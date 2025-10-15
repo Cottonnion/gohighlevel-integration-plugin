@@ -1,0 +1,24 @@
+{
+  "name": "Labgenz/crm-integration",
+  "description": "GoHighLevel CRM Integration for WordPress",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "Yahya Eddaqqaq",
+      "email": "yahyadard@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "GHL_CRM\\": "src/"
+    }
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true
+  }
+}
