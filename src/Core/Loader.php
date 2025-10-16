@@ -65,6 +65,7 @@ class Loader {
 	private function define_components(): void {
 		$this->components = [
 			// Core components
+			'core.settings'   => \GHL_CRM\Core\SettingsManager::class,
 			'core.assets'     => \GHL_CRM\Core\AssetsManager::class,
 			'core.ajax'       => \GHL_CRM\Core\AjaxHandler::class,
 			'core.menu'       => \GHL_CRM\Core\MenuManager::class,

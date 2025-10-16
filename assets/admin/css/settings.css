@@ -1,59 +1,121 @@
-/* Settings Page Styles */
-.ghl-crm-settings .ghl-crm-container {
-	display: flex;
-	gap: 20px;
-	margin-top: 20px;
+/**
+ * Settings Page Specific Styles
+ * 
+ * Uses global classes from globals.css
+ * Only page-specific overrides and custom components here
+ *
+ * Global classes used:
+ * - .ghl-container (layout)
+ * - .ghl-main-content (layout)
+ * - .ghl-sidebar (layout)
+ * - .ghl-card (card component)
+ * - .ghl-heading-secondary (typography)
+ * - .ghl-list (lists)
+ * - .ghl-button-primary, .ghl-button-secondary (buttons)
+ * - CSS custom properties (--ghl-*)
+ *
+ * @package GHL_CRM_Integration
+ */
+
+/* Settings Page Wrapper */
+.ghl-crm-settings {
+	font-family: var(--ghl-font-family);
 }
 
-.ghl-crm-settings .ghl-crm-main-content {
-	flex: 1;
-	max-width: 800px;
-}
-
-.ghl-crm-settings .ghl-crm-sidebar {
-	width: 300px;
-}
-
-.ghl-crm-settings .ghl-crm-card {
-	background: #fff;
-	border: 1px solid #ccd0d4;
-	padding: 15px 20px;
-	margin-bottom: 20px;
-	box-shadow: 0 1px 1px rgba(0,0,0,.04);
-}
-
-.ghl-crm-settings .ghl-crm-card h2 {
-	margin-top: 0;
-	font-size: 14px;
-	font-weight: 600;
-	text-transform: uppercase;
-	color: #555;
-}
-
-.ghl-crm-settings .ghl-crm-card ol,
-.ghl-crm-settings .ghl-crm-card ul {
-	margin-left: 20px;
-}
-
-.ghl-crm-settings .ghl-crm-card li {
-	margin-bottom: 8px;
-	line-height: 1.5;
-}
-
+/* Required field indicator */
 .ghl-crm-settings .required {
-	color: #d63638;
+	color: var(--ghl-error);
+	font-weight: var(--ghl-font-weight-semibold);
 }
 
+/* Test Connection Section - uses .ghl-divider pattern */
 .ghl-crm-settings .ghl-crm-test-connection {
-	margin-top: 30px;
+	margin-top: var(--ghl-spacing-3xl);
+	padding-top: var(--ghl-spacing-xl);
+	border-top: 1px solid var(--ghl-border-primary);
 }
 
-@media screen and (max-width: 782px) {
-	.ghl-crm-settings .ghl-crm-container {
-		flex-direction: column;
-	}
-	
-	.ghl-crm-settings .ghl-crm-sidebar {
-		width: 100%;
-	}
+/* Settings Form Specific Styles */
+.ghl-crm-settings .form-table th {
+	font-weight: var(--ghl-font-weight-medium);
+	color: var(--ghl-text-primary);
+	padding: var(--ghl-spacing-base);
 }
+
+.ghl-crm-settings .form-table td {
+	padding: var(--ghl-spacing-base);
+}
+
+.ghl-crm-settings .form-table input[type="text"],
+.ghl-crm-settings .form-table input[type="password"],
+.ghl-crm-settings .form-table select {
+	/* Inherits from .ghl-input in globals.css */
+	width: 100%;
+	max-width: 400px;
+}
+
+/* Settings form description */
+.ghl-crm-settings .form-table p.description {
+	margin-top: var(--ghl-spacing-xs);
+	font-size: var(--ghl-font-size-sm);
+	color: var(--ghl-text-secondary);
+	line-height: var(--ghl-line-height-relaxed);
+}
+
+/* API Token visibility toggle (if needed) */
+.ghl-crm-settings .token-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--ghl-spacing-sm);
+	margin-top: var(--ghl-spacing-xs);
+	color: var(--ghl-primary);
+	cursor: pointer;
+	font-size: var(--ghl-font-size-sm);
+	transition: color var(--ghl-transition-fast);
+}
+
+.ghl-crm-settings .token-toggle:hover {
+	color: var(--ghl-primary-hover);
+}
+
+/* Connection status indicator */
+.ghl-crm-settings .connection-status {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--ghl-spacing-sm);
+	padding: var(--ghl-spacing-xs) var(--ghl-spacing-md);
+	border-radius: var(--ghl-radius-full);
+	font-size: var(--ghl-font-size-sm);
+	font-weight: var(--ghl-font-weight-medium);
+}
+
+.ghl-crm-settings .connection-status--connected {
+	background: var(--ghl-success-light);
+	color: var(--ghl-success-dark);
+}
+
+.ghl-crm-settings .connection-status--disconnected {
+	background: var(--ghl-error-light);
+	color: var(--ghl-error-dark);
+}
+
+.ghl-crm-settings .connection-status--checking {
+	background: var(--ghl-info-light);
+	color: var(--ghl-info-dark);
+}
+
+/* Loading spinner for test connection */
+.ghl-crm-settings .spinner {
+	float: none;
+	margin: 0;
+	vertical-align: middle;
+}
+
+/* 
+ * Button styles inherit from WordPress core and globals.css
+ * Custom extensions can be added here if needed
+ * - .ghl-button-primary (from globals.css)
+ * - .ghl-button-secondary (from globals.css)
+ * 
+ * Responsive overrides are handled by globals.css
+ */

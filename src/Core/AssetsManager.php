@@ -106,12 +106,26 @@ class AssetsManager {
 	 * @return void
 	 */
 	private function define_admin_assets(): void {
+		// Global CSS for all admin pages
+		$this->add_admin_asset(
+			'ghl-crm-globals-css',
+			[ 
+				'toplevel_page_ghl-crm-integration',
+				'ghl-crm_page_ghl-crm-sync-logs',
+				'ghl-crm_page_ghl-crm-field-mapping'
+			],
+			'globals.css',
+			[],
+			[],
+			'1.0.3'
+		);
+
 		// Settings page assets
 		$this->add_admin_asset(
 			'ghl-crm-settings-css',
 			[ 'toplevel_page_ghl-crm-integration' ],
 			'settings.css',
-			[ 'sweetalert2' ], // SweetAlert2 CSS will load automatically
+			[ 'ghl-crm-globals-css', 'sweetalert2' ], // SweetAlert2 CSS will load automatically
 			[],
 			GHL_CRM_VERSION
 		);
@@ -134,7 +148,7 @@ class AssetsManager {
 			'ghl-crm-sync-logs-css',
 			[ 'ghl-crm_page_ghl-crm-sync-logs' ],
 			'sync-logs.css',
-			[],
+			[ 'ghl-crm-globals-css' ],
 			[],
 			GHL_CRM_VERSION
 		);
@@ -144,7 +158,7 @@ class AssetsManager {
 			'ghl-crm-field-mapping-css',
 			[ 'ghl-crm_page_ghl-crm-field-mapping' ],
 			'field-mapping.css',
-			[],
+			[ 'ghl-crm-globals-css' ],
 			[],
 			GHL_CRM_VERSION
 		);

@@ -1,94 +1,125 @@
-/* Settings page JavaScript */
-(function($) {
+/**
+ * Settings Page JavaScript
+ *
+ * Handles settings page interactions via AJAX
+ *
+ * @package GHL_CRM_Integration
+ */
+
+(function ($) {
 	'use strict';
 
-	$(document).ready(function() {
-		// Test API Connection
-		$('#ghl-test-connection').on('click', function(e) {
+	$(document).ready(function () {
+		/**
+		 * Show notification message
+		 */
+		function showNotice(message, type = 'success') {
+			const $notice = $('#ghl-settings-notice');
+			const noticeClass = type === 'success' ? 'notice-success' : 'notice-error';
+			
+			$notice
+				.removeClass('notice-success notice-error')
+				.addClass('notice ' + noticeClass)
+				.html('<p>' + message + '</p>')
+				.slideDown();
+
+			// Auto-hide after 5 seconds
+			setTimeout(function () {
+				$notice.slideUp();
+			}, 5000);
+		}
+
+		/**
+		 * Save Settings via AJAX
+		 */
+		$('#ghl-crm-settings-form').on('submit', function (e) {
 			e.preventDefault();
-			
-			const $button = $(this);
-			const apiToken = $('#ghl_crm_api_token').val().trim();
-			const locationId = $('#ghl_crm_location_id').val().trim();
-			
-			// Validate fields
-			if (!apiToken || !locationId) {
-				Swal.fire({
-					icon: 'warning',
-					title: 'Required Fields',
-					text: 'Please enter both API Token and Location ID before testing.',
-					confirmButtonColor: '#2271b1'
-				});
-				return;
-			}
-			
-			// Show loading state
-			Swal.fire({
-				title: 'Testing Connection',
-				html: 'Connecting to GoHighLevel API...',
-				allowOutsideClick: false,
-				allowEscapeKey: false,
-				showConfirmButton: false,
-				willOpen: () => {
-					Swal.showLoading();
-				}
-			});
-			
+
+			const $form = $(this);
+			const $button = $('#ghl-save-settings');
+			const $buttonText = $button.find('.button-text');
+			const $spinner = $button.find('.spinner');
+
+			// Get form data
+			const formData = {
+				action: 'ghl_crm_save_settings',
+				nonce: $('#ghl_crm_nonce').val(),
+				api_token: $('#ghl_crm_api_token').val(),
+				location_id: $('#ghl_crm_location_id').val(),
+				api_version: $('#ghl_crm_api_version').val(),
+			};
+
+			// Disable button and show loading state
+			$button.prop('disabled', true);
+			$buttonText.text('Saving...');
+			$spinner.css('display', 'inline-block').addClass('is-active');
+
 			// Make AJAX request
 			$.ajax({
-				url: ghl_crm_settings_js_data.ajaxUrl,
+				url: ajaxurl,
+				type: 'POST',
+				data: formData,
+				success: function (response) {
+					if (response.success) {
+						showNotice(response.data.message, 'success');
+					} else {
+						showNotice(response.data.message || 'Failed to save settings.', 'error');
+					}
+				},
+				error: function (xhr) {
+					const errorMsg = xhr.responseJSON?.data?.message || 'An error occurred while saving settings.';
+					showNotice(errorMsg, 'error');
+				},
+				complete: function () {
+					$button.prop('disabled', false);
+					$buttonText.text('Save Settings');
+					$spinner.hide().removeClass('is-active');
+				},
+			});
+		});
+
+		/**
+		 * Test Connection via AJAX
+		 */
+		$('#ghl-test-connection').on('click', function () {
+			const $button = $(this);
+			const $result = $('#ghl-test-result');
+
+			// Disable button and show loading state
+			$button.prop('disabled', true).text('Testing...');
+			$result.html('<div class="notice notice-info"><p>Testing connection...</p></div>');
+
+			// Make AJAX request
+			$.ajax({
+				url: ajaxurl,
 				type: 'POST',
 				data: {
 					action: 'ghl_crm_test_connection',
-					nonce: ghl_crm_settings_js_data.nonce,
-					api_token: apiToken,
-					location_id: locationId
+					nonce: $('#ghl_crm_nonce').val(),
 				},
-				success: function(response) {
+				success: function (response) {
 					if (response.success) {
-						Swal.fire({
-							icon: 'success',
-							title: 'Connection Successful!',
-							html: response.data.details || 'Your GoHighLevel API credentials are valid.',
-							confirmButtonColor: '#2271b1'
-						});
+						let message = '<strong>✓ ' + response.data.message + '</strong>';
+						if (response.data.location_name) {
+							message += '<br>Location: ' + response.data.location_name;
+						}
+						$result.html('<div class="notice notice-success"><p>' + message + '</p></div>');
 					} else {
-						Swal.fire({
-							icon: 'error',
-							title: 'Connection Failed',
-							text: response.data.message || 'Unable to connect to GoHighLevel API.',
-							confirmButtonColor: '#2271b1'
-						});
+						let message = '<strong>✗ ' + response.data.message + '</strong>';
+						if (response.data.details) {
+							message += '<br><small>Details: ' + JSON.stringify(response.data.details) + '</small>';
+						}
+						$result.html('<div class="notice notice-error"><p>' + message + '</p></div>');
 					}
 				},
-				error: function(xhr, status, error) {
-					Swal.fire({
-						icon: 'error',
-						title: 'Request Failed',
-						text: 'An error occurred while testing the connection. Please try again.',
-						footer: 'Error: ' + error,
-						confirmButtonColor: '#2271b1'
-					});
-				}
+				error: function (xhr) {
+					const errorMsg = xhr.responseJSON?.data?.message || 'Connection test failed.';
+					$result.html('<div class="notice notice-error"><p><strong>✗ ' + errorMsg + '</strong></p></div>');
+				},
+				complete: function () {
+					$button.prop('disabled', false).text('Test API Connection');
+				},
 			});
 		});
-
-		// Form validation before submit
-		$('.ghl-crm-form').on('submit', function(e) {
-			const apiToken = $('#ghl_crm_api_token').val().trim();
-			const locationId = $('#ghl_crm_location_id').val().trim();
-
-			if (!apiToken || !locationId) {
-				e.preventDefault();
-				Swal.fire({
-					icon: 'warning',
-					title: 'Required Fields',
-					text: 'Please fill in both API Token and Location ID.',
-					confirmButtonColor: '#2271b1'
-				});
-				return false;
-			}
-		});
 	});
-
 })(jQuery);

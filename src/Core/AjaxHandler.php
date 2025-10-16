@@ -49,7 +49,7 @@ class AjaxHandler {
 	 */
 	public function init(): void {
 		// Test API connection
-		add_action( 'wp_ajax_ghl_crm_test_connection', [ $this, 'test_connection' ] );
+		// add_action( 'wp_ajax_ghl_crm_test_connection', [ $this, 'test_connection' ] );
 	}
 
 	/**
