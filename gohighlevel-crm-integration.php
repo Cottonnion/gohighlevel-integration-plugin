@@ -1,13 +1,13 @@
 <?php
 /**
  * Plugin Name:       GoHighLevel CRM Integration
- * Plugin URI:        https://example.com/gohighlevel-crm-integration
+ * Plugin URI:        https://labgenz.com/
  * Description:       Integrate WordPress + WooCommerce + BuddyBoss + LearnDash with GoHighLevel CRM for seamless two-way sync
  * Version:           1.0.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
- * Author:            Your Name
- * Author URI:        https://example.com
+ * Author:            Yahya Eddaqqaq
+ * Author URI:        https://labgenz.com
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       ghl-crm-integration

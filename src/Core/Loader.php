@@ -64,16 +64,14 @@ class Loader {
 	 */
 	private function define_components(): void {
 		$this->components = [
-			// Core components will be added here as we build them
-			// 'core.settings'   => \GHL_CRM\Core\Settings::class,
-			// 'core.assets'     => \GHL_CRM\Core\AssetsManager::class,
-			// 'admin.menu'      => \GHL_CRM\Admin\MenuManager::class,
-			// 'api.client'      => \GHL_CRM\API\GHLClient::class,
-			// 'sync.manager'    => \GHL_CRM\Sync\SyncManager::class,
+			// Core components
+			'core.assets'     => \GHL_CRM\Core\AssetsManager::class,
+			'core.ajax'       => \GHL_CRM\Core\AjaxHandler::class,
+			'core.menu'       => \GHL_CRM\Core\MenuManager::class,
 		];
-	}
-
-	/**
+	}	
+    
+    /**
 	 * Initialize WordPress hooks
 	 *
 	 * @return void

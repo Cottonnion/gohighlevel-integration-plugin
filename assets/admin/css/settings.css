@@ -1,0 +1,59 @@
+/* Settings Page Styles */
+.ghl-crm-settings .ghl-crm-container {
+	display: flex;
+	gap: 20px;
+	margin-top: 20px;
+}
+
+.ghl-crm-settings .ghl-crm-main-content {
+	flex: 1;
+	max-width: 800px;
+}
+
+.ghl-crm-settings .ghl-crm-sidebar {
+	width: 300px;
+}
+
+.ghl-crm-settings .ghl-crm-card {
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	padding: 15px 20px;
+	margin-bottom: 20px;
+	box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+
+.ghl-crm-settings .ghl-crm-card h2 {
+	margin-top: 0;
+	font-size: 14px;
+	font-weight: 600;
+	text-transform: uppercase;
+	color: #555;
+}
+
+.ghl-crm-settings .ghl-crm-card ol,
+.ghl-crm-settings .ghl-crm-card ul {
+	margin-left: 20px;
+}
+
+.ghl-crm-settings .ghl-crm-card li {
+	margin-bottom: 8px;
+	line-height: 1.5;
+}
+
+.ghl-crm-settings .required {
+	color: #d63638;
+}
+
+.ghl-crm-settings .ghl-crm-test-connection {
+	margin-top: 30px;
+}
+
+@media screen and (max-width: 782px) {
+	.ghl-crm-settings .ghl-crm-container {
+		flex-direction: column;
+	}
+	
+	.ghl-crm-settings .ghl-crm-sidebar {
+		width: 100%;
+	}
+}

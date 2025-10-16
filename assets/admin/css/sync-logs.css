@@ -1,0 +1,28 @@
+/* Sync Logs Page Styles */
+.ghl-crm-sync-logs .ghl-crm-logs-container {
+	margin-top: 20px;
+	background: #fff;
+	padding: 20px;
+	border: 1px solid #ccd0d4;
+	box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+
+.ghl-crm-sync-logs .column-date { 
+	width: 15%; 
+}
+
+.ghl-crm-sync-logs .column-type { 
+	width: 15%; 
+}
+
+.ghl-crm-sync-logs .column-status { 
+	width: 10%; 
+}
+
+.ghl-crm-sync-logs .column-message { 
+	width: 45%; 
+}
+
+.ghl-crm-sync-logs .column-actions { 
+	width: 15%; 
+}
