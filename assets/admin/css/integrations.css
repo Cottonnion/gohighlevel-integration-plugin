@@ -1,0 +1,515 @@
+/**
+ * Integrations Page Styles
+ *
+ * @package    GHL_CRM_Integration
+ * @subpackage Assets/Admin/CSS
+ */
+
+/* ========================================
+   Tabs Navigation
+   ======================================== */
+
+.ghl-tabs-nav {
+	display: flex;
+	gap: var(--ghl-spacing-xs);
+	margin-bottom: var(--ghl-spacing-lg);
+	border-bottom: 2px solid var(--ghl-border-color);
+	overflow-x: auto;
+	overflow-y: hidden;
+}
+
+.ghl-tab-button {
+	display: flex;
+	align-items: center;
+	gap: var(--ghl-spacing-xs);
+	padding: var(--ghl-spacing-md) var(--ghl-spacing-lg);
+	background: transparent;
+	border: none;
+	border-bottom: 3px solid transparent;
+	color: var(--ghl-text-secondary);
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	white-space: nowrap;
+	margin-bottom: -2px;
+}
+
+.ghl-tab-button:hover:not(:disabled) {
+	color: var(--ghl-primary);
+	background: rgba(99, 91, 255, 0.05);
+}
+
+.ghl-tab-button.active {
+	color: var(--ghl-primary);
+	border-bottom-color: var(--ghl-primary);
+	font-weight: 600;
+}
+
+.ghl-tab-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.ghl-tab-button .dashicons {
+	font-size: 18px;
+	width: 18px;
+	height: 18px;
+}
+
+.ghl-tab-button .ghl-badge {
+	margin-left: var(--ghl-spacing-xs);
+}
+
+/* ========================================
+   Tabs Content
+   ======================================== */
+
+.ghl-tabs-content {
+	margin-bottom: var(--ghl-spacing-xl);
+}
+
+.ghl-tab-panel {
+	display: none;
+	animation: fadeIn 0.3s ease-in-out;
+}
+
+.ghl-tab-panel.active {
+	display: block;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* ========================================
+   Card Header
+   ======================================== */
+
+.ghl-card-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--ghl-spacing-lg);
+	padding-bottom: var(--ghl-spacing-lg);
+	border-bottom: 1px solid var(--ghl-border-color);
+	margin-bottom: var(--ghl-spacing-lg);
+}
+
+.ghl-card-header-left {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--ghl-spacing-md);
+	flex: 1;
+}
+
+.ghl-card-header-right {
+	display: flex;
+	align-items: center;
+	gap: var(--ghl-spacing-sm);
+	flex-shrink: 0;
+}
+
+.ghl-card-header h2 {
+	margin: 0 0 4px 0;
+	font-size: 18px;
+	font-weight: 600;
+	color: var(--ghl-text-primary);
+}
+
+.ghl-card-header p {
+	margin: 0;
+	font-size: 14px;
+	color: var(--ghl-text-secondary);
+}
+
+.ghl-toggle-label {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--ghl-text-secondary);
+}
+
+/* ========================================
+   Integration Icon
+   ======================================== */
+
+.ghl-integration-icon {
+	flex-shrink: 0;
+	width: 48px;
+	height: 48px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: linear-gradient(135deg, var(--ghl-primary) 0%, #7c3aed 100%);
+	border-radius: var(--ghl-radius-md);
+	color: #fff;
+}
+
+.ghl-integration-icon .dashicons {
+	font-size: 24px;
+	width: 24px;
+	height: 24px;
+}
+
+/* ========================================
+   Toggle Switch
+   ======================================== */
+
+.ghl-toggle-switch {
+	position: relative;
+	display: inline-block;
+	width: 50px;
+	height: 28px;
+	cursor: pointer;
+}
+
+.ghl-toggle-switch input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+.ghl-toggle-slider {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: var(--ghl-border-color);
+	transition: 0.3s;
+	border-radius: 28px;
+}
+
+.ghl-toggle-slider:before {
+	position: absolute;
+	content: "";
+	height: 22px;
+	width: 22px;
+	left: 3px;
+	bottom: 3px;
+	background-color: white;
+	transition: 0.3s;
+	border-radius: 50%;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.ghl-toggle-switch input:checked + .ghl-toggle-slider {
+	background-color: var(--ghl-primary);
+}
+
+.ghl-toggle-switch input:checked + .ghl-toggle-slider:before {
+	transform: translateX(22px);
+}
+
+.ghl-toggle-switch input:focus + .ghl-toggle-slider {
+	box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.1);
+}
+
+.ghl-toggle-switch input:disabled + .ghl-toggle-slider {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* ========================================
+   Integration Content
+   ======================================== */
+
+.ghl-integration-content {
+	padding-top: var(--ghl-spacing-lg);
+}
+
+.ghl-settings-section {
+	margin-bottom: var(--ghl-spacing-xl);
+}
+
+.ghl-settings-section:last-child {
+	margin-bottom: 0;
+}
+
+.ghl-settings-section h3 {
+	margin: 0 0 var(--ghl-spacing-sm) 0;
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--ghl-text-primary);
+}
+
+.ghl-settings-section > .description {
+	display: block;
+	margin: 0 0 var(--ghl-spacing-md) 0;
+	color: var(--ghl-text-secondary);
+	font-size: 14px;
+}
+
+/* ========================================
+   Checkbox Group
+   ======================================== */
+
+.ghl-checkbox-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--ghl-spacing-md);
+}
+
+.ghl-checkbox-label {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--ghl-spacing-sm);
+	padding: var(--ghl-spacing-md);
+	background: var(--ghl-bg-secondary);
+	border: 1px solid var(--ghl-border-color);
+	border-radius: var(--ghl-radius-sm);
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.ghl-checkbox-label:hover {
+	background: var(--ghl-bg-hover);
+	border-color: var(--ghl-primary);
+}
+
+.ghl-checkbox-label input[type="checkbox"] {
+	margin: 2px 0 0 0;
+	flex-shrink: 0;
+}
+
+.ghl-checkbox-text {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.ghl-checkbox-text strong {
+	display: block;
+	font-size: 14px;
+	color: var(--ghl-text-primary);
+	font-weight: 600;
+}
+
+.ghl-checkbox-text .description {
+	display: block;
+	font-size: 13px;
+	color: var(--ghl-text-secondary);
+	margin: 0;
+}
+
+/* ========================================
+   Info Box
+   ======================================== */
+
+.ghl-info-box {
+	display: flex;
+	gap: var(--ghl-spacing-md);
+	padding: var(--ghl-spacing-md);
+	background: #e0f2fe;
+	border: 1px solid #7dd3fc;
+	border-radius: var(--ghl-radius-sm);
+}
+
+.ghl-info-box .dashicons {
+	flex-shrink: 0;
+	color: #0284c7;
+	font-size: 20px;
+	width: 20px;
+	height: 20px;
+	margin-top: 2px;
+}
+
+.ghl-info-box > div {
+	flex: 1;
+}
+
+.ghl-info-box strong {
+	display: block;
+	margin-bottom: 4px;
+	color: #0c4a6e;
+	font-size: 14px;
+}
+
+.ghl-info-box p {
+	margin: 0 0 var(--ghl-spacing-sm) 0;
+	font-size: 13px;
+	color: #0c4a6e;
+}
+
+.ghl-info-box .button {
+	margin-top: var(--ghl-spacing-xs);
+}
+
+/* ========================================
+   Form Actions
+   ======================================== */
+
+.ghl-form-actions {
+	position: sticky;
+	bottom: 0;
+	background: white;
+	padding: var(--ghl-spacing-lg) 0;
+	border-top: 1px solid var(--ghl-border-color);
+	margin-top: var(--ghl-spacing-xl);
+	z-index: 10;
+}
+
+.ghl-form-actions button {
+	position: relative;
+	min-width: 200px;
+}
+
+.ghl-form-actions button .spinner {
+	position: absolute;
+	right: 12px;
+	top: 50%;
+	transform: translateY(-50%);
+	margin: 0;
+	float: none;
+}
+
+.ghl-form-actions button.is-loading .button-text {
+	opacity: 0.5;
+}
+
+.ghl-form-actions button.is-loading .spinner {
+	visibility: visible;
+}
+
+/* ========================================
+   Messages
+   ======================================== */
+
+#ghl-integrations-messages {
+	margin: var(--ghl-spacing-md) 0;
+}
+
+#ghl-integrations-messages .notice {
+	position: relative;
+	padding: var(--ghl-spacing-md) var(--ghl-spacing-lg);
+	border-left: 4px solid;
+	border-radius: var(--ghl-radius-sm);
+	background: white;
+	box-shadow: var(--ghl-shadow-sm);
+}
+
+#ghl-integrations-messages .notice-success {
+	border-color: var(--ghl-success);
+	background: #f0fdf4;
+}
+
+#ghl-integrations-messages .notice-error {
+	border-color: var(--ghl-danger);
+	background: #fef2f2;
+}
+
+#ghl-integrations-messages .notice p {
+	margin: 0;
+	font-size: 14px;
+}
+
+/* ========================================
+   Coming Soon Card
+   ======================================== */
+
+.ghl-coming-soon-card {
+	min-height: 400px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.ghl-coming-soon-content {
+	text-align: center;
+	max-width: 500px;
+	padding: var(--ghl-spacing-xl);
+}
+
+.ghl-coming-soon-icon {
+	width: 80px;
+	height: 80px;
+	margin: 0 auto var(--ghl-spacing-lg);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+	border-radius: var(--ghl-radius-lg);
+}
+
+.ghl-coming-soon-icon .dashicons {
+	font-size: 40px;
+	width: 40px;
+	height: 40px;
+	color: #64748b;
+}
+
+.ghl-coming-soon-content h2 {
+	margin: 0 0 var(--ghl-spacing-sm) 0;
+	font-size: 24px;
+	font-weight: 600;
+	color: var(--ghl-text-primary);
+}
+
+.ghl-coming-soon-content p {
+	margin: 0 0 var(--ghl-spacing-lg) 0;
+	font-size: 16px;
+	color: var(--ghl-text-secondary);
+	line-height: 1.6;
+}
+
+.ghl-badge-large {
+	padding: var(--ghl-spacing-sm) var(--ghl-spacing-lg);
+	font-size: 14px;
+	font-weight: 600;
+}
+
+/* ========================================
+   Responsive
+   ======================================== */
+
+@media (max-width: 1024px) {
+	.ghl-card-header {
+		flex-direction: column;
+	}
+
+	.ghl-card-header-right {
+		width: 100%;
+		justify-content: space-between;
+	}
+}
+
+@media (max-width: 768px) {
+	.ghl-tabs-nav {
+		border-bottom: none;
+		flex-wrap: wrap;
+	}
+
+	.ghl-tab-button {
+		flex: 1;
+		min-width: 150px;
+		justify-content: center;
+		border: 1px solid var(--ghl-border-color);
+		border-radius: var(--ghl-radius-sm);
+		margin-bottom: var(--ghl-spacing-xs);
+	}
+
+	.ghl-tab-button.active {
+		border-color: var(--ghl-primary);
+		background: rgba(99, 91, 255, 0.05);
+	}
+
+	.ghl-card-header-left {
+		flex-direction: column;
+	}
+
+	.ghl-form-actions {
+		text-align: center;
+	}
+
+	.ghl-form-actions button {
+		width: 100%;
+	}
+}
