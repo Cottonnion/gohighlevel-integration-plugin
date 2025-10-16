@@ -17,7 +17,6 @@ $settings         = $settings_manager->get_settings_array();
 $enable_user_sync              = $settings['enable_user_sync'] ?? false;
 $user_sync_actions             = $settings['user_sync_actions'] ?? [];
 $delete_contact_on_user_delete = $settings['delete_contact_on_user_delete'] ?? false;
-print_r($settings);
 ?>
 
 <div class="wrap ghl-crm-wrap">
