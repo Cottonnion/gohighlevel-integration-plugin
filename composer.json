@@ -10,7 +10,8 @@
     }
   ],
   "require": {
-    "php": ">=7.4"
+    "php": ">=7.4",
+    "woocommerce/action-scheduler": "^3.9"
   },
   "autoload": {
     "psr-4": {
