@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Assets Manager class
  *
- * Handles enqueuing of CSS and JavaScript files for admin and frontend.
+ * Handles enqueuing of CSS and Javascript
  *
  * @package    GHL_CRM_Integration
  * @subpackage GHL_CRM_Integration/Core
@@ -111,6 +111,7 @@ class AssetsManager {
 			'ghl-crm-globals-css',
 			[ 
 				'toplevel_page_ghl-crm-integration',
+				'ghl-crm_page_ghl-crm-integrations',
 				'ghl-crm_page_ghl-crm-sync-logs',
 				'ghl-crm_page_ghl-crm-field-mapping'
 			],
@@ -151,6 +152,35 @@ class AssetsManager {
 			[ 'ghl-crm-globals-css' ],
 			[],
 			GHL_CRM_VERSION
+		);
+
+		// Integrations page assets
+		$this->add_admin_asset(
+			'ghl-crm-integrations-css',
+			[ 'ghl-crm_page_ghl-crm-integrations' ],
+			'integrations.css',
+			[ 'ghl-crm-globals-css' ],
+			[],
+			GHL_CRM_VERSION
+		);
+
+		$this->add_admin_asset(
+			'ghl-crm-integrations',
+			[ 'ghl-crm_page_ghl-crm-integrations' ],
+			'integrations.js',
+			[ 'jquery' ],
+			[
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'ghl_crm_settings_nonce' ),
+				'i18n'    => [
+					'settingsSaved'         => __( 'Settings saved successfully!', 'ghl-crm-integration' ),
+					'saveFailed'            => __( 'Failed to save settings. Please try again.', 'ghl-crm-integration' ),
+					'saveError'             => __( 'An error occurred while saving settings.', 'ghl-crm-integration' ),
+					'selectAtLeastOneAction' => __( 'Please select at least one sync action when user sync is enabled.', 'ghl-crm-integration' ),
+				],
+			],
+			GHL_CRM_VERSION,
+			true
 		);
 
 		// Field Mapping page assets
