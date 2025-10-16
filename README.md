@@ -356,7 +356,7 @@ GNU General Public License for more details.
 **Yahya Eddaqqaq**
 - Lead Developer & Architect
 - Email: yahyadard@gmail.com
-- Website: [labgenz.com](https://yahyadev.online/)
+- Website: [yahyadev.com](https://yahyadev.online/)
 - GitHub: [@Cottonnion](https://github.com/Cottonnion)
 
 *Specialized in WordPress plugin development, CRM integrations, and enterprise solutions.*
