@@ -82,6 +82,16 @@ class MenuManager {
 			[ $this, 'render_settings_page' ]                         // Callback
 		);
 
+		// Integrations submenu
+		add_submenu_page(
+			'ghl-crm-integration',                                     // Parent slug
+			__( 'Integrations', 'ghl-crm-integration' ),              // Page title
+			__( 'Integrations', 'ghl-crm-integration' ),              // Menu title
+			'manage_options',                                          // Capability
+			'ghl-crm-integrations',                                    // Menu slug
+			[ $this, 'render_integrations_page' ]                     // Callback
+		);
+
 		// Sync Logs submenu
 		add_submenu_page(
 			'ghl-crm-integration',                                     // Parent slug
@@ -146,6 +156,19 @@ class MenuManager {
 		}
 
 		$this->load_template( 'admin/sync-logs' );
+	}
+
+	/**
+	 * Render integrations page
+	 *
+	 * @return void
+	 */
+	public function render_integrations_page(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'ghl-crm-integration' ) );
+		}
+
+		$this->load_template( 'admin/integrations' );
 	}
 
 	/**
