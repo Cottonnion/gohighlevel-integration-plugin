@@ -75,6 +75,11 @@ class UserHooks {
 	private function register_hooks(): void {
 		$settings = $this->settings_manager->get_settings_array();
 
+		// Check if connection is verified first
+		if ( ! $this->settings_manager->is_connection_verified() ) {
+			return;
+		}
+
 		// Check if user sync is enabled
 		if ( empty( $settings['enable_user_sync'] ) ) {
 			return;

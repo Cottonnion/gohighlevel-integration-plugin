@@ -38,6 +38,13 @@ class SettingsManager {
 	private const NETWORK_OPTION_NAME = 'ghl_crm_network_settings';
 
 	/**
+	 * Connection verification option name
+	 *
+	 * @var string
+	 */
+	private const VERIFICATION_OPTION_NAME = 'ghl_crm_connection_verified';
+
+	/**
 	 * Get class instance | singleton pattern
 	 *
 	 * @return self
@@ -89,6 +96,11 @@ class SettingsManager {
 		$location_id   = isset( $_POST['location_id'] ) ? sanitize_text_field( wp_unslash( $_POST['location_id'] ) ) : '';
 		$api_version   = isset( $_POST['api_version'] ) ? sanitize_text_field( wp_unslash( $_POST['api_version'] ) ) : '2021-07-28';
 
+		// Check if API credentials changed
+		$current_settings    = $this->get_settings_array();
+		$credentials_changed = ( $api_token !== $current_settings['api_token'] ) || 
+		                       ( $location_id !== $current_settings['location_id'] );
+
 		// User sync settings
 		$enable_user_sync = isset( $_POST['enable_user_sync'] ) && filter_var( $_POST['enable_user_sync'], FILTER_VALIDATE_BOOLEAN );
 		$user_sync_actions = isset( $_POST['user_sync_actions'] ) && is_array( $_POST['user_sync_actions'] ) 
@@ -124,11 +136,23 @@ class SettingsManager {
 		// Save settings (multisite aware)
 		$saved = $this->save_site_settings( $settings );
 
+		// If credentials changed, invalidate verification
+		if ( $credentials_changed && $saved ) {
+			$this->mark_connection_unverified();
+		}
+
 		if ( $saved ) {
-			wp_send_json_success( [
+			$response_data = [
 				'message'  => __( 'Settings saved successfully!', 'ghl-crm-integration' ),
 				'settings' => $this->get_settings_array(),
-			] );
+			];
+
+			// Add warning if credentials changed
+			if ( $credentials_changed ) {
+				$response_data['warning'] = __( 'API credentials changed. Please test your connection to verify.', 'ghl-crm-integration' );
+			}
+
+			wp_send_json_success( $response_data );
 		} else {
 			wp_send_json_error( [
 				'message' => __( 'Failed to save settings. Please try again.', 'ghl-crm-integration' ),
@@ -208,12 +232,18 @@ class SettingsManager {
 		$body        = json_decode( wp_remote_retrieve_body( $response ), true );
 
 		if ( $status_code === 200 ) {
+			// Mark connection as verified
+			$this->mark_connection_verified();
+
 			wp_send_json_success( [
 				'message'      => __( 'Connection successful! Your API credentials are working.', 'ghl-crm-integration' ),
 				'location_name' => isset( $body['location']['name'] ) ? $body['location']['name'] : '',
 				'status_code'  => $status_code,
 			] );
 		} else {
+			// Mark connection as not verified
+			$this->mark_connection_unverified();
+
 			wp_send_json_error( [
 				'message' => sprintf(
 					/* translators: %d: HTTP status code */
@@ -325,6 +355,72 @@ class SettingsManager {
 	 */
 	public function is_multisite(): bool {
 		return is_multisite();
+	}
+
+	/**
+	 * Check if API connection is verified
+	 *
+	 * @param int|null $site_id Optional. Site ID for multisite.
+	 * @return bool
+	 */
+	public function is_connection_verified( ?int $site_id = null ): bool {
+		// Get current settings
+		$settings = $this->get_settings_array( $site_id );
+
+		// Check if basic credentials exist
+		if ( empty( $settings['api_token'] ) || empty( $settings['location_id'] ) ) {
+			return false;
+		}
+
+		// Check verification status
+		if ( is_multisite() && null !== $site_id && $site_id !== get_current_blog_id() ) {
+			switch_to_blog( $site_id );
+			$verified = get_option( self::VERIFICATION_OPTION_NAME, false );
+			restore_current_blog();
+			return (bool) $verified;
+		}
+
+		return (bool) get_option( self::VERIFICATION_OPTION_NAME, false );
+	}
+
+	/**
+	 * Mark connection as verified
+	 *
+	 * @param int|null $site_id Optional. Site ID for multisite.
+	 * @return bool
+	 */
+	private function mark_connection_verified( ?int $site_id = null ): bool {
+		$verification_data = [
+			'verified'    => true,
+			'verified_at' => current_time( 'mysql' ),
+			'site_id'     => $site_id ?? get_current_blog_id(),
+		];
+
+		if ( is_multisite() && null !== $site_id && $site_id !== get_current_blog_id() ) {
+			switch_to_blog( $site_id );
+			$saved = update_option( self::VERIFICATION_OPTION_NAME, $verification_data, true );
+			restore_current_blog();
+			return $saved;
+		}
+
+		return update_option( self::VERIFICATION_OPTION_NAME, $verification_data, true );
+	}
+
+	/**
+	 * Mark connection as not verified
+	 *
+	 * @param int|null $site_id Optional. Site ID for multisite.
+	 * @return bool
+	 */
+	private function mark_connection_unverified( ?int $site_id = null ): bool {
+		if ( is_multisite() && null !== $site_id && $site_id !== get_current_blog_id() ) {
+			switch_to_blog( $site_id );
+			$deleted = delete_option( self::VERIFICATION_OPTION_NAME );
+			restore_current_blog();
+			return $deleted;
+		}
+
+		return delete_option( self::VERIFICATION_OPTION_NAME );
 	}
 
 	/**
