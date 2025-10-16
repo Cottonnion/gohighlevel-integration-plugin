@@ -89,6 +89,18 @@ class SettingsManager {
 		$location_id   = isset( $_POST['location_id'] ) ? sanitize_text_field( wp_unslash( $_POST['location_id'] ) ) : '';
 		$api_version   = isset( $_POST['api_version'] ) ? sanitize_text_field( wp_unslash( $_POST['api_version'] ) ) : '2021-07-28';
 
+		// User sync settings
+		$enable_user_sync = isset( $_POST['enable_user_sync'] ) && filter_var( $_POST['enable_user_sync'], FILTER_VALIDATE_BOOLEAN );
+		$user_sync_actions = isset( $_POST['user_sync_actions'] ) && is_array( $_POST['user_sync_actions'] ) 
+			? array_map( 'sanitize_text_field', wp_unslash( $_POST['user_sync_actions'] ) ) 
+			: [];
+		$delete_contact_on_user_delete = isset( $_POST['delete_contact_on_user_delete'] ) && filter_var( $_POST['delete_contact_on_user_delete'], FILTER_VALIDATE_BOOLEAN );
+		
+		// User field mapping
+		$user_field_mapping = isset( $_POST['user_field_mapping'] ) && is_array( $_POST['user_field_mapping'] ) 
+			? array_map( 'sanitize_text_field', wp_unslash( $_POST['user_field_mapping'] ) ) 
+			: [];
+
 		// Validate required fields
 		if ( empty( $api_token ) || empty( $location_id ) ) {
 			wp_send_json_error( [
@@ -98,11 +110,15 @@ class SettingsManager {
 
 		// Prepare settings array
 		$settings = [
-			'api_token'   => $api_token,
-			'location_id' => $location_id,
-			'api_version' => $api_version,
-			'updated_at'  => current_time( 'mysql' ),
-			'site_id'     => get_current_blog_id(),
+			'api_token'                     => $api_token,
+			'location_id'                   => $location_id,
+			'api_version'                   => $api_version,
+			'enable_user_sync'              => $enable_user_sync,
+			'user_sync_actions'             => $user_sync_actions,
+			'delete_contact_on_user_delete' => $delete_contact_on_user_delete,
+			'user_field_mapping'            => $user_field_mapping,
+			'updated_at'                    => current_time( 'mysql' ),
+			'site_id'                       => get_current_blog_id(),
 		];
 
 		// Save settings (multisite aware)
@@ -227,11 +243,15 @@ class SettingsManager {
 
 		// Return with defaults
 		return wp_parse_args( $settings, [
-			'api_token'   => '',
-			'location_id' => '',
-			'api_version' => '2021-07-28',
-			'updated_at'  => '',
-			'site_id'     => get_current_blog_id(),
+			'api_token'                     => '',
+			'location_id'                   => '',
+			'api_version'                   => '2021-07-28',
+			'enable_user_sync'              => false,
+			'user_sync_actions'             => [],
+			'delete_contact_on_user_delete' => false,
+			'user_field_mapping'            => [],
+			'updated_at'                    => '',
+			'site_id'                       => get_current_blog_id(),
 		] );
 	}
 

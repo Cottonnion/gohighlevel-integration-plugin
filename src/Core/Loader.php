@@ -69,6 +69,9 @@ class Loader {
 			'core.assets'     => \GHL_CRM\Core\AssetsManager::class,
 			'core.ajax'       => \GHL_CRM\Core\AjaxHandler::class,
 			'core.menu'       => \GHL_CRM\Core\MenuManager::class,
+			
+			// Integration components
+			'integrations.users' => \GHL_CRM\Integrations\Users\UserHooks::class,
 		];
 	}	
     
