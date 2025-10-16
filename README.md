@@ -321,7 +321,7 @@ We welcome contributions! Please follow these steps:
 
 ### Reporting Security Issues
 
-If you discover a security vulnerability, please email security@yourcompany.com. Do not create public issues for security vulnerabilities.
+If you discover a security vulnerability, please email yahyadard@gmail.com. Do not create public issues for security vulnerabilities.
 
 ### Security Features
 
@@ -351,6 +351,16 @@ GNU General Public License for more details.
 
 ## 🙏 Credits
 
+### Main Developer
+
+**Yahya Eddaqqaq**
+- Lead Developer & Architect
+- Email: yahyadard@gmail.com
+- Website: [labgenz.com](https://yahyadev.online/)
+- GitHub: [@Cottonnion](https://github.com/Cottonnion)
+
+*Specialized in WordPress plugin development, CRM integrations, and enterprise solutions.*
+
 ### Built With
 
 - [WordPress](https://wordpress.org/) - CMS Platform
@@ -367,8 +377,8 @@ GNU General Public License for more details.
 ### Professional Support
 
 Need help with setup or custom development?
-- Email: support@yourcompany.com
-- Website: https://yourcompany.com/support
+- Email: yahyadard@gmail.com
+- Website: https://labgenz.com/
 - Priority Support: Available for Pro users
 
 ## 🌟 Roadmap
