@@ -160,9 +160,17 @@ $ghl_fields = array(
 
 // Calculate total fields
 $total_fields = count( $default_wp_fields ) + count( $custom_user_fields ) + count( $buddyboss_fields );
+
+// Get current field mappings
+$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+$settings         = $settings_manager->get_settings_array();
+$saved_mappings   = $settings['user_field_mapping'] ?? [];
 ?>
 <div class="wrap ghl-crm-field-mapping">
 	<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+	
+	<!-- Message Area for AJAX responses -->
+	<div id="ghl-field-mapping-messages"></div>
 	
 	<div class="notice notice-info">
 		<p>
@@ -170,8 +178,8 @@ $total_fields = count( $default_wp_fields ) + count( $custom_user_fields ) + cou
 		</p>
 	</div>
 
-	<form method="post" action="">
-		<?php wp_nonce_field( 'ghl_crm_save_field_mapping', 'ghl_crm_mapping_nonce' ); ?>
+	<form id="ghl-field-mapping-form" method="post" action="">
+		<?php wp_nonce_field( 'ghl_crm_field_mapping', 'ghl_crm_mapping_nonce' ); ?>
 		
 		<h2><?php esc_html_e( 'User Contact Fields', 'ghl-crm-integration' ); ?></h2>
 		<p class="description">
@@ -199,7 +207,10 @@ $total_fields = count( $default_wp_fields ) + count( $custom_user_fields ) + cou
 				</tr>
 			</thead>
 			<tbody>
-				<?php foreach ( $default_wp_fields as $key => $label ) : ?>
+				<?php foreach ( $default_wp_fields as $key => $label ) : 
+					$saved_ghl_field = isset( $saved_mappings[ $key ]['ghl_field'] ) ? $saved_mappings[ $key ]['ghl_field'] : '';
+					$saved_direction = isset( $saved_mappings[ $key ]['direction'] ) ? $saved_mappings[ $key ]['direction'] : 'both';
+				?>
 					<tr>
 						<td>
 							<strong><?php echo esc_html( $label ); ?></strong><br>
@@ -208,15 +219,17 @@ $total_fields = count( $default_wp_fields ) + count( $custom_user_fields ) + cou
 						<td>
 							<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="regular-text">
 								<?php foreach ( $ghl_fields as $ghl_key => $ghl_label ) : ?>
-									<option value="<?php echo esc_attr( $ghl_key ); ?>"><?php echo esc_html( $ghl_label ); ?></option>
+									<option value="<?php echo esc_attr( $ghl_key ); ?>" <?php selected( $saved_ghl_field, $ghl_key ); ?>>
+										<?php echo esc_html( $ghl_label ); ?>
+									</option>
 								<?php endforeach; ?>
 							</select>
 						</td>
 						<td>
 							<select name="sync_direction_<?php echo esc_attr( $key ); ?>">
-								<option value="both"><?php esc_html_e( '↔ Both Ways', 'ghl-crm-integration' ); ?></option>
-								<option value="to_ghl"><?php esc_html_e( '→ To GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
-								<option value="from_ghl"><?php esc_html_e( '← From GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
+								<option value="both" <?php selected( $saved_direction, 'both' ); ?>><?php esc_html_e( '↔ Both Ways', 'ghl-crm-integration' ); ?></option>
+								<option value="to_ghl" <?php selected( $saved_direction, 'to_ghl' ); ?>><?php esc_html_e( '→ To GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
+								<option value="from_ghl" <?php selected( $saved_direction, 'from_ghl' ); ?>><?php esc_html_e( '← From GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
 							</select>
 						</td>
 					</tr>
@@ -246,7 +259,10 @@ $total_fields = count( $default_wp_fields ) + count( $custom_user_fields ) + cou
 					</tr>
 				</thead>
 				<tbody>
-					<?php foreach ( $buddyboss_fields as $key => $label ) : ?>
+					<?php foreach ( $buddyboss_fields as $key => $label ) : 
+						$saved_ghl_field = isset( $saved_mappings[ $key ]['ghl_field'] ) ? $saved_mappings[ $key ]['ghl_field'] : '';
+						$saved_direction = isset( $saved_mappings[ $key ]['direction'] ) ? $saved_mappings[ $key ]['direction'] : 'both';
+					?>
 						<tr>
 							<td>
 								<strong><?php echo esc_html( $label ); ?></strong><br>
@@ -255,15 +271,17 @@ $total_fields = count( $default_wp_fields ) + count( $custom_user_fields ) + cou
 							<td>
 								<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="regular-text">
 									<?php foreach ( $ghl_fields as $ghl_key => $ghl_label ) : ?>
-										<option value="<?php echo esc_attr( $ghl_key ); ?>"><?php echo esc_html( $ghl_label ); ?></option>
+										<option value="<?php echo esc_attr( $ghl_key ); ?>" <?php selected( $saved_ghl_field, $ghl_key ); ?>>
+											<?php echo esc_html( $ghl_label ); ?>
+										</option>
 									<?php endforeach; ?>
 								</select>
 							</td>
 							<td>
 								<select name="sync_direction_<?php echo esc_attr( $key ); ?>">
-									<option value="both"><?php esc_html_e( '↔ Both Ways', 'ghl-crm-integration' ); ?></option>
-									<option value="to_ghl"><?php esc_html_e( '→ To GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
-									<option value="from_ghl"><?php esc_html_e( '← From GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
+									<option value="both" <?php selected( $saved_direction, 'both' ); ?>><?php esc_html_e( '↔ Both Ways', 'ghl-crm-integration' ); ?></option>
+									<option value="to_ghl" <?php selected( $saved_direction, 'to_ghl' ); ?>><?php esc_html_e( '→ To GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
+									<option value="from_ghl" <?php selected( $saved_direction, 'from_ghl' ); ?>><?php esc_html_e( '← From GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
 								</select>
 							</td>
 						</tr>
@@ -294,7 +312,10 @@ $total_fields = count( $default_wp_fields ) + count( $custom_user_fields ) + cou
 					</tr>
 				</thead>
 				<tbody>
-					<?php foreach ( $custom_user_fields as $key => $label ) : ?>
+					<?php foreach ( $custom_user_fields as $key => $label ) : 
+						$saved_ghl_field = isset( $saved_mappings[ $key ]['ghl_field'] ) ? $saved_mappings[ $key ]['ghl_field'] : '';
+						$saved_direction = isset( $saved_mappings[ $key ]['direction'] ) ? $saved_mappings[ $key ]['direction'] : 'both';
+					?>
 						<tr>
 							<td>
 								<strong><?php echo esc_html( $label ); ?></strong><br>
@@ -303,15 +324,17 @@ $total_fields = count( $default_wp_fields ) + count( $custom_user_fields ) + cou
 							<td>
 								<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="regular-text">
 									<?php foreach ( $ghl_fields as $ghl_key => $ghl_label ) : ?>
-										<option value="<?php echo esc_attr( $ghl_key ); ?>"><?php echo esc_html( $ghl_label ); ?></option>
+										<option value="<?php echo esc_attr( $ghl_key ); ?>" <?php selected( $saved_ghl_field, $ghl_key ); ?>>
+											<?php echo esc_html( $ghl_label ); ?>
+										</option>
 									<?php endforeach; ?>
 								</select>
 							</td>
 							<td>
 								<select name="sync_direction_<?php echo esc_attr( $key ); ?>">
-									<option value="both"><?php esc_html_e( '↔ Both Ways', 'ghl-crm-integration' ); ?></option>
-									<option value="to_ghl"><?php esc_html_e( '→ To GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
-									<option value="from_ghl"><?php esc_html_e( '← From GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
+									<option value="both" <?php selected( $saved_direction, 'both' ); ?>><?php esc_html_e( '↔ Both Ways', 'ghl-crm-integration' ); ?></option>
+									<option value="to_ghl" <?php selected( $saved_direction, 'to_ghl' ); ?>><?php esc_html_e( '→ To GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
+									<option value="from_ghl" <?php selected( $saved_direction, 'from_ghl' ); ?>><?php esc_html_e( '← From GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
 								</select>
 							</td>
 						</tr>
