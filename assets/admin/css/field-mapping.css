@@ -24,3 +24,31 @@
 	border-radius: 3px;
 	font-size: 12px;
 }
+
+/* Visual feedback when field mapping changes */
+.ghl-field-changed {
+	background-color: #fffbcc !important;
+	transition: background-color 0.3s ease;
+}
+
+/* Message area */
+#ghl-field-mapping-messages {
+	margin: 20px 0 10px 0;
+}
+
+#ghl-field-mapping-messages .notice {
+	margin: 0 0 15px 0;
+}
+
+/* Disabled options in GHL field dropdowns */
+.ghl-crm-field-mapping select[name^="ghl_field_"] option:disabled {
+	color: #999 !important;
+	font-style: italic;
+	background-color: #f5f5f5;
+}
+
+/* Highlight currently focused dropdown */
+.ghl-crm-field-mapping select[name^="ghl_field_"]:focus {
+	border-color: #635BFF;
+	box-shadow: 0 0 0 1px #635BFF;
+}
