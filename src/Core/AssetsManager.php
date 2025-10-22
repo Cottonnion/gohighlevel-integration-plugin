@@ -106,14 +106,12 @@ class AssetsManager {
 	 * @return void
 	 */
 	private function define_admin_assets(): void {
-		// Global CSS for all admin pages
+		// Global CSS for all admin pages (now includes tabbed main-settings page)
 		$this->add_admin_asset(
 			'ghl-crm-globals-css',
 			[ 
-				'toplevel_page_ghl-crm-integration',
-				'ghl-crm_page_ghl-crm-integrations',
+				'toplevel_page_ghl-crm-settings',           // New main tabbed page
 				'ghl-crm_page_ghl-crm-sync-logs',
-				'ghl-crm_page_ghl-crm-field-mapping'
 			],
 			'globals.css',
 			[],
@@ -121,21 +119,22 @@ class AssetsManager {
 			'1.0.3'
 		);
 
-		// Settings page assets
+		// Settings page CSS (loads on main-settings page for all tabs)
 		$this->add_admin_asset(
 			'ghl-crm-settings-css',
-			[ 'toplevel_page_ghl-crm-integration' ],
+			[ 'toplevel_page_ghl-crm-settings' ],
 			'settings.css',
-			[ 'ghl-crm-globals-css', 'sweetalert2' ], // SweetAlert2 CSS will load automatically
+			[ 'ghl-crm-globals-css', 'sweetalert2' ],
 			[],
 			'1.0.1'
 		);
 
+		// Settings page JS (loads on main-settings page for settings tab)
 		$this->add_admin_asset(
 			'ghl-crm-settings-js',
-			[ 'toplevel_page_ghl-crm-integration' ],
+			[ 'toplevel_page_ghl-crm-settings' ],
 			'settings.js',
-			[ 'jquery', 'sweetalert2' ], // SweetAlert2 JS will load automatically
+			[ 'jquery', 'sweetalert2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
@@ -144,57 +143,50 @@ class AssetsManager {
 			true
 		);
 
-		// Sync Logs page assets
-		$this->add_admin_asset(
-			'ghl-crm-sync-logs-css',
-			[ 'ghl-crm_page_ghl-crm-sync-logs' ],
-			'sync-logs.css',
-			[ 'ghl-crm-globals-css' ],
-			[],
-			GHL_CRM_VERSION
-		);
+	// Field Mapping CSS (loads on main-settings page for field-mapping tab)
+	$this->add_admin_asset(
+		'ghl-crm-field-mapping-css',
+		[ 'toplevel_page_ghl-crm-settings' ],
+		'field-mapping.css',
+		[ 'ghl-crm-globals-css' ],
+		[],
+		GHL_CRM_VERSION
+	);
 
-		// Integrations page assets
-		$this->add_admin_asset(
-			'ghl-crm-integrations-css',
-			[ 'ghl-crm_page_ghl-crm-integrations' ],
-			'integrations.css',
-			[ 'ghl-crm-globals-css' ],
-			[],
-			GHL_CRM_VERSION
-		);
+	// Integrations CSS (loads on main-settings page for integrations tab)
+	$this->add_admin_asset(
+		'ghl-crm-integrations-css',
+		[ 'toplevel_page_ghl-crm-settings' ],
+		'integrations.css',
+		[ 'ghl-crm-globals-css' ],
+		[],
+		GHL_CRM_VERSION
+	);
 
-		$this->add_admin_asset(
-			'ghl-crm-integrations',
-			[ 'ghl-crm_page_ghl-crm-integrations' ],
-			'integrations.js',
-			[ 'jquery' ],
-			[
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'ghl_crm_settings_nonce' ),
-				'i18n'    => [
-					'settingsSaved'         => __( 'Settings saved successfully!', 'ghl-crm-integration' ),
-					'saveFailed'            => __( 'Failed to save settings. Please try again.', 'ghl-crm-integration' ),
-					'saveError'             => __( 'An error occurred while saving settings.', 'ghl-crm-integration' ),
-					'selectAtLeastOneAction' => __( 'Please select at least one sync action when user sync is enabled.', 'ghl-crm-integration' ),
-				],
-			],
-			GHL_CRM_VERSION,
-			true
-		);
+	// Integrations JS (loads on main-settings page for integrations tab)
+	$this->add_admin_asset(
+		'ghl-crm-integrations-js',
+		[ 'toplevel_page_ghl-crm-settings' ],
+		'integrations.js',
+		[ 'jquery', 'sweetalert2' ],
+		[
+			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+			'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
+		],
+		GHL_CRM_VERSION,
+		true
+	);
 
-		// Field Mapping page assets
-		$this->add_admin_asset(
-			'ghl-crm-field-mapping-css',
-			[ 'ghl-crm_page_ghl-crm-field-mapping' ],
-			'field-mapping.css',
-			[ 'ghl-crm-globals-css' ],
-			[],
-			GHL_CRM_VERSION
-		);
-	}
-
-	/**
+	// Sync Logs page assets (separate page)
+	$this->add_admin_asset(
+		'ghl-crm-sync-logs-css',
+		[ 'ghl-crm_page_ghl-crm-sync-logs' ],
+		'sync-logs.css',
+		[ 'ghl-crm-globals-css' ],
+		[],
+		GHL_CRM_VERSION
+	);
+}	/**
 	 * Adds an admin script or style to the array of admin assets.
 	 *
 	 * @param string $handle           Unique handle for the asset.

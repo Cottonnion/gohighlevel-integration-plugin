@@ -61,55 +61,35 @@ class MenuManager {
 	 * @return void
 	 */
 	public function add_admin_menu(): void {
-		// Main menu page
+		// Main menu page with tabs (Settings, Integrations, Field Mapping)
 		add_menu_page(
 			__( 'GoHighLevel CRM', 'ghl-crm-integration' ),           // Page title
 			__( 'GHL CRM', 'ghl-crm-integration' ),                   // Menu title
 			'manage_options',                                          // Capability
-			'ghl-crm-integration',                                     // Menu slug
-			[ $this, 'render_settings_page' ],                        // Callback
+			'ghl-crm-settings',                                        // Menu slug
+			[ $this, 'render_main_settings_page' ],                   // Callback
 			'dashicons-cloud',                                         // Icon
 			58                                                         // Position (after Plugins)
 		);
 
 		// Settings submenu (will replace the duplicate main menu item)
 		add_submenu_page(
-			'ghl-crm-integration',                                     // Parent slug
+			'ghl-crm-settings',                                        // Parent slug
 			__( 'Settings', 'ghl-crm-integration' ),                  // Page title
 			__( 'Settings', 'ghl-crm-integration' ),                  // Menu title
 			'manage_options',                                          // Capability
-			'ghl-crm-integration',                                     // Menu slug (same as parent)
-			[ $this, 'render_settings_page' ]                         // Callback
+			'ghl-crm-settings',                                        // Menu slug (same as parent)
+			[ $this, 'render_main_settings_page' ]                    // Callback
 		);
 
-		// Integrations submenu
+		// Sync Logs submenu (separate page)
 		add_submenu_page(
-			'ghl-crm-integration',                                     // Parent slug
-			__( 'Integrations', 'ghl-crm-integration' ),              // Page title
-			__( 'Integrations', 'ghl-crm-integration' ),              // Menu title
-			'manage_options',                                          // Capability
-			'ghl-crm-integrations',                                    // Menu slug
-			[ $this, 'render_integrations_page' ]                     // Callback
-		);
-
-		// Sync Logs submenu
-		add_submenu_page(
-			'ghl-crm-integration',                                     // Parent slug
+			'ghl-crm-settings',                                        // Parent slug
 			__( 'Sync Logs', 'ghl-crm-integration' ),                 // Page title
 			__( 'Sync Logs', 'ghl-crm-integration' ),                 // Menu title
 			'manage_options',                                          // Capability
 			'ghl-crm-sync-logs',                                       // Menu slug
 			[ $this, 'render_sync_logs_page' ]                        // Callback
-		);
-
-		// Field Mapping submenu
-		add_submenu_page(
-			'ghl-crm-integration',                                     // Parent slug
-			__( 'Field Mapping', 'ghl-crm-integration' ),             // Page title
-			__( 'Field Mapping', 'ghl-crm-integration' ),             // Menu title
-			'manage_options',                                          // Capability
-			'ghl-crm-field-mapping',                                   // Menu slug
-			[ $this, 'render_field_mapping_page' ]                    // Callback
 		);
 	}
 
@@ -122,7 +102,7 @@ class MenuManager {
 	public function add_plugin_action_links( array $links ): array {
 		$settings_link = sprintf(
 			'<a href="%s">%s</a>',
-			esc_url( admin_url( 'admin.php?page=ghl-crm-integration' ) ),
+			esc_url( admin_url( 'admin.php?page=ghl-crm-settings' ) ),
 			esc_html__( 'Settings', 'ghl-crm-integration' )
 		);
 
@@ -133,16 +113,25 @@ class MenuManager {
 	}
 
 	/**
-	 * Render settings page
+	 * Render main settings page with tabs
 	 *
 	 * @return void
 	 */
-	public function render_settings_page(): void {
+	public function render_main_settings_page(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'ghl-crm-integration' ) );
 		}
 
-		$this->load_template( 'admin/settings' );
+		$this->load_template( 'admin/main-settings' );
+	}
+
+	/**
+	 * Render settings page (legacy - redirects to main with settings tab)
+	 *
+	 * @return void
+	 */
+	public function render_settings_page(): void {
+		$this->render_main_settings_page();
 	}
 
 	/**
@@ -159,29 +148,23 @@ class MenuManager {
 	}
 
 	/**
-	 * Render integrations page
+	 * Render integrations page (legacy - redirects to main with integrations tab)
 	 *
 	 * @return void
 	 */
 	public function render_integrations_page(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'ghl-crm-integration' ) );
-		}
-
-		$this->load_template( 'admin/integrations' );
+		wp_safe_redirect( admin_url( 'admin.php?page=ghl-crm-settings&tab=integrations' ) );
+		exit;
 	}
 
 	/**
-	 * Render field mapping page
+	 * Render field mapping page (legacy - redirects to main with field-mapping tab)
 	 *
 	 * @return void
 	 */
 	public function render_field_mapping_page(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'ghl-crm-integration' ) );
-		}
-
-		$this->load_template( 'admin/field-mapping' );
+		wp_safe_redirect( admin_url( 'admin.php?page=ghl-crm-settings&tab=field-mapping' ) );
+		exit;
 	}
 
 	/**
