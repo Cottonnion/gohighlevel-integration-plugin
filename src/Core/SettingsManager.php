@@ -73,6 +73,7 @@ class SettingsManager {
 		add_action( 'wp_ajax_ghl_crm_save_settings', [ $this, 'save_settings' ] );
 		add_action( 'wp_ajax_ghl_crm_get_settings', [ $this, 'get_settings' ] );
 		add_action( 'wp_ajax_ghl_crm_test_connection', [ $this, 'test_connection' ] );
+		add_action( 'wp_ajax_ghl_crm_save_field_mapping', [ $this, 'save_field_mapping' ] );
 	}
 
 	/**
@@ -257,9 +258,65 @@ class SettingsManager {
 	}
 
 	/**
+	 * Save field mapping via AJAX
+	 *
+	 * @return void
+	 */
+	public function save_field_mapping(): void {
+		// Verify nonce
+		check_ajax_referer( 'ghl_crm_field_mapping_nonce', 'nonce' );
+
+		// Check permissions
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( [
+				'message' => __( 'You do not have permission to save field mapping.', 'ghl-crm-integration' ),
+			], 403 );
+		}
+
+		// Get field mapping data from POST
+		$field_mappings = isset( $_POST['field_mappings'] ) && is_array( $_POST['field_mappings'] ) 
+			? $_POST['field_mappings'] 
+			: [];
+
+		// Process and sanitize field mappings
+		$sanitized_mappings = [];
+		foreach ( $field_mappings as $wp_field => $mapping_data ) {
+			$wp_field = sanitize_text_field( $wp_field );
+			
+			if ( is_array( $mapping_data ) ) {
+				$sanitized_mappings[ $wp_field ] = [
+					'ghl_field' => isset( $mapping_data['ghl_field'] ) ? sanitize_text_field( $mapping_data['ghl_field'] ) : '',
+					'direction' => isset( $mapping_data['direction'] ) ? sanitize_text_field( $mapping_data['direction'] ) : 'both',
+				];
+			}
+		}
+
+		// Get current settings
+		$current_settings = $this->get_settings_array();
+
+		// Update field mapping
+		$current_settings['user_field_mapping'] = $sanitized_mappings;
+		$current_settings['updated_at'] = current_time( 'mysql' );
+
+		// Save settings
+		$saved = $this->save_site_settings( $current_settings );
+
+		if ( $saved ) {
+			wp_send_json_success( [
+				'message' => __( 'Field mapping saved successfully!', 'ghl-crm-integration' ),
+				'count'   => count( $sanitized_mappings ),
+			] );
+		} else {
+			wp_send_json_error( [
+				'message' => __( 'Failed to save field mapping. Please try again.', 'ghl-crm-integration' ),
+			], 500 );
+		}
+	}
+
+	/**
 	 * Get settings as array (multisite aware)
 	 *
-	 * @param int|null $site_id Optional. Site ID for multisite. Defaults to current site.
+	 * @param int|null $site_id Optional. Site ID for multisite.
 	 * @return array
 	 */
 	public function get_settings_array( ?int $site_id = null ): array {
