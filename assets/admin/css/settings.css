@@ -111,6 +111,45 @@
 	vertical-align: middle;
 }
 
+/* OAuth Status Badge */
+.ghl-status-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 16px;
+	border-radius: 4px;
+	font-weight: 500;
+	font-size: 14px;
+}
+
+.ghl-status-connected {
+	background-color: #d4edda;
+	color: #155724;
+	border: 1px solid #c3e6cb;
+}
+
+.ghl-status-connected .dashicons {
+	color: #28a745;
+}
+
+.ghl-oauth-connected {
+	margin-top: 20px;
+}
+
+.ghl-oauth-connected h2 {
+	margin-bottom: 20px;
+}
+
+.button-hero {
+	padding: 12px 24px !important;
+	height: auto !important;
+	font-size: 16px !important;
+}
+
+.button-hero .dashicons {
+	font-size: 20px;
+}
+
 /* 
  * Button styles inherit from WordPress core and globals.css
  * Custom extensions can be added here if needed

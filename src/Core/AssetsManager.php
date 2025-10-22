@@ -128,7 +128,7 @@ class AssetsManager {
 			'settings.css',
 			[ 'ghl-crm-globals-css', 'sweetalert2' ], // SweetAlert2 CSS will load automatically
 			[],
-			GHL_CRM_VERSION
+			'1.0.1'
 		);
 
 		$this->add_admin_asset(
