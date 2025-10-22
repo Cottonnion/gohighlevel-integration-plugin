@@ -238,7 +238,18 @@ class Client implements ClientInterface {
 					return wp_remote_request( $url, $args );
 					
 				} catch ( \Exception $e ) {
-					// Token refresh failed - return error
+					// Token refresh failed - show admin notice
+					$notices = \GHL_CRM\Core\AdminNotices::get_instance();
+					$notices->error(
+						sprintf(
+							/* translators: %s: Error message */
+							__( 'GoHighLevel token refresh failed: %s. Please reconnect your account.', 'ghl-crm-integration' ),
+							$e->getMessage()
+						),
+						true // Show on all admin pages
+					);
+
+					// Return error
 					return new \WP_Error( 
 						'token_refresh_failed', 
 						sprintf(

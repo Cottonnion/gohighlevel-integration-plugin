@@ -62,6 +62,22 @@ if ( isset( $_GET['oauth'] ) && 'disconnected' === $_GET['oauth'] ) {
 			<p><?php echo esc_html( $oauth_error ); ?></p>
 		</div>
 	<?php endif; ?>
+
+	<?php
+	/**
+	 * Action hook: Display admin notices on settings page
+	 *
+	 * Use this hook to display custom notices from anywhere in the plugin.
+	 * 
+	 * Example usage:
+	 * add_action( 'ghl_crm_settings_notices', function() {
+	 *     echo '<div class="notice notice-error is-dismissible"><p>Error message here</p></div>';
+	 * });
+	 *
+	 * @since 1.0.0
+	 */
+	do_action( 'ghl_crm_settings_notices' );
+	?>
 	
 	<div class="notice notice-info">
 		<p>

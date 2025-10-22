@@ -69,6 +69,7 @@ class Loader {
 			'core.assets'     => \GHL_CRM\Core\AssetsManager::class,
 			'core.ajax'       => \GHL_CRM\Core\AjaxHandler::class,
 			'core.menu'       => \GHL_CRM\Core\MenuManager::class,
+			'core.notices'    => \GHL_CRM\Core\AdminNotices::class,
 			
 			// API components
 			'api.oauth'       => \GHL_CRM\API\OAuth\OAuthHandler::class,
