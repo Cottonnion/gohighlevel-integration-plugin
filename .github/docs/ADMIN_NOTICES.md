@@ -5,10 +5,18 @@ The plugin includes a centralized admin notices system that allows you to displa
 ## Features
 
 - **Action Hook Integration**: Uses `do_action('ghl_crm_settings_notices')` on the settings page
-- **Transient Storage**: Notices persist across redirects using WordPress transients
+- **Transient Storage**: Notices persist across redirects using WordPress site transients
+- **Multisite Compatible**: Uses `get_site_transient()` for proper multisite support (site-specific notices)
 - **Multiple Types**: Support for success, error, warning, and info notices
 - **Global or Local**: Display notices on all admin pages or just the settings page
 - **Auto-dismiss**: All notices are dismissible by default
+
+## Multisite Behavior
+
+- **Site-Specific Notices**: Each site in a multisite network has isolated notices
+- **Uses Site Transients**: Properly uses `get_site_transient()`, `set_site_transient()`, and `delete_site_transient()`
+- **Matches Architecture**: Aligns with the plugin's per-site settings approach
+- **No Network Admin**: Network admin pages are not currently supported
 
 ## Basic Usage
 
@@ -171,10 +179,11 @@ add_action( 'ghl_crm_settings_notices', function() {
 
 ## How It Works
 
-1. **Storage**: Notices are stored in user-specific transients (valid for 1 hour)
+1. **Storage**: Notices are stored in user-specific site transients (valid for 1 hour)
 2. **Display**: The `ghl_crm_settings_notices` action hook is called in the settings template
 3. **Cleanup**: Notices are automatically deleted after being displayed
 4. **Global Notices**: If `$global = true`, notices appear via `admin_notices` hook on all admin pages
+5. **Multisite**: Uses `get_site_transient()` for proper site-specific storage in multisite networks
 
 ## Notice Types
 

@@ -13,12 +13,21 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Centralized system for displaying admin notices across the plugin.
  * Uses action hooks to display notices on the settings page and other admin pages.
  *
+ * MULTISITE BEHAVIOR:
+ * - Notices use site transients (site-specific in multisite networks)
+ * - Each site in a multisite network has isolated notices
+ * - This matches the plugin's per-site settings architecture
+ * - Uses get_site_transient/set_site_transient/delete_site_transient for proper multisite support
+ * - Network admin pages are not currently supported
+ *
  * @package    GHL_CRM_Integration
  * @subpackage Core
  */
 class AdminNotices {
 	/**
 	 * Transient prefix for storing notices
+	 * 
+	 * Note: Uses site transients (site-specific in multisite)
 	 */
 	private const TRANSIENT_PREFIX = 'ghl_crm_notice_';
 
@@ -64,6 +73,9 @@ class AdminNotices {
 	/**
 	 * Add a notice to be displayed
 	 *
+	 * Notices are stored in site-specific transients (multisite-aware).
+	 * In multisite environments, notices are isolated per site.
+	 *
 	 * @param string $message Notice message (will be escaped)
 	 * @param string $type    Notice type: 'success', 'error', 'warning', 'info'
 	 * @param bool   $dismissible Whether the notice is dismissible
@@ -82,7 +94,8 @@ class AdminNotices {
 		$notices = $this->get_stored_notices();
 		$notices[] = $notice;
 
-		set_transient( self::TRANSIENT_PREFIX . get_current_user_id(), $notices, HOUR_IN_SECONDS );
+		// Use site transient for multisite compatibility
+		set_site_transient( self::TRANSIENT_PREFIX . get_current_user_id(), $notices, HOUR_IN_SECONDS );
 	}
 
 	/**
@@ -132,20 +145,25 @@ class AdminNotices {
 	/**
 	 * Get stored notices from transient
 	 *
+	 * Uses site-specific transients (multisite-aware).
+	 * In multisite, notices are isolated per site.
+	 *
 	 * @return array
 	 */
 	private function get_stored_notices(): array {
-		$notices = get_transient( self::TRANSIENT_PREFIX . get_current_user_id() );
+		$notices = get_site_transient( self::TRANSIENT_PREFIX . get_current_user_id() );
 		return is_array( $notices ) ? $notices : [];
 	}
 
 	/**
 	 * Clear all stored notices
 	 *
+	 * Clears site-specific transients (multisite-aware).
+	 *
 	 * @return void
 	 */
 	private function clear_notices(): void {
-		delete_transient( self::TRANSIENT_PREFIX . get_current_user_id() );
+		delete_site_transient( self::TRANSIENT_PREFIX . get_current_user_id() );
 	}
 
 	/**
