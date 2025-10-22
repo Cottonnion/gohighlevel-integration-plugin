@@ -70,6 +70,9 @@ class Loader {
 			'core.ajax'       => \GHL_CRM\Core\AjaxHandler::class,
 			'core.menu'       => \GHL_CRM\Core\MenuManager::class,
 			
+			// API components
+			'api.oauth'       => \GHL_CRM\API\OAuth\OAuthHandler::class,
+			
 			// Integration components
 			'integrations.users' => \GHL_CRM\Integrations\Users\UserHooks::class,
 		];
