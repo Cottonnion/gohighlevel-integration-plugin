@@ -109,12 +109,6 @@ if ( isset( $_GET['oauth'] ) && 'disconnected' === $_GET['oauth'] ) {
 				// Use existing settings template content (skip wrapping div and h1)
 				// Variables needed by settings.php are already set above
 				?>
-				<div class="notice notice-info">
-					<p>
-						<strong><?php esc_html_e( 'Getting Started:', 'ghl-crm-integration' ); ?></strong>
-						<?php esc_html_e( 'Connect your GoHighLevel account using OAuth for secure, automatic authentication.', 'ghl-crm-integration' ); ?>
-					</p>
-				</div>
 				<?php
 				// Include just the content part of settings template
 				include GHL_CRM_PATH . 'templates/admin/settings.php';
