@@ -91,9 +91,6 @@ class Loader {
 
 		// Initialize components after plugins loaded
 		add_action( 'plugins_loaded', [ $this, 'init_components' ], 20 );
-
-		// Load textdomain
-		add_action( 'init', [ $this, 'load_textdomain' ] );
 	}
 
 	/**
@@ -155,19 +152,6 @@ class Loader {
 
 		// Fire deactivation hook
 		do_action( 'ghl_crm_deactivated' );
-	}
-
-	/**
-	 * Load plugin textdomain
-	 *
-	 * @return void
-	 */
-	public function load_textdomain(): void {
-		load_plugin_textdomain(
-			GHL_CRM_TEXTDOMAIN,
-			false,
-			dirname( GHL_CRM_BASENAME ) . '/languages'
-		);
 	}
 
 	/**

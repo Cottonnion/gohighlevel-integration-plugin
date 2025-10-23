@@ -12,10 +12,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Get current settings tab from query param or default to 'general'
 // Check both $_GET and $_POST for AJAX compatibility
 $current_tab = 'general';
+// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Tab selection via URL parameter doesn't require nonce
 if ( isset( $_GET['settings_tab'] ) ) {
-	$current_tab = sanitize_text_field( $_GET['settings_tab'] );
-} elseif ( isset( $_POST['settings_tab'] ) ) {
-	$current_tab = sanitize_text_field( $_POST['settings_tab'] );
+	$current_tab = sanitize_text_field( wp_unslash( $_GET['settings_tab'] ) );
+}
+// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+// For POST requests (AJAX), verify nonce
+if ( isset( $_POST['settings_tab'] ) && check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce', false ) ) {
+	$current_tab = sanitize_text_field( wp_unslash( $_POST['settings_tab'] ) );
 }
 
 // Define available settings tabs

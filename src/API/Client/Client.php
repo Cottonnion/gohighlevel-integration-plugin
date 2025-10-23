@@ -388,8 +388,8 @@ class Client implements ClientInterface {
 			throw new ApiException(
 				sprintf(
 					/* translators: %s: Error message */
-					__( 'OAuth token exchange failed: %s', 'ghl-crm-integration' ),
-					$response->get_error_message()
+					esc_html__( 'OAuth token exchange failed: %s', 'ghl-crm-integration' ),
+					esc_html( $response->get_error_message() )
 				)
 			);
 		}
@@ -400,9 +400,9 @@ class Client implements ClientInterface {
 
 		if ( $status_code !== 200 || empty( $decoded['access_token'] ) ) {
 			throw new ApiException(
-				__( 'Failed to obtain access token from GoHighLevel', 'ghl-crm-integration' ),
-				$status_code,
-				$decoded
+				esc_html__( 'Failed to obtain access token from GoHighLevel', 'ghl-crm-integration' ),
+				(int) $status_code,
+				(array) $decoded
 			);
 		}
 
@@ -421,7 +421,7 @@ class Client implements ClientInterface {
 	 */
 	public function refresh_access_token(): array {
 		if ( empty( $this->refresh_token ) ) {
-			throw new ApiException( __( 'No refresh token available', 'ghl-crm-integration' ) );
+			throw new ApiException( esc_html__( 'No refresh token available', 'ghl-crm-integration' ) );
 		}
 
 		// Handle edge case where refresh token might be corrupted (not a string)
@@ -434,7 +434,7 @@ class Client implements ClientInterface {
 				return $this->exchange_code_for_token( $auth_code, $redirect_uri );
 			} catch ( ApiException $e ) {
 				throw new ApiException(
-					__( 'Refresh token is invalid and reconnect failed', 'ghl-crm-integration' )
+					esc_html__( 'Refresh token is invalid and reconnect failed', 'ghl-crm-integration' )
 				);
 			}
 		}
@@ -461,8 +461,8 @@ class Client implements ClientInterface {
 			throw new ApiException(
 				sprintf(
 					/* translators: %s: Error message */
-					__( 'Token refresh failed: %s', 'ghl-crm-integration' ),
-					$response->get_error_message()
+					esc_html__( 'Token refresh failed: %s', 'ghl-crm-integration' ),
+					esc_html( $response->get_error_message() )
 				)
 			);
 		}
@@ -473,9 +473,9 @@ class Client implements ClientInterface {
 
 		if ( $status_code !== 200 || empty( $decoded['access_token'] ) ) {
 			throw new ApiException(
-				__( 'Failed to refresh access token', 'ghl-crm-integration' ),
-				$status_code,
-				$decoded
+				esc_html__( 'Failed to refresh access token', 'ghl-crm-integration' ),
+				(int) $status_code,
+				(array) $decoded
 			);
 		}
 
@@ -506,7 +506,7 @@ class Client implements ClientInterface {
 	 */
 	public function reconnect_api(): string {
 		if ( empty( $this->location_id ) ) {
-			throw new ApiException( __( 'Missing location ID for HighLevel reconnect', 'ghl-crm-integration' ) );
+			throw new ApiException( esc_html__( 'Missing location ID for HighLevel reconnect', 'ghl-crm-integration' ) );
 		}
 
 		$data = [
@@ -530,8 +530,8 @@ class Client implements ClientInterface {
 			throw new ApiException(
 				sprintf(
 					/* translators: %s: Error message */
-					__( 'Reconnect API failed: %s', 'ghl-crm-integration' ),
-					$response->get_error_message()
+					esc_html__( 'Reconnect API failed: %s', 'ghl-crm-integration' ),
+					esc_html( $response->get_error_message() )
 				)
 			);
 		}
@@ -542,9 +542,9 @@ class Client implements ClientInterface {
 
 		if ( $status_code !== 200 || empty( $decoded['authorizationCode'] ) ) {
 			throw new ApiException(
-				__( 'Failed to get authorization code from HighLevel reconnect', 'ghl-crm-integration' ),
-				$status_code,
-				$decoded
+				esc_html__( 'Failed to get authorization code from HighLevel reconnect', 'ghl-crm-integration' ),
+				(int) $status_code,
+				(array) $decoded
 			);
 		}
 
@@ -665,7 +665,7 @@ class Client implements ClientInterface {
 		} elseif ( ! empty( $this->token ) ) {
 			$auth_token = $this->token;
 		} else {
-			throw new AuthenticationException( __( 'No authentication method configured. Please connect your GoHighLevel account.', 'ghl-crm-integration' ) );
+			throw new AuthenticationException( esc_html__( 'No authentication method configured. Please connect your GoHighLevel account.', 'ghl-crm-integration' ) );
 		}
 
 		// Build request arguments
@@ -692,8 +692,8 @@ class Client implements ClientInterface {
 			throw new ApiException(
 				sprintf(
 					/* translators: %s: Error message */
-					__( 'HTTP Request failed: %s', 'ghl-crm-integration' ),
-					$response->get_error_message()
+					esc_html__( 'HTTP Request failed: %s', 'ghl-crm-integration' ),
+					esc_html( $response->get_error_message() )
 				)
 			);
 		}
@@ -736,9 +736,9 @@ class Client implements ClientInterface {
 		
 		if ( json_last_error() !== JSON_ERROR_NONE ) {
 			throw new ApiException(
-				__( 'Invalid JSON response from API', 'ghl-crm-integration' ),
-				$status_code,
-				[ 'raw_body' => $body ]
+				esc_html__( 'Invalid JSON response from API', 'ghl-crm-integration' ),
+				(int) $status_code,
+				[ 'raw_body' => (string) $body ]
 			);
 		}
 
@@ -798,7 +798,7 @@ class Client implements ClientInterface {
 			return; // Success
 		}
 
-		$error_message = $response['message'] ?? $response['error'] ?? __( 'Unknown API error', 'ghl-crm-integration' );
+		$error_message = $response['message'] ?? $response['error'] ?? esc_html__( 'Unknown API error', 'ghl-crm-integration' );
 
 		// Rate limit exceeded
 		if ( 429 === $status_code ) {
@@ -806,20 +806,20 @@ class Client implements ClientInterface {
 			throw new RateLimitException(
 				sprintf(
 					/* translators: %d: Seconds until retry */
-					__( 'Rate limit exceeded. Retry after %d seconds.', 'ghl-crm-integration' ),
-					$retry_after
+					esc_html__( 'Rate limit exceeded. Retry after %d seconds.', 'ghl-crm-integration' ),
+					(int) $retry_after
 				),
 				(int) $retry_after,
-				$response
+				(array) $response
 			);
 		}
 
 		// Authentication error
 		if ( 401 === $status_code || 403 === $status_code ) {
-			throw new AuthenticationException( $error_message, $response );
+			throw new AuthenticationException( esc_html( $error_message ), (array) $response );
 		}
 
 		// Generic API error
-		throw new ApiException( $error_message, $status_code, $response );
+		throw new ApiException( esc_html( $error_message ), (int) $status_code, (array) $response );
 	}
 }

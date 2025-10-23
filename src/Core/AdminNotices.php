@@ -235,7 +235,7 @@ class AdminNotices {
 			'<div class="notice notice-%s %s"><p>%s</p></div>',
 			esc_attr( $type ),
 			esc_attr( $dismissible ),
-			$message // Already escaped above
+			esc_html( $message ) // Already escaped above
 		);
 	}
 

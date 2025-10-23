@@ -187,7 +187,7 @@ $saved_mappings   = $settings['user_field_mapping'] ?? [];
 			printf(
 				/* translators: %d: number of WordPress fields found */
 				esc_html__( 'Found %d WordPress user fields available for mapping.', 'ghl-crm-integration' ),
-				$total_fields
+				esc_html( $total_fields )
 			);
 			?>
 		</p>

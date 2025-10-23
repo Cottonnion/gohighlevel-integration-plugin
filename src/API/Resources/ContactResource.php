@@ -100,7 +100,7 @@ class ContactResource extends AbstractResource {
 	 */
 	public function upsert( array $data ): array {
 		if ( empty( $data['email'] ) ) {
-			throw new \InvalidArgumentException( __( 'Email is required for upsert', 'ghl-crm-integration' ) );
+			throw new \InvalidArgumentException( esc_html__( 'Email is required for upsert', 'ghl-crm-integration' ) );
 		}
 
 		// Check if contact exists

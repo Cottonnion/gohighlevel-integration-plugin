@@ -40,12 +40,13 @@ $wp_roles = wp_roles()->get_names();
 								<input type="hidden" name="role_tags[<?php echo esc_attr( $role_key ); ?>][role]" value="<?php echo esc_attr( $role_key ); ?>" />
 							</td>
 							<td>
-								<input 
-									type="text" 
-									name="role_tags[<?php echo esc_attr( $role_key ); ?>][tags]" 
-									placeholder="<?php printf( esc_attr__( 'e.g., %s, member, active', 'ghl-crm-integration' ), esc_attr( strtolower( $role_name ) ) ); ?>" 
-									class="large-text" 
-								/>
+							// translators: %s: user role name (e.g., administrator, editor)
+							<input 
+								type="text" 
+								name="role_tags[<?php echo esc_attr( $role_key ); ?>][tags]" 
+								placeholder="<?php printf( esc_attr__( 'e.g., %s, member, active', 'ghl-crm-integration' ), esc_attr( strtolower( $role_name ) ) ); ?>" 
+								class="large-text" 
+							/>
 							</td>
 							<td>
 								<input 
