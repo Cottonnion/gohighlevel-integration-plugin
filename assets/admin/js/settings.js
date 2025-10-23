@@ -6,10 +6,13 @@
  * @package GHL_CRM_Integration
  */
 
-(function ($) {
+(function ($, window) {
 	'use strict';
 
-	$(document).ready(function () {
+	/**
+	 * Initialize settings functionality
+	 */
+	function initSettings() {
 		/**
 		 * Show notification message
 		 */
@@ -121,5 +124,12 @@
 				},
 			});
 		});
-	});
-})(jQuery);
+	}
+
+	// Export to global scope for SPA to call
+	window.initSettings = initSettings;
+
+	// Initialize on document ready (for non-SPA page loads)
+	$(document).ready(initSettings);
+
+})(jQuery, window);

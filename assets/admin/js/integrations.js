@@ -27,9 +27,6 @@
 			// Tab navigation
 			$('.ghl-tab-button').on('click', this.switchTab.bind(this));
 
-			// Update toggle label when master toggle changes
-			$('#enable_user_sync').on('change', this.updateToggleLabel.bind(this));
-
 			// Save settings button
 			$('#save-integrations-settings').on('click', this.saveSettings.bind(this));
 
@@ -64,20 +61,6 @@
 		},
 
 		/**
-		 * Update toggle label text
-		 */
-		updateToggleLabel(e) {
-			const $toggle = $(e.currentTarget);
-			const $label = $toggle.closest('.ghl-card-header-right').find('.ghl-toggle-label');
-			
-			if ($toggle.is(':checked')) {
-				$label.text(ghlCrmAdmin.i18n.enabled || 'Enabled');
-			} else {
-				$label.text(ghlCrmAdmin.i18n.disabled || 'Disabled');
-			}
-		},
-
-		/**
 		 * Load current settings
 		 */
 		loadSettings() {
@@ -91,25 +74,12 @@
 		 */
 		gatherFormData() {
 			const data = {
-				action: 'ghl_crm_save_settings',
+				action: 'ghl_crm_save_integrations',
 				nonce: ghl_crm_integrations_data.nonce,
 			};
 
-			// Get API settings from main settings (preserve them)
-			// We'll fetch these from hidden fields or existing settings
-
-			// User sync settings
-			data.enable_user_sync = $('#enable_user_sync').is(':checked');
-			
-			// Get selected sync actions
-			const syncActions = [];
-			$('input[name="user_sync_actions[]"]:checked').each(function () {
-				syncActions.push($(this).val());
-			});
-			data.user_sync_actions = syncActions;
-
-			// Delete behavior
-			data.delete_contact_on_user_delete = $('#delete_contact_on_user_delete').is(':checked');
+			// Future: Add BuddyBoss, WooCommerce, LearnDash settings here
+			// For now, just return basic structure
 
 			return data;
 		},
@@ -121,15 +91,6 @@
 			const $button = $('#save-integrations-settings');
 			const $buttonText = $button.find('.button-text');
 			const $spinner = $button.find('.spinner');
-
-			// Validate at least one action is selected if sync is enabled
-			if ($('#enable_user_sync').is(':checked')) {
-				const checkedActions = $('input[name="user_sync_actions[]"]:checked').length;
-				if (checkedActions === 0) {
-					this.showMessage('error', ghl_crm_integrations_data.i18n.selectAtLeastOneAction || 'Please select at least one sync action.');
-					return;
-				}
-			}
 
 			// Disable button and show spinner
 			$button.prop('disabled', true).addClass('is-loading');
@@ -224,9 +185,17 @@
 		},
 	};
 
-	// Initialize on document ready
-	$(document).ready(function () {
+	/**
+	 * Initialize integrations functionality
+	 */
+	function initIntegrations() {
 		IntegrationsManager.init();
-	});
+	}
+
+	// Export to global scope for SPA to call
+	window.initIntegrations = initIntegrations;
+
+	// Initialize on document ready (for non-SPA page loads)
+	$(document).ready(initIntegrations);
 
 })(jQuery);

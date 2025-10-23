@@ -7,10 +7,13 @@
  * @subpackage Assets/Admin/JS
  */
 
-(function ($) {
+(function ($, window) {
 	'use strict';
 
-	$(document).ready(function () {
+	/**
+	 * Initialize field mapping functionality
+	 */
+	function initFieldMapping() {
 		/**
 		 * Update GHL field dropdowns to show which fields are already mapped
 		 */
@@ -203,6 +206,12 @@
 
 		// Initialize field availability on page load
 		updateGHLFieldAvailability();
-	});
+	}
 
-})(jQuery);
+	// Export to global scope for SPA to call
+	window.initFieldMapping = initFieldMapping;
+
+	// Initialize on document ready (for non-SPA page loads)
+	$(document).ready(initFieldMapping);
+
+})(jQuery, window);

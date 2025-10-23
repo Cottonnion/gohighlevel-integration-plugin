@@ -1,0 +1,123 @@
+/**
+ * GoHighLevel CRM Integration - Admin Menu Styling
+ *
+ * Custom styling for the WordPress admin menu sidebar
+ *
+ * @package    GHL_CRM_Integration
+ * @subpackage GHL_CRM_Integration/assets/admin/css
+ */
+
+/* ===========================
+   Main Menu Container Styling
+   =========================== */
+#adminmenu .toplevel_page_ghl-crm-admin {
+    background: #2d3748;
+    margin: 0;
+}
+
+#adminmenu .toplevel_page_ghl-crm-admin > a {
+    color: #e2e8f0 !important;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 12px 15px !important;
+}
+
+#adminmenu .toplevel_page_ghl-crm-admin:hover > a,
+#adminmenu .toplevel_page_ghl-crm-admin.wp-has-current-submenu > a {
+    color: #ffffff !important;
+}
+
+/* Menu icon styling */
+#adminmenu .toplevel_page_ghl-crm-admin .wp-menu-image img,
+#adminmenu .toplevel_page_ghl-crm-admin .wp-menu-image::before {
+    opacity: 0.9;
+}
+
+/* ===========================
+   Submenu Container Styling
+   =========================== */
+#adminmenu .toplevel_page_ghl-crm-admin .wp-submenu {
+    background: #2d3748 !important;
+    padding: 0;
+    margin: 0;
+}
+
+/* Remove default WordPress submenu styles */
+#adminmenu .toplevel_page_ghl-crm-admin .wp-submenu a {
+    color: #a0aec0 !important;
+    padding: 12px 20px !important;
+    font-size: 14px;
+    font-weight: 400;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #3a4556;
+    transition: all 0.15s ease;
+}
+
+/* Last submenu item - no bottom border */
+#adminmenu .toplevel_page_ghl-crm-admin .wp-submenu li:last-child a {
+    border-bottom: none;
+}
+
+/* Submenu hover state */
+#adminmenu .toplevel_page_ghl-crm-admin .wp-submenu a:hover {
+    background: #3a4556 !important;
+    color: #ffffff !important;
+}
+
+/* Active submenu item - matches screenshot */
+#adminmenu .toplevel_page_ghl-crm-admin .wp-submenu a.current {
+    background: #3a4556 !important;
+    color: #ffffff !important;
+    font-weight: 600;
+}
+
+/* ===========================
+   Visual Grouping & Borders
+   =========================== */
+/* Add thicker borders between major groups */
+#adminmenu .toplevel_page_ghl-crm-admin .wp-submenu li.menu-group-separator {
+    border-bottom: 2px solid #3a4556 !important;
+}
+
+#adminmenu .toplevel_page_ghl-crm-admin .wp-submenu li.menu-group-separator a {
+    border-bottom: none;
+}
+
+/* Indented submenu items (for nested items like under Contacts) */
+#adminmenu .toplevel_page_ghl-crm-admin .wp-submenu li.menu-indent a {
+    padding-left: 35px !important;
+    font-size: 13px;
+}
+
+/* ===========================
+   Responsive Adjustments
+   =========================== */
+@media screen and (max-width: 960px) {
+    #adminmenu .toplevel_page_ghl-crm-admin .wp-submenu {
+        position: absolute;
+        left: 36px;
+        min-width: 220px;
+    }
+}
+
+@media screen and (max-width: 782px) {
+    #adminmenu .toplevel_page_ghl-crm-admin .wp-submenu a {
+        padding: 14px 15px !important;
+        font-size: 16px;
+    }
+    
+    #adminmenu .toplevel_page_ghl-crm-admin .wp-submenu li.menu-indent a {
+        padding-left: 30px !important;
+    }
+}
+
+/* ===========================
+   Accessibility
+   =========================== */
+#adminmenu .toplevel_page_ghl-crm-admin .wp-submenu a:focus {
+    /* outline: 2px solid #7e3bd0; */
+    outline-offset: -2px;
+    background: #3a4556 !important;
+    color: #ffffff !important;
+}

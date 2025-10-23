@@ -1,0 +1,143 @@
+/**
+ * Settings Side Menu Handler
+ * Handles tab switching in the settings page via AJAX
+ */
+
+(function($) {
+	'use strict';
+
+	/**
+	 * Initialize settings menu
+	 */
+	function initSettingsMenu() {
+		// Prevent multiple initializations
+		if (window.ghlSettingsMenuInitialized) {
+			return;
+		}
+		window.ghlSettingsMenuInitialized = true;
+		
+		// Check for hash on page load
+		const hash = window.location.hash.slice(1);
+		if (hash && hash !== '') {
+			// Load tab from hash if present
+			const $link = $('.ghl-settings-nav a[data-tab="' + hash + '"]');
+			if ($link.length) {
+				loadSettingsTab(hash);
+				$('.ghl-settings-nav li').removeClass('active');
+				$link.parent().addClass('active');
+			}
+		}
+		
+		// Remove any existing event handlers first
+		$(document).off('click.ghlSettingsMenu', '.ghl-settings-nav a');
+		$(window).off('hashchange.ghlSettingsMenu');
+		
+		// Handle tab clicks with namespaced event
+		$(document).on('click.ghlSettingsMenu', '.ghl-settings-nav a', function(e) {
+			e.preventDefault();
+			
+			const $link = $(this);
+			const tab = $link.data('tab');
+			
+			// Don't reload if already active
+			if ($link.parent().hasClass('active')) {
+				return;
+			}
+			
+			// Update active state
+			$('.ghl-settings-nav li').removeClass('active');
+			$link.parent().addClass('active');
+			
+			// Update hash
+			window.location.hash = tab;
+			
+			// Load tab content
+			loadSettingsTab(tab);
+		});
+		
+		// Handle browser back/forward with hash changes (namespaced event)
+		$(window).on('hashchange.ghlSettingsMenu', function() {
+			const hash = window.location.hash.slice(1);
+			if (hash && hash !== '') {
+				// Only handle if it's a settings tab (use centralized config)
+				const settingsTabs = (typeof ghlCrmSpaConfig !== 'undefined' && ghlCrmSpaConfig.settings) 
+					? ghlCrmSpaConfig.settings.tabs 
+					: ['general', 'api', 'rest-api', 'webhooks', 'notifications', 'field-sync', 'contact-fields', 'role-tags', 'advanced'];
+				if (settingsTabs.includes(hash)) {
+					loadSettingsTab(hash);
+					// Update active state
+					$('.ghl-settings-nav li').removeClass('active');
+					$('.ghl-settings-nav a[data-tab="' + hash + '"]').parent().addClass('active');
+				}
+			}
+		});
+	}
+	
+	/**
+	 * Load settings tab content via AJAX
+	 * 
+	 * @param {string} tab - The tab to load (general, api, notifications, advanced, etc.)
+	 */
+	function loadSettingsTab(tab) {
+		const $content = $('.ghl-settings-content');
+		
+		// Show loading state
+		$content.css('opacity', '0.5');
+		
+		// Check if we have the SPA config
+		const ajaxUrl = (typeof ghlCrmSpaConfig !== 'undefined') ? ghlCrmSpaConfig.ajaxUrl : ajaxurl;
+		const nonce = (typeof ghlCrmSpaConfig !== 'undefined') ? ghlCrmSpaConfig.nonce : '';
+		
+		// Make AJAX request to load partial directly
+		$.ajax({
+			url: ajaxUrl,
+			type: 'POST',
+			data: {
+				action: 'ghl_crm_load_settings_tab',
+				nonce: nonce,
+				tab: tab
+			},
+			success: function(response) {
+				if (response.success && response.data.html) {
+					$content.html(response.data.html);
+					
+					// Re-initialize any scripts for the loaded content
+					if (typeof window.initSettings === 'function') {
+						window.initSettings();
+					}
+				} else {
+					$content.html('<div class="notice notice-error"><p>' + (response.data.message || 'Failed to load settings tab.') + '</p></div>');
+				}
+			},
+			error: function(xhr, status, error) {
+				console.error('Settings tab load error:', error);
+				$content.html('<div class="notice notice-error"><p>Error loading settings tab. Please try again.</p></div>');
+			},
+			complete: function() {
+				$content.css('opacity', '1');
+			}
+		});
+	}
+	
+	// Initialize on document ready
+	$(document).ready(function() {
+		// Only initialize if we're on a settings page with side menu
+		if ($('.ghl-settings-with-sidebar').length) {
+			initSettingsMenu();
+		}
+	});
+	
+	/**
+	 * Cleanup function to reset initialization state
+	 */
+	function cleanupSettingsMenu() {
+		window.ghlSettingsMenuInitialized = false;
+		$(document).off('click.ghlSettingsMenu', '.ghl-settings-nav a');
+		$(window).off('hashchange.ghlSettingsMenu');
+	}
+	
+	// Export for use in SPA router
+	window.initSettingsMenu = initSettingsMenu;
+	window.cleanupSettingsMenu = cleanupSettingsMenu;
+	
+})(jQuery);
