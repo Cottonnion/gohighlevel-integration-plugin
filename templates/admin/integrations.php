@@ -13,10 +13,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Get current settings
 $settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
-
-$enable_user_sync              = $settings['enable_user_sync'] ?? false;
-$user_sync_actions             = $settings['user_sync_actions'] ?? [];
-$delete_contact_on_user_delete = $settings['delete_contact_on_user_delete'] ?? false;
 ?>
 
 <div class="wrap ghl-crm-wrap">
@@ -25,7 +21,7 @@ $delete_contact_on_user_delete = $settings['delete_contact_on_user_delete'] ?? f
 	</h1>
 
 	<p class="ghl-page-description">
-		<?php esc_html_e( 'Configure which WordPress features should sync with GoHighLevel.', 'ghl-crm-integration' ); ?>
+		<?php esc_html_e( 'Configure third-party integrations with WooCommerce, BuddyBoss, and LearnDash. Basic WordPress user sync is managed in General Settings.', 'ghl-crm-integration' ); ?>
 	</p>
 
 	<!-- Success/Error Messages -->
@@ -33,11 +29,7 @@ $delete_contact_on_user_delete = $settings['delete_contact_on_user_delete'] ?? f
 
 	<!-- Tabs Navigation -->
 	<div class="ghl-tabs-nav">
-		<button class="ghl-tab-button active" data-tab="users">
-			<span class="dashicons dashicons-admin-users"></span>
-			<?php esc_html_e( 'WordPress Users', 'ghl-crm-integration' ); ?>
-		</button>
-		<button class="ghl-tab-button" data-tab="woocommerce" disabled>
+		<button class="ghl-tab-button active" data-tab="woocommerce" disabled>
 			<span class="dashicons dashicons-cart"></span>
 			<?php esc_html_e( 'WooCommerce', 'ghl-crm-integration' ); ?>
 			<span class="ghl-badge ghl-badge-secondary"><?php esc_html_e( 'Soon', 'ghl-crm-integration' ); ?></span>
@@ -55,150 +47,8 @@ $delete_contact_on_user_delete = $settings['delete_contact_on_user_delete'] ?? f
 
 	<!-- Tabs Content -->
 	<div class="ghl-tabs-content">
-		<!-- Tab: WordPress Users -->
-		<div class="ghl-tab-panel active" data-tab="users">
-			<div class="ghl-card">
-				<div class="ghl-card-header">
-					<div class="ghl-card-header-left">
-						<div class="ghl-integration-icon">
-							<span class="dashicons dashicons-admin-users"></span>
-						</div>
-						<div>
-							<h2><?php esc_html_e( 'WordPress Users ↔ GoHighLevel Contacts', 'ghl-crm-integration' ); ?></h2>
-							<p><?php esc_html_e( 'Automatically sync WordPress users with GoHighLevel contacts', 'ghl-crm-integration' ); ?></p>
-						</div>
-					</div>
-					<div class="ghl-card-header-right">
-						<label class="ghl-toggle-switch">
-							<input 
-								type="checkbox" 
-								id="enable_user_sync" 
-								name="enable_user_sync"
-								<?php checked( $enable_user_sync ); ?>
-							>
-							<span class="ghl-toggle-slider"></span>
-						</label>
-						<span class="ghl-toggle-label">
-							<?php echo $enable_user_sync ? esc_html__( 'Enabled', 'ghl-crm-integration' ) : esc_html__( 'Disabled', 'ghl-crm-integration' ); ?>
-						</span>
-					</div>
-				</div>
-
-				<div class="ghl-card-body">
-					<div class="ghl-settings-section">
-						<h3><?php esc_html_e( 'Sync Triggers', 'ghl-crm-integration' ); ?></h3>
-						<p class="description">
-							<?php esc_html_e( 'Choose which WordPress user events should automatically trigger synchronization with GoHighLevel. Each action creates or updates contact records in real-time.', 'ghl-crm-integration' ); ?>
-						</p>
-
-						<div class="ghl-checkbox-group">
-							<label class="ghl-checkbox-label">
-								<input 
-									type="checkbox" 
-									name="user_sync_actions[]" 
-									value="user_register"
-									<?php checked( in_array( 'user_register', $user_sync_actions, true ) ); ?>
-								>
-								<span class="ghl-checkbox-text">
-									<strong><?php esc_html_e( 'User Registration', 'ghl-crm-integration' ); ?></strong>
-									<span class="description"><?php esc_html_e( 'Automatically create a new contact in GoHighLevel whenever someone registers on your WordPress site. Their email, name, and user role will be synced immediately.', 'ghl-crm-integration' ); ?></span>
-								</span>
-							</label>
-
-							<label class="ghl-checkbox-label">
-								<input 
-									type="checkbox" 
-									name="user_sync_actions[]" 
-									value="profile_update"
-									<?php checked( in_array( 'profile_update', $user_sync_actions, true ) ); ?>
-								>
-								<span class="ghl-checkbox-text">
-									<strong><?php esc_html_e( 'Profile Update', 'ghl-crm-integration' ); ?></strong>
-									<span class="description"><?php esc_html_e( 'Keep contact information up-to-date in GoHighLevel when users modify their WordPress profile (name, email, phone, or custom fields).', 'ghl-crm-integration' ); ?></span>
-								</span>
-							</label>
-
-							<label class="ghl-checkbox-label">
-								<input 
-									type="checkbox" 
-									name="user_sync_actions[]" 
-									value="delete_user"
-									<?php checked( in_array( 'delete_user', $user_sync_actions, true ) ); ?>
-								>
-								<span class="ghl-checkbox-text">
-									<strong><?php esc_html_e( 'User Deletion', 'ghl-crm-integration' ); ?></strong>
-									<span class="description"><?php esc_html_e( 'Manage the GoHighLevel contact when a WordPress user account is deleted. You can choose to either delete the contact or tag them as "deleted" below.', 'ghl-crm-integration' ); ?></span>
-								</span>
-							</label>
-
-							<label class="ghl-checkbox-label">
-								<input 
-									type="checkbox" 
-									name="user_sync_actions[]" 
-									value="set_user_role"
-									<?php checked( in_array( 'set_user_role', $user_sync_actions, true ) ); ?>
-								>
-								<span class="ghl-checkbox-text">
-									<strong><?php esc_html_e( 'Role Change', 'ghl-crm-integration' ); ?></strong>
-									<span class="description"><?php esc_html_e( 'Automatically update contact tags in GoHighLevel when a user\'s role changes (e.g., from Subscriber to Customer). Tags match the WordPress role name.', 'ghl-crm-integration' ); ?></span>
-								</span>
-							</label>
-
-							<label class="ghl-checkbox-label">
-								<input 
-									type="checkbox" 
-									name="user_sync_actions[]" 
-									value="user_login"
-									<?php checked( in_array( 'user_login', $user_sync_actions, true ) ); ?>
-								>
-								<span class="ghl-checkbox-text">
-									<strong><?php esc_html_e( 'User Login', 'ghl-crm-integration' ); ?></strong>
-									<span class="description"><?php esc_html_e( 'Track user engagement by adding a timestamped note to their GoHighLevel contact record each time they log into your WordPress site.', 'ghl-crm-integration' ); ?></span>
-								</span>
-							</label>
-						</div>
-					</div>
-
-					<div class="ghl-settings-section">
-						<h3><?php esc_html_e( 'Deletion Behavior', 'ghl-crm-integration' ); ?></h3>
-						<p class="description" style="margin-bottom: 12px;">
-							<?php esc_html_e( 'Control what happens to GoHighLevel contacts when their corresponding WordPress user account is deleted.', 'ghl-crm-integration' ); ?>
-						</p>
-						
-						<label class="ghl-checkbox-label">
-							<input 
-								type="checkbox" 
-								id="delete_contact_on_user_delete" 
-								name="delete_contact_on_user_delete"
-								<?php checked( $delete_contact_on_user_delete ); ?>
-							>
-							<span class="ghl-checkbox-text">
-								<strong><?php esc_html_e( 'Permanently delete GoHighLevel contact when WordPress user is deleted', 'ghl-crm-integration' ); ?></strong>
-								<span class="description">
-									<?php esc_html_e( 'If unchecked, the contact will be preserved in GoHighLevel and tagged as "wp-user-deleted" for your records instead of being permanently removed.', 'ghl-crm-integration' ); ?>
-								</span>
-							</span>
-						</label>
-					</div>
-
-					<div class="ghl-settings-section">
-						<div class="ghl-info-box">
-							<span class="dashicons dashicons-info"></span>
-							<div>
-								<strong><?php esc_html_e( 'Need to sync custom fields?', 'ghl-crm-integration' ); ?></strong>
-								<p><?php esc_html_e( 'By default, basic user information (name, email, phone) is synced. Visit the Field Mapping page to map additional WordPress user meta fields to custom fields in GoHighLevel.', 'ghl-crm-integration' ); ?></p>
-								<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-field-mapping' ) ); ?>" class="button button-secondary">
-									<?php esc_html_e( 'Configure Field Mapping', 'ghl-crm-integration' ); ?>
-								</a>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
 		<!-- Tab: WooCommerce (Coming Soon) -->
-		<div class="ghl-tab-panel" data-tab="woocommerce">
+		<div class="ghl-tab-panel active" data-tab="woocommerce">
 			<div class="ghl-card ghl-coming-soon-card">
 				<div class="ghl-coming-soon-content">
 					<div class="ghl-coming-soon-icon">

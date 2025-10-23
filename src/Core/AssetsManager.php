@@ -106,11 +106,140 @@ class AssetsManager {
 	 * @return void
 	 */
 	private function define_admin_assets(): void {
+		// Admin Menu Styling (loads on all admin pages to style the menu)
+		$this->add_admin_asset(
+			'ghl-crm-admin-menu-css',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'admin-menu.css',
+			[],
+			[],
+			'1.0.0'
+		);
+
+		// Menu Router for SPA active state management
+		$this->add_admin_asset(
+			'ghl-crm-menu-router-js',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'menu-router.js',
+			[ 'jquery' ],
+			[],
+			'1.0.0',
+			true
+		);
+
+		// SPA Application assets (new single-page admin)
+		$this->add_admin_asset(
+			'ghl-crm-spa-css',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'spa-app.css',
+			[],
+			[],
+			'1.0.0'
+		);
+
+		$this->add_admin_asset(
+			'ghl-crm-spa-js',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'spa-router.js',
+			[ 'jquery', 'sweetalert2' ],
+			[],
+			'1.0.0',
+			true
+		);
+
+		// Field Mapping assets (need to load on SPA page)
+		$this->add_admin_asset(
+			'ghl-crm-field-mapping-css',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'field-mapping.css',
+			[],
+			[],
+			GHL_CRM_VERSION
+		);
+
+		$this->add_admin_asset(
+			'ghl-crm-field-mapping-js',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'field-mapping.js',
+			[ 'jquery', 'sweetalert2' ],
+			[
+				'nonce' => wp_create_nonce( 'ghl_crm_field_mapping_nonce' ),
+			],
+			'1.0.2',
+			true
+		);
+
+		// Integrations assets (need to load on SPA page)
+		$this->add_admin_asset(
+			'ghl-crm-integrations-css',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'integrations.css',
+			[],
+			[],
+			GHL_CRM_VERSION
+		);
+
+		$this->add_admin_asset(
+			'ghl-crm-integrations-js',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'integrations.js',
+			[ 'jquery', 'sweetalert2' ],
+			[
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
+			],
+			GHL_CRM_VERSION,
+			true
+		);
+
+		// Settings assets (need to load on SPA page)
+		$this->add_admin_asset(
+			'ghl-crm-settings-css',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'settings.css',
+			[ 'sweetalert2' ],
+			[],
+			'1.0.1'
+		);
+
+		$this->add_admin_asset(
+			'ghl-crm-settings-menu-css',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'settings-menu.css',
+			[],
+			[],
+			'1.0.0'
+		);
+
+		$this->add_admin_asset(
+			'ghl-crm-settings-menu-js',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'settings-menu.js',
+			[ 'jquery' ],
+			[],
+			'1.0.0',
+			true
+		);
+
+		$this->add_admin_asset(
+			'ghl-crm-settings-js',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'settings.js',
+			[ 'jquery', 'sweetalert2' ],
+			[
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
+			],
+			GHL_CRM_VERSION,
+			true
+		);
+
 		// Global CSS for all admin pages (now includes tabbed main-settings page)
 		$this->add_admin_asset(
 			'ghl-crm-globals-css',
 			[ 
-				'toplevel_page_ghl-crm-settings',           // New main tabbed page
+				'toplevel_page_ghl-crm-settings',           // Legacy main tabbed page
+				'toplevel_page_ghl-crm-admin',              // New SPA page
 				'ghl-crm_page_ghl-crm-sync-logs',
 			],
 			'globals.css',
