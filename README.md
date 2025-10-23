@@ -1,79 +1,84 @@
 # GoHighLevel CRM Integration
 
-A powerful WordPress plugin that seamlessly integrates GoHighLevel CRM with WordPress, WooCommerce, BuddyBoss, and LearnDash, providing true two-way synchronization and advanced automation capabilities.
+A powerful WordPress plugin that seamlessly integrates GoHighLevel CRM with WordPress, WooCommerce, BuddyBoss, and LearnDash, providing OAuth2 authentication, intelligent field mapping, and automatic contact synchronization.
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![WordPress](https://img.shields.io/badge/wordpress-6.0%2B-brightgreen.svg)
-![PHP](https://img.shields.io/badge/php-7.4%2B-purple.svg)
+![PHP](https://img.shields.io/badge/php-8.0%2B-purple.svg)
 ![License](https://img.shields.io/badge/license-GPL--2.0%2B-red.svg)
 
 ## 🎯 Overview
 
-This plugin bridges the gap between your WordPress ecosystem and GoHighLevel CRM, offering features that competitive plugins lack—including **BuddyBoss integration**, **full multisite support**, and **advanced field mapping**.
+This plugin bridges the gap between your WordPress ecosystem and GoHighLevel CRM, offering features that competitive plugins lack—including **OAuth2 authentication**, **BuddyBoss integration**, **full multisite support**, and **intelligent field mapping with duplicate prevention**.
 
 ### What Makes This Plugin Different?
 
-- ✅ **BuddyBoss Integration** - The ONLY plugin that syncs BuddyBoss groups and members with GHL
-- ✅ **True Two-Way Sync** - Data flows both directions automatically
+- ✅ **OAuth2 Authentication** - One-click secure connection to your GoHighLevel account
+- ✅ **Automatic Token Refresh** - Seamless token management with fallback reconnection
+- ✅ **BuddyBoss Integration** - The ONLY plugin that syncs BuddyBoss XProfile fields with GHL
+- ✅ **Smart Field Mapping** - Visual interface with duplicate field prevention
+- ✅ **Bi-directional Sync** - Choose sync direction per field (→ To GHL, ← From GHL, ↔ Both Ways)
+- ✅ **Duplicate Contact Prevention** - Automatically updates existing contacts instead of creating duplicates
 - ✅ **WordPress Multisite Ready** - Perfect for enterprise and network installations
-- ✅ **LearnDash Support** - Sync course enrollments and progress
 - ✅ **WooCommerce Deep Integration** - Orders, customers, and product data
-- ✅ **Advanced Field Mapping** - Complete control over data synchronization
-- ✅ **Action Scheduler** - Reliable background processing, not WP-Cron
 - ✅ **Comprehensive Logging** - Track every sync operation
-- ✅ **Modern UI/UX** - Clean, minimal dashboard inspired by Google Analytics & Stripe
+- ✅ **Modern Tabbed UI** - Clean interface inspired by Memberium for Keap
 
 ## 🚀 Features
 
-### Core Integrations
+### Core Features
+
+#### OAuth2 Authentication
+- **One-Click Connection** - Securely connect to GoHighLevel with OAuth2
+- **Automatic Token Refresh** - Tokens refresh automatically in the background
+- **Reconnect API Fallback** - Seamless reconnection if refresh fails
+- **Multi-Location Support** - Switch between different GoHighLevel locations
+- **Secure Storage** - Tokens stored securely in WordPress options
 
 #### WordPress Users
-- Automatic user creation in GHL when users register
-- Sync user meta data, roles, and custom fields
-- Tag-based segmentation
-- Real-time updates
+- Automatic contact creation when users register
+- Real-time profile updates sync to GHL
+- User deletion options (archive or delete contact)
+- Configurable sync triggers (registration, profile update, login, etc.)
+- Custom field synchronization
 
-#### WooCommerce
+#### Smart Field Mapping
+- **Visual Mapper** - Drag-and-drop interface for field mapping
+- **Duplicate Prevention** - Shows which GHL fields are already mapped (✓ checkmark)
+- **Bi-directional Sync** - Choose direction per field:
+  - → To GoHighLevel Only
+  - ← From GoHighLevel Only
+  - ↔ Both Ways
+- **BuddyBoss XProfile Support** - Map BuddyBoss profile fields to GHL custom fields
+- **Dynamic Field Detection** - Automatically detects custom fields from plugins
+
+#### WooCommerce Integration
 - Customer sync on order completion
 - Order data tracking in GHL
 - Product purchase history
-- Abandoned cart recovery
 - Custom order meta fields
+- Abandoned cart recovery (coming soon)
 
-#### BuddyBoss
-- **Group synchronization with GHL companies**
-- Member to contact mapping
-- Activity tracking
-- Group roles and permissions
-- Community engagement metrics
+#### BuddyBoss/BuddyPress
+- **XProfile field synchronization** - Map BuddyBoss profile fields to GHL
+- Group member data sync (coming soon)
+- Activity tracking (coming soon)
+- Community engagement metrics (coming soon)
 
-#### LearnDash
+#### LearnDash (Coming Soon)
 - Course enrollment synchronization
 - Progress tracking
-- Quiz and assignment completion
+- Quiz completion tracking
 - Certificate issuance tracking
-- Student performance metrics
-
-### Advanced Features
-
-- **Webhooks Support** - Real-time bidirectional updates
-- **Retry Logic** - Failed syncs automatically retry
-- **Queue Management** - Built on WooCommerce Action Scheduler
-- **Error Logging** - Detailed error tracking and reporting
-- **Manual Sync Controls** - Trigger syncs on-demand
-- **Bulk Operations** - Process large datasets efficiently
-- **Custom Field Mapping** - Map any WordPress field to any GHL field
-- **Conditional Sync** - Rules-based synchronization
-- **API Rate Limiting** - Smart throttling to respect API limits
 
 ## 📋 Requirements
 
 - WordPress 6.0 or higher
-- PHP 7.4 or higher
-- GoHighLevel account with API access
+- PHP 8.0 or higher (PHP 8.1+ recommended)
+- GoHighLevel account with OAuth App configured
 - WooCommerce 5.0+ (optional, for eCommerce features)
-- BuddyBoss 1.0+ (optional, for community features)
-- LearnDash 3.0+ (optional, for LMS features)
+- BuddyBoss/BuddyPress (optional, for community features)
+- LearnDash 3.0+ (optional, for LMS features - coming soon)
 
 ## 🔧 Installation
 
@@ -87,83 +92,117 @@ This plugin bridges the gap between your WordPress ecosystem and GoHighLevel CRM
 
 ### Manual Installation
 
-1. Upload the plugin folder to `/wp-content/plugins/`
+1. Upload the plugin folder to `/wp-content/plugins/crm-integration`
 2. Activate the plugin through the 'Plugins' menu in WordPress
-
-### Via Composer
-
-```bash
-composer require your-vendor/gohighlevel-crm-integration
-```
+3. Navigate to **GHL CRM** in the admin menu to begin setup
 
 ## ⚙️ Configuration
 
-### 1. Get Your GoHighLevel API Credentials
+### 1. Set Up Your GoHighLevel OAuth App
 
-1. Log into your GoHighLevel account
-2. Navigate to **Settings → Integrations → Private Integrations**
-3. Create a new Private Integration Token
-4. Copy your **API Token** and **Location ID**
+Before connecting the plugin, you need to create an OAuth app in GoHighLevel:
+
+1. Log into your **GoHighLevel Agency account**
+2. Navigate to **Settings → OAuth**
+3. Click **Create New OAuth App**
+4. Fill in the following details:
+   - **App Name**: WordPress CRM Integration (or your preferred name)
+   - **Redirect URL**: `https://yourdomain.com/wp-admin/admin.php?page=ghl-crm-settings`
+   - **Scopes**: Select all required scopes:
+     - `contacts.readonly`
+     - `contacts.write`
+     - `locations.readonly`
+     - `users.readonly`
+5. Click **Create** and copy your **Client ID** and **Client Secret**
 
 ### 2. Configure the Plugin
 
 1. In WordPress admin, go to **GHL CRM → Settings**
-2. Enter your **API Token**
-3. Enter your **Location ID**
-4. Click **Save Settings**
-5. Click **Test Connection** to verify
+2. On the **General Settings** tab, you'll see the OAuth connection section
+3. Click the **"Connect with GoHighLevel"** button
+4. You'll be redirected to GoHighLevel to authorize the connection
+5. **Authorize the app** in your GoHighLevel account
+6. You'll be redirected back to WordPress automatically
+7. Connection status will show as **"✓ Connected"** with your location name
+
+That's it! The plugin is now connected and ready to use.
 
 ### 3. Configure Field Mapping
 
-1. Navigate to **GHL CRM → Field Mapping**
-2. Map WordPress fields to GoHighLevel fields
-3. Set up custom field mappings
-4. Save your configuration
+1. Navigate to **GHL CRM → Settings** and click the **Field Mapping** tab
+2. You'll see three sections:
+   - **Default WordPress Fields** (user_email, first_name, last_name, etc.)
+   - **BuddyBoss Profile Fields** (if BuddyBoss is active)
+   - **Custom & Plugin Fields** (fields added by other plugins)
+3. For each WordPress field:
+   - Select the corresponding **GoHighLevel field** from the dropdown
+   - Choose the **Sync Direction**:
+     - **↔ Both Ways** - Sync changes in both directions
+     - **→ To GoHighLevel Only** - Only send data from WordPress to GHL
+     - **← From GoHighLevel Only** - Only receive data from GHL to WordPress
+4. Click **Save Field Mapping**
+5. Fields already mapped will show with a **✓ (mapped)** indicator in other dropdowns
 
-### 4. Enable Sync Modules
+**Note**: Already mapped GHL fields will be disabled in other dropdowns to prevent duplicate mappings.
 
-Choose which integrations to enable:
-- WordPress Users
-- WooCommerce Orders
-- BuddyBoss Groups
-- LearnDash Courses
+### 4. Enable User Synchronization
+
+1. Go to **GHL CRM → Settings** and click the **Integrations** tab
+2. Click on the **WordPress Users** card
+3. Toggle **"Enable User Sync"** to ON
+4. Select which WordPress events should trigger synchronization:
+   - ✓ User Registration
+   - ✓ Profile Update
+   - ✓ User Login (optional)
+   - ✓ Password Reset (optional)
+5. Choose deletion behavior:
+   - Keep contact in GoHighLevel when user is deleted, OR
+   - Delete contact from GoHighLevel when user is deleted
+6. Click **Save Integration Settings**
 
 ## 📖 Usage
 
-### Basic Sync Operations
+### Viewing Sync Activity
 
-#### Automatic Sync
-The plugin automatically syncs data based on WordPress events:
-- User registration
-- Order completion
-- Course enrollment
-- Group membership changes
+1. Navigate to **GHL CRM → Sync Logs**
+2. View all synchronization activity in real-time
+3. Filter by date, status, or sync type
+4. Click on any log entry to see detailed information
 
-#### Manual Sync
-Force a sync from the admin panel:
-1. Go to **GHL CRM → Sync Logs**
-2. Click **Run Manual Sync**
-3. Select the data type to sync
-4. Monitor progress in real-time
+### Testing the Connection
+
+After connecting via OAuth, you can test the connection:
+
+1. Go to **GHL CRM → Settings** (General Settings tab)
+2. Scroll down to the **Test Connection** section
+3. Click **"Test API Connection"**
+4. You'll see a success message with your location name if connected properly
+
+### Managing OAuth Connection
+
+**To Disconnect:**
+1. Go to **GHL CRM → Settings**
+2. Click the **"Disconnect"** button in the OAuth status section
+3. Confirm the disconnection
+
+**To Reconnect:**
+1. Simply click **"Connect with GoHighLevel"** again
+2. Authorize the app in GoHighLevel
+3. You'll be redirected back automatically
 
 ### Advanced Configuration
 
-#### Webhooks Setup
+#### Custom Field Mapping with Code
 
-Enable real-time updates from GoHighLevel:
-
-1. Go to GHL Settings → Webhooks
-2. Add the endpoint above
-3. Select events to monitor
-4. Save configuration
-
-#### Custom Field Mapping
+While the visual mapper handles most use cases, you can also programmatically add field mappings:
 
 ```php
-// Example: Map custom user meta to GHL custom field
-add_filter('ghl_crm_user_field_map', function($fields, $user_id) {
-    $fields['custom_field_key'] = get_user_meta($user_id, 'your_meta_key', true);
-    return $fields;
+// Example: Add custom field mapping via filter
+add_filter('ghl_crm_user_contact_data', function($contact_data, $user_id) {
+    // Add custom field
+    $contact_data['customField.custom_field_key'] = get_user_meta($user_id, 'your_meta_key', true);
+    
+    return $contact_data;
 }, 10, 2);
 ```
 
@@ -177,24 +216,45 @@ add_filter('ghl_crm_should_sync_user', function($should_sync, $user_id) {
 }, 10, 2);
 ```
 
+#### Modify Sync Actions
+
+```php
+// Example: Add custom action after successful sync
+add_action('ghl_crm_user_synced', function($user_id, $contact_id, $is_new) {
+    if ($is_new) {
+        // Do something for new contacts
+        error_log("New GHL contact created: {$contact_id} for user {$user_id}");
+    }
+}, 10, 3);
+```
+
 ## 🎨 Screenshots
 
-1. **Settings Page** - Clean, modern interface for API configuration
-2. **Field Mapping** - Visual field mapper with drag-and-drop
-3. **Sync Logs** - Comprehensive sync history and error tracking
-4. **Dashboard** - Quick stats and sync status overview
+1. **OAuth Connection** - One-click secure connection to GoHighLevel
+2. **Settings Page** - Clean tabbed interface for settings, integrations, and field mapping
+3. **Field Mapping** - Visual field mapper with duplicate prevention and sync direction control
+4. **Integrations** - Toggle WordPress Users, WooCommerce, BuddyBoss sync modules
+5. **Sync Logs** - Comprehensive sync history and error tracking
 
 ## 🔍 Troubleshooting
 
-### Connection Issues
+### OAuth Connection Issues
 
-**Problem:** "API Connection Failed"
+**Problem:** "OAuth authorization failed"
 
 **Solutions:**
-1. Verify your API token is correct
-2. Check your Location ID
-3. Ensure your GoHighLevel account is active
-4. Check server firewall settings
+1. Verify your OAuth app is created correctly in GoHighLevel
+2. Check that the **Redirect URL** in your GHL OAuth app matches your WordPress admin URL exactly
+3. Ensure your WordPress site uses **HTTPS** (required for OAuth)
+4. Try disconnecting and reconnecting
+5. Clear your browser cache and try again
+
+**Problem:** "Token refresh failed"
+
+**Solutions:**
+1. The plugin will automatically attempt to reconnect
+2. If reconnection fails, simply click **"Connect with GoHighLevel"** again
+3. Check that your OAuth app in GHL is still active
 
 ### Sync Not Working
 
@@ -202,9 +262,30 @@ add_filter('ghl_crm_should_sync_user', function($should_sync, $user_id) {
 
 **Solutions:**
 1. Check **GHL CRM → Sync Logs** for errors
-2. Verify field mappings are correct
-3. Ensure sync is enabled for that module
-4. Check Action Scheduler queue: **Tools → Scheduled Actions**
+2. Verify OAuth connection is active (green checkmark on Settings page)
+3. Ensure field mappings are configured in **Field Mapping** tab
+4. Verify **User Sync** is enabled in **Integrations** tab
+5. Check that sync triggers are selected (user registration, profile update, etc.)
+
+### Field Mapping Issues
+
+**Problem:** "Fields not mapping correctly"
+
+**Solutions:**
+1. Ensure you've clicked **Save Field Mapping** after making changes
+2. Check that GHL fields aren't already mapped (look for ✓ checkmark)
+3. Verify sync direction is set correctly for each field
+4. Test with a new user registration to see if data syncs
+
+### Duplicate Contacts
+
+**Problem:** "Creating duplicate contacts in GoHighLevel"
+
+**Solutions:**
+1. The plugin automatically prevents duplicates by email
+2. Existing contacts are updated instead of creating new ones
+3. If you see duplicates, they likely have different email addresses
+4. Check your GoHighLevel location settings for duplicate prevention rules
 
 ### Rate Limit Errors
 
@@ -212,17 +293,18 @@ add_filter('ghl_crm_should_sync_user', function($should_sync, $user_id) {
 
 **Solutions:**
 1. The plugin automatically throttles requests
-2. Reduce sync frequency in settings
-3. Enable queue batching for large datasets
+2. GoHighLevel OAuth apps have higher rate limits than API keys
+3. If syncing many users at once, the plugin will queue them automatically
 
 ### Multisite Issues
 
 **Problem:** Settings not saving on specific sites
 
 **Solutions:**
-1. Verify multisite is properly configured
-2. Check site-specific settings vs network settings
-3. Ensure proper user capabilities
+1. Each site in a multisite network has its own OAuth connection
+2. Connect each site separately via **GHL CRM → Settings**
+3. Field mappings are per-site and can differ between sites
+4. Ensure proper user capabilities (`manage_options`) on each site
 
 ## 🛠️ Development
 
@@ -232,24 +314,13 @@ add_filter('ghl_crm_should_sync_user', function($should_sync, $user_id) {
 # Clone the repository
 git clone https://github.com/Cottonnion/gohighlevel-integration-plugin.git
 
-# Install dependencies
-composer install
+# Navigate to your WordPress plugins directory
+cd wp-content/plugins/
 
-# Set up local WordPress environment
-# Configure wp-config.php with database credentials
-```
+# Create symbolic link or copy the plugin folder
+ln -s /path/to/gohighlevel-integration-plugin crm-integration
 
-### Running Tests
-
-```bash
-# Run PHPUnit tests
-composer test
-
-# Run code standards check
-composer phpcs
-
-# Fix code standards
-composer phpcbf
+# No composer install needed - plugin is dependency-free
 ```
 
 ### Project Structure
@@ -257,16 +328,36 @@ composer phpcbf
 ```
 crm-integration/
 ├── src/
-│   ├── Core/           # Core functionality
-│   ├── Admin/          # Admin UI
-│   ├── API/            # REST API & Webhooks
-│   ├── Integrations/   # Platform integrations
-│   ├── Sync/           # Sync services
-│   ├── Database/       # Data layer
-│   └── Utilities/      # Helper functions
+│   ├── Core/              # Core functionality
+│   │   ├── Loader.php           # Plugin initialization
+│   │   ├── MenuManager.php      # Admin menu structure
+│   │   ├── SettingsManager.php  # Settings & AJAX handlers
+│   │   ├── AssetsManager.php    # CSS/JS management
+│   │   ├── AdminNotices.php     # Notification system
+│   │   └── AjaxHandler.php      # Legacy AJAX handlers
+│   ├── API/               # GoHighLevel API integration
+│   │   ├── Client/            # HTTP client
+│   │   ├── OAuth/             # OAuth2 authentication
+│   │   └── Resources/         # API resource classes
+│   ├── Integrations/      # Platform integrations
+│   │   ├── Users/             # WordPress user sync
+│   │   ├── WooCommerce/       # WooCommerce integration
+│   │   └── BuddyBoss/         # BuddyBoss integration
+│   └── Utilities/         # Helper functions
+├── templates/
+│   └── admin/             # Admin page templates
+│       ├── main-settings.php    # Main tabbed interface
+│       ├── settings.php         # General settings tab
+│       ├── integrations.php     # Integrations tab
+│       ├── field-mapping.php    # Field mapping tab
+│       └── sync-logs.php        # Sync logs page
 ├── assets/
-│   ├── admin/          # Admin CSS/JS
-│   └── public/         # Frontend assets
+│   ├── admin/
+│   │   ├── css/              # Admin stylesheets
+│   │   └── js/               # Admin JavaScript
+│   └── public/               # Frontend assets (if needed)
+└── gohighlevel-crm-integration.php  # Main plugin file
+```
 ├── templates/          # PHP templates
 ├── vendor/             # Composer dependencies
 └── tests/              # Unit tests
@@ -293,29 +384,30 @@ We welcome contributions! Please follow these steps:
 ### Contribution Guidelines
 
 - Follow WordPress coding standards
-- Write PHPUnit tests for new features
+- Write clear, documented code
+- Test thoroughly before submitting
 - Update documentation as needed
 - Ensure backward compatibility
-- Add inline documentation for complex logic
 
 ## 📝 Changelog
 
-### Version 1.0.0 - 2025-10-16
+### Version 1.0.0 - 2025-10-23
 
 **Initial Release**
 
-- ✨ GoHighLevel API integration
-- ✨ WordPress user synchronization
-- ✨ WooCommerce integration
-- ✨ BuddyBoss integration (exclusive feature)
-- ✨ LearnDash integration
-- ✨ Advanced field mapping
-- ✨ Comprehensive logging
-- ✨ WordPress Multisite support
-- ✨ Action Scheduler integration
-- ✨ Modern, minimal UI design
-- ✨ Webhook support
-- ✨ Two-way sync capabilities
+- ✨ **OAuth2 Authentication** - Secure one-click connection to GoHighLevel
+- ✨ **Automatic Token Refresh** - Seamless token management with reconnect fallback
+- ✨ **WordPress User Sync** - Real-time contact synchronization
+- ✨ **Smart Field Mapping** - Visual mapper with duplicate prevention
+- ✨ **Bi-directional Sync** - Choose sync direction per field (→, ←, ↔)
+- ✨ **BuddyBoss XProfile Support** - Map BuddyBoss profile fields to GHL
+- ✨ **Duplicate Contact Prevention** - Auto-update existing contacts
+- ✨ **WooCommerce Integration** - Customer and order sync
+- ✨ **Multisite Support** - Per-site OAuth connections
+- ✨ **Comprehensive Logging** - Track all sync operations
+- ✨ **Modern Tabbed UI** - Clean interface inspired by Memberium
+- ✨ **AJAX-Based Settings** - No page reloads, instant feedback
+- ✨ **SweetAlert2 Notifications** - Beautiful toast notifications
 
 ## 🔐 Security
 
@@ -325,13 +417,14 @@ If you discover a security vulnerability, please email yahyadard@gmail.com. Do n
 
 ### Security Features
 
-- ✅ Nonce verification on all forms
-- ✅ Capability checks for admin functions
-- ✅ Input sanitization
-- ✅ Output escaping
-- ✅ Prepared SQL statements
-- ✅ Secure API token storage
-- ✅ Rate limiting protection
+- ✅ **OAuth2 Secure Authentication** - Industry-standard authentication
+- ✅ **Automatic Token Encryption** - Secure token storage
+- ✅ **Nonce Verification** - CSRF protection on all AJAX requests
+- ✅ **Capability Checks** - Proper user permission validation
+- ✅ **Input Sanitization** - All user inputs sanitized
+- ✅ **Output Escaping** - XSS protection
+- ✅ **No External Dependencies** - Zero third-party PHP libraries
+- ✅ **HTTPS Required** - OAuth requires secure connections
 
 ## 📄 License
 
