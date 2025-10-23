@@ -147,7 +147,8 @@
 	--ghl-z-popover: 1060;
 	--ghl-z-tooltip: 1070;
 	--ghl-z-notification: 1080;
-		--ghl-sidemenu-bg: var(--ghl-bg-primary);
+
+	--ghl-sidemenu-bg: var(--ghl-bg-primary);
 	--ghl-sidemenu-hover-bg: var(--ghl-bg-hover);
 	--ghl-sidemenu-active-bg: var(--ghl-bg-active);
 	--ghl-sidemenu-border: var(--ghl-border-primary);
