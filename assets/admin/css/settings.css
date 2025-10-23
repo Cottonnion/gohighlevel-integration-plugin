@@ -158,3 +158,286 @@
  * 
  * Responsive overrides are handled by globals.css
  */
+
+/* ========================================
+   CARD-BASED SETTINGS LAYOUT
+   Clean, modern design for settings tabs
+   ======================================== */
+
+/* Settings Wrapper */
+.ghl-settings-wrapper {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: var(--ghl-spacing-xl) 0;
+}
+
+/* Settings Cards */
+.ghl-settings-card {
+	background: var(--ghl-bg-primary);
+	border: 1px solid var(--ghl-border-primary);
+	border-radius: var(--ghl-radius-lg);
+	padding: var(--ghl-spacing-xl);
+	margin-bottom: var(--ghl-spacing-xl);
+	box-shadow: var(--ghl-shadow-sm);
+	transition: var(--ghl-transition-base);
+}
+
+.ghl-settings-card:hover {
+	box-shadow: var(--ghl-shadow-md);
+}
+
+/* Card Headers */
+.ghl-settings-card h2 {
+	margin: 0 0 var(--ghl-spacing-sm) 0;
+	font-size: var(--ghl-font-size-xl);
+	font-weight: var(--ghl-font-weight-semibold);
+	color: var(--ghl-text-primary);
+	line-height: var(--ghl-line-height-tight);
+}
+
+.ghl-settings-card p {
+	margin: 0 0 var(--ghl-spacing-lg) 0;
+	font-size: var(--ghl-font-size-base);
+	color: var(--ghl-text-secondary);
+	line-height: var(--ghl-line-height-base);
+}
+
+.ghl-settings-card hr {
+	border: none;
+	border-top: 1px solid var(--ghl-border-primary);
+	margin: var(--ghl-spacing-lg) 0;
+}
+
+/* ========================================
+   FORM BUILDER & FORM LAYOUT
+   ======================================== */
+
+.ghl-form-builder {
+	margin-top: var(--ghl-spacing-lg);
+}
+
+.ghl-form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--ghl-spacing-lg);
+}
+
+.ghl-form-item {
+	display: flex;
+	flex-direction: column;
+	gap: var(--ghl-spacing-sm);
+}
+
+.ghl-form-item-content {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--ghl-spacing-md);
+}
+
+/* ========================================
+   CUSTOM CHECKBOXES
+   ======================================== */
+
+.ghl-checkbox {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--ghl-spacing-md);
+	cursor: pointer;
+	user-select: none;
+	transition: var(--ghl-transition-base);
+	padding: var(--ghl-spacing-sm);
+	border-radius: var(--ghl-radius-base);
+}
+
+.ghl-checkbox:hover {
+	background: var(--ghl-bg-hover);
+}
+
+/* Checkbox Input Container */
+.ghl-checkbox-input {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	position: relative;
+	width: 20px;
+	height: 20px;
+	margin-top: 2px;
+}
+
+/* Checkbox Visual (the box itself) */
+.ghl-checkbox-inner {
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	border: 2px solid var(--ghl-border-secondary);
+	border-radius: var(--ghl-radius-sm);
+	background: var(--ghl-bg-primary);
+	transition: var(--ghl-transition-base);
+	position: relative;
+}
+
+/* Checkbox - Checked State */
+.ghl-checkbox-input.is-checked .ghl-checkbox-inner {
+	background: var(--ghl-primary);
+	border-color: var(--ghl-primary);
+}
+
+/* Checkmark Icon */
+.ghl-checkbox-input.is-checked .ghl-checkbox-inner::after {
+	content: '';
+	position: absolute;
+	left: 6px;
+	top: 2px;
+	width: 5px;
+	height: 10px;
+	border: solid white;
+	border-width: 0 2px 2px 0;
+	transform: rotate(45deg);
+}
+
+/* Hide the actual checkbox input */
+.ghl-checkbox-original {
+	/* position: absolute;
+	opacity: 0; */
+	width: 0;
+	height: 0;
+	margin: 0;
+	padding: 0;
+	/* Removed pointer-events: none to allow clicks */
+}
+
+/* Checkbox Label Text */
+.ghl-checkbox-label {
+	font-size: var(--ghl-font-size-base);
+	color: var(--ghl-text-primary);
+	line-height: var(--ghl-line-height-base);
+	font-weight: var(--ghl-font-weight-normal);
+}
+
+.ghl-checkbox:hover .ghl-checkbox-label {
+	color: var(--ghl-text-primary);
+}
+
+/* ========================================
+   MODERN BUTTONS
+   ======================================== */
+
+.ghl-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--ghl-spacing-sm);
+	padding: var(--ghl-spacing-md) var(--ghl-spacing-xl);
+	border: none;
+	border-radius: var(--ghl-radius-base);
+	font-size: var(--ghl-font-size-base);
+	font-weight: var(--ghl-font-weight-medium);
+	font-family: var(--ghl-font-family);
+	cursor: pointer;
+	transition: var(--ghl-transition-base);
+	text-decoration: none;
+	outline: none;
+}
+
+.ghl-button:focus {
+	box-shadow: var(--ghl-shadow-focus);
+}
+
+/* Button Sizes */
+.ghl-button-medium {
+	padding: 12px var(--ghl-spacing-xl);
+	font-size: var(--ghl-font-size-md);
+}
+
+.ghl-button-large {
+	padding: var(--ghl-spacing-lg) var(--ghl-spacing-2xl);
+	font-size: var(--ghl-font-size-lg);
+}
+
+/* Button Success Variant */
+.ghl-button-success {
+	background: var(--ghl-success);
+	color: var(--ghl-text-inverse);
+	border: 1px solid var(--ghl-success);
+}
+
+.ghl-button-success:hover {
+	background: var(--ghl-success-dark);
+	border-color: var(--ghl-success-dark);
+	transform: translateY(-1px);
+	box-shadow: var(--ghl-shadow-md);
+}
+
+.ghl-button-success:active {
+	transform: translateY(0);
+}
+
+/* Button Primary Variant */
+.ghl-button-primary {
+	background: var(--ghl-primary);
+	color: var(--ghl-text-inverse);
+	border: 1px solid var(--ghl-primary);
+}
+
+.ghl-button-primary:hover {
+	background: var(--ghl-primary-hover);
+	border-color: var(--ghl-primary-hover);
+	transform: translateY(-1px);
+	box-shadow: var(--ghl-shadow-md);
+}
+
+.ghl-button-primary:active {
+	transform: translateY(0);
+}
+
+/* Button Secondary Variant */
+.ghl-button-secondary {
+	background: var(--ghl-bg-primary);
+	color: var(--ghl-text-primary);
+	border: 1px solid var(--ghl-border-primary);
+}
+
+.ghl-button-secondary:hover {
+	background: var(--ghl-bg-hover);
+	border-color: var(--ghl-border-secondary);
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media screen and (max-width: 782px) {
+	.ghl-settings-wrapper {
+		padding: var(--ghl-spacing-lg) 0;
+	}
+
+	.ghl-settings-card {
+		padding: var(--ghl-spacing-lg);
+		margin-bottom: var(--ghl-spacing-lg);
+	}
+
+	.ghl-settings-card h2 {
+		font-size: var(--ghl-font-size-lg);
+	}
+
+	.ghl-button {
+		width: 100%;
+		justify-content: center;
+	}
+}
+
+@media screen and (max-width: 600px) {
+	.ghl-settings-card {
+		padding: var(--ghl-spacing-md);
+	}
+
+	.ghl-checkbox {
+		flex-direction: row;
+		align-items: flex-start;
+	}
+
+	.ghl-form-item {
+		gap: var(--ghl-spacing-md);
+	}
+}

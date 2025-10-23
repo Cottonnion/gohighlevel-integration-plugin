@@ -78,6 +78,7 @@ class SettingsManager {
 
 	/**
 	 * Save settings via AJAX
+	 * Universal handler for all settings tabs
 	 *
 	 * @return void
 	 */
@@ -92,47 +93,58 @@ class SettingsManager {
 			], 403 );
 		}
 
-		// Get and sanitize POST data
-		$api_token     = isset( $_POST['api_token'] ) ? sanitize_text_field( wp_unslash( $_POST['api_token'] ) ) : '';
-		$location_id   = isset( $_POST['location_id'] ) ? sanitize_text_field( wp_unslash( $_POST['location_id'] ) ) : '';
-		$api_version   = isset( $_POST['api_version'] ) ? sanitize_text_field( wp_unslash( $_POST['api_version'] ) ) : '2021-07-28';
-
-		// Check if API credentials changed
-		$current_settings    = $this->get_settings_array();
-		$credentials_changed = ( $api_token !== $current_settings['api_token'] ) || 
-		                       ( $location_id !== $current_settings['location_id'] );
-
-		// User sync settings
-		$enable_user_sync = isset( $_POST['enable_user_sync'] ) && filter_var( $_POST['enable_user_sync'], FILTER_VALIDATE_BOOLEAN );
-		$user_sync_actions = isset( $_POST['user_sync_actions'] ) && is_array( $_POST['user_sync_actions'] ) 
-			? array_map( 'sanitize_text_field', wp_unslash( $_POST['user_sync_actions'] ) ) 
-			: [];
-		$delete_contact_on_user_delete = isset( $_POST['delete_contact_on_user_delete'] ) && filter_var( $_POST['delete_contact_on_user_delete'], FILTER_VALIDATE_BOOLEAN );
+		// Get current settings to merge with new data
+		$current_settings = $this->get_settings_array();
 		
-		// User field mapping
-		$user_field_mapping = isset( $_POST['user_field_mapping'] ) && is_array( $_POST['user_field_mapping'] ) 
-			? array_map( 'sanitize_text_field', wp_unslash( $_POST['user_field_mapping'] ) ) 
-			: [];
-
-		// Validate required fields
-		if ( empty( $api_token ) || empty( $location_id ) ) {
-			wp_send_json_error( [
-				'message' => __( 'API Token and Location ID are required.', 'ghl-crm-integration' ),
-			], 400 );
+		// Prepare new settings array
+		$new_settings = [];
+		
+		// Check if API credentials are being changed
+		$credentials_changed = false;
+		
+		// Process all POST data dynamically
+		foreach ( $_POST as $key => $value ) {
+			// Skip WordPress and plugin internal fields
+			if ( in_array( $key, [ 'action', 'nonce', '_wp_http_referer' ], true ) ) {
+				continue;
+			}
+			
+			// Sanitize based on value type
+			if ( is_array( $value ) ) {
+				// Handle arrays (checkboxes, multi-selects, etc.)
+				$new_settings[ $key ] = array_map( 'sanitize_text_field', wp_unslash( $value ) );
+			} else {
+				// Check if this is an empty array marker from JavaScript
+				if ( $value === '__EMPTY_ARRAY__' ) {
+					$new_settings[ $key ] = [];
+				} else {
+					// Handle scalar values
+					$new_settings[ $key ] = sanitize_text_field( wp_unslash( $value ) );
+				}
+				
+				// Check if API credentials changed
+				if ( in_array( $key, [ 'api_token', 'location_id' ], true ) ) {
+					if ( isset( $current_settings[ $key ] ) && $current_settings[ $key ] !== $new_settings[ $key ] ) {
+						$credentials_changed = true;
+					}
+				}
+			}
 		}
+		
+		// Merge with current settings to preserve unmodified fields
+		$settings = array_merge( $current_settings, $new_settings, [
+			'updated_at' => current_time( 'mysql' ),
+			'site_id'    => get_current_blog_id(),
+		] );
 
-		// Prepare settings array
-		$settings = [
-			'api_token'                     => $api_token,
-			'location_id'                   => $location_id,
-			'api_version'                   => $api_version,
-			'enable_user_sync'              => $enable_user_sync,
-			'user_sync_actions'             => $user_sync_actions,
-			'delete_contact_on_user_delete' => $delete_contact_on_user_delete,
-			'user_field_mapping'            => $user_field_mapping,
-			'updated_at'                    => current_time( 'mysql' ),
-			'site_id'                       => get_current_blog_id(),
-		];
+		// Validate critical fields if they're being set
+		if ( isset( $new_settings['api_token'] ) || isset( $new_settings['location_id'] ) ) {
+			if ( empty( $settings['api_token'] ) || empty( $settings['location_id'] ) ) {
+				wp_send_json_error( [
+					'message' => __( 'API Token and Location ID are required.', 'ghl-crm-integration' ),
+				], 400 );
+			}
+		}
 
 		// Save settings (multisite aware)
 		$saved = $this->save_site_settings( $settings );
