@@ -1,0 +1,343 @@
+/**
+ * GoHighLevel CRM Integration - SPA Styles
+ *
+ * Styles for the Single Page Application interface.
+ *
+ * @package    GHL_CRM_Integration
+ * @subpackage GHL_CRM_Integration/assets/admin/css
+ */
+
+/* SPA Container */
+.ghl-spa-container {
+    min-height: 400px;
+    position: relative;
+    margin-top: 20px;
+}
+
+/* Loading State */
+.ghl-spa-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    gap: 1rem;
+}
+
+.ghl-loading-spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #7e3bd0;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: ghl-spin 1s linear infinite;
+}
+
+@keyframes ghl-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.ghl-spa-loading p {
+    color: #666;
+    font-size: 14px;
+}
+
+/* Dashboard */
+.ghl-crm-dashboard {
+    padding: 20px 0;
+}
+
+.ghl-card {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.ghl-card h2 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+/* Connection Status */
+.ghl-connection-status {
+    margin: 20px 0;
+    padding: 15px;
+    border-radius: 4px;
+}
+
+.ghl-status-connected {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    padding: 15px;
+    border-radius: 4px;
+}
+
+.ghl-status-connected .dashicons {
+    color: #28a745;
+    font-size: 20px;
+    vertical-align: middle;
+}
+
+.ghl-status-disconnected {
+    background: #fff3cd;
+    border: 1px solid #ffeeba;
+    color: #856404;
+    padding: 15px;
+    border-radius: 4px;
+}
+
+.ghl-status-disconnected .dashicons {
+    color: #ff9800;
+    font-size: 20px;
+    vertical-align: middle;
+}
+
+/* Settings Section */
+.ghl-crm-settings {
+    padding: 20px 0;
+}
+
+.ghl-settings-section {
+    /* background: #fff; */
+    /* border: 1px solid #ccd0d4; */
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.ghl-oauth-actions {
+    margin-top: 20px;
+}
+
+/* Integrations */
+.ghl-crm-integrations {
+    padding: 20px 0;
+}
+
+.ghl-crm-integrations .form-table {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+}
+
+/* Field Mapping */
+.ghl-crm-field-mapping {
+    padding: 20px 0;
+}
+
+.ghl-crm-field-mapping .wp-list-table {
+    margin-top: 20px;
+    background: #fff;
+}
+
+.ghl-crm-field-mapping .wp-list-table th {
+    font-weight: 600;
+}
+
+.ghl-crm-field-mapping .wp-list-table td {
+    vertical-align: middle;
+}
+
+.ghl-crm-field-mapping select {
+    width: 100%;
+    max-width: 300px;
+}
+
+.ghl-crm-field-mapping code {
+    background: #f0f0f1;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: #135e96;
+}
+
+.ghl-field-select:focus,
+.direction-select:focus {
+    /* border-color: #7e3bd0; */
+    /* box-shadow: 0 0 0 1px #7e3bd0; */
+    outline: none;
+}
+
+.ghl-field-select option:disabled {
+    color: #999;
+    font-style: italic;
+}
+
+/* Sync Logs */
+.ghl-crm-sync-logs {
+    padding: 20px 0;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+    .ghl-crm-field-mapping select {
+        max-width: 100%;
+    }
+    
+    .ghl-card {
+        padding: 15px;
+    }
+    
+    .ghl-settings-section {
+        padding: 15px;
+    }
+}
+
+/* ===========================
+   Horizontal Header Navigation
+   =========================== */
+.ghl-header-nav {
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0;
+    margin: 0 0 20px -20px;
+    margin-left: -20px;
+    margin-right: -20px;
+    position: sticky;
+    top: 32px;
+    z-index: 9;
+}
+
+/* WordPress admin bar offset */
+body.admin-bar .ghl-header-nav {
+    top: 32px;
+}
+
+@media screen and (max-width: 782px) {
+    body.admin-bar .ghl-header-nav {
+        top: 46px;
+    }
+}
+
+/* Navigation tabs container */
+.ghl-nav-tabs {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 0 20px;
+    margin: 0;
+    list-style: none;
+}
+
+/* Individual navigation tab */
+.ghl-nav-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 20px;
+    color: #6b7280 !important;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+    position: relative;
+    white-space: nowrap;
+}
+
+/* Tab icon */
+.ghl-nav-tab .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: #9ca3af;
+    transition: color 0.2s ease;
+}
+
+/* Tab label */
+.ghl-nav-label {
+    display: inline-block;
+}
+
+/* Hover state */
+.ghl-nav-tab:hover {
+    color: #111827 !important;
+    background: #f9fafb;
+    border-bottom-color: #e5e7eb;
+}
+
+.ghl-nav-tab:hover .dashicons {
+    color: #6b7280;
+}
+
+/* Active/Current tab */
+.ghl-nav-tab.current,
+.ghl-nav-tab.active {
+    color: #7e3bd0 !important;
+    border-bottom-color: #7e3bd0;
+    background: transparent;
+}
+
+.ghl-nav-tab.current .dashicons,
+.ghl-nav-tab.active .dashicons {
+    color: #7e3bd0;
+}
+
+/* Focus state for accessibility */
+.ghl-nav-tab:focus {
+    /* outline: 2px solid #7e3bd0;
+    outline-offset: -2px; */
+    box-shadow: none;
+}
+
+/* ===========================
+   Responsive Design
+   =========================== */
+@media screen and (max-width: 1280px) {
+    .ghl-nav-tabs {
+        padding: 0 15px;
+    }
+    
+    .ghl-nav-tab {
+        padding: 14px 16px;
+        font-size: 13px;
+    }
+}
+
+@media screen and (max-width: 960px) {
+    .ghl-nav-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .ghl-nav-tab {
+        flex-shrink: 0;
+    }
+}
+
+@media screen and (max-width: 782px) {
+    .ghl-header-nav {
+        margin-left: -10px;
+        margin-right: -10px;
+    }
+    
+    .ghl-nav-tabs {
+        padding: 0 10px;
+    }
+    
+    .ghl-nav-tab {
+        padding: 12px 14px;
+    }
+    
+    /* Hide labels on mobile, show icons only */
+    .ghl-nav-label {
+        display: none;
+    }
+    
+    .ghl-nav-tab .dashicons {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .ghl-nav-tab {
+        padding: 12px 12px;
+    }
+}
