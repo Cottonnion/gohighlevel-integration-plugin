@@ -55,6 +55,7 @@ class MenuManager {
 		add_filter( 'plugin_action_links_' . GHL_CRM_BASENAME, [ $this, 'add_plugin_action_links' ] );
 		add_action( 'wp_ajax_ghl_crm_spa_view', [ $this, 'handle_spa_view_request' ] );
 		add_action( 'wp_ajax_ghl_crm_load_settings_tab', [ $this, 'handle_settings_tab_request' ] );
+		add_filter( 'admin_footer_text', [ $this, 'custom_admin_footer_text' ] );
 	}
 
 	/**
@@ -143,6 +144,31 @@ class MenuManager {
 		array_unshift( $links, $settings_link );
 
 		return $links;
+	}
+
+	/**
+	 * Custom admin footer text for plugin pages
+	 *
+	 * Displays custom footer text on plugin admin pages encouraging users to rate the plugin.
+	 *
+	 * @param string $footer_text The existing footer text.
+	 * @return string Modified footer text on plugin pages, original text otherwise.
+	 */
+	public function custom_admin_footer_text( string $footer_text ): string {
+		// Get current screen
+		$current_screen = get_current_screen();
+		
+		// Check if we're on one of our plugin pages
+		if ( isset( $current_screen->id ) && strpos( $current_screen->id, 'ghl-crm' ) !== false ) {
+			$footer_text = sprintf(
+				/* translators: 1: Plugin name with link, 2: Star rating HTML */
+				esc_html__( 'Thank you for using %1$s! If you find it helpful, please consider leaving a %2$s rating.', 'ghl-crm-integration' ),
+				'<strong>' . esc_html__( 'GoHighLevel CRM Integration', 'ghl-crm-integration' ) . '</strong>',
+				'<a href="https://wordpress.org/support/plugin/ghl-crm-integration/reviews/?filter=5#new-post" target="_blank" rel="noopener noreferrer">&#9733;&#9733;&#9733;&#9733;&#9733;</a>'
+			);
+		}
+		
+		return $footer_text;
 	}
 
 	/**
