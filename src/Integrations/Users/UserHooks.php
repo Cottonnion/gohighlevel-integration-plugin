@@ -80,37 +80,38 @@ class UserHooks {
 			return;
 		}
 
-		// Check if user sync is enabled
-		if ( empty( $settings['enable_user_sync'] ) ) {
+		// Check API credentials (OAuth or manual token)
+		$has_oauth = ! empty( $settings['oauth_access_token'] );
+		$has_token = ! empty( $settings['api_token'] );
+		
+		if ( ! $has_oauth && ! $has_token ) {
+			return;
+		}
+		
+		if ( empty( $settings['location_id'] ) ) {
 			return;
 		}
 
-		// Check API credentials
-		if ( empty( $settings['api_token'] ) || empty( $settings['location_id'] ) ) {
-			return;
-		}
-
-		// Register hooks based on enabled actions
+		// Get sync actions array
 		$sync_actions = $settings['user_sync_actions'] ?? [];
 
+		// 1. User registration hook - Create new contacts in GoHighLevel when users register
 		if ( in_array( 'user_register', $sync_actions, true ) ) {
 			add_action( 'user_register', [ $this, 'on_user_register' ], 10, 1 );
 		}
 
-		if ( in_array( 'profile_update', $sync_actions, true ) ) {
+		// 2. User sync enabled - Sync profile updates and logins
+		if ( ! empty( $settings['enable_user_sync'] ) ) {
+			// Sync user profile updates to GoHighLevel
 			add_action( 'profile_update', [ $this, 'on_user_update' ], 10, 2 );
-		}
-
-		if ( in_array( 'delete_user', $sync_actions, true ) ) {
-			add_action( 'delete_user', [ $this, 'on_user_delete' ], 10, 1 );
-		}
-
-		if ( in_array( 'set_user_role', $sync_actions, true ) ) {
-			add_action( 'set_user_role', [ $this, 'on_user_role_change' ], 10, 3 );
-		}
-
-		if ( in_array( 'user_login', $sync_actions, true ) ) {
+			
+			// Track user logins in GoHighLevel
 			add_action( 'wp_login', [ $this, 'on_user_login' ], 10, 2 );
+		}
+
+		// 3. User deletion hook - Handle contact deletion/tagging when user is deleted
+		if ( ! empty( $settings['delete_contact_on_user_delete'] ) ) {
+			add_action( 'delete_user', [ $this, 'on_user_delete' ], 10, 1 );
 		}
 	}
 
