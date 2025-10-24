@@ -122,31 +122,18 @@ class UserHooks {
 	 * @return void
 	 */
 	public function on_user_register( int $user_id ): void {
-		try {
-			$user = get_userdata( $user_id );
-			
-			if ( ! $user ) {
-				return;
-			}
-
-			// Prepare contact data
-			$contact_data = $this->prepare_contact_data( $user );
-
-			// Create contact in GHL
-			$response = $this->contact_resource->upsert( $contact_data );
-
-			// Log success
-			$this->log_sync_event( $user_id, 'user_register', 'success', $response );
-
-			// Add tags if configured
-			$this->maybe_add_tags( $response['contact']['id'] ?? null, 'user_register' );
-
-		} catch ( \Exception $e ) {
-			// Log error
-			$this->log_sync_event( $user_id, 'user_register', 'error', [
-				'message' => $e->getMessage(),
-			] );
+		$user = get_userdata( $user_id );
+		
+		if ( ! $user ) {
+			return;
 		}
+
+		// Prepare contact data
+		$contact_data = $this->prepare_contact_data( $user );
+
+		// Queue for async processing
+		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
+		$queue_manager->add_to_queue( 'user', $user_id, 'user_register', $contact_data );
 	}
 
 	/**
@@ -157,28 +144,25 @@ class UserHooks {
 	 * @return void
 	 */
 	public function on_user_update( int $user_id, \WP_User $old_user_data ): void {
-		try {
-			$user = get_userdata( $user_id );
-			
-			if ( ! $user ) {
-				return;
-			}
-
-			// Prepare contact data
-			$contact_data = $this->prepare_contact_data( $user );
-
-			// Update contact in GHL
-			$response = $this->contact_resource->upsert( $contact_data );
-
-			// Log success
-			$this->log_sync_event( $user_id, 'profile_update', 'success', $response );
-
-		} catch ( \Exception $e ) {
-			// Log error
-			$this->log_sync_event( $user_id, 'profile_update', 'error', [
-				'message' => $e->getMessage(),
-			] );
+		// Debounce: Prevent multiple API calls on rapid updates
+		$lock_key = "ghl_sync_lock_{$user_id}";
+		if ( get_transient( $lock_key ) ) {
+			return;
 		}
+		set_transient( $lock_key, 1, 10 ); // 10 second lock
+
+		$user = get_userdata( $user_id );
+		
+		if ( ! $user ) {
+			return;
+		}
+
+		// Prepare contact data
+		$contact_data = $this->prepare_contact_data( $user );
+
+		// Queue for async processing
+		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
+		$queue_manager->add_to_queue( 'user', $user_id, 'profile_update', $contact_data );
 	}
 
 	/**
@@ -188,115 +172,51 @@ class UserHooks {
 	 * @return void
 	 */
 	public function on_user_delete( int $user_id ): void {
-		try {
-			$user = get_userdata( $user_id );
-			
-			if ( ! $user ) {
-				return;
-			}
-
-			// Find contact by email
-			$contact = $this->contact_resource->find_by_email( $user->user_email );
-
-			if ( $contact ) {
-				// Check if we should delete or just tag
-				$settings = $this->settings_manager->get_settings_array();
-				
-				if ( ! empty( $settings['delete_contact_on_user_delete'] ) ) {
-					// Delete contact from GHL
-					$this->contact_resource->delete( $contact['id'] );
-				} else {
-					// Just add a "deleted" tag
-					$this->contact_resource->add_tags( $contact['id'], [ 'wp-user-deleted' ] );
-				}
-
-				// Log success
-				$this->log_sync_event( $user_id, 'delete_user', 'success', [ 'contact_id' => $contact['id'] ] );
-			}
-
-		} catch ( \Exception $e ) {
-			// Log error
-			$this->log_sync_event( $user_id, 'delete_user', 'error', [
-				'message' => $e->getMessage(),
-			] );
+		$user = get_userdata( $user_id );
+		
+		if ( ! $user ) {
+			return;
 		}
-	}
 
-	/**
-	 * Handle user role change
-	 *
-	 * @param int    $user_id   User ID
-	 * @param string $role      New role
-	 * @param array  $old_roles Old roles
-	 * @return void
-	 */
-	public function on_user_role_change( int $user_id, string $role, array $old_roles ): void {
-		try {
-			$user = get_userdata( $user_id );
-			
-			if ( ! $user ) {
-				return;
-			}
+		$settings = $this->settings_manager->get_settings_array();
+		
+		// Queue deletion with settings
+		$data = [
+			'email'  => $user->user_email,
+			'delete' => ! empty( $settings['delete_contact_on_user_delete'] ),
+		];
 
-			// Find contact by email
-			$contact = $this->contact_resource->find_by_email( $user->user_email );
-
-			if ( $contact ) {
-				// Add role-based tags
-				$this->contact_resource->add_tags( $contact['id'], [ "wp-role-{$role}" ] );
-
-				// Update contact data with new role
-				$contact_data         = $this->prepare_contact_data( $user );
-				$this->contact_resource->update( $contact['id'], $contact_data );
-
-				// Log success
-				$this->log_sync_event( $user_id, 'set_user_role', 'success', [
-					'new_role'  => $role,
-					'old_roles' => $old_roles,
-				] );
-			}
-
-		} catch ( \Exception $e ) {
-			// Log error
-			$this->log_sync_event( $user_id, 'set_user_role', 'error', [
-				'message' => $e->getMessage(),
-			] );
-		}
+		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
+		$queue_manager->add_to_queue( 'user', $user_id, 'delete_user', $data );
 	}
 
 	/**
 	 * Handle user login
+	 * Updates last_login custom field instead of adding notes (less API spam)
 	 *
 	 * @param string   $user_login Username
 	 * @param \WP_User $user       User object
 	 * @return void
 	 */
 	public function on_user_login( string $user_login, \WP_User $user ): void {
-		try {
-			// Find contact by email
-			$contact = $this->contact_resource->find_by_email( $user->user_email );
-
-			if ( $contact ) {
-				// Add note about login
-				$this->contact_resource->add_note(
-					$contact['id'],
-					sprintf(
-						/* translators: %s: Date and time */
-						__( 'User logged in on %s', 'ghl-crm-integration' ),
-						current_time( 'mysql' )
-					)
-				);
-
-				// Log success
-				$this->log_sync_event( $user->ID, 'user_login', 'success', [ 'contact_id' => $contact['id'] ] );
-			}
-
-		} catch ( \Exception $e ) {
-			// Log error
-			$this->log_sync_event( $user->ID, 'user_login', 'error', [
-				'message' => $e->getMessage(),
-			] );
+		// Throttle: Only update once per hour to avoid API spam
+		$last_login_key = "ghl_last_login_{$user->ID}";
+		$last_sync = get_transient( $last_login_key );
+		
+		if ( $last_sync ) {
+			return; // Already synced within the hour
 		}
+		
+		set_transient( $last_login_key, time(), HOUR_IN_SECONDS );
+
+		// Queue login tracking (will update custom field, not add note)
+		$data = [
+			'email'      => $user->user_email,
+			'last_login' => current_time( 'mysql' ),
+		];
+
+		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
+		$queue_manager->add_to_queue( 'user', $user->ID, 'user_login', $data );
 	}
 
 	/**
@@ -363,48 +283,6 @@ class UserHooks {
 				// Silent fail for tags
 				error_log( 'GHL CRM: Failed to add tags - ' . $e->getMessage() );
 			}
-		}
-	}
-
-	/**
-	 * Log sync event
-	 *
-	 * @param int    $user_id User ID
-	 * @param string $action  Action name
-	 * @param string $status  Status (success/error)
-	 * @param array  $data    Additional data
-	 * @return void
-	 */
-	private function log_sync_event( int $user_id, string $action, string $status, array $data = [] ): void {
-		// Store in wp_options for now (Phase 2 will create dedicated table)
-		$log_entry = [
-			'user_id'   => $user_id,
-			'action'    => $action,
-			'status'    => $status,
-			'data'      => $data,
-			'timestamp' => current_time( 'mysql' ),
-		];
-
-		// Get existing logs
-		$logs = get_option( 'ghl_crm_sync_logs', [] );
-		
-		// Add new log
-		array_unshift( $logs, $log_entry );
-		
-		// Keep only last 100 logs
-		$logs = array_slice( $logs, 0, 100 );
-		
-		// Update option
-		update_option( 'ghl_crm_sync_logs', $logs );
-
-		// Also log to error_log for debugging
-		if ( 'error' === $status ) {
-			error_log( sprintf(
-				'GHL CRM Sync Error: User %d, Action %s, Message: %s',
-				$user_id,
-				$action,
-				$data['message'] ?? 'Unknown error'
-			) );
 		}
 	}
 
