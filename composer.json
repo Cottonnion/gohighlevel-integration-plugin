@@ -20,6 +20,21 @@
   },
   "config": {
     "optimize-autoloader": true,
-    "sort-packages": true
+    "sort-packages": true,
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
+  },
+  "scripts": {
+    "check": "phpcs",
+    "fix": "phpcbf",
+    "check-file": "phpcs --file-list=-",
+    "fix-file": "phpcbf --file-list=-",
+    "standards": "phpcs -i"
+  },
+  "require-dev": {
+    "dealerdirect/phpcodesniffer-composer-installer": "^1.1",
+    "squizlabs/php_codesniffer": "^3.13",
+    "wp-coding-standards/wpcs": "^3.2"
   }
 }

@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+
+# GHL CRM Integration - Code Standards Auto-Fixer
+# Usage: ./fix [path]
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Plugin directory
+PLUGIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Default path to fix (all files if not specified)
+FIX_PATH="${1:-}"
+
+echo -e "${BLUE}🔧 GHL CRM Integration - Code Standards Auto-Fix${NC}"
+echo -e "${BLUE}==================================================${NC}"
+
+# Check if phpcbf is available
+if [ ! -f "$PLUGIN_DIR/vendor/bin/phpcbf" ]; then
+    echo -e "${RED}❌ PHP Code Beautifier and Fixer not found!${NC}"
+    echo -e "${YELLOW}Run: composer install --dev${NC}"
+    exit 1
+fi
+
+# Build command
+PHPCBF_CMD=("$PLUGIN_DIR/vendor/bin/phpcbf")
+
+# Add configuration file
+if [ -f "$PLUGIN_DIR/phpcs.xml" ]; then
+    PHPCBF_CMD+=("--standard=$PLUGIN_DIR/phpcs.xml")
+else
+    echo -e "${YELLOW}⚠️  No phpcs.xml found, using WordPress standards${NC}"
+    PHPCBF_CMD+=("--standard=WordPress")
+fi
+
+# Add specific path if provided
+if [ -n "$FIX_PATH" ]; then
+    if [ ! -e "$FIX_PATH" ]; then
+        echo -e "${RED}❌ Path not found: $FIX_PATH${NC}"
+        exit 1
+    fi
+    PHPCBF_CMD+=("$FIX_PATH")
+    echo -e "${BLUE}Fixing: $FIX_PATH${NC}"
+else
+    echo -e "${BLUE}Fixing: All plugin files${NC}"
+fi
+
+echo ""
+
+# Run phpcbf
+echo -e "${YELLOW}⚠️  This will modify your files automatically${NC}"
+read -p "Continue? (y/N): " -n 1 -r
+echo ""
+
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo -e "${YELLOW}Cancelled by user${NC}"
+    exit 0
+fi
+
+echo -e "${BLUE}Running auto-fixer...${NC}"
+echo ""
+
+# Run the fixer
+if "${PHPCBF_CMD[@]}"; then
+    echo ""
+    echo -e "${GREEN}✅ No fixable issues found (or all issues fixed)${NC}"
+    echo -e "${BLUE}💡 Run './check' to verify all standards are met${NC}"
+else
+    EXIT_CODE=$?
+    if [ $EXIT_CODE -eq 1 ]; then
+        echo ""
+        echo -e "${GREEN}✅ Some issues were automatically fixed!${NC}"
+        echo -e "${BLUE}💡 Run './check' to see remaining issues${NC}"
+        exit 0
+    else
+        echo ""
+        echo -e "${RED}❌ Auto-fixer encountered an error${NC}"
+        exit $EXIT_CODE
+    fi
+fi

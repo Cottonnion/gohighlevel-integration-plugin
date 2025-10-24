@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+# GHL CRM Integration - Code Standards Checker
+# Usage: ./check [path]
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Plugin directory
+PLUGIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Default path to check (all files if not specified)
+CHECK_PATH="${1:-}"
+
+echo -e "${BLUE}🔍 GHL CRM Integration - Code Standards Check${NC}"
+echo -e "${BLUE}=================================================${NC}"
+
+# Check if phpcs is available
+if [ ! -f "$PLUGIN_DIR/vendor/bin/phpcs" ]; then
+    echo -e "${RED}❌ PHP_CodeSniffer not found!${NC}"
+    echo -e "${YELLOW}Run: composer install --dev${NC}"
+    exit 1
+fi
+
+# Build command
+PHPCS_CMD=("$PLUGIN_DIR/vendor/bin/phpcs")
+
+# Add configuration file
+if [ -f "$PLUGIN_DIR/phpcs.xml" ]; then
+    PHPCS_CMD+=("--standard=$PLUGIN_DIR/phpcs.xml")
+else
+    echo -e "${YELLOW}⚠️  No phpcs.xml found, using WordPress standards${NC}"
+    PHPCS_CMD+=("--standard=WordPress")
+fi
+
+# Add specific path if provided
+if [ -n "$CHECK_PATH" ]; then
+    if [ ! -e "$CHECK_PATH" ]; then
+        echo -e "${RED}❌ Path not found: $CHECK_PATH${NC}"
+        exit 1
+    fi
+    PHPCS_CMD+=("$CHECK_PATH")
+    echo -e "${BLUE}Checking: $CHECK_PATH${NC}"
+else
+    echo -e "${BLUE}Checking: All plugin files${NC}"
+fi
+
+echo ""
+
+# Run phpcs
+if "${PHPCS_CMD[@]}"; then
+    echo ""
+    echo -e "${GREEN}✅ All files pass coding standards!${NC}"
+    exit 0
+else
+    EXIT_CODE=$?
+    echo ""
+    echo -e "${RED}❌ Coding standards violations found${NC}"
+    echo -e "${YELLOW}💡 Run './fix' to automatically fix some issues${NC}"
+    echo -e "${YELLOW}💡 Run './fix [path]' to fix specific files${NC}"
+    exit $EXIT_CODE
+fi

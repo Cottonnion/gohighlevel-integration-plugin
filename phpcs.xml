@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+<ruleset name="GHL CRM Integration">
+    <description>WordPress coding standards for GHL CRM Integration plugin</description>
+
+    <!-- Check all PHP files in these directories -->
+    <file>./src</file>
+    <file>./gohighlevel-crm-integration.php</file>
+    <file>./templates</file>
+
+    <!-- Exclude vendor and other third-party directories -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+    <exclude-pattern>*/assets/admin/js/*</exclude-pattern>
+    <exclude-pattern>*/assets/admin/css/*</exclude-pattern>
+
+    <!-- Use WordPress coding standards -->
+    <rule ref="WordPress">
+        <!-- Allow short array syntax (modern PHP) -->
+        <exclude name="Generic.Arrays.DisallowShortArraySyntax"/>
+        <exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
+        
+        <!-- Allow snake_case file names (WordPress convention) -->
+        <exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+        <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+        
+        <!-- Don't require strict comparison for certain cases -->
+        <exclude name="WordPress.PHP.StrictComparisons.LooseComparison"/>
+        
+        <!-- Allow multiple assignments in one statement -->
+        <exclude name="Squiz.PHP.DisallowMultipleAssignments"/>
+        
+        <!-- Don't require text domain in every string -->
+        <exclude name="WordPress.WP.I18n.MissingTranslatorsComment"/>
+        <exclude name="WordPress.WP.I18n.NonSingularStringLiteralDomain"/>
+        
+        <!-- Allow closures without specific spacing -->
+        <exclude name="Squiz.Functions.MultiLineFunctionDeclaration.BraceOnSameLine"/>
+        
+        <!-- Don't require file docblocks -->
+        <exclude name="Squiz.Commenting.FileComment.Missing"/>
+        
+        <!-- Allow inline comments without ending punctuation -->
+        <exclude name="Squiz.Commenting.InlineComment.InvalidEndChar"/>
+    </rule>
+
+    <!-- Include WordPress-Extra rules for additional checks -->
+    <rule ref="WordPress-Extra"/>
+
+    <!-- Include WordPress-Docs for documentation standards -->
+    <rule ref="WordPress-Docs"/>
+
+    <!-- Set minimum PHP version -->
+    <config name="minimum_supported_wp_version" value="6.0"/>
+    <config name="testVersion" value="7.4-"/>
+
+    <!-- Custom rules for this project -->
+    <rule ref="Generic.PHP.ForbiddenFunctions">
+        <properties>
+            <property name="forbiddenFunctions" type="array">
+                <!-- Discourage dangerous functions -->
+                <element key="eval" value="null"/>
+                <element key="exec" value="null"/>
+                <element key="system" value="null"/>
+                <element key="shell_exec" value="null"/>
+                <element key="passthru" value="null"/>
+                <!-- Encourage WordPress alternatives -->
+                <element key="curl_init" value="wp_remote_get"/>
+                <element key="file_get_contents" value="wp_remote_get"/>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- Text domain should match plugin slug -->
+    <rule ref="WordPress.WP.I18n">
+        <properties>
+            <property name="text_domain" type="array">
+                <element value="ghl-crm-integration"/>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- Prefix for global functions and variables -->
+    <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+        <properties>
+            <property name="prefixes" type="array">
+                <element value="ghl_crm"/>
+                <element value="GHL_CRM"/>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- File encoding -->
+    <arg name="encoding" value="utf-8"/>
+    
+    <!-- Show colors in output -->
+    <arg name="colors"/>
+    
+    <!-- Show progress -->
+    <arg value="p"/>
+    
+    <!-- Show sniff codes -->
+    <arg value="s"/>
+    
+    <!-- Extensions to check -->
+    <arg name="extensions" value="php"/>
+    
+    <!-- Parallel processing -->
+    <arg name="parallel" value="8"/>
+</ruleset>
