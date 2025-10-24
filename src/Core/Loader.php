@@ -65,6 +65,7 @@ class Loader {
 	private function define_components(): void {
 		$this->components = [
 			// Core components
+			'core.database'   => \GHL_CRM\Core\Database::class,
 			'core.settings'   => \GHL_CRM\Core\SettingsManager::class,
 			'core.assets'     => \GHL_CRM\Core\AssetsManager::class,
 			'core.ajax'       => \GHL_CRM\Core\AjaxHandler::class,
@@ -73,6 +74,9 @@ class Loader {
 			
 			// API components
 			'api.oauth'       => \GHL_CRM\API\OAuth\OAuthHandler::class,
+			
+			// Sync components
+			'sync.queue'      => \GHL_CRM\Sync\QueueManager::class,
 			
 			// Integration components
 			'integrations.users' => \GHL_CRM\Integrations\Users\UserHooks::class,
@@ -91,6 +95,9 @@ class Loader {
 
 		// Initialize components after plugins loaded
 		add_action( 'plugins_loaded', [ $this, 'init_components' ], 20 );
+		
+		// Register cleanup action (Action Scheduler hook)
+		add_action( 'ghl_crm_cleanup_database', [ \GHL_CRM\Core\Database::class, 'cleanup' ] );
 	}
 
 	/**
@@ -120,6 +127,7 @@ class Loader {
 
 	/**
 	 * Plugin activation handler
+	 * Multisite-aware: Creates tables for each site
 	 *
 	 * @return void
 	 */
@@ -134,7 +142,26 @@ class Loader {
 			);
 		}
 
-		// Activation logic here
+		// Create/update database tables
+		if ( is_multisite() ) {
+			// Create tables for all existing sites
+			$sites = get_sites( [
+				'number' => 999,
+			] );
+
+			foreach ( $sites as $site ) {
+				switch_to_blog( $site->blog_id );
+				\GHL_CRM\Core\Database::get_instance()->init();
+				restore_current_blog();
+			}
+		} else {
+			\GHL_CRM\Core\Database::get_instance()->init();
+		}
+
+		// Schedule cleanup job
+		\GHL_CRM\Core\Database::get_instance()->schedule_cleanup();
+
+		// Flush rewrite rules
 		flush_rewrite_rules();
 
 		// Fire activation hook
@@ -147,7 +174,15 @@ class Loader {
 	 * @return void
 	 */
 	public static function deactivate(): void {
-		// Deactivation logic here
+		// Unschedule all Action Scheduler actions
+		\GHL_CRM\Sync\QueueManager::unschedule_actions();
+		
+		// Unschedule cleanup (Action Scheduler)
+		if ( function_exists( 'as_unschedule_all_actions' ) ) {
+			as_unschedule_all_actions( 'ghl_crm_cleanup_database', [], 'ghl-crm' );
+		}
+
+		// Flush rewrite rules
 		flush_rewrite_rules();
 
 		// Fire deactivation hook
