@@ -146,14 +146,14 @@ class Client implements ClientInterface {
 	 */
 	public function handle_http_response( $response, $args, $url ) {
 		// Only handle GoHighLevel API requests
-		if ( strpos( $url, 'services.leadconnectorhq.com' ) === false && 
-		     strpos( $url, 'rest.gohighlevel.com' ) === false ) {
+		if ( strpos( $url, 'services.leadconnectorhq.com' ) === false &&
+			strpos( $url, 'rest.gohighlevel.com' ) === false ) {
 			return $response;
 		}
 
 		// Skip if it's a token request (avoid infinite loop)
-		if ( strpos( $url, '/oauth/token' ) !== false || 
-		     strpos( $url, '/oauth/reconnect' ) !== false ) {
+		if ( strpos( $url, '/oauth/token' ) !== false ||
+			strpos( $url, '/oauth/reconnect' ) !== false ) {
 			return $response;
 		}
 
@@ -163,7 +163,7 @@ class Client implements ClientInterface {
 		}
 
 		$response_code = wp_remote_retrieve_response_code( $response );
-		
+
 		// Success - no action needed
 		if ( 200 === $response_code || 201 === $response_code ) {
 			return $response;
@@ -172,42 +172,42 @@ class Client implements ClientInterface {
 		$body_json = json_decode( wp_remote_retrieve_body( $response ), true );
 
 		// Handle duplicate contact - auto-update instead of create
-		if ( 400 === $response_code && 
-		     isset( $body_json['message'] ) && 
-		     'This location does not allow duplicated contacts.' === $body_json['message'] &&
-		     isset( $body_json['meta']['matchingField'] ) &&
-		     'email' === $body_json['meta']['matchingField'] ) {
-			
+		if ( 400 === $response_code &&
+			isset( $body_json['message'] ) &&
+			'This location does not allow duplicated contacts.' === $body_json['message'] &&
+			isset( $body_json['meta']['matchingField'] ) &&
+			'email' === $body_json['meta']['matchingField'] ) {
+
 			// Extract contact ID and update instead
 			$contact_id = sanitize_text_field( $body_json['meta']['contactId'] ?? '' );
-			
+
 			if ( ! empty( $contact_id ) && 'POST' === $args['method'] ) {
 				// Change to PUT request for update
 				$args['method'] = 'PUT';
-				
+
 				// Remove locationId from body (causes error on update)
 				$contact_data = json_decode( $args['body'], true );
 				if ( isset( $contact_data['locationId'] ) ) {
 					unset( $contact_data['locationId'] );
 				}
-				
+
 				$args['body'] = wp_json_encode( $contact_data );
-				
+
 				// Update the URL to include contact ID
 				$base_url = preg_replace( '/contacts\/?$/', '', $url );
-				$new_url = $base_url . 'contacts/' . $contact_id;
-				
+				$new_url  = $base_url . 'contacts/' . $contact_id;
+
 				// Retry as update request
 				return wp_remote_request( $new_url, $args );
 			}
 		}
 
 		// Handle 401/403 authentication errors
-		if ( ( 401 === $response_code || 403 === $response_code ) && 
-		     isset( $body_json['message'] ) ) {
-			
+		if ( ( 401 === $response_code || 403 === $response_code ) &&
+			isset( $body_json['message'] ) ) {
+
 			$error_message = $body_json['message'];
-			
+
 			// Check if it's a token-related error
 			$token_errors = [
 				'The token does not have access to this location.',
@@ -217,7 +217,7 @@ class Client implements ClientInterface {
 				'expired',
 				'unauthorized',
 			];
-			
+
 			$is_token_error = false;
 			foreach ( $token_errors as $error_str ) {
 				if ( stripos( $error_message, $error_str ) !== false ) {
@@ -225,18 +225,18 @@ class Client implements ClientInterface {
 					break;
 				}
 			}
-			
+
 			if ( $is_token_error ) {
 				try {
 					// Attempt to refresh the access token
 					$this->refresh_access_token();
-					
+
 					// Update authorization header with new token
 					$args['headers']['Authorization'] = 'Bearer ' . $this->access_token;
-					
+
 					// Retry the original request
 					return wp_remote_request( $url, $args );
-					
+
 				} catch ( \Exception $e ) {
 					// Token refresh failed - show admin notice
 					$notices = \GHL_CRM\Core\AdminNotices::get_instance();
@@ -250,8 +250,8 @@ class Client implements ClientInterface {
 					);
 
 					// Return error
-					return new \WP_Error( 
-						'token_refresh_failed', 
+					return new \WP_Error(
+						'token_refresh_failed',
 						sprintf(
 							/* translators: %s: Error message */
 							__( 'Error refreshing access token: %s', 'ghl-crm-integration' ),
@@ -274,25 +274,25 @@ class Client implements ClientInterface {
 		// Get settings from SettingsManager (multisite-aware)
 		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 		$settings         = $settings_manager->get_settings_array();
-		
+
 		// OAuth2 tokens from settings
 		if ( ! empty( $settings['oauth_access_token'] ) ) {
 			$this->access_token = $settings['oauth_access_token'];
 		}
-		
+
 		if ( ! empty( $settings['oauth_refresh_token'] ) ) {
 			$this->refresh_token = $settings['oauth_refresh_token'];
 		}
-		
+
 		// Fallback to manual token if OAuth not configured
 		if ( ! empty( $settings['api_token'] ) ) {
 			$this->token = $settings['api_token'];
 		}
-		
+
 		if ( ! empty( $settings['location_id'] ) ) {
 			$this->location_id = $settings['location_id'];
 		}
-		
+
 		if ( ! empty( $settings['api_version'] ) ) {
 			$this->api_version = $settings['api_version'];
 		}
@@ -480,7 +480,7 @@ class Client implements ClientInterface {
 		}
 
 		// Update tokens
-		$this->access_token  = $decoded['access_token'];
+		$this->access_token = $decoded['access_token'];
 		if ( ! empty( $decoded['refresh_token'] ) ) {
 			$this->refresh_token = $decoded['refresh_token'];
 		}
@@ -618,7 +618,7 @@ class Client implements ClientInterface {
 	 */
 	public function get_rate_limit_status(): array {
 		$headers = $this->last_response_headers;
-		
+
 		return [
 			'remaining' => isset( $headers['x-ratelimit-remaining'] ) ? (int) $headers['x-ratelimit-remaining'] : 0,
 			'limit'     => isset( $headers['x-ratelimit-limit'] ) ? (int) $headers['x-ratelimit-limit'] : 0,
@@ -635,16 +635,16 @@ class Client implements ClientInterface {
 	 */
 	private function build_url( string $endpoint, array $params = [] ): string {
 		$url = self::BASE_URL . '/' . ltrim( $endpoint, '/' );
-		
+
 		// Add location ID to params if not already present
 		if ( ! empty( $this->location_id ) && ! isset( $params['locationId'] ) ) {
 			$params['locationId'] = $this->location_id;
 		}
-		
+
 		if ( ! empty( $params ) ) {
 			$url .= '?' . http_build_query( $params );
 		}
-		
+
 		return $url;
 	}
 
@@ -711,18 +711,18 @@ class Client implements ClientInterface {
 			try {
 				// Attempt to refresh the token
 				$this->refresh_access_token();
-				
+
 				// Save refreshed tokens
 				$this->save_oauth_tokens();
-				
+
 				// Retry the request with new token
 				$args['headers']['Authorization'] = 'Bearer ' . $this->access_token;
-				$response = wp_remote_request( $url, $args );
-				
+				$response                         = wp_remote_request( $url, $args );
+
 				if ( ! is_wp_error( $response ) ) {
-					$status_code = wp_remote_retrieve_response_code( $response );
-					$body        = wp_remote_retrieve_body( $response );
-					$headers     = wp_remote_retrieve_headers( $response );
+					$status_code                 = wp_remote_retrieve_response_code( $response );
+					$body                        = wp_remote_retrieve_body( $response );
+					$headers                     = wp_remote_retrieve_headers( $response );
 					$this->last_response_headers = $headers->getAll();
 				}
 			} catch ( ApiException $e ) {
@@ -733,7 +733,7 @@ class Client implements ClientInterface {
 
 		// Decode JSON response
 		$decoded = json_decode( $body, true );
-		
+
 		if ( json_last_error() !== JSON_ERROR_NONE ) {
 			throw new ApiException(
 				esc_html__( 'Invalid JSON response from API', 'ghl-crm-integration' ),
@@ -756,12 +756,12 @@ class Client implements ClientInterface {
 	private function save_oauth_tokens(): void {
 		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 		$current_settings = $settings_manager->get_settings_array();
-		
+
 		$oauth_settings = [
 			'oauth_access_token'  => $this->access_token,
 			'oauth_refresh_token' => $this->refresh_token,
 		];
-		
+
 		// Merge with existing settings and save
 		$updated_settings = array_merge( $current_settings, $oauth_settings );
 		update_option( 'ghl_crm_settings', $updated_settings );
@@ -775,13 +775,13 @@ class Client implements ClientInterface {
 	private function clear_oauth_tokens(): void {
 		$this->access_token  = '';
 		$this->refresh_token = '';
-		
+
 		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 		$current_settings = $settings_manager->get_settings_array();
-		
+
 		unset( $current_settings['oauth_access_token'] );
 		unset( $current_settings['oauth_refresh_token'] );
-		
+
 		update_option( 'ghl_crm_settings', $current_settings );
 	}
 

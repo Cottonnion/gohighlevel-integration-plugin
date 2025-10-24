@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class AdminNotices {
 	/**
 	 * Transient prefix for storing notices
-	 * 
+	 *
 	 * Note: Uses site transients (site-specific in multisite)
 	 */
 	private const TRANSIENT_PREFIX = 'ghl_crm_notice_';
@@ -65,7 +65,7 @@ class AdminNotices {
 	private function init_hooks(): void {
 		// Display notices on settings page
 		add_action( 'ghl_crm_settings_notices', [ $this, 'display_notices' ] );
-		
+
 		// Display notices on all admin pages (for global notices)
 		add_action( 'admin_notices', [ $this, 'display_global_notices' ] );
 	}
@@ -91,7 +91,7 @@ class AdminNotices {
 			'timestamp'   => time(),
 		];
 
-		$notices = $this->get_stored_notices();
+		$notices   = $this->get_stored_notices();
 		$notices[] = $notice;
 
 		// Use site transient for multisite compatibility
@@ -227,8 +227,8 @@ class AdminNotices {
 	 * @return void
 	 */
 	private function render_notice( array $notice ): void {
-		$type = sanitize_html_class( $notice['type'] ?? 'info' );
-		$message = esc_html( $notice['message'] ?? '' );
+		$type        = sanitize_html_class( $notice['type'] ?? 'info' );
+		$message     = esc_html( $notice['message'] ?? '' );
 		$dismissible = ! empty( $notice['dismissible'] ) ? 'is-dismissible' : '';
 
 		printf(

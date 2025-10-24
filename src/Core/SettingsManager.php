@@ -88,27 +88,30 @@ class SettingsManager {
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [
-				'message' => __( 'You do not have permission to save settings.', 'ghl-crm-integration' ),
-			], 403 );
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to save settings.', 'ghl-crm-integration' ),
+				],
+				403
+			);
 		}
 
 		// Get current settings to merge with new data
 		$current_settings = $this->get_settings_array();
-		
+
 		// Prepare new settings array
 		$new_settings = [];
-		
+
 		// Check if API credentials are being changed
 		$credentials_changed = false;
-		
+
 		// Process all POST data dynamically
 		foreach ( $_POST as $key => $value ) {
 			// Skip WordPress and plugin internal fields
 			if ( in_array( $key, [ 'action', 'nonce', '_wp_http_referer' ], true ) ) {
 				continue;
 			}
-			
+
 			// Sanitize based on value type
 			if ( is_array( $value ) ) {
 				// Handle arrays (checkboxes, multi-selects, etc.)
@@ -121,7 +124,7 @@ class SettingsManager {
 					// Handle scalar values
 					$new_settings[ $key ] = sanitize_text_field( wp_unslash( $value ) );
 				}
-				
+
 				// Check if API credentials changed
 				if ( in_array( $key, [ 'api_token', 'location_id' ], true ) ) {
 					if ( isset( $current_settings[ $key ] ) && $current_settings[ $key ] !== $new_settings[ $key ] ) {
@@ -130,19 +133,26 @@ class SettingsManager {
 				}
 			}
 		}
-		
+
 		// Merge with current settings to preserve unmodified fields
-		$settings = array_merge( $current_settings, $new_settings, [
-			'updated_at' => current_time( 'mysql' ),
-			'site_id'    => get_current_blog_id(),
-		] );
+		$settings = array_merge(
+			$current_settings,
+			$new_settings,
+			[
+				'updated_at' => current_time( 'mysql' ),
+				'site_id'    => get_current_blog_id(),
+			]
+		);
 
 		// Validate critical fields if they're being set
 		if ( isset( $new_settings['api_token'] ) || isset( $new_settings['location_id'] ) ) {
 			if ( empty( $settings['api_token'] ) || empty( $settings['location_id'] ) ) {
-				wp_send_json_error( [
-					'message' => __( 'API Token and Location ID are required.', 'ghl-crm-integration' ),
-				], 400 );
+				wp_send_json_error(
+					[
+						'message' => __( 'API Token and Location ID are required.', 'ghl-crm-integration' ),
+					],
+					400
+				);
 			}
 		}
 
@@ -167,9 +177,12 @@ class SettingsManager {
 
 			wp_send_json_success( $response_data );
 		} else {
-			wp_send_json_error( [
-				'message' => __( 'Failed to save settings. Please try again.', 'ghl-crm-integration' ),
-			], 500 );
+			wp_send_json_error(
+				[
+					'message' => __( 'Failed to save settings. Please try again.', 'ghl-crm-integration' ),
+				],
+				500
+			);
 		}
 	}
 
@@ -184,14 +197,19 @@ class SettingsManager {
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [
-				'message' => __( 'You do not have permission to view settings.', 'ghl-crm-integration' ),
-			], 403 );
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to view settings.', 'ghl-crm-integration' ),
+				],
+				403
+			);
 		}
 
-		wp_send_json_success( [
-			'settings' => $this->get_settings_array(),
-		] );
+		wp_send_json_success(
+			[
+				'settings' => $this->get_settings_array(),
+			]
+		);
 	}
 
 	/**
@@ -205,40 +223,52 @@ class SettingsManager {
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [
-				'message' => __( 'You do not have permission to test connection.', 'ghl-crm-integration' ),
-			], 403 );
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to test connection.', 'ghl-crm-integration' ),
+				],
+				403
+			);
 		}
 
 		// Get settings
 		$settings = $this->get_settings_array();
 
 		if ( empty( $settings['api_token'] ) || empty( $settings['location_id'] ) ) {
-			wp_send_json_error( [
-				'message' => __( 'Please save your API credentials first.', 'ghl-crm-integration' ),
-			], 400 );
+			wp_send_json_error(
+				[
+					'message' => __( 'Please save your API credentials first.', 'ghl-crm-integration' ),
+				],
+				400
+			);
 		}
 
 		// Test the connection
 		$api_url = 'https://services.leadconnectorhq.com/locations/' . $settings['location_id'];
-		
-		$response = wp_remote_get( $api_url, [
-			'headers' => [
-				'Authorization' => 'Bearer ' . $settings['api_token'],
-				'Version'       => $settings['api_version'],
-				'Content-Type'  => 'application/json',
-			],
-			'timeout' => 15,
-		] );
+
+		$response = wp_remote_get(
+			$api_url,
+			[
+				'headers' => [
+					'Authorization' => 'Bearer ' . $settings['api_token'],
+					'Version'       => $settings['api_version'],
+					'Content-Type'  => 'application/json',
+				],
+				'timeout' => 15,
+			]
+		);
 
 		if ( is_wp_error( $response ) ) {
-			wp_send_json_error( [
-				'message' => sprintf(
-					/* translators: %s: Error message */
-					__( 'Connection failed: %s', 'ghl-crm-integration' ),
-					$response->get_error_message()
-				),
-			], 500 );
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: Error message */
+						__( 'Connection failed: %s', 'ghl-crm-integration' ),
+						$response->get_error_message()
+					),
+				],
+				500
+			);
 		}
 
 		$status_code = wp_remote_retrieve_response_code( $response );
@@ -248,24 +278,29 @@ class SettingsManager {
 			// Mark connection as verified
 			$this->mark_connection_verified();
 
-			wp_send_json_success( [
-				'message'      => __( 'Connection successful! Your API credentials are working.', 'ghl-crm-integration' ),
-				'location_name' => isset( $body['location']['name'] ) ? $body['location']['name'] : '',
-				'status_code'  => $status_code,
-			] );
+			wp_send_json_success(
+				[
+					'message'       => __( 'Connection successful! Your API credentials are working.', 'ghl-crm-integration' ),
+					'location_name' => isset( $body['location']['name'] ) ? $body['location']['name'] : '',
+					'status_code'   => $status_code,
+				]
+			);
 		} else {
 			// Mark connection as not verified
 			$this->mark_connection_unverified();
 
-			wp_send_json_error( [
-				'message' => sprintf(
-					/* translators: %d: HTTP status code */
-					__( 'Connection failed with status code: %d', 'ghl-crm-integration' ),
-					$status_code
-				),
-				'details'     => $body,
-				'status_code' => $status_code,
-			], $status_code );
+			wp_send_json_error(
+				[
+					'message'     => sprintf(
+						/* translators: %d: HTTP status code */
+						__( 'Connection failed with status code: %d', 'ghl-crm-integration' ),
+						$status_code
+					),
+					'details'     => $body,
+					'status_code' => $status_code,
+				],
+				$status_code
+			);
 		}
 	}
 
@@ -280,21 +315,24 @@ class SettingsManager {
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [
-				'message' => __( 'You do not have permission to save field mapping.', 'ghl-crm-integration' ),
-			], 403 );
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to save field mapping.', 'ghl-crm-integration' ),
+				],
+				403
+			);
 		}
 
 		// Get field mapping data from POST
-		$field_mappings = isset( $_POST['field_mappings'] ) && is_array( $_POST['field_mappings'] ) 
-			? $_POST['field_mappings'] 
+		$field_mappings = isset( $_POST['field_mappings'] ) && is_array( $_POST['field_mappings'] )
+			? $_POST['field_mappings']
 			: [];
 
 		// Process and sanitize field mappings
 		$sanitized_mappings = [];
 		foreach ( $field_mappings as $wp_field => $mapping_data ) {
 			$wp_field = sanitize_text_field( $wp_field );
-			
+
 			if ( is_array( $mapping_data ) ) {
 				$sanitized_mappings[ $wp_field ] = [
 					'ghl_field' => isset( $mapping_data['ghl_field'] ) ? sanitize_text_field( $mapping_data['ghl_field'] ) : '',
@@ -308,20 +346,25 @@ class SettingsManager {
 
 		// Update field mapping
 		$current_settings['user_field_mapping'] = $sanitized_mappings;
-		$current_settings['updated_at'] = current_time( 'mysql' );
+		$current_settings['updated_at']         = current_time( 'mysql' );
 
 		// Save settings
 		$saved = $this->save_site_settings( $current_settings );
 
 		if ( $saved ) {
-			wp_send_json_success( [
-				'message' => __( 'Field mapping saved successfully!', 'ghl-crm-integration' ),
-				'count'   => count( $sanitized_mappings ),
-			] );
+			wp_send_json_success(
+				[
+					'message' => __( 'Field mapping saved successfully!', 'ghl-crm-integration' ),
+					'count'   => count( $sanitized_mappings ),
+				]
+			);
 		} else {
-			wp_send_json_error( [
-				'message' => __( 'Failed to save field mapping. Please try again.', 'ghl-crm-integration' ),
-			], 500 );
+			wp_send_json_error(
+				[
+					'message' => __( 'Failed to save field mapping. Please try again.', 'ghl-crm-integration' ),
+				],
+				500
+			);
 		}
 	}
 
@@ -341,21 +384,24 @@ class SettingsManager {
 		}
 
 		// Return with defaults
-		return wp_parse_args( $settings, [
-			'api_token'                     => '',
-			'location_id'                   => '',
-			'api_version'                   => '2021-07-28',
-			'oauth_access_token'            => '',
-			'oauth_refresh_token'           => '',
-			'oauth_expires_at'              => 0,
-			'oauth_connected_at'            => '',
-			'enable_user_sync'              => false,
-			'user_sync_actions'             => [],
-			'delete_contact_on_user_delete' => false,
-			'user_field_mapping'            => [],
-			'updated_at'                    => '',
-			'site_id'                       => get_current_blog_id(),
-		] );
+		return wp_parse_args(
+			$settings,
+			[
+				'api_token'                     => '',
+				'location_id'                   => '',
+				'api_version'                   => '2021-07-28',
+				'oauth_access_token'            => '',
+				'oauth_refresh_token'           => '',
+				'oauth_expires_at'              => 0,
+				'oauth_connected_at'            => '',
+				'enable_user_sync'              => false,
+				'user_sync_actions'             => [],
+				'delete_contact_on_user_delete' => false,
+				'user_field_mapping'            => [],
+				'updated_at'                    => '',
+				'site_id'                       => get_current_blog_id(),
+			]
+		);
 	}
 
 	/**
@@ -388,10 +434,13 @@ class SettingsManager {
 
 		$settings = get_site_option( self::NETWORK_OPTION_NAME, [] );
 
-		return wp_parse_args( $settings, [
-			'enable_network_wide' => false,
-			'default_api_version' => '2021-07-28',
-		] );
+		return wp_parse_args(
+			$settings,
+			[
+				'enable_network_wide' => false,
+				'default_api_version' => '2021-07-28',
+			]
+		);
 	}
 
 	/**
@@ -506,9 +555,11 @@ class SettingsManager {
 			return [ get_current_blog_id() => $this->get_settings_array() ];
 		}
 
-		$sites = get_sites( [
-			'number' => 999,
-		] );
+		$sites = get_sites(
+			[
+				'number' => 999,
+			]
+		);
 
 		$all_settings = [];
 

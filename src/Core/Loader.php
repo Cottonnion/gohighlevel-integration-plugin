@@ -28,14 +28,14 @@ class Loader {
 	 *
 	 * @var array<string, object>
 	 */
-	private array $container = [];
+	private array $container = array();
 
 	/**
 	 * Plugin components that need initialization
 	 *
 	 * @var array<string, class-string>
 	 */
-	private array $components = [];
+	private array $components = array();
 
 	/**
 	 * Get class instance | singleton pattern
@@ -63,41 +63,41 @@ class Loader {
 	 * @return void
 	 */
 	private function define_components(): void {
-		$this->components = [
+		$this->components = array(
 			// Core components
-			'core.database'   => \GHL_CRM\Core\Database::class,
-			'core.settings'   => \GHL_CRM\Core\SettingsManager::class,
-			'core.assets'     => \GHL_CRM\Core\AssetsManager::class,
-			'core.ajax'       => \GHL_CRM\Core\AjaxHandler::class,
-			'core.menu'       => \GHL_CRM\Core\MenuManager::class,
-			'core.notices'    => \GHL_CRM\Core\AdminNotices::class,
-			
+			'core.database'      => \GHL_CRM\Core\Database::class,
+			'core.settings'      => \GHL_CRM\Core\SettingsManager::class,
+			'core.assets'        => \GHL_CRM\Core\AssetsManager::class,
+			'core.ajax'          => \GHL_CRM\Core\AjaxHandler::class,
+			'core.menu'          => \GHL_CRM\Core\MenuManager::class,
+			'core.notices'       => \GHL_CRM\Core\AdminNotices::class,
+
 			// API components
-			'api.oauth'       => \GHL_CRM\API\OAuth\OAuthHandler::class,
-			
+			'api.oauth'          => \GHL_CRM\API\OAuth\OAuthHandler::class,
+
 			// Sync components
-			'sync.queue'      => \GHL_CRM\Sync\QueueManager::class,
-			
+			'sync.queue'         => \GHL_CRM\Sync\QueueManager::class,
+
 			// Integration components
 			'integrations.users' => \GHL_CRM\Integrations\Users\UserHooks::class,
-		];
-	}	
-    
-    /**
+		);
+	}
+
+	/**
 	 * Initialize WordPress hooks
 	 *
 	 * @return void
 	 */
 	private function init_hooks(): void {
 		// Plugin activation/deactivation
-		register_activation_hook( GHL_CRM_PATH . 'gohighlevel-crm-integration.php', [ self::class, 'activate' ] );
-		register_deactivation_hook( GHL_CRM_PATH . 'gohighlevel-crm-integration.php', [ self::class, 'deactivate' ] );
+		register_activation_hook( GHL_CRM_PATH . 'gohighlevel-crm-integration.php', array( self::class, 'activate' ) );
+		register_deactivation_hook( GHL_CRM_PATH . 'gohighlevel-crm-integration.php', array( self::class, 'deactivate' ) );
 
 		// Initialize components after plugins loaded
-		add_action( 'plugins_loaded', [ $this, 'init_components' ], 20 );
-		
+		add_action( 'plugins_loaded', array( $this, 'init_components' ), 20 );
+
 		// Register cleanup action (Action Scheduler hook)
-		add_action( 'ghl_crm_cleanup_database', [ \GHL_CRM\Core\Database::class, 'cleanup' ] );
+		add_action( 'ghl_crm_cleanup_database', array( \GHL_CRM\Core\Database::class, 'cleanup' ) );
 	}
 
 	/**
@@ -138,16 +138,18 @@ class Loader {
 			wp_die(
 				esc_html__( 'GoHighLevel CRM Integration requires PHP 7.4 or higher.', 'ghl-crm-integration' ),
 				esc_html__( 'Plugin Activation Error', 'ghl-crm-integration' ),
-				[ 'back_link' => true ]
+				array( 'back_link' => true )
 			);
 		}
 
 		// Create/update database tables
 		if ( is_multisite() ) {
 			// Create tables for all existing sites
-			$sites = get_sites( [
-				'number' => 999,
-			] );
+			$sites = get_sites(
+				array(
+					'number' => 999,
+				)
+			);
 
 			foreach ( $sites as $site ) {
 				switch_to_blog( $site->blog_id );
@@ -176,10 +178,10 @@ class Loader {
 	public static function deactivate(): void {
 		// Unschedule all Action Scheduler actions
 		\GHL_CRM\Sync\QueueManager::unschedule_actions();
-		
+
 		// Unschedule cleanup (Action Scheduler)
 		if ( function_exists( 'as_unschedule_all_actions' ) ) {
-			as_unschedule_all_actions( 'ghl_crm_cleanup_database', [], 'ghl-crm' );
+			as_unschedule_all_actions( 'ghl_crm_cleanup_database', array(), 'ghl-crm' );
 		}
 
 		// Flush rewrite rules

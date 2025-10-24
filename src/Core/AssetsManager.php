@@ -248,7 +248,7 @@ class AssetsManager {
 		// Global CSS for all admin pages (now includes tabbed main-settings page)
 		$this->add_admin_asset(
 			'ghl-crm-globals-css',
-			[ 
+			[
 				'toplevel_page_ghl-crm-settings',           // Legacy main tabbed page
 				'toplevel_page_ghl-crm-admin',              // New SPA page
 				'ghl-crm_page_ghl-crm-sync-logs',
@@ -283,74 +283,74 @@ class AssetsManager {
 			true
 		);
 
-	// Field Mapping CSS (loads on main-settings page for field-mapping tab)
-	$this->add_admin_asset(
-		'ghl-crm-field-mapping-css',
-		[ 'toplevel_page_ghl-crm-settings' ],
-		'field-mapping.css',
-		[ 'ghl-crm-globals-css' ],
-		[],
-		GHL_CRM_VERSION
-	);
+		// Field Mapping CSS (loads on main-settings page for field-mapping tab)
+		$this->add_admin_asset(
+			'ghl-crm-field-mapping-css',
+			[ 'toplevel_page_ghl-crm-settings' ],
+			'field-mapping.css',
+			[ 'ghl-crm-globals-css' ],
+			[],
+			GHL_CRM_VERSION
+		);
 
-	// Field Mapping JS (loads on main-settings page for field-mapping tab)
-	$this->add_admin_asset(
-		'ghl-crm-field-mapping-js',
-		[ 'toplevel_page_ghl-crm-settings' ],
-		'field-mapping.js',
-		[ 'jquery', 'sweetalert2' ],
-		[
-			'nonce' => wp_create_nonce( 'ghl_crm_field_mapping_nonce' ),
-		],
-		'1.0.2',
-		true
-	);
+		// Field Mapping JS (loads on main-settings page for field-mapping tab)
+		$this->add_admin_asset(
+			'ghl-crm-field-mapping-js',
+			[ 'toplevel_page_ghl-crm-settings' ],
+			'field-mapping.js',
+			[ 'jquery', 'sweetalert2' ],
+			[
+				'nonce' => wp_create_nonce( 'ghl_crm_field_mapping_nonce' ),
+			],
+			'1.0.2',
+			true
+		);
 
-	// Integrations CSS (loads on main-settings page for integrations tab)
-	$this->add_admin_asset(
-		'ghl-crm-integrations-css',
-		[ 'toplevel_page_ghl-crm-settings' ],
-		'integrations.css',
-		[ 'ghl-crm-globals-css' ],
-		[],
-		GHL_CRM_VERSION
-	);
+		// Integrations CSS (loads on main-settings page for integrations tab)
+		$this->add_admin_asset(
+			'ghl-crm-integrations-css',
+			[ 'toplevel_page_ghl-crm-settings' ],
+			'integrations.css',
+			[ 'ghl-crm-globals-css' ],
+			[],
+			GHL_CRM_VERSION
+		);
 
-	// Integrations JS (loads on main-settings page for integrations tab)
-	$this->add_admin_asset(
-		'ghl-crm-integrations-js',
-		[ 'toplevel_page_ghl-crm-settings' ],
-		'integrations.js',
-		[ 'jquery', 'sweetalert2' ],
-		[
-			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-			'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
-		],
-		GHL_CRM_VERSION,
-		true
-	);
+		// Integrations JS (loads on main-settings page for integrations tab)
+		$this->add_admin_asset(
+			'ghl-crm-integrations-js',
+			[ 'toplevel_page_ghl-crm-settings' ],
+			'integrations.js',
+			[ 'jquery', 'sweetalert2' ],
+			[
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
+			],
+			GHL_CRM_VERSION,
+			true
+		);
 
-	// Sync Logs page assets (separate page)
-	$this->add_admin_asset(
-		'ghl-crm-sync-logs-css',
-		[ 'ghl-crm_page_ghl-crm-sync-logs' ],
-		'sync-logs.css',
-		[ 'ghl-crm-globals-css' ],
-		[],
-		GHL_CRM_VERSION
-	);
-}	/**
-	 * Adds an admin script or style to the array of admin assets.
-	 *
-	 * @param string $handle           Unique handle for the asset.
-	 * @param array  $pages            Array of admin page IDs where this asset should load.
-	 * @param string $file             File name (e.g., 'settings.css' or 'settings.js').
-	 * @param array  $dependencies     Array of dependency handles.
-	 * @param array  $localization     Array of data to localize for scripts.
-	 * @param string $version          Version string for cache busting.
-	 * @param bool   $enqueue_in_footer Whether to enqueue script in footer (scripts only).
-	 * @return void
-	 */
+		// Sync Logs page assets (separate page)
+		$this->add_admin_asset(
+			'ghl-crm-sync-logs-css',
+			[ 'ghl-crm_page_ghl-crm-sync-logs' ],
+			'sync-logs.css',
+			[ 'ghl-crm-globals-css' ],
+			[],
+			GHL_CRM_VERSION
+		);
+	}   /**
+		 * Adds an admin script or style to the array of admin assets.
+		 *
+		 * @param string $handle           Unique handle for the asset.
+		 * @param array  $pages            Array of admin page IDs where this asset should load.
+		 * @param string $file             File name (e.g., 'settings.css' or 'settings.js').
+		 * @param array  $dependencies     Array of dependency handles.
+		 * @param array  $localization     Array of data to localize for scripts.
+		 * @param string $version          Version string for cache busting.
+		 * @param bool   $enqueue_in_footer Whether to enqueue script in footer (scripts only).
+		 * @return void
+		 */
 	public function add_admin_asset(
 		string $handle,
 		array $pages,
@@ -378,7 +378,7 @@ class AssetsManager {
 	 */
 	public function enqueue_admin_assets(): void {
 		$current_screen = get_current_screen();
-		
+
 		if ( ! $current_screen ) {
 			return;
 		}

@@ -163,9 +163,11 @@ class Database {
 			return;
 		}
 
-		$sites = get_sites( [
-			'number' => 999,
-		] );
+		$sites = get_sites(
+			[
+				'number' => 999,
+			]
+		);
 
 		foreach ( $sites as $site ) {
 			switch_to_blog( $site->blog_id );
@@ -236,21 +238,25 @@ class Database {
 				)
 			);
 
-			error_log( sprintf(
-				'GHL CRM Emergency Cleanup [Site %d]: Queue exceeded 50k rows. Purged old items.',
-				$current_site_id
-			) );
+			error_log(
+				sprintf(
+					'GHL CRM Emergency Cleanup [Site %d]: Queue exceeded 50k rows. Purged old items.',
+					$current_site_id
+				)
+			);
 		}
 
 		// Log cleanup stats
 		if ( $deleted_completed || $deleted_failed || $deleted_logs ) {
-			error_log( sprintf(
-				'GHL CRM Cleanup [Site %d]: Deleted %d completed, %d failed queue items, %d logs',
-				$current_site_id,
-				$deleted_completed,
-				$deleted_failed,
-				$deleted_logs
-			) );
+			error_log(
+				sprintf(
+					'GHL CRM Cleanup [Site %d]: Deleted %d completed, %d failed queue items, %d logs',
+					$current_site_id,
+					$deleted_completed,
+					$deleted_failed,
+					$deleted_logs
+				)
+			);
 		}
 	}
 

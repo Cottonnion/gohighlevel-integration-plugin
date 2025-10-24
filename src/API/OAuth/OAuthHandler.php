@@ -39,7 +39,7 @@ class OAuthHandler {
 	public function __construct() {
 		$this->settings_manager = SettingsManager::get_instance();
 		$this->client           = Client::get_instance();
-		
+
 		$this->init_hooks();
 	}
 
@@ -51,7 +51,7 @@ class OAuthHandler {
 	private function init_hooks(): void {
 		// Register OAuth callback endpoint (REST API method)
 		add_action( 'rest_api_init', [ $this, 'register_oauth_endpoint' ] );
-		
+
 		// Handle OAuth callback via admin_init (fallback if REST API disabled)
 		add_action( 'admin_init', [ $this, 'handle_admin_oauth_callback' ] );
 	}
@@ -62,11 +62,15 @@ class OAuthHandler {
 	 * @return void
 	 */
 	public function register_oauth_endpoint(): void {
-		register_rest_route( 'ghl-crm/v1', '/oauth/callback', [
-			'methods'             => 'GET',
-			'callback'            => [ $this, 'handle_oauth_rest_callback' ],
-			'permission_callback' => '__return_true',
-		] );
+		register_rest_route(
+			'ghl-crm/v1',
+			'/oauth/callback',
+			[
+				'methods'             => 'GET',
+				'callback'            => [ $this, 'handle_oauth_rest_callback' ],
+				'permission_callback' => '__return_true',
+			]
+		);
 	}
 
 	/**
@@ -77,10 +81,10 @@ class OAuthHandler {
 	public function get_authorization_url(): string {
 		$state        = wp_create_nonce( 'ghl_oauth_state' );
 		$redirect_uri = $this->get_redirect_uri();
-		
+
 		// Store state in transient for verification
 		set_transient( 'ghl_oauth_state_' . get_current_user_id(), $state, HOUR_IN_SECONDS );
-		
+
 		return $this->client->get_oauth_authorization_url( $redirect_uri, $state );
 	}
 
@@ -113,10 +117,15 @@ class OAuthHandler {
 
 		// Check if we have required parameters
 		if ( ! isset( $_GET['code'] ) || ! isset( $_GET['state'] ) ) {
-			wp_safe_redirect( add_query_arg( [
-				'oauth'   => 'error',
-				'message' => urlencode( __( 'Missing OAuth parameters', 'ghl-crm-integration' ) ),
-			], admin_url( 'admin.php?page=ghl-crm-settings' ) ) );
+			wp_safe_redirect(
+				add_query_arg(
+					[
+						'oauth'   => 'error',
+						'message' => urlencode( __( 'Missing OAuth parameters', 'ghl-crm-integration' ) ),
+					],
+					admin_url( 'admin.php?page=ghl-crm-settings' )
+				)
+			);
 			exit;
 		}
 
@@ -128,10 +137,15 @@ class OAuthHandler {
 
 		// Redirect with result
 		if ( is_wp_error( $result ) ) {
-			wp_safe_redirect( add_query_arg( [
-				'oauth'   => 'error',
-				'message' => urlencode( $result->get_error_message() ),
-			], admin_url( 'admin.php?page=ghl-crm-settings' ) ) );
+			wp_safe_redirect(
+				add_query_arg(
+					[
+						'oauth'   => 'error',
+						'message' => urlencode( $result->get_error_message() ),
+					],
+					admin_url( 'admin.php?page=ghl-crm-settings' )
+				)
+			);
 		} else {
 			wp_safe_redirect( add_query_arg( 'oauth', 'success', admin_url( 'admin.php?page=ghl-crm-settings' ) ) );
 		}
@@ -151,10 +165,15 @@ class OAuthHandler {
 		$result = $this->process_oauth_callback( $code, $state );
 
 		if ( is_wp_error( $result ) ) {
-			wp_safe_redirect( add_query_arg( [
-				'oauth'   => 'error',
-				'message' => urlencode( $result->get_error_message() ),
-			], admin_url( 'admin.php?page=ghl-crm-settings' ) ) );
+			wp_safe_redirect(
+				add_query_arg(
+					[
+						'oauth'   => 'error',
+						'message' => urlencode( $result->get_error_message() ),
+					],
+					admin_url( 'admin.php?page=ghl-crm-settings' )
+				)
+			);
 		} else {
 			wp_safe_redirect( add_query_arg( 'oauth', 'success', admin_url( 'admin.php?page=ghl-crm-settings' ) ) );
 		}
@@ -171,11 +190,11 @@ class OAuthHandler {
 	private function process_oauth_callback( string $code, string $state ) {
 		// Verify state parameter
 		$stored_state = get_transient( 'ghl_oauth_state_' . get_current_user_id() );
-		
+
 		if ( empty( $stored_state ) ) {
 			return new \WP_Error( 'invalid_state', __( 'OAuth state expired. Please try again.', 'ghl-crm-integration' ) );
 		}
-		
+
 		if ( ! hash_equals( $stored_state, $state ) ) {
 			return new \WP_Error( 'invalid_state', __( 'Invalid OAuth state parameter', 'ghl-crm-integration' ) );
 		}
@@ -282,8 +301,8 @@ class OAuthHandler {
 	public function is_connected(): bool {
 		$settings = $this->settings_manager->get_settings_array();
 
-		return ! empty( $settings['oauth_access_token'] ) && 
-		       ! empty( $settings['oauth_refresh_token'] );
+		return ! empty( $settings['oauth_access_token'] ) &&
+				! empty( $settings['oauth_refresh_token'] );
 	}
 
 	/**

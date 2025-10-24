@@ -50,11 +50,11 @@ abstract class AbstractResource {
 	 */
 	protected function build_endpoint( string $path = '' ): string {
 		$endpoint = $this->endpoint;
-		
+
 		if ( ! empty( $path ) ) {
 			$endpoint .= '/' . ltrim( $path, '/' );
 		}
-		
+
 		return $endpoint;
 	}
 

@@ -30,9 +30,12 @@ class ContactResource extends AbstractResource {
 	 * @return array|null Contact data or null if not found
 	 */
 	public function find_by_email( string $email ): ?array {
-		$response = $this->client->get( $this->endpoint, [
-			'email' => $email,
-		] );
+		$response = $this->client->get(
+			$this->endpoint,
+			[
+				'email' => $email,
+			]
+		);
 
 		return $response['contacts'][0] ?? null;
 	}
@@ -44,9 +47,12 @@ class ContactResource extends AbstractResource {
 	 * @return array|null Contact data or null if not found
 	 */
 	public function find_by_phone( string $phone ): ?array {
-		$response = $this->client->get( $this->endpoint, [
-			'phone' => $phone,
-		] );
+		$response = $this->client->get(
+			$this->endpoint,
+			[
+				'phone' => $phone,
+			]
+		);
 
 		return $response['contacts'][0] ?? null;
 	}

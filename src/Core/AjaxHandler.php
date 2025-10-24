@@ -63,9 +63,11 @@ class AjaxHandler {
 
 		// Check user capabilities
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [
-				'message' => __( 'You do not have permission to perform this action.', 'ghl-crm-integration' ),
-			] );
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to perform this action.', 'ghl-crm-integration' ),
+				]
+			);
 		}
 
 		// Get API credentials from POST or from saved options
@@ -74,24 +76,30 @@ class AjaxHandler {
 
 		// Validate required fields
 		if ( empty( $api_token ) || empty( $location_id ) ) {
-			wp_send_json_error( [
-				'message' => __( 'API Token and Location ID are required.', 'ghl-crm-integration' ),
-			] );
+			wp_send_json_error(
+				[
+					'message' => __( 'API Token and Location ID are required.', 'ghl-crm-integration' ),
+				]
+			);
 		}
 
 		// Test the connection
 		$result = $this->test_ghl_api_connection( $api_token, $location_id );
 
 		if ( $result['success'] ) {
-			wp_send_json_success( [
-				'message'       => __( 'Connection successful!', 'ghl-crm-integration' ),
-				'location_name' => $result['location_name'] ?? '',
-				'details'       => $result['details'] ?? '',
-			] );
+			wp_send_json_success(
+				[
+					'message'       => __( 'Connection successful!', 'ghl-crm-integration' ),
+					'location_name' => $result['location_name'] ?? '',
+					'details'       => $result['details'] ?? '',
+				]
+			);
 		} else {
-			wp_send_json_error( [
-				'message' => $result['message'] ?? __( 'Connection failed.', 'ghl-crm-integration' ),
-			] );
+			wp_send_json_error(
+				[
+					'message' => $result['message'] ?? __( 'Connection failed.', 'ghl-crm-integration' ),
+				]
+			);
 		}
 	}
 
@@ -107,14 +115,17 @@ class AjaxHandler {
 		$api_url = 'https://services.leadconnectorhq.com/locations/' . $location_id;
 
 		// Make API request
-		$response = wp_remote_get( $api_url, [
-			'headers' => [
-				'Authorization' => 'Bearer ' . $api_token,
-				'Version'       => '2021-07-28',
-				'Content-Type'  => 'application/json',
-			],
-			'timeout' => 30,
-		] );
+		$response = wp_remote_get(
+			$api_url,
+			[
+				'headers' => [
+					'Authorization' => 'Bearer ' . $api_token,
+					'Version'       => '2021-07-28',
+					'Content-Type'  => 'application/json',
+				],
+				'timeout' => 30,
+			]
+		);
 
 		// Check for WordPress HTTP errors
 		if ( is_wp_error( $response ) ) {

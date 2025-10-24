@@ -61,7 +61,7 @@ class QueueManager {
 	private function init_hooks(): void {
 		// Register Action Scheduler hook for queue processing
 		add_action( 'ghl_crm_process_queue', [ $this, 'process_queue' ] );
-		
+
 		// Schedule recurring action via Action Scheduler (runs every minute)
 		if ( function_exists( 'as_next_scheduled_action' ) ) {
 			if ( false === as_next_scheduled_action( 'ghl_crm_process_queue' ) ) {
@@ -89,7 +89,7 @@ class QueueManager {
 	public function add_to_queue( string $item_type, int $item_id, string $action, array $payload ) {
 		global $wpdb;
 
-		$table_name = $this->get_queue_table_name();
+		$table_name      = $this->get_queue_table_name();
 		$current_site_id = get_current_blog_id();
 
 		// Check for existing pending item
@@ -134,11 +134,13 @@ class QueueManager {
 		);
 
 		if ( $queue_count >= 10000 ) { // Max 10k pending items per site
-			error_log( sprintf(
-				'GHL CRM Queue Limit Reached [Site %d]: Cannot add more items. Current pending: %d',
-				$current_site_id,
-				$queue_count
-			) );
+			error_log(
+				sprintf(
+					'GHL CRM Queue Limit Reached [Site %d]: Cannot add more items. Current pending: %d',
+					$current_site_id,
+					$queue_count
+				)
+			);
 			return false;
 		}
 
@@ -190,9 +192,11 @@ class QueueManager {
 		try {
 			if ( is_multisite() ) {
 				// Process each site's queue
-				$sites = get_sites( [
-					'number' => 999,
-				] );
+				$sites = get_sites(
+					[
+						'number' => 999,
+					]
+				);
 
 				foreach ( $sites as $site ) {
 					switch_to_blog( $site->blog_id );
@@ -216,7 +220,7 @@ class QueueManager {
 	private function process_site_queue(): void {
 		global $wpdb;
 
-		$table_name = $this->get_queue_table_name();
+		$table_name      = $this->get_queue_table_name();
 		$current_site_id = get_current_blog_id();
 
 		// Clean up stale items first (stuck in processing for >5 minutes)
@@ -255,7 +259,7 @@ class QueueManager {
 	private function cleanup_stale_items(): void {
 		global $wpdb;
 
-		$table_name = $this->get_queue_table_name();
+		$table_name      = $this->get_queue_table_name();
 		$current_site_id = get_current_blog_id();
 
 		// Reset items that have been processing for too long
@@ -333,7 +337,6 @@ class QueueManager {
 			} else {
 				throw new \Exception( 'Sync execution returned false' );
 			}
-
 		} catch ( \Exception $e ) {
 			// Mark as failed if max attempts reached
 			$status = ( $item->attempts + 1 >= self::MAX_ATTEMPTS ) ? 'failed' : 'pending';
@@ -406,7 +409,7 @@ class QueueManager {
 	 * @throws \Exception
 	 */
 	private function execute_user_sync( string $action, int $user_id, array $payload ): bool {
-		$client = \GHL_CRM\API\Client\Client::get_instance();
+		$client           = \GHL_CRM\API\Client\Client::get_instance();
 		$contact_resource = new \GHL_CRM\API\Resources\ContactResource( $client );
 
 		switch ( $action ) {
@@ -458,11 +461,14 @@ class QueueManager {
 				}
 
 				if ( $contact ) {
-					$result = $contact_resource->update( $contact['id'], [
-						'customField' => [
-							'last_login' => $payload['last_login'] ?? current_time( 'mysql' ),
-						],
-					] );
+					$result = $contact_resource->update(
+						$contact['id'],
+						[
+							'customField' => [
+								'last_login' => $payload['last_login'] ?? current_time( 'mysql' ),
+							],
+						]
+					);
 					return ! empty( $result );
 				}
 				return false;
@@ -484,7 +490,7 @@ class QueueManager {
 		}
 
 		$cache_key = 'ghl_contact_' . md5( strtolower( $email ) );
-		$cached = get_transient( $cache_key );
+		$cached    = get_transient( $cache_key );
 
 		return $cached ? $cached : null;
 	}
@@ -570,13 +576,15 @@ class QueueManager {
 
 		// Also log errors to error_log
 		if ( 'error' === $status ) {
-			error_log( sprintf(
-				'GHL CRM Sync Error [Site %d]: User %d, Action %s, Message: %s',
-				get_current_blog_id(),
-				$user_id,
-				$action,
-				$error_message ?? 'Unknown error'
-			) );
+			error_log(
+				sprintf(
+					'GHL CRM Sync Error [Site %d]: User %d, Action %s, Message: %s',
+					get_current_blog_id(),
+					$user_id,
+					$action,
+					$error_message ?? 'Unknown error'
+				)
+			);
 		}
 	}
 
@@ -589,7 +597,7 @@ class QueueManager {
 	public function get_queue_status(): array {
 		global $wpdb;
 
-		$table_name = $this->get_queue_table_name();
+		$table_name      = $this->get_queue_table_name();
 		$current_site_id = get_current_blog_id();
 
 		$pending = $wpdb->get_var(
@@ -634,26 +642,26 @@ class QueueManager {
 		);
 
 		// Health check
-		$health = 'good';
+		$health   = 'good';
 		$warnings = [];
 
 		if ( $pending > 1000 ) {
-			$health = 'warning';
+			$health     = 'warning';
 			$warnings[] = sprintf( 'High pending count: %d items', $pending );
 		}
 
 		if ( $pending > 5000 ) {
-			$health = 'critical';
+			$health     = 'critical';
 			$warnings[] = 'Critical: Queue severely backed up';
 		}
 
 		if ( $failed > 100 ) {
-			$health = ( $health === 'critical' ) ? 'critical' : 'warning';
+			$health     = ( $health === 'critical' ) ? 'critical' : 'warning';
 			$warnings[] = sprintf( 'High failure rate: %d failed items', $failed );
 		}
 
 		if ( $oldest_pending && $oldest_pending > 60 ) {
-			$health = ( $health === 'critical' ) ? 'critical' : 'warning';
+			$health     = ( $health === 'critical' ) ? 'critical' : 'warning';
 			$warnings[] = sprintf( 'Oldest pending item: %d minutes old', $oldest_pending );
 		}
 
@@ -662,15 +670,15 @@ class QueueManager {
 		}
 
 		return [
-			'pending'           => (int) $pending,
-			'failed'            => (int) $failed,
-			'completed_24h'     => (int) $completed_24h,
-			'total_items'       => (int) $total_items,
+			'pending'                => (int) $pending,
+			'failed'                 => (int) $failed,
+			'completed_24h'          => (int) $completed_24h,
+			'total_items'            => (int) $total_items,
 			'oldest_pending_minutes' => (int) $oldest_pending,
-			'health'            => $health,
-			'warnings'          => $warnings,
-			'site_id'           => $current_site_id,
-			'max_queue_limit'   => 10000,
+			'health'                 => $health,
+			'warnings'               => $warnings,
+			'site_id'                => $current_site_id,
+			'max_queue_limit'        => 10000,
 		];
 	}
 

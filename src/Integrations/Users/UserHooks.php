@@ -58,11 +58,11 @@ class UserHooks {
 	 */
 	private function __construct() {
 		$this->settings_manager = SettingsManager::get_instance();
-		
+
 		// Initialize ContactResource with Client
 		$client                 = Client::get_instance();
 		$this->contact_resource = new ContactResource( $client );
-		
+
 		// Register hooks if sync is enabled
 		$this->register_hooks();
 	}
@@ -83,11 +83,11 @@ class UserHooks {
 		// Check API credentials (OAuth or manual token)
 		$has_oauth = ! empty( $settings['oauth_access_token'] );
 		$has_token = ! empty( $settings['api_token'] );
-		
+
 		if ( ! $has_oauth && ! $has_token ) {
 			return;
 		}
-		
+
 		if ( empty( $settings['location_id'] ) ) {
 			return;
 		}
@@ -104,7 +104,7 @@ class UserHooks {
 		if ( ! empty( $settings['enable_user_sync'] ) ) {
 			// Sync user profile updates to GoHighLevel
 			add_action( 'profile_update', [ $this, 'on_user_update' ], 10, 2 );
-			
+
 			// Track user logins in GoHighLevel
 			add_action( 'wp_login', [ $this, 'on_user_login' ], 10, 2 );
 		}
@@ -123,7 +123,7 @@ class UserHooks {
 	 */
 	public function on_user_register( int $user_id ): void {
 		$user = get_userdata( $user_id );
-		
+
 		if ( ! $user ) {
 			return;
 		}
@@ -152,7 +152,7 @@ class UserHooks {
 		set_transient( $lock_key, 1, 10 ); // 10 second lock
 
 		$user = get_userdata( $user_id );
-		
+
 		if ( ! $user ) {
 			return;
 		}
@@ -173,13 +173,13 @@ class UserHooks {
 	 */
 	public function on_user_delete( int $user_id ): void {
 		$user = get_userdata( $user_id );
-		
+
 		if ( ! $user ) {
 			return;
 		}
 
 		$settings = $this->settings_manager->get_settings_array();
-		
+
 		// Queue deletion with settings
 		$data = [
 			'email'  => $user->user_email,
@@ -201,12 +201,12 @@ class UserHooks {
 	public function on_user_login( string $user_login, \WP_User $user ): void {
 		// Throttle: Only update once per hour to avoid API spam
 		$last_login_key = "ghl_last_login_{$user->ID}";
-		$last_sync = get_transient( $last_login_key );
-		
+		$last_sync      = get_transient( $last_login_key );
+
 		if ( $last_sync ) {
 			return; // Already synced within the hour
 		}
-		
+
 		set_transient( $last_login_key, time(), HOUR_IN_SECONDS );
 
 		// Queue login tracking (will update custom field, not add note)
@@ -226,8 +226,8 @@ class UserHooks {
 	 * @return array Contact data for GHL API
 	 */
 	private function prepare_contact_data( \WP_User $user ): array {
-		$settings    = $this->settings_manager->get_settings_array();
-		$field_map   = $settings['user_field_mapping'] ?? [];
+		$settings  = $this->settings_manager->get_settings_array();
+		$field_map = $settings['user_field_mapping'] ?? [];
 
 		// Base contact data
 		$contact_data = [
@@ -274,7 +274,7 @@ class UserHooks {
 		}
 
 		$settings = $this->settings_manager->get_settings_array();
-		$tags     = $settings["user_sync_tags_{$action}"] ?? [];
+		$tags     = $settings[ "user_sync_tags_{$action}" ] ?? [];
 
 		if ( ! empty( $tags ) && is_array( $tags ) ) {
 			try {

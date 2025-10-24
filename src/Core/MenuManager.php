@@ -157,7 +157,7 @@ class MenuManager {
 	public function custom_admin_footer_text( string $footer_text ): string {
 		// Get current screen
 		$current_screen = get_current_screen();
-		
+
 		// Check if we're on one of our plugin pages
 		if ( isset( $current_screen->id ) && strpos( $current_screen->id, 'ghl-crm' ) !== false ) {
 			$footer_text = sprintf(
@@ -167,7 +167,7 @@ class MenuManager {
 				'<a href="https://wordpress.org/support/plugin/ghl-crm-integration/reviews/?filter=5#new-post" target="_blank" rel="noopener noreferrer">&#9733;&#9733;&#9733;&#9733;&#9733;</a>'
 			);
 		}
-		
+
 		return $footer_text;
 	}
 
@@ -272,12 +272,15 @@ class MenuManager {
 		check_ajax_referer( 'ghl_crm_spa_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [
-				'message' => __( 'You do not have permission to access this view.', 'ghl-crm-integration' ),
-			], 403 );
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to access this view.', 'ghl-crm-integration' ),
+				],
+				403
+			);
 		}
 
-		$view = isset( $_POST['view'] ) ? sanitize_text_field( wp_unslash( $_POST['view'] ) ) : 'dashboard';
+		$view   = isset( $_POST['view'] ) ? sanitize_text_field( wp_unslash( $_POST['view'] ) ) : 'dashboard';
 		$params = isset( $_POST['params'] ) && is_array( $_POST['params'] ) ? $_POST['params'] : [];
 
 		switch ( $view ) {
@@ -302,9 +305,12 @@ class MenuManager {
 				break;
 
 			default:
-				wp_send_json_error( [
-					'message' => __( 'Invalid view requested.', 'ghl-crm-integration' ),
-				], 404 );
+				wp_send_json_error(
+					[
+						'message' => __( 'Invalid view requested.', 'ghl-crm-integration' ),
+					],
+					404
+				);
 		}
 	}
 
@@ -318,11 +324,11 @@ class MenuManager {
 	 */
 	private function get_dashboard_data(): void {
 		ob_start();
-		
+
 		// Get OAuth status for dashboard
 		$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
-		$oauth_status = $oauth_handler->get_connection_status();
-		
+		$oauth_status  = $oauth_handler->get_connection_status();
+
 		?>
 		<div class="ghl-crm-dashboard">
 			<div class="ghl-card">
@@ -360,13 +366,15 @@ class MenuManager {
 			</div>
 		</div>
 		<?php
-		
+
 		$html = ob_get_clean();
-		
-		wp_send_json_success( [
-			'view' => 'dashboard',
-			'html' => $html,
-		] );
+
+		wp_send_json_success(
+			[
+				'view' => 'dashboard',
+				'html' => $html,
+			]
+		);
 	}
 
 	/**
@@ -383,15 +391,17 @@ class MenuManager {
 		if ( isset( $params['settings_tab'] ) ) {
 			$_GET['settings_tab'] = sanitize_text_field( $params['settings_tab'] );
 		}
-		
+
 		ob_start();
 		$this->load_template( 'admin/settings' );
 		$html = ob_get_clean();
-		
-		wp_send_json_success( [
-			'view' => 'settings',
-			'html' => $html,
-		] );
+
+		wp_send_json_success(
+			[
+				'view' => 'settings',
+				'html' => $html,
+			]
+		);
 	}
 
 	/**
@@ -406,11 +416,13 @@ class MenuManager {
 		ob_start();
 		$this->load_template( 'admin/integrations' );
 		$html = ob_get_clean();
-		
-		wp_send_json_success( [
-			'view' => 'integrations',
-			'html' => $html,
-		] );
+
+		wp_send_json_success(
+			[
+				'view' => 'integrations',
+				'html' => $html,
+			]
+		);
 	}
 
 	/**
@@ -425,11 +437,13 @@ class MenuManager {
 		ob_start();
 		$this->load_template( 'admin/field-mapping' );
 		$html = ob_get_clean();
-		
-		wp_send_json_success( [
-			'view' => 'field-mapping',
-			'html' => $html,
-		] );
+
+		wp_send_json_success(
+			[
+				'view' => 'field-mapping',
+				'html' => $html,
+			]
+		);
 	}
 
 	/**
@@ -445,16 +459,18 @@ class MenuManager {
 		ob_start();
 		$this->load_template( 'admin/sync-logs' );
 		$html = ob_get_clean();
-		
-		wp_send_json_success( [
-			'view' => 'sync-logs',
-			'html' => $html,
-		] );
+
+		wp_send_json_success(
+			[
+				'view' => 'sync-logs',
+				'html' => $html,
+			]
+		);
 	}
 
 	/**
 	 * Get valid settings tabs
-	 * 
+	 *
 	 * @return array<string> List of valid settings tab names
 	 */
 	public static function get_valid_settings_tabs(): array {
@@ -480,39 +496,50 @@ class MenuManager {
 		check_ajax_referer( 'ghl_crm_spa_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [
-				'message' => __( 'You do not have permission to access this page.', 'ghl-crm-integration' ),
-			], 403 );
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to access this page.', 'ghl-crm-integration' ),
+				],
+				403
+			);
 		}
 
 		$tab = isset( $_POST['tab'] ) ? sanitize_text_field( wp_unslash( $_POST['tab'] ) ) : 'general';
-		
+
 		// Define valid tabs using centralized method
 		$valid_tabs = self::get_valid_settings_tabs();
 
 		if ( ! in_array( $tab, $valid_tabs, true ) ) {
-			wp_send_json_error( [
-				'message' => __( 'Invalid settings tab.', 'ghl-crm-integration' ),
-			], 400 );
+			wp_send_json_error(
+				[
+					'message' => __( 'Invalid settings tab.', 'ghl-crm-integration' ),
+				],
+				400
+			);
 		}
 
 		// Load the partial template
 		$partial_file = GHL_CRM_PATH . 'templates/admin/partials/settings/' . $tab . '.php';
-		
+
 		if ( ! file_exists( $partial_file ) ) {
-			wp_send_json_error( [
-				'message' => __( 'Settings tab template not found.', 'ghl-crm-integration' ),
-			], 404 );
+			wp_send_json_error(
+				[
+					'message' => __( 'Settings tab template not found.', 'ghl-crm-integration' ),
+				],
+				404
+			);
 		}
 
 		ob_start();
 		include $partial_file;
 		$html = ob_get_clean();
 
-		wp_send_json_success( [
-			'tab'  => $tab,
-			'html' => $html,
-		] );
+		wp_send_json_success(
+			[
+				'tab'  => $tab,
+				'html' => $html,
+			]
+		);
 	}
 
 	/**
