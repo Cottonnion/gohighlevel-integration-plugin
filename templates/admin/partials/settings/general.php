@@ -37,15 +37,15 @@ $delete_contact_on_user_delete = $settings['delete_contact_on_user_delete'] ?? f
 				<div class="ghl-form-item">
 					<div class="ghl-form-item-content">
 						<label class="ghl-checkbox <?php echo $enable_user_sync ? 'is-checked' : ''; ?>">
+							<input type="checkbox" 
+								   class="ghl-checkbox-original"
+								   id="enable_user_sync" 
+								   name="enable_user_sync" 
+								   value="1" 
+								   <?php checked( $enable_user_sync ); ?>
+								   >
 							<span class="ghl-checkbox-input <?php echo $enable_user_sync ? 'is-checked' : ''; ?>">
 								<span class="ghl-checkbox-inner"></span>
-								<input type="checkbox" 
-									   class="ghl-checkbox-original"
-									   id="enable_user_sync" 
-									   name="enable_user_sync" 
-									   value="1" 
-									   <?php checked( $enable_user_sync ); ?>
-									   >
 							</span>
 							<span class="ghl-checkbox-label">
 								<?php esc_html_e( 'Enable Sync between WP User Data and GoHighLevel Contact Data', 'ghl-crm-integration' ); ?>
@@ -57,15 +57,15 @@ $delete_contact_on_user_delete = $settings['delete_contact_on_user_delete'] ?? f
 				<div class="ghl-form-item">
 					<div class="ghl-form-item-content">
 						<label class="ghl-checkbox <?php echo $delete_contact_on_user_delete ? 'is-checked' : ''; ?>">
+							<input type="checkbox" 
+								   class="ghl-checkbox-original"
+								   id="delete_contact_on_user_delete" 
+								   name="delete_contact_on_user_delete" 
+								   value="1" 
+								   <?php checked( $delete_contact_on_user_delete ); ?>
+								   >
 							<span class="ghl-checkbox-input <?php echo $delete_contact_on_user_delete ? 'is-checked' : ''; ?>">
 								<span class="ghl-checkbox-inner"></span>
-								<input type="checkbox" 
-									   class="ghl-checkbox-original"
-									   id="delete_contact_on_user_delete" 
-									   name="delete_contact_on_user_delete" 
-									   value="1" 
-									   <?php checked( $delete_contact_on_user_delete ); ?>
-									   >
 							</span>
 							<span class="ghl-checkbox-label">
 								<?php esc_html_e( 'Delete GoHighLevel contact on WP User delete', 'ghl-crm-integration' ); ?>
@@ -89,15 +89,14 @@ $delete_contact_on_user_delete = $settings['delete_contact_on_user_delete'] ?? f
 				<div class="ghl-form-item">
 					<div class="ghl-form-item-content">
 						<label class="ghl-checkbox <?php echo in_array( 'user_register', $user_sync_actions, true ) ? 'is-checked' : ''; ?>">
+							<input type="checkbox" 
+								   class="ghl-checkbox-original"
+								   name="user_sync_actions[]" 
+								   value="user_register"
+								   <?php checked( in_array( 'user_register', $user_sync_actions, true ) ); ?>
+								   >
 							<span class="ghl-checkbox-input <?php echo in_array( 'user_register', $user_sync_actions, true ) ? 'is-checked' : ''; ?>">
 								<span class="ghl-checkbox-inner"></span>
-								<input type="checkbox" 
-									   class="ghl-checkbox-original"
-									   name="user_sync_actions[]" 
-									   value="user_register"
-									   <?php checked( in_array( 'user_register', $user_sync_actions, true ) ); ?>
-									   
-                                >
 							</span>
 							<span class="ghl-checkbox-label">
 								<?php esc_html_e( 'Enable Create new contacts in GoHighLevel when users register in WordPress', 'ghl-crm-integration' ); ?>

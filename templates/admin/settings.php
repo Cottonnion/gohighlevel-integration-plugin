@@ -27,41 +27,42 @@ if ( isset( $_POST['settings_tab'] ) && check_ajax_referer( 'ghl_crm_settings_no
 $settings_tabs = [
 	'general' => [
 		'label' => __( 'General', 'ghl-crm-integration' ),
-		'icon'  => 'dashicons-admin-generic',
+		'icon'  => 'fa-solid fa-gear',
 	],
 	'api' => [
 		'label' => __( 'API Configuration', 'ghl-crm-integration' ),
-		'icon'  => 'dashicons-admin-network',
+		'icon'  => 'fa-solid fa-network-wired',
 	],
 	'rest-api' => [
 		'label' => __( 'REST API', 'ghl-crm-integration' ),
-		'icon'  => 'dashicons-rest-api',
+		'icon'  => 'fa-solid fa-code',
 	],
 	'webhooks' => [
 		'label' => __( 'Webhooks', 'ghl-crm-integration' ),
-		'icon'  => 'dashicons-randomize',
+		'icon'  => 'fa-solid fa-link',
 	],
 	'notifications' => [
 		'label' => __( 'Email Notifications', 'ghl-crm-integration' ),
-		'icon'  => 'dashicons-email-alt',
+		'icon'  => 'fa-solid fa-envelope',
 	],
 	'field-sync' => [
 		'label' => __( 'Field Sync', 'ghl-crm-integration' ),
-		'icon'  => 'dashicons-update',
+		'icon'  => 'fa-solid fa-arrows-rotate',
 	],
 	'contact-fields' => [
 		'label' => __( 'Custom Contact Fields', 'ghl-crm-integration' ),
-		'icon'  => 'dashicons-id',
+		'icon'  => 'fa-solid fa-id-card',
 	],
 	'role-tags' => [
 		'label' => __( 'Role Based Tags', 'ghl-crm-integration' ),
-		'icon'  => 'dashicons-tag',
+		'icon'  => 'fa-solid fa-tags',
 	],
 	'advanced' => [
 		'label' => __( 'Advanced', 'ghl-crm-integration' ),
-		'icon'  => 'dashicons-admin-tools',
+		'icon'  => 'fa-solid fa-screwdriver-wrench',
 	],
 ];
+
 ?>
 <div class="wrap ghl-crm-settings">
 	<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
@@ -71,11 +72,9 @@ $settings_tabs = [
 		<nav class="ghl-settings-nav">
 			<ul>
 				<?php foreach ( $settings_tabs as $tab_key => $tab_data ) : ?>
-					<li class="<?php echo $current_tab === $tab_key ? 'active' : ''; ?>">
-						<a href="#<?php echo esc_attr( $tab_key ); ?>" data-tab="<?php echo esc_attr( $tab_key ); ?>">
-							<span class="dashicons <?php echo esc_attr( $tab_data['icon'] ); ?>"></span>
-							<?php echo esc_html( $tab_data['label'] ); ?>
-						</a>
+					<li class="<?php echo $current_tab === $tab_key ? 'active' : ''; ?>" data-tab="<?php echo esc_attr( $tab_key ); ?>">
+						<span class="dashicons <?php echo esc_attr( $tab_data['icon'] ); ?>"></span>
+						<span class="ghl-tab-label"><?php echo esc_html( $tab_data['label'] ); ?></span>
 					</li>
 				<?php endforeach; ?>
 			</ul>

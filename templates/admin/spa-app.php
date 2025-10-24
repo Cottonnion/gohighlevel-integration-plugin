@@ -15,30 +15,30 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 
 <div class="wrap ghl-crm-wrap">
-	<h1 class="wp-heading-inline"><?php esc_html_e( 'GoHighLevel CRM Integration', 'ghl-crm-integration' ); ?></h1>
+	<!-- <h1 class="wp-heading-inline"><?php esc_html_e( 'GoHighLevel CRM Integration', 'ghl-crm-integration' ); ?></h1> -->
 	<hr class="wp-header-end">
 
 	<!-- Horizontal Header Navigation -->
 	<div class="ghl-header-nav">
 		<nav class="ghl-nav-tabs">
 			<a href="#/" class="ghl-nav-tab" data-route="dashboard">
-				<span class="dashicons dashicons-dashboard"></span>
+				<i class="fa-solid fa-gauge"></i>
 				<span class="ghl-nav-label"><?php esc_html_e( 'Dashboard', 'ghl-crm-integration' ); ?></span>
 			</a>
 			<a href="#/settings" class="ghl-nav-tab" data-route="settings">
-				<span class="dashicons dashicons-admin-settings"></span>
+				<i class="fa-solid fa-gear"></i>
 				<span class="ghl-nav-label"><?php esc_html_e( 'Settings', 'ghl-crm-integration' ); ?></span>
 			</a>
 			<a href="#/integrations" class="ghl-nav-tab" data-route="integrations">
-				<span class="dashicons dashicons-admin-plugins"></span>
+				<i class="fa-solid fa-plug"></i>
 				<span class="ghl-nav-label"><?php esc_html_e( 'Integrations', 'ghl-crm-integration' ); ?></span>
 			</a>
 			<a href="#/field-mapping" class="ghl-nav-tab" data-route="field-mapping">
-				<span class="dashicons dashicons-admin-links"></span>
+				<i class="fa-solid fa-code-compare"></i>
 				<span class="ghl-nav-label"><?php esc_html_e( 'Field Mapping', 'ghl-crm-integration' ); ?></span>
 			</a>
 			<a href="#/sync-logs" class="ghl-nav-tab" data-route="sync-logs">
-				<span class="dashicons dashicons-list-view"></span>
+				<i class="fa-solid fa-list"></i>
 				<span class="ghl-nav-label"><?php esc_html_e( 'Sync Logs', 'ghl-crm-integration' ); ?></span>
 			</a>
 		</nav>
