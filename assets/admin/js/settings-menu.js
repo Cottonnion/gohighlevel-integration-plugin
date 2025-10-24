@@ -20,33 +20,33 @@
 		const hash = window.location.hash.slice(1);
 		if (hash && hash !== '') {
 			// Load tab from hash if present
-			const $link = $('.ghl-settings-nav a[data-tab="' + hash + '"]');
-			if ($link.length) {
+			const $tab = $('.ghl-settings-nav li[data-tab="' + hash + '"]');
+			if ($tab.length) {
 				loadSettingsTab(hash);
 				$('.ghl-settings-nav li').removeClass('active');
-				$link.parent().addClass('active');
+				$tab.addClass('active');
 			}
 		}
 		
 		// Remove any existing event handlers first
-		$(document).off('click.ghlSettingsMenu', '.ghl-settings-nav a');
+		$(document).off('click.ghlSettingsMenu', '.ghl-settings-nav li');
 		$(window).off('hashchange.ghlSettingsMenu');
 		
 		// Handle tab clicks with namespaced event
-		$(document).on('click.ghlSettingsMenu', '.ghl-settings-nav a', function(e) {
+		$(document).on('click.ghlSettingsMenu', '.ghl-settings-nav li', function(e) {
 			e.preventDefault();
 			
-			const $link = $(this);
-			const tab = $link.data('tab');
+			const $tab = $(this);
+			const tab = $tab.data('tab');
 			
 			// Don't reload if already active
-			if ($link.parent().hasClass('active')) {
+			if ($tab.hasClass('active')) {
 				return;
 			}
 			
 			// Update active state
 			$('.ghl-settings-nav li').removeClass('active');
-			$link.parent().addClass('active');
+			$tab.addClass('active');
 			
 			// Update hash
 			window.location.hash = tab;
@@ -67,7 +67,7 @@
 					loadSettingsTab(hash);
 					// Update active state
 					$('.ghl-settings-nav li').removeClass('active');
-					$('.ghl-settings-nav a[data-tab="' + hash + '"]').parent().addClass('active');
+					$('.ghl-settings-nav li[data-tab="' + hash + '"]').addClass('active');
 				}
 			}
 		});

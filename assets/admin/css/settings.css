@@ -235,7 +235,7 @@
 }
 
 /* ========================================
-   CUSTOM CHECKBOXES
+   TOGGLE SWITCH (Modern Switch Style)
    ======================================== */
 
 .ghl-checkbox {
@@ -253,70 +253,104 @@
 	background: var(--ghl-bg-hover);
 }
 
-/* Checkbox Input Container */
+/* Toggle Switch Container */
 .ghl-checkbox-input {
 	display: inline-flex;
 	align-items: center;
-	justify-content: center;
+	justify-content: flex-start;
 	flex-shrink: 0;
 	position: relative;
-	width: 20px;
-	height: 20px;
+	width: 44px;
+	height: 24px;
 	margin-top: 2px;
 }
 
-/* Checkbox Visual (the box itself) */
+/* Toggle Switch Track */
 .ghl-checkbox-inner {
-	display: inline-block;
-	width: 20px;
-	height: 20px;
-	border: 2px solid var(--ghl-border-secondary);
-	border-radius: var(--ghl-radius-sm);
-	background: var(--ghl-bg-primary);
-	transition: var(--ghl-transition-base);
+	display: block;
+	width: 44px;
+	height: 24px;
+	border-radius: 12px;
+	background: #dcdfe6;
+	border: 1px solid #dcdfe6;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 	position: relative;
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* Checkbox - Checked State */
+/* Toggle Switch Circle/Knob */
+.ghl-checkbox-inner::after {
+	content: '';
+	position: absolute;
+	left: 2px;
+	top: 2px;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background: #ffffff;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Toggle Switch - Checked State */
 .ghl-checkbox-input.is-checked .ghl-checkbox-inner {
 	background: var(--ghl-primary);
 	border-color: var(--ghl-primary);
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
-/* Checkmark Icon */
+/* Move the knob to the right when checked */
 .ghl-checkbox-input.is-checked .ghl-checkbox-inner::after {
-	content: '';
-	position: absolute;
-	left: 6px;
-	top: 2px;
-	width: 5px;
-	height: 10px;
-	border: solid white;
-	border-width: 0 2px 2px 0;
-	transform: rotate(45deg);
+	left: 22px;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Hover effect on toggle */
+.ghl-checkbox:hover .ghl-checkbox-inner {
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15), 0 0 0 4px rgba(126, 59, 208, 0.1);
+}
+
+.ghl-checkbox:hover .ghl-checkbox-input.is-checked .ghl-checkbox-inner {
+	background: var(--ghl-primary-hover);
+	border-color: var(--ghl-primary-hover);
+}
+
+/* Focus state for accessibility */
+.ghl-checkbox-original:focus + .ghl-checkbox-input .ghl-checkbox-inner {
+	outline: 2px solid var(--ghl-primary);
+	outline-offset: 2px;
 }
 
 /* Hide the actual checkbox input */
 .ghl-checkbox-original {
-	/* position: absolute;
-	opacity: 0; */
+	position: absolute;
+	opacity: 0;
 	width: 0;
 	height: 0;
-	margin: 0;
-	padding: 0;
-	/* Removed pointer-events: none to allow clicks */
 }
 
-/* Checkbox Label Text */
+/* Toggle Label Text */
 .ghl-checkbox-label {
 	font-size: var(--ghl-font-size-base);
 	color: var(--ghl-text-primary);
 	line-height: var(--ghl-line-height-base);
 	font-weight: var(--ghl-font-weight-normal);
+	flex: 1;
 }
 
 .ghl-checkbox:hover .ghl-checkbox-label {
 	color: var(--ghl-text-primary);
+}
+
+/* Disabled state */
+.ghl-checkbox-original:disabled ~ .ghl-checkbox-input .ghl-checkbox-inner {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.ghl-checkbox-original:disabled ~ .ghl-checkbox-label {
+	opacity: 0.5;
+	cursor: not-allowed;
 }
 
 /* ========================================

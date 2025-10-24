@@ -285,6 +285,10 @@ body.admin-bar .ghl-header-nav {
     box-shadow: none;
 }
 
+.wrap.ghl-crm-wrap {
+    margin: 0px;
+}
+
 /* ===========================
    Responsive Design
    =========================== */
