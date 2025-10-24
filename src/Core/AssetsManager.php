@@ -98,6 +98,14 @@ class AssetsManager {
 			'11.0.0',
 			true
 		);
+
+		// Register Font Awesome
+		wp_register_style(
+			'font-awesome',
+			'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css',
+			[],
+			'6.6.0'
+		);
 	}
 
 	/**
@@ -106,6 +114,9 @@ class AssetsManager {
 	 * @return void
 	 */
 	private function define_admin_assets(): void {
+
+		wp_enqueue_style( 'font-awesome' );
+
 		// Admin Menu Styling (loads on all admin pages to style the menu)
 		$this->add_admin_asset(
 			'ghl-crm-admin-menu-css',
