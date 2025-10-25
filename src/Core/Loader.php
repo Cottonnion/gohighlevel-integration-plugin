@@ -68,9 +68,10 @@ class Loader {
 			'core.database'      => \GHL_CRM\Core\Database::class,
 			'core.settings'      => \GHL_CRM\Core\SettingsManager::class,
 			'core.assets'        => \GHL_CRM\Core\AssetsManager::class,
-			'core.ajax'          => \GHL_CRM\Core\AjaxHandler::class,
 			'core.menu'          => \GHL_CRM\Core\MenuManager::class,
 			'core.notices'       => \GHL_CRM\Core\AdminNotices::class,
+			// @deprecated
+			'core.ajax'          => \GHL_CRM\Core\AjaxHandler::class,
 
 			// API components
 			'api.oauth'          => \GHL_CRM\API\OAuth\OAuthHandler::class,
