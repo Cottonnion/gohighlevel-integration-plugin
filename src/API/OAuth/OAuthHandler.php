@@ -314,10 +314,11 @@ class OAuthHandler {
 		$settings = $this->settings_manager->get_settings_array();
 
 		return [
-			'connected'    => $this->is_connected(),
-			'connected_at' => $settings['oauth_connected_at'] ?? '',
-			'expires_at'   => $settings['oauth_expires_at'] ?? '',
-			'location_id'  => $settings['location_id'] ?? '',
+			'connected'     => $this->is_connected(),
+			'connected_at'  => $settings['oauth_connected_at'] ?? '',
+			'expires_at'    => $settings['oauth_expires_at'] ?? '',
+			'location_id'   => $settings['location_id'] ?? '',
+			'location_name' => $settings['location_name'] ?? '',
 		];
 	}
 }
