@@ -28,6 +28,13 @@ class QueueManager {
 	private const BATCH_SIZE = 10;
 
 	/**
+	 * GHL API Rate Limits (per location)
+	 */
+	private const RATE_LIMIT_BURST        = 100; // Max requests per 10 seconds
+	private const RATE_LIMIT_BURST_WINDOW = 10; // Seconds
+	private const RATE_LIMIT_DAILY        = 200000; // Max requests per day
+
+	/**
 	 * Singleton instance
 	 *
 	 * @var self|null
@@ -293,6 +300,13 @@ class QueueManager {
 		$table_name = $this->get_queue_table_name();
 		$start_time = microtime( true );
 
+		// Check rate limits before processing
+		if ( ! $this->check_rate_limits() ) {
+			// Rate limit exceeded, don't process this item yet
+			// It will be picked up in the next queue run
+			return;
+		}
+
 		// Increment attempts
 		$wpdb->update(
 			$table_name,
@@ -310,6 +324,9 @@ class QueueManager {
 
 			// Execute sync based on item type
 			$result = $this->execute_sync( $item->item_type, $item->action, $item->item_id, $payload );
+
+			// Track API request
+			$this->track_api_request();
 
 			if ( $result ) {
 				// Mark as completed
@@ -338,6 +355,34 @@ class QueueManager {
 				throw new \Exception( 'Sync execution returned false' );
 			}
 		} catch ( \Exception $e ) {
+			// Check if it's a rate limit error
+			if ( $this->is_rate_limit_error( $e ) ) {
+				// Don't increment attempts for rate limit errors
+				// Reset attempt counter so it will retry
+				$wpdb->update(
+					$table_name,
+					[
+						'status'        => 'pending',
+						'error_message' => 'Rate limit exceeded - will retry',
+						'updated_at'    => current_time( 'mysql' ),
+					],
+					[ 'id' => $item->id ],
+					[ '%s', '%s', '%s' ],
+					[ '%d' ]
+				);
+
+				// Log rate limit hit
+				error_log(
+					sprintf(
+						'GHL CRM Rate Limit Hit [Site %d]: Item %d paused for retry',
+						get_current_blog_id(),
+						$item->id
+					)
+				);
+
+				return; // Stop processing this batch
+			}
+
 			// Mark as failed if max attempts reached
 			$status = ( $item->attempts + 1 >= self::MAX_ATTEMPTS ) ? 'failed' : 'pending';
 
@@ -476,6 +521,105 @@ class QueueManager {
 			default:
 				throw new \Exception( 'Unknown user action: ' . $action );
 		}
+	}
+
+	/**
+	 * Check if rate limits allow processing
+	 * Checks both burst limit (100 per 10 sec) and daily limit (200k per day)
+	 * Tracks by GHL location ID so multiple sites sharing same account share limits
+	 *
+	 * @return bool True if under limits, false if exceeded
+	 */
+	private function check_rate_limits(): bool {
+		$location_id = $this->get_ghl_location_id();
+		if ( empty( $location_id ) ) {
+			// No location ID configured, allow processing but log warning
+			error_log( 'GHL CRM: No location ID configured for site ' . get_current_blog_id() );
+			return true;
+		}
+
+		// Check burst limit (100 requests per 10 seconds) - shared across sites with same location
+		$burst_key   = 'ghl_rate_burst_' . md5( $location_id );
+		$burst_data  = get_site_transient( $burst_key );
+		$burst_count = $burst_data ? (int) $burst_data : 0;
+
+		if ( $burst_count >= self::RATE_LIMIT_BURST ) {
+			error_log(
+				sprintf(
+					'GHL CRM Burst Rate Limit Hit [Location %s, Site %d]: %d/%d requests in 10 seconds',
+					$location_id,
+					get_current_blog_id(),
+					$burst_count,
+					self::RATE_LIMIT_BURST
+				)
+			);
+			return false;
+		}
+
+		// Check daily limit (200,000 requests per day) - shared across sites with same location
+		$daily_key   = 'ghl_rate_daily_' . md5( $location_id ) . '_' . gmdate( 'Y-m-d' );
+		$daily_data  = get_site_transient( $daily_key );
+		$daily_count = $daily_data ? (int) $daily_data : 0;
+
+		if ( $daily_count >= self::RATE_LIMIT_DAILY ) {
+			error_log(
+				sprintf(
+					'GHL CRM Daily Rate Limit Hit [Location %s, Site %d]: %d/%d requests today',
+					$location_id,
+					get_current_blog_id(),
+					$daily_count,
+					self::RATE_LIMIT_DAILY
+				)
+			);
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Track API request for rate limiting
+	 * Increments both burst and daily counters
+	 * Tracks by GHL location ID so multiple sites sharing same account share limits
+	 *
+	 * @return void
+	 */
+	private function track_api_request(): void {
+		$location_id = $this->get_ghl_location_id();
+		if ( empty( $location_id ) ) {
+			return; // Skip tracking if no location ID
+		}
+
+		// Track burst (10 second window) - shared across all sites with same location
+		$burst_key   = 'ghl_rate_burst_' . md5( $location_id );
+		$burst_data  = get_site_transient( $burst_key );
+		$burst_count = $burst_data ? (int) $burst_data : 0;
+		set_site_transient( $burst_key, $burst_count + 1, self::RATE_LIMIT_BURST_WINDOW );
+
+		// Track daily (24 hour window) - shared across all sites with same location
+		$daily_key   = 'ghl_rate_daily_' . md5( $location_id ) . '_' . gmdate( 'Y-m-d' );
+		$daily_data  = get_site_transient( $daily_key );
+		$daily_count = $daily_data ? (int) $daily_data : 0;
+
+		// Set expiry to end of day
+		$end_of_day = strtotime( 'tomorrow midnight' ) - time();
+		set_site_transient( $daily_key, $daily_count + 1, $end_of_day );
+	}
+
+	/**
+	 * Check if exception is a rate limit error
+	 *
+	 * @param \Exception $e Exception to check
+	 * @return bool True if rate limit error
+	 */
+	private function is_rate_limit_error( \Exception $e ): bool {
+		$message = strtolower( $e->getMessage() );
+
+		// Check for common rate limit indicators
+		return strpos( $message, 'rate limit' ) !== false
+			|| strpos( $message, 'too many requests' ) !== false
+			|| strpos( $message, '429' ) !== false
+			|| ( $e instanceof \GHL_CRM\API\Exceptions\RateLimitException );
 	}
 
 	/**
@@ -669,6 +813,9 @@ class QueueManager {
 			$warnings[] = sprintf( 'Large queue table: %d total rows (cleanup recommended)', $total_items );
 		}
 
+		// Get rate limit info
+		$rate_limits = $this->get_rate_limit_status();
+
 		return [
 			'pending'                => (int) $pending,
 			'failed'                 => (int) $failed,
@@ -679,7 +826,96 @@ class QueueManager {
 			'warnings'               => $warnings,
 			'site_id'                => $current_site_id,
 			'max_queue_limit'        => 10000,
+			'rate_limits'            => $rate_limits,
 		];
+	}
+
+	/**
+	 * Get rate limit status
+	 *
+	 * @return array Rate limit statistics
+	 */
+	private function get_rate_limit_status(): array {
+		$location_id = $this->get_ghl_location_id();
+		if ( empty( $location_id ) ) {
+			return [
+				'burst'     => [
+					'limit'     => self::RATE_LIMIT_BURST,
+					'used'      => 0,
+					'remaining' => self::RATE_LIMIT_BURST,
+					'percent'   => 0,
+					'window'    => self::RATE_LIMIT_BURST_WINDOW . ' seconds',
+				],
+				'daily'     => [
+					'limit'     => self::RATE_LIMIT_DAILY,
+					'used'      => 0,
+					'remaining' => self::RATE_LIMIT_DAILY,
+					'percent'   => 0,
+					'resets_at' => gmdate( 'Y-m-d H:i:s', strtotime( 'tomorrow midnight' ) ),
+				],
+				'throttled' => false,
+				'location_id' => null,
+				'shared_across_sites' => false,
+			];
+		}
+
+		// Burst limit status (shared across sites with same location)
+		$burst_key       = 'ghl_rate_burst_' . md5( $location_id );
+		$burst_data      = get_site_transient( $burst_key );
+		$burst_count     = $burst_data ? (int) $burst_data : 0;
+		$burst_remaining = max( 0, self::RATE_LIMIT_BURST - $burst_count );
+
+		// Daily limit status (shared across sites with same location)
+		$daily_key       = 'ghl_rate_daily_' . md5( $location_id ) . '_' . gmdate( 'Y-m-d' );
+		$daily_data      = get_site_transient( $daily_key );
+		$daily_count     = $daily_data ? (int) $daily_data : 0;
+		$daily_remaining = max( 0, self::RATE_LIMIT_DAILY - $daily_count );
+
+		// Calculate percentages
+		$burst_percent = ( $burst_count / self::RATE_LIMIT_BURST ) * 100;
+		$daily_percent = ( $daily_count / self::RATE_LIMIT_DAILY ) * 100;
+
+		return [
+			'burst'     => [
+				'limit'     => self::RATE_LIMIT_BURST,
+				'used'      => $burst_count,
+				'remaining' => $burst_remaining,
+				'percent'   => round( $burst_percent, 2 ),
+				'window'    => self::RATE_LIMIT_BURST_WINDOW . ' seconds',
+			],
+			'daily'     => [
+				'limit'     => self::RATE_LIMIT_DAILY,
+				'used'      => $daily_count,
+				'remaining' => $daily_remaining,
+				'percent'   => round( $daily_percent, 2 ),
+				'resets_at' => gmdate( 'Y-m-d H:i:s', strtotime( 'tomorrow midnight' ) ),
+			],
+			'throttled' => $burst_count >= self::RATE_LIMIT_BURST || $daily_count >= self::RATE_LIMIT_DAILY,
+			'location_id' => $location_id,
+			'shared_across_sites' => is_multisite(),
+		];
+	}
+
+	/**
+	 * Get GHL location ID for current site
+	 * Used for rate limiting tracking across sites sharing same GHL account
+	 *
+	 * @return string|null Location ID or null if not configured
+	 */
+	private function get_ghl_location_id(): ?string {
+		// Get from settings manager
+		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$location_id      = $settings_manager->get_setting( 'ghl_location_id' );
+
+		// Fallback: Try to get from OAuth tokens if available
+		if ( empty( $location_id ) ) {
+			$oauth_handler = \GHL_CRM\API\OAuth\OAuthHandler::get_instance();
+			if ( method_exists( $oauth_handler, 'get_location_id' ) ) {
+				$location_id = $oauth_handler->get_location_id();
+			}
+		}
+
+		return ! empty( $location_id ) ? (string) $location_id : null;
 	}
 
 	/**
