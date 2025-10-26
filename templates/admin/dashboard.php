@@ -147,8 +147,8 @@ $settings      = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_arr
 					<span class="dashicons dashicons-warning"></span>
 					<strong><?php esc_html_e( 'Not Connected', 'ghl-crm-integration' ); ?></strong>
 					<p><?php esc_html_e( 'Connect your GoHighLevel account to start syncing data.', 'ghl-crm-integration' ); ?></p>
-					
-					<a href="<?php echo esc_url( $oauth_handler->get_authorization_url() ); ?>" class="button button-primary button-hero" style="margin-top: 15px;">
+
+					<a target='_blank' href="<?php echo esc_url( $oauth_handler->get_authorization_url() ); ?>" class="button button-primary button-hero" style="margin-top: 15px;" >
 						<span class="dashicons dashicons-cloud" style="margin-top: 5px;"></span>
 						<?php esc_html_e( 'Connect to GoHighLevel', 'ghl-crm-integration' ); ?>
 					</a>
