@@ -69,7 +69,7 @@ $settings_tabs = [
 	
 	<div class="ghl-settings-with-sidebar">
 		<!-- Settings Side Menu -->
-		<nav class="ghl-settings-nav">
+		<nav class="ghl-settings-nav" id="ghl-settings-nav">
 			<ul>
 				<?php foreach ( $settings_tabs as $tab_key => $tab_data ) : ?>
 					<li class="<?php echo $current_tab === $tab_key ? 'active' : ''; ?>" data-tab="<?php echo esc_attr( $tab_key ); ?>">
@@ -79,6 +79,12 @@ $settings_tabs = [
 				<?php endforeach; ?>
 			</ul>
 		</nav>
+
+		<!-- Mobile Menu Toggle Button -->
+		<button type="button" class="ghl-settings-menu-toggle" id="ghl-menu-toggle" aria-label="<?php esc_attr_e( 'Toggle settings menu', 'ghl-crm-integration' ); ?>">
+			<span class="dashicons dashicons-menu"></span>
+			<span class="dashicons dashicons-no-alt"></span>
+		</button>
 
 		<!-- Settings Content Area -->
 		<div class="ghl-settings-content">

@@ -119,54 +119,134 @@
 	padding: 0;
 }
 
+/* Mobile Menu Toggle Button */
+.ghl-settings-menu-toggle {
+	display: none;
+	position: fixed;
+	bottom: 20px;
+	right: 20px;
+	z-index: 1000;
+	width: 56px;
+	height: 56px;
+	border-radius: 50%;
+	background: var(--ghl-primary);
+	color: #fff;
+	border: none;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	cursor: pointer;
+	transition: all 0.3s ease;
+	align-items: center;
+	justify-content: center;
+}
+
+.ghl-settings-menu-toggle:hover {
+	background: var(--ghl-primary-dark, #0056b3);
+	transform: scale(1.1);
+}
+
+.ghl-settings-menu-toggle:active {
+	transform: scale(0.95);
+}
+
+.ghl-settings-menu-toggle .dashicons {
+	font-size: 24px;
+	width: 24px;
+	height: 24px;
+}
+
 /* Responsive */
 @media screen and (max-width: 782px) {
 	.ghl-settings-with-sidebar {
-		flex-direction: column;
+		position: relative;
 	}
 
 	.ghl-settings-nav {
-		width: 100%;
+		position: fixed;
+		left: 0;
+		top: 32px; /* WP admin bar height */
+		bottom: 0;
+		width: 60px;
+		z-index: 999;
+		transition: width 0.3s ease;
+		overflow: hidden;
 	}
 
-	.ghl-settings-nav ul {
-		display: flex;
-		flex-wrap: wrap;
+	.ghl-settings-nav.expanded {
+		width: 220px;
 	}
 
 	.ghl-settings-nav li {
-		flex: 1;
-		border-bottom: none;
-		border-right: 1px solid var(--ghl-sidemenu-border);
-		justify-content: center;
-		text-align: center;
-		font-size: var(--ghl-font-size-sm);
-		padding: var(--ghl-spacing-sm);
+		min-height: 56px;
+		justify-content: flex-start;
+		white-space: nowrap;
 	}
 
-	.ghl-settings-nav li:last-child {
-		border-right: none;
+	.ghl-settings-nav .ghl-tab-label {
+		opacity: 0;
+		transition: opacity 0.2s ease;
 	}
 
-	.ghl-settings-nav li.active {
-		border-left: none;
-		border-bottom: 3px solid var(--ghl-primary);
+	.ghl-settings-nav.expanded .ghl-tab-label {
+		opacity: 1;
+		transition: opacity 0.3s ease 0.1s;
+	}
+
+	.ghl-settings-nav .dashicons {
+		margin: 0;
+	}
+
+	.ghl-settings-content {
+		margin-left: 60px;
+		transition: margin-left 0.3s ease;
+	}
+
+	.ghl-settings-nav.expanded ~ .ghl-settings-content {
+		margin-left: 220px;
+	}
+
+	.ghl-settings-menu-toggle {
+		display: flex;
+	}
+
+	.ghl-settings-nav.expanded + .ghl-settings-menu-toggle .dashicons-menu {
+		display: none;
+	}
+
+	.ghl-settings-nav:not(.expanded) + .ghl-settings-menu-toggle .dashicons-no-alt {
+		display: none;
 	}
 }
 
 @media screen and (max-width: 600px) {
-	.ghl-settings-nav ul {
-		flex-direction: column;
+	.ghl-settings-nav {
+		width: 0;
+		left: -220px;
+		box-shadow: none;
 	}
 
-	.ghl-settings-nav li {
-		border-right: none;
-		border-bottom: 1px solid var(--ghl-sidemenu-border);
-		justify-content: flex-start;
+	.ghl-settings-nav.expanded {
+		width: 220px;
+		left: 0;
+		box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
 	}
 
-	.ghl-settings-nav li.active {
-		border-left: 3px solid var(--ghl-primary);
-		border-bottom: 1px solid var(--ghl-sidemenu-border);
+	.ghl-settings-content {
+		margin-left: 0;
+	}
+
+	.ghl-settings-nav.expanded ~ .ghl-settings-content {
+		margin-left: 0;
+	}
+
+	/* Overlay when menu is open */
+	body.ghl-menu-open::before {
+		content: '';
+		position: fixed;
+		top: 32px;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.5);
+		z-index: 998;
 	}
 }

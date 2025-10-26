@@ -16,6 +16,9 @@
 		}
 		window.ghlSettingsMenuInitialized = true;
 		
+		// Initialize mobile menu toggle
+		initMobileMenuToggle();
+		
 		// Check for hash on page load
 		const hash = window.location.hash.slice(1);
 		if (hash && hash !== '') {
@@ -41,6 +44,8 @@
 			
 			// Don't reload if already active
 			if ($tab.hasClass('active')) {
+				// Close menu on mobile after selection
+				closeMobileMenu();
 				return;
 			}
 			
@@ -53,6 +58,9 @@
 			
 			// Load tab content
 			loadSettingsTab(tab);
+			
+			// Close menu on mobile after selection
+			closeMobileMenu();
 		});
 		
 		// Handle browser back/forward with hash changes (namespaced event)
@@ -71,6 +79,66 @@
 				}
 			}
 		});
+	}
+	
+	/**
+	 * Initialize mobile menu toggle
+	 */
+	function initMobileMenuToggle() {
+		const $toggleBtn = $('#ghl-menu-toggle');
+		const $nav = $('#ghl-settings-nav');
+		
+		// Remove existing handlers
+		$toggleBtn.off('click.ghlMenuToggle');
+		$(document).off('click.ghlMenuOverlay');
+		
+		// Toggle menu on button click
+		$toggleBtn.on('click.ghlMenuToggle', function(e) {
+			e.stopPropagation();
+			toggleMobileMenu();
+		});
+		
+		// Close menu when clicking outside on mobile
+		$(document).on('click.ghlMenuOverlay', function(e) {
+			if ($nav.hasClass('expanded')) {
+				const isClickInside = $(e.target).closest('.ghl-settings-nav, #ghl-menu-toggle').length > 0;
+				if (!isClickInside) {
+					closeMobileMenu();
+				}
+			}
+		});
+		
+		// Close menu on Escape key
+		$(document).on('keydown.ghlMenuToggle', function(e) {
+			if (e.key === 'Escape' && $nav.hasClass('expanded')) {
+				closeMobileMenu();
+			}
+		});
+	}
+	
+	/**
+	 * Toggle mobile menu
+	 */
+	function toggleMobileMenu() {
+		const $nav = $('#ghl-settings-nav');
+		$nav.toggleClass('expanded');
+		$('body').toggleClass('ghl-menu-open');
+		
+		// Update aria attributes for accessibility
+		const isExpanded = $nav.hasClass('expanded');
+		$('#ghl-menu-toggle').attr('aria-expanded', isExpanded);
+	}
+	
+	/**
+	 * Close mobile menu
+	 */
+	function closeMobileMenu() {
+		const $nav = $('#ghl-settings-nav');
+		if ($nav.hasClass('expanded')) {
+			$nav.removeClass('expanded');
+			$('body').removeClass('ghl-menu-open');
+			$('#ghl-menu-toggle').attr('aria-expanded', 'false');
+		}
 	}
 	
 	/**
@@ -134,6 +202,10 @@
 		window.ghlSettingsMenuInitialized = false;
 		$(document).off('click.ghlSettingsMenu', '.ghl-settings-nav a');
 		$(window).off('hashchange.ghlSettingsMenu');
+		$('#ghl-menu-toggle').off('click.ghlMenuToggle');
+		$(document).off('click.ghlMenuOverlay');
+		$(document).off('keydown.ghlMenuToggle');
+		$('body').removeClass('ghl-menu-open');
 	}
 	
 	// Export for use in SPA router

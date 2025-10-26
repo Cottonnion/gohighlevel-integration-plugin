@@ -219,7 +219,7 @@ class AssetsManager {
 			'settings-menu.css',
 			[],
 			[],
-			'1.0.0'
+			'1.0.1'
 		);
 
 		$this->add_admin_asset(
@@ -228,7 +228,7 @@ class AssetsManager {
 			'settings-menu.js',
 			[ 'jquery' ],
 			[],
-			'1.0.0',
+			'1.0.1',
 			true
 		);
 
