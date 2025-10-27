@@ -111,8 +111,10 @@ Before connecting the plugin, you need to create an OAuth app in GoHighLevel:
    - **Scopes**: Select all required scopes:
      - `contacts.readonly`
      - `contacts.write`
-     - `locations.readonly`
-     - `users.readonly`
+     - `locations/tags.readonly`
+     - `locations/tags.write`
+     - `locations/customFields.readonly`
+     - `locations/customFields.write`
 5. Click **Create** and copy your **Client ID** and **Client Secret**
 
 ### 2. Configure the Plugin
