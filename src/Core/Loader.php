@@ -71,7 +71,7 @@ class Loader {
 			'core.menu'          => \GHL_CRM\Core\MenuManager::class,
 			'core.notices'       => \GHL_CRM\Core\AdminNotices::class,
 			// @deprecated
-			'core.ajax'          => \GHL_CRM\Core\AjaxHandler::class,
+			// 'core.ajax'          => \GHL_CRM\Core\AjaxHandler::class,
 
 			// API components
 			'api.oauth'          => \GHL_CRM\API\OAuth\OAuthHandler::class,
