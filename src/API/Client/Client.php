@@ -42,19 +42,19 @@ class Client implements ClientInterface {
 
 	/**
 	 * OAuth2 Client ID
-	 * TODO: Replace with your actual GoHighLevel OAuth app client ID
+	 * Production OAuth App Client ID
 	 *
 	 * @var string
 	 */
-	private const OAUTH_CLIENT_ID = 'ghl-crm-integration-temp-client-id';
+	private const OAUTH_CLIENT_ID = '68ff9baa25051d0ca83341e9-mh9cljcg';
 
 	/**
 	 * OAuth2 Client Secret
-	 * TODO: Replace with your actual GoHighLevel OAuth app client secret
+	 * Production OAuth App Client Secret
 	 *
 	 * @var string
 	 */
-	private const OAUTH_CLIENT_SECRET = 'ghl-crm-integration-temp-client-secret';
+	private const OAUTH_CLIENT_SECRET = '17bd923c-13df-4198-8f78-0675a4b2e99a';
 
 	/**
 	 * OAuth2 Access Token
@@ -348,7 +348,7 @@ class Client implements ClientInterface {
 		$params = [
 			'client_id'     => self::OAUTH_CLIENT_ID,
 			'redirect_uri'  => $redirect_uri,
-			'scope'         => 'contacts.readonly contacts.write locations.readonly',
+			'scope'         => 'contacts.readonly contacts.write locations/tags.readonly locations/tags.write locations/customFields.readonly locations/customFields.write',
 			'response_type' => 'code',
 			'state'         => $state,
 		];
