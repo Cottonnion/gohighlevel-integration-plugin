@@ -19,6 +19,7 @@ $settings = $settings_manager->get_settings_array();
 $enable_user_sync              = $settings['enable_user_sync'] ?? false;
 $user_sync_actions             = $settings['user_sync_actions'] ?? [];
 $delete_contact_on_user_delete = $settings['delete_contact_on_user_delete'] ?? false;
+$user_register_tags            = $settings['user_register_tags'] ?? [];
 ?>
 
 <div class="ghl-settings-wrapper">
@@ -91,6 +92,7 @@ $delete_contact_on_user_delete = $settings['delete_contact_on_user_delete'] ?? f
 						<label class="ghl-checkbox <?php echo in_array( 'user_register', $user_sync_actions, true ) ? 'is-checked' : ''; ?>">
 							<input type="checkbox" 
 								   class="ghl-checkbox-original"
+								   id="enable_user_register"
 								   name="user_sync_actions[]" 
 								   value="user_register"
 								   <?php checked( in_array( 'user_register', $user_sync_actions, true ) ); ?>
@@ -102,6 +104,28 @@ $delete_contact_on_user_delete = $settings['delete_contact_on_user_delete'] ?? f
 								<?php esc_html_e( 'Enable Create new contacts in GoHighLevel when users register in WordPress', 'ghl-crm-integration' ); ?>
 							</span>
 						</label>
+					</div>
+				</div>
+				
+				<!-- Conditional Tags Dropdown -->
+				<div class="ghl-form-item" id="user_register_tags_section" style="margin-left: 30px; <?php echo ! in_array( 'user_register', $user_sync_actions, true ) ? 'display: none;' : ''; ?>">
+					<div class="ghl-form-item-content">
+						<label style="display: block; margin-bottom: 10px; font-weight: 600;">
+							<?php esc_html_e( 'Default Tags on User Registration', 'ghl-crm-integration' ); ?>
+						</label>
+						<select 
+							id="user_register_tags" 
+							name="user_register_tags[]" 
+							multiple 
+							class="ghl-tags-select"
+							style="width: 100%; max-width: 500px;"
+							data-saved-tags='<?php echo wp_json_encode( $user_register_tags ); ?>'
+							data-placeholder="<?php esc_attr_e( 'Select tags to apply when user registers...', 'ghl-crm-integration' ); ?>">
+							<option value=""><?php esc_html_e( 'Loading tags...', 'ghl-crm-integration' ); ?></option>
+						</select>
+						<p class="description" style="margin-top: 8px;">
+							<?php esc_html_e( 'These tags will be automatically added to contacts when users register in WordPress.', 'ghl-crm-integration' ); ?>
+						</p>
 					</div>
 				</div>
 				
