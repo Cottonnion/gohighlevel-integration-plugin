@@ -154,10 +154,43 @@ class AssetsManager {
 			'spa-router.js',
 			[ 'jquery', 'sweetalert2' ],
 			[],
-			'1.0.0',
+			'1.0.1',
 			true
 		);
 
+		// Dashboard assets (loads on SPA page)
+		$this->add_admin_asset(
+			'ghl-crm-dashboard-css',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'dashboard.css',
+			[],
+			[],
+			'1.0.0'
+		);
+
+		$this->add_admin_asset(
+			'ghl-crm-dashboard-js',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'dashboard.js',
+			[ 'jquery', 'sweetalert2' ],
+			[
+				'ajaxUrl'        => admin_url( 'admin-ajax.php' ),
+				'nonce'          => wp_create_nonce( 'ghl_crm_admin' ),
+				'manualConnectNonce' => wp_create_nonce( 'ghl_crm_manual_connect' ),
+				'disconnectNonce' => wp_create_nonce( 'ghl_crm_oauth_disconnect' ),
+				'i18n'           => [
+					'connecting'       => __( 'Connecting...', 'ghl-crm-integration' ),
+					'connectionFailed' => __( 'Connection failed', 'ghl-crm-integration' ),
+					'connectionError'  => __( 'An error occurred while connecting', 'ghl-crm-integration' ),
+					'disconnectConfirm' => __( 'Are you sure you want to disconnect your GoHighLevel account?', 'ghl-crm-integration' ),
+					'disconnecting'    => __( 'Disconnecting...', 'ghl-crm-integration' ),
+					'disconnectFailed' => __( 'Failed to disconnect', 'ghl-crm-integration' ),
+					'disconnectError'  => __( 'An error occurred while disconnecting', 'ghl-crm-integration' ),
+				],
+			],
+			'1.0.8',
+			true
+		);
 		// Field Mapping assets (need to load on SPA page)
 		$this->add_admin_asset(
 			'ghl-crm-field-mapping-css',
