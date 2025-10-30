@@ -107,6 +107,16 @@
 						formData[name] = $input.val();
 					}
 				}
+				// Handle multi-select dropdowns
+				else if ($input.is('select[multiple]')) {
+					const baseName = name.endsWith('[]') ? name.replace('[]', '') : name;
+					const selectedValues = $input.val(); // Returns array for multi-select
+					if (selectedValues && selectedValues.length > 0) {
+						formData[baseName] = selectedValues;
+					} else {
+						formData[baseName] = [];
+					}
+				}
 				// Handle all other inputs
 				else {
 					formData[name] = $input.val();
@@ -235,11 +245,114 @@
 		window.ghlSettingsInitialized = false;
 	}
 
+	/**
+	 * Initialize tags functionality for user registration
+	 */
+	function initUserRegisterTags() {
+		const $enableCheckbox = $('#enable_user_register');
+		const $tagsSection = $('#user_register_tags_section');
+		const $tagsSelect = $('#user_register_tags');
+		
+		// Check if elements exist (only on general settings tab)
+		if ($enableCheckbox.length === 0 || $tagsSection.length === 0 || $tagsSelect.length === 0) {
+			return;
+		}
+		
+		// Remove existing event handlers to prevent duplicates
+		$enableCheckbox.off('change.ghlTags');
+		
+		// Toggle tags section when checkbox changes
+		$enableCheckbox.on('change.ghlTags', function() {
+			if ($(this).is(':checked')) {
+				$tagsSection.slideDown(300);
+				// Load tags if not already loaded
+				if ($tagsSelect.find('option').length <= 1) {
+					loadGoHighLevelTags();
+				}
+			} else {
+				$tagsSection.slideUp(300);
+			}
+		});
+		
+		// Load tags on page load if checkbox is already checked
+		if ($enableCheckbox.is(':checked') && $tagsSelect.find('option').length <= 1) {
+			loadGoHighLevelTags();
+		}
+	}
+	
+	/**
+	 * Load tags from GoHighLevel
+	 */
+	function loadGoHighLevelTags() {
+		const $tagsSelect = $('#user_register_tags');
+		const savedTags = $tagsSelect.data('saved-tags') || [];
+		
+		// Show loading state
+		$tagsSelect.html('<option value="">Loading tags...</option>').prop('disabled', true);
+		
+		$.ajax({
+			url: ajaxurl,
+			type: 'POST',
+			data: {
+				action: 'ghl_crm_get_tags',
+				nonce: $('#ghl_crm_nonce').val()
+			},
+			success: function(response) {
+				if (response.success && response.data.tags) {
+					const tags = response.data.tags;
+					$tagsSelect.empty();
+					
+					if (tags.length === 0) {
+						$tagsSelect.append('<option value="">No tags found in your GoHighLevel location</option>');
+					} else {
+						// Add placeholder option
+						$tagsSelect.append('<option value="">Select tags...</option>');
+						
+						// Add each tag as an option
+						tags.forEach(function(tag) {
+							const tagValue = tag.name || tag;
+							const tagLabel = tag.name || tag;
+							const isSelected = savedTags.includes(tagValue);
+							$tagsSelect.append(
+								$('<option></option>')
+									.attr('value', tagValue)
+									.text(tagLabel)
+									.prop('selected', isSelected)
+							);
+						});
+					}
+					
+					$tagsSelect.prop('disabled', false);
+					
+					// Initialize Select2 if available
+					if (typeof $.fn.select2 !== 'undefined') {
+						$tagsSelect.select2({
+							placeholder: 'Select tags to apply on user registration',
+							allowClear: true,
+							width: '100%'
+						});
+					}
+				} else {
+					$tagsSelect.html('<option value="">Failed to load tags</option>');
+					console.error('Failed to load tags:', response);
+				}
+			},
+			error: function(xhr, status, error) {
+				$tagsSelect.html('<option value="">Error loading tags</option>').prop('disabled', false);
+				console.error('Error loading tags:', error);
+			}
+		});
+	}
+
 	// Export to global scope for SPA to call
 	window.initSettings = initSettings;
 	window.cleanupSettings = cleanupSettings;
+	window.initUserRegisterTags = initUserRegisterTags;
 
 	// Initialize on document ready (for non-SPA page loads)
-	$(document).ready(initSettings);
+	$(document).ready(function() {
+		initUserRegisterTags();
+		initSettings();
+	});
 
 })(jQuery, window);

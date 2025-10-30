@@ -106,6 +106,22 @@ class AssetsManager {
 			[],
 			'6.6.0'
 		);
+
+		// Register Select2
+		wp_register_style(
+			'select2',
+			'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
+			[],
+			'4.1.0'
+		);
+
+		wp_register_script(
+			'select2',
+			'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
+			[ 'jquery' ],
+			'4.1.0',
+			true
+		);
 	}
 
 	/**
@@ -188,7 +204,7 @@ class AssetsManager {
 					'disconnectError'  => __( 'An error occurred while disconnecting', 'ghl-crm-integration' ),
 				],
 			],
-			'1.0.8',
+			'1.0.9',
 			true
 		);
 		// Field Mapping assets (need to load on SPA page)
@@ -241,9 +257,9 @@ class AssetsManager {
 			'ghl-crm-settings-css',
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'settings.css',
-			[ 'sweetalert2' ],
+			[ 'sweetalert2', 'select2' ],
 			[],
-			'1.0.1'
+			'1.0.2'
 		);
 
 		$this->add_admin_asset(
@@ -269,12 +285,12 @@ class AssetsManager {
 			'ghl-crm-settings-js',
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'settings.js',
-			[ 'jquery', 'sweetalert2' ],
+			[ 'jquery', 'sweetalert2', 'select2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
 			],
-			GHL_CRM_VERSION,
+			'1.0.2',
 			true
 		);
 

@@ -159,6 +159,12 @@
          */
         initializeViewHandlers(view) {
             switch (view) {
+                case 'dashboard':
+                    // Re-initialize dashboard handlers
+                    if (typeof window.initDashboard === 'function') {
+                        window.initDashboard();
+                    }
+                    break;
                 case 'field-mapping':
                     // Re-initialize field mapping handlers
                     if (typeof window.initFieldMapping === 'function') {
@@ -175,6 +181,10 @@
                     // Re-initialize settings handlers
                     if (typeof window.initSettings === 'function') {
                         window.initSettings();
+                    }
+                    // Initialize user register tags functionality
+                    if (typeof window.initUserRegisterTags === 'function') {
+                        window.initUserRegisterTags();
                     }
                     // Initialize settings side menu for tab switching (only if not already initialized)
                     if (typeof window.initSettingsMenu === 'function' && !window.ghlSettingsMenuInitialized) {

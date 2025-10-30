@@ -437,6 +437,7 @@
 	border-color: var(--ghl-border-secondary);
 }
 
+
 /* ========================================
    RESPONSIVE DESIGN
    ======================================== */
@@ -473,5 +474,31 @@
 
 	.ghl-form-item {
 		gap: var(--ghl-spacing-md);
+	}
+
+	/* Tags Section Small Mobile */
+	#user_register_tags_section {
+		padding: var(--ghl-spacing-md);
+		margin-top: var(--ghl-spacing-md);
+	}
+
+	#user_register_tags_section .ghl-form-label {
+		font-size: var(--ghl-font-size-sm);
+	}
+
+	#user_register_tags_section .select2-container--default .select2-selection--multiple {
+		min-height: 40px;
+		padding: 4px 8px;
+	}
+
+	#user_register_tags_section .select2-container--default .select2-selection--multiple .select2-selection__choice {
+		padding: 4px 8px;
+		font-size: 12px;
+		margin: 3px 3px 3px 0;
+	}
+
+	.select2-container--default .select2-results__option {
+		padding: 10px 12px;
+		font-size: var(--ghl-font-size-sm);
 	}
 }

@@ -173,6 +173,11 @@
 					if (typeof window.initSettings === 'function') {
 						window.initSettings();
 					}
+					
+					// Re-initialize user register tags functionality (for general tab)
+					if (typeof window.initUserRegisterTags === 'function') {
+						window.initUserRegisterTags();
+					}
 				} else {
 					$content.html('<div class="notice notice-error"><p>' + (response.data.message || 'Failed to load settings tab.') + '</p></div>');
 				}
