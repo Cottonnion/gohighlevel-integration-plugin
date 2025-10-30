@@ -74,6 +74,9 @@ class SettingsManager {
 		add_action( 'wp_ajax_ghl_crm_get_settings', [ $this, 'get_settings' ] );
 		add_action( 'wp_ajax_ghl_crm_test_connection', [ $this, 'test_connection' ] );
 		add_action( 'wp_ajax_ghl_crm_save_field_mapping', [ $this, 'save_field_mapping' ] );
+		add_action( 'wp_ajax_ghl_crm_get_tags', [ $this, 'get_tags' ] );
+		add_action( 'wp_ajax_ghl_crm_get_custom_fields', [ $this, 'get_custom_fields' ] );
+		add_action( 'wp_ajax_ghl_crm_manual_queue_trigger', [ $this, 'manual_queue_trigger' ] );
 	}
 
 	/**
@@ -184,6 +187,62 @@ class SettingsManager {
 				500
 			);
 		}
+	}
+
+	/**
+	 * Save manual connection settings programmatically
+	 * 
+	 * This method is used for internal/programmatic settings updates
+	 * and does NOT require nonce verification. Used by MenuManager for manual API key connections.
+	 * 
+	 * @param array $new_settings Settings array to merge with existing settings.
+	 * @return array Result array with 'success' boolean and 'message' string.
+	 */
+	public function save_manual_connection_settings( array $new_settings ): array {
+		$current_settings = $this->get_settings_array();
+		
+		// Merge new settings with current settings
+		$settings = array_merge(
+			$current_settings,
+			$new_settings,
+			[
+				'updated_at' => current_time( 'mysql' ),
+				'site_id'    => get_current_blog_id(),
+			]
+		);
+
+		// Validate API credentials if they're being set (but allow clearing for disconnect)
+		if ( isset( $new_settings['api_token'] ) || isset( $new_settings['location_id'] ) ) {
+			// Only validate if at least one is not empty (i.e., user is trying to set credentials)
+			$is_setting_credentials = ! empty( $new_settings['api_token'] ) || ! empty( $new_settings['location_id'] );
+			
+			if ( $is_setting_credentials && ( empty( $settings['api_token'] ) || empty( $settings['location_id'] ) ) ) {
+				return [
+					'success' => false,
+					'message' => __( 'API Token and Location ID are required.', 'ghl-crm-integration' ),
+				];
+			}
+		}
+
+		// Save settings (multisite aware)
+		$saved = $this->save_site_settings( $settings );
+
+		if ( $saved ) {
+			// Mark connection as unverified if credentials changed
+			if ( isset( $new_settings['api_token'] ) || isset( $new_settings['location_id'] ) ) {
+				$this->mark_connection_unverified();
+			}
+
+			return [
+				'success' => true,
+				'message' => __( 'Settings saved successfully!', 'ghl-crm-integration' ),
+			];
+		}
+
+		return [
+			'success' => false,
+			'message' => __( 'Failed to save settings. Please try again.', 'ghl-crm-integration' ),
+		];
 	}
 
 	/**
@@ -546,6 +605,195 @@ class SettingsManager {
 	}
 
 	/**
+	 * Get tags from GoHighLevel location
+	 * AJAX handler
+	 *
+	 * @return void
+	 */
+	public function get_tags(): void {
+		// Verify nonce
+		check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce' );
+
+		// Check permissions
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to access tags.', 'ghl-crm-integration' ),
+				],
+				403
+			);
+		}
+
+		try {
+			$client      = \GHL_CRM\API\Client\Client::get_instance();
+			$settings    = $this->get_settings_array();
+			$location_id = $settings['location_id'] ?? '';
+
+			if ( empty( $location_id ) ) {
+				wp_send_json_error(
+					[
+						'message' => __( 'No location ID configured. Please connect to GoHighLevel first.', 'ghl-crm-integration' ),
+					],
+					400
+				);
+				return;
+			}
+
+			// Fetch tags from GoHighLevel
+			$response = $client->get( 'locations/' . $location_id . '/tags' );
+
+			if ( isset( $response['tags'] ) && is_array( $response['tags'] ) ) {
+				wp_send_json_success(
+					[
+						'tags'    => $response['tags'],
+						'message' => __( 'Tags loaded successfully.', 'ghl-crm-integration' ),
+					]
+				);
+			} else {
+				wp_send_json_success(
+					[
+						'tags'    => [],
+						'message' => __( 'No tags found in this location.', 'ghl-crm-integration' ),
+					]
+				);
+			}
+		} catch ( \Exception $e ) {
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: error message */
+						__( 'Failed to fetch tags: %s', 'ghl-crm-integration' ),
+						$e->getMessage()
+					),
+				],
+				500
+			);
+		}
+	}
+
+	/**
+	 * Get custom fields from GoHighLevel location
+	 *
+	 * @return void
+	 */
+	public function get_custom_fields(): void {
+		// Verify nonce
+		check_ajax_referer( 'ghl_crm_field_mapping_nonce', 'nonce' );
+
+		// Check user capabilities
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to access this data.', 'ghl-crm-integration' ),
+				],
+				403
+			);
+		}
+
+		try {
+			$settings = $this->get_settings_array();
+			$location_id = $settings['location_id'] ?? '';
+
+			if ( empty( $location_id ) ) {
+				wp_send_json_error(
+					[
+						'message' => __( 'Location ID not configured. Please save your settings first.', 'ghl-crm-integration' ),
+					],
+					400
+				);
+			}
+
+			$client = \GHL_CRM\API\Client\Client::get_instance();
+			
+			// Fetch custom fields from GHL API
+			// Endpoint: GET /locations/{locationId}/customFields (no hyphen)
+			// Pass empty array to prevent auto-adding locationId as query param
+			$response = $client->get( 'locations/' . $location_id . '/customFields', [] );
+
+			if ( empty( $response['customFields'] ) ) {
+				// Return standard fields if no custom fields found
+				wp_send_json_success(
+					[
+						'fields' => $this->get_standard_ghl_fields(),
+						'message' => __( 'No custom fields found. Showing standard fields only.', 'ghl-crm-integration' ),
+					]
+				);
+				return;
+			}
+
+			// Combine standard fields + custom fields
+			$all_fields = $this->get_standard_ghl_fields();
+			
+			foreach ( $response['customFields'] as $field ) {
+				$field_id = $field['id'] ?? '';
+				$field_name = $field['name'] ?? '';
+				
+				if ( $field_id && $field_name ) {
+					$all_fields[ 'custom.' . $field_id ] = $field_name . ' (Custom)';
+				}
+			}
+
+			wp_send_json_success(
+				[
+					'fields' => $all_fields,
+					'count' => count( $response['customFields'] ),
+				]
+			);
+
+		} catch ( \Exception $e ) {
+			error_log( 'GHL CRM: Failed to fetch custom fields - ' . $e->getMessage() );
+			error_log( 'GHL CRM: Exception trace: ' . $e->getTraceAsString() );
+			
+			// Get detailed debug info
+			$debug_info = [
+				'exception_message' => $e->getMessage(),
+				'exception_file' => $e->getFile(),
+				'exception_line' => $e->getLine(),
+				'location_id' => $location_id ?? 'not set',
+				'has_oauth' => ! empty( $settings['oauth_access_token'] ),
+				'has_api_token' => ! empty( $settings['api_token'] ),
+				'endpoint' => 'locations/' . ( $location_id ?? '{locationId}' ) . '/customFields',
+			];			error_log( 'GHL CRM: Debug info: ' . print_r( $debug_info, true ) );
+			
+			// Fallback to standard fields
+			wp_send_json_success(
+				[
+					'fields' => $this->get_standard_ghl_fields(),
+					'message' => __( 'Could not fetch custom fields. Showing standard fields only.', 'ghl-crm-integration' ),
+					'error' => $e->getMessage(),
+					'debug' => $debug_info,
+				]
+			);
+		}
+	}
+
+	/**
+	 * Get standard GoHighLevel contact fields
+	 *
+	 * @return array Standard field mappings
+	 */
+	private function get_standard_ghl_fields(): array {
+		return [
+			''            => __( '— Do Not Sync —', 'ghl-crm-integration' ),
+			'firstName'   => __( 'First Name', 'ghl-crm-integration' ),
+			'lastName'    => __( 'Last Name', 'ghl-crm-integration' ),
+			'name'        => __( 'Full Name', 'ghl-crm-integration' ),
+			'email'       => __( 'Email', 'ghl-crm-integration' ),
+			'phone'       => __( 'Phone', 'ghl-crm-integration' ),
+			'address1'    => __( 'Address Line 1', 'ghl-crm-integration' ),
+			'city'        => __( 'City', 'ghl-crm-integration' ),
+			'state'       => __( 'State', 'ghl-crm-integration' ),
+			'country'     => __( 'Country', 'ghl-crm-integration' ),
+			'postalCode'  => __( 'Postal Code', 'ghl-crm-integration' ),
+			'website'     => __( 'Website', 'ghl-crm-integration' ),
+			'timezone'    => __( 'Timezone', 'ghl-crm-integration' ),
+			'companyName' => __( 'Company Name', 'ghl-crm-integration' ),
+			'source'      => __( 'Source', 'ghl-crm-integration' ),
+			'dateOfBirth' => __( 'Date of Birth', 'ghl-crm-integration' ),
+		];
+	}
+
+	/**
 	 * Get all sites' settings (for network admin)
 	 *
 	 * @return array
@@ -568,6 +816,118 @@ class SettingsManager {
 		}
 
 		return $all_settings;
+	}
+
+	/**
+	 * Manual queue trigger AJAX handler
+	 *
+	 * @return void
+	 */
+	public function manual_queue_trigger(): void {
+		// Verify nonce
+		check_ajax_referer( 'ghl_crm_manual_queue', 'nonce' );
+
+		// Check user capabilities
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to perform this action.', 'ghl-crm-integration' ),
+				],
+				403
+			);
+		}
+
+		error_log( '🔧 GHL CRM: Manual queue trigger initiated by user' );
+
+		try {
+			// Get queue manager
+			$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
+
+			// Get count before processing
+			global $wpdb;
+			$table_name      = $wpdb->prefix . 'ghl_sync_queue';
+			$current_site_id = get_current_blog_id();
+			
+			$pending_before = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT COUNT(*) FROM {$table_name} WHERE status = 'pending' AND site_id = %d",
+					$current_site_id
+				)
+			);
+
+			error_log( "📊 GHL CRM: Pending items before processing: {$pending_before}" );
+
+			// Manually trigger queue processing
+			$queue_manager->process_queue();
+
+			// Get count after processing
+			$pending_after = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT COUNT(*) FROM {$table_name} WHERE status = 'pending' AND site_id = %d",
+					$current_site_id
+				)
+			);
+
+			$processed = $pending_before - $pending_after;
+
+			error_log( "✅ GHL CRM: Manual trigger complete. Processed: {$processed}, Remaining: {$pending_after}" );
+
+			wp_send_json_success(
+				[
+					'message'   => sprintf(
+						/* translators: %d: number of items processed */
+						__( 'Queue processed successfully. Processed %d items.', 'ghl-crm-integration' ),
+						$processed
+					),
+					'processed' => $processed,
+					'remaining' => $pending_after,
+					'before'    => $pending_before,
+				]
+			);
+
+		} catch ( \Exception $e ) {
+			error_log( '❌ GHL CRM: Manual queue trigger error: ' . $e->getMessage() );
+			error_log( 'Stack trace: ' . $e->getTraceAsString() );
+
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: error message */
+						__( 'Failed to process queue: %s', 'ghl-crm-integration' ),
+						$e->getMessage()
+					),
+				],
+				500
+			);
+		} catch ( \Error $err ) {
+			error_log( '❌ GHL CRM: Manual queue trigger fatal error: ' . $err->getMessage() );
+			error_log( 'Stack trace: ' . $err->getTraceAsString() );
+
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: error message */
+						__( 'A fatal error occurred while processing the queue: %s', 'ghl-crm-integration' ),
+						$err->getMessage()
+					),
+				],
+				500
+			);
+		} catch ( \Throwable $throwable ) {
+			error_log( '❌ GHL CRM: Manual queue trigger throwable: ' . $throwable->getMessage() );
+			error_log( 'Stack trace: ' . $throwable->getTraceAsString() );
+
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: error message */
+						__( 'An unexpected error occurred while processing the queue: %s', 'ghl-crm-integration' ),
+						$throwable->getMessage()
+					),
+				],
+				500
+			);
+		}
 	}
 
 	/**

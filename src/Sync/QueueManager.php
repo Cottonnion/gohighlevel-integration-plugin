@@ -25,7 +25,7 @@ class QueueManager {
 	/**
 	 * Batch size for processing
 	 */
-	private const BATCH_SIZE = 10;
+	private const BATCH_SIZE = 50;
 
 	/**
 	 * GHL API Rate Limits (per location)
@@ -69,10 +69,22 @@ class QueueManager {
 		// Register Action Scheduler hook for queue processing
 		add_action( 'ghl_crm_process_queue', [ $this, 'process_queue' ] );
 
-		// Schedule recurring action via Action Scheduler (runs every minute)
+		// Schedule recurring action AFTER Action Scheduler is ready
+		add_action( 'init', [ $this, 'schedule_queue_processor' ], 999 );
+	}
+
+	/**
+	 * Schedule the queue processor (called on 'init' hook after Action Scheduler is ready)
+	 *
+	 * @return void
+	 */
+	public function schedule_queue_processor(): void {
+		// Schedule recurring action via Action Scheduler (runs every 10 seconds)
 		if ( function_exists( 'as_next_scheduled_action' ) ) {
-			if ( false === as_next_scheduled_action( 'ghl_crm_process_queue' ) ) {
-				as_schedule_recurring_action( time(), 60, 'ghl_crm_process_queue', [], 'ghl-crm' );
+			$next_scheduled = as_next_scheduled_action( 'ghl_crm_process_queue' );
+			
+			if ( false === $next_scheduled ) {
+				as_schedule_recurring_action( time(), 10, 'ghl_crm_process_queue', [], 'ghl-crm' );
 			}
 		} else {
 			// Fallback to WP-Cron if Action Scheduler not available
@@ -96,8 +108,18 @@ class QueueManager {
 	public function add_to_queue( string $item_type, int $item_id, string $action, array $payload ) {
 		global $wpdb;
 
+		error_log( sprintf(
+			'GHL CRM QueueManager: add_to_queue() called - Type: %s, ID: %d, Action: %s',
+			$item_type,
+			$item_id,
+			$action
+		) );
+
 		$table_name      = $this->get_queue_table_name();
 		$current_site_id = get_current_blog_id();
+
+		error_log( 'GHL CRM QueueManager: Table name: ' . $table_name );
+		error_log( 'GHL CRM QueueManager: Site ID: ' . $current_site_id );
 
 		// Check for existing pending item
 		$existing = $wpdb->get_var(
@@ -115,6 +137,8 @@ class QueueManager {
 				$current_site_id
 			)
 		);
+
+		error_log( 'GHL CRM QueueManager: Existing queue item: ' . ( $existing ? $existing : 'NONE' ) );
 
 		// If duplicate exists, UPDATE payload with latest data (don't create new row)
 		if ( $existing ) {
@@ -176,6 +200,12 @@ class QueueManager {
 			]
 		);
 
+		if ( $inserted ) {
+			error_log( 'GHL CRM QueueManager: Successfully inserted queue item with ID: ' . $wpdb->insert_id );
+		} else {
+			error_log( 'GHL CRM QueueManager: FAILED to insert queue item. Error: ' . $wpdb->last_error );
+		}
+
 		return $inserted ? $wpdb->insert_id : false;
 	}
 
@@ -187,17 +217,22 @@ class QueueManager {
 	 * @return void
 	 */
 	public function process_queue(): void {
+		error_log( '🚀 GHL CRM: process_queue() CALLED at ' . current_time( 'mysql' ) );
+		
 		// Prevent concurrent processing (race condition protection)
 		$lock_key = 'ghl_crm_queue_processing';
 		if ( get_transient( $lock_key ) ) {
+			error_log( '⏸️ GHL CRM: Queue already processing, skipping' );
 			return; // Already processing
 		}
 
 		// Set lock for 2 minutes
 		set_transient( $lock_key, time(), 2 * MINUTE_IN_SECONDS );
+		error_log( '🔒 GHL CRM: Lock acquired, starting queue processing' );
 
 		try {
 			if ( is_multisite() ) {
+				error_log( '🌐 GHL CRM: Multisite detected, processing all sites' );
 				// Process each site's queue
 				$sites = get_sites(
 					[
@@ -206,7 +241,14 @@ class QueueManager {
 				);
 
 				foreach ( $sites as $site ) {
+					error_log( '📍 GHL CRM: Switching to blog ' . $site->blog_id );
 					switch_to_blog( $site->blog_id );
+					
+					// CRITICAL: Reload Client settings after blog switch (multisite fix)
+					// The Client singleton caches settings on first init, before blog switch
+					\GHL_CRM\API\Client\Client::get_instance()->reload_settings();
+					error_log( '🔄 GHL CRM: Reloaded Client settings for blog ' . $site->blog_id );
+					
 					$this->process_site_queue();
 					restore_current_blog();
 				}
@@ -216,6 +258,7 @@ class QueueManager {
 		} finally {
 			// Always release lock
 			delete_transient( $lock_key );
+			error_log( '🔓 GHL CRM: Lock released, queue processing complete' );
 		}
 	}
 
@@ -229,6 +272,8 @@ class QueueManager {
 
 		$table_name      = $this->get_queue_table_name();
 		$current_site_id = get_current_blog_id();
+
+		error_log( '📊 GHL CRM: Processing queue for site ' . $current_site_id );
 
 		// Clean up stale items first (stuck in processing for >5 minutes)
 		$this->cleanup_stale_items();
@@ -248,13 +293,19 @@ class QueueManager {
 			)
 		);
 
+		error_log( '📦 GHL CRM: Found ' . count( $items ) . ' pending items in queue' );
+
 		if ( empty( $items ) ) {
+			error_log( '⚠️ GHL CRM: No pending items, exiting' );
 			return;
 		}
 
 		foreach ( $items as $item ) {
+			error_log( '🔄 GHL CRM: Processing item ID ' . $item->id . ' - Type: ' . $item->item_type . ', Action: ' . $item->action );
 			$this->process_queue_item( $item );
 		}
+		
+		error_log( '✅ GHL CRM: Site queue processing complete' );
 	}
 
 	/**
@@ -297,15 +348,35 @@ class QueueManager {
 	private function process_queue_item( object $item ): void {
 		global $wpdb;
 
-		$table_name = $this->get_queue_table_name();
-		$start_time = microtime( true );
+		error_log( '⚙️ GHL CRM: process_queue_item() START - Item ID: ' . $item->id );
 
-		// Check rate limits before processing
-		if ( ! $this->check_rate_limits() ) {
-			// Rate limit exceeded, don't process this item yet
-			// It will be picked up in the next queue run
+		try {
+			$table_name = $this->get_queue_table_name();
+			error_log( '📋 GHL CRM: Got table name: ' . $table_name );
+			
+			$start_time = microtime( true );
+			error_log( '⏱️ GHL CRM: Start time: ' . $start_time );
+
+			// Check rate limits before processing
+			error_log( '🔍 GHL CRM: Checking rate limits...' );
+			$rate_ok = $this->check_rate_limits();
+			error_log( '🔍 GHL CRM: Rate limit check returned: ' . ( $rate_ok ? 'TRUE' : 'FALSE' ) );
+			
+			if ( ! $rate_ok ) {
+				error_log( '🚫 GHL CRM: Rate limit exceeded, skipping item ' . $item->id );
+				return;
+			}
+		} catch ( \Exception $e ) {
+			error_log( '❌ GHL CRM: EXCEPTION in process_queue_item: ' . $e->getMessage() );
+			error_log( '❌ GHL CRM: Stack trace: ' . $e->getTraceAsString() );
+			return;
+		} catch ( \Throwable $e ) {
+			error_log( '💥 GHL CRM: FATAL ERROR in process_queue_item: ' . $e->getMessage() );
+			error_log( '💥 GHL CRM: Stack trace: ' . $e->getTraceAsString() );
 			return;
 		}
+
+		error_log( '✅ GHL CRM: Rate limit OK, processing item ' . $item->id );
 
 		// Increment attempts
 		$wpdb->update(
@@ -319,16 +390,41 @@ class QueueManager {
 			[ '%d' ]
 		);
 
+		error_log( '📝 GHL CRM: Incremented attempts to ' . ( $item->attempts + 1 ) );
+
 		try {
 			$payload = json_decode( $item->payload, true );
+			error_log( '📦 GHL CRM: Decoded payload: ' . print_r( $payload, true ) );
 
 			// Execute sync based on item type
-			$result = $this->execute_sync( $item->item_type, $item->action, $item->item_id, $payload );
+			error_log( '🎯 GHL CRM: Calling execute_sync() for type: ' . $item->item_type . ', action: ' . $item->action );
+			error_log( '🔍 GHL CRM: About to call $this->execute_sync() method' );
+			error_log( '🔍 GHL CRM: Method exists: ' . ( method_exists( $this, 'execute_sync' ) ? 'YES' : 'NO' ) );
+			
+			// Register fatal error handler
+			register_shutdown_function( function() use ( $item ) {
+				$error = error_get_last();
+				if ( $error && in_array( $error['type'], [ E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR ] ) ) {
+					error_log( '💀 FATAL ERROR during execute_sync for item ' . $item->id );
+					error_log( '💀 Error: ' . print_r( $error, true ) );
+				}
+			} );
+			
+			$result = $this->execute_sync( $item->item_type, $item->action, (int) $item->item_id, $payload );
+			error_log( '📊 GHL CRM: execute_sync() returned: ' . ( $result ? 'TRUE' : 'FALSE' ) );
 
 			// Track API request
 			$this->track_api_request();
 
 			if ( $result ) {
+				error_log( '✅ GHL CRM: Sync successful, marking as completed' );
+				
+				// Extract contact ID from result if available
+				$contact_id = null;
+				if ( is_array( $result ) ) {
+					$contact_id = $result['contact']['id'] ?? $result['id'] ?? null;
+				}
+				
 				// Mark as completed
 				$wpdb->update(
 					$table_name,
@@ -342,12 +438,14 @@ class QueueManager {
 					[ '%d' ]
 				);
 
-				// Log success
+				// Log success with full request/response data
 				$this->log_sync_event(
-					$item->item_id,
+					(int) $item->item_id,
 					$item->action,
 					'success',
-					null,
+					$contact_id,
+					$payload, // Request data
+					is_array( $result ) ? $result : null, // Response data
 					null,
 					microtime( true ) - $start_time
 				);
@@ -355,6 +453,11 @@ class QueueManager {
 				throw new \Exception( 'Sync execution returned false' );
 			}
 		} catch ( \Exception $e ) {
+			error_log( '❌ GHL CRM: CAUGHT EXCEPTION in process_queue_item()' );
+			error_log( '❌ Exception Message: ' . $e->getMessage() );
+			error_log( '❌ Exception File: ' . $e->getFile() . ':' . $e->getLine() );
+			error_log( '❌ Stack Trace: ' . $e->getTraceAsString() );
+			
 			// Check if it's a rate limit error
 			if ( $this->is_rate_limit_error( $e ) ) {
 				// Don't increment attempts for rate limit errors
@@ -398,12 +501,14 @@ class QueueManager {
 				[ '%d' ]
 			);
 
-			// Log error
+			// Log error with request data
 			$this->log_sync_event(
-				$item->item_id,
+				(int) $item->item_id,
 				$item->action,
 				'error',
 				null,
+				$payload, // Request data that failed
+				null, // No response data on error
 				$e->getMessage(),
 				microtime( true ) - $start_time
 			);
@@ -420,27 +525,44 @@ class QueueManager {
 	 * @return bool Success status
 	 * @throws \Exception
 	 */
-	private function execute_sync( string $item_type, string $action, int $item_id, array $payload ): bool {
-		// Route to appropriate integration handler
-		switch ( $item_type ) {
-			case 'user':
-				return $this->execute_user_sync( $action, $item_id, $payload );
+	/**
+	 * Execute sync operation
+	 * 
+	 * @param string $item_type Item type
+	 * @param string $action Action
+	 * @param int $item_id Item ID
+	 * @param array $payload Payload data
+	 * @return array|bool API response array on success, false on failure
+	 * @throws \Exception
+	 */
+	private function execute_sync( string $item_type, string $action, int $item_id, array $payload ) {
+		error_log( '🔧 GHL CRM: execute_sync() ENTERED - Type: ' . $item_type . ', Action: ' . $action . ', ID: ' . $item_id );
+		
+		try {
+			// Route to appropriate integration handler
+			switch ( $item_type ) {
+				case 'user':
+					return $this->execute_user_sync( $action, $item_id, $payload );
 
-			case 'order':
-				// Future: WooCommerce order sync
-				return apply_filters( 'ghl_crm_execute_order_sync', false, $action, $item_id, $payload );
+				case 'order':
+					// Future: WooCommerce order sync
+					return apply_filters( 'ghl_crm_execute_order_sync', false, $action, $item_id, $payload );
 
-			case 'group':
-				// Future: BuddyBoss group sync
-				return apply_filters( 'ghl_crm_execute_group_sync', false, $action, $item_id, $payload );
+				case 'group':
+					// Future: BuddyBoss group sync
+					return apply_filters( 'ghl_crm_execute_group_sync', false, $action, $item_id, $payload );
 
-			case 'course':
-				// Future: LearnDash course sync
-				return apply_filters( 'ghl_crm_execute_course_sync', false, $action, $item_id, $payload );
+				case 'course':
+					// Future: LearnDash course sync
+					return apply_filters( 'ghl_crm_execute_course_sync', false, $action, $item_id, $payload );
 
-			default:
-				// Allow third-party extensions
-				return apply_filters( 'ghl_crm_execute_sync', false, $item_type, $action, $item_id, $payload );
+				default:
+					// Allow third-party extensions
+					return apply_filters( 'ghl_crm_execute_sync', false, $item_type, $action, $item_id, $payload );
+			}
+		} catch ( \Exception $e ) {
+			error_log( '❌ GHL CRM: execute_sync() EXCEPTION: ' . $e->getMessage() );
+			throw $e;
 		}
 	}
 
@@ -450,78 +572,103 @@ class QueueManager {
 	 * @param string $action  Action
 	 * @param int    $user_id User ID
 	 * @param array  $payload Payload data
-	 * @return bool Success status
+	 * @return array|bool API response array on success, false on failure
 	 * @throws \Exception
 	 */
-	private function execute_user_sync( string $action, int $user_id, array $payload ): bool {
-		$client           = \GHL_CRM\API\Client\Client::get_instance();
+private function execute_user_sync( string $action, int $user_id, array $payload ) {
+	error_log( '👤 GHL CRM: execute_user_sync() START - Action: ' . $action . ', User ID: ' . $user_id );
+	try {
+		error_log( '📡 GHL CRM: Getting Client instance...' );
+		$client = \GHL_CRM\API\Client\Client::get_instance();
+		error_log( '📦 GHL CRM: Creating ContactResource...' );
 		$contact_resource = new \GHL_CRM\API\Resources\ContactResource( $client );
+		error_log( '✅ GHL CRM: Client and ContactResource ready' );
 
 		switch ( $action ) {
-			case 'user_register':
-			case 'profile_update':
-				// Check cache first (15 min TTL)
-				$cached_contact = $this->get_cached_contact( $payload['email'] ?? '' );
+	case 'user_register':
+		case 'profile_update':
+			error_log( '🔄 GHL CRM: Register/Update for: ' . ( $payload['email'] ?? 'no-email' ) );
+			
+			// Get location ID
+			$location_id = $this->get_ghl_location_id();
+			if ( empty( $location_id ) ) {
+				error_log( '❌ No location ID configured' );
+				return false;
+			}
+			
+			$cached_contact = $this->get_cached_contact( $payload['email'] ?? '' );
 
-				if ( $cached_contact ) {
-					// Update existing contact
-					$result = $contact_resource->update( $cached_contact['id'], $payload );
+			if ( $cached_contact ) {
+				error_log( '💾 Using cached contact ID: ' . $cached_contact['id'] );
+				$result = $contact_resource->update( $cached_contact['id'], $payload );
+			} else {
+				error_log( '🔍 Searching for existing contact by email...' );
+				$email = $payload['email'] ?? '';
+				$existing = $client->get( 'contacts/', [ 'query' => $email ] );
+				if ( ! empty( $existing['contacts'][0] ) ) {
+					$contact = $existing['contacts'][0];
+					error_log( '✅ Found existing contact ID: ' . $contact['id'] );
+					$this->cache_contact( $payload['email'], $contact );
+					$result = $contact_resource->update( $contact['id'], $payload );
 				} else {
-					// Find or create contact
-					$existing = $contact_resource->find_by_email( $payload['email'] );
-
-					if ( $existing ) {
-						// Cache and update
-						$this->cache_contact( $payload['email'], $existing );
-						$result = $contact_resource->update( $existing['id'], $payload );
-					} else {
-						// Create new
-						$result = $contact_resource->create( $payload );
-						if ( $result && isset( $result['contact']['id'] ) ) {
-							$this->cache_contact( $payload['email'], $result['contact'] );
-						}
+					error_log( '🆕 Creating new contact via direct POST...' );
+					// POST to /contacts/ with locationId in the body
+					$result = $client->post( 'contacts/', array_merge( $payload, [ 'locationId' => $location_id ] ) );
+					if ( $result && isset( $result['contact']['id'] ) ) {
+						error_log( '✅ Contact created with ID: ' . $result['contact']['id'] );
+						$this->cache_contact( $payload['email'], $result['contact'] );
 					}
 				}
-
-				return ! empty( $result );
-
-			case 'delete_user':
+			}
+			error_log( '✅ Register/Update completed: ' . ( ! empty( $result ) ? 'SUCCESS' : 'FAILED' ) );
+			return ! empty( $result ) ? $result : false;			case 'delete_user':
+				error_log( '🗑️ Deleting user...' );
 				if ( ! empty( $payload['delete'] ) ) {
-					$contact = $contact_resource->find_by_email( $payload['email'] );
-					if ( $contact ) {
-						$contact_resource->delete( $contact['id'] );
+					$email = $payload['email'] ?? '';
+					$existing = $client->get( 'contacts/', [ 'query' => $email ] );
+					if ( ! empty( $existing['contacts'][0]['id'] ) ) {
+						$result = $contact_resource->delete( $existing['contacts'][0]['id'] );
 						$this->delete_cached_contact( $payload['email'] );
+						error_log( '✅ Contact deleted' );
+						return [ 'deleted' => true, 'contact_id' => $existing['contacts'][0]['id'] ];
 					}
 				}
-				return true;
+				return [ 'deleted' => false, 'message' => 'Contact not found or delete flag not set' ];
 
 			case 'user_login':
-				// Update last_login custom field
+				error_log( '🔐 User login - updating last_login for: ' . ( $payload['email'] ?? 'no-email' ) );
 				$contact = $this->get_cached_contact( $payload['email'] ?? '' );
 				if ( ! $contact ) {
-					$contact = $contact_resource->find_by_email( $payload['email'] );
-					if ( $contact ) {
+					$email = urlencode( $payload['email'] ?? '' );
+					$existing = $client->get( 'contacts?query=' . $email );
+					if ( ! empty( $existing['contacts'][0] ) ) {
+						$contact = $existing['contacts'][0];
+						error_log( '✅ Found contact ID: ' . $contact['id'] );
 						$this->cache_contact( $payload['email'], $contact );
 					}
 				}
-
 				if ( $contact ) {
-					$result = $contact_resource->update(
-						$contact['id'],
-						[
-							'customField' => [
-								'last_login' => $payload['last_login'] ?? current_time( 'mysql' ),
-							],
-						]
-					);
-					return ! empty( $result );
+					error_log( '📝 Updating last_login for contact ID: ' . $contact['id'] );
+					$result = $contact_resource->update( $contact['id'], [
+						'customFields' => [ 'last_login' => $payload['last_login'] ?? current_time( 'mysql' ) ],
+					] );
+					error_log( '✅ Last login updated: ' . ( ! empty( $result ) ? 'SUCCESS' : 'FAILED' ) );
+					return ! empty( $result ) ? $result : false;
 				}
+				error_log( '⚠️ No contact found, returning false' );
 				return false;
 
 			default:
+				error_log( '❌ Unknown action: ' . $action );
 				throw new \Exception( 'Unknown user action: ' . $action );
 		}
+	} catch ( \Exception $e ) {
+		error_log( '❌ execute_user_sync() EXCEPTION: ' . $e->getMessage() );
+		error_log( '📚 Stack trace: ' . $e->getTraceAsString() );
+		throw $e;
 	}
+}
+
 
 	/**
 	 * Check if rate limits allow processing
@@ -678,6 +825,8 @@ class QueueManager {
 	 * @param string      $action         Action
 	 * @param string      $status         Status (success/error)
 	 * @param string|null $contact_id     Contact ID
+	 * @param array|null  $request_data   Request payload sent to API
+	 * @param array|null  $response_data  Response received from API
 	 * @param string|null $error_message  Error message
 	 * @param float|null  $execution_time Execution time in seconds
 	 * @return void
@@ -687,6 +836,8 @@ class QueueManager {
 		string $action,
 		string $status,
 		?string $contact_id = null,
+		?array $request_data = null,
+		?array $response_data = null,
 		?string $error_message = null,
 		?float $execution_time = null
 	): void {
@@ -701,6 +852,8 @@ class QueueManager {
 				'action'         => $action,
 				'status'         => $status,
 				'contact_id'     => $contact_id,
+				'request_data'   => ! empty( $request_data ) ? wp_json_encode( $request_data ) : null,
+				'response_data'  => ! empty( $response_data ) ? wp_json_encode( $response_data ) : null,
 				'error_message'  => $error_message,
 				'execution_time' => $execution_time,
 				'created_at'     => current_time( 'mysql' ),
@@ -708,6 +861,8 @@ class QueueManager {
 			],
 			[
 				'%d',
+				'%s',
+				'%s',
 				'%s',
 				'%s',
 				'%s',
@@ -905,11 +1060,11 @@ class QueueManager {
 	private function get_ghl_location_id(): ?string {
 		// Get from settings manager
 		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
-		$location_id      = $settings_manager->get_setting( 'ghl_location_id' );
+		$location_id      = $settings_manager->get_setting( 'location_id' );
 
 		// Fallback: Try to get from OAuth tokens if available
 		if ( empty( $location_id ) ) {
-			$oauth_handler = \GHL_CRM\API\OAuth\OAuthHandler::get_instance();
+			$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
 			if ( method_exists( $oauth_handler, 'get_location_id' ) ) {
 				$location_id = $oauth_handler->get_location_id();
 			}

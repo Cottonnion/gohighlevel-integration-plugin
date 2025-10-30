@@ -92,8 +92,9 @@ class Loader {
 		register_activation_hook( GHL_CRM_PATH . 'gohighlevel-crm-integration.php', array( self::class, 'activate' ) );
 		register_deactivation_hook( GHL_CRM_PATH . 'gohighlevel-crm-integration.php', array( self::class, 'deactivate' ) );
 
-		// Initialize components after plugins loaded
-		add_action( 'plugins_loaded', array( $this, 'init_components' ), 20 );
+		// Initialize components EARLY (priority 1) to catch multisite activation
+		// wp-activate.php runs before most plugins, so we need to init ASAP
+		add_action( 'plugins_loaded', array( $this, 'init_components' ), 1 );
 
 		// Register cleanup action (Action Scheduler hook)
 		add_action( 'ghl_crm_cleanup_database', array( \GHL_CRM\Core\Database::class, 'cleanup' ) );
