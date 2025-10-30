@@ -33,7 +33,7 @@ class ContactResource extends AbstractResource {
 		$response = $this->client->get(
 			$this->endpoint,
 			[
-				'email' => $email,
+				'query' => $email,
 			]
 		);
 
@@ -110,7 +110,8 @@ class ContactResource extends AbstractResource {
 		}
 
 		// Check if contact exists
-		$existing = $this->find_by_email( $data['email'] );
+		$existing = !empty($data['email']) ? $this->find_by_email($data['email']) : null;
+
 
 		if ( $existing ) {
 			// Update existing contact

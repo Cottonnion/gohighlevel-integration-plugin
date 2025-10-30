@@ -99,6 +99,13 @@ class Client implements ClientInterface {
 	private array $last_response_headers = [];
 
 	/**
+	 * Skip OAuth token refresh (for manual API key testing)
+	 *
+	 * @var bool
+	 */
+	private bool $skip_oauth_refresh = false;
+
+	/**
 	 * Singleton instance
 	 *
 	 * @var self|null
@@ -208,6 +215,11 @@ class Client implements ClientInterface {
 
 			$error_message = $body_json['message'];
 
+			// Skip OAuth refresh if flag is set (e.g., during manual API key testing)
+			if ( $this->skip_oauth_refresh ) {
+				return $response;
+			}
+
 			// Check if it's a token-related error
 			$token_errors = [
 				'The token does not have access to this location.',
@@ -228,14 +240,19 @@ class Client implements ClientInterface {
 
 			if ( $is_token_error ) {
 				try {
-					// Attempt to refresh the access token
-					$this->refresh_access_token();
+					// Only attempt to refresh if we have OAuth tokens
+					if ( ! empty( $this->refresh_token ) ) {
+						// Attempt to refresh the access token
+						$this->refresh_access_token();
 
-					// Update authorization header with new token
-					$args['headers']['Authorization'] = 'Bearer ' . $this->access_token;
+						// Update authorization header with new token
+						$args['headers']['Authorization'] = 'Bearer ' . $this->access_token;
 
-					// Retry the original request
-					return wp_remote_request( $url, $args );
+						// Retry the original request
+						return wp_remote_request( $url, $args );
+					}
+					// If no refresh token (manual API key), just return the error response
+					return $response;
 
 				} catch ( \Exception $e ) {
 					// Token refresh failed - show admin notice
@@ -335,6 +352,16 @@ class Client implements ClientInterface {
 	 */
 	public function set_api_version( string $version ): void {
 		$this->api_version = $version;
+	}
+
+	/**
+	 * Skip OAuth token refresh for manual API key testing
+	 *
+	 * @param bool $skip Whether to skip OAuth refresh
+	 * @return void
+	 */
+	public function set_skip_oauth_refresh( bool $skip ): void {
+		$this->skip_oauth_refresh = $skip;
 	}
 
 	/**
@@ -637,13 +664,21 @@ class Client implements ClientInterface {
 		$url = self::BASE_URL . '/' . ltrim( $endpoint, '/' );
 
 		// Add location ID to params if not already present
-		if ( ! empty( $this->location_id ) && ! isset( $params['locationId'] ) ) {
+		// Skip if endpoint already contains "locations/{locationId}" in the path
+		$endpoint_has_location_path = preg_match( '#^locations/[a-zA-Z0-9_-]+/#', $endpoint );
+		
+		if ( ! empty( $this->location_id ) && ! isset( $params['locationId'] ) && ! $endpoint_has_location_path ) {
 			$params['locationId'] = $this->location_id;
 		}
 
 		if ( ! empty( $params ) ) {
 			$url .= '?' . http_build_query( $params );
 		}
+
+		// DEBUG: Log built URL
+		error_log( '🔗 GHL CRM: Built URL: ' . $url );
+		error_log( '   - Endpoint: ' . $endpoint );
+		error_log( '   - Params: ' . print_r( $params, true ) );
 
 		return $url;
 	}
@@ -667,6 +702,12 @@ class Client implements ClientInterface {
 		} else {
 			throw new AuthenticationException( esc_html__( 'No authentication method configured. Please connect your GoHighLevel account.', 'ghl-crm-integration' ) );
 		}
+		
+		// Log full credentials for debugging
+		error_log( '🔑 FULL CREDENTIALS:' );
+		error_log( '   - Token: ' . $auth_token );
+		error_log( '   - Location ID: ' . $this->location_id );
+		error_log( '   - URL: ' . $url );
 
 		// Build request arguments
 		$args = [
@@ -689,19 +730,20 @@ class Client implements ClientInterface {
 
 		// Check for WP errors
 		if ( is_wp_error( $response ) ) {
-			throw new ApiException(
-				sprintf(
-					/* translators: %s: Error message */
-					esc_html__( 'HTTP Request failed: %s', 'ghl-crm-integration' ),
-					esc_html( $response->get_error_message() )
-				)
-			);
+			$error_msg = 'HTTP Request failed: ' . $response->get_error_message();
+			error_log( '❌ ' . $error_msg );
+			throw new ApiException( esc_html( $error_msg ) );
 		}
 
 		// Get response data
 		$status_code = wp_remote_retrieve_response_code( $response );
 		$body        = wp_remote_retrieve_body( $response );
 		$headers     = wp_remote_retrieve_headers( $response );
+
+		// Log full response
+		error_log( '📥 GHL CRM: API Response:' );
+		error_log( '   - Status Code: ' . $status_code );
+		error_log( '   - Body: ' . $body );
 
 		// Store headers for rate limit tracking
 		$this->last_response_headers = $headers->getAll();
@@ -772,7 +814,7 @@ class Client implements ClientInterface {
 	 *
 	 * @return void
 	 */
-	private function clear_oauth_tokens(): void {
+	public function clear_oauth_tokens(): void {
 		$this->access_token  = '';
 		$this->refresh_token = '';
 
@@ -781,8 +823,102 @@ class Client implements ClientInterface {
 
 		unset( $current_settings['oauth_access_token'] );
 		unset( $current_settings['oauth_refresh_token'] );
+		unset( $current_settings['oauth_expires_at'] );
 
 		update_option( 'ghl_crm_settings', $current_settings );
+	}
+
+	/**
+	 * Test manual API connection
+	 * 
+	 * Tests if the provided API token and location ID can successfully authenticate.
+	 * Uses Bearer token authentication method.
+	 * 
+	 * @param string $api_token   The API token to test.
+	 * @param string $location_id The location ID to test.
+	 * @return array Result array with 'success' boolean, 'message' string, and optional 'data'.
+	 */
+	public function test_manual_connection( string $api_token, string $location_id ): array {
+		// Validate inputs
+		if ( empty( $api_token ) || empty( $location_id ) ) {
+			return [
+				'success' => false,
+				'message' => __( 'API Token and Location ID are required.', 'ghl-crm-integration' ),
+			];
+		}
+
+		// Check if token is JWT format (temporary token, not suitable for permanent integration)
+		if ( strpos( $api_token, 'eyJ' ) === 0 ) {
+			return [
+				'success' => false,
+				'message' => __( 'Invalid API Key Format: You appear to have entered a JWT token (temporary) instead of a Location API Key (permanent). Please get your Location API Key from: Settings → Integrations → API Key in your GoHighLevel location.', 'ghl-crm-integration' ),
+			];
+		}
+
+		// Test the connection with a simple API call
+		$test_url = self::BASE_URL . '/contacts/?locationId=' . $location_id . '&limit=1';
+		
+		$response = wp_remote_get(
+			$test_url,
+			[
+				'headers' => [
+					'Authorization' => 'Bearer ' . $api_token,
+					'Content-Type'  => 'application/json',
+					'Version'       => $this->api_version,
+				],
+				'timeout' => 30,
+			]
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return [
+				'success' => false,
+				'message' => sprintf(
+					/* translators: %s: Error message */
+					__( 'Connection failed: %s', 'ghl-crm-integration' ),
+					$response->get_error_message()
+				),
+			];
+		}
+
+		$status_code = wp_remote_retrieve_response_code( $response );
+		$body        = wp_remote_retrieve_body( $response );
+
+		if ( $status_code === 200 ) {
+			return [
+				'success' => true,
+				'message' => __( 'Successfully connected to GoHighLevel!', 'ghl-crm-integration' ),
+				'data'    => [
+					'status_code' => $status_code,
+					'preview'     => substr( $body, 0, 200 ),
+				],
+			];
+		}
+
+		// Handle authentication errors
+		if ( $status_code === 401 ) {
+			return [
+				'success' => false,
+				'message' => __( 'Authentication failed. Please verify your API key is correct and has not expired.', 'ghl-crm-integration' ),
+			];
+		}
+
+		if ( $status_code === 403 ) {
+			return [
+				'success' => false,
+				'message' => __( 'Access denied. Please verify your API key has access to this location.', 'ghl-crm-integration' ),
+			];
+		}
+
+		// Generic error
+		return [
+			'success' => false,
+			'message' => sprintf(
+				/* translators: %d: HTTP status code */
+				__( 'Connection failed with status code: %d', 'ghl-crm-integration' ),
+				$status_code
+			),
+		];
 	}
 
 	/**
@@ -798,7 +934,17 @@ class Client implements ClientInterface {
 			return; // Success
 		}
 
-		$error_message = $response['message'] ?? $response['error'] ?? esc_html__( 'Unknown API error', 'ghl-crm-integration' );
+		// Extract error message - handle both string and array formats
+		$error_raw = $response['message'] ?? $response['error'] ?? esc_html__( 'Unknown API error', 'ghl-crm-integration' );
+		
+		if ( is_array( $error_raw ) ) {
+			// Convert array to readable string
+			$error_message = implode( ', ', array_map( function( $item ) {
+				return is_string( $item ) ? $item : wp_json_encode( $item );
+			}, $error_raw ) );
+		} else {
+			$error_message = (string) $error_raw;
+		}
 
 		// Rate limit exceeded
 		if ( 429 === $status_code ) {
