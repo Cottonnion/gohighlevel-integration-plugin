@@ -52,9 +52,21 @@ if ( file_exists( GHL_CRM_PATH . 'vendor/autoload.php' ) ) {
 	return;
 }
 
+// Initialize Action Scheduler
+if ( file_exists( GHL_CRM_PATH . 'vendor/woocommerce/action-scheduler/action-scheduler.php' ) ) {
+	require_once GHL_CRM_PATH . 'vendor/woocommerce/action-scheduler/action-scheduler.php';
+}
+
 // Initialize the plugin
 function ghl_crm_init() {
 	return \GHL_CRM\Core\Loader::get_instance();
+}
+
+// CRITICAL: Initialize UserHooks IMMEDIATELY for multisite activation
+// wp-activate.php runs before plugins_loaded, so we must hook NOW
+if ( is_multisite() ) {
+	// Initialize UserHooks right away to catch multisite activation
+	\GHL_CRM\Integrations\Users\UserHooks::get_instance();
 }
 
 // Start the plugin
