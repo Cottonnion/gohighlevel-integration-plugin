@@ -1,0 +1,567 @@
+<?php
+/**
+ * Role Tags Manager
+ *
+ * Manages role-based tag assignments and removal for GHL contacts
+ *
+ * @package    GHL_CRM_Integration
+ * @subpackage Integrations/Users
+ */
+
+declare(strict_types=1);
+
+namespace GHL_CRM\Integrations\Users;
+
+use GHL_CRM\Core\SettingsManager;
+use GHL_CRM\Sync\QueueManager;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Role Tags Manager Class
+ *
+ * Handles automatic tag assignment based on user roles
+ */
+class RoleTagsManager {
+
+	/**
+	 * Singleton instance
+	 *
+	 * @var self|null
+	 */
+	private static ?self $instance = null;
+
+	/**
+	 * Settings Manager instance
+	 *
+	 * @var SettingsManager
+	 */
+	private SettingsManager $settings_manager;
+
+	/**
+	 * Queue Manager instance
+	 *
+	 * @var QueueManager
+	 */
+	private QueueManager $queue_manager;
+
+	/**
+	 * Get singleton instance
+	 *
+	 * @return self
+	 */
+	public static function get_instance(): self {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
+
+	/**
+	 * Constructor
+	 */
+	private function __construct() {
+		$this->settings_manager = SettingsManager::get_instance();
+		$this->queue_manager    = QueueManager::get_instance();
+
+		$this->init_hooks();
+	}
+
+	/**
+	 * Initialize WordPress hooks
+	 *
+	 * @return void
+	 */
+	private function init_hooks(): void {
+		// Hook into role changes
+		add_action( 'set_user_role', [ $this, 'handle_role_change' ], 10, 3 );
+		add_action( 'add_user_role', [ $this, 'handle_role_added' ], 10, 2 );
+		add_action( 'remove_user_role', [ $this, 'handle_role_removed' ], 10, 2 );
+
+		// AJAX handlers for bulk operations
+		add_action( 'wp_ajax_ghl_crm_bulk_add_role_tags', [ $this, 'ajax_bulk_add_role_tags' ] );
+		add_action( 'wp_ajax_ghl_crm_bulk_remove_role_tags', [ $this, 'ajax_bulk_remove_role_tags' ] );
+	}
+
+	/**
+	 * Handle user role change (set_user_role action)
+	 *
+	 * @param int    $user_id   User ID
+	 * @param string $new_role  New role
+	 * @param array  $old_roles Array of old roles
+	 * @return void
+	 */
+	public function handle_role_change( int $user_id, string $new_role, array $old_roles ): void {
+		$settings = $this->settings_manager->get_settings_array();
+		$role_tags = $settings['role_tags'] ?? [];
+
+		// Get contact ID
+		$contact_id = get_user_meta( $user_id, '_ghl_contact_id', true );
+		if ( empty( $contact_id ) ) {
+			return; // User not synced with GHL
+		}
+
+		$tags_to_add = [];
+		$tags_to_remove = [];
+
+		// Remove tags from old roles (if configured)
+		foreach ( $old_roles as $old_role ) {
+			$role_config = $role_tags[ $old_role ] ?? [];
+			if ( ! empty( $role_config['remove_on_change'] ) && ! empty( $role_config['tags'] ) ) {
+				$tags = $this->parse_tags( $role_config['tags'] );
+				$tags_to_remove = array_merge( $tags_to_remove, $tags );
+			}
+		}
+
+		// Add tags for new role (if configured)
+		$new_role_config = $role_tags[ $new_role ] ?? [];
+		if ( ! empty( $new_role_config['auto_apply'] ) && ! empty( $new_role_config['tags'] ) ) {
+			$tags = $this->parse_tags( $new_role_config['tags'] );
+			$tags_to_add = array_merge( $tags_to_add, $tags );
+		}
+
+		// Apply prefix if configured
+		$prefix = $settings['tag_prefix'] ?? '';
+		if ( ! empty( $prefix ) ) {
+			$tags_to_add = array_map( fn( $tag ) => $prefix . $tag, $tags_to_add );
+			$tags_to_remove = array_map( fn( $tag ) => $prefix . $tag, $tags_to_remove );
+		}
+
+		// Remove duplicates
+		$tags_to_add = array_unique( $tags_to_add );
+		$tags_to_remove = array_unique( $tags_to_remove );
+
+		// Queue tag updates
+		if ( ! empty( $tags_to_remove ) ) {
+			$this->queue_tag_removal( $user_id, $contact_id, $tags_to_remove );
+		}
+
+		if ( ! empty( $tags_to_add ) ) {
+			$this->queue_tag_addition( $user_id, $contact_id, $tags_to_add );
+		}
+	}
+
+	/**
+	 * Handle role added to user (add_user_role action)
+	 *
+	 * @param int    $user_id User ID
+	 * @param string $role    Role added
+	 * @return void
+	 */
+	public function handle_role_added( int $user_id, string $role ): void {
+		$settings = $this->settings_manager->get_settings_array();
+		$role_tags = $settings['role_tags'] ?? [];
+
+		// Get contact ID
+		$contact_id = get_user_meta( $user_id, '_ghl_contact_id', true );
+		if ( empty( $contact_id ) ) {
+			return;
+		}
+
+		// Check if auto-apply is enabled for this role
+		$role_config = $role_tags[ $role ] ?? [];
+		if ( empty( $role_config['auto_apply'] ) || empty( $role_config['tags'] ) ) {
+			return;
+		}
+
+		$tags = $this->parse_tags( $role_config['tags'] );
+
+		// Apply prefix if configured
+		$prefix = $settings['tag_prefix'] ?? '';
+		if ( ! empty( $prefix ) ) {
+			$tags = array_map( fn( $tag ) => $prefix . $tag, $tags );
+		}
+
+		$this->queue_tag_addition( $user_id, $contact_id, $tags );
+	}
+
+	/**
+	 * Handle role removed from user (remove_user_role action)
+	 *
+	 * @param int    $user_id User ID
+	 * @param string $role    Role removed
+	 * @return void
+	 */
+	public function handle_role_removed( int $user_id, string $role ): void {
+		$settings = $this->settings_manager->get_settings_array();
+		$role_tags = $settings['role_tags'] ?? [];
+
+		// Get contact ID
+		$contact_id = get_user_meta( $user_id, '_ghl_contact_id', true );
+		if ( empty( $contact_id ) ) {
+			return;
+		}
+
+		// Check if remove_on_change is enabled for this role
+		$role_config = $role_tags[ $role ] ?? [];
+		if ( empty( $role_config['remove_on_change'] ) || empty( $role_config['tags'] ) ) {
+			return;
+		}
+
+		$tags = $this->parse_tags( $role_config['tags'] );
+
+		// Apply prefix if configured
+		$prefix = $settings['tag_prefix'] ?? '';
+		if ( ! empty( $prefix ) ) {
+			$tags = array_map( fn( $tag ) => $prefix . $tag, $tags );
+		}
+
+		$this->queue_tag_removal( $user_id, $contact_id, $tags );
+	}
+
+	/**
+	 * Get tags for a user based on their current roles
+	 *
+	 * @param int $user_id User ID
+	 * @return array Array of tag names
+	 */
+	public function get_user_role_tags( int $user_id ): array {
+		$user = get_userdata( $user_id );
+		if ( ! $user ) {
+			error_log( '🏷️ GHL CRM RoleTagsManager: User not found for ID ' . $user_id );
+			return [];
+		}
+
+		$settings = $this->settings_manager->get_settings_array();
+		$role_tags = $settings['role_tags'] ?? [];
+		$prefix = $settings['tag_prefix'] ?? '';
+		$global_tags = $settings['global_tags'] ?? '';
+
+		error_log( '🏷️ GHL CRM RoleTagsManager: Getting tags for user ' . $user_id . ' with roles: ' . implode( ', ', $user->roles ) );
+		error_log( '🏷️ GHL CRM RoleTagsManager: Role tags config: ' . print_r( $role_tags, true ) );
+
+		$all_tags = [];
+
+		// Add role-based tags
+		foreach ( $user->roles as $role ) {
+			$role_config = $role_tags[ $role ] ?? [];
+			error_log( '🏷️ GHL CRM RoleTagsManager: Config for role ' . $role . ': ' . print_r( $role_config, true ) );
+			
+			if ( ! empty( $role_config['tags'] ) ) {
+				$tags = $this->parse_tags( $role_config['tags'] );
+				error_log( '🏷️ GHL CRM RoleTagsManager: Parsed tags for role ' . $role . ': ' . implode( ', ', $tags ) );
+				$all_tags = array_merge( $all_tags, $tags );
+			} else {
+				error_log( '🏷️ GHL CRM RoleTagsManager: No tags configured for role ' . $role );
+			}
+		}
+
+		// Add global tags
+		if ( ! empty( $global_tags ) ) {
+			$global_tags_array = $this->parse_tags( $global_tags );
+			error_log( '🏷️ GHL CRM RoleTagsManager: Global tags: ' . implode( ', ', $global_tags_array ) );
+			$all_tags = array_merge( $all_tags, $global_tags_array );
+		}
+
+		// Apply prefix
+		if ( ! empty( $prefix ) ) {
+			$all_tags = array_map( fn( $tag ) => $prefix . $tag, $all_tags );
+			error_log( '🏷️ GHL CRM RoleTagsManager: Tags with prefix "' . $prefix . '": ' . implode( ', ', $all_tags ) );
+		}
+
+		$final_tags = array_unique( $all_tags );
+		error_log( '🏷️ GHL CRM RoleTagsManager: Final tags for user ' . $user_id . ': ' . implode( ', ', $final_tags ) );
+
+		return $final_tags;
+	}
+
+	/**
+	 * Get tags for a specific role (without requiring a user object)
+	 * Useful during user creation when role isn't saved to DB yet
+	 *
+	 * @param string $role Role slug (e.g., 'administrator', 'editor')
+	 * @return array Array of tags for this role
+	 */
+	public function get_tags_for_role( string $role ): array {
+		$settings = $this->settings_manager->get_settings_array();
+		$role_tags = $settings['role_tags'] ?? [];
+		$prefix = $settings['tag_prefix'] ?? '';
+
+		error_log( '🏷️ GHL CRM RoleTagsManager: Getting tags for role: ' . $role );
+
+		$all_tags = [];
+
+		// Get tags for this specific role
+		$role_config = $role_tags[ $role ] ?? [];
+		
+		if ( ! empty( $role_config['tags'] ) ) {
+			$tags = $this->parse_tags( $role_config['tags'] );
+			error_log( '🏷️ GHL CRM RoleTagsManager: Tags for role ' . $role . ': ' . implode( ', ', $tags ) );
+			$all_tags = array_merge( $all_tags, $tags );
+		} else {
+			error_log( '🏷️ GHL CRM RoleTagsManager: No tags configured for role ' . $role );
+		}
+
+		// Apply prefix
+		if ( ! empty( $prefix ) ) {
+			$all_tags = array_map( fn( $tag ) => $prefix . $tag, $all_tags );
+		}
+
+		return array_unique( $all_tags );
+	}
+
+	/**
+	 * Parse tags from array or comma-separated string
+	 *
+	 * @param mixed $tags Tags array or comma-separated string
+	 * @return array Array of trimmed tag names
+	 */
+	private function parse_tags( $tags ): array {
+		// If already an array, just clean it
+		if ( is_array( $tags ) ) {
+			$tags = array_map( 'trim', $tags );
+			$tags = array_filter( $tags ); // Remove empty values
+			return $tags;
+		}
+
+		// If string, split by comma
+		if ( is_string( $tags ) && ! empty( $tags ) ) {
+			$tags = explode( ',', $tags );
+			$tags = array_map( 'trim', $tags );
+			$tags = array_filter( $tags ); // Remove empty values
+			return $tags;
+		}
+
+		return [];
+	}
+
+	/**
+	 * Queue tag addition for user
+	 *
+	 * @param int    $user_id    User ID
+	 * @param string $contact_id GHL Contact ID
+	 * @param array  $tags       Tags to add
+	 * @return void
+	 */
+	private function queue_tag_addition( int $user_id, string $contact_id, array $tags ): void {
+		try {
+			$this->queue_manager->add_to_queue(
+				'user',
+				$user_id,
+				'add_tags',
+				[
+					'contact_id' => $contact_id,
+					'tags'       => $tags,
+					'source'     => 'role_change',
+				]
+			);
+		} catch ( \Exception $e ) {
+			error_log( 'GHL CRM: Failed to queue tag addition - ' . $e->getMessage() );
+		}
+	}
+
+	/**
+	 * Queue tag removal for user
+	 *
+	 * @param int    $user_id    User ID
+	 * @param string $contact_id GHL Contact ID
+	 * @param array  $tags       Tags to remove
+	 * @return void
+	 */
+	private function queue_tag_removal( int $user_id, string $contact_id, array $tags ): void {
+		try {
+			$this->queue_manager->add_to_queue(
+				'user',
+				$user_id,
+				'remove_tags',
+				[
+					'contact_id' => $contact_id,
+					'tags'       => $tags,
+					'source'     => 'role_change',
+				]
+			);
+		} catch ( \Exception $e ) {
+			error_log( 'GHL CRM: Failed to queue tag removal - ' . $e->getMessage() );
+		}
+	}
+
+	/**
+	 * AJAX: Bulk add tags to all users with a role
+	 *
+	 * @return void
+	 */
+	public function ajax_bulk_add_role_tags(): void {
+		try {
+			// Verify nonce
+			check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce' );
+
+			// Check permissions
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ] );
+				return;
+			}
+
+			$role = isset( $_POST['role'] ) ? sanitize_text_field( wp_unslash( $_POST['role'] ) ) : '';
+			$tags_string = isset( $_POST['tags'] ) ? sanitize_text_field( wp_unslash( $_POST['tags'] ) ) : '';
+
+			if ( empty( $role ) || empty( $tags_string ) ) {
+				wp_send_json_error( [ 'message' => __( 'Role and tags are required', 'ghl-crm-integration' ) ] );
+				return;
+			}
+
+			$tags = $this->parse_tags( $tags_string );
+
+			if ( empty( $tags ) ) {
+				wp_send_json_error( [ 'message' => __( 'No valid tags provided', 'ghl-crm-integration' ) ] );
+				return;
+			}
+
+			// Get all users with this role
+			$users = get_users( [ 'role' => $role ] );
+			
+			if ( empty( $users ) ) {
+				wp_send_json_error( [ 'message' => __( 'No users found with this role', 'ghl-crm-integration' ) ] );
+				return;
+			}
+
+			$queued = 0;
+			$errors = [];
+
+			foreach ( $users as $user ) {
+				try {
+					$contact_id = get_user_meta( $user->ID, '_ghl_contact_id', true );
+					if ( ! empty( $contact_id ) ) {
+						$this->queue_tag_addition( $user->ID, $contact_id, $tags );
+						$queued++;
+					}
+				} catch ( \Exception $e ) {
+					$errors[] = sprintf( 'User %d: %s', $user->ID, $e->getMessage() );
+					error_log( '❌ GHL CRM RoleTagsManager: Error queuing user ' . $user->ID . ': ' . $e->getMessage() );
+				}
+			}
+
+			wp_send_json_success(
+				[
+					'message' => sprintf(
+						/* translators: %d: Number of users queued */
+						__( '%d users queued for tag addition.', 'ghl-crm-integration' ),
+						$queued
+					),
+					'queued' => $queued,
+					'total' => count( $users ),
+					'errors' => $errors,
+				]
+			);
+		} catch ( \Exception $e ) {
+			error_log( '❌ GHL CRM RoleTagsManager: ajax_bulk_add_role_tags() EXCEPTION: ' . $e->getMessage() );
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: Error message */
+						__( 'Error: %s', 'ghl-crm-integration' ),
+						$e->getMessage()
+					),
+					'error_details' => $e->getMessage(),
+					'error_trace' => $e->getTraceAsString(),
+				]
+			);
+		} catch ( \Error $e ) {
+			error_log( '❌ GHL CRM RoleTagsManager: ajax_bulk_add_role_tags() THROWN: ' . $e->getMessage() );
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: Error message */
+						__( 'Error: %s', 'ghl-crm-integration' ),
+						$e->getMessage()
+					),
+					'error_details' => $e->getMessage(),
+					'error_trace' => $e->getTraceAsString(),
+				]
+			);
+		}
+	}
+
+	/**
+	 * AJAX: Bulk remove tags from all users with a role
+	 *
+	 * @return void
+	 */
+	public function ajax_bulk_remove_role_tags(): void {
+		try {
+			// Verify nonce
+			check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce' );
+
+			// Check permissions
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ] );
+				return;
+			}
+
+			$role = isset( $_POST['role'] ) ? sanitize_text_field( wp_unslash( $_POST['role'] ) ) : '';
+			$tags_string = isset( $_POST['tags'] ) ? sanitize_text_field( wp_unslash( $_POST['tags'] ) ) : '';
+
+			if ( empty( $role ) || empty( $tags_string ) ) {
+				wp_send_json_error( [ 'message' => __( 'Role and tags are required', 'ghl-crm-integration' ) ] );
+				return;
+			}
+
+			$tags = $this->parse_tags( $tags_string );
+
+			if ( empty( $tags ) ) {
+				wp_send_json_error( [ 'message' => __( 'No valid tags provided', 'ghl-crm-integration' ) ] );
+				return;
+			}
+
+			// Get all users with this role
+			$users = get_users( [ 'role' => $role ] );
+			
+			if ( empty( $users ) ) {
+				wp_send_json_error( [ 'message' => __( 'No users found with this role', 'ghl-crm-integration' ) ] );
+				return;
+			}
+
+			$queued = 0;
+			$errors = [];
+
+			foreach ( $users as $user ) {
+				try {
+					$contact_id = get_user_meta( $user->ID, '_ghl_contact_id', true );
+					if ( ! empty( $contact_id ) ) {
+						$this->queue_tag_removal( $user->ID, $contact_id, $tags );
+						$queued++;
+					}
+				} catch ( \Exception $e ) {
+					$errors[] = sprintf( 'User %d: %s', $user->ID, $e->getMessage() );
+					error_log( '❌ GHL CRM RoleTagsManager: Error queuing user ' . $user->ID . ': ' . $e->getMessage() );
+				}
+			}
+
+			wp_send_json_success(
+				[
+					'message' => sprintf(
+						/* translators: %d: Number of users queued */
+						__( '%d users queued for tag removal.', 'ghl-crm-integration' ),
+						$queued
+					),
+					'queued' => $queued,
+					'total' => count( $users ),
+					'errors' => $errors,
+				]
+			);
+		} catch ( \Exception $e ) {
+			error_log( '❌ GHL CRM RoleTagsManager: ajax_bulk_remove_role_tags() EXCEPTION: ' . $e->getMessage() );
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: Error message */
+						__( 'Error: %s', 'ghl-crm-integration' ),
+						$e->getMessage()
+					),
+					'error_details' => $e->getMessage(),
+					'error_trace' => $e->getTraceAsString(),
+				]
+			);
+		}
+	}
+
+	/**
+	 * Initialize hooks (called by Loader)
+	 *
+	 * @return void
+	 */
+	public static function init(): void {
+		self::get_instance();
+	}
+}
