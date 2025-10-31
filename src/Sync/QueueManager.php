@@ -20,7 +20,7 @@ class QueueManager {
 	/**
 	 * Max retry attempts
 	 */
-	private const MAX_ATTEMPTS = 3;
+	private const MAX_ATTEMPTS = 5;
 
 	/**
 	 * Batch size for processing
@@ -278,6 +278,26 @@ class QueueManager {
 		// Clean up stale items first (stuck in processing for >5 minutes)
 		$this->cleanup_stale_items();
 
+		// Mark items with MAX_ATTEMPTS as failed (fix for stuck items)
+		$fixed_count = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE {$table_name} 
+				SET status = 'failed' 
+				WHERE status = 'pending' 
+				AND site_id = %d
+				AND attempts >= %d",
+				$current_site_id,
+				self::MAX_ATTEMPTS
+			)
+		);
+
+		if ( $fixed_count > 0 ) {
+			error_log( sprintf(
+				'🔧 GHL CRM: Marked %d items as failed (reached max attempts)',
+				$fixed_count
+			) );
+		}
+
 		// Get pending items for current site
 		$items = $wpdb->get_results(
 			$wpdb->prepare(
@@ -392,6 +412,9 @@ class QueueManager {
 
 		error_log( '📝 GHL CRM: Incremented attempts to ' . ( $item->attempts + 1 ) );
 
+		// Update item object to reflect database change
+		$item->attempts = $item->attempts + 1;
+
 		try {
 			$payload = json_decode( $item->payload, true );
 			error_log( '📦 GHL CRM: Decoded payload: ' . print_r( $payload, true ) );
@@ -486,22 +509,30 @@ class QueueManager {
 				return; // Stop processing this batch
 			}
 
-			// Mark as failed if max attempts reached
-			$status = ( $item->attempts + 1 >= self::MAX_ATTEMPTS ) ? 'failed' : 'pending';
+		// Mark as failed if max attempts reached (attempts already incremented above)
+		$status = ( $item->attempts >= self::MAX_ATTEMPTS ) ? 'failed' : 'pending';
 
-			$wpdb->update(
-				$table_name,
-				[
-					'status'        => $status,
-					'error_message' => $e->getMessage(),
-					'updated_at'    => current_time( 'mysql' ),
-				],
-				[ 'id' => $item->id ],
-				[ '%s', '%s', '%s' ],
-				[ '%d' ]
-			);
+		$wpdb->update(
+			$table_name,
+			[
+				'status'        => $status,
+				'error_message' => $e->getMessage(),
+				'updated_at'    => current_time( 'mysql' ),
+			],
+			[ 'id' => $item->id ],
+			[ '%s', '%s', '%s' ],
+			[ '%d' ]
+		);
 
-			// Log error with request data
+		// Log when item is marked as failed
+		if ( $status === 'failed' ) {
+			error_log( sprintf(
+				'❌ GHL CRM: Item %d marked as FAILED after %d attempts. Error: %s',
+				$item->id,
+				$item->attempts,
+				$e->getMessage()
+			) );
+		}			// Log error with request data
 			$this->log_sync_event(
 				(int) $item->item_id,
 				$item->action,
