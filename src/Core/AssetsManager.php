@@ -66,6 +66,9 @@ class AssetsManager {
 		add_action( 'admin_enqueue_scripts', [ $this, 'register_external_libraries' ], 5 );
 		add_action( 'wp_enqueue_scripts', [ $this, 'register_external_libraries' ], 5 );
 
+		// Enqueue Font Awesome on all admin pages
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_global_admin_assets' ], 6 );
+
 		// Register admin assets
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
 
@@ -122,6 +125,17 @@ class AssetsManager {
 			'4.1.0',
 			true
 		);
+	}
+
+	/**
+	 * Enqueue global admin assets (Font Awesome, etc.)
+	 * These load on all admin pages
+	 *
+	 * @return void
+	 */
+	public function enqueue_global_admin_assets(): void {
+		// Enqueue Font Awesome on all admin pages
+		wp_enqueue_style( 'font-awesome' );
 	}
 
 	/**
