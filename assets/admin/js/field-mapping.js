@@ -15,9 +15,9 @@
 	 */
 	function initFieldMapping() {
 		/**
-		 * Update GHL field dropdowns to show which fields are already mapped
+		 * Check for duplicate GHL field mappings and show warnings
 		 */
-		function updateGHLFieldAvailability() {
+		function checkDuplicateMappings() {
 			// Get all selected GHL fields
 			const selectedFields = {};
 			
@@ -25,7 +25,7 @@
 				const $select = $(this);
 				const selectedValue = $select.val();
 				
-				if (selectedValue !== '') {
+				if (selectedValue !== '' && selectedValue !== undefined) {
 					if (!selectedFields[selectedValue]) {
 						selectedFields[selectedValue] = [];
 					}
@@ -33,47 +33,32 @@
 				}
 			});
 
-			// Update all dropdowns
-			$('select[name^="ghl_field_"]').each(function () {
-				const $currentSelect = $(this);
-				const currentValue = $currentSelect.val();
+			// Clear all previous warnings
+			$('.ghl-duplicate-warning').remove();
+			$('select[name^="ghl_field_"]').css('border-color', '');
 
-				$currentSelect.find('option').each(function () {
-					const $option = $(this);
-					const optionValue = $option.val();
-
-					// Skip empty option (Do Not Sync)
-					if (optionValue === '') {
-						return;
-					}
-
-					// Check if this field is already selected elsewhere
-					if (selectedFields[optionValue] && selectedFields[optionValue].length > 0) {
-						const isCurrentSelect = selectedFields[optionValue].some(function ($select) {
-							return $select.is($currentSelect);
-						});
-
-						if (!isCurrentSelect) {
-							// Field is selected elsewhere - disable it and add checkmark
-							$option.prop('disabled', true);
-							const originalText = $option.text().replace(' ✓ (mapped)', '');
-							$option.text(originalText + ' ✓ (mapped)');
-							$option.css('color', '#999');
-						} else {
-							// This is the current select - enable it
-							$option.prop('disabled', false);
-							const originalText = $option.text().replace(' ✓ (mapped)', '');
-							$option.text(originalText);
-							$option.css('color', '');
+			// Check for duplicates and add warnings
+			Object.keys(selectedFields).forEach(function(fieldValue) {
+				const selects = selectedFields[fieldValue];
+				
+				if (selects.length > 1) {
+					// Multiple WordPress fields are mapping to the same GHL field
+					selects.forEach(function($select) {
+						// Add yellow border to highlight the duplicate
+						$select.css('border-color', '#f0b849');
+						
+						// Add warning message if not already present
+						const $cell = $select.closest('td');
+						if ($cell.find('.ghl-duplicate-warning').length === 0) {
+							const fieldName = $select.find('option:selected').text();
+							const warningHtml = '<div class="ghl-duplicate-warning" style="margin-top: 5px; padding: 5px 10px; background: #fff3cd; border-left: 3px solid #f0b849; font-size: 12px; color: #856404;">' +
+								'<span style="font-weight: 600;">⚠ Duplicate Mapping:</span> This GHL field is mapped ' + selects.length + ' times. ' +
+								'Last sync will overwrite earlier values.' +
+								'</div>';
+							$cell.append(warningHtml);
 						}
-					} else {
-						// Field is not selected - enable it
-						$option.prop('disabled', false);
-						const originalText = $option.text().replace(' ✓ (mapped)', '');
-						$option.text(originalText);
-						$option.css('color', '');
-					}
-				});
+					});
+				}
 			});
 		}
 
@@ -193,9 +178,9 @@
 			const $row = $(this).closest('tr');
 			$row.addClass('ghl-field-changed');
 			
-			// Update GHL field availability when a field is selected/changed
+			// Check for duplicate mappings when a GHL field is selected/changed
 			if ($(this).attr('name').startsWith('ghl_field_')) {
-				updateGHLFieldAvailability();
+				checkDuplicateMappings();
 			}
 			
 			// Remove highlight after a moment
@@ -204,8 +189,8 @@
 			}, 1000);
 		});
 
-		// Initialize field availability on page load
-		updateGHLFieldAvailability();
+		// Initialize duplicate check on page load
+		checkDuplicateMappings();
 	}
 
 	// Export to global scope for SPA to call

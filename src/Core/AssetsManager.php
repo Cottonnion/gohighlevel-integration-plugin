@@ -170,7 +170,7 @@ class AssetsManager {
 			'spa-router.js',
 			[ 'jquery', 'sweetalert2' ],
 			[],
-			'1.0.1',
+			'1.0.2',
 			true
 		);
 
@@ -225,7 +225,7 @@ class AssetsManager {
 			[
 				'nonce' => wp_create_nonce( 'ghl_crm_field_mapping_nonce' ),
 			],
-			'1.0.2',
+			'1.0.3',
 			true
 		);
 

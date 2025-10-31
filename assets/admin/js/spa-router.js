@@ -170,6 +170,10 @@
                     if (typeof window.initFieldMapping === 'function') {
                         window.initFieldMapping();
                     }
+                    // Load GHL custom fields
+                    if (typeof window.GHL_FieldMapping.loadFields === 'function') {
+                        window.GHL_FieldMapping.loadFields(false);
+                    }
                     break;
                 case 'integrations':
                     // Re-initialize integrations handlers
