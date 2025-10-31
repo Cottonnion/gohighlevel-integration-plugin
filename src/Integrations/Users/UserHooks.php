@@ -277,9 +277,25 @@ class UserHooks {
 		$settings  = $this->settings_manager->get_settings_array();
 		$field_map = $settings['user_field_mapping'] ?? [];
 
+		// Build source identifier with site info
+		$site_url = get_site_url();
+		$site_name = get_bloginfo( 'name' );
+		$source_parts = [ 'WordPress' ];
+		
+		if ( is_multisite() ) {
+			$site_id = get_current_blog_id();
+			$source_parts[] = "Site #{$site_id}";
+		}
+		
+		if ( ! empty( $site_name ) ) {
+			$source_parts[] = $site_name;
+		}
+		
+		$source_parts[] = parse_url( $site_url, PHP_URL_HOST ) ?: $site_url;
+		
 		// Start with source field (always included)
 		$contact_data = [
-			'source' => 'WordPress',
+			'source' => implode( ' - ', $source_parts ),
 		];
 
 		// Map of WP user properties to their values
