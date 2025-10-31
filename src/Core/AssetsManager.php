@@ -131,15 +131,13 @@ class AssetsManager {
 	 */
 	private function define_admin_assets(): void {
 
-		wp_enqueue_style( 'font-awesome' );
-
 		// Admin Menu Styling (loads on all admin pages to style the menu)
 		$this->add_admin_asset(
 			'ghl-crm-admin-menu-css',
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'admin-menu.css',
 			[],
-			[],
+			[ 'font-awesome' ], // Add Font Awesome as a dependency
 			'1.0.0'
 		);
 
