@@ -77,6 +77,7 @@ class Loader {
 			// API components
 			'api.oauth'          => \GHL_CRM\API\OAuth\OAuthHandler::class,
 			'api.webhooks'       => \GHL_CRM\API\Webhooks\WebhookHandler::class,
+			'api.rest'           => \GHL_CRM\API\RestAPIController::class,
 
 			// Sync components
 			'sync.queue'         => \GHL_CRM\Sync\QueueManager::class,
