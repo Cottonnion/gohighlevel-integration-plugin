@@ -82,6 +82,10 @@ class Loader {
 
 			// Integration components
 			'integrations.users' => \GHL_CRM\Integrations\Users\UserHooks::class,
+
+			// Membership components
+			'membership.metaboxes'    => \GHL_CRM\Membership\Admin\MetaBoxes::class,
+			'membership.restrictions' => \GHL_CRM\Membership\Restrictions::class,
 		);
 	}
 
