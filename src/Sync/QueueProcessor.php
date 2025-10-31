@@ -124,9 +124,59 @@ class QueueProcessor {
 			case 'user_login':
 				return $this->handle_user_login( $client, $contact_resource, $payload );
 
+			case 'add_tags':
+				return $this->handle_add_tags( $contact_resource, $payload );
+
+			case 'remove_tags':
+				return $this->handle_remove_tags( $contact_resource, $payload );
+
 			default:
 				throw new \Exception( 'Unknown user action: ' . $action );
 		}
+	}
+
+	/**
+	 * Handle tag addition
+	 *
+	 * @param \GHL_CRM\API\Resources\ContactResource $contact_resource Contact resource
+	 * @param array $payload Payload data
+	 * @return array|bool
+	 * @throws \Exception
+	 */
+	private function handle_add_tags( $contact_resource, array $payload ) {
+		$contact_id = $payload['contact_id'] ?? '';
+		$tags = $payload['tags'] ?? [];
+
+		if ( empty( $contact_id ) || empty( $tags ) ) {
+			throw new \Exception( 'Contact ID and tags are required' );
+		}
+
+		error_log( '🏷️ GHL CRM QueueProcessor: Adding tags to contact ' . $contact_id . ': ' . implode( ', ', $tags ) );
+		
+		$result = $contact_resource->add_tags( $contact_id, $tags );
+		return ! empty( $result ) ? $result : false;
+	}
+
+	/**
+	 * Handle tag removal
+	 *
+	 * @param \GHL_CRM\API\Resources\ContactResource $contact_resource Contact resource
+	 * @param array $payload Payload data
+	 * @return array|bool
+	 * @throws \Exception
+	 */
+	private function handle_remove_tags( $contact_resource, array $payload ) {
+		$contact_id = $payload['contact_id'] ?? '';
+		$tags = $payload['tags'] ?? [];
+
+		if ( empty( $contact_id ) || empty( $tags ) ) {
+			throw new \Exception( 'Contact ID and tags are required' );
+		}
+
+		error_log( '🏷️ GHL CRM QueueProcessor: Removing tags from contact ' . $contact_id . ': ' . implode( ', ', $tags ) );
+		
+		$result = $contact_resource->remove_tags( $contact_id, $tags );
+		return ! empty( $result ) ? $result : false;
 	}
 
 	/**
