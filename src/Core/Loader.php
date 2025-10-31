@@ -76,9 +76,11 @@ class Loader {
 
 			// API components
 			'api.oauth'          => \GHL_CRM\API\OAuth\OAuthHandler::class,
+			'api.webhooks'       => \GHL_CRM\API\Webhooks\WebhookHandler::class,
 
 			// Sync components
 			'sync.queue'         => \GHL_CRM\Sync\QueueManager::class,
+			'sync.ghl_to_wp'     => \GHL_CRM\Sync\GHLToWordPressSync::class,
 
 			// Integration components
 			'integrations.users' => \GHL_CRM\Integrations\Users\UserHooks::class,
