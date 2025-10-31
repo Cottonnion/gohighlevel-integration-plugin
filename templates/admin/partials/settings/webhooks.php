@@ -227,7 +227,7 @@ $settings        = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_a
 		</table>
 
 		<p class="submit">
-			<button type="submit" class="button button-primary">
+			<button type="submit" class="ghl-button ghl-button-primary ghl-save-settings-btn">
 				<?php esc_html_e( 'Save Webhook Settings', 'ghl-crm-integration' ); ?>
 			</button>
 		</p>

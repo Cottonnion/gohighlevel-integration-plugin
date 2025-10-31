@@ -262,7 +262,7 @@ if ( empty( $rest_api_key ) ) {
 
 
 	<!-- Save Button -->
-	<button type="button" id="save-rest-api-settings" class="ghl-button ghl-button-success ghl-button-medium">
+	<button type="button" id="save-rest-api-settings" class="ghl-button ghl-button-primary ghl-save-settings-btn">
 		<span class="ghl-button-text"><?php esc_html_e( 'Save REST API Settings', 'ghl-crm-integration' ); ?></span>
 	</button>
 

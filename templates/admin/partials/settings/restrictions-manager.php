@@ -328,8 +328,8 @@ $all_roles = $wp_roles->get_names();
 		<hr>
 
 		<!-- Save Button -->
-		<button type="button" id="save-restrictions-settings" class="ghl-button ghl-button-success ghl-button-medium">
-			<span class="ghl-button-text"><?php esc_html_e( 'Save Settings', 'ghl-crm-integration' ); ?></span>
+		<button type="button" id="save-restrictions-settings" class="ghl-button ghl-button-primary ghl-save-settings-btn">
+			<span class="ghl-button-text"><?php esc_html_e( 'Save Restrictions Settings', 'ghl-crm-integration' ); ?></span>
 		</button>
 	</div>
 

@@ -134,8 +134,8 @@ $user_register_tags            = $settings['user_register_tags'] ?? [];
 	</div>
 
 	<!-- Save Button -->
-	<button type="button" id="save-general-settings" class="ghl-button ghl-button-success ghl-button-medium">
-		<span class="ghl-button-text"><?php esc_html_e( 'Save Settings', 'ghl-crm-integration' ); ?></span>
+	<button type="button" id="save-general-settings" class="ghl-button ghl-button-primary ghl-save-settings-btn">
+		<span class="ghl-button-text"><?php esc_html_e( 'Save General Settings', 'ghl-crm-integration' ); ?></span>
 	</button>
 
 	<!-- Help Section -->
