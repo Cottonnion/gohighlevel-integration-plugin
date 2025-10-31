@@ -448,6 +448,12 @@ class QueueManager {
 					$contact_id = $result['contact']['id'] ?? $result['id'] ?? null;
 				}
 				
+				// Store contact ID and sync time in user meta (for admin columns)
+				if ( 'user' === $item->item_type && ! empty( $contact_id ) ) {
+					update_user_meta( (int) $item->item_id, '_ghl_contact_id', $contact_id );
+					update_user_meta( (int) $item->item_id, '_ghl_last_sync', time() );
+				}
+				
 				// Mark as completed
 				$wpdb->update(
 					$table_name,
