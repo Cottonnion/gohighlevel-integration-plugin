@@ -358,9 +358,12 @@ class UserHooks {
 			$contact_data['email'] = $user->user_email;
 		}
 
-		// Add GHL custom fields if any were mapped
+		// Add custom fields to contact data (GHL API uses 'customFields' plural)
+		// Format: [{"id": "field_id", "value": "value"}] for custom fields from field mapping
+		
+		// Note: GHL API expects 'customFields' (plural) with array of objects containing 'id' and 'value'
 		if ( ! empty( $ghl_custom_fields ) ) {
-			$contact_data['customField'] = $ghl_custom_fields;
+			$contact_data['customFields'] = $ghl_custom_fields;
 		}
 
 		// Debug log: Show which fields are being synced
@@ -371,32 +374,6 @@ class UserHooks {
 			count( $ghl_custom_fields )
 		) );
 		error_log( 'GHL CRM: Mapped fields: ' . implode( ', ', array_keys( $contact_data ) ) );
-		
-		// Add WordPress tracking fields (always included for reference)
-		$custom_fields = [];
-		if ( ! empty( $user->ID ) ) {
-			$custom_fields[] = [
-				'key'   => 'wp_user_id',
-				'value' => (string) $user->ID,
-			];
-		}
-		if ( ! empty( $user->user_login ) ) {
-			$custom_fields[] = [
-				'key'   => 'wp_user_login',
-				'value' => $user->user_login,
-			];
-		}
-		if ( ! empty( $user->roles ) ) {
-			$custom_fields[] = [
-				'key'   => 'wp_user_role',
-				'value' => implode( ', ', $user->roles ),
-			];
-		}
-		
-		// Only add customFields if we have data
-		if ( ! empty( $custom_fields ) ) {
-			$contact_data['customFields'] = $custom_fields;
-		}
 		
 		return $contact_data;
 	}

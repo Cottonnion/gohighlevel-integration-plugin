@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace GHL_CRM\Admin;
 
 use GHL_CRM\Admin\Columns\UserColumns;
+use GHL_CRM\Admin\Profile\UserProfileFields;
 use GHL_CRM\Core\SettingsManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -73,8 +74,10 @@ class AdminUI {
 		// Initialize user columns (adds GHL Contact ID column to users table)
 		UserColumns::init();
 
+		// Initialize user profile fields (adds GHL section to user edit pages)
+		UserProfileFields::init();
+
 		// Future: Initialize other admin components
-		// UserProfileFields::init();
 		// PostColumns::init();
 		// OrderColumns::init();
 	}
