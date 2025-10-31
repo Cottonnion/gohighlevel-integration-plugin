@@ -88,6 +88,7 @@ class WebhookHandler {
 	 */
 	private function init_hooks(): void {
 		add_action( 'rest_api_init', [ $this, 'register_webhook_endpoint' ] );
+        add_action( 'wp_ajax_ghl_crm_test_webhook', [ $this, 'handle_test_webhook' ] );
 		add_action( 'ghl_process_webhook_async', [ $this, 'process_webhook_async' ], 10, 2 );
 	}
 
@@ -404,6 +405,40 @@ class WebhookHandler {
 		return true;
 	}
 
+
+	/**
+	 * Handle test webhook AJAX request
+	 *
+	 * @return void
+	 */
+	public function handle_test_webhook(): void {
+		try {
+			check_ajax_referer( 'ghl_crm_admin', 'nonce' );
+
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ] );
+			}
+
+			$webhook_handler = \GHL_CRM\API\Webhooks\WebhookHandler::get_instance();
+			$result          = $webhook_handler->test_webhook_endpoint();
+
+			if ( is_wp_error( $result ) ) {
+				wp_send_json_error( [ 'message' => $result->get_error_message() ] );
+			} else {
+				wp_send_json_success( $result );
+			}
+		} catch ( \Exception $e ) {
+			wp_send_json_error( [
+				'message' => sprintf(
+					/* translators: %s: Error message */
+					__( 'Failed to test webhook: %s', 'ghl-crm-integration' ),
+					$e->getMessage()
+				),
+				'code'    => 'exception',
+				'details' => $e->getCode(),
+			] );
+		}
+	}
 	/**
 	 * Check if sync direction is enabled
 	 *
