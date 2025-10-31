@@ -137,5 +137,37 @@ $user_register_tags            = $settings['user_register_tags'] ?? [];
 	<button type="button" id="save-general-settings" class="ghl-button ghl-button-success ghl-button-medium">
 		<span class="ghl-button-text"><?php esc_html_e( 'Save Settings', 'ghl-crm-integration' ); ?></span>
 	</button>
+
+	<!-- Help Section -->
+	<div class="ghl-help-box" style="margin-top: 30px;">
+		<h3>
+			<span class="dashicons dashicons-info"></span>
+			<?php esc_html_e( 'How User Sync Works', 'ghl-crm-integration' ); ?>
+		</h3>
+		<div class="ghl-help-content">
+			<ol>
+				<li>
+					<strong><?php esc_html_e( 'Enable User Sync:', 'ghl-crm-integration' ); ?></strong>
+					<?php esc_html_e( 'Turn on the master toggle to activate automatic synchronization between WordPress users and GoHighLevel contacts.', 'ghl-crm-integration' ); ?>
+				</li>
+				<li>
+					<strong><?php esc_html_e( 'Choose Sync Events:', 'ghl-crm-integration' ); ?></strong>
+					<?php esc_html_e( 'Select which WordPress events trigger contact creation in GoHighLevel (e.g., user registration, profile updates).', 'ghl-crm-integration' ); ?>
+				</li>
+				<li>
+					<strong><?php esc_html_e( 'Configure Default Tags:', 'ghl-crm-integration' ); ?></strong>
+					<?php esc_html_e( 'When "Create on Registration" is enabled, you can assign default tags to automatically tag new contacts in GoHighLevel.', 'ghl-crm-integration' ); ?>
+				</li>
+				<li>
+					<strong><?php esc_html_e( 'Field Mapping:', 'ghl-crm-integration' ); ?></strong>
+					<?php esc_html_e( 'Visit the Field Mapping tab to configure which WordPress user fields sync to which GoHighLevel contact fields.', 'ghl-crm-integration' ); ?>
+				</li>
+			</ol>
+			
+			<p><strong><?php esc_html_e( 'Note:', 'ghl-crm-integration' ); ?></strong>
+				<?php esc_html_e( 'User data is synced in real-time when enabled. Ensure your GoHighLevel connection is active before enabling sync.', 'ghl-crm-integration' ); ?>
+			</p>
+		</div>
+	</div>
 	
 </div>

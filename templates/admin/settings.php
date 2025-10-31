@@ -29,8 +29,8 @@ $settings_tabs = [
 		'label' => __( 'General', 'ghl-crm-integration' ),
 		'icon'  => 'fa-solid fa-gear',
 	],
-	'api' => [
-		'label' => __( 'API Configuration', 'ghl-crm-integration' ),
+	'restrictions-manager' => [
+		'label' => __( 'Restrictions Manager', 'ghl-crm-integration' ),
 		'icon'  => 'fa-solid fa-network-wired',
 	],
 	'rest-api' => [
