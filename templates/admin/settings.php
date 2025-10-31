@@ -31,7 +31,7 @@ $settings_tabs = [
 	],
 	'restrictions-manager' => [
 		'label' => __( 'Restrictions Manager', 'ghl-crm-integration' ),
-		'icon'  => 'fa-solid fa-network-wired',
+		'icon'  => 'fa-solid fa-lock',
 	],
 	'rest-api' => [
 		'label' => __( 'REST API', 'ghl-crm-integration' ),
