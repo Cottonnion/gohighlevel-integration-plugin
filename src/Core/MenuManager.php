@@ -609,7 +609,7 @@ class MenuManager {
 	public static function get_valid_settings_tabs(): array {
 		return [
 			'general',
-			'api',
+			'restrictions-manager',
 			'rest-api',
 			'webhooks',
 			'notifications',
