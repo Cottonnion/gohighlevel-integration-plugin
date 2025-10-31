@@ -1,0 +1,51 @@
+/**
+ * GoHighLevel CRM Integration - Frontend Styles
+ * Styles for restricted content messages
+ */
+
+/* Restricted Content Notice */
+.ghl-restricted-content {
+    background: #f8f9fa;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.ghl-restricted-content p {
+    margin: 0 0 10px;
+}
+
+.ghl-restricted-content p:last-child {
+    margin-bottom: 0;
+}
+
+.ghl-restricted-notice {
+    font-size: 18px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.ghl-restricted-content a {
+    color: #2271b1;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.ghl-restricted-content a:hover {
+    color: #135e96;
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+    .ghl-restricted-content {
+        padding: 15px;
+        margin: 15px 0;
+    }
+
+    .ghl-restricted-notice {
+        font-size: 16px;
+    }
+}

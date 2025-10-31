@@ -42,8 +42,8 @@
 		 * Universal Save Settings Handler
 		 * Works for all settings tabs - collects all form data from active tab
 		 */
-		$(document).off('click.ghlSettings', '#save-general-settings, .ghl-save-settings-btn')
-			.on('click.ghlSettings', '#save-general-settings, .ghl-save-settings-btn', function(e) {
+		$(document).off('click.ghlSettings', '#save-general-settings, #save-restrictions-settings, .ghl-save-settings-btn')
+			.on('click.ghlSettings', '#save-general-settings, #save-restrictions-settings, .ghl-save-settings-btn', function(e) {
 			e.preventDefault();
 			
 			const $button = $(this);
@@ -344,14 +344,34 @@
 		});
 	}
 
+	/**
+	 * Initialize roles select2 for restrictions settings
+	 */
+	function initRestrictionsRolesSelect() {
+		const $rolesSelect = $('.ghl-roles-select');
+		
+		if ($rolesSelect.length === 0 || typeof $.fn.select2 === 'undefined') {
+			return;
+		}
+
+		$rolesSelect.select2({
+			placeholder: $rolesSelect.data('placeholder') || 'Select roles that can bypass restrictions...',
+			allowClear: true,
+			width: '100%',
+			closeOnSelect: false
+		});
+	}
+
 	// Export to global scope for SPA to call
 	window.initSettings = initSettings;
 	window.cleanupSettings = cleanupSettings;
 	window.initUserRegisterTags = initUserRegisterTags;
+	window.initRestrictionsRolesSelect = initRestrictionsRolesSelect;
 
 	// Initialize on document ready (for non-SPA page loads)
 	$(document).ready(function() {
 		initUserRegisterTags();
+		initRestrictionsRolesSelect();
 		initSettings();
 	});
 

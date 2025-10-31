@@ -6,6 +6,9 @@
  * @package GHL_CRM_Integration
  */
 
+ body{
+	line-height: normal !important;
+ }
 /* Connection Tabs */
 .ghl-connection-tabs {
 	margin-top: 20px;

@@ -190,6 +190,10 @@
                     if (typeof window.initUserRegisterTags === 'function') {
                         window.initUserRegisterTags();
                     }
+                    // Initialize restrictions roles select functionality
+                    if (typeof window.initRestrictionsRolesSelect === 'function') {
+                        window.initRestrictionsRolesSelect();
+                    }
                     // Initialize settings side menu for tab switching (only if not already initialized)
                     if (typeof window.initSettingsMenu === 'function' && !window.ghlSettingsMenuInitialized) {
                         window.initSettingsMenu();

@@ -178,6 +178,11 @@
 					if (typeof window.initUserRegisterTags === 'function') {
 						window.initUserRegisterTags();
 					}
+					
+					// Re-initialize restrictions roles select functionality (for restrictions tab)
+					if (typeof window.initRestrictionsRolesSelect === 'function') {
+						window.initRestrictionsRolesSelect();
+					}
 				} else {
 					$content.html('<div class="notice notice-error"><p>' + (response.data.message || 'Failed to load settings tab.') + '</p></div>');
 				}

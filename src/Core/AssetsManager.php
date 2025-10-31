@@ -77,7 +77,7 @@ class AssetsManager {
 	}
 
 	/**
-	 * Register external libraries (CDN)
+	 * Register external libraries (CDN and local)
 	 * These are registered but not enqueued - they'll only load when used as dependencies
 	 *
 	 * @return void
@@ -107,17 +107,17 @@ class AssetsManager {
 			'6.6.0'
 		);
 
-		// Register Select2
+		// Register Select2 (local files)
 		wp_register_style(
 			'select2',
-			'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
+			GHL_CRM_URL . 'assets/admin/css/select2.min.css',
 			[],
 			'4.1.0'
 		);
 
 		wp_register_script(
 			'select2',
-			'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
+			GHL_CRM_URL . 'assets/admin/js/select2.min.js',
 			[ 'jquery' ],
 			'4.1.0',
 			true
@@ -170,7 +170,7 @@ class AssetsManager {
 			'spa-router.js',
 			[ 'jquery', 'sweetalert2' ],
 			[],
-			'1.0.2',
+			'1.0.3',
 			true
 		);
 
@@ -259,7 +259,7 @@ class AssetsManager {
 			'settings.css',
 			[ 'sweetalert2', 'select2' ],
 			[],
-			'1.0.2'
+			'1.0.3'
 		);
 
 		$this->add_admin_asset(
@@ -313,9 +313,9 @@ class AssetsManager {
 			'ghl-crm-settings-css',
 			[ 'toplevel_page_ghl-crm-settings' ],
 			'settings.css',
-			[ 'ghl-crm-globals-css', 'sweetalert2' ],
+			[ 'ghl-crm-globals-css', 'sweetalert2', 'select2' ],
 			[],
-			'1.0.1'
+			'1.0.2'
 		);
 
 		// Settings page JS (loads on main-settings page for settings tab)
@@ -323,12 +323,12 @@ class AssetsManager {
 			'ghl-crm-settings-js',
 			[ 'toplevel_page_ghl-crm-settings' ],
 			'settings.js',
-			[ 'jquery', 'sweetalert2' ],
+			[ 'jquery', 'sweetalert2', 'select2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
 			],
-			GHL_CRM_VERSION,
+			'1.0.2',
 			true
 		);
 

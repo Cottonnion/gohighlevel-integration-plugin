@@ -502,3 +502,100 @@
 		font-size: var(--ghl-font-size-sm);
 	}
 }
+
+/* ============================================
+   Restrictions Manager Settings
+   ============================================ */
+
+/* Settings Header */
+.ghl-settings-header {
+	margin-bottom: 20px;
+}
+
+.ghl-settings-header h2 {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 10px;
+}
+
+.ghl-settings-header h2 .dashicons {
+	color: #2271b1;
+	font-size: 28px;
+	width: 28px;
+	height: 28px;
+}
+
+/* Toggle Switch */
+.ghl-toggle-switch {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	cursor: pointer;
+}
+
+.ghl-toggle-slider {
+	position: relative;
+	display: inline-block;
+	width: 50px;
+	height: 24px;
+	background-color: #ccc;
+	border-radius: 24px;
+	transition: background-color 0.3s;
+}
+
+.ghl-toggle-slider::before {
+	content: '';
+	position: absolute;
+	width: 18px;
+	height: 18px;
+	left: 3px;
+	top: 3px;
+	background-color: white;
+	border-radius: 50%;
+	transition: transform 0.3s;
+}
+
+.ghl-toggle-switch input[type="checkbox"] {
+	display: none;
+}
+
+.ghl-toggle-switch input[type="checkbox"]:checked + .ghl-toggle-slider {
+	background-color: #2271b1;
+}
+
+.ghl-toggle-switch input[type="checkbox"]:checked + .ghl-toggle-slider::before {
+	transform: translateX(26px);
+}
+
+/* Help Box */
+.ghl-help-box {
+	background: #f0f6fc;
+	border-left: 4px solid #2271b1;
+	padding: 20px;
+	border-radius: 4px;
+}
+
+.ghl-help-box h3 {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 0;
+}
+
+.ghl-help-box .dashicons {
+	color: #2271b1;
+}
+
+.ghl-help-content ol {
+	margin-left: 20px;
+}
+
+.ghl-help-content li {
+	margin-bottom: 10px;
+}
+
+/* Save Button with Icon */
+#ghl-save-restrictions .dashicons {
+	margin-right: 5px;
+}
