@@ -370,6 +370,29 @@ class QueueManager {
 
 		error_log( '⚙️ GHL CRM: process_queue_item() START - Item ID: ' . $item->id );
 
+		// Safety check: If item already has MAX_ATTEMPTS, mark as failed immediately
+		if ( $item->attempts >= self::MAX_ATTEMPTS ) {
+			error_log( sprintf(
+				'🚫 GHL CRM: Item %d already has %d attempts, marking as failed',
+				$item->id,
+				$item->attempts
+			) );
+			
+			$table_name = $this->get_queue_table_name();
+			$wpdb->update(
+				$table_name,
+				[
+					'status'        => 'failed',
+					'error_message' => 'Maximum retry attempts reached',
+					'updated_at'    => current_time( 'mysql' ),
+				],
+				[ 'id' => $item->id ],
+				[ '%s', '%s', '%s' ],
+				[ '%d' ]
+			);
+			return;
+		}
+
 		try {
 			$table_name = $this->get_queue_table_name();
 			error_log( '📋 GHL CRM: Got table name: ' . $table_name );
@@ -448,10 +471,18 @@ class QueueManager {
 					$contact_id = $result['contact']['id'] ?? $result['id'] ?? null;
 				}
 				
-				// Store contact ID and sync time in user meta (for admin columns)
+				// Store contact ID, tags, and sync time in user meta (for admin columns and profile page)
 				if ( 'user' === $item->item_type && ! empty( $contact_id ) ) {
 					update_user_meta( (int) $item->item_id, '_ghl_contact_id', $contact_id );
 					update_user_meta( (int) $item->item_id, '_ghl_last_sync', time() );
+					
+					// Store tags if available in response
+					if ( is_array( $result ) ) {
+						$contact_data = $result['contact'] ?? $result;
+						if ( ! empty( $contact_data['tags'] ) && is_array( $contact_data['tags'] ) ) {
+							update_user_meta( (int) $item->item_id, '_ghl_contact_tags', $contact_data['tags'] );
+						}
+					}
 				}
 				
 				// Mark as completed
