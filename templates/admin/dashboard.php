@@ -32,7 +32,7 @@ print_r($queue_status);
 echo '</pre>';
 
 // Check next scheduled action
-if ( function_exists( 'as_next_scheduled_action' ) ) {
+if ( ! function_exists( 'as_next_scheduled_action' ) ) {
 	echo '<h5>Next Scheduled Queue Process:</h5>';
 	$next_scheduled = as_next_scheduled_action( 'ghl_crm_process_queue' );
 	

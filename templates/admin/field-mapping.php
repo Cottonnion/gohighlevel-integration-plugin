@@ -206,23 +206,49 @@ $saved_mappings   = $settings['user_field_mapping'] ?? [];
 				</tr>
 			</thead>
 			<tbody>
-				<?php foreach ( $default_wp_fields as $key => $label ) : 
-					$saved_ghl_field = isset( $saved_mappings[ $key ]['ghl_field'] ) ? $saved_mappings[ $key ]['ghl_field'] : '';
+				<?php 
+				foreach ( $default_wp_fields as $key => $label ) : 
+					// Set default mappings if not configured yet
+					$default_mappings = [
+						'user_email'  => 'email',
+						'first_name'  => 'firstName',
+						'last_name'   => 'lastName',
+					];
+					
+					// Use saved value if exists, otherwise use default mapping if available
+					if ( isset( $saved_mappings[ $key ]['ghl_field'] ) ) {
+						$saved_ghl_field = $saved_mappings[ $key ]['ghl_field'];
+					} elseif ( isset( $default_mappings[ $key ] ) ) {
+						$saved_ghl_field = $default_mappings[ $key ];
+					} else {
+						$saved_ghl_field = '';
+					}
+					
 					$saved_direction = isset( $saved_mappings[ $key ]['direction'] ) ? $saved_mappings[ $key ]['direction'] : 'both';
+					
+					// Email field should be disabled (required by GHL)
+					$is_email_field = ( $key === 'user_email' );
 				?>
 					<tr>
 						<td>
 							<strong><?php echo esc_html( $label ); ?></strong><br>
 							<code style="color: #666;"><?php echo esc_html( $key ); ?></code>
+							<?php if ( $is_email_field ) : ?>
+								<br><span style="color: #d63638; font-size: 11px;"><?php esc_html_e( '* Required field', 'ghl-crm-integration' ); ?></span>
+							<?php endif; ?>
 						</td>
 						<td>
-							<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="regular-text">
+							<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="regular-text" data-saved-value="<?php echo esc_attr( $saved_ghl_field ); ?>" <?php echo $is_email_field ? 'disabled' : ''; ?>>
 								<?php foreach ( $ghl_fields as $ghl_key => $ghl_label ) : ?>
 									<option value="<?php echo esc_attr( $ghl_key ); ?>" <?php selected( $saved_ghl_field, $ghl_key ); ?>>
 										<?php echo esc_html( $ghl_label ); ?>
 									</option>
 								<?php endforeach; ?>
 							</select>
+							<?php if ( $is_email_field ) : ?>
+								<!-- Hidden input to ensure email mapping is submitted even though select is disabled -->
+								<input type="hidden" name="ghl_field_<?php echo esc_attr( $key ); ?>" value="email">
+							<?php endif; ?>
 						</td>
 						<td>
 							<select name="sync_direction_<?php echo esc_attr( $key ); ?>">
@@ -268,7 +294,7 @@ $saved_mappings   = $settings['user_field_mapping'] ?? [];
 								<code style="color: #666;"><?php echo esc_html( $key ); ?></code>
 							</td>
 							<td>
-								<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="regular-text">
+								<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="regular-text" data-saved-value="<?php echo esc_attr( $saved_ghl_field ); ?>">
 									<?php foreach ( $ghl_fields as $ghl_key => $ghl_label ) : ?>
 										<option value="<?php echo esc_attr( $ghl_key ); ?>" <?php selected( $saved_ghl_field, $ghl_key ); ?>>
 											<?php echo esc_html( $ghl_label ); ?>
@@ -321,7 +347,7 @@ $saved_mappings   = $settings['user_field_mapping'] ?? [];
 								<code style="color: #666;"><?php echo esc_html( $key ); ?></code>
 							</td>
 							<td>
-								<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="regular-text">
+								<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="regular-text" data-saved-value="<?php echo esc_attr( $saved_ghl_field ); ?>">
 									<?php foreach ( $ghl_fields as $ghl_key => $ghl_label ) : ?>
 										<option value="<?php echo esc_attr( $ghl_key ); ?>" <?php selected( $saved_ghl_field, $ghl_key ); ?>>
 											<?php echo esc_html( $ghl_label ); ?>
@@ -353,12 +379,20 @@ $saved_mappings   = $settings['user_field_mapping'] ?? [];
 </div>
 
 <script>
-jQuery(document).ready(function($) {
+// Expose globally so SPA router can call it
+window.GHL_FieldMapping = window.GHL_FieldMapping || {};
+
+(function($) {
 	// Function to load GHL fields
-	function loadGHLFields(isInitialLoad) {
+	window.GHL_FieldMapping.loadFields = function(isInitialLoad) {
 		const $button = $('#ghl-load-custom-fields');
 		const $status = $('#ghl-custom-fields-status');
 		const $icon = $button.find('.dashicons');
+		
+		// Check if elements exist (may not be on this tab)
+		if ($button.length === 0) {
+			return;
+		}
 		
 		// Show loading state
 		$button.prop('disabled', true);
@@ -386,7 +420,14 @@ jQuery(document).ready(function($) {
 					
 					$('select[name^="ghl_field_"]').each(function() {
 						const $select = $(this);
-						const currentValue = $select.val();
+						// Get saved value from data attribute (set by PHP)
+						let savedValue = $select.data('saved-value') || '';
+						
+						// Force email field to always be mapped to 'email'
+						const isEmailField = $select.attr('name') === 'ghl_field_user_email';
+						if (isEmailField) {
+							savedValue = 'email';
+						}
 						
 						// Clear existing options
 						$select.empty();
@@ -397,13 +438,23 @@ jQuery(document).ready(function($) {
 								.attr('value', key)
 								.text(label);
 							
-							// Restore previous selection if it exists
-							if (key === currentValue) {
+							// Restore saved selection from data attribute
+							if (key === savedValue) {
 								$option.attr('selected', 'selected');
 							}
 							
 							$select.append($option);
 						});
+						
+						// Set the value explicitly to ensure it's selected
+						if (savedValue) {
+							$select.val(savedValue);
+						}
+						
+						// Re-disable email field after populating
+						if (isEmailField) {
+							$select.prop('disabled', true);
+						}
 					});
 					
 					// Show success message
@@ -438,23 +489,34 @@ jQuery(document).ready(function($) {
 				$status.html('<span style="color: #dc3232;">⚠ Error: ' + error + '</span>');
 			}
 		});
-	}
+	};
 	
-	// Auto-load fields on page load
-	loadGHLFields(true);
-	
-	// Handle manual reload button click
-	$('#ghl-load-custom-fields').on('click', function() {
-		loadGHLFields(false);
+	// Initialize on document ready
+	$(document).ready(function() {
+		// Auto-load fields on initial page load
+		window.GHL_FieldMapping.loadFields(true);
+		
+		// Handle manual reload button click
+		$(document).on('click', '#ghl-load-custom-fields', function() {
+			window.GHL_FieldMapping.loadFields(false);
+		});
 	});
-});
+})(jQuery);
 
-// Add rotation animation
+// Add rotation animation and disabled field styling
 const style = document.createElement('style');
 style.textContent = `
 	@keyframes rotation {
 		from { transform: rotate(0deg); }
 		to { transform: rotate(359deg); }
+	}
+	
+	/* Style for disabled email field */
+	select[name="ghl_field_user_email"]:disabled {
+		background-color: #f0f0f1;
+		color: #2c3338;
+		cursor: not-allowed;
+		opacity: 0.7;
 	}
 `;
 document.head.appendChild(style);
