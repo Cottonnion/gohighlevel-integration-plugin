@@ -9,11 +9,30 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Debug Mode Toggle
+ * 
+ * Set to TRUE to show debug information including:
+ * - Settings dump
+ * - Queue manager status
+ * - Scheduled action details
+ * - Pending queue items
+ * - Error logs
+ * - API connection test
+ * - Manual queue trigger button
+ * 
+ * Set to FALSE for production (clean dashboard)
+ */
+define( 'GHL_SHOW_DEBUG', false );
+
 // Get OAuth handler and status
 $oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
 $oauth_status  = $oauth_handler->get_connection_status();
 $settings      = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
+?>
 
+<?php if ( GHL_SHOW_DEBUG ) : ?>
+<?php
 // Debug: Print settings
 echo '<div style="background: #f0f0f0; padding: 15px; margin-bottom: 20px; border-left: 4px solid #2271b1;">';
 echo '<h4 style="margin-top: 0;">Debug: Settings</h4>';
@@ -151,6 +170,7 @@ if ( ! empty( $settings['api_token'] ) && ! empty( $settings['location_id'] ) ) 
 
 echo '</div>';
 ?>
+<?php endif; // End GHL_SHOW_DEBUG ?>
 
 <div class="ghl-crm-dashboard">
 	<div class="ghl-card">
@@ -471,7 +491,7 @@ echo '</div>';
 	</div>
 	
 	<!-- Manual Queue Trigger Button (Bottom of Page) -->
-	<?php if ( function_exists( 'as_next_scheduled_action' ) ) : ?>
+	<?php if ( GHL_SHOW_DEBUG && function_exists( 'as_next_scheduled_action' ) ) : ?>
 		<?php 
 		$manual_nonce = wp_create_nonce( 'ghl_crm_manual_queue' );
 		$batch_size = 50; // Default batch size
