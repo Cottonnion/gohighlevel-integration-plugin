@@ -117,8 +117,13 @@ class SettingsManager {
 
 			// Sanitize based on value type
 			if ( is_array( $value ) ) {
-				// Handle arrays (checkboxes, multi-selects, etc.)
-				$new_settings[ $key ] = array_map( 'sanitize_text_field', wp_unslash( $value ) );
+				// Special handling for role_tags nested structure
+				if ( $key === 'role_tags' ) {
+					$new_settings[ $key ] = $this->sanitize_role_tags( $value );
+				} else {
+					// Handle other arrays (checkboxes, multi-selects, etc.)
+					$new_settings[ $key ] = $this->sanitize_array_recursive( $value );
+				}
 			} else {
 				// Check if this is an empty array marker from JavaScript
 				if ( $value === '__EMPTY_ARRAY__' ) {
@@ -425,6 +430,72 @@ class SettingsManager {
 				500
 			);
 		}
+	}
+
+	/**
+	 * Sanitize array recursively
+	 *
+	 * @param array $array Array to sanitize
+	 * @return array Sanitized array
+	 */
+	private function sanitize_array_recursive( array $array ): array {
+		$sanitized = [];
+		foreach ( $array as $key => $value ) {
+			if ( is_array( $value ) ) {
+				$sanitized[ $key ] = $this->sanitize_array_recursive( $value );
+			} elseif ( $value === '__EMPTY_ARRAY__' ) {
+				$sanitized[ $key ] = [];
+			} else {
+				$sanitized[ $key ] = sanitize_text_field( wp_unslash( $value ) );
+			}
+		}
+		return $sanitized;
+	}
+
+	/**
+	 * Sanitize role_tags structure
+	 *
+	 * @param array $role_tags Role tags array from POST
+	 * @return array Sanitized role tags structure
+	 */
+	private function sanitize_role_tags( array $role_tags ): array {
+		$sanitized = [];
+		
+		foreach ( $role_tags as $role => $config ) {
+			if ( ! is_array( $config ) ) {
+				continue;
+			}
+			
+			$sanitized_config = [];
+			
+			// Sanitize role key (if present)
+			if ( isset( $config['role'] ) ) {
+				$sanitized_config['role'] = sanitize_text_field( wp_unslash( $config['role'] ) );
+			}
+			
+			// Sanitize tags (can be array from Select2 or string)
+			if ( isset( $config['tags'] ) ) {
+				if ( is_array( $config['tags'] ) ) {
+					// Handle Select2 array format
+					$sanitized_config['tags'] = array_map( 'sanitize_text_field', array_map( 'wp_unslash', $config['tags'] ) );
+				} elseif ( $config['tags'] === '__EMPTY_ARRAY__' ) {
+					$sanitized_config['tags'] = [];
+				} else {
+					// Handle string format
+					$sanitized_config['tags'] = sanitize_text_field( wp_unslash( $config['tags'] ) );
+				}
+			} else {
+				$sanitized_config['tags'] = [];
+			}
+			
+			// Sanitize checkboxes
+			$sanitized_config['auto_apply'] = isset( $config['auto_apply'] ) && $config['auto_apply'] === '1';
+			$sanitized_config['remove_on_change'] = isset( $config['remove_on_change'] ) && $config['remove_on_change'] === '1';
+			
+			$sanitized[ sanitize_text_field( wp_unslash( $role ) ) ] = $sanitized_config;
+		}
+		
+		return $sanitized;
 	}
 
 	/**
