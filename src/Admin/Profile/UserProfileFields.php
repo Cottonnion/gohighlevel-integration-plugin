@@ -129,9 +129,17 @@ class UserProfileFields {
 			true
 		);
 
+		// Enqueue custom styles
+		wp_enqueue_style(
+			'ghl-user-profile',
+			GHL_CRM_URL . 'assets/admin/css/user-profile.css',
+			[ 'select2' ],
+			'1.0.0'
+		);
+
 		// Enqueue custom script
 		wp_enqueue_script(
-			'ghl-user-profile',
+			'ghl-user-profile-js',
 			GHL_CRM_URL . 'assets/admin/js/user-profile.js',
 			[ 'jquery', 'select2' ],
 			'1.0.0',
@@ -140,7 +148,7 @@ class UserProfileFields {
 
 		// Localize script
 		wp_localize_script(
-			'ghl-user-profile',
+			'ghl-user-profile-js',
 			'ghlUserProfile',
 			[
 				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
@@ -156,7 +164,7 @@ class UserProfileFields {
 		);
 
 		// Add custom styles
-		wp_add_inline_style( 'select2', $this->get_custom_styles() );
+		// wp_add_inline_style( 'select2', $this->get_custom_styles() );
 	}
 
 	/**
@@ -376,6 +384,9 @@ class UserProfileFields {
 				<h3><?php esc_html_e( 'Contact Tags', 'ghl-crm-integration' ); ?></h3>
 				<p class="description">
 					<?php esc_html_e( 'Manage tags for this contact in GoHighLevel. Changes will be synced when you save the profile.', 'ghl-crm-integration' ); ?>
+					<br>
+					<strong><?php esc_html_e( 'Note:', 'ghl-crm-integration' ); ?></strong>
+					<?php esc_html_e( 'Updates are processed in the background and may take up to 60 seconds to appear in your GoHighLevel.', 'ghl-crm-integration' ); ?>
 				</p>
 				
 				<select 

@@ -85,13 +85,14 @@ class UserHooks {
 		if ( in_array( 'user_register', $sync_actions, true ) ) {
 			
 			// Standard WordPress registration (single site or admin-created users)
-			add_action( 'user_register', [ $this, 'on_user_register' ], 10, 1 );
-			add_action( 'edit_user_created_user', [ $this, 'on_user_register' ], 10, 1 );
+			// Priority 999 ensures roles are assigned before we try to read them
+			add_action( 'user_register', [ $this, 'on_user_register' ], 999, 1 );
+			add_action( 'edit_user_created_user', [ $this, 'on_user_register' ], 999, 1 );
 			
 			// Multisite hooks
 			if ( is_multisite() ) {
 				// When admin directly creates a user in network admin
-				add_action( 'wpmu_new_user', [ $this, 'on_user_register' ], 10, 1 );
+				add_action( 'wpmu_new_user', [ $this, 'on_user_register' ], 999, 1 );
 				
 				// CRITICAL: These are the hooks that fire during multisite frontend registration/activation
 				// Priority 999 to ensure WordPress has finished all its setup
@@ -139,8 +140,34 @@ class UserHooks {
 		$settings = $this->settings_manager->get_settings_array();
 		$register_tags = $settings['user_register_tags'] ?? [];
 		
-		if ( ! empty( $register_tags ) && is_array( $register_tags ) ) {
-			$contact_data['tags'] = $register_tags;
+		// Get role-based tags
+		// During user creation, WordPress hasn't assigned the role to the database yet
+		// We need to read it from $_POST['role'] for admin-created users
+		$role_tags_manager = RoleTagsManager::get_instance();
+		$role_based_tags = [];
+		
+		// Check if this is an admin-created user (role in POST data)
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- WordPress core handles this
+		if ( ! empty( $_POST['role'] ) && is_string( $_POST['role'] ) ) {
+			// Admin is creating user with specific role - use POST data
+			$assigned_role = sanitize_text_field( wp_unslash( $_POST['role'] ) );
+			error_log( '🏷️ GHL CRM UserHooks: User ' . $user_id . ' created via admin with role: ' . $assigned_role );
+			$role_based_tags = $role_tags_manager->get_tags_for_role( $assigned_role );
+		} else {
+			// Regular registration or role already assigned - read from user object
+			$role_based_tags = $role_tags_manager->get_user_role_tags( $user_id );
+		}
+		
+		// Combine registration tags with role-based tags
+		$all_tags = array_merge( $register_tags, $role_based_tags );
+		$all_tags = array_unique( $all_tags );
+		// Re-index array to ensure sequential numeric keys (not associative)
+		$all_tags = array_values( $all_tags );
+		
+		error_log( '🏷️ GHL CRM UserHooks: Final tags for new user ' . $user_id . ': ' . implode( ', ', $all_tags ) );
+		
+		if ( ! empty( $all_tags ) ) {
+			$contact_data['tags'] = $all_tags;
 		}
 		
 		// Queue for async processing
@@ -217,8 +244,73 @@ class UserHooks {
 		if ( ! $user ) {
 			return;
 		}
+		
+		// Detect role changes
+		$old_roles = $old_user_data->roles;
+		$new_roles = $user->roles;
+		$role_changed = ( $old_roles !== $new_roles );
+		
+		error_log( '👤 GHL CRM UserHooks: User ' . $user_id . ' update - Old roles: ' . implode( ', ', $old_roles ) . ' | New roles: ' . implode( ', ', $new_roles ) );
+		
 		// Prepare contact data
 		$contact_data = $this->prepare_contact_data( $user );
+		
+		// Get existing tags from GHL to avoid overwriting them
+		$existing_tags = [];
+		$contact_id = get_user_meta( $user_id, '_ghl_contact_id', true );
+		
+		if ( $contact_id ) {
+			// Fetch existing contact from GHL to get current tags
+			try {
+				$client = \GHL_CRM\API\Client\Client::get_instance();
+				$contact = $client->get( "contacts/{$contact_id}" );
+				
+				if ( ! empty( $contact['contact']['tags'] ) && is_array( $contact['contact']['tags'] ) ) {
+					$existing_tags = $contact['contact']['tags'];
+					error_log( '🏷️ GHL CRM UserHooks: Existing tags from GHL: ' . implode( ', ', $existing_tags ) );
+				}
+			} catch ( \Exception $e ) {
+				error_log( '⚠️ GHL CRM UserHooks: Failed to fetch existing tags: ' . $e->getMessage() );
+			}
+		}
+		
+		// Handle role-based tags
+		$role_tags_manager = RoleTagsManager::get_instance();
+		$settings = $this->settings_manager->get_settings_array();
+		$role_tags_config = $settings['role_tags'] ?? [];
+		
+		// If role changed, remove old role tags (if configured)
+		$tags_to_remove = [];
+		if ( $role_changed ) {
+			foreach ( $old_roles as $old_role ) {
+				$old_role_config = $role_tags_config[ $old_role ] ?? [];
+				if ( ! empty( $old_role_config['remove_on_change'] ) && ! empty( $old_role_config['tags'] ) ) {
+					$old_tags = is_array( $old_role_config['tags'] ) ? $old_role_config['tags'] : explode( ',', $old_role_config['tags'] );
+					$old_tags = array_map( 'trim', $old_tags );
+					$tags_to_remove = array_merge( $tags_to_remove, $old_tags );
+					error_log( '🏷️ GHL CRM UserHooks: Will remove tags from old role ' . $old_role . ': ' . implode( ', ', $old_tags ) );
+				}
+			}
+		}
+		
+		// Get new role-based tags
+		$role_based_tags = $role_tags_manager->get_user_role_tags( $user_id );
+		
+		// Remove old role tags from existing tags
+		if ( ! empty( $tags_to_remove ) ) {
+			$existing_tags = array_diff( $existing_tags, $tags_to_remove );
+			error_log( '🏷️ GHL CRM UserHooks: Existing tags after removal: ' . implode( ', ', $existing_tags ) );
+		}
+		
+		// Merge: existing tags (minus removed) + new role tags
+		$all_tags = array_unique( array_merge( $existing_tags, $role_based_tags ) );
+		
+		error_log( '🏷️ GHL CRM UserHooks: Final merged tags: ' . implode( ', ', $all_tags ) );
+		
+		if ( ! empty( $all_tags ) ) {
+			$contact_data['tags'] = $all_tags;
+		}
+		
 		// Queue for async processing
 		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
 		$queue_manager->add_to_queue( 'user', $user_id, 'profile_update', $contact_data );
