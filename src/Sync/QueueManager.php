@@ -13,6 +13,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Manages async queue for all integrations (Users, WooCommerce, BuddyBoss, LearnDash)
  * Fully multisite-compatible with per-site queues
  *
+ * REFACTORED: Now uses helper classes for separation of concerns
+ * - RateLimiter: Handle API rate limiting
+ * - ContactCache: Handle contact caching
+ * - QueueProcessor: Handle sync execution
+ * - QueueLogger: Handle logging
+ *
  * @package    GHL_CRM_Integration
  * @subpackage Sync
  */
@@ -28,18 +34,39 @@ class QueueManager {
 	private const BATCH_SIZE = 50;
 
 	/**
-	 * GHL API Rate Limits (per location)
-	 */
-	private const RATE_LIMIT_BURST        = 100; // Max requests per 10 seconds
-	private const RATE_LIMIT_BURST_WINDOW = 10; // Seconds
-	private const RATE_LIMIT_DAILY        = 200000; // Max requests per day
-
-	/**
 	 * Singleton instance
 	 *
 	 * @var self|null
 	 */
 	private static ?self $instance = null;
+
+	/**
+	 * Rate limiter instance
+	 *
+	 * @var RateLimiter
+	 */
+	private RateLimiter $rate_limiter;
+
+	/**
+	 * Contact cache instance
+	 *
+	 * @var ContactCache
+	 */
+	private ContactCache $contact_cache;
+
+	/**
+	 * Queue processor instance
+	 *
+	 * @var QueueProcessor
+	 */
+	private QueueProcessor $processor;
+
+	/**
+	 * Logger instance
+	 *
+	 * @var QueueLogger
+	 */
+	private QueueLogger $logger;
 
 	/**
 	 * Get instance
@@ -55,8 +82,14 @@ class QueueManager {
 
 	/**
 	 * Private constructor
+	 * Initialize helper class dependencies
 	 */
 	private function __construct() {
+		$this->rate_limiter  = RateLimiter::get_instance();
+		$this->contact_cache = ContactCache::get_instance();
+		$this->processor     = QueueProcessor::get_instance();
+		$this->logger        = QueueLogger::get_instance();
+		
 		$this->init_hooks();
 	}
 
@@ -400,9 +433,10 @@ class QueueManager {
 			$start_time = microtime( true );
 			error_log( '⏱️ GHL CRM: Start time: ' . $start_time );
 
-			// Check rate limits before processing
+			// Check rate limits before processing (using RateLimiter helper)
 			error_log( '🔍 GHL CRM: Checking rate limits...' );
-			$rate_ok = $this->check_rate_limits();
+			$location_id = $this->get_ghl_location_id();
+			$rate_ok = $location_id ? $this->rate_limiter->check_limits( $location_id ) : true;
 			error_log( '🔍 GHL CRM: Rate limit check returned: ' . ( $rate_ok ? 'TRUE' : 'FALSE' ) );
 			
 			if ( ! $rate_ok ) {
@@ -456,11 +490,14 @@ class QueueManager {
 				}
 			} );
 			
-			$result = $this->execute_sync( $item->item_type, $item->action, (int) $item->item_id, $payload );
+			// Execute sync using QueueProcessor helper
+			$result = $this->processor->execute_sync( $item->item_type, $item->action, (int) $item->item_id, $payload );
 			error_log( '📊 GHL CRM: execute_sync() returned: ' . ( $result ? 'TRUE' : 'FALSE' ) );
 
-			// Track API request
-			$this->track_api_request();
+			// Track API request using RateLimiter helper
+			if ( $location_id ) {
+				$this->rate_limiter->track_request( $location_id );
+			}
 
 			if ( $result ) {
 				error_log( '✅ GHL CRM: Sync successful, marking as completed' );
@@ -498,8 +535,8 @@ class QueueManager {
 					[ '%d' ]
 				);
 
-				// Log success with full request/response data
-				$this->log_sync_event(
+				// Log success with full request/response data (using QueueLogger helper)
+				$this->logger->log_event(
 					(int) $item->item_id,
 					$item->action,
 					'success',
@@ -518,8 +555,8 @@ class QueueManager {
 			error_log( '❌ Exception File: ' . $e->getFile() . ':' . $e->getLine() );
 			error_log( '❌ Stack Trace: ' . $e->getTraceAsString() );
 			
-			// Check if it's a rate limit error
-			if ( $this->is_rate_limit_error( $e ) ) {
+			// Check if it's a rate limit error (using RateLimiter helper)
+			if ( $this->rate_limiter->is_rate_limit_error( $e ) ) {
 				// Don't increment attempts for rate limit errors
 				// Reset attempt counter so it will retry
 				$wpdb->update(
@@ -569,8 +606,8 @@ class QueueManager {
 				$item->attempts,
 				$e->getMessage()
 			) );
-		}			// Log error with request data
-			$this->log_sync_event(
+		}			// Log error with request data (using QueueLogger helper)
+			$this->logger->log_event(
 				(int) $item->item_id,
 				$item->action,
 				'error',
@@ -584,376 +621,31 @@ class QueueManager {
 	}
 
 	/**
-	 * Execute sync action
+	 * ============================================================
+	 * REFACTORING COMPLETE
+	 * ============================================================
+	 * The following methods have been extracted to helper classes
+	 * for better separation of concerns and maintainability:
 	 *
-	 * @param string $item_type Item type
-	 * @param string $action    Action
-	 * @param int    $item_id   Item ID
-	 * @param array  $payload   Payload data
-	 * @return bool Success status
-	 * @throws \Exception
-	 */
-	/**
-	 * Execute sync operation
-	 * 
-	 * @param string $item_type Item type
-	 * @param string $action Action
-	 * @param int $item_id Item ID
-	 * @param array $payload Payload data
-	 * @return array|bool API response array on success, false on failure
-	 * @throws \Exception
-	 */
-	private function execute_sync( string $item_type, string $action, int $item_id, array $payload ) {
-		error_log( '🔧 GHL CRM: execute_sync() ENTERED - Type: ' . $item_type . ', Action: ' . $action . ', ID: ' . $item_id );
-		
-		try {
-			// Route to appropriate integration handler
-			switch ( $item_type ) {
-				case 'user':
-					return $this->execute_user_sync( $action, $item_id, $payload );
-
-				case 'order':
-					// Future: WooCommerce order sync
-					return apply_filters( 'ghl_crm_execute_order_sync', false, $action, $item_id, $payload );
-
-				case 'group':
-					// Future: BuddyBoss group sync
-					return apply_filters( 'ghl_crm_execute_group_sync', false, $action, $item_id, $payload );
-
-				case 'course':
-					// Future: LearnDash course sync
-					return apply_filters( 'ghl_crm_execute_course_sync', false, $action, $item_id, $payload );
-
-				default:
-					// Allow third-party extensions
-					return apply_filters( 'ghl_crm_execute_sync', false, $item_type, $action, $item_id, $payload );
-			}
-		} catch ( \Exception $e ) {
-			error_log( '❌ GHL CRM: execute_sync() EXCEPTION: ' . $e->getMessage() );
-			throw $e;
-		}
-	}
-
-	/**
-	 * Execute user sync
+	 * QueueProcessor (src/Sync/QueueProcessor.php):
+	 * - execute_sync()
+	 * - execute_user_sync()
+	 * - execute_contact_sync()
 	 *
-	 * @param string $action  Action
-	 * @param int    $user_id User ID
-	 * @param array  $payload Payload data
-	 * @return array|bool API response array on success, false on failure
-	 * @throws \Exception
-	 */
-private function execute_user_sync( string $action, int $user_id, array $payload ) {
-	error_log( '👤 GHL CRM: execute_user_sync() START - Action: ' . $action . ', User ID: ' . $user_id );
-	try {
-		error_log( '📡 GHL CRM: Getting Client instance...' );
-		$client = \GHL_CRM\API\Client\Client::get_instance();
-		error_log( '📦 GHL CRM: Creating ContactResource...' );
-		$contact_resource = new \GHL_CRM\API\Resources\ContactResource( $client );
-		error_log( '✅ GHL CRM: Client and ContactResource ready' );
-
-		switch ( $action ) {
-	case 'user_register':
-		case 'profile_update':
-			error_log( '🔄 GHL CRM: Register/Update for: ' . ( $payload['email'] ?? 'no-email' ) );
-			
-			// Get location ID
-			$location_id = $this->get_ghl_location_id();
-			if ( empty( $location_id ) ) {
-				error_log( '❌ No location ID configured' );
-				return false;
-			}
-			
-			$cached_contact = $this->get_cached_contact( $payload['email'] ?? '' );
-
-			if ( $cached_contact ) {
-				error_log( '💾 Using cached contact ID: ' . $cached_contact['id'] );
-				$result = $contact_resource->update( $cached_contact['id'], $payload );
-			} else {
-				error_log( '🔍 Searching for existing contact by email...' );
-				$email = $payload['email'] ?? '';
-				$existing = $client->get( 'contacts/', [ 'query' => $email ] );
-				if ( ! empty( $existing['contacts'][0] ) ) {
-					$contact = $existing['contacts'][0];
-					error_log( '✅ Found existing contact ID: ' . $contact['id'] );
-					$this->cache_contact( $payload['email'], $contact );
-					$result = $contact_resource->update( $contact['id'], $payload );
-				} else {
-					error_log( '🆕 Creating new contact via direct POST...' );
-					// POST to /contacts/ with locationId in the body
-					$result = $client->post( 'contacts/', array_merge( $payload, [ 'locationId' => $location_id ] ) );
-					if ( $result && isset( $result['contact']['id'] ) ) {
-						error_log( '✅ Contact created with ID: ' . $result['contact']['id'] );
-						$this->cache_contact( $payload['email'], $result['contact'] );
-					}
-				}
-			}
-			error_log( '✅ Register/Update completed: ' . ( ! empty( $result ) ? 'SUCCESS' : 'FAILED' ) );
-			return ! empty( $result ) ? $result : false;			case 'delete_user':
-				error_log( '🗑️ Deleting user...' );
-				if ( ! empty( $payload['delete'] ) ) {
-					$email = $payload['email'] ?? '';
-					$existing = $client->get( 'contacts/', [ 'query' => $email ] );
-					if ( ! empty( $existing['contacts'][0]['id'] ) ) {
-						$result = $contact_resource->delete( $existing['contacts'][0]['id'] );
-						$this->delete_cached_contact( $payload['email'] );
-						error_log( '✅ Contact deleted' );
-						return [ 'deleted' => true, 'contact_id' => $existing['contacts'][0]['id'] ];
-					}
-				}
-				return [ 'deleted' => false, 'message' => 'Contact not found or delete flag not set' ];
-
-			case 'user_login':
-				error_log( '🔐 User login - updating last_login for: ' . ( $payload['email'] ?? 'no-email' ) );
-				$contact = $this->get_cached_contact( $payload['email'] ?? '' );
-				if ( ! $contact ) {
-					$email = urlencode( $payload['email'] ?? '' );
-					$existing = $client->get( 'contacts?query=' . $email );
-					if ( ! empty( $existing['contacts'][0] ) ) {
-						$contact = $existing['contacts'][0];
-						error_log( '✅ Found contact ID: ' . $contact['id'] );
-						$this->cache_contact( $payload['email'], $contact );
-					}
-				}
-				if ( $contact ) {
-					error_log( '📝 Updating last_login for contact ID: ' . $contact['id'] );
-					$result = $contact_resource->update( $contact['id'], [
-						'customFields' => [ 'last_login' => $payload['last_login'] ?? current_time( 'mysql' ) ],
-					] );
-					error_log( '✅ Last login updated: ' . ( ! empty( $result ) ? 'SUCCESS' : 'FAILED' ) );
-					return ! empty( $result ) ? $result : false;
-				}
-				error_log( '⚠️ No contact found, returning false' );
-				return false;
-
-			default:
-				error_log( '❌ Unknown action: ' . $action );
-				throw new \Exception( 'Unknown user action: ' . $action );
-		}
-	} catch ( \Exception $e ) {
-		error_log( '❌ execute_user_sync() EXCEPTION: ' . $e->getMessage() );
-		error_log( '📚 Stack trace: ' . $e->getTraceAsString() );
-		throw $e;
-	}
-}
-
-
-	/**
-	 * Check if rate limits allow processing
-	 * Checks both burst limit (100 per 10 sec) and daily limit (200k per day)
-	 * Tracks by GHL location ID so multiple sites sharing same account share limits
+	 * RateLimiter (src/Sync/RateLimiter.php):
+	 * - check_rate_limits() → check_limits()
+	 * - track_api_request() → track_request()
+	 * - is_rate_limit_error()
 	 *
-	 * @return bool True if under limits, false if exceeded
-	 */
-	private function check_rate_limits(): bool {
-		$location_id = $this->get_ghl_location_id();
-		if ( empty( $location_id ) ) {
-			// No location ID configured, allow processing but log warning
-			error_log( 'GHL CRM: No location ID configured for site ' . get_current_blog_id() );
-			return true;
-		}
-
-		// Check burst limit (100 requests per 10 seconds) - shared across sites with same location
-		$burst_key   = 'ghl_rate_burst_' . md5( $location_id );
-		$burst_data  = get_site_transient( $burst_key );
-		$burst_count = $burst_data ? (int) $burst_data : 0;
-
-		if ( $burst_count >= self::RATE_LIMIT_BURST ) {
-			error_log(
-				sprintf(
-					'GHL CRM Burst Rate Limit Hit [Location %s, Site %d]: %d/%d requests in 10 seconds',
-					$location_id,
-					get_current_blog_id(),
-					$burst_count,
-					self::RATE_LIMIT_BURST
-				)
-			);
-			return false;
-		}
-
-		// Check daily limit (200,000 requests per day) - shared across sites with same location
-		$daily_key   = 'ghl_rate_daily_' . md5( $location_id ) . '_' . gmdate( 'Y-m-d' );
-		$daily_data  = get_site_transient( $daily_key );
-		$daily_count = $daily_data ? (int) $daily_data : 0;
-
-		if ( $daily_count >= self::RATE_LIMIT_DAILY ) {
-			error_log(
-				sprintf(
-					'GHL CRM Daily Rate Limit Hit [Location %s, Site %d]: %d/%d requests today',
-					$location_id,
-					get_current_blog_id(),
-					$daily_count,
-					self::RATE_LIMIT_DAILY
-				)
-			);
-			return false;
-		}
-
-		return true;
-	}
-
-	/**
-	 * Track API request for rate limiting
-	 * Increments both burst and daily counters
-	 * Tracks by GHL location ID so multiple sites sharing same account share limits
+	 * ContactCache (src/Sync/ContactCache.php):
+	 * - get_cached_contact() → get()
+	 * - cache_contact() → set()
+	 * - delete_cached_contact() → delete()
 	 *
-	 * @return void
+	 * QueueLogger (src/Sync/QueueLogger.php):
+	 * - log_sync_event() → log_event()
+	 * ============================================================
 	 */
-	private function track_api_request(): void {
-		$location_id = $this->get_ghl_location_id();
-		if ( empty( $location_id ) ) {
-			return; // Skip tracking if no location ID
-		}
-
-		// Track burst (10 second window) - shared across all sites with same location
-		$burst_key   = 'ghl_rate_burst_' . md5( $location_id );
-		$burst_data  = get_site_transient( $burst_key );
-		$burst_count = $burst_data ? (int) $burst_data : 0;
-		set_site_transient( $burst_key, $burst_count + 1, self::RATE_LIMIT_BURST_WINDOW );
-
-		// Track daily (24 hour window) - shared across all sites with same location
-		$daily_key   = 'ghl_rate_daily_' . md5( $location_id ) . '_' . gmdate( 'Y-m-d' );
-		$daily_data  = get_site_transient( $daily_key );
-		$daily_count = $daily_data ? (int) $daily_data : 0;
-
-		// Set expiry to end of day
-		$end_of_day = strtotime( 'tomorrow midnight' ) - time();
-		set_site_transient( $daily_key, $daily_count + 1, $end_of_day );
-	}
-
-	/**
-	 * Check if exception is a rate limit error
-	 *
-	 * @param \Exception $e Exception to check
-	 * @return bool True if rate limit error
-	 */
-	private function is_rate_limit_error( \Exception $e ): bool {
-		$message = strtolower( $e->getMessage() );
-
-		// Check for common rate limit indicators
-		return strpos( $message, 'rate limit' ) !== false
-			|| strpos( $message, 'too many requests' ) !== false
-			|| strpos( $message, '429' ) !== false
-			|| ( $e instanceof \GHL_CRM\API\Exceptions\RateLimitException );
-	}
-
-	/**
-	 * Get cached contact (using transients)
-	 *
-	 * @param string $email Email address
-	 * @return array|null Contact data or null if not cached
-	 */
-	private function get_cached_contact( string $email ): ?array {
-		if ( empty( $email ) ) {
-			return null;
-		}
-
-		$cache_key = 'ghl_contact_' . md5( strtolower( $email ) );
-		$cached    = get_transient( $cache_key );
-
-		return $cached ? $cached : null;
-	}
-
-	/**
-	 * Cache contact data (using transients)
-	 *
-	 * @param string $email   Email address
-	 * @param array  $contact Contact data
-	 * @return bool Success status
-	 */
-	private function cache_contact( string $email, array $contact ): bool {
-		if ( empty( $email ) || empty( $contact ) ) {
-			return false;
-		}
-
-		$cache_key = 'ghl_contact_' . md5( strtolower( $email ) );
-		return set_transient( $cache_key, $contact, 15 * MINUTE_IN_SECONDS );
-	}
-
-	/**
-	 * Delete cached contact
-	 *
-	 * @param string $email Email address
-	 * @return bool Success status
-	 */
-	private function delete_cached_contact( string $email ): bool {
-		if ( empty( $email ) ) {
-			return false;
-		}
-
-		$cache_key = 'ghl_contact_' . md5( strtolower( $email ) );
-		return delete_transient( $cache_key );
-	}
-
-	/**
-	 * Log sync event to database
-	 * Multisite-aware: Uses current site's table
-	 *
-	 * @param int         $user_id        User ID
-	 * @param string      $action         Action
-	 * @param string      $status         Status (success/error)
-	 * @param string|null $contact_id     Contact ID
-	 * @param array|null  $request_data   Request payload sent to API
-	 * @param array|null  $response_data  Response received from API
-	 * @param string|null $error_message  Error message
-	 * @param float|null  $execution_time Execution time in seconds
-	 * @return void
-	 */
-	private function log_sync_event(
-		int $user_id,
-		string $action,
-		string $status,
-		?string $contact_id = null,
-		?array $request_data = null,
-		?array $response_data = null,
-		?string $error_message = null,
-		?float $execution_time = null
-	): void {
-		global $wpdb;
-
-		$table_name = $this->get_log_table_name();
-
-		$wpdb->insert(
-			$table_name,
-			[
-				'user_id'        => $user_id,
-				'action'         => $action,
-				'status'         => $status,
-				'contact_id'     => $contact_id,
-				'request_data'   => ! empty( $request_data ) ? wp_json_encode( $request_data ) : null,
-				'response_data'  => ! empty( $response_data ) ? wp_json_encode( $response_data ) : null,
-				'error_message'  => $error_message,
-				'execution_time' => $execution_time,
-				'created_at'     => current_time( 'mysql' ),
-				'site_id'        => get_current_blog_id(),
-			],
-			[
-				'%d',
-				'%s',
-				'%s',
-				'%s',
-				'%s',
-				'%s',
-				'%s',
-				'%f',
-				'%s',
-				'%d',
-			]
-		);
-
-		// Also log errors to error_log
-		if ( 'error' === $status ) {
-			error_log(
-				sprintf(
-					'GHL CRM Sync Error [Site %d]: User %d, Action %s, Message: %s',
-					get_current_blog_id(),
-					$user_id,
-					$action,
-					$error_message ?? 'Unknown error'
-				)
-			);
-		}
-	}
 
 	/**
 	 * Get queue status
@@ -1054,7 +746,7 @@ private function execute_user_sync( string $action, int $user_id, array $payload
 	}
 
 	/**
-	 * Get rate limit status
+	 * Get rate limit status (using RateLimiter helper)
 	 *
 	 * @return array Rate limit statistics
 	 */
@@ -1063,16 +755,16 @@ private function execute_user_sync( string $action, int $user_id, array $payload
 		if ( empty( $location_id ) ) {
 			return [
 				'burst'     => [
-					'limit'     => self::RATE_LIMIT_BURST,
+					'limit'     => 100,
 					'used'      => 0,
-					'remaining' => self::RATE_LIMIT_BURST,
+					'remaining' => 100,
 					'percent'   => 0,
-					'window'    => self::RATE_LIMIT_BURST_WINDOW . ' seconds',
+					'window'    => '10 seconds',
 				],
 				'daily'     => [
-					'limit'     => self::RATE_LIMIT_DAILY,
+					'limit'     => 200000,
 					'used'      => 0,
-					'remaining' => self::RATE_LIMIT_DAILY,
+					'remaining' => 200000,
 					'percent'   => 0,
 					'resets_at' => gmdate( 'Y-m-d H:i:s', strtotime( 'tomorrow midnight' ) ),
 				],
@@ -1082,41 +774,8 @@ private function execute_user_sync( string $action, int $user_id, array $payload
 			];
 		}
 
-		// Burst limit status (shared across sites with same location)
-		$burst_key       = 'ghl_rate_burst_' . md5( $location_id );
-		$burst_data      = get_site_transient( $burst_key );
-		$burst_count     = $burst_data ? (int) $burst_data : 0;
-		$burst_remaining = max( 0, self::RATE_LIMIT_BURST - $burst_count );
-
-		// Daily limit status (shared across sites with same location)
-		$daily_key       = 'ghl_rate_daily_' . md5( $location_id ) . '_' . gmdate( 'Y-m-d' );
-		$daily_data      = get_site_transient( $daily_key );
-		$daily_count     = $daily_data ? (int) $daily_data : 0;
-		$daily_remaining = max( 0, self::RATE_LIMIT_DAILY - $daily_count );
-
-		// Calculate percentages
-		$burst_percent = ( $burst_count / self::RATE_LIMIT_BURST ) * 100;
-		$daily_percent = ( $daily_count / self::RATE_LIMIT_DAILY ) * 100;
-
-		return [
-			'burst'     => [
-				'limit'     => self::RATE_LIMIT_BURST,
-				'used'      => $burst_count,
-				'remaining' => $burst_remaining,
-				'percent'   => round( $burst_percent, 2 ),
-				'window'    => self::RATE_LIMIT_BURST_WINDOW . ' seconds',
-			],
-			'daily'     => [
-				'limit'     => self::RATE_LIMIT_DAILY,
-				'used'      => $daily_count,
-				'remaining' => $daily_remaining,
-				'percent'   => round( $daily_percent, 2 ),
-				'resets_at' => gmdate( 'Y-m-d H:i:s', strtotime( 'tomorrow midnight' ) ),
-			],
-			'throttled' => $burst_count >= self::RATE_LIMIT_BURST || $daily_count >= self::RATE_LIMIT_DAILY,
-			'location_id' => $location_id,
-			'shared_across_sites' => is_multisite(),
-		];
+		// Use RateLimiter helper to get status
+		return $this->rate_limiter->get_status( $location_id );
 	}
 
 	/**
