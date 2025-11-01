@@ -70,7 +70,7 @@
 				// Only handle if it's a settings tab (use centralized config)
 				const settingsTabs = (typeof ghlCrmSpaConfig !== 'undefined' && ghlCrmSpaConfig.settings) 
 					? ghlCrmSpaConfig.settings.tabs 
-					: ['general', 'api', 'rest-api', 'webhooks', 'notifications', 'field-sync', 'contact-fields', 'role-tags', 'advanced'];
+					: ['general', 'api', 'rest-api', 'webhooks', 'notifications', 'field-sync', 'role-tags', 'advanced', 'stats'];
 				if (settingsTabs.includes(hash)) {
 					loadSettingsTab(hash);
 					// Update active state

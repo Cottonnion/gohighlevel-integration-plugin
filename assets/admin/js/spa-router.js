@@ -44,7 +44,7 @@
             // Check if this is a settings tab hash (not a SPA view)
             const settingsTabs = (this.config.settings && this.config.settings.tabs) 
                 ? this.config.settings.tabs 
-                : ['general', 'api', 'rest-api', 'webhooks', 'notifications', 'field-sync', 'contact-fields', 'role-tags', 'advanced'];
+                : ['general', 'api', 'rest-api', 'webhooks', 'notifications', 'field-sync', 'role-tags', 'advanced', 'stats'];
             if (settingsTabs.includes(hash)) {
                 // This is a settings tab, first load settings view if not already loaded
                 console.log('Settings tab hash detected:', hash);

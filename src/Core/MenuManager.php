@@ -614,9 +614,9 @@ class MenuManager {
 			'webhooks',
 			'notifications',
 			'field-sync',
-			'contact-fields',
 			'role-tags',
 			'advanced',
+			'stats',
 		];
 	}
 

@@ -49,10 +49,6 @@ $settings_tabs = [
 		'label' => __( 'Field Sync', 'ghl-crm-integration' ),
 		'icon'  => 'fa-solid fa-arrows-rotate',
 	],
-	'contact-fields' => [
-		'label' => __( 'Custom Contact Fields', 'ghl-crm-integration' ),
-		'icon'  => 'fa-solid fa-id-card',
-	],
 	'role-tags' => [
 		'label' => __( 'Role Based Tags', 'ghl-crm-integration' ),
 		'icon'  => 'fa-solid fa-tags',
@@ -60,6 +56,10 @@ $settings_tabs = [
 	'advanced' => [
 		'label' => __( 'Advanced', 'ghl-crm-integration' ),
 		'icon'  => 'fa-solid fa-screwdriver-wrench',
+	],
+	'stats' => [
+		'label' => __( 'System Status', 'ghl-crm-integration' ),
+		'icon'  => 'fa-solid fa-circle-info',
 	],
 ];
 

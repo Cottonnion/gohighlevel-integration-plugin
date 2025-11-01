@@ -97,7 +97,7 @@
             // Check if this is a settings tab - if so, treat as settings view
             const settingsTabs = (typeof ghlCrmSpaConfig !== 'undefined' && ghlCrmSpaConfig.settings) 
                 ? ghlCrmSpaConfig.settings.tabs 
-                : ['general', 'api', 'rest-api', 'webhooks', 'notifications', 'field-sync', 'contact-fields', 'role-tags', 'advanced'];
+                : ['general', 'api', 'rest-api', 'webhooks', 'notifications', 'field-sync', 'role-tags', 'advanced', 'stats'];
             
             if (settingsTabs.includes(hash)) {
                 hash = 'settings'; // Treat all settings tabs as the settings view for menu highlighting
