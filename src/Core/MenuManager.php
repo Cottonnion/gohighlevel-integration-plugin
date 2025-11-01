@@ -616,6 +616,7 @@ class MenuManager {
 			'field-sync',
 			'role-tags',
 			'advanced',
+			'tools',
 			'stats',
 		];
 	}

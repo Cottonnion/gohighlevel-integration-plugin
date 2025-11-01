@@ -57,6 +57,10 @@ $settings_tabs = [
 		'label' => __( 'Advanced', 'ghl-crm-integration' ),
 		'icon'  => 'fa-solid fa-screwdriver-wrench',
 	],
+	'tools' => [
+		'label' => __( 'Tools', 'ghl-crm-integration' ),
+		'icon'  => 'fa-solid fa-toolbox',
+	],
 	'stats' => [
 		'label' => __( 'System Status', 'ghl-crm-integration' ),
 		'icon'  => 'fa-solid fa-circle-info',
