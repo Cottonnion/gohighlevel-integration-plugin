@@ -16,14 +16,27 @@ $settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 $settings = $settings_manager->get_settings_array();
 ?>
 
-<div class="ghl-settings-section">
-	<h2><?php esc_html_e( 'Advanced Settings', 'ghl-crm-integration' ); ?></h2>
+<div class="ghl-settings-wrapper">
+	<?php wp_nonce_field( 'ghl_crm_settings_nonce', 'ghl_crm_nonce' ); ?>
 	
-	<form id="ghl-advanced-settings-form" method="post">
-		<?php wp_nonce_field( 'ghl_crm_advanced_settings', 'ghl_advanced_nonce' ); ?>
+	<!-- Performance & Caching Section -->
+	<div class="ghl-settings-section ghl-settings-card">
+		<div class="ghl-settings-header">
+			<h2>
+				<span class="dashicons dashicons-performance"></span>
+				<?php esc_html_e( 'Performance & Caching', 'ghl-crm-integration' ); ?>
+			</h2>
+			<p class="description">
+				<?php esc_html_e( 'Configure caching, batch processing, and data retention to optimize plugin performance.', 'ghl-crm-integration' ); ?>
+			</p>
+		</div>
 		
-		<table class="form-table" role="presentation">
-			<tbody>
+		<hr>
+		
+		<div class="ghl-form-builder">
+			<form class="ghl-form" method="post">
+				<table class="form-table" role="presentation">
+					<tbody>
 				<tr>
 					<th scope="row">
 						<label for="cache_duration">
@@ -68,33 +81,61 @@ $settings = $settings_manager->get_settings_array();
 				
 				<tr>
 					<th scope="row">
-						<?php esc_html_e( 'Data Management', 'ghl-crm-integration' ); ?>
+						<label for="log_retention_days">
+							<?php esc_html_e( 'Log Retention Period', 'ghl-crm-integration' ); ?>
+						</label>
 					</th>
 					<td>
-						<button type="button" class="button button-secondary" id="clear-cache-btn">
-							<?php esc_html_e( 'Clear Cache', 'ghl-crm-integration' ); ?>
-						</button>
+						<input type="number" 
+							   id="log_retention_days" 
+							   name="log_retention_days" 
+							   value="<?php echo esc_attr( $settings['log_retention_days'] ?? 30 ); ?>" 
+							   min="1"
+							   max="365"
+							   class="small-text">
+						<span><?php esc_html_e( 'days', 'ghl-crm-integration' ); ?></span>
 						<p class="description">
-							<?php esc_html_e( 'Clear all cached API responses.', 'ghl-crm-integration' ); ?>
-						</p>
-						
-						<br><br>
-						
-						<button type="button" class="button button-secondary" id="reset-settings-btn">
-							<?php esc_html_e( 'Reset to Defaults', 'ghl-crm-integration' ); ?>
-						</button>
-						<p class="description">
-							<?php esc_html_e( 'Reset all plugin settings to default values (OAuth connection will be preserved).', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'Number of days to keep sync logs and completed queue items before automatic cleanup.', 'ghl-crm-integration' ); ?>
 						</p>
 					</td>
 				</tr>
-			</tbody>
-		</table>
-		
-		<p class="submit">
-			<button type="submit" class="button button-primary">
-				<?php esc_html_e( 'Save Advanced Settings', 'ghl-crm-integration' ); ?>
-			</button>
-		</p>
-	</form>
+				
+				<tr>
+					<th scope="row">
+						<label><?php esc_html_e( 'Data Management', 'ghl-crm-integration' ); ?></label>
+					</th>
+					<td>
+						<div style="margin-bottom: 15px;">
+							<button type="button" class="ghl-button ghl-button-secondary" id="clear-cache-btn">
+								<span class="dashicons dashicons-trash"></span>
+								<?php esc_html_e( 'Clear Cache', 'ghl-crm-integration' ); ?>
+							</button>
+							<p class="description">
+								<?php esc_html_e( 'Clear all cached API responses and contact data.', 'ghl-crm-integration' ); ?>
+							</p>
+						</div>
+						
+						<div>
+							<button type="button" class="ghl-button ghl-button-secondary" id="reset-settings-btn">
+								<span class="dashicons dashicons-image-rotate"></span>
+								<?php esc_html_e( 'Reset to Defaults', 'ghl-crm-integration' ); ?>
+							</button>
+							<p class="description">
+								<?php esc_html_e( 'Reset all plugin settings to default values (OAuth connection will be preserved).', 'ghl-crm-integration' ); ?>
+							</p>
+						</div>
+					</td>
+				</tr>
+					</tbody>
+				</table>
+			</form>
+		</div>
+
+		<hr>
+
+		<!-- Save Button -->
+		<button type="button" id="save-advanced-settings" class="ghl-button ghl-button-primary ghl-save-settings-btn">
+			<span class="ghl-button-text"><?php esc_html_e( 'Save Advanced Settings', 'ghl-crm-integration' ); ?></span>
+		</button>
+	</div>
 </div>
