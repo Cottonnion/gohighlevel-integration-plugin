@@ -12,15 +12,16 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Handles caching of GHL contact data using WordPress transients
  * Reduces API calls by caching contact lookups
+ * Cache duration is configurable via settings
  *
  * @package    GHL_CRM_Integration
  * @subpackage Sync
  */
 class ContactCache {
 	/**
-	 * Cache TTL (15 minutes)
+	 * Default cache TTL (15 minutes)
 	 */
-	private const CACHE_TTL = 15 * MINUTE_IN_SECONDS;
+	private const DEFAULT_CACHE_TTL = 15 * MINUTE_IN_SECONDS;
 
 	/**
 	 * Singleton instance
@@ -46,6 +47,19 @@ class ContactCache {
 	 */
 	private function __construct() {
 		// Intentionally empty
+	}
+
+	/**
+	 * Get cache TTL from settings
+	 *
+	 * @return int Cache duration in seconds
+	 */
+	private function get_cache_ttl(): int {
+		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$cache_duration   = absint( $settings_manager->get_setting( 'cache_duration', self::DEFAULT_CACHE_TTL ) );
+		
+		// If set to 0, disable caching
+		return max( 0, min( 86400, $cache_duration ) ); // Clamp between 0-86400 (24 hours)
 	}
 
 	/**
@@ -77,8 +91,15 @@ class ContactCache {
 			return false;
 		}
 
+		$cache_ttl = $this->get_cache_ttl();
+		
+		// If caching is disabled (0), don't cache
+		if ( 0 === $cache_ttl ) {
+			return true; // Return true but don't cache
+		}
+
 		$cache_key = $this->get_cache_key( $email );
-		return set_transient( $cache_key, $contact, self::CACHE_TTL );
+		return set_transient( $cache_key, $contact, $cache_ttl );
 	}
 
 	/**

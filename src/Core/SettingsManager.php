@@ -77,6 +77,8 @@ class SettingsManager {
 		add_action( 'wp_ajax_ghl_crm_get_tags', [ $this, 'get_tags' ] );
 		add_action( 'wp_ajax_ghl_crm_get_custom_fields', [ $this, 'get_custom_fields' ] );
 		add_action( 'wp_ajax_ghl_crm_manual_queue_trigger', [ $this, 'manual_queue_trigger' ] );
+		add_action( 'wp_ajax_ghl_crm_clear_cache', [ $this, 'clear_cache' ] );
+		add_action( 'wp_ajax_ghl_crm_reset_settings', [ $this, 'reset_settings' ] );
 	}
 
 	/**
@@ -995,6 +997,141 @@ class SettingsManager {
 						__( 'An unexpected error occurred while processing the queue: %s', 'ghl-crm-integration' ),
 						$throwable->getMessage()
 					),
+				],
+				500
+			);
+		}
+	}
+
+	/**
+	 * Clear cache via AJAX
+	 *
+	 * @return void
+	 */
+	public function clear_cache(): void {
+		// Verify nonce
+		check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce' );
+
+		// Check permissions
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to clear cache.', 'ghl-crm-integration' ),
+				],
+				403
+			);
+		}
+
+		// Clear all GHL CRM transients
+		global $wpdb;
+		$site_id = get_current_blog_id();
+		
+		// Delete contact cache transients
+		$wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$wpdb->options} 
+				WHERE option_name LIKE %s 
+				OR option_name LIKE %s",
+				$wpdb->esc_like( '_transient_ghl_contact_' ) . '%',
+				$wpdb->esc_like( '_transient_timeout_ghl_contact_' ) . '%'
+			)
+		);
+
+		// Delete rate limit transients
+		$wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$wpdb->options} 
+				WHERE option_name LIKE %s 
+				OR option_name LIKE %s",
+				$wpdb->esc_like( '_transient_ghl_rate_' ) . '%',
+				$wpdb->esc_like( '_transient_timeout_ghl_rate_' ) . '%'
+			)
+		);
+
+		// Clear object cache if available
+		if ( function_exists( 'wp_cache_flush' ) ) {
+			wp_cache_flush();
+		}
+
+		wp_send_json_success(
+			[
+				'message' => __( 'Cache cleared successfully!', 'ghl-crm-integration' ),
+			]
+		);
+	}
+
+	/**
+	 * Reset settings to defaults via AJAX
+	 * Preserves OAuth connection and manual API connection credentials
+	 *
+	 * @return void
+	 */
+	public function reset_settings(): void {
+		// Verify nonce
+		check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce' );
+
+		// Check permissions
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to reset settings.', 'ghl-crm-integration' ),
+				],
+				403
+			);
+		}
+
+		// Get current settings to preserve connection credentials
+		$current_settings = $this->get_settings_array();
+		
+		// Preserve ALL connection-related settings (OAuth + Manual API)
+		$preserved_credentials = [
+			// OAuth credentials
+			'oauth_access_token'   => $current_settings['oauth_access_token'] ?? '',
+			'oauth_refresh_token'  => $current_settings['oauth_refresh_token'] ?? '',
+			'oauth_expires_at'     => $current_settings['oauth_expires_at'] ?? '',
+			'oauth_token_type'     => $current_settings['oauth_token_type'] ?? '',
+			'oauth_location_id'    => $current_settings['oauth_location_id'] ?? '',
+			'oauth_company_id'     => $current_settings['oauth_company_id'] ?? '',
+			'oauth_user_type'      => $current_settings['oauth_user_type'] ?? '',
+			'oauth_connected_at'   => $current_settings['oauth_connected_at'] ?? '',
+			// Manual API connection credentials
+			'api_token'            => $current_settings['api_token'] ?? '',
+			'location_id'          => $current_settings['location_id'] ?? '',
+			'api_version'          => $current_settings['api_version'] ?? '2021-07-28',
+		];
+
+		// Default settings (everything except credentials)
+		$default_settings = [
+			'cache_duration'                => 3600,
+			'batch_size'                    => 50,
+			'log_retention_days'            => 30,
+			'enable_user_sync'              => false,
+			'user_sync_actions'             => [],
+			'delete_contact_on_user_delete' => false,
+			'user_field_mapping'            => [],
+			'role_tags'                     => [],
+			'restrictions_enabled'          => true,
+			'updated_at'                    => current_time( 'mysql' ),
+			'site_id'                       => get_current_blog_id(),
+		];
+
+		// Merge: defaults first, then preserved credentials (credentials take priority)
+		$settings = array_merge( $default_settings, $preserved_credentials );
+
+		// Use multisite-aware save method instead of direct update_option
+		$saved = $this->save_site_settings( $settings );
+
+		if ( $saved ) {
+			wp_send_json_success(
+				[
+					'message'  => __( 'Settings reset to defaults successfully! Your API connection has been preserved.', 'ghl-crm-integration' ),
+					'settings' => $settings,
+				]
+			);
+		} else {
+			wp_send_json_error(
+				[
+					'message' => __( 'Failed to reset settings. Please try again.', 'ghl-crm-integration' ),
 				],
 				500
 			);

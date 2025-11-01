@@ -308,6 +308,11 @@ class QueueManager {
 
 		error_log( '📊 GHL CRM: Processing queue for site ' . $current_site_id );
 
+		// Get batch size from settings via SettingsManager
+		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$batch_size       = absint( $settings_manager->get_setting( 'batch_size', self::BATCH_SIZE ) );
+		$batch_size       = max( 1, min( 500, $batch_size ) ); // Clamp between 1-500
+
 		// Clean up stale items first (stuck in processing for >5 minutes)
 		$this->cleanup_stale_items();
 
@@ -331,7 +336,7 @@ class QueueManager {
 			) );
 		}
 
-		// Get pending items for current site
+		// Get pending items for current site (using configured batch size)
 		$items = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT * FROM {$table_name} 
@@ -342,7 +347,7 @@ class QueueManager {
 				LIMIT %d",
 				$current_site_id,
 				self::MAX_ATTEMPTS,
-				self::BATCH_SIZE
+				$batch_size
 			)
 		);
 

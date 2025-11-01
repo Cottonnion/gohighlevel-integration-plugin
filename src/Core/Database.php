@@ -179,7 +179,7 @@ class Database {
 	/**
 	 * Clean up old records
 	 * Multisite-aware: Cleans current site's data
-	 * Aggressive cleanup to prevent database bloat
+	 * Uses configurable retention period from settings
 	 *
 	 * @return void
 	 */
@@ -189,6 +189,11 @@ class Database {
 		$sync_queue_table = $wpdb->prefix . 'ghl_sync_queue';
 		$sync_log_table   = $wpdb->prefix . 'ghl_sync_log';
 		$current_site_id  = get_current_blog_id();
+
+		// Get retention period from settings via SettingsManager (default: 30 days)
+		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$retention_days   = absint( $settings_manager->get_setting( 'log_retention_days', 30 ) );
+		$retention_hours  = max( 1, $retention_days * 24 ); // Convert to hours, minimum 1 hour
 
 		// Delete completed queue items older than 1 day (keep it lean)
 		$deleted_completed = $wpdb->query(
@@ -208,12 +213,12 @@ class Database {
 			)
 		);
 
-		// Delete logs older than 30 days
+		// Delete logs older than configured retention period
 		$deleted_logs = $wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$sync_log_table} WHERE site_id = %d AND created_at < %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 				$current_site_id,
-				gmdate( 'Y-m-d H:i:s', strtotime( '-30 days' ) )
+				gmdate( 'Y-m-d H:i:s', strtotime( "-{$retention_days} days" ) )
 			)
 		);
 
