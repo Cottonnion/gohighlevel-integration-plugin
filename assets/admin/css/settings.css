@@ -425,16 +425,49 @@
 	transform: translateY(0);
 }
 
-/* Button Secondary Variant */
+/* Button Secondary Variant - Modern Flat Design */
 .ghl-button-secondary {
-	background: var(--ghl-bg-primary);
-	color: var(--ghl-text-primary);
-	border: 1px solid var(--ghl-border-primary);
+	padding: 11px 22px;
+	border: none;
+	background: #edf2f7;
+	color: #2d3748;
+	border-radius: 6px;
+	font-size: 14px;
+	font-weight: 600;
+	letter-spacing: 0.3px;
+	transition: all 0.2s ease;
+	cursor: pointer;
 }
 
 .ghl-button-secondary:hover {
-	background: var(--ghl-bg-hover);
-	border-color: var(--ghl-border-secondary);
+	background: #e2e8f0;
+}
+
+.ghl-button-secondary:active {
+	background: #cbd5e0;
+}
+
+/* Button icon spacing (for dashicons) */
+.ghl-button .dashicons,
+.ghl-button-primary .dashicons,
+.ghl-button-secondary .dashicons,
+.ghl-button-success .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	margin-right: 6px;
+	vertical-align: middle;
+	margin-top: -2px;
+}
+
+/* WordPress native button with dashicons */
+.button.button-secondary .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	margin-right: 6px;
+	vertical-align: middle;
+	margin-top: -2px;
 }
 
 

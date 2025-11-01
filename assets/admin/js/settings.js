@@ -10,6 +10,33 @@
 	'use strict';
 
 	/**
+	 * Show notification message using SweetAlert2 toast
+	 */
+	function showNotice(message, type = 'success') {
+		if (typeof Swal !== 'undefined') {
+			const Toast = Swal.mixin({
+				toast: true,
+				position: 'top-end',
+				showConfirmButton: false,
+				timer: 3000,
+				timerProgressBar: true,
+				didOpen: (toast) => {
+					toast.addEventListener('mouseenter', Swal.stopTimer);
+					toast.addEventListener('mouseleave', Swal.resumeTimer);
+				}
+			});
+
+			Toast.fire({
+				icon: type === 'success' ? 'success' : 'error',
+				title: message
+			});
+		} else {
+			// Fallback to console if SweetAlert2 is not available
+			console.log(type + ': ' + message);
+		}
+	}
+
+	/**
 	 * Initialize settings functionality
 	 */
 	function initSettings() {
@@ -169,28 +196,6 @@
 		});
 		
 		/**
-		 * Show notification message using SweetAlert2 toast
-		 */
-		function showNotice(message, type = 'success') {
-			const Toast = Swal.mixin({
-				toast: true,
-				position: 'top-end',
-				showConfirmButton: false,
-				timer: 3000,
-				timerProgressBar: true,
-				didOpen: (toast) => {
-					toast.addEventListener('mouseenter', Swal.stopTimer);
-					toast.addEventListener('mouseleave', Swal.resumeTimer);
-				}
-			});
-
-			Toast.fire({
-				icon: type === 'success' ? 'success' : 'error',
-				title: message
-			});
-		}
-
-		/**
 		 * Test Connection via AJAX
 		 */
 		$('#ghl-test-connection').off('click.ghlSettings').on('click.ghlSettings', function () {
@@ -236,11 +241,153 @@
 	}
 
 	/**
+	 * Handle Clear Cache button click
+	 */
+	$(document).off('click.ghlClearCache', '#clear-cache-btn')
+		.on('click.ghlClearCache', '#clear-cache-btn', function(e) {
+		e.preventDefault();
+		
+		const $button = $(this);
+		const originalText = $button.text().trim();
+		
+		// Confirm action
+		if (typeof Swal !== 'undefined') {
+			Swal.fire({
+				title: 'Clear Cache?',
+				text: 'This will remove all cached API responses and contact data.',
+				icon: 'warning',
+				showCancelButton: true,
+				confirmButtonColor: '#635bff',
+				cancelButtonColor: '#6b7280',
+				confirmButtonText: 'Yes, clear it',
+				cancelButtonText: 'Cancel'
+			}).then((result) => {
+				if (result.isConfirmed) {
+					clearCache($button, originalText);
+				}
+			});
+		} else {
+			if (confirm('Are you sure you want to clear all cached data?')) {
+				clearCache($button, originalText);
+			}
+		}
+	});
+	
+	function clearCache($button, originalText) {
+		$button.prop('disabled', true).text('Clearing...');
+		
+		$.ajax({
+			url: ajaxurl,
+			type: 'POST',
+			data: {
+				action: 'ghl_crm_clear_cache',
+				nonce: $('#ghl_crm_nonce').val()
+			},
+			success: function(response) {
+				if (response.success) {
+					showNotice(response.data.message || 'Cache cleared successfully!', 'success');
+				} else {
+					showNotice(response.data.message || 'Failed to clear cache.', 'error');
+				}
+			},
+			error: function() {
+				showNotice('An error occurred while clearing cache.', 'error');
+			},
+			complete: function() {
+				$button.prop('disabled', false).text(originalText);
+			}
+		});
+	}
+	
+	/**
+	 * Handle Reset Settings button click
+	 */
+	$(document).off('click.ghlResetSettings', '#reset-settings-btn')
+		.on('click.ghlResetSettings', '#reset-settings-btn', function(e) {
+		e.preventDefault();
+		
+		const $button = $(this);
+		const originalText = $button.text().trim();
+		
+		// First confirmation
+		if (typeof Swal !== 'undefined') {
+			Swal.fire({
+				title: 'Reset Settings?',
+				html: 'This will reset all plugin settings to default values.<br><strong>Your OAuth connection will be preserved.</strong>',
+				icon: 'warning',
+				showCancelButton: true,
+				confirmButtonColor: '#ef4444',
+				cancelButtonColor: '#6b7280',
+				confirmButtonText: 'Yes, reset',
+				cancelButtonText: 'Cancel'
+			}).then((result) => {
+				if (result.isConfirmed) {
+					// Second confirmation
+					Swal.fire({
+						title: 'Are you absolutely sure?',
+						html: 'This action cannot be undone!<br><br>All custom settings will be lost:<br>• Cache duration<br>• Batch size<br>• Log retention<br>• User sync settings<br>• Field mappings<br>• Role tags<br><br><strong>Only OAuth connection will remain.</strong>',
+						icon: 'error',
+						showCancelButton: true,
+						confirmButtonColor: '#dc2626',
+						cancelButtonColor: '#6b7280',
+						confirmButtonText: 'Yes, I understand',
+						cancelButtonText: 'No, cancel',
+						reverseButtons: true
+					}).then((finalResult) => {
+						if (finalResult.isConfirmed) {
+							resetSettings($button, originalText);
+						}
+					});
+				}
+			});
+		} else {
+			// Fallback for browsers without SweetAlert2
+			if (confirm('Are you sure you want to reset all settings to defaults? Your OAuth connection will be preserved.')) {
+				if (confirm('Final confirmation: This action cannot be undone! All custom settings will be lost. Continue?')) {
+					resetSettings($button, originalText);
+				}
+			}
+		}
+	});
+	
+	function resetSettings($button, originalText) {
+		$button.prop('disabled', true).text('Resetting...');
+		
+		$.ajax({
+			url: ajaxurl,
+			type: 'POST',
+			data: {
+				action: 'ghl_crm_reset_settings',
+				nonce: $('#ghl_crm_nonce').val()
+			},
+			success: function(response) {
+				if (response.success) {
+					showNotice(response.data.message || 'Settings reset successfully!', 'success');
+					// Reload the page after 1 second to show updated values
+					setTimeout(function() {
+						window.location.reload();
+					}, 1000);
+				} else {
+					showNotice(response.data.message || 'Failed to reset settings.', 'error');
+				}
+			},
+			error: function() {
+				showNotice('An error occurred while resetting settings.', 'error');
+			},
+			complete: function() {
+				$button.prop('disabled', false).text(originalText);
+			}
+		});
+	}
+
+	/**
 	 * Cleanup function to remove all event handlers
 	 */
 	function cleanupSettings() {
 		$(document).off('.ghlSettings');
 		$(document).off('change.ghlCheckbox', '.ghl-checkbox-original');
+		$(document).off('click.ghlClearCache', '#clear-cache-btn');
+		$(document).off('click.ghlResetSettings', '#reset-settings-btn');
 		$('#ghl-test-connection').off('click.ghlSettings');
 		window.ghlSettingsInitialized = false;
 	}
