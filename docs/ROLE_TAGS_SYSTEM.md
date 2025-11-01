@@ -215,9 +215,10 @@ All role tag settings stored in `wp_options` table (or `wp_sitemeta` for multisi
 'global_tags' => 'wordpress, site-member',
 'registration_source_tag' => true,
 'woocommerce_customer_tag' => true,
-'sync_existing_tags' => true,
 'tag_prefix' => 'wp-',
 ```
+
+**Note:** The plugin always preserves existing GHL tags by default. When syncing, it fetches existing tags from GoHighLevel and merges them with WordPress-generated tags to prevent accidental deletion of manually added tags.
 
 ### User Meta
 

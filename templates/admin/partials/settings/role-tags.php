@@ -20,7 +20,6 @@ $role_tags = $settings['role_tags'] ?? [];
 $global_tags_raw = $settings['global_tags'] ?? [];
 // Convert array to comma-separated string for display, or keep as is if string
 $global_tags = is_array( $global_tags_raw ) ? implode( ',', $global_tags_raw ) : $global_tags_raw;
-$sync_existing_tags = $settings['sync_existing_tags'] ?? true;
 $tag_prefix = $settings['tag_prefix'] ?? '';
 ?>
 
@@ -154,32 +153,10 @@ $tag_prefix = $settings['tag_prefix'] ?? '';
 						<p class="description" style="margin-top: 8px;">
 							<?php esc_html_e( 'Tags to apply to all synced contacts regardless of role.', 'ghl-crm-integration' ); ?>
 						</p>
-					</td>
-				</tr>
-
-				<tr>
-					<th scope="row">
-						<label for="sync_existing_tags">
-							<?php esc_html_e( 'Preserve Existing Tags', 'ghl-crm-integration' ); ?>
-						</label>
-					</th>
-					<td>
-						<label class="ghl-checkbox <?php echo $sync_existing_tags ? 'is-checked' : ''; ?>">
-							<input type="checkbox" 
-								   class="ghl-checkbox-original"
-								   id="sync_existing_tags" 
-								   name="sync_existing_tags" 
-								   value="1"
-								   <?php checked( $sync_existing_tags ); ?>>
-							<span class="ghl-checkbox-input <?php echo $sync_existing_tags ? 'is-checked' : ''; ?>">
-								<span class="ghl-checkbox-inner"></span>
-							</span>
-							<span class="ghl-checkbox-label">
-								<?php esc_html_e( 'Keep existing GoHighLevel tags when syncing', 'ghl-crm-integration' ); ?>
-							</span>
-						</label>
-						<p class="description" style="margin-left: 40px; margin-top: 8px;">
-							<?php esc_html_e( 'When disabled, all existing tags will be replaced with role-based tags.', 'ghl-crm-integration' ); ?>
+						<p class="description" style="margin-top: 8px; padding: 10px; background: #f0f6fc; border-left: 3px solid #2271b1; border-radius: 3px;">
+							<span class="dashicons dashicons-info" style="color: #2271b1;"></span>
+							<strong><?php esc_html_e( 'Note:', 'ghl-crm-integration' ); ?></strong>
+							<?php esc_html_e( 'Global tags will be applied when users register, update their profile, or change roles. They are not applied immediately upon saving - use "Bulk Tag Operations" below to tag existing users.', 'ghl-crm-integration' ); ?>
 						</p>
 					</td>
 				</tr>
