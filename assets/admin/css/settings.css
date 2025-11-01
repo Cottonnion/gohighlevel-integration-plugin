@@ -632,3 +632,156 @@
 #ghl-save-restrictions .dashicons {
 	margin-right: 5px;
 }
+
+/* ======================================
+   Role Tags Settings Styles
+   ====================================== */
+
+/* Role tag mappings table container */
+.ghl-role-tag-mappings {
+	max-height: 500px;
+	overflow-y: auto;
+	overflow-x: auto;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	background: #fff;
+	position: relative;
+}
+
+/* Table styles */
+.ghl-role-tag-mappings .wp-list-table {
+	margin: 0;
+	border: none;
+}
+
+.ghl-role-tag-mappings .wp-list-table thead {
+	position: sticky;
+	top: 0;
+	z-index: 10;
+	background: #f9fafb;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ghl-role-tag-mappings .wp-list-table th {
+	font-weight: 600;
+	padding: 12px 10px;
+	border-bottom: 2px solid #c3c4c7;
+	white-space: nowrap;
+}
+
+.ghl-role-tag-mappings .wp-list-table td {
+	vertical-align: middle;
+	padding: 12px 10px;
+}
+
+.ghl-role-tag-mappings .wp-list-table tbody tr {
+	background: #fff;
+}
+
+.ghl-role-tag-mappings .wp-list-table tbody tr:nth-child(even) {
+	background: #f9f9f9;
+}
+
+.ghl-role-tag-mappings .wp-list-table tbody tr:hover {
+	background: #f0f6fc;
+}
+
+/* Select2 in table cells */
+.ghl-role-tag-mappings .select2-container {
+	min-width: 200px;
+}
+
+.ghl-role-tag-mappings .select2-container .select2-selection--multiple {
+	min-height: 32px;
+	border-color: #8c8f94;
+}
+
+.ghl-role-tag-mappings .select2-container .select2-selection--multiple:focus,
+.ghl-role-tag-mappings .select2-container .select2-selection--multiple:hover {
+	border-color: #2271b1;
+}
+
+/* Checkbox styling in table */
+.ghl-role-tag-mappings input[type="checkbox"] {
+	width: 20px;
+	height: 20px;
+	margin: 0;
+	cursor: pointer;
+}
+
+/* Scrollbar styling for webkit browsers */
+.ghl-role-tag-mappings::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+
+.ghl-role-tag-mappings::-webkit-scrollbar-track {
+	background: #f1f1f1;
+	border-radius: 4px;
+}
+
+.ghl-role-tag-mappings::-webkit-scrollbar-thumb {
+	background: #c1c1c1;
+	border-radius: 4px;
+}
+
+.ghl-role-tag-mappings::-webkit-scrollbar-thumb:hover {
+	background: #a8a8a8;
+}
+
+/* Responsive table columns */
+@media screen and (max-width: 1280px) {
+	.ghl-role-tag-mappings .wp-list-table th:nth-child(1),
+	.ghl-role-tag-mappings .wp-list-table td:nth-child(1) {
+		min-width: 120px;
+	}
+	
+	.ghl-role-tag-mappings .wp-list-table th:nth-child(2),
+	.ghl-role-tag-mappings .wp-list-table td:nth-child(2) {
+		min-width: 200px;
+	}
+	
+	.ghl-role-tag-mappings .wp-list-table th:nth-child(3),
+	.ghl-role-tag-mappings .wp-list-table td:nth-child(3),
+	.ghl-role-tag-mappings .wp-list-table th:nth-child(4),
+	.ghl-role-tag-mappings .wp-list-table td:nth-child(4) {
+		min-width: 100px;
+	}
+}
+
+/* Bulk operations section */
+.ghl-bulk-operations-section {
+	margin-top: 30px;
+}
+
+.ghl-bulk-operations-section .button {
+	min-width: 180px;
+}
+
+.ghl-bulk-operations-section .button .dashicons {
+	line-height: inherit;
+	vertical-align: middle;
+	margin-right: 4px;
+}
+
+/* Table info message */
+.ghl-table-info {
+	padding: 12px;
+	background: #f0f6fc;
+	border-left: 4px solid #2271b1;
+	border-radius: 4px;
+	margin-bottom: 15px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.ghl-table-info .dashicons {
+	color: #2271b1;
+	flex-shrink: 0;
+}
+
+.ghl-table-info p {
+	margin: 0;
+	line-height: 1.5;
+}

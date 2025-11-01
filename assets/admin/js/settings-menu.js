@@ -183,6 +183,11 @@
 					if (typeof window.initRestrictionsRolesSelect === 'function') {
 						window.initRestrictionsRolesSelect();
 					}
+					
+					// Re-initialize role tags functionality (for role-tags tab)
+					if (typeof window.initRoleTags === 'function') {
+						window.initRoleTags();
+					}
 				} else {
 					$content.html('<div class="notice notice-error"><p>' + (response.data.message || 'Failed to load settings tab.') + '</p></div>');
 				}

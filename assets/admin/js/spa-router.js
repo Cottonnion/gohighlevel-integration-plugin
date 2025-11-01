@@ -194,6 +194,10 @@
                     if (typeof window.initRestrictionsRolesSelect === 'function') {
                         window.initRestrictionsRolesSelect();
                     }
+                    // Initialize role tags functionality
+                    if (typeof window.initRoleTags === 'function') {
+                        window.initRoleTags();
+                    }
                     // Initialize settings side menu for tab switching (only if not already initialized)
                     if (typeof window.initSettingsMenu === 'function' && !window.ghlSettingsMenuInitialized) {
                         window.initSettingsMenu();

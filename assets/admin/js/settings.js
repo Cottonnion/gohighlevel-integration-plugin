@@ -793,16 +793,241 @@
 		});
 	}
 
+	// ======================================
+	// Role Tags Functionality
+	// ======================================
+
+	/**
+	 * Initialize role tags Select2 fields
+	 */
+	function initRoleTagsSelect2() {
+		if (typeof $.fn.select2 !== 'undefined' && $('.ghl-role-tags-select').length > 0) {
+			$('.ghl-role-tags-select').select2({
+				tags: true,
+				tokenSeparators: [','],
+				allowClear: true,
+				width: '100%',
+				ajax: {
+					url: ajaxurl,
+					type: 'POST',
+					dataType: 'json',
+					delay: 250,
+					data: function(params) {
+						return {
+							action: 'ghl_crm_get_tags',
+							nonce: $('#ghl_crm_nonce').val(),
+							search: params.term || ''
+						};
+					},
+					processResults: function(response) {
+						if (response.success && response.data && response.data.tags) {
+							return {
+								results: response.data.tags.map(function(tag) {
+									// Handle both object format {id, name} and string format
+									if (typeof tag === 'object' && tag !== null) {
+										return {
+											id: String(tag.name || tag.id || ''),
+											text: String(tag.name || tag.id || '')
+										};
+									}
+									// Fallback for string format
+									return {
+										id: String(tag || ''),
+										text: String(tag || '')
+									};
+								})
+							};
+						}
+						return { results: [] };
+					},
+					cache: true
+				},
+				minimumInputLength: 0,
+				createTag: function(params) {
+					var term = $.trim(params.term);
+					if (term === '') {
+						return null;
+					}
+					return {
+						id: term,
+						text: term,
+						newTag: true
+					};
+				}
+			});
+		}
+	}
+
+	/**
+	 * Setup role tags bulk operations
+	 */
+	function initRoleTagsBulkOps() {
+		// Bulk add tags
+		$(document).off('click.ghlBulkAddTags', '#bulk-add-tags')
+			.on('click.ghlBulkAddTags', '#bulk-add-tags', function() {
+			const role = $('#bulk_role_select').val();
+			const tagsArray = $('#bulk_tags_input').val();
+			
+			if (!role || !tagsArray || tagsArray.length === 0) {
+				if (typeof Swal !== 'undefined') {
+					Swal.fire({
+						icon: 'warning',
+						title: 'Please select a role and enter tags.',
+						confirmButtonColor: '#3085d6'
+					});
+				} else {
+					alert('Please select a role and enter tags.');
+				}
+				return;
+			}
+
+			executeBulkTagOperation('add', role, tagsArray, $(this), 'ghl_crm_bulk_add_role_tags');
+		});
+
+		// Bulk remove tags
+		$(document).off('click.ghlBulkRemoveTags', '#bulk-remove-tags')
+			.on('click.ghlBulkRemoveTags', '#bulk-remove-tags', function() {
+			const role = $('#bulk_role_select').val();
+			const tagsArray = $('#bulk_tags_input').val();
+			
+			if (!role || !tagsArray || tagsArray.length === 0) {
+				if (typeof Swal !== 'undefined') {
+					Swal.fire({
+						icon: 'warning',
+						title: 'Please select a role and enter tags.',
+						confirmButtonColor: '#3085d6'
+					});
+				} else {
+					alert('Please select a role and enter tags.');
+				}
+				return;
+			}
+
+			executeBulkTagOperation('remove', role, tagsArray, $(this), 'ghl_crm_bulk_remove_role_tags');
+		});
+	}
+
+	/**
+	 * Execute bulk tag operation
+	 */
+	function executeBulkTagOperation(operationType, role, tagsArray, $button, action) {
+		const originalHtml = $button.html();
+		const confirmMessage = operationType === 'add' 
+			? 'This will queue all users with the selected role for tag addition. Continue?'
+			: 'This will queue all users with the selected role for tag removal. Continue?';
+		
+		// Use SweetAlert2 if available
+		if (typeof Swal !== 'undefined') {
+			Swal.fire({
+				title: 'Are you sure?',
+				html: confirmMessage,
+				icon: 'warning',
+				showCancelButton: true,
+				confirmButtonColor: operationType === 'remove' ? '#dc2626' : '#3085d6',
+				cancelButtonColor: '#6b7280',
+				confirmButtonText: 'Yes, proceed',
+				cancelButtonText: 'Cancel'
+			}).then((result) => {
+				if (result.isConfirmed) {
+					performBulkTagOperation(action, role, tagsArray, $button, originalHtml);
+				}
+			});
+		} else {
+			if (confirm(confirmMessage)) {
+				performBulkTagOperation(action, role, tagsArray, $button, originalHtml);
+			}
+		}
+	}
+
+	/**
+	 * Perform the actual bulk tag operation
+	 */
+	function performBulkTagOperation(action, role, tagsArray, $button, originalHtml) {
+		// Show loading state
+		$button.prop('disabled', true).html(
+			'<span class="dashicons dashicons-update ghl-spin"></span> Processing...'
+		);
+
+		$.ajax({
+			url: ajaxurl,
+			type: 'POST',
+			dataType: 'json',
+			data: {
+				action: action,
+				nonce: $('#ghl_crm_nonce').val(),
+				role: role,
+				tags: tagsArray.join(',')
+			},
+			success: function(response) {
+				if (response.success) {
+					if (typeof Swal !== 'undefined') {
+						Swal.fire({
+							icon: 'success',
+							title: 'Success',
+							text: response.data.message || 'Users queued successfully!',
+							confirmButtonColor: '#10b981'
+						});
+					} else {
+						showNotice(response.data.message || 'Users queued successfully!', 'success');
+					}
+					// Clear the tags input
+					$('#bulk_tags_input').val(null).trigger('change');
+				} else {
+					if (typeof Swal !== 'undefined') {
+						Swal.fire({
+							icon: 'error',
+							title: 'Error',
+							text: response.data.message || 'Failed to queue users.',
+							confirmButtonColor: '#dc2626'
+						});
+					} else {
+						showNotice(response.data.message || 'Failed to queue users.', 'error');
+					}
+				}
+			},
+			error: function(xhr, status, error) {
+				console.error('AJAX Error:', {xhr, status, error});
+				if (typeof Swal !== 'undefined') {
+					Swal.fire({
+						icon: 'error',
+						title: 'Error',
+						html: 'An error occurred. Please try again.<br><br><small>' + error + '</small>',
+						confirmButtonColor: '#dc2626'
+					});
+				} else {
+					showNotice('An error occurred. Please try again.', 'error');
+				}
+			},
+			complete: function() {
+				// Restore button state
+				$button.prop('disabled', false).html(originalHtml);
+			}
+		});
+	}
+
+	/**
+	 * Initialize all role tags functionality
+	 */
+	function initRoleTags() {
+		// Only initialize if on role-tags tab
+		if ($('.ghl-role-tags-select').length > 0) {
+			initRoleTagsSelect2();
+			initRoleTagsBulkOps();
+		}
+	}
+
 	// Export to global scope for SPA to call
 	window.initSettings = initSettings;
 	window.cleanupSettings = cleanupSettings;
 	window.initUserRegisterTags = initUserRegisterTags;
 	window.initRestrictionsRolesSelect = initRestrictionsRolesSelect;
+	window.initRoleTags = initRoleTags;
 
 	// Initialize on document ready (for non-SPA page loads)
 	$(document).ready(function() {
 		initUserRegisterTags();
 		initRestrictionsRolesSelect();
+		initRoleTags();
 		initSettings();
 	});
 
