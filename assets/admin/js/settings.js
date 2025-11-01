@@ -404,12 +404,18 @@
 				if (response.success && response.data.settings) {
 					// Remove sensitive credentials from export
 					const exportSettings = {...response.data.settings};
+					// Remove manual API credentials
 					delete exportSettings.api_token;
+					// Remove OAuth credentials
 					delete exportSettings.oauth_access_token;
 					delete exportSettings.oauth_refresh_token;
 					delete exportSettings.oauth_expires_at;
 					delete exportSettings.oauth_token_type;
 					delete exportSettings.oauth_connected_at;
+					delete exportSettings.oauth_location_id;
+					delete exportSettings.oauth_company_id;
+					delete exportSettings.oauth_user_type;
+					// Keep location_id for reference (non-sensitive)
 					
 					// Create JSON file
 					const dataStr = JSON.stringify(exportSettings, null, 2);

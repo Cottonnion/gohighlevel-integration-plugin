@@ -154,12 +154,16 @@ class SettingsManager {
 			]
 		);
 
-		// Validate critical fields if they're being set
-		if ( isset( $new_settings['api_token'] ) || isset( $new_settings['location_id'] ) ) {
-			if ( empty( $settings['api_token'] ) || empty( $settings['location_id'] ) ) {
+		// Validate critical fields only if user is actively trying to set up manual API connection
+		// Don't validate on imports or when only location_id is present
+		$is_setting_manual_api = isset( $new_settings['api_token'] ) && ! empty( $new_settings['api_token'] );
+		
+		if ( $is_setting_manual_api ) {
+			// User is trying to set manual API token - require location_id too
+			if ( empty( $settings['location_id'] ) ) {
 				wp_send_json_error(
 					[
-						'message' => __( 'API Token and Location ID are required.', 'ghl-crm-integration' ),
+						'message' => __( 'Location ID is required when setting API Token.', 'ghl-crm-integration' ),
 					],
 					400
 				);
