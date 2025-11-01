@@ -37,8 +37,13 @@ $all_roles = $wp_roles->get_names();
 <div class="ghl-settings-wrapper">
 	<?php wp_nonce_field( 'ghl_crm_settings_nonce', 'ghl_crm_nonce' ); ?>
 	
+	<!-- Master Toggle -->
 	<div class="ghl-settings-section ghl-settings-card">
 		<div class="ghl-settings-header">
+			<h2>
+				<span class="dashicons dashicons-lock"></span>
+				<?php esc_html_e( 'Content Restrictions', 'ghl-crm-integration' ); ?>
+			</h2>
 			<p class="description">
 				<?php esc_html_e( 'Control content access based on GoHighLevel tags. Restrict pages, posts, products, and courses to users with specific tags.', 'ghl-crm-integration' ); ?>
 			</p>

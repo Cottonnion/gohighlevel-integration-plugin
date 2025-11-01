@@ -23,13 +23,20 @@ $user_register_tags            = $settings['user_register_tags'] ?? [];
 ?>
 
 <div class="ghl-settings-wrapper">
-	
 	<?php wp_nonce_field( 'ghl_crm_settings_nonce', 'ghl_crm_nonce' ); ?>
 	
 	<!-- Auto Sync User Data Section -->
 	<div class="ghl-settings-section ghl-settings-card">
-		<h2><?php esc_html_e( 'Auto Sync User Data and Contact Data', 'ghl-crm-integration' ); ?></h2>
-		<p><?php esc_html_e( 'Automatically Sync your WP User Data and GoHighLevel Contact Data', 'ghl-crm-integration' ); ?></p>
+		<div class="ghl-settings-header">
+			<h2>
+				<span class="dashicons dashicons-update"></span>
+				<?php esc_html_e( 'Auto Sync User Data and Contact Data', 'ghl-crm-integration' ); ?>
+			</h2>
+			<p class="description">
+				<?php esc_html_e( 'Automatically Sync your WP User Data and GoHighLevel Contact Data', 'ghl-crm-integration' ); ?>
+			</p>
+		</div>
+		
 		<hr>
 		
 		<div class="ghl-form-builder">
