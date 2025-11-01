@@ -379,6 +379,122 @@
 			}
 		});
 	}
+	
+	/**
+	 * Handle System Health Check button click
+	 */
+	$(document).off('click.ghlHealthCheck', '#health-check-btn')
+		.on('click.ghlHealthCheck', '#health-check-btn', function(e) {
+		e.preventDefault();
+		
+		const $button = $(this);
+		const originalHtml = $button.html();
+		
+		// Disable button and show loading state
+		$button.prop('disabled', true).html('<span class="dashicons dashicons-update-alt" style="animation: rotation 1s infinite linear;"></span> Running Diagnostics...');
+		
+		// Add CSS animation for spinner
+		if (!$('#health-check-spinner-style').length) {
+			$('<style id="health-check-spinner-style">@keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(359deg); } }</style>').appendTo('head');
+		}
+		
+		$.ajax({
+			url: ajaxurl,
+			type: 'POST',
+			data: {
+				action: 'ghl_crm_system_health_check',
+				nonce: $('#ghl_crm_nonce').val()
+			},
+			success: function(response) {
+				if (response.success) {
+					const data = response.data;
+					
+					// Build HTML for health check results
+					let resultsHtml = '<div style="text-align: left; max-height: 500px; overflow-y: auto;">';
+					
+					// Overall status badge
+					const statusColor = data.overall_status === 'success' ? '#10b981' : 
+										(data.overall_status === 'warning' ? '#f59e0b' : '#ef4444');
+					const statusIcon = data.overall_status === 'success' ? '✓' : 
+									   (data.overall_status === 'warning' ? '⚠' : '✗');
+					
+					resultsHtml += `<div style="background: ${statusColor}; color: white; padding: 12px; border-radius: 6px; margin-bottom: 20px; text-align: center;">
+						<strong style="font-size: 16px;">${statusIcon} ${data.message}</strong>
+					</div>`;
+					
+					// Loop through each check category
+					Object.keys(data.checks).forEach(function(key) {
+						const check = data.checks[key];
+						const checkStatusIcon = check.status === 'success' ? '✓' : 
+												(check.status === 'warning' ? '⚠' : '✗');
+						const checkStatusColor = check.status === 'success' ? '#10b981' : 
+												(check.status === 'warning' ? '#f59e0b' : '#ef4444');
+						
+						resultsHtml += `<div style="margin-bottom: 20px; padding: 15px; background: #f9fafb; border-radius: 6px; border-left: 4px solid ${checkStatusColor};">
+							<h4 style="margin: 0 0 10px 0; color: #1f2937; display: flex; align-items: center; gap: 8px;">
+								<span style="color: ${checkStatusColor}; font-weight: bold; font-size: 18px;">${checkStatusIcon}</span>
+								${check.label}
+							</h4>
+							<table style="width: 100%; border-collapse: collapse;">`;
+						
+						check.items.forEach(function(item) {
+							const itemStatusIcon = item.status === 'success' ? '✓' : 
+												   (item.status === 'warning' ? '⚠' : 
+													(item.status === 'error' ? '✗' : 'ℹ'));
+							const itemStatusColor = item.status === 'success' ? '#10b981' : 
+													(item.status === 'warning' ? '#f59e0b' : 
+													 (item.status === 'error' ? '#ef4444' : '#6b7280'));
+							
+							resultsHtml += `<tr style="border-bottom: 1px solid #e5e7eb;">
+								<td style="padding: 8px 0; color: #6b7280; width: 50%;">${item.label}</td>
+								<td style="padding: 8px 0; text-align: right;">
+									<span style="font-weight: 500; color: #1f2937; margin-right: 8px;">${item.value}</span>
+									<span style="color: ${itemStatusColor}; font-size: 14px; font-weight: bold;">${itemStatusIcon}</span>
+								</td>
+							</tr>`;
+						});
+						
+						resultsHtml += `</table></div>`;
+					});
+					
+					resultsHtml += `<div style="text-align: center; padding: 10px; color: #6b7280; font-size: 12px; border-top: 1px solid #e5e7eb; margin-top: 10px;">
+						Last checked: ${data.timestamp}
+					</div>`;
+					
+					resultsHtml += '</div>';
+					
+					// Show results in modal
+					if (typeof Swal !== 'undefined') {
+						Swal.fire({
+							title: 'System Health Report',
+							html: resultsHtml,
+							icon: data.overall_status === 'success' ? 'success' : 
+								  (data.overall_status === 'warning' ? 'warning' : 'error'),
+							width: '700px',
+							confirmButtonText: 'Close',
+							confirmButtonColor: '#3085d6',
+							customClass: {
+								popup: 'health-check-modal'
+							}
+						});
+					} else {
+						// Fallback - show in notice
+						showNotice(data.message, data.overall_status === 'success' ? 'success' : 'warning');
+					}
+				} else {
+					showNotice(response.data.message || 'Failed to run health check', 'error');
+				}
+			},
+			error: function(xhr, status, error) {
+				console.error('Health check error:', error);
+				showNotice('Failed to run system diagnostics. Please try again.', 'error');
+			},
+			complete: function() {
+				// Restore button state
+				$button.prop('disabled', false).html(originalHtml);
+			}
+		});
+	});
 
 	/**
 	 * Handle Export Settings button click
