@@ -41,6 +41,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<i class="fa-solid fa-list"></i>
 				<span class="ghl-nav-label"><?php esc_html_e( 'Sync Logs', 'ghl-crm-integration' ); ?></span>
 			</a>
+			<a href="#/custom-objects" class="ghl-nav-tab" data-route="custom-objects">
+				<i class="fa-solid fa-cube"></i>
+				<span class="ghl-nav-label"><?php esc_html_e( 'Custom Objects', 'ghl-crm-integration' ); ?></span>
+			</a>
 		</nav>
 	</div>
 

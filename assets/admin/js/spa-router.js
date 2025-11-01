@@ -175,6 +175,10 @@
                         window.GHL_FieldMapping.loadFields(false);
                     }
                     break;
+                case 'custom-objects':
+                    // Custom Objects view - handlers are inline in the template
+                    console.log('Custom Objects view loaded');
+                    break;
                 case 'integrations':
                     // Re-initialize integrations handlers
                     if (typeof window.initIntegrations === 'function') {

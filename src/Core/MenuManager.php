@@ -120,6 +120,15 @@ class MenuManager {
 
 		add_submenu_page(
 			'ghl-crm-admin',
+			__( 'Custom Objects', 'ghl-crm-integration' ),
+			__( 'Custom Objects', 'ghl-crm-integration' ),
+			'manage_options',
+			'ghl-crm-admin#/custom-objects',
+			'__return_false'
+		);
+
+		add_submenu_page(
+			'ghl-crm-admin',
 			__( 'Sync Logs', 'ghl-crm-integration' ),
 			__( 'Sync Logs', 'ghl-crm-integration' ),
 			'manage_options',
@@ -301,6 +310,10 @@ class MenuManager {
 
 			case 'field-mapping':
 				$this->get_field_mapping_data();
+				break;
+
+			case 'custom-objects':
+				$this->get_custom_objects_data( $params );
 				break;
 
 			case 'sync-logs':
@@ -574,6 +587,28 @@ class MenuManager {
 		wp_send_json_success(
 			[
 				'view' => 'field-mapping',
+				'html' => $html,
+			]
+		);
+	}
+
+	/**
+	 * Get custom objects data for SPA view
+	 *
+	 * Loads the custom objects template and returns the rendered HTML.
+	 * Returns JSON response with the custom objects view HTML.
+	 *
+	 * @param array $params Query parameters for filtering and pagination.
+	 * @return void Outputs JSON response and exits.
+	 */
+	private function get_custom_objects_data( array $params ): void {
+		ob_start();
+		$this->load_template( 'admin/custom-objects' );
+		$html = ob_get_clean();
+
+		wp_send_json_success(
+			[
+				'view' => 'custom-objects',
 				'html' => $html,
 			]
 		);
