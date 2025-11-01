@@ -325,7 +325,7 @@
 					// Second confirmation
 					Swal.fire({
 						title: 'Are you absolutely sure?',
-						html: 'This action cannot be undone!<br><br>All custom settings will be lost:<br>• Cache duration<br>• Batch size<br>• Log retention<br>• User sync settings<br>• Field mappings<br>• Role tags<br><br><strong>Only OAuth connection will remain.</strong>',
+						html: 'This action cannot be undone!<br><br>All custom settings will be lost:<br>• Cache duration<br>• Batch size<br>• Log retention<br>• User sync settings<br>• Field mappings<br>• Role tags<br><br><strong>Only Api connection will remain.</strong>',
 						icon: 'error',
 						showCancelButton: true,
 						confirmButtonColor: '#dc2626',
@@ -381,6 +381,165 @@
 	}
 
 	/**
+	 * Handle Export Settings button click
+	 */
+	$(document).off('click.ghlExportSettings', '#export-settings-btn')
+		.on('click.ghlExportSettings', '#export-settings-btn', function(e) {
+		e.preventDefault();
+		
+		const $button = $(this);
+		const originalText = $button.text().trim();
+		
+		$button.prop('disabled', true).text('Exporting...');
+		
+		// Get current settings via AJAX
+		$.ajax({
+			url: ajaxurl,
+			type: 'POST',
+			data: {
+				action: 'ghl_crm_get_settings',
+				nonce: $('#ghl_crm_nonce').val()
+			},
+			success: function(response) {
+				if (response.success && response.data.settings) {
+					// Remove sensitive credentials from export
+					const exportSettings = {...response.data.settings};
+					delete exportSettings.api_token;
+					delete exportSettings.oauth_access_token;
+					delete exportSettings.oauth_refresh_token;
+					delete exportSettings.oauth_expires_at;
+					delete exportSettings.oauth_token_type;
+					delete exportSettings.oauth_connected_at;
+					
+					// Create JSON file
+					const dataStr = JSON.stringify(exportSettings, null, 2);
+					const dataBlob = new Blob([dataStr], {type: 'application/json'});
+					
+					// Create download link
+					const url = window.URL.createObjectURL(dataBlob);
+					const link = document.createElement('a');
+					link.href = url;
+					link.download = 'ghl-crm-settings-' + new Date().toISOString().split('T')[0] + '.json';
+					document.body.appendChild(link);
+					link.click();
+					document.body.removeChild(link);
+					window.URL.revokeObjectURL(url);
+					
+					showNotice('Settings exported successfully!', 'success');
+				} else {
+					showNotice('Failed to export settings.', 'error');
+				}
+			},
+			error: function() {
+				showNotice('An error occurred while exporting settings.', 'error');
+			},
+			complete: function() {
+				$button.prop('disabled', false).text(originalText);
+			}
+		});
+	});
+	
+	/**
+	 * Handle Import Settings button click
+	 */
+	$(document).off('click.ghlImportSettings', '#import-settings-btn')
+		.on('click.ghlImportSettings', '#import-settings-btn', function(e) {
+		e.preventDefault();
+		$('#import-settings-file').trigger('click');
+	});
+	
+	/**
+	 * Handle Import Settings file selection
+	 */
+	$(document).off('change.ghlImportFile', '#import-settings-file')
+		.on('change.ghlImportFile', '#import-settings-file', function(e) {
+		const file = e.target.files[0];
+		if (!file) return;
+		
+		// Validate file type
+		if (file.type !== 'application/json') {
+			showNotice('Please select a valid JSON file.', 'error');
+			return;
+		}
+		
+		// Confirm import
+		if (typeof Swal !== 'undefined') {
+			Swal.fire({
+				title: 'Import Settings?',
+				html: 'This will overwrite your current settings (except API credentials).<br><br>Are you sure you want to continue?',
+				icon: 'warning',
+				showCancelButton: true,
+				confirmButtonColor: '#635bff',
+				cancelButtonColor: '#6b7280',
+				confirmButtonText: 'Yes, import',
+				cancelButtonText: 'Cancel'
+			}).then((result) => {
+				if (result.isConfirmed) {
+					importSettingsFile(file);
+				} else {
+					// Reset file input
+					$('#import-settings-file').val('');
+				}
+			});
+		} else {
+			if (confirm('Import settings? This will overwrite your current configuration (except API credentials).')) {
+				importSettingsFile(file);
+			} else {
+				$('#import-settings-file').val('');
+			}
+		}
+	});
+	
+	function importSettingsFile(file) {
+		const reader = new FileReader();
+		
+		reader.onload = function(e) {
+			try {
+				const importedSettings = JSON.parse(e.target.result);
+				
+				// Save imported settings via AJAX
+				$.ajax({
+					url: ajaxurl,
+					type: 'POST',
+					data: {
+						action: 'ghl_crm_save_settings',
+						nonce: $('#ghl_crm_nonce').val(),
+						...importedSettings
+					},
+					success: function(response) {
+						if (response.success) {
+							showNotice('Settings imported successfully!', 'success');
+							// Reload after 1 second
+							setTimeout(function() {
+								window.location.reload();
+							}, 1000);
+						} else {
+							showNotice(response.data.message || 'Failed to import settings.', 'error');
+						}
+					},
+					error: function() {
+						showNotice('An error occurred while importing settings.', 'error');
+					},
+					complete: function() {
+						// Reset file input
+						$('#import-settings-file').val('');
+					}
+				});
+			} catch (error) {
+				showNotice('Invalid JSON file format.', 'error');
+				$('#import-settings-file').val('');
+			}
+		};
+		
+		reader.onerror = function() {
+			showNotice('Failed to read file.', 'error');
+			$('#import-settings-file').val('');
+		};
+		
+		reader.readAsText(file);
+	}
+
+	/**
 	 * Cleanup function to remove all event handlers
 	 */
 	function cleanupSettings() {
@@ -388,6 +547,9 @@
 		$(document).off('change.ghlCheckbox', '.ghl-checkbox-original');
 		$(document).off('click.ghlClearCache', '#clear-cache-btn');
 		$(document).off('click.ghlResetSettings', '#reset-settings-btn');
+		$(document).off('click.ghlExportSettings', '#export-settings-btn');
+		$(document).off('click.ghlImportSettings', '#import-settings-btn');
+		$(document).off('change.ghlImportFile', '#import-settings-file');
 		$('#ghl-test-connection').off('click.ghlSettings');
 		window.ghlSettingsInitialized = false;
 	}
@@ -436,7 +598,7 @@
 		
 		// Show loading state
 		$tagsSelect.html('<option value="">Loading tags...</option>').prop('disabled', true);
-		
+
 		$.ajax({
 			url: ajaxurl,
 			type: 'POST',
@@ -448,13 +610,13 @@
 				if (response.success && response.data.tags) {
 					const tags = response.data.tags;
 					$tagsSelect.empty();
-					
+
 					if (tags.length === 0) {
 						$tagsSelect.append('<option value="">No tags found in your GoHighLevel location</option>');
 					} else {
 						// Add placeholder option
 						$tagsSelect.append('<option value="">Select tags...</option>');
-						
+
 						// Add each tag as an option
 						tags.forEach(function(tag) {
 							const tagValue = tag.name || tag;
@@ -468,9 +630,9 @@
 							);
 						});
 					}
-					
+
 					$tagsSelect.prop('disabled', false);
-					
+
 					// Initialize Select2 if available
 					if (typeof $.fn.select2 !== 'undefined') {
 						$tagsSelect.select2({
@@ -496,7 +658,7 @@
 	 */
 	function initRestrictionsRolesSelect() {
 		const $rolesSelect = $('.ghl-roles-select');
-		
+
 		if ($rolesSelect.length === 0 || typeof $.fn.select2 === 'undefined') {
 			return;
 		}
