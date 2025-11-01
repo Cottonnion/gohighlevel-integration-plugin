@@ -99,33 +99,6 @@ $settings = $settings_manager->get_settings_array();
 						</p>
 					</td>
 				</tr>
-				
-				<tr>
-					<th scope="row">
-						<label><?php esc_html_e( 'Data Management', 'ghl-crm-integration' ); ?></label>
-					</th>
-					<td>
-						<div style="margin-bottom: 15px;">
-							<button type="button" class="ghl-button ghl-button-secondary" id="clear-cache-btn">
-								<span class="dashicons dashicons-trash"></span>
-								<?php esc_html_e( 'Clear Cache', 'ghl-crm-integration' ); ?>
-							</button>
-							<p class="description">
-								<?php esc_html_e( 'Clear all cached API responses and contact data.', 'ghl-crm-integration' ); ?>
-							</p>
-						</div>
-						
-						<div>
-							<button type="button" class="ghl-button ghl-button-secondary" id="reset-settings-btn">
-								<span class="dashicons dashicons-image-rotate"></span>
-								<?php esc_html_e( 'Reset to Defaults', 'ghl-crm-integration' ); ?>
-							</button>
-							<p class="description">
-								<?php esc_html_e( 'Reset all plugin settings to default values (OAuth connection will be preserved).', 'ghl-crm-integration' ); ?>
-							</p>
-						</div>
-					</td>
-				</tr>
 					</tbody>
 				</table>
 			</form>
