@@ -194,22 +194,20 @@ $settings = $settings_manager->get_settings_array();
 		<div class="ghl-form-builder">
 			<table class="form-table" role="presentation">
 				<tbody>
-					<tr>
-						<th scope="row">
-							<label><?php esc_html_e( 'System Health Check', 'ghl-crm-integration' ); ?></label>
-						</th>
-						<td>
-							<button type="button" class="ghl-button ghl-button-secondary" id="health-check-btn" disabled>
-								<span class="dashicons dashicons-yes-alt"></span>
-								<?php esc_html_e( 'Run Health Check', 'ghl-crm-integration' ); ?>
-							</button>
-							<p class="description">
-								<?php esc_html_e( 'Test API connectivity, database tables, and system requirements. Coming soon.', 'ghl-crm-integration' ); ?>
-							</p>
-						</td>
-					</tr>
-					
-					<tr>
+				<tr>
+					<th scope="row">
+						<label><?php esc_html_e( 'System Health', 'ghl-crm-integration' ); ?></label>
+					</th>
+					<td>
+						<button type="button" id="health-check-btn" class="ghl-button ghl-button-secondary">
+							<span class="dashicons dashicons-yes-alt"></span>
+							<?php esc_html_e( 'Run Health Check', 'ghl-crm-integration' ); ?>
+						</button>
+						<p class="description">
+							<?php esc_html_e( 'Check API connectivity, database tables, and system requirements.', 'ghl-crm-integration' ); ?>
+						</p>
+					</td>
+				</tr>					<tr>
 						<th scope="row">
 							<label><?php esc_html_e( 'Debug Log', 'ghl-crm-integration' ); ?></label>
 						</th>
