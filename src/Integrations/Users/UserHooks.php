@@ -308,7 +308,8 @@ class UserHooks {
 		error_log( '🏷️ GHL CRM UserHooks: Final merged tags: ' . implode( ', ', $all_tags ) );
 		
 		if ( ! empty( $all_tags ) ) {
-			$contact_data['tags'] = $all_tags;
+			// Reindex array to ensure sequential keys for proper JSON encoding
+			$contact_data['tags'] = array_values( $all_tags );
 		}
 		
 		// Queue for async processing

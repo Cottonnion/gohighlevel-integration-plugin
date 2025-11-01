@@ -261,7 +261,8 @@ class RoleTagsManager {
 			error_log( '🏷️ GHL CRM RoleTagsManager: Tags with prefix "' . $prefix . '": ' . implode( ', ', $all_tags ) );
 		}
 
-		$final_tags = array_unique( $all_tags );
+		// Ensure array has sequential keys for proper JSON encoding
+		$final_tags = array_values( array_unique( $all_tags ) );
 		error_log( '🏷️ GHL CRM RoleTagsManager: Final tags for user ' . $user_id . ': ' . implode( ', ', $final_tags ) );
 
 		return $final_tags;
@@ -299,7 +300,8 @@ class RoleTagsManager {
 			$all_tags = array_map( fn( $tag ) => $prefix . $tag, $all_tags );
 		}
 
-		return array_unique( $all_tags );
+		// Ensure array has sequential keys for proper JSON encoding
+		return array_values( array_unique( $all_tags ) );
 	}
 
 	/**
