@@ -122,13 +122,6 @@ class RoleTagsManager {
 			$tags_to_add = array_merge( $tags_to_add, $tags );
 		}
 
-		// Apply prefix if configured
-		$prefix = $settings['tag_prefix'] ?? '';
-		if ( ! empty( $prefix ) ) {
-			$tags_to_add = array_map( fn( $tag ) => $prefix . $tag, $tags_to_add );
-			$tags_to_remove = array_map( fn( $tag ) => $prefix . $tag, $tags_to_remove );
-		}
-
 		// Remove duplicates
 		$tags_to_add = array_unique( $tags_to_add );
 		$tags_to_remove = array_unique( $tags_to_remove );
@@ -168,12 +161,6 @@ class RoleTagsManager {
 
 		$tags = $this->parse_tags( $role_config['tags'] );
 
-		// Apply prefix if configured
-		$prefix = $settings['tag_prefix'] ?? '';
-		if ( ! empty( $prefix ) ) {
-			$tags = array_map( fn( $tag ) => $prefix . $tag, $tags );
-		}
-
 		$this->queue_tag_addition( $user_id, $contact_id, $tags );
 	}
 
@@ -202,12 +189,6 @@ class RoleTagsManager {
 
 		$tags = $this->parse_tags( $role_config['tags'] );
 
-		// Apply prefix if configured
-		$prefix = $settings['tag_prefix'] ?? '';
-		if ( ! empty( $prefix ) ) {
-			$tags = array_map( fn( $tag ) => $prefix . $tag, $tags );
-		}
-
 		$this->queue_tag_removal( $user_id, $contact_id, $tags );
 	}
 
@@ -226,7 +207,6 @@ class RoleTagsManager {
 
 		$settings = $this->settings_manager->get_settings_array();
 		$role_tags = $settings['role_tags'] ?? [];
-		$prefix = $settings['tag_prefix'] ?? '';
 		$global_tags = $settings['global_tags'] ?? '';
 
 		error_log( '🏷️ GHL CRM RoleTagsManager: Getting tags for user ' . $user_id . ' with roles: ' . implode( ', ', $user->roles ) );
@@ -255,12 +235,6 @@ class RoleTagsManager {
 			$all_tags = array_merge( $all_tags, $global_tags_array );
 		}
 
-		// Apply prefix
-		if ( ! empty( $prefix ) ) {
-			$all_tags = array_map( fn( $tag ) => $prefix . $tag, $all_tags );
-			error_log( '🏷️ GHL CRM RoleTagsManager: Tags with prefix "' . $prefix . '": ' . implode( ', ', $all_tags ) );
-		}
-
 		// Ensure array has sequential keys for proper JSON encoding
 		$final_tags = array_values( array_unique( $all_tags ) );
 		error_log( '🏷️ GHL CRM RoleTagsManager: Final tags for user ' . $user_id . ': ' . implode( ', ', $final_tags ) );
@@ -278,7 +252,6 @@ class RoleTagsManager {
 	public function get_tags_for_role( string $role ): array {
 		$settings = $this->settings_manager->get_settings_array();
 		$role_tags = $settings['role_tags'] ?? [];
-		$prefix = $settings['tag_prefix'] ?? '';
 
 		error_log( '🏷️ GHL CRM RoleTagsManager: Getting tags for role: ' . $role );
 
@@ -293,11 +266,6 @@ class RoleTagsManager {
 			$all_tags = array_merge( $all_tags, $tags );
 		} else {
 			error_log( '🏷️ GHL CRM RoleTagsManager: No tags configured for role ' . $role );
-		}
-
-		// Apply prefix
-		if ( ! empty( $prefix ) ) {
-			$all_tags = array_map( fn( $tag ) => $prefix . $tag, $all_tags );
 		}
 
 		// Ensure array has sequential keys for proper JSON encoding

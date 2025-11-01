@@ -20,7 +20,6 @@ $role_tags = $settings['role_tags'] ?? [];
 $global_tags_raw = $settings['global_tags'] ?? [];
 // Convert array to comma-separated string for display, or keep as is if string
 $global_tags = is_array( $global_tags_raw ) ? implode( ',', $global_tags_raw ) : $global_tags_raw;
-$tag_prefix = $settings['tag_prefix'] ?? '';
 ?>
 
 <div class="ghl-settings-wrapper">
@@ -48,7 +47,7 @@ $tag_prefix = $settings['tag_prefix'] ?? '';
 				<thead>
 					<tr>
 						<th style="width: 25%;"><?php esc_html_e( 'WordPress Role', 'ghl-crm-integration' ); ?></th>
-						<th style="width: 35%;"><?php esc_html_e( 'GoHighLevel Tags (comma separated)', 'ghl-crm-integration' ); ?></th>
+						<th style="width: 35%;"><?php esc_html_e( 'GoHighLevel Tags', 'ghl-crm-integration' ); ?></th>
 						<th style="width: 20%;"><?php esc_html_e( 'Auto-Apply', 'ghl-crm-integration' ); ?></th>
 						<th style="width: 20%;"><?php esc_html_e( 'Remove on Role Change', 'ghl-crm-integration' ); ?></th>
 					</tr>
@@ -161,26 +160,6 @@ $tag_prefix = $settings['tag_prefix'] ?? '';
 					</td>
 				</tr>
 
-				<tr>
-					<th scope="row">
-						<label for="tag_prefix">
-							<?php esc_html_e( 'Tag Prefix', 'ghl-crm-integration' ); ?>
-						</label>
-					</th>
-					<td>
-						<input 
-							type="text" 
-							id="tag_prefix" 
-							name="tag_prefix" 
-							value="<?php echo esc_attr( $tag_prefix ); ?>"
-							placeholder="wp-" 
-							class="regular-text" 
-						/>
-						<p class="description">
-							<?php esc_html_e( 'Optional prefix to add to all WordPress-generated tags (e.g., "wp-subscriber").', 'ghl-crm-integration' ); ?>
-						</p>
-					</td>
-				</tr>
 			</tbody>
 		</table>
 
