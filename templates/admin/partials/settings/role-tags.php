@@ -42,6 +42,11 @@ $global_tags = is_array( $global_tags_raw ) ? implode( ',', $global_tags_raw ) :
 		<div class="ghl-form-builder">
 			<form class="ghl-form" method="post">
 
+		<div class="ghl-table-info">
+			<span class="dashicons dashicons-info"></span>
+			<p><?php esc_html_e( 'The table below is scrollable. Configure tags for each WordPress role by selecting from existing GHL tags or creating new ones.', 'ghl-crm-integration' ); ?></p>
+		</div>
+
 		<div class="ghl-role-tag-mappings">
 			<table class="wp-list-table widefat fixed striped">
 				<thead>
@@ -165,7 +170,8 @@ $global_tags = is_array( $global_tags_raw ) ? implode( ',', $global_tags_raw ) :
 
 		<hr style="margin: 30px 0;">
 
-		<h3><?php esc_html_e( 'Bulk Tag Operations', 'ghl-crm-integration' ); ?></h3>
+		<div class="ghl-bulk-operations-section">
+			<h3><?php esc_html_e( 'Bulk Tag Operations', 'ghl-crm-integration' ); ?></h3>
 		<p class="description">
 			<?php esc_html_e( 'Apply or remove tags for all users with a specific role.', 'ghl-crm-integration' ); ?>
 		</p>
@@ -233,6 +239,7 @@ $global_tags = is_array( $global_tags_raw ) ? implode( ',', $global_tags_raw ) :
 				</tr>
 			</tbody>
 		</table>
+		</div><!-- .ghl-bulk-operations-section -->
 
 				<div class="ghl-form-item">
 					<div class="ghl-form-item-footer" style="margin-top: 30px;">
@@ -276,197 +283,3 @@ $global_tags = is_array( $global_tags_raw ) ? implode( ',', $global_tags_raw ) :
 	</div>
 
 </div><!-- .ghl-settings-wrapper -->
-
-<style>
-.ghl-settings-role-tags .wp-list-table th {
-	font-weight: 600;
-}
-.ghl-settings-role-tags .wp-list-table td {
-	vertical-align: middle;
-}
-.ghl-help-box {
-	background: #f0f6fc;
-	padding: 20px;
-	border-radius: 4px;
-	border-left: 4px solid #2271b1;
-}
-.ghl-help-box h3 {
-	margin-top: 0;
-	color: #2271b1;
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-.ghl-help-box .dashicons {
-	font-size: 20px;
-	width: 20px;
-	height: 20px;
-}
-.ghl-help-content p {
-	margin: 10px 0;
-}
-.ghl-help-content p:first-child {
-	margin-top: 0;
-}
-.ghl-help-content p:last-child {
-	margin-bottom: 0;
-}
-</style>
-
-<script type="text/javascript">
-(function($) {
-	'use strict';
-
-	// Initialize Select2 for all role tag fields
-	$(document).ready(function() {
-		if (typeof $.fn.select2 !== 'undefined') {
-			$('.ghl-role-tags-select').select2({
-				tags: true,
-				tokenSeparators: [','],
-				allowClear: true,
-				width: '100%',
-				ajax: {
-					url: ajaxurl,
-					type: 'POST',
-					dataType: 'json',
-					delay: 250,
-					data: function(params) {
-						return {
-							action: 'ghl_crm_get_tags',
-							nonce: $('#ghl_crm_nonce').val(),
-							search: params.term || ''
-						};
-					},
-					processResults: function(response) {
-						if (response.success && response.data && response.data.tags) {
-							return {
-								results: response.data.tags.map(function(tag) {
-									// Handle both object format {id, name} and string format
-									if (typeof tag === 'object' && tag !== null) {
-										return {
-											id: String(tag.name || tag.id || ''),
-											text: String(tag.name || tag.id || '')
-										};
-									}
-									// Fallback for string format
-									return {
-										id: String(tag || ''),
-										text: String(tag || '')
-									};
-								})
-							};
-						}
-						return { results: [] };
-					},
-					cache: true
-				},
-				minimumInputLength: 0,
-				createTag: function(params) {
-					var term = $.trim(params.term);
-					if (term === '') {
-						return null;
-					}
-					return {
-						id: term,
-						text: term,
-						newTag: true
-					};
-				}
-			});
-		}
-	});
-
-	// Bulk add tags
-	$('#bulk-add-tags').on('click', function() {
-		const role = $('#bulk_role_select').val();
-		const tagsArray = $('#bulk_tags_input').val();
-		
-		if (!role || !tagsArray || tagsArray.length === 0) {
-			alert('<?php esc_html_e( 'Please select a role and enter tags.', 'ghl-crm-integration' ); ?>');
-			return;
-		}
-
-		if (!confirm('<?php esc_html_e( 'This will queue all users with the selected role for tag addition. Continue?', 'ghl-crm-integration' ); ?>')) {
-			return;
-		}
-
-		const $button = $(this);
-		const originalText = $button.html();
-		$button.prop('disabled', true).html('<span class="dashicons dashicons-update ghl-spin"></span> <?php esc_html_e( 'Processing...', 'ghl-crm-integration' ); ?>');
-
-		$.ajax({
-			url: ajaxurl,
-			type: 'POST',
-			dataType: 'json',
-			data: {
-				action: 'ghl_crm_bulk_add_role_tags',
-				nonce: $('#ghl_crm_nonce').val(),
-				role: role,
-				tags: tagsArray.join(',')
-			},
-			success: function(response) {
-				if (response.success) {
-					alert('✓ ' + (response.data.message || '<?php esc_html_e( 'Users queued successfully!', 'ghl-crm-integration' ); ?>'));
-					$('#bulk_tags_input').val(null).trigger('change');
-				} else {
-					alert('✗ ' + (response.data.message || '<?php esc_html_e( 'Failed to queue users.', 'ghl-crm-integration' ); ?>'));
-				}
-			},
-			error: function(xhr, status, error) {
-				console.error('AJAX Error:', {xhr, status, error});
-				alert('✗ <?php esc_html_e( 'An error occurred. Please try again.', 'ghl-crm-integration' ); ?>\n\nError: ' + error);
-			},
-			complete: function() {
-				$button.prop('disabled', false).html(originalText);
-			}
-		});
-	});
-
-	// Bulk remove tags
-	$('#bulk-remove-tags').on('click', function() {
-		const role = $('#bulk_role_select').val();
-		const tagsArray = $('#bulk_tags_input').val();
-		
-		if (!role || !tagsArray || tagsArray.length === 0) {
-			alert('<?php esc_html_e( 'Please select a role and enter tags.', 'ghl-crm-integration' ); ?>');
-			return;
-		}
-
-		if (!confirm('<?php esc_html_e( 'This will queue all users with the selected role for tag removal. Continue?', 'ghl-crm-integration' ); ?>')) {
-			return;
-		}
-
-		const $button = $(this);
-		const originalText = $button.html();
-		$button.prop('disabled', true).html('<span class="dashicons dashicons-update ghl-spin"></span> <?php esc_html_e( 'Processing...', 'ghl-crm-integration' ); ?>');
-
-		$.ajax({
-			url: ajaxurl,
-			type: 'POST',
-			dataType: 'json',
-			data: {
-				action: 'ghl_crm_bulk_remove_role_tags',
-				nonce: $('#ghl_crm_nonce').val(),
-				role: role,
-				tags: tagsArray.join(',')
-			},
-			success: function(response) {
-				if (response.success) {
-					alert('✓ ' + (response.data.message || '<?php esc_html_e( 'Users queued successfully!', 'ghl-crm-integration' ); ?>'));
-					$('#bulk_tags_input').val(null).trigger('change');
-				} else {
-					alert('✗ ' + (response.data.message || '<?php esc_html_e( 'Failed to queue users.', 'ghl-crm-integration' ); ?>'));
-				}
-			},
-			error: function(xhr, status, error) {
-				console.error('AJAX Error:', {xhr, status, error});
-				alert('✗ <?php esc_html_e( 'An error occurred. Please try again.', 'ghl-crm-integration' ); ?>\n\nError: ' + error);
-			},
-			complete: function() {
-				$button.prop('disabled', false).html(originalText);
-			}
-		});
-	});
-
-})(jQuery);
-</script>

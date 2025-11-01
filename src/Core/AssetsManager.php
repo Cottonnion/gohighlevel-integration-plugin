@@ -182,7 +182,7 @@ class AssetsManager {
 			'spa-router.js',
 			[ 'jquery', 'sweetalert2' ],
 			[],
-			'1.0.3',
+			'1.0.34',
 			true
 		);
 
@@ -302,7 +302,7 @@ class AssetsManager {
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
 			],
-			'1.0.7',
+			'1.0.8',
 			true
 		);
 
