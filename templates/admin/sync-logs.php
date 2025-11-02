@@ -71,13 +71,26 @@ $log_count = $wpdb->get_var( $wpdb->prepare(
 							if ( $user_created > 100 ) break;
 						}
 						$message = ! empty( $log['error_message'] ) ? $log['error_message'] : json_encode( $log['response_data'] );
+						$details_json = json_encode( [
+							'action' => $log['action'],
+							'status' => $log['status'],
+							'error_message' => $log['error_message'] ?? null,
+							'response_data' => $log['response_data'] ?? null,
+							'item_type' => $log['item_type'] ?? null,
+							'item_id' => $log['item_id'] ?? null,
+							'created_at' => $log['created_at'],
+						], JSON_PRETTY_PRINT );
 						?>
 						<tr>
 							<td><?php echo esc_html( $log['created_at'] ); ?></td>
 							<td><?php echo esc_html( $log['action'] ); ?></td>
 							<td><?php echo esc_html( $log['action'] ); ?></td>
 							<td><?php echo esc_html( $log['status'] ); ?></td>
-							<td><pre><?php echo esc_html( $message ); ?></pre></td>
+							<td>
+								<button type="button" class="button button-small ghl-view-details" data-details="<?php echo esc_attr( $details_json ); ?>">
+									View Details
+								</button>
+							</td>
 						</tr>
 					<?php endforeach; ?>
 				<?php else : ?>
@@ -87,3 +100,53 @@ $log_count = $wpdb->get_var( $wpdb->prepare(
 		</table>
 	</div>
 </div>
+
+<!-- Details Modal -->
+<div id="ghl-details-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; overflow:auto;">
+	<div style="position:relative; max-width:800px; margin:50px auto; background:#fff; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+		<div style="padding:20px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between; align-items:center;">
+			<h2 style="margin:0;">Sync Log Details</h2>
+			<button type="button" id="ghl-close-modal" style="background:transparent; border:none; font-size:24px; cursor:pointer; color:#666;">&times;</button>
+		</div>
+		<div style="padding:20px;">
+			<pre id="ghl-details-content" style="background:#f5f5f5; padding:15px; border-radius:4px; overflow:auto; max-height:500px; font-size:13px; line-height:1.5;"></pre>
+		</div>
+	</div>
+</div>
+
+<script>
+jQuery(document).ready(function($) {
+	var modal = $('#ghl-details-modal');
+	var closeBtn = $('#ghl-close-modal');
+	var content = $('#ghl-details-content');
+
+	// Use event delegation for dynamically loaded buttons
+	$(document).on('click', '.ghl-view-details', function(e) {
+		e.preventDefault();
+		var details = $(this).attr('data-details');
+		try {
+			var parsed = JSON.parse(details);
+			content.text(JSON.stringify(parsed, null, 2));
+		} catch (err) {
+			content.text(details);
+		}
+		modal.show();
+	});
+
+	closeBtn.on('click', function() {
+		modal.hide();
+	});
+
+	modal.on('click', function(e) {
+		if (e.target === modal[0]) {
+			modal.hide();
+		}
+	});
+
+	$(document).on('keydown', function(e) {
+		if (e.key === 'Escape' && modal.is(':visible')) {
+			modal.hide();
+		}
+	});
+});
+</script>

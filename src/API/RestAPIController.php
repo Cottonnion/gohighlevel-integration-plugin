@@ -308,6 +308,7 @@ class RestAPIController {
 			return new \WP_REST_Response(
 				[
 					'success' => true,
+					/* translators: %s: Type of sync (e.g., users, contacts) */
 					'message' => sprintf( __( '%s sync triggered successfully', 'ghl-crm-integration' ), ucfirst( $sync_type ) ),
 				],
 				200
@@ -391,6 +392,7 @@ class RestAPIController {
 			return new \WP_Error(
 				'rate_limit_exceeded',
 				sprintf(
+					/* translators: %d: Maximum number of requests allowed per minute */
 					__( 'Rate limit exceeded. Maximum %d requests per minute allowed.', 'ghl-crm-integration' ),
 					$requests_per_minute
 				),

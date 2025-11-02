@@ -603,24 +603,25 @@ class WebhookHandler {
 		
 		// Check if we've received any webhooks recently
 		global $wpdb;
-		$table_name = $wpdb->prefix . 'ghl_sync_logs';
-		
-		$recent_webhooks = $wpdb->get_var( $wpdb->prepare(
-			"SELECT COUNT(*) FROM {$table_name} 
-			 WHERE sync_type = 'ghl_to_wp' 
-			 AND operation LIKE 'webhook_%' 
-			 AND created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)"
-		) );
+	$table_name = $wpdb->prefix . 'ghl_sync_logs';
+	$like_pattern = $wpdb->esc_like( 'webhook_' ) . '%';
+	
+	$recent_webhooks = $wpdb->get_var( $wpdb->prepare(
+		"SELECT COUNT(*) FROM {$table_name} 
+		 WHERE sync_type = 'ghl_to_wp' 
+		 AND operation LIKE %s 
+		 AND created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)",
+		$like_pattern
+	) );
 
-		$last_webhook = $wpdb->get_row( $wpdb->prepare(
-			"SELECT * FROM {$table_name} 
-			 WHERE sync_type = 'ghl_to_wp' 
-			 AND operation LIKE 'webhook_%' 
-			 ORDER BY created_at DESC 
-			 LIMIT 1"
-		) );
-
-		return [
+	$last_webhook = $wpdb->get_row( $wpdb->prepare(
+		"SELECT * FROM {$table_name} 
+		 WHERE sync_type = 'ghl_to_wp' 
+		 AND operation LIKE %s 
+		 ORDER BY created_at DESC 
+		 LIMIT 1",
+		$like_pattern
+	) );		return [
 			'webhook_url' => $webhook_url,
 			'is_configured' => $recent_webhooks > 0,
 			'recent_webhooks_24h' => (int) $recent_webhooks,

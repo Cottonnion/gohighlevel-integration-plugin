@@ -58,7 +58,7 @@ class RateLimiter {
 	 */
 	public function check_limits( ?string $location_id = null ): bool {
 		if ( empty( $location_id ) ) {
-			error_log( 'GHL CRM RateLimiter: No location ID, allowing request' );
+			
 			return true;
 		}
 

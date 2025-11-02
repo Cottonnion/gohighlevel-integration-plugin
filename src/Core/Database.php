@@ -146,7 +146,7 @@ class Database {
 		];
 
 		foreach ( $tables as $table ) {
-			$wpdb->query( "DROP TABLE IF EXISTS {$table}" ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			$wpdb->query( "DROP TABLE IF EXISTS {$table}" ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		}
 
 		delete_option( 'ghl_crm_db_version' );
@@ -232,36 +232,18 @@ class Database {
 
 		if ( $queue_count > 50000 ) {
 			// Delete oldest 25k completed/failed items regardless of age
+			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			$wpdb->query(
 				$wpdb->prepare(
 					"DELETE FROM {$sync_queue_table} 
 					WHERE site_id = %d 
 					AND status IN ('completed', 'failed') 
 					ORDER BY created_at ASC 
-					LIMIT 25000", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					LIMIT 25000",
 					$current_site_id
 				)
 			);
-
-			error_log(
-				sprintf(
-					'GHL CRM Emergency Cleanup [Site %d]: Queue exceeded 50k rows. Purged old items.',
-					$current_site_id
-				)
-			);
-		}
-
-		// Log cleanup stats
-		if ( $deleted_completed || $deleted_failed || $deleted_logs ) {
-			error_log(
-				sprintf(
-					'GHL CRM Cleanup [Site %d]: Deleted %d completed, %d failed queue items, %d logs',
-					$current_site_id,
-					$deleted_completed,
-					$deleted_failed,
-					$deleted_logs
-				)
-			);
+			// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		}
 	}
 

@@ -151,8 +151,8 @@ class QueueManager {
 		$table_name      = $this->get_queue_table_name();
 		$current_site_id = get_current_blog_id();
 
-		error_log( 'GHL CRM QueueManager: Table name: ' . $table_name );
-		error_log( 'GHL CRM QueueManager: Site ID: ' . $current_site_id );
+		
+		
 
 		// Check for existing pending item
 		$existing = $wpdb->get_var(
@@ -171,7 +171,7 @@ class QueueManager {
 			)
 		);
 
-		error_log( 'GHL CRM QueueManager: Existing queue item: ' . ( $existing ? $existing : 'NONE' ) );
+		
 
 		// If duplicate exists, UPDATE payload with latest data (don't create new row)
 		if ( $existing ) {
@@ -234,9 +234,9 @@ class QueueManager {
 		);
 
 		if ( $inserted ) {
-			error_log( 'GHL CRM QueueManager: Successfully inserted queue item with ID: ' . $wpdb->insert_id );
+			
 		} else {
-			error_log( 'GHL CRM QueueManager: FAILED to insert queue item. Error: ' . $wpdb->last_error );
+			
 		}
 
 		return $inserted ? $wpdb->insert_id : false;
@@ -250,22 +250,22 @@ class QueueManager {
 	 * @return void
 	 */
 	public function process_queue(): void {
-		error_log( '🚀 GHL CRM: process_queue() CALLED at ' . current_time( 'mysql' ) );
+		
 		
 		// Prevent concurrent processing (race condition protection)
 		$lock_key = 'ghl_crm_queue_processing';
 		if ( get_transient( $lock_key ) ) {
-			error_log( '⏸️ GHL CRM: Queue already processing, skipping' );
+			
 			return; // Already processing
 		}
 
 		// Set lock for 2 minutes
 		set_transient( $lock_key, time(), 2 * MINUTE_IN_SECONDS );
-		error_log( '🔒 GHL CRM: Lock acquired, starting queue processing' );
+		
 
 		try {
 			if ( is_multisite() ) {
-				error_log( '🌐 GHL CRM: Multisite detected, processing all sites' );
+				
 				// Process each site's queue
 				$sites = get_sites(
 					[
@@ -274,13 +274,13 @@ class QueueManager {
 				);
 
 				foreach ( $sites as $site ) {
-					error_log( '📍 GHL CRM: Switching to blog ' . $site->blog_id );
+					
 					switch_to_blog( $site->blog_id );
 					
 					// CRITICAL: Reload Client settings after blog switch (multisite fix)
 					// The Client singleton caches settings on first init, before blog switch
 					\GHL_CRM\API\Client\Client::get_instance()->reload_settings();
-					error_log( '🔄 GHL CRM: Reloaded Client settings for blog ' . $site->blog_id );
+					
 					
 					$this->process_site_queue();
 					restore_current_blog();
@@ -291,7 +291,7 @@ class QueueManager {
 		} finally {
 			// Always release lock
 			delete_transient( $lock_key );
-			error_log( '🔓 GHL CRM: Lock released, queue processing complete' );
+			
 		}
 	}
 
@@ -306,7 +306,7 @@ class QueueManager {
 		$table_name      = $this->get_queue_table_name();
 		$current_site_id = get_current_blog_id();
 
-		error_log( '📊 GHL CRM: Processing queue for site ' . $current_site_id );
+		
 
 		// Get batch size from settings via SettingsManager
 		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
@@ -351,19 +351,19 @@ class QueueManager {
 			)
 		);
 
-		error_log( '📦 GHL CRM: Found ' . count( $items ) . ' pending items in queue' );
+		
 
 		if ( empty( $items ) ) {
-			error_log( '⚠️ GHL CRM: No pending items, exiting' );
+			
 			return;
 		}
 
 		foreach ( $items as $item ) {
-			error_log( '🔄 GHL CRM: Processing item ID ' . $item->id . ' - Type: ' . $item->item_type . ', Action: ' . $item->action );
+			
 			$this->process_queue_item( $item );
 		}
 		
-		error_log( '✅ GHL CRM: Site queue processing complete' );
+		
 	}
 
 	/**
@@ -406,7 +406,7 @@ class QueueManager {
 	private function process_queue_item( object $item ): void {
 		global $wpdb;
 
-		error_log( '⚙️ GHL CRM: process_queue_item() START - Item ID: ' . $item->id );
+		
 
 		// Safety check: If item already has MAX_ATTEMPTS, mark as failed immediately
 		if ( $item->attempts >= self::MAX_ATTEMPTS ) {
@@ -433,32 +433,32 @@ class QueueManager {
 
 		try {
 			$table_name = $this->get_queue_table_name();
-			error_log( '📋 GHL CRM: Got table name: ' . $table_name );
+			
 			
 			$start_time = microtime( true );
-			error_log( '⏱️ GHL CRM: Start time: ' . $start_time );
+			
 
 			// Check rate limits before processing (using RateLimiter helper)
-			error_log( '🔍 GHL CRM: Checking rate limits...' );
+			
 			$location_id = $this->get_ghl_location_id();
 			$rate_ok = $location_id ? $this->rate_limiter->check_limits( $location_id ) : true;
-			error_log( '🔍 GHL CRM: Rate limit check returned: ' . ( $rate_ok ? 'TRUE' : 'FALSE' ) );
+			
 			
 			if ( ! $rate_ok ) {
-				error_log( '🚫 GHL CRM: Rate limit exceeded, skipping item ' . $item->id );
+				
 				return;
 			}
 		} catch ( \Exception $e ) {
-			error_log( '❌ GHL CRM: EXCEPTION in process_queue_item: ' . $e->getMessage() );
-			error_log( '❌ GHL CRM: Stack trace: ' . $e->getTraceAsString() );
+			
+			
 			return;
 		} catch ( \Throwable $e ) {
-			error_log( '💥 GHL CRM: FATAL ERROR in process_queue_item: ' . $e->getMessage() );
-			error_log( '💥 GHL CRM: Stack trace: ' . $e->getTraceAsString() );
+			
+			
 			return;
 		}
 
-		error_log( '✅ GHL CRM: Rate limit OK, processing item ' . $item->id );
+		
 
 		// Increment attempts
 		$wpdb->update(
@@ -472,32 +472,32 @@ class QueueManager {
 			[ '%d' ]
 		);
 
-		error_log( '📝 GHL CRM: Incremented attempts to ' . ( $item->attempts + 1 ) );
+		
 
 		// Update item object to reflect database change
 		$item->attempts = $item->attempts + 1;
 
 		try {
 			$payload = json_decode( $item->payload, true );
-			error_log( '📦 GHL CRM: Decoded payload: ' . print_r( $payload, true ) );
+			
 
 			// Execute sync based on item type
-			error_log( '🎯 GHL CRM: Calling execute_sync() for type: ' . $item->item_type . ', action: ' . $item->action );
-			error_log( '🔍 GHL CRM: About to call $this->execute_sync() method' );
-			error_log( '🔍 GHL CRM: Method exists: ' . ( method_exists( $this, 'execute_sync' ) ? 'YES' : 'NO' ) );
+			
+			
+			
 			
 			// Register fatal error handler
 			register_shutdown_function( function() use ( $item ) {
 				$error = error_get_last();
 				if ( $error && in_array( $error['type'], [ E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR ] ) ) {
-					error_log( '💀 FATAL ERROR during execute_sync for item ' . $item->id );
-					error_log( '💀 Error: ' . print_r( $error, true ) );
+					
+					
 				}
 			} );
 			
 			// Execute sync using QueueProcessor helper
 			$result = $this->processor->execute_sync( $item->item_type, $item->action, (int) $item->item_id, $payload );
-			error_log( '📊 GHL CRM: execute_sync() returned: ' . ( $result ? 'TRUE' : 'FALSE' ) );
+			
 
 			// Track API request using RateLimiter helper
 			if ( $location_id ) {
@@ -505,7 +505,7 @@ class QueueManager {
 			}
 
 			if ( $result ) {
-				error_log( '✅ GHL CRM: Sync successful, marking as completed' );
+				
 				
 				// Extract contact ID from result if available
 				$contact_id = null;
@@ -555,10 +555,10 @@ class QueueManager {
 				throw new \Exception( 'Sync execution returned false' );
 			}
 		} catch ( \Exception $e ) {
-			error_log( '❌ GHL CRM: CAUGHT EXCEPTION in process_queue_item()' );
-			error_log( '❌ Exception Message: ' . $e->getMessage() );
-			error_log( '❌ Exception File: ' . $e->getFile() . ':' . $e->getLine() );
-			error_log( '❌ Stack Trace: ' . $e->getTraceAsString() );
+			
+			
+			
+			
 			
 			// Check if it's a rate limit error (using RateLimiter helper)
 			if ( $this->rate_limiter->is_rate_limit_error( $e ) ) {

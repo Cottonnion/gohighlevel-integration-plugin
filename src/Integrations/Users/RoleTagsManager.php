@@ -201,7 +201,7 @@ class RoleTagsManager {
 	public function get_user_role_tags( int $user_id ): array {
 		$user = get_userdata( $user_id );
 		if ( ! $user ) {
-			error_log( '🏷️ GHL CRM RoleTagsManager: User not found for ID ' . $user_id );
+			
 			return [];
 		}
 
@@ -209,35 +209,35 @@ class RoleTagsManager {
 		$role_tags = $settings['role_tags'] ?? [];
 		$global_tags = $settings['global_tags'] ?? '';
 
-		error_log( '🏷️ GHL CRM RoleTagsManager: Getting tags for user ' . $user_id . ' with roles: ' . implode( ', ', $user->roles ) );
-		error_log( '🏷️ GHL CRM RoleTagsManager: Role tags config: ' . print_r( $role_tags, true ) );
+		
+		
 
 		$all_tags = [];
 
 		// Add role-based tags
 		foreach ( $user->roles as $role ) {
 			$role_config = $role_tags[ $role ] ?? [];
-			error_log( '🏷️ GHL CRM RoleTagsManager: Config for role ' . $role . ': ' . print_r( $role_config, true ) );
+			
 			
 			if ( ! empty( $role_config['tags'] ) ) {
 				$tags = $this->parse_tags( $role_config['tags'] );
-				error_log( '🏷️ GHL CRM RoleTagsManager: Parsed tags for role ' . $role . ': ' . implode( ', ', $tags ) );
+				
 				$all_tags = array_merge( $all_tags, $tags );
 			} else {
-				error_log( '🏷️ GHL CRM RoleTagsManager: No tags configured for role ' . $role );
+				
 			}
 		}
 
 		// Add global tags
 		if ( ! empty( $global_tags ) ) {
 			$global_tags_array = $this->parse_tags( $global_tags );
-			error_log( '🏷️ GHL CRM RoleTagsManager: Global tags: ' . implode( ', ', $global_tags_array ) );
+			
 			$all_tags = array_merge( $all_tags, $global_tags_array );
 		}
 
 		// Ensure array has sequential keys for proper JSON encoding
 		$final_tags = array_values( array_unique( $all_tags ) );
-		error_log( '🏷️ GHL CRM RoleTagsManager: Final tags for user ' . $user_id . ': ' . implode( ', ', $final_tags ) );
+		
 
 		return $final_tags;
 	}
@@ -253,7 +253,7 @@ class RoleTagsManager {
 		$settings = $this->settings_manager->get_settings_array();
 		$role_tags = $settings['role_tags'] ?? [];
 
-		error_log( '🏷️ GHL CRM RoleTagsManager: Getting tags for role: ' . $role );
+		
 
 		$all_tags = [];
 
@@ -262,10 +262,10 @@ class RoleTagsManager {
 		
 		if ( ! empty( $role_config['tags'] ) ) {
 			$tags = $this->parse_tags( $role_config['tags'] );
-			error_log( '🏷️ GHL CRM RoleTagsManager: Tags for role ' . $role . ': ' . implode( ', ', $tags ) );
+			
 			$all_tags = array_merge( $all_tags, $tags );
 		} else {
-			error_log( '🏷️ GHL CRM RoleTagsManager: No tags configured for role ' . $role );
+			
 		}
 
 		// Ensure array has sequential keys for proper JSON encoding
@@ -318,7 +318,7 @@ class RoleTagsManager {
 				]
 			);
 		} catch ( \Exception $e ) {
-			error_log( 'GHL CRM: Failed to queue tag addition - ' . $e->getMessage() );
+			
 		}
 	}
 
@@ -343,7 +343,7 @@ class RoleTagsManager {
 				]
 			);
 		} catch ( \Exception $e ) {
-			error_log( 'GHL CRM: Failed to queue tag removal - ' . $e->getMessage() );
+			
 		}
 	}
 
@@ -398,7 +398,7 @@ class RoleTagsManager {
 					}
 				} catch ( \Exception $e ) {
 					$errors[] = sprintf( 'User %d: %s', $user->ID, $e->getMessage() );
-					error_log( '❌ GHL CRM RoleTagsManager: Error queuing user ' . $user->ID . ': ' . $e->getMessage() );
+					
 				}
 			}
 
@@ -415,7 +415,7 @@ class RoleTagsManager {
 				]
 			);
 		} catch ( \Exception $e ) {
-			error_log( '❌ GHL CRM RoleTagsManager: ajax_bulk_add_role_tags() EXCEPTION: ' . $e->getMessage() );
+			
 			wp_send_json_error(
 				[
 					'message' => sprintf(
@@ -428,7 +428,7 @@ class RoleTagsManager {
 				]
 			);
 		} catch ( \Error $e ) {
-			error_log( '❌ GHL CRM RoleTagsManager: ajax_bulk_add_role_tags() THROWN: ' . $e->getMessage() );
+			
 			wp_send_json_error(
 				[
 					'message' => sprintf(
@@ -494,7 +494,7 @@ class RoleTagsManager {
 					}
 				} catch ( \Exception $e ) {
 					$errors[] = sprintf( 'User %d: %s', $user->ID, $e->getMessage() );
-					error_log( '❌ GHL CRM RoleTagsManager: Error queuing user ' . $user->ID . ': ' . $e->getMessage() );
+					
 				}
 			}
 
@@ -511,7 +511,7 @@ class RoleTagsManager {
 				]
 			);
 		} catch ( \Exception $e ) {
-			error_log( '❌ GHL CRM RoleTagsManager: ajax_bulk_remove_role_tags() EXCEPTION: ' . $e->getMessage() );
+			
 			wp_send_json_error(
 				[
 					'message' => sprintf(

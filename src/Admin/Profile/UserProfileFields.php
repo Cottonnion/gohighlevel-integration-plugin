@@ -489,7 +489,7 @@ class UserProfileFields {
 			$result = $this->contact_resource->update( $contact_id, [ 'tags' => $tags ] );
 			return ! empty( $result );
 		} catch ( \Exception $e ) {
-			error_log( 'GHL CRM: Failed to sync tags - ' . $e->getMessage() );
+			
 			return false;
 		}
 	}
@@ -609,7 +609,7 @@ class UserProfileFields {
 
 			return $tags;
 		} catch ( \Exception $e ) {
-			error_log( 'GHL CRM: Failed to fetch tags - ' . $e->getMessage() );
+			
 			return [];
 		}
 	}

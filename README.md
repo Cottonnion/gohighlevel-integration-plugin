@@ -1,3 +1,17 @@
+=== GoHighLevel CRM Integration ===
+Contributors: cottonnion
+Tags: gohighlevel, crm, woocommerce, buddyboss, learndash
+Requires at least: 5.8
+Tested up to: 6.7
+Requires PHP: 7.4
+Stable tag: 1.0.0
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+
+A powerful WordPress plugin that seamlessly integrates GoHighLevel CRM with WordPress, WooCommerce, BuddyBoss, and LearnDash.
+
+== Description ==
+
 # GoHighLevel CRM Integration
 
 A powerful WordPress plugin that seamlessly integrates GoHighLevel CRM with WordPress, WooCommerce, BuddyBoss, and LearnDash, providing OAuth2 authentication, intelligent field mapping, and automatic contact synchronization.

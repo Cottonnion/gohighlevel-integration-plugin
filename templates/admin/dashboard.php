@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * 
  * Set to FALSE for production (clean dashboard)
  */
-define( 'GHL_SHOW_DEBUG', false );
+define( 'GHL_SHOW_DEBUG', true );
 
 // Get OAuth handler and status
 $oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
@@ -58,9 +58,9 @@ if ( ! function_exists( 'as_next_scheduled_action' ) ) {
 	if ( $next_scheduled ) {
 		$time_until = $next_scheduled - time();
 		echo '<p style="background: white; padding: 10px; margin: 10px 0;">';
-		echo '<strong>Next Run:</strong> ' . date( 'Y-m-d H:i:s', $next_scheduled ) . '<br>';
-		echo '<strong>Time Until Next Run:</strong> ' . $time_until . ' seconds<br>';
-		echo '<strong>Current Time:</strong> ' . date( 'Y-m-d H:i:s', time() ) . '<br>';
+		echo '<strong>Next Run:</strong> ' . esc_html( gmdate( 'Y-m-d H:i:s', $next_scheduled ) ) . '<br>';
+		echo '<strong>Time Until Next Run:</strong> ' . esc_html( $time_until ) . ' seconds<br>';
+		echo '<strong>Current Time:</strong> ' . esc_html( gmdate( 'Y-m-d H:i:s', time() ) ) . '<br>';
 		echo '<strong>Status:</strong> ' . ( $time_until <= 0 ? '<span style="color: green;">Ready to run</span>' : '<span style="color: orange;">Scheduled</span>' );
 		echo '</p>';
 	} else {
@@ -159,9 +159,9 @@ if ( ! empty( $settings['api_token'] ) && ! empty( $settings['location_id'] ) ) 
 		echo '<p style="color: red; font-weight: bold;">✗ API Connection Failed</p>';
 		echo '<p>Error: ' . esc_html( $e->getMessage() ) . '</p>';
 		echo '<pre style="background: white; padding: 10px; overflow: auto;">';
-		echo 'Exception Class: ' . get_class( $e ) . "\n";
-		echo 'Exception Code: ' . $e->getCode() . "\n";
-		echo 'Trace: ' . "\n" . $e->getTraceAsString();
+		echo 'Exception Class: ' . esc_html( get_class( $e ) ) . "\n";
+		echo 'Exception Code: ' . esc_html( (string) $e->getCode() ) . "\n";
+		echo 'Trace: ' . "\n" . esc_html( $e->getTraceAsString() );
 		echo '</pre>';
 	}
 } else {

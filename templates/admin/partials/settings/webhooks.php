@@ -33,21 +33,23 @@ $settings        = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_a
 					<strong style="color: #46b450;"><?php esc_html_e( 'Active', 'ghl-crm-integration' ); ?></strong>
 				</p>
 				<p class="description">
-					<?php 
-					printf( 
-						esc_html__( 'Webhook is receiving data. %d webhooks processed in the last 24 hours.', 'ghl-crm-integration' ), 
-						$webhook_status['recent_webhooks_24h'] 
-					); 
-					?>
+				<?php
+				printf( 
+					/* translators: %d: Number of webhooks received in the last 24 hours */
+					esc_html__( 'Webhook is receiving data. %d webhooks processed in the last 24 hours.', 'ghl-crm-integration' ), 
+					esc_html( $webhook_status['recent_webhooks_24h'] )
+				); 
+				?>
 				</p>
 				<?php if ( $webhook_status['last_webhook_received'] ) : ?>
 					<p class="description">
-						<?php 
-						printf( 
-							esc_html__( 'Last webhook received: %s', 'ghl-crm-integration' ), 
-							esc_html( $webhook_status['last_webhook_received'] ) 
-						); 
-						?>
+					<?php
+					printf( 
+						/* translators: %s: Date and time of last webhook received */
+						esc_html__( 'Last webhook received: %s', 'ghl-crm-integration' ), 
+						esc_html( $webhook_status['last_webhook_received'] ) 
+					); 
+					?>
 					</p>
 				<?php endif; ?>
 			<?php else : ?>

@@ -69,7 +69,7 @@ class QueueProcessor {
 	 * @throws \Exception
 	 */
 	public function execute_sync( string $item_type, string $action, int $item_id, array $payload ) {
-		error_log( '🔧 GHL CRM QueueProcessor: execute_sync() - Type: ' . $item_type . ', Action: ' . $action );
+		
 
 		try {
 			// Route to appropriate integration handler
@@ -93,7 +93,7 @@ class QueueProcessor {
 					return apply_filters( 'ghl_crm_execute_sync', false, $item_type, $action, $item_id, $payload );
 			}
 		} catch ( \Exception $e ) {
-			error_log( '❌ GHL CRM QueueProcessor: execute_sync() EXCEPTION: ' . $e->getMessage() );
+			
 			throw $e;
 		}
 	}
@@ -108,7 +108,7 @@ class QueueProcessor {
 	 * @throws \Exception
 	 */
 	private function execute_user_sync( string $action, int $user_id, array $payload ) {
-		error_log( '👤 GHL CRM QueueProcessor: execute_user_sync() - Action: ' . $action . ', User: ' . $user_id );
+		
 
 		$client = \GHL_CRM\API\Client\Client::get_instance();
 		$contact_resource = new \GHL_CRM\API\Resources\ContactResource( $client );
@@ -131,7 +131,7 @@ class QueueProcessor {
 				return $this->handle_remove_tags( $contact_resource, $payload );
 
 			default:
-				throw new \Exception( 'Unknown user action: ' . $action );
+				throw new \Exception( esc_html( 'Unknown user action: ' . $action ) );
 		}
 	}
 
@@ -151,7 +151,7 @@ class QueueProcessor {
 			throw new \Exception( 'Contact ID and tags are required' );
 		}
 
-		error_log( '🏷️ GHL CRM QueueProcessor: Adding tags to contact ' . $contact_id . ': ' . implode( ', ', $tags ) );
+		
 		
 		$result = $contact_resource->add_tags( $contact_id, $tags );
 		return ! empty( $result ) ? $result : false;
@@ -173,7 +173,7 @@ class QueueProcessor {
 			throw new \Exception( 'Contact ID and tags are required' );
 		}
 
-		error_log( '🏷️ GHL CRM QueueProcessor: Removing tags from contact ' . $contact_id . ': ' . implode( ', ', $tags ) );
+		
 		
 		$result = $contact_resource->remove_tags( $contact_id, $tags );
 		return ! empty( $result ) ? $result : false;
@@ -191,7 +191,7 @@ class QueueProcessor {
 	private function handle_user_register_update( $client, $contact_resource, array $payload ) {
 		$location_id = $this->get_location_id();
 		if ( empty( $location_id ) ) {
-			error_log( '❌ No location ID configured' );
+			
 			return false;
 		}
 
@@ -199,7 +199,7 @@ class QueueProcessor {
 		$cached_contact = $this->contact_cache->get( $email );
 
 		if ( $cached_contact ) {
-			error_log( '💾 Using cached contact ID: ' . $cached_contact['id'] );
+			
 			$result = $contact_resource->update( $cached_contact['id'], $payload );
 		} else {
 			// Search for existing contact
@@ -207,11 +207,11 @@ class QueueProcessor {
 			
 			if ( ! empty( $existing['contacts'][0] ) ) {
 				$contact = $existing['contacts'][0];
-				error_log( '✅ Found existing contact ID: ' . $contact['id'] );
+				
 				$this->contact_cache->set( $email, $contact );
 				$result = $contact_resource->update( $contact['id'], $payload );
 			} else {
-				error_log( '🆕 Creating new contact...' );
+				
 				$result = $client->post( 'contacts/', array_merge( $payload, [ 'locationId' => $location_id ] ) );
 				if ( $result && isset( $result['contact']['id'] ) ) {
 					$this->contact_cache->set( $email, $result['contact'] );
@@ -287,7 +287,7 @@ class QueueProcessor {
 	 * @throws \Exception
 	 */
 	private function execute_contact_sync( string $action, string $contact_id, array $payload ): array {
-		error_log( '📥 GHL CRM QueueProcessor: execute_contact_sync() - Action: ' . $action );
+		
 
 		$ghl_sync = \GHL_CRM\Sync\GHLToWordPressSync::get_instance();
 
@@ -297,7 +297,7 @@ class QueueProcessor {
 				$result = $ghl_sync->sync_contact_to_wordpress( $contact_id, $payload );
 
 				if ( is_wp_error( $result ) ) {
-					throw new \Exception( $result->get_error_message() );
+					throw new \Exception( esc_html( $result->get_error_message() ) );
 				}
 
 				return [
@@ -311,7 +311,7 @@ class QueueProcessor {
 				$result = $ghl_sync->delete_wordpress_user( $contact_id );
 
 				if ( is_wp_error( $result ) ) {
-					throw new \Exception( $result->get_error_message() );
+					throw new \Exception( esc_html( $result->get_error_message() ) );
 				}
 
 				return [
@@ -321,7 +321,7 @@ class QueueProcessor {
 				];
 
 			default:
-				throw new \Exception( 'Unknown contact action: ' . $action );
+				throw new \Exception( esc_html( 'Unknown contact action: ' . $action ) );
 		}
 	}
 
