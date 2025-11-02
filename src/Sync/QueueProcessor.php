@@ -268,8 +268,10 @@ class QueueProcessor {
 		}
 
 		if ( $contact ) {
+			// Just update email to trigger GHL automations on login
+			// Don't send customFields to avoid "customFields must be an array" error
 			$result = $contact_resource->update( $contact['id'], [
-				'customFields' => [ 'last_login' => $payload['last_login'] ?? current_time( 'mysql' ) ],
+				'email' => $payload['email'],
 			] );
 			return ! empty( $result ) ? $result : false;
 		}

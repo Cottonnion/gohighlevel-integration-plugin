@@ -423,17 +423,15 @@ class Client implements ClientInterface {
 
 		$status_code = wp_remote_retrieve_response_code( $response );
 		$body        = wp_remote_retrieve_body( $response );
-		$decoded     = json_decode( $body, true );
+	$decoded     = json_decode( $body, true );
 
-		if ( $status_code !== 200 || empty( $decoded['access_token'] ) ) {
-			throw new ApiException(
-				esc_html__( 'Failed to obtain access token from GoHighLevel', 'ghl-crm-integration' ),
-				(int) $status_code,
-				(array) $decoded
-			);
-		}
-
-		// Store tokens
+	if ( $status_code !== 200 || empty( $decoded['access_token'] ) ) {
+		throw new ApiException( // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+			esc_html__( 'Failed to obtain access token from GoHighLevel', 'ghl-crm-integration' ),
+			(int) $status_code,
+			(array) $decoded
+		);
+	}		// Store tokens
 		$this->access_token  = $decoded['access_token'];
 		$this->refresh_token = $decoded['refresh_token'] ?? '';
 
@@ -498,15 +496,13 @@ class Client implements ClientInterface {
 		$body        = wp_remote_retrieve_body( $response );
 		$decoded     = json_decode( $body, true );
 
-		if ( $status_code !== 200 || empty( $decoded['access_token'] ) ) {
-			throw new ApiException(
-				esc_html__( 'Failed to refresh access token', 'ghl-crm-integration' ),
-				(int) $status_code,
-				(array) $decoded
-			);
-		}
-
-		// Update tokens
+	if ( $status_code !== 200 || empty( $decoded['access_token'] ) ) {
+		throw new ApiException( // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+			esc_html__( 'Failed to refresh access token', 'ghl-crm-integration' ),
+			(int) $status_code,
+			(array) $decoded
+		);
+	}		// Update tokens
 		$this->access_token = $decoded['access_token'];
 		if ( ! empty( $decoded['refresh_token'] ) ) {
 			$this->refresh_token = $decoded['refresh_token'];
@@ -565,67 +561,69 @@ class Client implements ClientInterface {
 
 		$status_code = wp_remote_retrieve_response_code( $response );
 		$body        = wp_remote_retrieve_body( $response );
-		$decoded     = json_decode( $body, true );
+	$decoded     = json_decode( $body, true );
 
-		if ( $status_code !== 200 || empty( $decoded['authorizationCode'] ) ) {
-			throw new ApiException(
-				esc_html__( 'Failed to get authorization code from HighLevel reconnect', 'ghl-crm-integration' ),
-				(int) $status_code,
-				(array) $decoded
-			);
-		}
-
-		return $decoded['authorizationCode'];
+	if ( $status_code !== 200 || empty( $decoded['authorizationCode'] ) ) {
+		throw new ApiException( // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+			esc_html__( 'Failed to get authorization code from HighLevel reconnect', 'ghl-crm-integration' ),
+			(int) $status_code,
+			(array) $decoded
+		);
+	}		return $decoded['authorizationCode'];
 	}
 
 	/**
 	 * Send GET request
 	 *
-	 * @param string $endpoint API endpoint
-	 * @param array  $params   Query parameters
+	 * @param string $endpoint            API endpoint
+	 * @param array  $params              Query parameters
+	 * @param bool   $include_location_id Whether to include locationId in query params (default: true)
 	 * @return array Response data
 	 * @throws ApiException
 	 */
-	public function get( string $endpoint, array $params = [] ): array {
-		$url = $this->build_url( $endpoint, $params );
+	public function get( string $endpoint, array $params = [], bool $include_location_id = true ): array {
+		$url = $this->build_url( $endpoint, $params, $include_location_id );
 		return $this->request( 'GET', $url );
 	}
 
 	/**
 	 * Send POST request
 	 *
-	 * @param string $endpoint API endpoint
-	 * @param array  $data     Request body
+	 * @param string $endpoint            API endpoint
+	 * @param array  $data                Request body
+	 * @param bool   $include_location_id Whether to include locationId in query params (default: true)
 	 * @return array Response data
 	 * @throws ApiException
 	 */
-	public function post( string $endpoint, array $data = [] ): array {
-		$url = $this->build_url( $endpoint );
+	public function post( string $endpoint, array $data = [], bool $include_location_id = true ): array {
+		$url = $this->build_url( $endpoint, [], $include_location_id );
 		return $this->request( 'POST', $url, $data );
 	}
 
 	/**
 	 * Send PUT request
 	 *
-	 * @param string $endpoint API endpoint
-	 * @param array  $data     Request body
+	 * @param string $endpoint            API endpoint
+	 * @param array  $data                Request body
+	 * @param bool   $include_location_id Whether to include locationId in query params (default: true)
 	 * @return array Response data
 	 * @throws ApiException
 	 */
-	public function put( string $endpoint, array $data = [] ): array {
-		$url = $this->build_url( $endpoint );
+	public function put( string $endpoint, array $data = [], bool $include_location_id = true ): array {
+		$url = $this->build_url( $endpoint, [], $include_location_id );
 		return $this->request( 'PUT', $url, $data );
 	}
 
 	/**
 	 * Send DELETE request
 	 *
-	 * @param string $endpoint API endpoint
+	 * @param string $endpoint            API endpoint
+	 * @param bool   $include_location_id Whether to include locationId in query params (default: true)
 	 * @return array Response data
 	 * @throws ApiException
 	 */
-	public function delete( string $endpoint ): array {
-		$url = $this->build_url( $endpoint );
+	public function delete( string $endpoint, bool $include_location_id = true ): array {
+		$url = $this->build_url( $endpoint, [], $include_location_id );
 		return $this->request( 'DELETE', $url );
 	}
 
@@ -656,29 +654,25 @@ class Client implements ClientInterface {
 	/**
 	 * Build full URL with endpoint and params
 	 *
-	 * @param string $endpoint Endpoint path
-	 * @param array  $params   Query parameters
+	 * @param string $endpoint            Endpoint path
+	 * @param array  $params              Query parameters
+	 * @param bool   $include_location_id Whether to include locationId in query params (default: true)
 	 * @return string Full URL
 	 */
-	private function build_url( string $endpoint, array $params = [] ): string {
+	private function build_url( string $endpoint, array $params = [], bool $include_location_id = true ): string {
 		$url = self::BASE_URL . '/' . ltrim( $endpoint, '/' );
 
-		// Add location ID to params if not already present
+		// Add location ID to params if requested and not already present
 		// Skip if endpoint already contains "locations/{locationId}" in the path
 		$endpoint_has_location_path = preg_match( '#^locations/[a-zA-Z0-9_-]+/#', $endpoint );
 		
-		if ( ! empty( $this->location_id ) && ! isset( $params['locationId'] ) && ! $endpoint_has_location_path ) {
+		if ( $include_location_id && ! empty( $this->location_id ) && ! isset( $params['locationId'] ) && ! $endpoint_has_location_path ) {
 			$params['locationId'] = $this->location_id;
 		}
 
 		if ( ! empty( $params ) ) {
 			$url .= '?' . http_build_query( $params );
 		}
-
-		// DEBUG: Log built URL
-		error_log( '🔗 GHL CRM: Built URL: ' . $url );
-		error_log( '   - Endpoint: ' . $endpoint );
-		error_log( '   - Params: ' . print_r( $params, true ) );
 
 		return $url;
 	}
@@ -703,12 +697,6 @@ class Client implements ClientInterface {
 			throw new AuthenticationException( esc_html__( 'No authentication method configured. Please connect your GoHighLevel account.', 'ghl-crm-integration' ) );
 		}
 		
-		// Log full credentials for debugging
-		error_log( '🔑 FULL CREDENTIALS:' );
-		error_log( '   - Token: ' . $auth_token );
-		error_log( '   - Location ID: ' . $this->location_id );
-		error_log( '   - URL: ' . $url );
-
 		// Build request arguments
 		$args = [
 			'method'  => $method,
@@ -731,7 +719,7 @@ class Client implements ClientInterface {
 		// Check for WP errors
 		if ( is_wp_error( $response ) ) {
 			$error_msg = 'HTTP Request failed: ' . $response->get_error_message();
-			error_log( '❌ ' . $error_msg );
+			
 			throw new ApiException( esc_html( $error_msg ) );
 		}
 
@@ -741,9 +729,9 @@ class Client implements ClientInterface {
 		$headers     = wp_remote_retrieve_headers( $response );
 
 		// Log full response
-		error_log( '📥 GHL CRM: API Response:' );
-		error_log( '   - Status Code: ' . $status_code );
-		error_log( '   - Body: ' . $body );
+		
+		
+		
 
 		// Store headers for rate limit tracking
 		$this->last_response_headers = $headers->getAll();
@@ -776,15 +764,13 @@ class Client implements ClientInterface {
 		// Decode JSON response
 		$decoded = json_decode( $body, true );
 
-		if ( json_last_error() !== JSON_ERROR_NONE ) {
-			throw new ApiException(
-				esc_html__( 'Invalid JSON response from API', 'ghl-crm-integration' ),
-				(int) $status_code,
-				[ 'raw_body' => (string) $body ]
-			);
-		}
-
-		// Handle error responses
+	if ( json_last_error() !== JSON_ERROR_NONE ) {
+		throw new ApiException( // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+			esc_html__( 'Invalid JSON response from API', 'ghl-crm-integration' ),
+			(int) $status_code,
+			[ 'raw_body' => (string) $body ]
+		);
+	}		// Handle error responses
 		$this->handle_error_response( $status_code, $decoded );
 
 		return $decoded;
@@ -946,26 +932,26 @@ class Client implements ClientInterface {
 			$error_message = (string) $error_raw;
 		}
 
-		// Rate limit exceeded
-		if ( 429 === $status_code ) {
-			$retry_after = $this->last_response_headers['retry-after'] ?? 60;
-			throw new RateLimitException(
-				sprintf(
-					/* translators: %d: Seconds until retry */
-					esc_html__( 'Rate limit exceeded. Retry after %d seconds.', 'ghl-crm-integration' ),
-					(int) $retry_after
-				),
-				(int) $retry_after,
-				(array) $response
-			);
-		}
-
-		// Authentication error
-		if ( 401 === $status_code || 403 === $status_code ) {
-			throw new AuthenticationException( esc_html( $error_message ), (array) $response );
-		}
-
-		// Generic API error
-		throw new ApiException( esc_html( $error_message ), (int) $status_code, (array) $response );
+	// Rate limit exceeded
+	if ( 429 === $status_code ) {
+		$retry_after = $response['headers']['retry-after'] ?? 60;
+		throw new RateLimitException( // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+			sprintf(
+				/* translators: %d: Seconds until retry */
+				esc_html__( 'Rate limit exceeded. Retry after %d seconds.', 'ghl-crm-integration' ),
+				(int) $retry_after
+			),
+			(int) $retry_after,
+			(array) $response
+		);
 	}
+
+	// Authentication error
+	if ( 401 === $status_code || 403 === $status_code ) {
+		throw new AuthenticationException( esc_html( $error_message ), (array) $response ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+	}
+
+	// Generic API error
+	throw new ApiException( esc_html( $error_message ), (int) $status_code, (array) $response ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+}
 }

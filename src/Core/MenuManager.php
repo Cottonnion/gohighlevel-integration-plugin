@@ -120,19 +120,19 @@ class MenuManager {
 
 		add_submenu_page(
 			'ghl-crm-admin',
-			__( 'Custom Objects', 'ghl-crm-integration' ),
-			__( 'Custom Objects', 'ghl-crm-integration' ),
+			__( 'Sync Logs', 'ghl-crm-integration' ),
+			__( 'Sync Logs', 'ghl-crm-integration' ),
 			'manage_options',
-			'ghl-crm-admin#/custom-objects',
+			'ghl-crm-admin#/sync-logs',
 			'__return_false'
 		);
 
 		add_submenu_page(
 			'ghl-crm-admin',
-			__( 'Sync Logs', 'ghl-crm-integration' ),
-			__( 'Sync Logs', 'ghl-crm-integration' ),
+			__( 'Custom Objects', 'ghl-crm-integration' ),
+			__( 'Custom Objects', 'ghl-crm-integration' ),
 			'manage_options',
-			'ghl-crm-admin#/sync-logs',
+			'ghl-crm-admin#/custom-objects',
 			'__return_false'
 		);
 	}

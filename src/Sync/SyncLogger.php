@@ -74,7 +74,7 @@ class SyncLogger {
 		$result = $wpdb->insert( $table_name, $data );
 
 		if ( $result === false ) {
-			error_log( 'GHL CRM: Failed to insert sync log - ' . $wpdb->last_error );
+			
 			return false;
 		}
 
@@ -149,39 +149,41 @@ class SyncLogger {
 
 		$args = wp_parse_args( $args, $defaults );
 
-		// Build WHERE clause
-		$where = [ '1=1' ];
-		$where[] = $wpdb->prepare( 'site_id = %d', get_current_blog_id() );
+	// Build WHERE clause
+	$where = [ '1=1' ];
+	$where[] = $wpdb->prepare( 'site_id = %d', get_current_blog_id() );
 
-		if ( ! empty( $args['sync_type'] ) ) {
-			$where[] = $wpdb->prepare( 'sync_type = %s', $args['sync_type'] );
-		}
+	if ( ! empty( $args['sync_type'] ) ) {
+		$where[] = $wpdb->prepare( 'sync_type = %s', $args['sync_type'] );
+	}
 
-		if ( ! empty( $args['status'] ) ) {
-			$where[] = $wpdb->prepare( 'status = %s', $args['status'] );
-		}
+	if ( ! empty( $args['status'] ) ) {
+		$where[] = $wpdb->prepare( 'status = %s', $args['status'] );
+	}
 
-		if ( ! empty( $args['item_id'] ) ) {
-			$where[] = $wpdb->prepare( 'item_id = %d', $args['item_id'] );
-		}
+	if ( ! empty( $args['item_id'] ) ) {
+		$where[] = $wpdb->prepare( 'item_id = %d', $args['item_id'] );
+	}
 
-		$where_clause = implode( ' AND ', $where );
+	$where_clause = implode( ' AND ', $where );
 
-		// Build ORDER BY clause
-		$allowed_orderby = [ 'id', 'created_at', 'sync_type', 'status' ];
-		$orderby = in_array( $args['orderby'], $allowed_orderby, true ) ? $args['orderby'] : 'created_at';
-		$order = strtoupper( $args['order'] ) === 'ASC' ? 'ASC' : 'DESC';
+	// Build ORDER BY clause
+	$allowed_orderby = [ 'id', 'created_at', 'sync_type', 'status' ];
+	$orderby = in_array( $args['orderby'], $allowed_orderby, true ) ? $args['orderby'] : 'created_at';
+	$order = strtoupper( $args['order'] ) === 'ASC' ? 'ASC' : 'DESC';
 
-		// Build query
-		$query = "SELECT * FROM {$table_name} WHERE {$where_clause} ORDER BY {$orderby} {$order} LIMIT %d OFFSET %d";
+	// Build query - phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+	$query = $wpdb->prepare(
+		"SELECT * FROM {$table_name} WHERE {$where_clause} ORDER BY {$orderby} {$order} LIMIT %d OFFSET %d",
+		$args['limit'],
+		$args['offset']
+	);
 
-		// Execute query
-		$results = $wpdb->get_results(
-			$wpdb->prepare( $query, $args['limit'], $args['offset'] ),
-			ARRAY_A
-		);
-
-		return $results ?: [];
+	// Execute query
+	$results = $wpdb->get_results(
+		$query, // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		ARRAY_A
+	);		return $results ?: [];
 	}
 
 	/**
@@ -228,7 +230,7 @@ class SyncLogger {
 		global $wpdb;
 
 		$table_name = $wpdb->prefix . 'ghl_sync_log';
-		$date_limit = date( 'Y-m-d H:i:s', strtotime( "-{$days} days" ) );
+		$date_limit = gmdate( 'Y-m-d H:i:s', strtotime( "-{$days} days" ) );
 
 		return $wpdb->query(
 			$wpdb->prepare(
