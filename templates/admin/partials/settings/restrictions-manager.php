@@ -27,11 +27,7 @@ $show_login_link = $settings['restrictions_show_login_link'] ?? true;
 $allow_admins = $settings['restrictions_allow_admins'] ?? true;
 $hide_restricted_archives = $settings['restrictions_hide_archives'] ?? false;
 $hide_from_rest_api = $settings['restrictions_hide_rest_api'] ?? false;
-$allowed_roles = $settings['restrictions_allowed_roles'] ?? [];
-
-// Get all WordPress roles
-$wp_roles = wp_roles();
-$all_roles = $wp_roles->get_names();
+$allowed_tags = $settings['restrictions_allowed_tags'] ?? [];
 ?>
 
 <div class="ghl-settings-wrapper">
@@ -299,27 +295,20 @@ $all_roles = $wp_roles->get_names();
 
 				<tr>
 					<th scope="row">
-						<label for="restrictions_allowed_roles">
-							<?php esc_html_e( 'Additional Allowed Roles', 'ghl-crm-integration' ); ?>
+						<label for="restrictions_allowed_tags">
+							<?php esc_html_e( 'Additional Allowed Tags', 'ghl-crm-integration' ); ?>
 						</label>
 					</th>
 					<td>
-						<select id="restrictions_allowed_roles" 
-								name="restrictions_allowed_roles[]" 
+						<select id="restrictions_allowed_tags" 
+								name="restrictions_allowed_tags[]" 
 								multiple 
-								class="ghl-roles-select"
+								class="ghl-tags-select"
 								style="width: 100%; max-width: 500px;"
-								data-placeholder="<?php esc_attr_e( 'Select roles that can bypass restrictions...', 'ghl-crm-integration' ); ?>">
-							<?php foreach ( $all_roles as $role_slug => $role_name ) : ?>
-								<?php if ( 'administrator' === $role_slug ) continue; // Skip admin, it has its own toggle ?>
-								<option value="<?php echo esc_attr( $role_slug ); ?>" 
-										<?php echo in_array( $role_slug, $allowed_roles, true ) ? 'selected' : ''; ?>>
-									<?php echo esc_html( translate_user_role( $role_name ) ); ?>
-								</option>
-							<?php endforeach; ?>
+								data-placeholder="<?php esc_attr_e( 'Select tags that can bypass restrictions...', 'ghl-crm-integration' ); ?>">
 						</select>
 						<p class="description" style="margin-top: 8px;">
-							<?php esc_html_e( 'Select additional user roles that can view all restricted content (e.g., Editor, Shop Manager).', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'Users with any of these tags can view all restricted content, regardless of individual page restrictions.', 'ghl-crm-integration' ); ?>
 						</p>
 					</td>
 				</tr>

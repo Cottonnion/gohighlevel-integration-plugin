@@ -132,7 +132,7 @@ class Restrictions {
 	}
 
 	/**
-	 * Check if current user has an allowed role that bypasses restrictions
+	 * Check if current user has bypass permissions (admin or allowed tags)
 	 *
 	 * @return bool
 	 */
@@ -147,21 +147,19 @@ class Restrictions {
 			return true;
 		}
 
-		// Check additional allowed roles
-		$allowed_roles = $this->settings_manager->get_setting( 'restrictions_allowed_roles', [] );
-		if ( empty( $allowed_roles ) || ! is_array( $allowed_roles ) ) {
-			return false;
-		}
-
-		$user = wp_get_current_user();
-		if ( ! $user || empty( $user->roles ) ) {
-			return false;
-		}
-
-		// Check if user has any of the allowed roles
-		foreach ( $user->roles as $role ) {
-			if ( in_array( $role, $allowed_roles, true ) ) {
-				return true;
+		// Check additional allowed tags
+		$allowed_tags = $this->settings_manager->get_setting( 'restrictions_allowed_tags', [] );
+		if ( ! empty( $allowed_tags ) && is_array( $allowed_tags ) ) {
+			$user_id = get_current_user_id();
+			$user_tags = get_user_meta( $user_id, 'ghl_contact_tags', true );
+			
+			if ( ! empty( $user_tags ) && is_array( $user_tags ) ) {
+				// Check if user has any of the allowed tags
+				foreach ( $allowed_tags as $allowed_tag ) {
+					if ( in_array( $allowed_tag, $user_tags, true ) ) {
+						return true;
+					}
+				}
 			}
 		}
 
