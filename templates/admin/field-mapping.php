@@ -407,7 +407,7 @@ window.GHL_FieldMapping = window.GHL_FieldMapping || {};
 			type: 'POST',
 			data: {
 				action: 'ghl_crm_get_custom_fields',
-				nonce: '<?php echo wp_create_nonce( 'ghl_crm_field_mapping_nonce' ); ?>'
+				nonce: '<?php echo esc_js( wp_create_nonce( 'ghl_crm_field_mapping_nonce' ) ); ?>'
 			},
 			success: function(response) {
 				$button.prop('disabled', false);
