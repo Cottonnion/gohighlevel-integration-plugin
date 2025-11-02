@@ -113,6 +113,11 @@ class UserHooks {
 		// 3. User deletion hook - Handle contact deletion/tagging when user is deleted
 		if ( ! empty( $settings['delete_contact_on_user_delete'] ) ) {
 			add_action( 'delete_user', [ $this, 'on_user_delete' ], 10, 1 );
+			
+			// Multisite: Also handle when user is removed from a specific site
+			if ( is_multisite() ) {
+				add_action( 'remove_user_from_blog', [ $this, 'on_user_remove_from_blog' ], 10, 2 );
+			}
 		}
 	}
 	/**
@@ -151,7 +156,6 @@ class UserHooks {
 		if ( ! empty( $_POST['role'] ) && is_string( $_POST['role'] ) ) {
 			// Admin is creating user with specific role - use POST data
 			$assigned_role = sanitize_text_field( wp_unslash( $_POST['role'] ) );
-			error_log( '🏷️ GHL CRM UserHooks: User ' . $user_id . ' created via admin with role: ' . $assigned_role );
 			$role_based_tags = $role_tags_manager->get_tags_for_role( $assigned_role );
 		} else {
 			// Regular registration or role already assigned - read from user object
@@ -163,8 +167,6 @@ class UserHooks {
 		$all_tags = array_unique( $all_tags );
 		// Re-index array to ensure sequential numeric keys (not associative)
 		$all_tags = array_values( $all_tags );
-		
-		error_log( '🏷️ GHL CRM UserHooks: Final tags for new user ' . $user_id . ': ' . implode( ', ', $all_tags ) );
 		
 		if ( ! empty( $all_tags ) ) {
 			$contact_data['tags'] = $all_tags;
@@ -250,8 +252,6 @@ class UserHooks {
 		$new_roles = $user->roles;
 		$role_changed = ( $old_roles !== $new_roles );
 		
-		error_log( '👤 GHL CRM UserHooks: User ' . $user_id . ' update - Old roles: ' . implode( ', ', $old_roles ) . ' | New roles: ' . implode( ', ', $new_roles ) );
-		
 		// Prepare contact data
 		$contact_data = $this->prepare_contact_data( $user );
 		
@@ -267,10 +267,9 @@ class UserHooks {
 				
 				if ( ! empty( $contact['contact']['tags'] ) && is_array( $contact['contact']['tags'] ) ) {
 					$existing_tags = $contact['contact']['tags'];
-					error_log( '🏷️ GHL CRM UserHooks: Existing tags from GHL: ' . implode( ', ', $existing_tags ) );
 				}
 			} catch ( \Exception $e ) {
-				error_log( '⚠️ GHL CRM UserHooks: Failed to fetch existing tags: ' . $e->getMessage() );
+				// Silently fail if we can't fetch existing tags
 			}
 		}
 		
@@ -288,7 +287,6 @@ class UserHooks {
 					$old_tags = is_array( $old_role_config['tags'] ) ? $old_role_config['tags'] : explode( ',', $old_role_config['tags'] );
 					$old_tags = array_map( 'trim', $old_tags );
 					$tags_to_remove = array_merge( $tags_to_remove, $old_tags );
-					error_log( '🏷️ GHL CRM UserHooks: Will remove tags from old role ' . $old_role . ': ' . implode( ', ', $old_tags ) );
 				}
 			}
 		}
@@ -299,13 +297,10 @@ class UserHooks {
 		// Remove old role tags from existing tags
 		if ( ! empty( $tags_to_remove ) ) {
 			$existing_tags = array_diff( $existing_tags, $tags_to_remove );
-			error_log( '🏷️ GHL CRM UserHooks: Existing tags after removal: ' . implode( ', ', $existing_tags ) );
 		}
 		
 		// Merge: existing tags (minus removed) + new role tags
 		$all_tags = array_unique( array_merge( $existing_tags, $role_based_tags ) );
-		
-		error_log( '🏷️ GHL CRM UserHooks: Final merged tags: ' . implode( ', ', $all_tags ) );
 		
 		if ( ! empty( $all_tags ) ) {
 			// Reindex array to ensure sequential keys for proper JSON encoding
@@ -333,6 +328,38 @@ class UserHooks {
 			'email'  => $user->user_email,
 			'delete' => ! empty( $settings['delete_contact_on_user_delete'] ),
 		];
+		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
+		$queue_manager->add_to_queue( 'user', $user_id, 'delete_user', $data );
+	}
+
+	/**
+	 * Handle user removal from blog (Multisite)
+	 * Fires when user is removed from a specific site, not deleted from network
+	 *
+	 * @param int $user_id User ID being removed
+	 * @param int $blog_id Blog ID user is being removed from
+	 * @return void
+	 */
+	public function on_user_remove_from_blog( int $user_id, int $blog_id ): void {
+		// Only process if this is the current site
+		if ( get_current_blog_id() !== $blog_id ) {
+			return;
+		}
+
+		$user = get_userdata( $user_id );
+		if ( ! $user ) {
+			return;
+		}
+
+		$settings = $this->settings_manager->get_settings_array();
+		
+		// Queue deletion with settings (same as delete_user)
+		$data = [
+			'email'   => $user->user_email,
+			'delete'  => ! empty( $settings['delete_contact_on_user_delete'] ),
+			'blog_id' => $blog_id, // Track which site triggered this
+		];
+		
 		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
 		$queue_manager->add_to_queue( 'user', $user_id, 'delete_user', $data );
 	}
@@ -459,15 +486,6 @@ class UserHooks {
 			$contact_data['customFields'] = $ghl_custom_fields;
 		}
 
-		// Debug log: Show which fields are being synced
-		error_log( sprintf(
-			'GHL CRM: Preparing contact data for user %d - Syncing %d standard fields + %d custom fields',
-			$user->ID,
-			count( $contact_data ) - 1, // -1 for 'source' field
-			count( $ghl_custom_fields )
-		) );
-		error_log( 'GHL CRM: Mapped fields: ' . implode( ', ', array_keys( $contact_data ) ) );
-		
 		return $contact_data;
 	}
 	/**
@@ -488,7 +506,6 @@ class UserHooks {
 				$this->contact_resource->add_tags( $contact_id, $tags );
 			} catch ( \Exception $e ) {
 				// Silent fail for tags
-				error_log( 'GHL CRM: Failed to add tags - ' . $e->getMessage() );
 			}
 		}
 	}
