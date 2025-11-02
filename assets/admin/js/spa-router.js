@@ -176,7 +176,10 @@
                     }
                     break;
                 case 'custom-objects':
-                    // Custom Objects view - handlers are inline in the template
+                    // Re-initialize custom objects handlers
+                    if (typeof window.initCustomObjects === 'function') {
+                        window.initCustomObjects();
+                    }
                     console.log('Custom Objects view loaded');
                     break;
                 case 'integrations':
@@ -193,6 +196,10 @@
                     // Initialize user register tags functionality
                     if (typeof window.initUserRegisterTags === 'function') {
                         window.initUserRegisterTags();
+                    }
+                    // Initialize user register company functionality
+                    if (typeof window.initUserRegisterCompany === 'function') {
+                        window.initUserRegisterCompany();
                     }
                     // Initialize restrictions roles select functionality
                     if (typeof window.initRestrictionsRolesSelect === 'function') {

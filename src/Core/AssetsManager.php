@@ -400,6 +400,106 @@ class AssetsManager {
 			[],
 			GHL_CRM_VERSION
 		);
+
+		// Custom Objects page assets (SPA page)
+		$this->add_admin_asset(
+			'ghl-crm-custom-objects-css',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'custom-objects.css',
+			[],
+			[],
+			GHL_CRM_VERSION
+		);
+
+		$this->add_admin_asset(
+			'ghl-crm-custom-objects-js',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'custom-objects.js',
+			[ 'jquery' ],
+			[
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonces'  => [
+					'customObjects' => wp_create_nonce( 'ghl_crm_custom_objects' ),
+					'mappings'      => wp_create_nonce( 'ghl_crm_mappings' ),
+				],
+				'i18n'    => [
+					// Schema messages
+					'failedToLoadSchemas'        => __( 'Failed to load schemas', 'ghl-crm-integration' ),
+					'networkError'               => __( 'Network error', 'ghl-crm-integration' ),
+					'noCustomObjectsFound'       => __( 'No Custom Objects Found', 'ghl-crm-integration' ),
+					'createCustomObjectsMessage' => __( 'Create Custom Objects in your GoHighLevel account to see them here.', 'ghl-crm-integration' ),
+					'noDescription'              => __( 'No description available', 'ghl-crm-integration' ),
+					'requiredFields'             => __( 'Required Fields', 'ghl-crm-integration' ),
+					'searchableFields'           => __( 'Searchable Fields', 'ghl-crm-integration' ),
+					'created'                    => __( 'Created', 'ghl-crm-integration' ),
+					'viewDetails'                => __( 'View Details', 'ghl-crm-integration' ),
+					'loading'                    => __( 'Loading...', 'ghl-crm-integration' ),
+					'error'                      => __( 'Error', 'ghl-crm-integration' ),
+					'failedToFetchSchemaDetails' => __( 'Failed to fetch schema details', 'ghl-crm-integration' ),
+					// Modal messages
+					'overview'                   => __( 'Overview', 'ghl-crm-integration' ),
+					'type'                       => __( 'Type', 'ghl-crm-integration' ),
+					'key'                        => __( 'Key', 'ghl-crm-integration' ),
+					'description'                => __( 'Description', 'ghl-crm-integration' ),
+					'primaryDisplay'             => __( 'Primary Display', 'ghl-crm-integration' ),
+					'updated'                    => __( 'Updated', 'ghl-crm-integration' ),
+					'requiredProperties'         => __( 'Required Properties', 'ghl-crm-integration' ),
+					'searchableProperties'       => __( 'Searchable Properties', 'ghl-crm-integration' ),
+					'uniqueProperties'           => __( 'Unique Properties', 'ghl-crm-integration' ),
+					'addRecordConfiguration'     => __( 'Add Record Configuration', 'ghl-crm-integration' ),
+					'associations'               => __( 'Associations (Contact Linking)', 'ghl-crm-integration' ),
+					'associationsDescription'    => __( 'This object can be associated with the following object types:', 'ghl-crm-integration' ),
+					'contactLinkNote'            => __( 'When syncing WordPress posts to this custom object, you must provide a contactId to link the record to a contact.', 'ghl-crm-integration' ),
+					'noAssociations'             => __( 'No Associations Configured', 'ghl-crm-integration' ),
+					'noAssociationsMessage'      => __( 'This custom object has no associations configured in GoHighLevel. Records will not be linked to contacts.', 'ghl-crm-integration' ),
+					'rawJson'                    => __( 'Raw JSON', 'ghl-crm-integration' ),
+					// Mapping messages
+					'viewMappings'               => __( 'View Mappings', 'ghl-crm-integration' ),
+					'backToObjects'              => __( 'Back to Objects', 'ghl-crm-integration' ),
+					'noMappingsCreated'          => __( 'No Mappings Created', 'ghl-crm-integration' ),
+					'createMappingMessage'       => __( 'Create your first Custom Object mapping to start syncing data.', 'ghl-crm-integration' ),
+					'active'                     => __( 'Active', 'ghl-crm-integration' ),
+					'inactive'                   => __( 'Inactive', 'ghl-crm-integration' ),
+					'cpt'                        => __( 'CPT', 'ghl-crm-integration' ),
+					'ghlObject'                  => __( 'GHL Object', 'ghl-crm-integration' ),
+					'fields'                     => __( 'Fields', 'ghl-crm-integration' ),
+					'edit'                       => __( 'Edit', 'ghl-crm-integration' ),
+					'delete'                     => __( 'Delete', 'ghl-crm-integration' ),
+					'confirmDelete'              => __( 'Are you sure you want to delete this mapping?', 'ghl-crm-integration' ),
+					'errorDeletingMapping'       => __( 'Error deleting mapping', 'ghl-crm-integration' ),
+					// Form messages
+					'selectPostType'             => __( 'Select Post Type...', 'ghl-crm-integration' ),
+					'selectCustomObject'         => __( 'Select Custom Object...', 'ghl-crm-integration' ),
+					'selectGHLObjectFirst'       => __( 'Select GHL Object first...', 'ghl-crm-integration' ),
+					'selectGHLField'             => __( 'Select GHL Field...', 'ghl-crm-integration' ),
+					'enterCustomFieldKey'        => __( '➕ Enter Custom Field Key...', 'ghl-crm-integration' ),
+					'selectWPField'              => __( 'Select WP Field...', 'ghl-crm-integration' ),
+					'postFields'                 => __( 'Post Fields', 'ghl-crm-integration' ),
+					'postTitle'                  => __( 'Post Title', 'ghl-crm-integration' ),
+					'postContent'                => __( 'Post Content', 'ghl-crm-integration' ),
+					'postExcerpt'                => __( 'Post Excerpt', 'ghl-crm-integration' ),
+					'postDate'                   => __( 'Post Date', 'ghl-crm-integration' ),
+					'postModified'               => __( 'Post Modified Date', 'ghl-crm-integration' ),
+					'postMeta'                   => __( 'Post Meta', 'ghl-crm-integration' ),
+					'postMetaCustom'             => __( 'Post Meta (Custom)', 'ghl-crm-integration' ),
+					'other'                      => __( 'Other', 'ghl-crm-integration' ),
+					'acfField'                   => __( 'ACF Field', 'ghl-crm-integration' ),
+					'taxonomyTerm'               => __( 'Taxonomy Term', 'ghl-crm-integration' ),
+					'staticValue'                => __( 'Static Value', 'ghl-crm-integration' ),
+					'fieldNamePlaceholder'       => __( 'Field name...', 'ghl-crm-integration' ),
+					'customFieldPlaceholder'     => __( 'e.g., custom_objects.wordpress_pages.post_content', 'ghl-crm-integration' ),
+					'transformNone'              => __( 'None', 'ghl-crm-integration' ),
+					'transformSanitize'          => __( 'Sanitize HTML', 'ghl-crm-integration' ),
+					'transformNumber'            => __( 'Convert to Number', 'ghl-crm-integration' ),
+					'transformDateISO'           => __( 'Format Date (ISO)', 'ghl-crm-integration' ),
+					'transformStripHTML'         => __( 'Strip HTML', 'ghl-crm-integration' ),
+					'transformJSON'              => __( 'JSON Encode', 'ghl-crm-integration' ),
+					'mappingSaved'               => __( 'Mapping saved successfully!', 'ghl-crm-integration' ),
+				],
+			],
+			'1.0.1',
+			true
+		);
 	}   /**
 		 * Adds an admin script or style to the array of admin assets.
 		 *
