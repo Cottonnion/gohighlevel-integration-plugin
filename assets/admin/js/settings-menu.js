@@ -180,8 +180,8 @@
 					}
 					
 					// Re-initialize restrictions roles select functionality (for restrictions tab)
-					if (typeof window.initRestrictionsRolesSelect === 'function') {
-						window.initRestrictionsRolesSelect();
+					if (typeof window.initRestrictionsTagsSelect === 'function') {
+						window.initRestrictionsTagsSelect();
 					}
 					
 					// Re-initialize role tags functionality (for role-tags tab)

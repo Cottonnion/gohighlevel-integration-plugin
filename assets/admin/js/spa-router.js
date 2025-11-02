@@ -202,8 +202,8 @@
                         window.initUserRegisterCompany();
                     }
                     // Initialize restrictions roles select functionality
-                    if (typeof window.initRestrictionsRolesSelect === 'function') {
-                        window.initRestrictionsRolesSelect();
+                    if (typeof window.initRestrictionsTagsSelect === 'function') {
+                        window.initRestrictionsTagsSelect();
                     }
                     // Initialize role tags functionality
                     if (typeof window.initRoleTags === 'function') {

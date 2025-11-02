@@ -776,20 +776,87 @@
 	}
 
 	/**
-	 * Initialize roles select2 for restrictions settings
+	 * Initialize tags select2 for restrictions settings (bypass tags)
 	 */
-	function initRestrictionsRolesSelect() {
-		const $rolesSelect = $('.ghl-roles-select');
+	function initRestrictionsTagsSelect() {
+		const $tagsSelect = $('.ghl-tags-select');
 
-		if ($rolesSelect.length === 0 || typeof $.fn.select2 === 'undefined') {
+		if ($tagsSelect.length === 0 || typeof $.fn.select2 === 'undefined') {
 			return;
 		}
 
-		$rolesSelect.select2({
-			placeholder: $rolesSelect.data('placeholder') || 'Select roles that can bypass restrictions...',
+		// Initialize Select2 with AJAX
+		$tagsSelect.select2({
+			placeholder: $tagsSelect.data('placeholder') || 'Select tags that can bypass restrictions...',
 			allowClear: true,
 			width: '100%',
-			closeOnSelect: false
+			closeOnSelect: false,
+			ajax: {
+				url: ajaxurl,
+				type: 'POST',
+				dataType: 'json',
+				delay: 250,
+				data: function(params) {
+					return {
+						action: 'ghl_crm_get_tags',
+						nonce: $('#ghl_crm_nonce').val(),
+						search: params.term || ''
+					};
+				},
+				processResults: function(response) {
+					if (response.success && response.data && response.data.tags) {
+						return {
+							results: response.data.tags.map(function(tag) {
+								// Handle both object format {id, name} and string format
+								if (typeof tag === 'object' && tag !== null) {
+									return {
+										id: String(tag.name || tag.id || ''),
+										text: String(tag.name || tag.id || '')
+									};
+								}
+								// Fallback for string format
+								return {
+									id: String(tag || ''),
+									text: String(tag || '')
+								};
+							})
+						};
+					}
+					return { results: [] };
+				},
+				cache: true
+			},
+			minimumInputLength: 0
+		});
+
+		// Load current settings and pre-populate saved tags
+		$.ajax({
+			url: ajaxurl,
+			type: 'POST',
+			data: {
+				action: 'ghl_crm_get_settings',
+				nonce: $('#ghl_crm_nonce').val()
+			},
+			success: function(response) {
+				if (response.success && response.data.settings) {
+					const savedTags = response.data.settings.restrictions_allowed_tags || [];
+					
+					// Pre-populate with saved tags
+					if (Array.isArray(savedTags) && savedTags.length > 0) {
+						savedTags.forEach(function(tag) {
+							// Create option if it doesn't exist
+							if ($tagsSelect.find("option[value='" + tag + "']").length === 0) {
+								const newOption = new Option(tag, tag, true, true);
+								$tagsSelect.append(newOption);
+							}
+						});
+						$tagsSelect.val(savedTags).trigger('change');
+					}
+				}
+			},
+			error: function(xhr, status, error) {
+				console.error('Failed to load saved tags:', error);
+			}
 		});
 	}
 
@@ -1020,13 +1087,13 @@
 	window.initSettings = initSettings;
 	window.cleanupSettings = cleanupSettings;
 	window.initUserRegisterTags = initUserRegisterTags;
-	window.initRestrictionsRolesSelect = initRestrictionsRolesSelect;
+	window.initRestrictionsTagsSelect = initRestrictionsTagsSelect;
 	window.initRoleTags = initRoleTags;
 
 	// Initialize on document ready (for non-SPA page loads)
 	$(document).ready(function() {
 		initUserRegisterTags();
-		initRestrictionsRolesSelect();
+		initRestrictionsTagsSelect();
 		initRoleTags();
 		initSettings();
 	});
