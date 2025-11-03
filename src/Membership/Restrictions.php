@@ -412,6 +412,7 @@ class Restrictions {
 		}
 
 		if ( ! empty( $exclude_ids ) ) {
+			// phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in -- Necessary for content restriction security
 			$query->set( 'post__not_in', array_merge(
 				(array) $query->get( 'post__not_in' ),
 				$exclude_ids

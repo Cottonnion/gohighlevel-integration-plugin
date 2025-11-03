@@ -119,6 +119,7 @@ class GHLToWordPressSync {
 	 */
 	private function find_wordpress_user( array $contact_data ): ?\WP_User {
 		// First, try to find by stored GHL contact ID
+		// phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 		$users = get_users(
 			[
 				'meta_key'   => '_ghl_contact_id',
@@ -126,6 +127,7 @@ class GHLToWordPressSync {
 				'number'     => 1,
 			]
 		);
+		// phpcs:enable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 
 		if ( ! empty( $users ) ) {
 			return $users[0];
@@ -312,6 +314,7 @@ class GHLToWordPressSync {
 	 */
 	public function delete_wordpress_user( string $contact_id ) {
 		// Find user by GHL contact ID
+		// phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 		$users = get_users(
 			[
 				'meta_key'   => '_ghl_contact_id',
@@ -319,6 +322,7 @@ class GHLToWordPressSync {
 				'number'     => 1,
 			]
 		);
+		// phpcs:enable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 
 		if ( empty( $users ) ) {
 			return new \WP_Error( 'user_not_found', __( 'WordPress user not found', 'ghl-crm-integration' ) );
