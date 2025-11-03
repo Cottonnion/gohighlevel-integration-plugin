@@ -126,6 +126,15 @@ class MenuManager {
 			'ghl-crm-admin#/sync-logs',
 			'__return_false'
 		);
+		
+				add_submenu_page(
+					'ghl-crm-admin',
+					__( 'Forms', 'ghl-crm-integration' ),
+					__( 'Forms', 'ghl-crm-integration' ),
+					'manage_options',
+					'ghl-crm-admin#/forms',
+					'__return_false'
+				);
 
 		add_submenu_page(
 			'ghl-crm-admin',
@@ -312,15 +321,17 @@ class MenuManager {
 				$this->get_field_mapping_data();
 				break;
 
-			case 'custom-objects':
-				$this->get_custom_objects_data( $params );
-				break;
+		case 'custom-objects':
+			$this->get_custom_objects_data( $params );
+			break;
 
-			case 'sync-logs':
-				$this->get_sync_logs_data( $params );
-				break;
+		case 'forms':
+			$this->get_forms_data();
+			break;
 
-			default:
+		case 'sync-logs':
+			$this->get_sync_logs_data( $params );
+			break;			default:
 				wp_send_json_error(
 					[
 						'message' => __( 'Invalid view requested.', 'ghl-crm-integration' ),
@@ -631,6 +642,27 @@ class MenuManager {
 		wp_send_json_success(
 			[
 				'view' => 'sync-logs',
+				'html' => $html,
+			]
+		);
+	}
+
+	/**
+	 * Get forms data for SPA view
+	 *
+	 * Loads the forms template and returns the rendered HTML.
+	 * Returns JSON response with the forms view HTML.
+	 *
+	 * @return void Outputs JSON response and exits.
+	 */
+	private function get_forms_data(): void {
+		ob_start();
+		$this->load_template( 'admin/forms' );
+		$html = ob_get_clean();
+
+		wp_send_json_success(
+			[
+				'view' => 'forms',
 				'html' => $html,
 			]
 		);

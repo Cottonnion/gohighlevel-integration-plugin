@@ -22,27 +22,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<div class="ghl-header-nav">
 		<nav class="ghl-nav-tabs">
 			<a href="#/" class="ghl-nav-tab" data-route="dashboard">
-				<i class="fa-solid fa-gauge"></i>
+				<span class="dashicons dashicons-dashboard"></span>
 				<span class="ghl-nav-label"><?php esc_html_e( 'Dashboard', 'ghl-crm-integration' ); ?></span>
 			</a>
 			<a href="#/settings" class="ghl-nav-tab" data-route="settings">
-				<i class="fa-solid fa-gear"></i>
+				<span class="dashicons dashicons-admin-settings"></span>
 				<span class="ghl-nav-label"><?php esc_html_e( 'Settings', 'ghl-crm-integration' ); ?></span>
 			</a>
 			<a href="#/integrations" class="ghl-nav-tab" data-route="integrations">
-				<i class="fa-solid fa-plug"></i>
+				<span class="dashicons dashicons-admin-plugins"></span>
 				<span class="ghl-nav-label"><?php esc_html_e( 'Integrations', 'ghl-crm-integration' ); ?></span>
 			</a>
 			<a href="#/field-mapping" class="ghl-nav-tab" data-route="field-mapping">
-				<i class="fa-solid fa-code-compare"></i>
+				<span class="dashicons dashicons-admin-generic"></span>
 				<span class="ghl-nav-label"><?php esc_html_e( 'Field Mapping', 'ghl-crm-integration' ); ?></span>
 			</a>
 			<a href="#/sync-logs" class="ghl-nav-tab" data-route="sync-logs">
-				<i class="fa-solid fa-list"></i>
+				<span class="dashicons dashicons-list-view"></span>
 				<span class="ghl-nav-label"><?php esc_html_e( 'Sync Logs', 'ghl-crm-integration' ); ?></span>
 			</a>
+			<a href="#/forms" class="ghl-nav-tab" data-route="forms">
+				<span class="dashicons dashicons-feedback"></span>
+				<span class="ghl-nav-label"><?php esc_html_e( 'Forms', 'ghl-crm-integration' ); ?></span>
+			</a>
 			<a href="#/custom-objects" class="ghl-nav-tab" data-route="custom-objects">
-				<i class="fa-solid fa-cube"></i>
+				<span class="dashicons dashicons-block-default"></span>
 				<span class="ghl-nav-label"><?php esc_html_e( 'Custom Objects', 'ghl-crm-integration' ); ?></span>
 			</a>
 		</nav>

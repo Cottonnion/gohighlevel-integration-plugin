@@ -27,43 +27,43 @@ if ( isset( $_POST['settings_tab'] ) && check_ajax_referer( 'ghl_crm_settings_no
 $settings_tabs = [
 	'general' => [
 		'label' => __( 'General', 'ghl-crm-integration' ),
-		'icon'  => 'fa-solid fa-gear',
+		'icon'  => 'dashicons-admin-generic',
 	],
 	'restrictions-manager' => [
 		'label' => __( 'Restrictions Manager', 'ghl-crm-integration' ),
-		'icon'  => 'fa-solid fa-lock',
+		'icon'  => 'dashicons-lock',
 	],
 	'rest-api' => [
 		'label' => __( 'REST API', 'ghl-crm-integration' ),
-		'icon'  => 'fa-solid fa-code',
+		'icon'  => 'dashicons-editor-code',
 	],
 	'webhooks' => [
 		'label' => __( 'Webhooks', 'ghl-crm-integration' ),
-		'icon'  => 'fa-solid fa-link',
+		'icon'  => 'dashicons-admin-links',
 	],
 	'notifications' => [
 		'label' => __( 'Email Notifications', 'ghl-crm-integration' ),
-		'icon'  => 'fa-solid fa-envelope',
+		'icon'  => 'dashicons-email',
 	],
 	'field-sync' => [
 		'label' => __( 'Field Sync', 'ghl-crm-integration' ),
-		'icon'  => 'fa-solid fa-arrows-rotate',
+		'icon'  => 'dashicons-update',
 	],
 	'role-tags' => [
-		'label' => __( 'Role Based Tags', 'ghl-crm-integration' ),
-		'icon'  => 'fa-solid fa-tags',
+		'label' => __( 'Role-Based Tags', 'ghl-crm-integration' ),
+		'icon'  => 'dashicons-tag',
 	],
 	'advanced' => [
 		'label' => __( 'Advanced', 'ghl-crm-integration' ),
-		'icon'  => 'fa-solid fa-screwdriver-wrench',
+		'icon'  => 'dashicons-admin-tools',
 	],
 	'tools' => [
 		'label' => __( 'Tools', 'ghl-crm-integration' ),
-		'icon'  => 'fa-solid fa-toolbox',
+		'icon'  => 'dashicons-admin-settings',
 	],
 	'stats' => [
 		'label' => __( 'System Status', 'ghl-crm-integration' ),
-		'icon'  => 'fa-solid fa-circle-info',
+		'icon'  => 'dashicons-info',
 	],
 ];
 
