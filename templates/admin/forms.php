@@ -10,11 +10,42 @@ defined( 'ABSPATH' ) || exit;
 
 <div class="ghl-forms-container">
 	<div class="ghl-page-header">
-		<h1><?php esc_html_e( 'GoHighLevel Forms', 'ghl-crm-integration' ); ?></h1>
-		<p class="description">
-			<?php esc_html_e( 'Manage and embed GoHighLevel forms in your WordPress site.', 'ghl-crm-integration' ); ?>
-		</p>
 	</div>
+
+	<!-- Connection Check -->
+	<?php
+	$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+	$settings         = $settings_manager->get_settings_array();
+	$oauth_handler    = new \GHL_CRM\API\OAuth\OAuthHandler();
+	$oauth_status     = $oauth_handler->get_connection_status();
+	$is_connected     = $oauth_status['connected'] || ! empty( $settings['api_token'] );
+	
+	if ( ! $is_connected ) :
+		?>
+		<div class="notice notice-warning">
+			<p>
+				<strong><?php esc_html_e( 'Not Connected', 'ghl-crm-integration' ); ?></strong><br>
+				<?php
+				printf(
+					/* translators: %s: Link to dashboard page */
+					esc_html__( 'Please connect to GoHighLevel in %s first.', 'ghl-crm-integration' ),
+					sprintf(
+						'<a href="%s">%s</a>',
+						esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ),
+						esc_html__( 'Dashboard', 'ghl-crm-integration' )
+					)
+				);
+				?>
+			</p>
+		</div>
+		<?php
+		return;
+	endif;
+	?>
+
+	<p class="description">
+		<?php esc_html_e( 'Manage and embed GoHighLevel forms in your WordPress site.', 'ghl-crm-integration' ); ?>
+	</p>
 
 	<!-- Loading State -->
 	<div id="ghl-forms-loading" class="ghl-loading-state" style="display: none;">
@@ -26,29 +57,6 @@ defined( 'ABSPATH' ) || exit;
 	<div id="ghl-forms-error" class="notice notice-error" style="display: none;">
 		<p><strong><?php esc_html_e( 'Error:', 'ghl-crm-integration' ); ?></strong> <span id="ghl-forms-error-message"></span></p>
 	</div>
-
-	<!-- Connection Check -->
-	<?php
-	$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
-	if ( ! $settings_manager->is_connection_verified() ) :
-		?>
-		<div class="notice notice-warning">
-			<p>
-				<?php
-				echo wp_kses_post(
-					sprintf(
-						/* translators: %s: Settings page URL */
-						__( 'Please <a href="%s">connect to GoHighLevel</a> to manage forms.', 'ghl-crm-integration' ),
-						admin_url( 'admin.php?page=ghl-crm-admin#/settings' )
-					)
-				);
-				?>
-			</p>
-		</div>
-		<?php
-		return;
-	endif;
-	?>
 
 	<!-- Refresh Button -->
 	<div class="ghl-forms-toolbar">

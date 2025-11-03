@@ -8,6 +8,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// Check connection status
+$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+$settings         = $settings_manager->get_settings_array();
+$oauth_handler    = new \GHL_CRM\API\OAuth\OAuthHandler();
+$oauth_status     = $oauth_handler->get_connection_status();
+$is_connected     = $oauth_status['connected'] || ! empty( $settings['api_token'] );
+
 // WordPress base user fields (stored in wp_users table)
 $base_user_fields = array(
 	'user_login'      => __( 'Username', 'ghl-crm-integration' ),
@@ -148,12 +155,29 @@ $ghl_fields = array(
 $total_fields = count( $default_wp_fields ) + count( $custom_user_fields ) + count( $buddyboss_fields );
 
 // Get current field mappings
-$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
-$settings         = $settings_manager->get_settings_array();
-$saved_mappings   = $settings['user_field_mapping'] ?? [];
+$saved_mappings = $settings['user_field_mapping'] ?? [];
 ?>
 <div class="wrap ghl-crm-field-mapping">
-	<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+	
+	<?php if ( ! $is_connected ) : ?>
+		<div class="notice notice-warning">
+			<p>
+				<strong><?php esc_html_e( 'Not Connected', 'ghl-crm-integration' ); ?></strong><br>
+				<?php
+				printf(
+					/* translators: %s: Link to dashboard page */
+					esc_html__( 'Please connect to GoHighLevel in %s first.', 'ghl-crm-integration' ),
+					sprintf(
+						'<a href="%s">%s</a>',
+						esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ),
+						esc_html__( 'Dashboard', 'ghl-crm-integration' )
+					)
+				);
+				?>
+			</p>
+		</div>
+		<?php return; ?>
+	<?php endif; ?>
 	
 	<!-- Message Area for AJAX responses -->
 	<div id="ghl-field-mapping-messages"></div>

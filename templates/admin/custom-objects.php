@@ -24,10 +24,6 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 
 <div class="ghl-custom-objects-wrapper">
 	<div class="ghl-custom-objects-header">
-		<h1><?php esc_html_e( 'Custom Objects', 'ghl-crm-integration' ); ?></h1>
-		<p class="description">
-			<?php esc_html_e( 'View and manage Custom Objects from your GoHighLevel account. Custom Objects allow you to store structured data beyond standard contacts.', 'ghl-crm-integration' ); ?>
-		</p>
 	</div>
 
 	<?php if ( ! $is_connected ) : ?>
@@ -36,18 +32,25 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 				<strong><?php esc_html_e( 'Not Connected', 'ghl-crm-integration' ); ?></strong><br>
 				<?php
 				printf(
-					/* translators: %s: Link to settings page */
+					/* translators: %s: Link to dashboard page */
 					esc_html__( 'Please connect to GoHighLevel in %s first.', 'ghl-crm-integration' ),
 					sprintf(
 						'<a href="%s">%s</a>',
-						esc_url( admin_url( 'admin.php?page=ghl-crm-admin#/settings' ) ),
-						esc_html__( 'Settings', 'ghl-crm-integration' )
+						esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ),
+						esc_html__( 'Dashboard', 'ghl-crm-integration' )
 					)
 				);
 				?>
 			</p>
 		</div>
-	<?php else : ?>
+		<?php return; ?>
+	<?php endif; ?>
+
+	<p class="description">
+		<?php esc_html_e( 'View and manage Custom Objects from your GoHighLevel account. Custom Objects allow you to store structured data beyond standard contacts.', 'ghl-crm-integration' ); ?>
+	</p>
+	
+	<?php if ( $is_connected ) : ?>
 		
 		<div class="ghl-custom-objects-controls">
 			<button type="button" class="button button-primary" id="ghl-refresh-schemas">

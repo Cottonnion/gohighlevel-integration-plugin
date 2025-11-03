@@ -23,6 +23,13 @@ if ( isset( $_POST['settings_tab'] ) && check_ajax_referer( 'ghl_crm_settings_no
 	$current_tab = sanitize_text_field( wp_unslash( $_POST['settings_tab'] ) );
 }
 
+// Check connection status
+$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+$settings         = $settings_manager->get_settings_array();
+$oauth_handler    = new \GHL_CRM\API\OAuth\OAuthHandler();
+$oauth_status     = $oauth_handler->get_connection_status();
+$is_connected     = $oauth_status['connected'] || ! empty( $settings['api_token'] );
+
 // Define available settings tabs
 $settings_tabs = [
 	'general' => [
@@ -71,12 +78,49 @@ $settings_tabs = [
 <div class="wrap ghl-crm-settings">
 	<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
 	
+	<?php if ( ! $is_connected ) : ?>
+		<?php if ( 'general' === $current_tab ) : ?>
+			<div class="notice notice-info">
+				<p>
+					<strong><?php esc_html_e( 'Not Connected', 'ghl-crm-integration' ); ?></strong><br>
+					<?php esc_html_e( 'Please configure your connection settings below. Other settings tabs will be available once connected.', 'ghl-crm-integration' ); ?>
+				</p>
+			</div>
+		<?php else : ?>
+			<div class="notice notice-warning">
+				<p>
+					<strong><?php esc_html_e( 'Not Connected', 'ghl-crm-integration' ); ?></strong><br>
+					<?php
+					printf(
+						/* translators: %s: Link to dashboard page */
+						esc_html__( 'Please connect to GoHighLevel in %s first.', 'ghl-crm-integration' ),
+						sprintf(
+							'<a href="%s">%s</a>',
+							esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ),
+							esc_html__( 'Dashboard', 'ghl-crm-integration' )
+						)
+					);
+					?>
+				</p>
+			</div>
+			<?php return; ?>
+		<?php endif; ?>
+	<?php endif; ?>
+	
 	<div class="ghl-settings-with-sidebar">
 		<!-- Settings Side Menu -->
 		<nav class="ghl-settings-nav" id="ghl-settings-nav">
 			<ul>
 				<?php foreach ( $settings_tabs as $tab_key => $tab_data ) : ?>
-					<li class="<?php echo $current_tab === $tab_key ? 'active' : ''; ?>" data-tab="<?php echo esc_attr( $tab_key ); ?>">
+					<?php 
+					// Disable non-general tabs when not connected
+					$is_disabled = ! $is_connected && 'general' !== $tab_key;
+					$li_class = $current_tab === $tab_key ? 'active' : '';
+					if ( $is_disabled ) {
+						$li_class .= ' disabled';
+					}
+					?>
+					<li class="<?php echo esc_attr( $li_class ); ?>" data-tab="<?php echo esc_attr( $tab_key ); ?>" <?php echo $is_disabled ? 'title="' . esc_attr__( 'Connect to GoHighLevel first', 'ghl-crm-integration' ) . '"' : ''; ?>>
 						<span class="dashicons <?php echo esc_attr( $tab_data['icon'] ); ?>"></span>
 						<span class="ghl-tab-label"><?php echo esc_html( $tab_data['label'] ); ?></span>
 					</li>

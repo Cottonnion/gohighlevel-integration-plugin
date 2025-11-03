@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * 
  * Set to FALSE for production (clean dashboard)
  */
-define( 'GHL_SHOW_DEBUG', true );
+define( 'GHL_SHOW_DEBUG', false );
 
 // Get OAuth handler and status
 $oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();

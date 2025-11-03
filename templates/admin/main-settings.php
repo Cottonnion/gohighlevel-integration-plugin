@@ -28,7 +28,7 @@ $settings         = $settings_manager->get_settings_array();
 // Get OAuth handler
 $oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
 $oauth_status  = $oauth_handler->get_connection_status();
-$is_connected  = $oauth_status['connected'];
+$is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 
 // Check for OAuth callback messages
 $oauth_message = '';
@@ -53,7 +53,7 @@ if ( isset( $_GET['oauth'] ) && 'disconnected' === $_GET['oauth'] ) {
 	$oauth_message = __( 'Successfully disconnected from GoHighLevel.', 'ghl-crm-integration' );
 	// Refresh connection status
 	$oauth_status  = $oauth_handler->get_connection_status();
-	$is_connected  = $oauth_status['connected'];
+	$is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 }
 
 ?>
@@ -90,6 +90,26 @@ if ( isset( $_GET['oauth'] ) && 'disconnected' === $_GET['oauth'] ) {
 	 */
 	do_action( 'ghl_crm_settings_notices' );
 	?>
+
+	<?php if ( ! $is_connected && 'settings' !== $current_tab ) : ?>
+		<div class="notice notice-warning">
+			<p>
+				<strong><?php esc_html_e( 'Not Connected', 'ghl-crm-integration' ); ?></strong><br>
+				<?php
+				printf(
+					/* translators: %s: Link to dashboard page */
+					esc_html__( 'Please connect to GoHighLevel in %s first.', 'ghl-crm-integration' ),
+					sprintf(
+						'<a href="%s">%s</a>',
+						esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ),
+						esc_html__( 'Dashboard', 'ghl-crm-integration' )
+					)
+				);
+				?>
+			</p>
+		</div>
+		<?php return; ?>
+	<?php endif; ?>
 
 	<!-- Tab Navigation -->
 	<nav class="nav-tab-wrapper wp-clearfix" style="margin-bottom: 20px;">
