@@ -45,6 +45,12 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 		<?php return; ?>
 	<?php endif; ?>
 
+	<?php
+	// Check scope access for integrations
+	\GHL_CRM\Core\ScopeChecker::render_scope_notice( 'contacts' );
+	\GHL_CRM\Core\ScopeChecker::render_scope_notice( 'tags' );
+	?>
+
 	<p class="ghl-page-description">
 		<?php esc_html_e( 'Configure third-party integrations with WooCommerce, BuddyBoss, and LearnDash. Basic WordPress user sync is managed in General Settings.', 'ghl-crm-integration' ); ?>
 	</p>

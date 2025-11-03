@@ -41,6 +41,9 @@ defined( 'ABSPATH' ) || exit;
 		<?php
 		return;
 	endif;
+
+	// Check scope access for Forms
+	\GHL_CRM\Core\ScopeChecker::render_scope_notice( 'forms' );
 	?>
 
 	<p class="description">

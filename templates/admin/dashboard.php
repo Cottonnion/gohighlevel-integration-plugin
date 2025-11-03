@@ -368,14 +368,65 @@ echo '</div>';
 						<div class="ghl-info-box" style="background: #e7f3ff; border-left: 4px solid #2271b1; padding: 15px; margin: 20px 0;">
 							<h4 style="margin-top: 0;">
 								<span class="dashicons dashicons-info" style="color: #2271b1;"></span>
-								<?php esc_html_e( 'How to Get Your API Key:', 'ghl-crm-integration' ); ?>
+								<?php esc_html_e( 'How to Create a Private Integration:', 'ghl-crm-integration' ); ?>
 							</h4>
 							<ol style="margin: 10px 0 0 20px;">
-								<li><?php esc_html_e( 'Log into your GoHighLevel location (sub-account)', 'ghl-crm-integration' ); ?></li>
-								<li><?php esc_html_e( 'Go to Settings → Integrations → API Key', 'ghl-crm-integration' ); ?></li>
-								<li><?php esc_html_e( 'Click "Generate API Key" or copy your existing key', 'ghl-crm-integration' ); ?></li>
-								<li><?php esc_html_e( 'Copy the Location ID from the same page', 'ghl-crm-integration' ); ?></li>
+								<li><?php esc_html_e( 'Log into your GoHighLevel sub-account', 'ghl-crm-integration' ); ?></li>
+								<li><?php esc_html_e( 'Go to Settings → Integrations → Private Integrations', 'ghl-crm-integration' ); ?></li>
+								<li><?php esc_html_e( 'Click "Create" to create a new integration', 'ghl-crm-integration' ); ?></li>
+								<li><?php esc_html_e( 'Give it a name (e.g., "WordPress Plugin")', 'ghl-crm-integration' ); ?></li>
+								<li><?php esc_html_e( 'Select the required scopes listed below', 'ghl-crm-integration' ); ?></li>
+								<li><?php esc_html_e( 'Click "Create" and copy the generated API Key', 'ghl-crm-integration' ); ?></li>
+								<li><?php esc_html_e( 'Get Location ID from Settings → Business Profile → Location ID', 'ghl-crm-integration' ); ?></li>
 							</ol>
+						</div>
+
+						<!-- Required Scopes for API Key -->
+						<div class="ghl-oauth-scopes" style="background: #fff4e6; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #ffb84d;">
+							<div style="display: flex; align-items: center; margin-bottom: 15px;">
+								<div style="margin-right: 10px; border: 1px solid #ffb84d; padding: 8px; border-radius: 8px; background: #fff;">
+									<span class="dashicons dashicons-warning" style="font-size: 32px; width: 32px; height: 32px; color: #f0a020;"></span>
+								</div>
+								<div>
+									<h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #b45309;">
+										<?php esc_html_e( 'Required Scopes', 'ghl-crm-integration' ); ?>
+									</h3>
+									<p style="margin: 5px 0 0 0; font-size: 14px; color: #92400e; line-height: 1.5;">
+										<?php esc_html_e( 'These scopes are necessary for the plugin to function properly. Make sure to select all of them when creating your private integration.', 'ghl-crm-integration' ); ?>
+									</p>
+								</div>
+							</div>
+
+							<!-- Scopes List -->
+							<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;">
+								<?php
+								$required_scopes = array(
+									'contacts.readonly'    => __( 'View Contacts', 'ghl-crm-integration' ),
+									'contacts.write'       => __( 'Edit Contacts', 'ghl-crm-integration' ),
+									'contacts/tags.readonly' => __( 'View Tags', 'ghl-crm-integration' ),
+									'contacts/tags.write'  => __( 'Edit Tags', 'ghl-crm-integration' ),
+									'locations.readonly'   => __( 'View Locations', 'ghl-crm-integration' ),
+									'locations/tasks.write' => __( 'Edit Location Tasks', 'ghl-crm-integration' ),
+									'locations/customFields.readonly' => __( 'View Custom Fields', 'ghl-crm-integration' ),
+									'locations/customFields.write' => __( 'Edit Custom Fields', 'ghl-crm-integration' ),
+									'objects/schema.readonly' => __( 'View Objects Schema', 'ghl-crm-integration' ),
+									'objects/schema.write' => __( 'Edit Objects Schema', 'ghl-crm-integration' ),
+									'objects/records.readonly' => __( 'View Objects Record', 'ghl-crm-integration' ),
+									'objects/records.write' => __( 'Edit Objects Record', 'ghl-crm-integration' ),
+									'associations.readonly' => __( 'View Associations', 'ghl-crm-integration' ),
+									'associations.write'   => __( 'Write Associations', 'ghl-crm-integration' ),
+									'associations/relations.readonly' => __( 'View Associations Relation', 'ghl-crm-integration' ),
+									'associations/relations.write' => __( 'Write Associations Relation', 'ghl-crm-integration' ),
+									'forms.readonly'       => __( 'View Forms', 'ghl-crm-integration' ),
+								);
+
+								foreach ( $required_scopes as $scope => $label ) :
+								?>
+									<div style="display: inline-flex; align-items: center; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 4px; padding: 6px 12px; font-size: 14px; color: #78350f;">
+										<span><?php echo esc_html( $label ); ?></span>
+									</div>
+								<?php endforeach; ?>
+							</div>
 						</div>
 
 						<form id="ghl-manual-connection-form" method="post" style="max-width: 600px;">
@@ -457,22 +508,52 @@ echo '</div>';
 							</ul>
 						</div>
 
-						<div class="ghl-oauth-benefits" style="background: #f9f9f9; padding: 20px; border-radius: 4px; margin: 20px 0;">
-							<h4><?php esc_html_e( 'Required Permissions:', 'ghl-crm-integration' ); ?></h4>
-							<ul style="list-style: none; padding: 0;">
-								<li style="padding: 5px 0;">
-									<span class="dashicons dashicons-yes" style="color: #46b450;"></span>
-									<?php esc_html_e( 'Read and write contacts', 'ghl-crm-integration' ); ?>
-								</li>
-								<li style="padding: 5px 0;">
-									<span class="dashicons dashicons-yes" style="color: #46b450;"></span>
-									<?php esc_html_e( 'Manage contact tags', 'ghl-crm-integration' ); ?>
-								</li>
-								<li style="padding: 5px 0;">
-									<span class="dashicons dashicons-yes" style="color: #46b450;"></span>
-									<?php esc_html_e( 'Manage custom fields', 'ghl-crm-integration' ); ?>
-								</li>
-							</ul>
+						<!-- Required Scopes Section -->
+						<div class="ghl-oauth-scopes" style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e0e0e6;">
+							<div style="display: flex; align-items: center; margin-bottom: 15px;">
+								<div style="margin-right: 10px; border: 1px solid #e0e0e6; padding: 8px; border-radius: 8px; background: #fff;">
+									<span class="dashicons dashicons-info" style="font-size: 32px; width: 32px; height: 32px; color: #2271b1;"></span>
+								</div>
+								<div>
+									<h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #344054;">
+										<?php esc_html_e( 'Required Scopes', 'ghl-crm-integration' ); ?>
+									</h3>
+									<p style="margin: 5px 0 0 0; font-size: 14px; color: #667085; line-height: 1.5;">
+										<?php esc_html_e( 'These scopes are necessary for the plugin to function properly. When you click "Connect with GoHighLevel" below, you\'ll be asked to authorize these permissions for our app.', 'ghl-crm-integration' ); ?>
+									</p>
+								</div>
+							</div>
+
+							<!-- Scopes List -->
+							<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;">
+								<?php
+								$required_scopes = array(
+									'contacts.readonly'    => __( 'View Contacts', 'ghl-crm-integration' ),
+									'contacts.write'       => __( 'Edit Contacts', 'ghl-crm-integration' ),
+									'contacts/tags.readonly' => __( 'View Tags', 'ghl-crm-integration' ),
+									'contacts/tags.write'  => __( 'Edit Tags', 'ghl-crm-integration' ),
+									'locations.readonly'   => __( 'View Locations', 'ghl-crm-integration' ),
+									'locations/tasks.write' => __( 'Edit Location Tasks', 'ghl-crm-integration' ),
+									'locations/customFields.readonly' => __( 'View Custom Fields', 'ghl-crm-integration' ),
+									'locations/customFields.write' => __( 'Edit Custom Fields', 'ghl-crm-integration' ),
+									'objects/schema.readonly' => __( 'View Objects Schema', 'ghl-crm-integration' ),
+									'objects/schema.write' => __( 'Edit Objects Schema', 'ghl-crm-integration' ),
+									'objects/records.readonly' => __( 'View Objects Record', 'ghl-crm-integration' ),
+									'objects/records.write' => __( 'Edit Objects Record', 'ghl-crm-integration' ),
+									'associations.readonly' => __( 'View Associations', 'ghl-crm-integration' ),
+									'associations.write'   => __( 'Write Associations', 'ghl-crm-integration' ),
+									'associations/relations.readonly' => __( 'View Associations Relation', 'ghl-crm-integration' ),
+									'associations/relations.write' => __( 'Write Associations Relation', 'ghl-crm-integration' ),
+									'forms.readonly'       => __( 'View Forms', 'ghl-crm-integration' ),
+								);
+
+								foreach ( $required_scopes as $scope => $label ) :
+								?>
+									<div style="display: inline-flex; align-items: center; background: #fafafc; border: 1px solid #e0e0e6; border-radius: 4px; padding: 6px 12px; font-size: 14px; color: #344054;">
+										<span><?php echo esc_html( $label ); ?></span>
+									</div>
+								<?php endforeach; ?>
+							</div>
 						</div>
 
 						<div style="text-align: center; padding: 20px;">

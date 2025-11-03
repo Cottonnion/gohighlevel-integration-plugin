@@ -46,6 +46,12 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 		<?php return; ?>
 	<?php endif; ?>
 
+	<?php
+	// Check scope access for Custom Objects
+	\GHL_CRM\Core\ScopeChecker::render_scope_notice( 'custom_objects' );
+	\GHL_CRM\Core\ScopeChecker::render_scope_notice( 'associations' );
+	?>
+
 	<p class="description">
 		<?php esc_html_e( 'View and manage Custom Objects from your GoHighLevel account. Custom Objects allow you to store structured data beyond standard contacts.', 'ghl-crm-integration' ); ?>
 	</p>
