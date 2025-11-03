@@ -253,50 +253,8 @@ class SettingsManager {
 	 * @return array Result array with 'success' boolean and 'message' string.
 	 */
 	public function save_manual_connection_settings( array $new_settings ): array {
-		$current_settings = $this->get_settings_array();
-		
-		// Merge new settings with current settings
-		$settings = array_merge(
-			$current_settings,
-			$new_settings,
-			[
-				'updated_at' => current_time( 'mysql' ),
-				'site_id'    => get_current_blog_id(),
-			]
-		);
-
-		// Validate API credentials if they're being set (but allow clearing for disconnect)
-		if ( isset( $new_settings['api_token'] ) || isset( $new_settings['location_id'] ) ) {
-			// Only validate if at least one is not empty (i.e., user is trying to set credentials)
-			$is_setting_credentials = ! empty( $new_settings['api_token'] ) || ! empty( $new_settings['location_id'] );
-			
-			if ( $is_setting_credentials && ( empty( $settings['api_token'] ) || empty( $settings['location_id'] ) ) ) {
-				return [
-					'success' => false,
-					'message' => __( 'API Token and Location ID are required.', 'ghl-crm-integration' ),
-				];
-			}
-		}
-
-		// Save settings (multisite aware)
-		$saved = $this->save_site_settings( $settings );
-
-		if ( $saved ) {
-			// Mark connection as unverified if credentials changed
-			if ( isset( $new_settings['api_token'] ) || isset( $new_settings['location_id'] ) ) {
-				$this->mark_connection_unverified();
-			}
-
-			return [
-				'success' => true,
-				'message' => __( 'Settings saved successfully!', 'ghl-crm-integration' ),
-			];
-		}
-
-		return [
-			'success' => false,
-			'message' => __( 'Failed to save settings. Please try again.', 'ghl-crm-integration' ),
-		];
+		$connection_manager = \GHL_CRM\API\ConnectionManager::get_instance();
+		return $connection_manager->save_manual_connection_settings( $new_settings );
 	}
 
 	/**
@@ -351,75 +309,27 @@ class SettingsManager {
 			);
 		}
 
-		// Get settings
-		$settings = $this->get_settings_array();
+		// Use ConnectionManager to test connection
+		$connection_manager = \GHL_CRM\API\ConnectionManager::get_instance();
+		$result             = $connection_manager->test_connection();
 
-		if ( empty( $settings['api_token'] ) || empty( $settings['location_id'] ) ) {
-			wp_send_json_error(
-				[
-					'message' => __( 'Please save your API credentials first.', 'ghl-crm-integration' ),
-				],
-				400
-			);
-		}
-
-		// Test the connection
-		$api_url = 'https://services.leadconnectorhq.com/locations/' . $settings['location_id'];
-
-		$response = wp_remote_get(
-			$api_url,
-			[
-				'headers' => [
-					'Authorization' => 'Bearer ' . $settings['api_token'],
-					'Version'       => $settings['api_version'],
-					'Content-Type'  => 'application/json',
-				],
-				'timeout' => 15,
-			]
-		);
-
-		if ( is_wp_error( $response ) ) {
-			wp_send_json_error(
-				[
-					'message' => sprintf(
-						/* translators: %s: Error message */
-						__( 'Connection failed: %s', 'ghl-crm-integration' ),
-						$response->get_error_message()
-					),
-				],
-				500
-			);
-		}
-
-		$status_code = wp_remote_retrieve_response_code( $response );
-		$body        = json_decode( wp_remote_retrieve_body( $response ), true );
-
-		if ( $status_code === 200 ) {
-			// Mark connection as verified
-			$this->mark_connection_verified();
-
+		// Return AJAX response based on result
+		if ( $result['success'] ) {
 			wp_send_json_success(
 				[
-					'message'       => __( 'Connection successful! Your API credentials are working.', 'ghl-crm-integration' ),
-					'location_name' => isset( $body['location']['name'] ) ? $body['location']['name'] : '',
-					'status_code'   => $status_code,
+					'message'       => $result['message'],
+					'location_name' => $result['location_name'] ?? '',
+					'status_code'   => $result['status_code'] ?? 200,
 				]
 			);
 		} else {
-			// Mark connection as not verified
-			$this->mark_connection_unverified();
-
 			wp_send_json_error(
 				[
-					'message'     => sprintf(
-						/* translators: %d: HTTP status code */
-						__( 'Connection failed with status code: %d', 'ghl-crm-integration' ),
-						$status_code
-					),
-					'details'     => $body,
-					'status_code' => $status_code,
+					'message'     => $result['message'],
+					'details'     => $result['details'] ?? null,
+					'status_code' => $result['status_code'] ?? 500,
 				],
-				$status_code
+				$result['code'] ?? 500
 			);
 		}
 	}
@@ -718,8 +628,8 @@ class SettingsManager {
 	 * @return bool
 	 */
 	public function is_connection_verified( ?int $site_id = null ): bool {
-		$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
-		return $repository->is_connection_verified( $site_id );
+		$connection_manager = \GHL_CRM\API\ConnectionManager::get_instance();
+		return $connection_manager->is_connection_verified( $site_id );
 	}
 
 	/**
@@ -729,8 +639,8 @@ class SettingsManager {
 	 * @return bool
 	 */
 	private function mark_connection_verified( ?int $site_id = null ): bool {
-		$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
-		return $repository->mark_connection_verified( $site_id );
+		$connection_manager = \GHL_CRM\API\ConnectionManager::get_instance();
+		return $connection_manager->mark_connection_verified( $site_id );
 	}
 
 	/**
@@ -740,8 +650,8 @@ class SettingsManager {
 	 * @return bool
 	 */
 	private function mark_connection_unverified( ?int $site_id = null ): bool {
-		$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
-		return $repository->mark_connection_unverified( $site_id );
+		$connection_manager = \GHL_CRM\API\ConnectionManager::get_instance();
+		return $connection_manager->mark_connection_unverified( $site_id );
 	}
 
 	/**
