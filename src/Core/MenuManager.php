@@ -300,6 +300,7 @@ class MenuManager {
 				403
 			);
 		}
+		try{
 
 		$view   = isset( $_POST['view'] ) ? sanitize_text_field( wp_unslash( $_POST['view'] ) ) : 'dashboard';
 		$params = isset( $_POST['params'] ) && is_array( $_POST['params'] ) ? $_POST['params'] : [];
@@ -338,6 +339,21 @@ class MenuManager {
 					],
 					404
 				);
+		}
+		} catch ( \Exception $e ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'An error occurred while processing the request: ', 'ghl-crm-integration' ) . $e->getMessage(),
+				],
+				500
+			);
+		} catch ( \Error $err ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'A fatal error occurred while processing the request: ', 'ghl-crm-integration' ) . $err->getMessage(),
+				],
+				500
+			);
 		}
 	}
 
