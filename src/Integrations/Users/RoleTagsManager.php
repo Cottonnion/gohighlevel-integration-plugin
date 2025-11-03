@@ -252,6 +252,7 @@ class RoleTagsManager {
 	public function get_tags_for_role( string $role ): array {
 		$settings = $this->settings_manager->get_settings_array();
 		$role_tags = $settings['role_tags'] ?? [];
+		$global_tags = $settings['global_tags'] ?? '';
 
 		
 
@@ -266,6 +267,13 @@ class RoleTagsManager {
 			$all_tags = array_merge( $all_tags, $tags );
 		} else {
 			
+		}
+
+		// Add global tags
+		if ( ! empty( $global_tags ) ) {
+			$global_tags_array = $this->parse_tags( $global_tags );
+			
+			$all_tags = array_merge( $all_tags, $global_tags_array );
 		}
 
 		// Ensure array has sequential keys for proper JSON encoding
