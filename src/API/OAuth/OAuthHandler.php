@@ -235,33 +235,24 @@ class OAuthHandler {
 	 * @return void
 	 */
 	private function save_oauth_credentials( array $token_response, string $location_id = '' ): void {
-		$current_settings = $this->settings_manager->get_settings_array();
-
-		$oauth_settings = [
-			'oauth_access_token'  => $token_response['access_token'],
-			'oauth_refresh_token' => $token_response['refresh_token'] ?? '',
-			'oauth_expires_at'    => time() + ( $token_response['expires_in'] ?? 3600 ),
-			'oauth_connected_at'  => current_time( 'mysql' ),
-		];
+		// Save OAuth settings using SettingsManager (multisite-aware)
+		$this->settings_manager->update_setting( 'oauth_access_token', $token_response['access_token'] );
+		$this->settings_manager->update_setting( 'oauth_refresh_token', $token_response['refresh_token'] ?? '' );
+		$this->settings_manager->update_setting( 'oauth_expires_at', time() + ( $token_response['expires_in'] ?? 3600 ) );
+		$this->settings_manager->update_setting( 'oauth_connected_at', current_time( 'mysql' ) );
 
 		// Update location ID if provided
 		if ( ! empty( $location_id ) ) {
-			$oauth_settings['location_id'] = $location_id;
+			$this->settings_manager->update_setting( 'location_id', $location_id );
 		}
 
-		// Merge with existing settings
-		$updated_settings = array_merge( $current_settings, $oauth_settings );
-
-		// Save settings
-		update_option( 'ghl_crm_settings', $updated_settings );
-
-		// Mark connection as verified
+		// Mark connection as verified using SettingsManager (multisite-aware)
 		$verification_data = [
 			'verified'    => true,
 			'verified_at' => current_time( 'mysql' ),
 			'method'      => 'oauth2',
 		];
-		update_option( 'ghl_crm_connection_verified', $verification_data );
+		$this->settings_manager->update_option( 'ghl_crm_connection_verified', $verification_data );
 	}
 
 	/**
@@ -270,9 +261,7 @@ class OAuthHandler {
 	 * @return bool Success status
 	 */
 	public function disconnect(): bool {
-		$current_settings = $this->settings_manager->get_settings_array();
-
-		// Remove OAuth-related settings
+		// Remove OAuth-related settings using SettingsManager (multisite-aware)
 		$oauth_keys = [
 			'oauth_access_token',
 			'oauth_refresh_token',
@@ -280,17 +269,18 @@ class OAuthHandler {
 			'oauth_connected_at',
 		];
 
+		$success = true;
 		foreach ( $oauth_keys as $key ) {
-			unset( $current_settings[ $key ] );
+			$result = $this->settings_manager->delete_setting( $key );
+			if ( ! $result ) {
+				$success = false;
+			}
 		}
 
-		// Save updated settings
-		$saved = update_option( 'ghl_crm_settings', $current_settings );
+		// Remove verification using SettingsManager (multisite-aware)
+		$this->settings_manager->update_option( 'ghl_crm_connection_verified', false );
 
-		// Remove verification
-		delete_option( 'ghl_crm_connection_verified' );
-
-		return $saved;
+		return $success;
 	}
 
 	/**

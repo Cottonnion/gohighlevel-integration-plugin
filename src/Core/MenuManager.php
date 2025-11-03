@@ -464,12 +464,13 @@ class MenuManager {
 			);
 		}
 
-		// Mark connection as verified since test succeeded
+		// Mark connection as verified since test succeeded (multisite-aware)
+		$settings_manager  = SettingsManager::get_instance();
 		$verification_data = [
 			'verified_at' => current_time( 'mysql' ),
 			'method'      => 'manual_api_key',
 		];
-		update_option( 'ghl_crm_connection_verified', $verification_data, true );
+		$settings_manager->update_option( 'ghl_crm_connection_verified', $verification_data );
 
 		// Success!
 		wp_send_json_success(

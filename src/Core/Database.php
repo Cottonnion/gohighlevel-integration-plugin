@@ -55,11 +55,12 @@ class Database {
 	 * @return void
 	 */
 	public function init(): void {
-		$installed_version = get_option( 'ghl_crm_db_version', '0.0.0' );
+		$settings_manager  = SettingsManager::get_instance();
+		$installed_version = $settings_manager->get_option( 'ghl_crm_db_version', '0.0.0' );
 
 		if ( version_compare( $installed_version, self::DB_VERSION, '<' ) ) {
 			$this->create_tables();
-			update_option( 'ghl_crm_db_version', self::DB_VERSION );
+			$settings_manager->update_option( 'ghl_crm_db_version', self::DB_VERSION );
 		}
 	}
 
@@ -149,7 +150,8 @@ class Database {
 			$wpdb->query( "DROP TABLE IF EXISTS {$table}" ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		}
 
-		delete_option( 'ghl_crm_db_version' );
+		$settings_manager = SettingsManager::get_instance();
+		$settings_manager->update_option( 'ghl_crm_db_version', false );
 	}
 
 	/**

@@ -777,26 +777,20 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Save OAuth2 tokens to database
+	 * Save OAuth2 tokens to database (multisite-aware)
 	 *
 	 * @return void
 	 */
 	private function save_oauth_tokens(): void {
 		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
-		$current_settings = $settings_manager->get_settings_array();
 
-		$oauth_settings = [
-			'oauth_access_token'  => $this->access_token,
-			'oauth_refresh_token' => $this->refresh_token,
-		];
-
-		// Merge with existing settings and save
-		$updated_settings = array_merge( $current_settings, $oauth_settings );
-		update_option( 'ghl_crm_settings', $updated_settings );
+		// Update individual settings using SettingsManager (multisite-aware)
+		$settings_manager->update_setting( 'oauth_access_token', $this->access_token );
+		$settings_manager->update_setting( 'oauth_refresh_token', $this->refresh_token );
 	}
 
 	/**
-	 * Clear OAuth2 tokens from database
+	 * Clear OAuth2 tokens from database (multisite-aware)
 	 *
 	 * @return void
 	 */
@@ -805,13 +799,11 @@ class Client implements ClientInterface {
 		$this->refresh_token = '';
 
 		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
-		$current_settings = $settings_manager->get_settings_array();
 
-		unset( $current_settings['oauth_access_token'] );
-		unset( $current_settings['oauth_refresh_token'] );
-		unset( $current_settings['oauth_expires_at'] );
-
-		update_option( 'ghl_crm_settings', $current_settings );
+		// Delete OAuth settings using SettingsManager (multisite-aware)
+		$settings_manager->delete_setting( 'oauth_access_token' );
+		$settings_manager->delete_setting( 'oauth_refresh_token' );
+		$settings_manager->delete_setting( 'oauth_expires_at' );
 	}
 
 	/**
@@ -837,7 +829,7 @@ class Client implements ClientInterface {
 		if ( strpos( $api_token, 'eyJ' ) === 0 ) {
 			return [
 				'success' => false,
-				'message' => __( 'Invalid API Key Format: You appear to have entered a JWT token (temporary) instead of a Location API Key (permanent). Please get your Location API Key from: Settings → Integrations → API Key in your GoHighLevel location.', 'ghl-crm-integration' ),
+				'message' => __( 'Invalid API Key Format: You appear to have entered a JWT token (temporary) instead of a Location API Key (permanent). Please get your Location API Key from: Settings → Private Integrations → API Key in your GoHighLevel location.', 'ghl-crm-integration' ),
 			];
 		}
 
