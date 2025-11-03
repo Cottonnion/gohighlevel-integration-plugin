@@ -794,8 +794,9 @@ class SettingsManager {
 			$response = $client->get( 'locations/' . $location_id . '/tags' );
 
 			if ( isset( $response['tags'] ) && is_array( $response['tags'] ) ) {
-				// Cache tags for 30 minutes (1800 seconds) - site-specific
-				set_transient( $transient_key, $response['tags'], 30 * MINUTE_IN_SECONDS );
+				// Cache tags using configured duration
+				$cache_duration = absint( $this->get_setting( 'cache_duration', HOUR_IN_SECONDS ) );
+				set_transient( $transient_key, $response['tags'], $cache_duration );
 
 				wp_send_json_success(
 					[

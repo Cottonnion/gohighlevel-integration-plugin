@@ -40,13 +40,6 @@ class FormsResource {
 	private const CACHE_KEY = 'ghl_crm_forms_list';
 
 	/**
-	 * Cache expiration time (30 minutes)
-	 *
-	 * @var int
-	 */
-	private const CACHE_EXPIRATION = 1800;
-
-	/**
 	 * Constructor
 	 */
 	public function __construct() {
@@ -99,8 +92,9 @@ class FormsResource {
 	// Process and normalize forms data
 	$processed_forms = $this->process_forms( $forms );
 
-	// Cache the results
-	set_transient( self::CACHE_KEY, $processed_forms, self::CACHE_EXPIRATION );
+	// Cache the results using configured duration
+	$cache_duration = absint( $settings_manager->get_setting( 'cache_duration', HOUR_IN_SECONDS ) );
+	set_transient( self::CACHE_KEY, $processed_forms, $cache_duration );
 
 	return $processed_forms;
 	}

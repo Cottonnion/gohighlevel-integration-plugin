@@ -47,8 +47,10 @@ class CustomObjectResource extends AbstractResource {
 			// The response structure is { "objects": [...] } according to GHL docs
 			$objects = $response['objects'] ?? [];
 
-			// Cache for 1 hour
-			set_transient( 'ghl_custom_objects_schemas', $objects, HOUR_IN_SECONDS );
+			// Cache using configured duration
+			$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+			$cache_duration   = absint( $settings_manager->get_setting( 'cache_duration', HOUR_IN_SECONDS ) );
+			set_transient( 'ghl_custom_objects_schemas', $objects, $cache_duration );
 
 			return $objects;
 		} catch ( \Exception $e ) {

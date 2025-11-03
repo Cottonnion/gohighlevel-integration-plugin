@@ -604,8 +604,10 @@ class UserProfileFields {
 			$tags = array_unique( $tags );
 			sort( $tags );
 
-			// Cache for 1 hour
-			set_transient( $cache_key, $tags, HOUR_IN_SECONDS );
+			// Cache using configured duration
+			$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+			$cache_duration   = absint( $settings_manager->get_setting( 'cache_duration', HOUR_IN_SECONDS ) );
+			set_transient( $cache_key, $tags, $cache_duration );
 
 			return $tags;
 		} catch ( \Exception $e ) {
