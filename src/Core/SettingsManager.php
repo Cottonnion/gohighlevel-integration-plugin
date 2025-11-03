@@ -762,7 +762,8 @@ class SettingsManager {
 		} catch ( \Error $t ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'Failed to fetch tags: ' . $t->getMessage(), 'ghl-crm-integration' ),
+					/* translators: %s: Error message when fetching tags fails */
+					'message' => sprintf(__( 'Failed to fetch tags: %s', 'ghl-crm-integration' ), $t->getMessage()),
 				],
 				500
 			);
