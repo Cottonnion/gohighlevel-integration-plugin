@@ -113,19 +113,19 @@ class UserProfileFields {
 			return;
 		}
 
-		// Enqueue Select2
+		// Enqueue Select2 (local files)
 		wp_enqueue_style( 
 			'select2', 
-			'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
+			GHL_CRM_URL . 'assets/admin/css/select2.min.css',
 			[],
-			'4.1.0'
+			'1.0.0'
 		);
 		
 		wp_enqueue_script( 
 			'select2', 
-			'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
+			GHL_CRM_URL . 'assets/admin/js/select2.min.js',
 			[ 'jquery' ],
-			'4.1.0',
+			'1.0.0',
 			true
 		);
 
@@ -162,118 +162,6 @@ class UserProfileFields {
 				],
 			]
 		);
-
-		// Add custom styles
-		// wp_add_inline_style( 'select2', $this->get_custom_styles() );
-	}
-
-	/**
-	 * Get custom CSS styles
-	 *
-	 * @return string CSS styles
-	 */
-	private function get_custom_styles(): string {
-		return "
-			.ghl-profile-section {
-				background: #fff;
-				border: 1px solid #ccd0d4;
-				padding: 20px;
-				margin-top: 20px;
-				border-radius: 4px;
-			}
-			.ghl-profile-section h2 {
-				margin-top: 0;
-				padding-bottom: 10px;
-				border-bottom: 1px solid #e5e5e5;
-				display: flex;
-				align-items: center;
-				gap: 10px;
-			}
-			.ghl-profile-section h2 .dashicons {
-				color: #2271b1;
-			}
-			.ghl-data-grid {
-				display: grid;
-				grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-				gap: 15px;
-				margin: 20px 0;
-			}
-			.ghl-data-item {
-				display: flex;
-				flex-direction: column;
-			}
-			.ghl-data-item label {
-				font-weight: 600;
-				margin-bottom: 5px;
-				color: #1d2327;
-			}
-			.ghl-data-item .value {
-				color: #50575e;
-				font-family: monospace;
-				background: #f6f7f7;
-				padding: 8px 12px;
-				border-radius: 3px;
-				border: 1px solid #dcdcde;
-			}
-			.ghl-data-item .value.empty {
-				color: #a0a5aa;
-				font-style: italic;
-			}
-			.ghl-data-item .value a {
-				color: #2271b1;
-				text-decoration: none;
-			}
-			.ghl-data-item .value a:hover {
-				text-decoration: underline;
-			}
-			.ghl-sync-status {
-				display: inline-flex;
-				align-items: center;
-				gap: 6px;
-				padding: 6px 12px;
-				border-radius: 3px;
-				font-size: 13px;
-			}
-			.ghl-sync-status.synced {
-				background: #d4edda;
-				color: #155724;
-				border: 1px solid #c3e6cb;
-			}
-			.ghl-sync-status.not-synced {
-				background: #fff3cd;
-				color: #856404;
-				border: 1px solid #ffeeba;
-			}
-			.ghl-sync-status .dashicons {
-				font-size: 16px;
-				width: 16px;
-				height: 16px;
-			}
-			.ghl-tags-section {
-				margin: 20px 0;
-			}
-			.ghl-tags-section .select2-container {
-				width: 100% !important;
-				max-width: 600px;
-			}
-			.ghl-actions {
-				display: flex;
-				gap: 10px;
-				margin-top: 15px;
-			}
-			.ghl-actions .button {
-				display: inline-flex;
-				align-items: center;
-				gap: 6px;
-			}
-			.ghl-loading {
-				display: none;
-				margin-left: 10px;
-			}
-			.ghl-loading.active {
-				display: inline-block;
-			}
-		";
 	}
 
 	/**
@@ -387,6 +275,8 @@ class UserProfileFields {
 					<br>
 					<strong><?php esc_html_e( 'Note:', 'ghl-crm-integration' ); ?></strong>
 					<?php esc_html_e( 'Updates are processed in the background and may take up to 60 seconds to appear in your GoHighLevel.', 'ghl-crm-integration' ); ?>
+					<br>
+					<?php esc_html_e( 'Click "Update User" button at the bottom of this page to resync this user to GoHighLevel.', 'ghl-crm-integration' ); ?>
 				</p>
 				
 				<select 
