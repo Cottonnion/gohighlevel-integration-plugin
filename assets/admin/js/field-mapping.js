@@ -200,3 +200,167 @@
 	$(document).ready(initFieldMapping);
 
 })(jQuery, window);
+
+/**
+ * Field Mapping - GHL Field Loading
+ * 
+ * Handles loading GoHighLevel custom fields dynamically
+ */
+(function($) {
+	'use strict';
+
+	// Expose globally so SPA router can call it
+	window.GHL_FieldMapping = window.GHL_FieldMapping || {};
+
+	/**
+	 * Function to update row highlighting based on mapped status
+	 */
+	window.GHL_FieldMapping.updateMappedRows = function() {
+		$('select[name^="ghl_field_"]').each(function() {
+			const $select = $(this);
+			const $row = $select.closest('tr');
+			const selectedValue = $select.val();
+			
+			// Add/remove highlight class based on whether field is mapped
+			if (selectedValue && selectedValue !== '' && selectedValue !== '—') {
+				$row.addClass('ghl-mapped-field');
+			} else {
+				$row.removeClass('ghl-mapped-field');
+			}
+		});
+	};
+	
+	/**
+	 * Function to load GHL fields
+	 */
+	window.GHL_FieldMapping.loadFields = function(isInitialLoad) {
+		const $button = $('#ghl-load-custom-fields');
+		const $status = $('#ghl-custom-fields-status');
+		const $icon = $button.find('.dashicons');
+		
+		// Check if elements exist (may not be on this tab)
+		if ($button.length === 0) {
+			return;
+		}
+		
+		// Get nonce from data attribute or global
+		const nonce = $button.data('nonce') || (window.ghl_crm_field_mapping_nonce || '');
+		
+		// Show loading state
+		$button.prop('disabled', true);
+		$icon.removeClass('dashicons-update').addClass('dashicons-update-alt').css('animation', 'rotation 2s infinite linear');
+		
+		if (!isInitialLoad) {
+			$status.html('<span style="color: #999;"><span class="dashicons dashicons-update-alt" style="animation: rotation 2s infinite linear; margin-top: 3px;"></span> Loading fields...</span>');
+		}
+		
+		$.ajax({
+			url: ajaxurl,
+			type: 'POST',
+			data: {
+				action: 'ghl_crm_get_custom_fields',
+				nonce: nonce
+			},
+			success: function(response) {
+				$button.prop('disabled', false);
+				$icon.removeClass('dashicons-update-alt').addClass('dashicons-update').css('animation', '');
+				
+				if (response.success && response.data.fields) {
+					// Update all GHL field dropdowns
+					const fields = response.data.fields;
+					let fieldCount = Object.keys(fields).length;
+					
+					$('select[name^="ghl_field_"]').each(function() {
+						const $select = $(this);
+						// Get saved value from data attribute (set by PHP)
+						let savedValue = $select.data('saved-value') || '';
+						
+						// Force email field to always be mapped to 'email'
+						const isEmailField = $select.attr('name') === 'ghl_field_user_email';
+						if (isEmailField) {
+							savedValue = 'email';
+						}
+						
+						// Clear existing options
+						$select.empty();
+						
+						// Add all fields (including custom fields)
+						$.each(fields, function(key, label) {
+							const $option = $('<option></option>')
+								.attr('value', key)
+								.text(label);
+							
+							// Restore saved selection from data attribute
+							if (key === savedValue) {
+								$option.attr('selected', 'selected');
+							}
+							
+							$select.append($option);
+						});
+						
+						// Set the value explicitly to ensure it's selected
+						if (savedValue) {
+							$select.val(savedValue);
+						}
+						
+						// Re-disable email field after populating
+						if (isEmailField) {
+							$select.prop('disabled', true);
+						}
+					});
+					
+					// Show success message
+					const customCount = response.data.count || 0;
+					let message = '✅ Loaded ' + fieldCount + ' fields';
+					if (customCount > 0) {
+						message += ' (including ' + customCount + ' custom fields)';
+					}
+					$status.html('<span style="color: #46b450;">' + message + '</span>');
+					
+					// Show notice at top only on manual reload
+					if (!isInitialLoad) {
+						$('#ghl-field-mapping-messages').html(
+							'<div class="notice notice-success is-dismissible"><p>' + message + '</p></div>'
+						);
+					}
+					
+					setTimeout(function() {
+						$status.fadeOut();
+					}, 5000);
+					
+					// Update row highlighting for mapped fields
+					window.GHL_FieldMapping.updateMappedRows();
+					
+				} else {
+					$status.html('<span style="color: #dc3232;">⚠ Failed to load fields</span>');
+					if (response.data && response.data.error) {
+						console.error('GHL Field Load Error:', response.data.error);
+					}
+				}
+			},
+			error: function(xhr, status, error) {
+				$button.prop('disabled', false);
+				$icon.removeClass('dashicons-update-alt').addClass('dashicons-update').css('animation', '');
+				$status.html('<span style="color: #dc3232;">⚠ Error: ' + error + '</span>');
+			}
+		});
+	};
+	
+	/**
+	 * Initialize on document ready
+	 */
+	$(document).ready(function() {
+		// Auto-load fields on initial page load
+		window.GHL_FieldMapping.loadFields(true);
+		
+		// Handle manual reload button click
+		$(document).on('click', '#ghl-load-custom-fields', function() {
+			window.GHL_FieldMapping.loadFields(false);
+		});
+		
+		// Handle field mapping changes to update row highlighting
+		$(document).on('change', 'select[name^="ghl_field_"]', function() {
+			window.GHL_FieldMapping.updateMappedRows();
+		});
+	});
+})(jQuery);

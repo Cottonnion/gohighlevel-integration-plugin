@@ -159,7 +159,7 @@
 						</div>
 					</div>
 					<div class="ghl-schema-card-footer">
-						<button type="button" class="button ghl-view-schema" data-schema-id="${schema.id}">
+						<button type="button" class="ghl-button ghl-button-secondary ghl-view-schema" data-schema-id="${schema.id}">
 							<span class="dashicons dashicons-visibility"></span>
 							${ghl_crm_custom_objects_js_data.i18n.viewDetails}
 						</button>
@@ -199,12 +199,22 @@
 				if (response.success) {
 					showSchemaModal(response.data.schema, response.data.associations);
 				} else {
-					alert(ghl_crm_custom_objects_js_data.i18n.error + ': ' + (response.data?.message || ghl_crm_custom_objects_js_data.i18n.failedToFetchSchemaDetails));
+					Swal.fire({
+						icon: 'error',
+						title: ghl_crm_custom_objects_js_data.i18n.error,
+						text: response.data?.message || ghl_crm_custom_objects_js_data.i18n.failedToFetchSchemaDetails,
+						confirmButtonColor: '#d63638'
+					});
 				}
 			},
 			error: function(xhr, status, error) {
 				$btn.prop('disabled', false).html(originalHtml);
-				alert(ghl_crm_custom_objects_js_data.i18n.failedToFetchSchemaDetails + ': ' + error);
+				Swal.fire({
+					icon: 'error',
+					title: ghl_crm_custom_objects_js_data.i18n.failedToFetchSchemaDetails,
+					text: error,
+					confirmButtonColor: '#d63638'
+				});
 			}
 		});
 	}
@@ -726,13 +736,27 @@
 				if (response.success) {
 					$('#ghl-mapping-modal').fadeOut(200);
 					loadMappings();
-					alert(ghl_crm_custom_objects_js_data.i18n.mappingSaved);
+					Swal.fire({
+						icon: 'success',
+						title: ghl_crm_custom_objects_js_data.i18n.mappingSaved,
+						showConfirmButton: false,
+						timer: 1500
+					});
 				} else {
-					alert(ghl_crm_custom_objects_js_data.i18n.error + ': ' + response.data.message);
+					Swal.fire({
+						icon: 'error',
+						title: ghl_crm_custom_objects_js_data.i18n.error,
+						text: response.data.message,
+						confirmButtonColor: '#d63638'
+					});
 				}
 			},
 			error: function() {
-				alert(ghl_crm_custom_objects_js_data.i18n.networkError);
+				Swal.fire({
+					icon: 'error',
+					title: ghl_crm_custom_objects_js_data.i18n.networkError,
+					confirmButtonColor: '#d63638'
+				});
 			},
 			complete: function() {
 				$spinner.removeClass('is-active');
@@ -796,11 +820,11 @@
 						<span><strong>${ghl_crm_custom_objects_js_data.i18n.fields}:</strong> ${mapping.field_mappings ? mapping.field_mappings.length : 0}</span>
 					</div>
 					<div class="ghl-mapping-actions">
-						<button type="button" class="button edit-mapping" data-mapping-id="${mapping.id}">
+						<button type="button" class="ghl-button ghl-button-secondary edit-mapping" data-mapping-id="${mapping.id}">
 							<span class="dashicons dashicons-edit"></span>
 							${ghl_crm_custom_objects_js_data.i18n.edit}
 						</button>
-						<button type="button" class="button delete-mapping" data-mapping-id="${mapping.id}">
+						<button type="button" class="ghl-button ghl-button-secondary delete-mapping" data-mapping-id="${mapping.id}">
 							<span class="dashicons dashicons-trash"></span>
 							${ghl_crm_custom_objects_js_data.i18n.delete}
 						</button>
@@ -824,26 +848,52 @@
 	 * Delete mapping
 	 */
 	function deleteMapping() {
-		if (!confirm(ghl_crm_custom_objects_js_data.i18n.confirmDelete)) {
-			return;
-		}
-		
 		const mappingId = $(this).data('mapping-id');
 		
-		$.ajax({
-			url: ghl_crm_custom_objects_js_data.ajaxUrl,
-			type: 'POST',
-			data: {
-				action: 'ghl_crm_delete_mapping',
-				nonce: ghl_crm_custom_objects_js_data.nonces.mappings,
-				mapping_id: mappingId
-			},
-			success: function(response) {
-				if (response.success) {
-					loadMappings();
-				} else {
-					alert(ghl_crm_custom_objects_js_data.i18n.errorDeletingMapping);
-				}
+		Swal.fire({
+			title: ghl_crm_custom_objects_js_data.i18n.confirmDelete,
+			icon: 'warning',
+			showCancelButton: true,
+			confirmButtonColor: '#d63638',
+			cancelButtonColor: '#2271b1',
+			confirmButtonText: ghl_crm_custom_objects_js_data.i18n.delete || 'Delete',
+			cancelButtonText: ghl_crm_custom_objects_js_data.i18n.cancel || 'Cancel'
+		}).then((result) => {
+			if (result.isConfirmed) {
+				$.ajax({
+					url: ghl_crm_custom_objects_js_data.ajaxUrl,
+					type: 'POST',
+					data: {
+						action: 'ghl_crm_delete_mapping',
+						nonce: ghl_crm_custom_objects_js_data.nonces.mappings,
+						mapping_id: mappingId
+					},
+					success: function(response) {
+						if (response.success) {
+							Swal.fire({
+								icon: 'success',
+								title: ghl_crm_custom_objects_js_data.i18n.deleted || 'Deleted!',
+								text: ghl_crm_custom_objects_js_data.i18n.mappingDeleted || 'Mapping has been deleted.',
+								showConfirmButton: false,
+								timer: 1500
+							});
+							loadMappings();
+						} else {
+							Swal.fire({
+								icon: 'error',
+								title: ghl_crm_custom_objects_js_data.i18n.errorDeletingMapping,
+								confirmButtonColor: '#d63638'
+							});
+						}
+					},
+					error: function() {
+						Swal.fire({
+							icon: 'error',
+							title: ghl_crm_custom_objects_js_data.i18n.networkError,
+							confirmButtonColor: '#d63638'
+						});
+					}
+				});
 			}
 		});
 	}
