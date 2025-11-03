@@ -586,6 +586,31 @@ class SettingsManager {
 	}
 
 	/**
+	 * Update a single setting value
+	 *
+	 * @param string   $key     Setting key.
+	 * @param mixed    $value   Setting value.
+	 * @param int|null $site_id Optional. Site ID for multisite.
+	 * @return bool True on success, false on failure.
+	 */
+	public function update_setting( string $key, $value, ?int $site_id = null ): bool {
+		$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
+		return $repository->update_setting( $key, $value, $site_id );
+	}
+
+	/**
+	 * Delete a single setting value
+	 *
+	 * @param string   $key     Setting key.
+	 * @param int|null $site_id Optional. Site ID for multisite.
+	 * @return bool True on success, false on failure.
+	 */
+	public function delete_setting( string $key, ?int $site_id = null ): bool {
+		$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
+		return $repository->delete_setting( $key, $site_id );
+	}
+
+	/**
 	 * Get option (multisite-aware wrapper)
 	 *
 	 * @param string   $option_name Option name

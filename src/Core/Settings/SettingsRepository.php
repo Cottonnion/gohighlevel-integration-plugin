@@ -164,6 +164,48 @@ class SettingsRepository {
 	}
 
 	/**
+	 * Update a single setting value
+	 *
+	 * @param string   $key     Setting key.
+	 * @param mixed    $value   Setting value.
+	 * @param int|null $site_id Optional. Site ID for multisite.
+	 * @return bool True on success, false on failure.
+	 */
+	public function update_setting( string $key, $value, ?int $site_id = null ): bool {
+		// Get current settings
+		$settings = $this->get_settings_array( $site_id );
+
+		// Update the specific key
+		$settings[ $key ] = $value;
+
+		// Save back to database
+		return $this->save_site_settings( $settings, $site_id );
+	}
+
+	/**
+	 * Delete a single setting value
+	 *
+	 * @param string   $key     Setting key.
+	 * @param int|null $site_id Optional. Site ID for multisite.
+	 * @return bool True on success, false on failure.
+	 */
+	public function delete_setting( string $key, ?int $site_id = null ): bool {
+		// Get current settings
+		$settings = $this->get_settings_array( $site_id );
+
+		// Check if key exists
+		if ( ! isset( $settings[ $key ] ) ) {
+			return false; // Key doesn't exist, nothing to delete
+		}
+
+		// Remove the specific key
+		unset( $settings[ $key ] );
+
+		// Save back to database
+		return $this->save_site_settings( $settings, $site_id );
+	}
+
+	/**
 	 * Get option (multisite-aware wrapper)
 	 *
 	 * @param string   $option_name Option name
