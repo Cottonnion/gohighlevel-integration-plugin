@@ -491,6 +491,7 @@ class Restrictions {
 		// Add excluded IDs to query args
 		if ( ! empty( $exclude_ids ) ) {
 			$existing_excludes = ! empty( $args['post__not_in'] ) ? (array) $args['post__not_in'] : [];
+			// phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in -- Necessary for content restriction security in REST API
 			$args['post__not_in'] = array_merge( $existing_excludes, $exclude_ids );
 		}
 
