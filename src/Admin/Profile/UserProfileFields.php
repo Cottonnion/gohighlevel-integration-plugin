@@ -628,9 +628,13 @@ class UserProfileFields {
 			$auto_login_manager = \GHL_CRM\Core\AutoLoginManager::get_instance();
 			$token_data = $auto_login_manager->generate_token( $user_id );
 
+			// Get WordPress date/time format using SettingsManager (multisite-aware)
+			$date_format = $this->settings_manager->get_option( 'date_format' );
+			$time_format = $this->settings_manager->get_option( 'time_format' );
+
 			wp_send_json_success( [
 				'login_url' => $token_data['login_url'],
-				'expires'   => date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $token_data['expires'] ),
+				'expires'   => date_i18n( $date_format . ' ' . $time_format, $token_data['expires'] ),
 				'message'   => __( 'Login link generated successfully', 'ghl-crm-integration' ),
 			] );
 		} catch ( \Exception $e ) {

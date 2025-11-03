@@ -244,8 +244,8 @@ class CustomObjectResource extends AbstractResource {
 			// 
 			// IMPORTANT: The order must match the association definition!
 			// If association is: contact → custom_object, then firstRecordId = contact, secondRecordId = custom_object
-			$settings    = get_option( 'ghl_crm_settings', array() );
-			$location_id = $settings['location_id'] ?? '';
+			$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+			$location_id      = $settings_manager->get_setting( 'location_id', '' );
 			
 			// Determine correct order based on association direction
 			if ( $direction === 'second' ) {
