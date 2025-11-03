@@ -99,6 +99,7 @@ class UserProfileFields {
 		add_action( 'wp_ajax_ghl_crm_get_contact_data', [ $this, 'ajax_get_contact_data' ] );
 		add_action( 'wp_ajax_ghl_crm_get_available_tags', [ $this, 'ajax_get_available_tags' ] );
 		add_action( 'wp_ajax_ghl_crm_sync_user_now', [ $this, 'ajax_sync_user_now' ] );
+		add_action( 'wp_ajax_ghl_crm_generate_login_link', [ $this, 'ajax_generate_login_link' ] );
 	}
 
 	/**
@@ -317,6 +318,46 @@ class UserProfileFields {
 				
 				<span class="spinner ghl-loading"></span>
 			</div>
+
+			<!-- Auto Login Section (Admin Only) -->
+			<?php if ( current_user_can( 'administrator' ) && $user->ID !== get_current_user_id() ) : ?>
+				<div class="ghl-autologin-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e5e5;">
+					<h3><?php esc_html_e( 'Admin Tools', 'ghl-crm-integration' ); ?></h3>
+					<p class="description">
+						<?php esc_html_e( 'Generate a secure one-time login link to access this user account. Link expires in 15 minutes.', 'ghl-crm-integration' ); ?>
+					</p>
+					
+					<div class="ghl-autologin-controls">
+						<button 
+							type="button" 
+							class="button button-secondary ghl-generate-login-link" 
+							data-user-id="<?php echo esc_attr( $user->ID ); ?>">
+							<span class="dashicons dashicons-admin-network"></span>
+							<?php esc_html_e( 'Generate Login Link', 'ghl-crm-integration' ); ?>
+						</button>
+						
+						<div class="ghl-login-link-display" style="display: none; margin-top: 10px;">
+							<input 
+								type="text" 
+								id="ghl-login-link-input" 
+								class="regular-text" 
+								readonly 
+								style="width: 100%; max-width: 600px;">
+							<button 
+								type="button" 
+								class="button button-small ghl-copy-login-link" 
+								style="margin-left: 5px;">
+								<span class="dashicons dashicons-clipboard"></span>
+								<?php esc_html_e( 'Copy', 'ghl-crm-integration' ); ?>
+							</button>
+							<p class="description" style="color: #d63638; margin-top: 10px;">
+								<strong><?php esc_html_e( 'Warning:', 'ghl-crm-integration' ); ?></strong>
+								<?php esc_html_e( 'This link grants full access to this user account. Expires in 15 minutes or after one use.', 'ghl-crm-integration' ); ?>
+							</p>
+						</div>
+					</div>
+				</div>
+			<?php endif; ?>
 
 			<?php wp_nonce_field( 'ghl_save_user_data', 'ghl_user_nonce' ); ?>
 		</div>
@@ -549,6 +590,51 @@ class UserProfileFields {
 			] );
 		} else {
 			wp_send_json_error( [ 'message' => __( 'Failed to queue user for sync', 'ghl-crm-integration' ) ] );
+		}
+	}
+
+	/**
+	 * AJAX: Generate auto-login link.
+	 *
+	 * @return void
+	 */
+	public function ajax_generate_login_link(): void {
+		// Verify nonce.
+		check_ajax_referer( 'ghl_user_profile', 'nonce' );
+
+		// Check permissions - only administrators.
+		if ( ! current_user_can( 'administrator' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ] );
+		}
+
+		$user_id = isset( $_POST['user_id'] ) ? (int) $_POST['user_id'] : 0;
+
+		if ( empty( $user_id ) ) {
+			wp_send_json_error( [ 'message' => __( 'Invalid user ID', 'ghl-crm-integration' ) ] );
+		}
+
+		// Don't allow generating link for current user.
+		if ( $user_id === get_current_user_id() ) {
+			wp_send_json_error( [ 'message' => __( 'Cannot generate login link for yourself', 'ghl-crm-integration' ) ] );
+		}
+
+		// Verify user exists.
+		$user = get_userdata( $user_id );
+		if ( ! $user ) {
+			wp_send_json_error( [ 'message' => __( 'User not found', 'ghl-crm-integration' ) ] );
+		}
+
+		try {
+			$auto_login_manager = \GHL_CRM\Core\AutoLoginManager::get_instance();
+			$token_data = $auto_login_manager->generate_token( $user_id );
+
+			wp_send_json_success( [
+				'login_url' => $token_data['login_url'],
+				'expires'   => date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $token_data['expires'] ),
+				'message'   => __( 'Login link generated successfully', 'ghl-crm-integration' ),
+			] );
+		} catch ( \Exception $e ) {
+			wp_send_json_error( [ 'message' => $e->getMessage() ] );
 		}
 	}
 

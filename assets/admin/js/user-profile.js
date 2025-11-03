@@ -183,12 +183,112 @@
                     $(this).remove();
                 });
             }, 5000);
+        },
+
+        /**
+         * Initialize auto-login functionality
+         */
+        initAutoLogin: function() {
+            const self = this;
+
+            // Generate login link
+            $(document).on('click', '.ghl-generate-login-link', function(e) {
+                e.preventDefault();
+                const $button = $(this);
+                const userId = $button.data('user-id');
+                const $display = $('.ghl-login-link-display');
+                const $input = $('#ghl-login-link-input');
+                
+                $button.prop('disabled', true);
+                const originalText = $button.html();
+                $button.html('<span class="dashicons dashicons-update"></span> Generating...');
+                
+                $.ajax({
+                    url: ghlUserProfile.ajaxUrl,
+                    type: 'POST',
+                    data: {
+                        action: 'ghl_crm_generate_login_link',
+                        user_id: userId,
+                        nonce: ghlUserProfile.nonce
+                    },
+                    success: function(response) {
+                        if (response.success && response.data.login_url) {
+                            $input.val(response.data.login_url);
+                            $display.slideDown();
+                            $button.html('<span class="dashicons dashicons-admin-network"></span> Generate New Link');
+                        } else {
+                            alert('Error: ' + (response.data.message || 'Failed to generate login link'));
+                            $button.html(originalText);
+                        }
+                    },
+                    error: function() {
+                        alert('Failed to generate login link. Please try again.');
+                        $button.html(originalText);
+                    },
+                    complete: function() {
+                        $button.prop('disabled', false);
+                    }
+                });
+            });
+            
+            // Copy to clipboard
+            $(document).on('click', '.ghl-copy-login-link', function(e) {
+                e.preventDefault();
+                const $input = $('#ghl-login-link-input')[0];
+                const $button = $('.ghl-copy-login-link');
+                const originalHtml = $button.html();
+                
+                $input.select();
+                $input.setSelectionRange(0, 99999);
+                
+                let success = false;
+                
+                // Try modern clipboard API first (requires HTTPS)
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText($input.value).then(function() {
+                        $button.html('<span class="dashicons dashicons-yes"></span> Copied!');
+                        setTimeout(function() {
+                            $button.html(originalHtml);
+                        }, 2000);
+                    }).catch(function() {
+                        // Fallback to execCommand
+                        self.copyToClipboardFallback($input, $button, originalHtml);
+                    });
+                } else {
+                    // Use fallback method
+                    self.copyToClipboardFallback($input, $button, originalHtml);
+                }
+            });
+        },
+
+        /**
+         * Fallback method for copying to clipboard
+         */
+        copyToClipboardFallback: function($input, $button, originalHtml) {
+            try {
+                $input.select();
+                $input.setSelectionRange(0, 99999);
+                const successful = document.execCommand('copy');
+                
+                if (successful) {
+                    $button.html('<span class="dashicons dashicons-yes"></span> Copied!');
+                    setTimeout(function() {
+                        $button.html(originalHtml);
+                    }, 2000);
+                } else {
+                    alert('Failed to copy. Please copy manually: ' + $input.value);
+                }
+            } catch (err) {
+                alert('Failed to copy. Please copy manually: ' + $input.value);
+            }
         }
+        
     };
 
     // Initialize on document ready
     $(document).ready(function() {
         GHLUserProfile.init();
+        GHLUserProfile.initAutoLogin();
     });
 
 })(jQuery);

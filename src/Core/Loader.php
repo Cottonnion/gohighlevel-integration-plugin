@@ -70,6 +70,7 @@ class Loader {
 			'core.assets'        => \GHL_CRM\Core\AssetsManager::class,
 			'core.menu'          => \GHL_CRM\Core\MenuManager::class,
 			'core.notices'       => \GHL_CRM\Core\AdminNotices::class,
+			'core.autologin'     => \GHL_CRM\Core\AutoLoginManager::class,
 
 			// Admin UI components
 			'admin.ui'           => \GHL_CRM\Admin\AdminUI::class,
