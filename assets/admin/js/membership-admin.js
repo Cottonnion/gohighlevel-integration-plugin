@@ -28,6 +28,7 @@
                 tags: true,
                 tokenSeparators: [','],
                 placeholder: $tagsSelect.data('placeholder'),
+                closeOnSelect: false,
                 allowClear: true,
                 width: '100%',
                 ajax: {

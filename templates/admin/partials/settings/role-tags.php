@@ -224,11 +224,11 @@ $global_tags = is_array( $global_tags_raw ) ? implode( ',', $global_tags_raw ) :
 						<?php esc_html_e( 'Actions', 'ghl-crm-integration' ); ?>
 					</th>
 					<td>
-						<button type="button" class="button button-secondary" id="bulk-add-tags">
+						<button type="button" class="ghl-button ghl-button-secondary" id="bulk-add-tags">
 							<span class="dashicons dashicons-plus-alt"></span>
 							<?php esc_html_e( 'Add Tags to Role', 'ghl-crm-integration' ); ?>
 						</button>
-						<button type="button" class="button button-secondary" id="bulk-remove-tags" style="margin-left: 10px;">
+						<button type="button" class="ghl-button ghl-button-secondary" id="bulk-remove-tags" style="margin-left: 10px;">
 							<span class="dashicons dashicons-minus"></span>
 							<?php esc_html_e( 'Remove Tags from Role', 'ghl-crm-integration' ); ?>
 						</button>

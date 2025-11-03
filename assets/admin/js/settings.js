@@ -874,6 +874,7 @@
 				tokenSeparators: [','],
 				allowClear: true,
 				width: '100%',
+				closeOnSelect: false, // Keep dropdown open when selecting multiple tags
 				ajax: {
 					url: ajaxurl,
 					type: 'POST',

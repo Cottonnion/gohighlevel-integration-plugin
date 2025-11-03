@@ -29,6 +29,7 @@
                 tags: true,
                 tokenSeparators: [','],
                 placeholder: ghlUserProfile.strings.searchTags,
+                closeOnSelect: false,
                 allowClear: true,
                 width: '100%',
                 ajax: {
