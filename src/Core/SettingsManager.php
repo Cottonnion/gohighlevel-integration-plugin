@@ -82,7 +82,8 @@ class SettingsManager {
 		add_action( 'wp_ajax_ghl_crm_system_health_check', [ $this, 'system_health_check' ] );
 		add_action( 'wp_ajax_ghl_crm_get_custom_objects', [ $this, 'get_custom_objects' ] );
 		add_action( 'wp_ajax_ghl_crm_get_schema_details', [ $this, 'get_schema_details' ] );
-		
+		add_action( 'wp_ajax_ghl_crm_get_forms', [ $this, 'handle_get_forms' ] );
+
 		// Custom Object Mapping AJAX handlers
 		add_action( 'wp_ajax_ghl_crm_get_post_types', [ $this, 'get_post_types' ] );
 		add_action( 'wp_ajax_ghl_crm_save_mapping', [ $this, 'save_mapping' ] );
@@ -412,6 +413,70 @@ class SettingsManager {
 					'status_code' => $status_code,
 				],
 				$status_code
+			);
+		}
+	}
+
+
+		/**
+	 * Handle AJAX request to get forms from GoHighLevel
+	 *
+	 * @return void Outputs JSON response and exits.
+	 */
+	public function handle_get_forms(): void {
+		check_ajax_referer( 'ghl_crm_forms_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to access forms.', 'ghl-crm-integration' ),
+				],
+				403
+			);
+		}
+
+		// Check if connection is verified
+		$settings_manager = SettingsManager::get_instance();
+		if ( ! $settings_manager->is_connection_verified() ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'Please connect to GoHighLevel first.', 'ghl-crm-integration' ),
+				],
+				401
+			);
+		}
+
+		try {
+			// Get forms from GHL API
+			$forms_resource = new \GHL_CRM\API\Resources\FormsResource();
+			$forms = $forms_resource->get_forms( true ); // Force refresh
+
+			wp_send_json_success(
+				[
+					'forms' => $forms,
+				]
+			);
+		} catch ( \Exception $e ) {
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: Error message */
+						__( 'Failed to fetch forms: %s', 'ghl-crm-integration' ),
+						$e->getMessage()
+					),
+				],
+				500
+			);
+		} catch ( \Error $e ) {
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: error message */
+						__( 'A fatal error occurred while fetching forms: %s', 'ghl-crm-integration' ),
+						$e->getMessage()
+					),
+				],
+				500
 			);
 		}
 	}
@@ -1516,6 +1581,7 @@ class SettingsManager {
 			wp_send_json_error(
 				[
 					'message' => sprintf(
+						/* translators: %s: Error message */
 						/* translators: %s: Error message */
 						__( 'Failed to fetch Custom Objects: %s', 'ghl-crm-integration' ),
 						$e->getMessage()
