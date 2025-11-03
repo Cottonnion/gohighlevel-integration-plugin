@@ -760,7 +760,8 @@
 						$tagsSelect.select2({
 							placeholder: 'Select tags to apply on user registration',
 							allowClear: true,
-							width: '100%'
+							width: '100%',
+							closeOnSelect: false // Keep dropdown open when selecting multiple tags
 						});
 					}
 				} else {
