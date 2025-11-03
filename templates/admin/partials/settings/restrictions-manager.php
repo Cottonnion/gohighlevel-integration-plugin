@@ -92,7 +92,7 @@ $allowed_tags = $settings['restrictions_allowed_tags'] ?? [];
 							   name="restrictions_default_redirect" 
 							   value="<?php echo esc_url( $default_redirect_url ); ?>" 
 							   class="regular-text"
-							   placeholder="https://example.com/membership">
+						>
 						<p class="description">
 							<?php esc_html_e( 'Default URL to redirect users who don\'t have access. Can be overridden per page/post. Leave empty to show access denied message instead.', 'ghl-crm-integration' ); ?>
 						</p>
