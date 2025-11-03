@@ -114,7 +114,7 @@ $log_count = $wpdb->get_var( $wpdb->prepare(
 							<td><?php echo esc_html( $log['action'] ); ?></td>
 							<td><?php echo esc_html( $log['status'] ); ?></td>
 							<td>
-								<button type="button" class="button button-small ghl-view-details" data-details="<?php echo esc_attr( $details_json ); ?>">
+								<button type="button" class="ghl-button ghl-button-secondary ghl-view-details" data-details="<?php echo esc_attr( $details_json ); ?>">
 									View Details
 								</button>
 							</td>

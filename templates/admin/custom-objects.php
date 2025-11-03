@@ -59,11 +59,11 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 	<?php if ( $is_connected ) : ?>
 		
 		<div class="ghl-custom-objects-controls">
-			<button type="button" class="button button-primary" id="ghl-refresh-schemas">
+			<button type="button" class="ghl-button ghl-button-primary" id="ghl-refresh-schemas">
 				<span class="dashicons dashicons-update"></span>
 				<?php esc_html_e( 'Refresh Schemas', 'ghl-crm-integration' ); ?>
 			</button>
-			<button type="button" class="button" id="ghl-view-mappings">
+			<button type="button" class="ghl-button ghl-button-secondary" id="ghl-view-mappings">
 				<span class="dashicons dashicons-admin-settings"></span>
 				<?php esc_html_e( 'View Mappings', 'ghl-crm-integration' ); ?>
 			</button>
@@ -74,7 +74,7 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 		<div id="ghl-mappings-section" class="ghl-mappings-section" style="display: none;">
 			<div class="ghl-mappings-header">
 				<h2><?php esc_html_e( 'Custom Object Mappings', 'ghl-crm-integration' ); ?></h2>
-				<button type="button" class="button button-primary" id="ghl-create-mapping">
+				<button type="button" class="ghl-button ghl-button-primary" id="ghl-create-mapping">
 					<span class="dashicons dashicons-plus"></span>
 					<?php esc_html_e( 'Create Mapping', 'ghl-crm-integration' ); ?>
 				</button>
@@ -240,7 +240,7 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 									<!-- Dynamic rows will be added here -->
 								</tbody>
 							</table>
-							<button type="button" class="button" id="add-field-mapping">
+							<button type="button" class="ghl-button ghl-button-primary" id="add-field-mapping">
 								<span class="dashicons dashicons-plus"></span>
 								<?php esc_html_e( 'Add Field Mapping', 'ghl-crm-integration' ); ?>
 							</button>
@@ -262,11 +262,11 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 						</div>
 
 						<div class="ghl-form-actions">
-							<button type="submit" class="button button-primary">
+							<button type="submit" class="ghl-button ghl-button-primary">
 								<span class="dashicons dashicons-yes"></span>
 								<?php esc_html_e( 'Save Mapping', 'ghl-crm-integration' ); ?>
 							</button>
-							<button type="button" class="button ghl-modal-close">
+							<button type="button" class="ghl-button ghl-button-secondary ghl-modal-close">
 								<?php esc_html_e( 'Cancel', 'ghl-crm-integration' ); ?>
 							</button>
 							<span class="spinner"></span>
