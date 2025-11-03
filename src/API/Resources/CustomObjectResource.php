@@ -44,9 +44,6 @@ class CustomObjectResource extends AbstractResource {
 			// Endpoint: GET /objects/ returns all objects for a location
 			$response = $this->all();
 			
-			// Debug: Log the full response
-			
-			
 			// The response structure is { "objects": [...] } according to GHL docs
 			$objects = $response['objects'] ?? [];
 
@@ -55,8 +52,6 @@ class CustomObjectResource extends AbstractResource {
 
 			return $objects;
 		} catch ( \Exception $e ) {
-			
-			
 			return [];
 		}
 	}
@@ -71,23 +66,17 @@ class CustomObjectResource extends AbstractResource {
 	 */
 	public function delete_record( string $record_id, string $schema_id ): bool {
 		try {
-			error_log( 'GHL CRM CustomObjectResource: delete_record() called for ID: ' . $record_id );
-			
 			if ( empty( $schema_id ) ) {
 				throw new \Exception( 'Schema ID is required to delete custom object record' );
 			}
 			
 			// Use the correct GHL API endpoint format: /objects/:schemaKey/records/:recordId
 			$endpoint = "objects/{$schema_id}/records/{$record_id}";
-			error_log( "GHL CRM CustomObjectResource: Making API DELETE request to {$endpoint}" );
 			
 			$this->client->delete( $endpoint, false );
 
-			error_log( 'GHL CRM CustomObjectResource: Delete successful for ID: ' . $record_id );
-			
 			return true;
 		} catch ( \Exception $e ) {
-			error_log( 'GHL CRM CustomObjectResource: Delete EXCEPTION - ' . $e->getMessage() );
 			throw new \Exception( 'Failed to delete custom object record: ' . $e->getMessage() );
 		}
 	}
@@ -140,10 +129,6 @@ class CustomObjectResource extends AbstractResource {
 	 * @throws \Exception If creation fails
 	 */
 	public function create_record( string $schema_id, array $data ): array {
-		error_log( 'GHL CRM CustomObjectResource: create_record() called' );
-		error_log( 'GHL CRM CustomObjectResource: Schema ID: ' . $schema_id );
-		error_log( 'GHL CRM CustomObjectResource: Request data: ' . wp_json_encode( $data ) );
-		
 		try {
 			if ( empty( $schema_id ) ) {
 				throw new \Exception( 'Schema ID is required to create custom object record' );
@@ -151,19 +136,13 @@ class CustomObjectResource extends AbstractResource {
 			
 			// Use the correct GHL API endpoint format: /objects/:schemaKey/records
 			$endpoint = "objects/{$schema_id}/records";
-			error_log( "GHL CRM CustomObjectResource: Making API POST request to {$endpoint}" );
 			
 			$response = $this->client->post( $endpoint, $data, false );
 
-			error_log( 'GHL CRM CustomObjectResource: API Response received: ' . wp_json_encode( $response ) );
-
 			$result = $response['record'] ?? $response;
-			error_log( 'GHL CRM CustomObjectResource: Returning result: ' . wp_json_encode( $result ) );
 			
 			return $result;
 		} catch ( \Exception $e ) {
-			error_log( 'GHL CRM CustomObjectResource: EXCEPTION - ' . $e->getMessage() );
-			error_log( 'GHL CRM CustomObjectResource: Exception trace: ' . $e->getTraceAsString() );
 			throw new \Exception( 'Failed to create custom object record: ' . $e->getMessage() );
 		}
 	}
@@ -179,10 +158,6 @@ class CustomObjectResource extends AbstractResource {
 	 */
 	public function update_record( string $schema_key, string $record_id, array $data ): array {
 		try {
-			error_log( 'GHL CRM CustomObjectResource: update_record() called for ID: ' . $record_id );
-			error_log( 'GHL CRM CustomObjectResource: Schema KEY: ' . $schema_key );
-			error_log( 'GHL CRM CustomObjectResource: Request data: ' . wp_json_encode( $data ) );
-			
 			if ( empty( $schema_key ) ) {
 				throw new \Exception( 'Schema KEY is required to update custom object record' );
 			}
@@ -191,16 +166,12 @@ class CustomObjectResource extends AbstractResource {
 			// Per GHL docs: schemaKey format is "custom_objects.object_name"
 			// locationId MUST be included as query parameter
 			$endpoint = "objects/{$schema_key}/records/{$record_id}";
-			error_log( "GHL CRM CustomObjectResource: Making API PUT request to {$endpoint} (with locationId query param)" );
 			
 			// Pass true to include locationId in query params (required by GHL API)
 			$response = $this->client->put( $endpoint, $data, true );
 
-			error_log( 'GHL CRM CustomObjectResource: Update response: ' . wp_json_encode( $response ) );
-			
 			return $response['record'] ?? $response;
 		} catch ( \Exception $e ) {
-			error_log( 'GHL CRM CustomObjectResource: Update EXCEPTION - ' . $e->getMessage() );
 			throw new \Exception( 'Failed to update custom object record: ' . $e->getMessage() );
 		}
 	}
@@ -214,23 +185,17 @@ class CustomObjectResource extends AbstractResource {
 	 */
 	public function get_record( string $record_id, string $schema_id ): ?array {
 		try {
-			error_log( 'GHL CRM CustomObjectResource: get_record() called for ID: ' . $record_id );
-			
 			if ( empty( $schema_id ) ) {
 				throw new \Exception( 'Schema ID is required to get custom object record' );
 			}
 			
 			// Use the correct GHL API endpoint format: /objects/:schemaKey/records/:recordId
 			$endpoint = "objects/{$schema_id}/records/{$record_id}";
-			error_log( "GHL CRM CustomObjectResource: Making API GET request to {$endpoint}" );
 			
 			$response = $this->client->get( $endpoint, [], false );
 
-			error_log( 'GHL CRM CustomObjectResource: Get response: ' . wp_json_encode( $response ) );
-			
 			return $response['record'] ?? $response;
 		} catch ( \Exception $e ) {
-			error_log( 'GHL CRM CustomObjectResource: Get EXCEPTION - ' . $e->getMessage() );
 			return null;
 		}
 	}
@@ -243,16 +208,11 @@ class CustomObjectResource extends AbstractResource {
 	 */
 	public function get_associations(): array {
 		try {
-			error_log( 'GHL CRM CustomObjectResource: Fetching all associations' );
-			
 			$endpoint = "associations/";
 			$response = $this->client->get( $endpoint, [], true );
 			
-			error_log( 'GHL CRM CustomObjectResource: Associations response: ' . wp_json_encode( $response ) );
-			
 			return $response['associations'] ?? $response;
 		} catch ( \Exception $e ) {
-			error_log( 'GHL CRM CustomObjectResource: Get associations EXCEPTION - ' . $e->getMessage() );
 			throw new \Exception( 'Failed to get associations: ' . $e->getMessage() );
 		}
 	}
@@ -269,15 +229,6 @@ class CustomObjectResource extends AbstractResource {
 	 * @throws \Exception If association fails
 	 */
 	public function associate_with_contact( string $record_id, string $contact_id, string $schema_key, string $association_id, ?string $direction = null ): array {
-		error_log( sprintf(
-			'GHL CRM CustomObjectResource: Associating record %s with contact %s (schema: %s, associationId: %s, direction: %s)',
-			$record_id,
-			$contact_id,
-			$schema_key,
-			$association_id,
-			$direction ?? 'first (default)'
-		) );
-		
 		try {
 			// CORRECT GHL API endpoint: POST /associations/relations
 			// Documentation: https://marketplace.gohighlevel.com/docs/ghl/associations/create-relation
@@ -312,16 +263,10 @@ class CustomObjectResource extends AbstractResource {
 				'secondRecordId' => $second_id,
 			];
 			
-			error_log( 'GHL CRM CustomObjectResource: Association endpoint: ' . $endpoint );
-			error_log( 'GHL CRM CustomObjectResource: Association data: ' . wp_json_encode( $data ) );
-			
 			$response = $this->client->post( $endpoint, $data, false );
-			
-			error_log( 'GHL CRM CustomObjectResource: Association response: ' . wp_json_encode( $response ) );
 			
 			return $response;
 		} catch ( \Exception $e ) {
-			error_log( 'GHL CRM CustomObjectResource: Association EXCEPTION - ' . $e->getMessage() );
 			throw new \Exception( 'Failed to associate record with contact: ' . $e->getMessage() );
 		}
 	}
