@@ -318,9 +318,16 @@ class SettingsManager {
 			);
 		}
 
+		// Check connection status
+		$settings = $this->get_settings_array();
+		$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
+		$oauth_status = $oauth_handler->get_connection_status();
+		$is_connected = $oauth_status['connected'] || ! empty( $settings['api_token'] );
+
 		wp_send_json_success(
 			[
-				'settings' => $this->get_settings_array(),
+				'settings' => $settings,
+				'is_connected' => $is_connected,
 			]
 		);
 	}
