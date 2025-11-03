@@ -51,7 +51,83 @@ print_r($queue_status);
 echo '</pre>';
 
 // Check next scheduled action
-if ( ! function_exists( 'as_next_scheduled_action' ) ) {
+if ( function_exists( 'as_next_scheduled_action' ) ) {
+	// Prove Action Scheduler is loaded and available
+	echo '<div style="background: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 15px 0;">';
+	echo '<h4 style="margin-top: 0; color: #155724;">✓ Action Scheduler Available</h4>';
+	echo '<p style="margin: 5px 0;"><strong>Version:</strong> ' . esc_html( ActionScheduler_Versions::instance()->latest_version() ) . '</p>';
+	
+	// Get Action Scheduler statistics
+	$action_counts = array(
+		'pending'    => as_get_scheduled_actions( array( 'status' => 'pending', 'per_page' => 0 ), 'ids' ),
+		'in-progress' => as_get_scheduled_actions( array( 'status' => 'in-progress', 'per_page' => 0 ), 'ids' ),
+		'complete'   => as_get_scheduled_actions( array( 'status' => 'complete', 'per_page' => 0 ), 'ids' ),
+		'failed'     => as_get_scheduled_actions( array( 'status' => 'failed', 'per_page' => 0 ), 'ids' ),
+	);
+	
+	echo '<table style="background: white; width: 100%; margin-top: 10px;" class="widefat">';
+	echo '<thead><tr><th>Status</th><th>Count</th></tr></thead>';
+	echo '<tbody>';
+	echo '<tr><td>Pending Actions</td><td><strong>' . esc_html( count( $action_counts['pending'] ) ) . '</strong></td></tr>';
+	echo '<tr><td>In Progress</td><td><strong>' . esc_html( count( $action_counts['in-progress'] ) ) . '</strong></td></tr>';
+	echo '<tr><td>Completed</td><td><strong>' . esc_html( count( $action_counts['complete'] ) ) . '</strong></td></tr>';
+	echo '<tr><td>Failed</td><td><strong>' . esc_html( count( $action_counts['failed'] ) ) . '</strong></td></tr>';
+	echo '</tbody></table>';
+	
+	// Show detailed pending actions
+	if ( count( $action_counts['pending'] ) > 0 ) {
+		echo '<h5 style="margin-top: 15px; color: #155724;">Pending Actions Details:</h5>';
+		$pending_actions = as_get_scheduled_actions( array( 'status' => 'pending', 'per_page' => 10 ), 'OBJECT' );
+		
+		if ( ! empty( $pending_actions ) ) {
+			echo '<table style="background: white; width: 100%; margin-top: 10px; font-size: 12px;" class="widefat striped">';
+			echo '<thead><tr><th>Hook</th><th>Args</th><th>Group</th><th>Scheduled</th></tr></thead>';
+			echo '<tbody>';
+			foreach ( $pending_actions as $action ) {
+				$hook = $action->get_hook();
+				$args = $action->get_args();
+				$group = $action->get_group();
+				$scheduled = $action->get_schedule()->get_date();
+				
+				echo '<tr>';
+				echo '<td><code>' . esc_html( $hook ) . '</code></td>';
+				echo '<td><small>' . esc_html( ! empty( $args ) ? json_encode( $args ) : 'None' ) . '</small></td>';
+				echo '<td>' . esc_html( $group ) . '</td>';
+				echo '<td>' . esc_html( $scheduled->format( 'Y-m-d H:i:s' ) ) . '</td>';
+				echo '</tr>';
+			}
+			echo '</tbody></table>';
+		}
+	}
+	
+	// Show detailed in-progress actions
+	if ( count( $action_counts['in-progress'] ) > 0 ) {
+		echo '<h5 style="margin-top: 15px; color: #155724;">In-Progress Actions Details:</h5>';
+		$inprogress_actions = as_get_scheduled_actions( array( 'status' => 'in-progress', 'per_page' => 10 ), 'OBJECT' );
+		
+		if ( ! empty( $inprogress_actions ) ) {
+			echo '<table style="background: white; width: 100%; margin-top: 10px; font-size: 12px;" class="widefat striped">';
+			echo '<thead><tr><th>Hook</th><th>Args</th><th>Group</th><th>Started</th></tr></thead>';
+			echo '<tbody>';
+			foreach ( $inprogress_actions as $action ) {
+				$hook = $action->get_hook();
+				$args = $action->get_args();
+				$group = $action->get_group();
+				$scheduled = $action->get_schedule()->get_date();
+				
+				echo '<tr>';
+				echo '<td><code>' . esc_html( $hook ) . '</code></td>';
+				echo '<td><small>' . esc_html( ! empty( $args ) ? json_encode( $args ) : 'None' ) . '</small></td>';
+				echo '<td>' . esc_html( $group ) . '</td>';
+				echo '<td>' . esc_html( $scheduled->format( 'Y-m-d H:i:s' ) ) . '</td>';
+				echo '</tr>';
+			}
+			echo '</tbody></table>';
+		}
+	}
+	
+	echo '</div>';
+	
 	echo '<h5>Next Scheduled Queue Process:</h5>';
 	$next_scheduled = as_next_scheduled_action( 'ghl_crm_process_queue' );
 	
