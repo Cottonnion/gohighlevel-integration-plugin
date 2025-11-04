@@ -409,11 +409,24 @@ class AssetsManager {
 		// Sync Logs page assets (separate page)
 		$this->add_admin_asset(
 			'ghl-crm-sync-logs-css',
-			[ 'ghl-crm_page_ghl-crm-sync-logs' ],
+			[ 'toplevel_page_ghl-crm-admin' ],
 			'sync-logs.css',
 			[ 'ghl-crm-globals-css' ],
 			[],
-			GHL_CRM_VERSION
+			'1.0.1'
+		);
+
+		$this->add_admin_asset(
+			'ghl-crm-sync-logs-js',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'sync-logs.js',
+			[ 'jquery', 'sweetalert2' ],
+			[
+				'nonce'   => wp_create_nonce( 'ghl_sync_logs_nonce' ),
+				'ajaxurl' => admin_url( 'admin-ajax.php' ),
+			],
+			GHL_CRM_VERSION,
+			true
 		);
 
 		// Custom Objects page assets (SPA page)
