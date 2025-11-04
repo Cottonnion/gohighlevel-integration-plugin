@@ -214,6 +214,12 @@
                         window.initSettingsMenu();
                     }
                     break;
+                case 'sync-logs':
+                    // Re-initialize sync logs handlers
+                    if (typeof window.GHLSyncLogs !== 'undefined' && typeof window.GHLSyncLogs.init === 'function') {
+                        window.GHLSyncLogs.init();
+                    }
+                    break;
             }
         }
 
