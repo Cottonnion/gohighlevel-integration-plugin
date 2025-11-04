@@ -34,6 +34,13 @@ class AbandonedCartTracker {
 	private $contact_resource;
 
 	/**
+	 * Opportunity Manager instance
+	 *
+	 * @var OpportunityManager
+	 */
+	private $opportunity_manager;
+
+	/**
 	 * Abandonment threshold in minutes
 	 *
 	 * @var int
@@ -46,6 +53,7 @@ class AbandonedCartTracker {
 	public function __construct() {
 		$this->settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 		$this->contact_resource = new \GHL_CRM\API\Resources\ContactResource();
+		$this->opportunity_manager = new OpportunityManager();
 		
 		$settings = $this->settings_manager->get_settings_array();
 		$this->abandonment_threshold = absint( $settings['wc_abandoned_cart_time'] ?? 30 ); // Default: 30 minutes
@@ -466,45 +474,117 @@ class AbandonedCartTracker {
 				return; // No tags configured
 			}
 
-			// Prepare contact data
-			$contact_data = [
-				'email'     => $cart_data['email'],
-				'firstName' => $cart_data['first_name'] ?? '',
-				'lastName'  => $cart_data['last_name'] ?? '',
-				'phone'     => $cart_data['phone'] ?? '',
-			];
+		// Prepare contact data
+		$contact_data = [
+			'email'     => $cart_data['email'],
+			'firstName' => $cart_data['first_name'] ?? '',
+			'lastName'  => $cart_data['last_name'] ?? '',
+			'phone'     => $cart_data['phone'] ?? '',
+		];
 
-			// Upsert contact
-			$result = $this->contact_resource->upsert( $contact_data );
+		// Upsert contact
+		$result = $this->contact_resource->upsert( $contact_data );
 
-			if ( empty( $result['contact']['id'] ) ) {
-				error_log( 'GHL Abandoned Cart: Failed to upsert contact for ' . $cart_data['email'] );
-				return;
+		if ( empty( $result['contact']['id'] ) ) {
+			error_log( 'GHL Abandoned Cart: Failed to upsert contact for ' . $cart_data['email'] );
+			return;
+		}
+
+		$contact_id = $result['contact']['id'];
+
+		// Add abandoned cart tags to GHL
+		$this->contact_resource->add_tags( $contact_id, $abandoned_tags );
+
+		// If this is a logged-in user, also add tags to WordPress user meta
+		$user_id = null;
+		if ( strpos( $cart_key, 'user_' ) === 0 ) {
+			$user_id = absint( str_replace( 'user_', '', $cart_key ) );
+		} else {
+			// Try to find user by email
+			$user = get_user_by( 'email', $cart_data['email'] );
+			if ( $user ) {
+				$user_id = $user->ID;
+			}
+		}
+
+		if ( $user_id ) {
+			// Get existing GHL tags from user meta
+			$existing_tags = get_user_meta( $user_id, 'ghl_tags', true );
+			if ( ! is_array( $existing_tags ) ) {
+				$existing_tags = [];
 			}
 
-			$contact_id = $result['contact']['id'];
+			// Merge with abandoned cart tags (avoid duplicates)
+			$updated_tags = array_unique( array_merge( $existing_tags, $abandoned_tags ) );
+			update_user_meta( $user_id, 'ghl_tags', $updated_tags );
 
-			// Add abandoned cart tags
-			$this->contact_resource->add_tags( $contact_id, $abandoned_tags );
+			// Also store GHL contact ID if not already set
+			$stored_contact_id = get_user_meta( $user_id, 'ghl_contact_id', true );
+			if ( empty( $stored_contact_id ) ) {
+				update_user_meta( $user_id, 'ghl_contact_id', $contact_id );
+			}
+		}
 
-			// Mark cart as abandoned in transient
-			$cart_data['abandoned']    = true;
-			$cart_data['abandoned_at'] = time();
-			$cart_data['ghl_contact_id'] = $contact_id;
-			$cart_data['ghl_tags_applied'] = $abandoned_tags;
+		// Create opportunity if enabled (queued for async processing)
+		$opportunity_queued = false;
+		if ( $this->opportunity_manager->is_enabled() ) {
+			// Check if cart matches opportunity filter
+			if ( WC()->cart && ! WC()->cart->is_empty() ) {
+				if ( $this->opportunity_manager->matches_filter( WC()->cart ) ) {
+					// Add cart_key to cart_data for queue processing
+					$cart_data['cart_key'] = $cart_key;
+					$opportunity_queued = $this->opportunity_manager->create_abandoned_cart_opportunity(
+						$cart_data['email'],
+						$cart_data
+					);
+				}
+			}
+		}
 
-			set_transient( 'ghl_cart_' . $cart_key, $cart_data, DAY_IN_SECONDS * 7 );
+		// Mark cart as abandoned in transient
+		$cart_data['abandoned']         = true;
+		$cart_data['abandoned_at']      = time();
+		$cart_data['ghl_contact_id']    = $contact_id;
+		$cart_data['ghl_tags_applied']  = $abandoned_tags;
+		$cart_data['ghl_opportunity_queued'] = $opportunity_queued;
+		$cart_data['wp_user_id']        = $user_id;
 
-			// Log success
-			error_log( sprintf(
-				'GHL Abandoned Cart: Tagged cart for %s - Cart Value: %s, Items: %d, Tags: %s',
-				$cart_data['email'],
-				wc_price( $cart_data['cart_total'] ),
-				$cart_data['item_count'],
-				implode( ', ', $abandoned_tags )
-			) );
+		set_transient( 'ghl_cart_' . $cart_key, $cart_data, DAY_IN_SECONDS * 7 );
 
-		} catch ( \Exception $e ) {
+		// Log to sync logger
+		if ( class_exists( '\GHL_CRM\Sync\SyncLogger' ) ) {
+			\GHL_CRM\Sync\SyncLogger::log(
+				'abandoned_cart',
+				'success',
+				sprintf(
+					'Abandoned cart tagged for %s - Cart Value: %s, Items: %d',
+					$cart_data['email'],
+					wc_price( $cart_data['cart_total'] ),
+					$cart_data['item_count']
+				),
+				[
+					'cart_key'       => $cart_key,
+					'email'          => $cart_data['email'],
+					'contact_id'     => $contact_id,
+					'tags'           => $abandoned_tags,
+					'cart_total'     => $cart_data['cart_total'],
+					'item_count'     => $cart_data['item_count'],
+					'user_id'        => $user_id,
+					'abandoned_at'   => date( 'Y-m-d H:i:s', $cart_data['abandoned_at'] ),
+				]
+			);
+		}
+
+		// Also log to error log for immediate visibility
+		error_log( sprintf(
+			'GHL Abandoned Cart: Tagged cart for %s (User ID: %s) - Cart Value: %s, Items: %d, Tags: %s, GHL Contact: %s',
+			$cart_data['email'],
+			$user_id ? $user_id : 'guest',
+			wc_price( $cart_data['cart_total'] ),
+			$cart_data['item_count'],
+			implode( ', ', $abandoned_tags ),
+			$contact_id
+		) );		} catch ( \Exception $e ) {
 			error_log( 'GHL Abandoned Cart: Error processing cart - ' . $e->getMessage() );
 		}
 	}
