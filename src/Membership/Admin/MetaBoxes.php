@@ -122,10 +122,18 @@ class MetaBoxes {
 		// Enqueue our custom assets
 		$plugin_dir = plugin_dir_url( dirname( dirname( dirname( __DIR__ ) ) ) . '/gohighlevel-crm-integration.php' );
 		
+		// Enqueue globals CSS
+		wp_enqueue_style(
+			'ghl-globals',
+			$plugin_dir . 'assets/admin/css/globals.css',
+			[],
+			GHL_CRM_VERSION
+		);
+		
 		wp_enqueue_style(
 			'ghl-membership-admin',
 			$plugin_dir . 'assets/admin/css/membership-admin.css',
-			[ 'select2' ],
+			[ 'select2', 'ghl-globals' ],
 			GHL_CRM_VERSION
 		);
 
@@ -366,7 +374,7 @@ class MetaBoxes {
 		wp_enqueue_script(
 			'ghl-membership-admin',
 			GHL_CRM_URL . 'assets/admin/js/membership-admin.js',
-			[ 'jquery', 'select2' ],
+			[ 'jquery', 'select2', ],
 			'1.0.0',
 			true
 		);
@@ -377,7 +385,7 @@ class MetaBoxes {
 			'ghlMembership',
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'ghl_membership' ),
+				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
 			]
 		);
 
