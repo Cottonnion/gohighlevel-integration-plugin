@@ -41,12 +41,20 @@ class WooCommerceSync {
 	private $queue_manager;
 
 	/**
+	 * Abandoned Cart Tracker instance
+	 *
+	 * @var AbandonedCartTracker
+	 */
+	private $abandoned_cart_tracker;
+
+	/**
 	 * Constructor
 	 */
 	public function __construct() {
 		$this->settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 		$this->contact_resource = new \GHL_CRM\API\Resources\ContactResource();
 		$this->queue_manager    = \GHL_CRM\Sync\QueueManager::get_instance();
+		$this->abandoned_cart_tracker = new AbandonedCartTracker();
 	}
 
 	/**
@@ -87,11 +95,9 @@ class WooCommerceSync {
 			}
 		}
 
-		// Abandoned cart tracking (future implementation)
+		// Abandoned cart tracking
 		if ( ! empty( $settings['wc_abandoned_cart_enabled'] ) ) {
-			// Note: Abandoned cart detection requires additional setup
-			// This is a placeholder for future development
-			// Typically requires tracking cart updates and scheduled checks
+			$this->abandoned_cart_tracker->init();
 		}
 	}
 
