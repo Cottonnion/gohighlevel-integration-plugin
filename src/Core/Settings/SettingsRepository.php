@@ -91,6 +91,7 @@ class SettingsRepository {
 				'user_sync_actions'             => [],
 				'delete_contact_on_user_delete' => false,
 				'user_field_mapping'            => [],
+				'enable_sync_logging'           => true, // Default to enabled for logging
 				'updated_at'                    => '',
 				'site_id'                       => get_current_blog_id(),
 			]
