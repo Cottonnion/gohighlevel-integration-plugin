@@ -89,6 +89,9 @@ class SettingsManager {
 		add_action( 'wp_ajax_ghl_crm_save_mapping', [ $this, 'save_mapping' ] );
 		add_action( 'wp_ajax_ghl_crm_get_mappings', [ $this, 'get_mappings' ] );
 		add_action( 'wp_ajax_ghl_crm_delete_mapping', [ $this, 'delete_mapping' ] );
+
+		// Integrations AJAX handlers (delegated to AjaxHandler)
+		add_action( 'wp_ajax_ghl_crm_save_integrations', [ $this, 'handle_save_integrations' ] );
 	}
 
 	/**
@@ -686,8 +689,14 @@ class SettingsManager {
 	 * @return void
 	 */
 	public function get_tags(): void {
-		// Verify nonce
-		check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce' );
+		$nonce = $_POST['nonce'] ?? '';
+
+		if (
+			! wp_verify_nonce( $nonce, 'ghl_crm_settings_nonce' ) &&
+			! wp_verify_nonce( $nonce, 'ghl_crm_admin' )
+		) {
+			wp_send_json_error( [ 'message' => 'Invalid nonce.' ], 403 );
+		}
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -1856,6 +1865,30 @@ class SettingsManager {
 		$this->update_option( 'ghl_crm_custom_object_mappings', array_values( $mappings ) );
 
 		wp_send_json_success( [ 'message' => __( 'Mapping deleted successfully', 'ghl-crm-integration' ) ] );
+	}
+
+	/**
+	 * Handle save integrations AJAX request
+	 * Delegates to AjaxHandler for business logic
+	 *
+	 * @return void
+	 */
+	public function handle_save_integrations(): void {
+		// Verify nonce
+		check_ajax_referer( 'ghl_crm_admin', 'nonce' );
+
+		// Check permissions
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to save integrations settings.', 'ghl-crm-integration' ),
+				],
+				403
+			);
+		}
+
+		// Delegate to AjaxHandler
+		AjaxHandler::save_integrations();
 	}
 
 	/**
