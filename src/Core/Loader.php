@@ -110,8 +110,25 @@ class Loader {
 		// wp-activate.php runs before most plugins, so we need to init ASAP
 		add_action( 'plugins_loaded', array( $this, 'init_components' ), 1 );
 
+		// Register custom cron schedules
+		add_filter( 'cron_schedules', array( $this, 'add_cron_schedules' ) );
+
 		// Register cleanup action (Action Scheduler hook)
 		add_action( 'ghl_crm_cleanup_database', array( \GHL_CRM\Core\Database::class, 'cleanup' ) );
+	}
+
+	/**
+	 * Add custom cron schedules
+	 *
+	 * @param array $schedules Existing cron schedules.
+	 * @return array Modified schedules.
+	 */
+	public function add_cron_schedules( array $schedules ): array {
+		$schedules['ghl_crm_15min'] = array(
+			'interval' => 15 * MINUTE_IN_SECONDS,
+			'display'  => __( 'Every 15 Minutes', 'ghl-crm-integration' ),
+		);
+		return $schedules;
 	}
 
 	/**
