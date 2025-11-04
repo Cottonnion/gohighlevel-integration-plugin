@@ -80,6 +80,9 @@ class QueueProcessor {
 				case 'contact':
 					return $this->execute_contact_sync( $action, $item_id, $payload );
 
+				case 'wc_customer':
+					return $this->execute_woocommerce_sync( $action, $item_id, $payload );
+
 				case 'order':
 					return apply_filters( 'ghl_crm_execute_order_sync', false, $action, $item_id, $payload );
 
@@ -324,6 +327,33 @@ class QueueProcessor {
 
 			default:
 				throw new \Exception( esc_html( 'Unknown contact action: ' . $action ) );
+		}
+	}
+
+	/**
+	 * Execute WooCommerce sync (WooCommerce → GHL)
+	 *
+	 * @param string $action  Action
+	 * @param int    $order_id Order ID
+	 * @param array  $payload Payload data
+	 * @return array|bool API response on success, false on failure
+	 * @throws \Exception
+	 */
+	private function execute_woocommerce_sync( string $action, int $order_id, array $payload ) {
+		// Check if WooCommerce is active
+		if ( ! class_exists( 'WooCommerce' ) ) {
+			throw new \Exception( esc_html__( 'WooCommerce is not active', 'ghl-crm-integration' ) );
+		}
+
+		// Get WooCommerce sync handler
+		$wc_sync = new \GHL_CRM\Integrations\WooCommerce\WooCommerceSync();
+
+		switch ( $action ) {
+			case 'convert_lead':
+				return $wc_sync->process_customer_conversion( $payload );
+
+			default:
+				throw new \Exception( esc_html( 'Unknown WooCommerce action: ' . $action ) );
 		}
 	}
 

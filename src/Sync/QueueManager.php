@@ -518,11 +518,43 @@ class QueueManager {
 					update_user_meta( (int) $item->item_id, '_ghl_contact_id', $contact_id );
 					update_user_meta( (int) $item->item_id, '_ghl_last_sync', time() );
 					
-					// Store tags if available in response
+					// Store tags from payload (what we sent) OR from response
+					$tags_to_cache = null;
+					
+					// First try to get tags from the API response
 					if ( is_array( $result ) ) {
 						$contact_data = $result['contact'] ?? $result;
 						if ( ! empty( $contact_data['tags'] ) && is_array( $contact_data['tags'] ) ) {
-							update_user_meta( (int) $item->item_id, '_ghl_contact_tags', $contact_data['tags'] );
+							$tags_to_cache = $contact_data['tags'];
+						}
+					}
+					
+					// If tags not in response, use what we sent in the payload
+					if ( null === $tags_to_cache ) {
+						$payload_data = json_decode( $item->payload, true );
+						if ( ! empty( $payload_data['tags'] ) && is_array( $payload_data['tags'] ) ) {
+							$tags_to_cache = $payload_data['tags'];
+						}
+					}
+					
+					// Update user meta with tags
+					if ( ! empty( $tags_to_cache ) && is_array( $tags_to_cache ) ) {
+						update_user_meta( (int) $item->item_id, '_ghl_contact_tags', $tags_to_cache );
+					}
+				}
+				
+				// Handle WooCommerce customer conversion - update user meta for the customer
+				if ( 'wc_customer' === $item->item_type && ! empty( $contact_id ) && class_exists( 'WooCommerce' ) ) {
+					$order = wc_get_order( $item->item_id );
+					if ( $order && $order->get_customer_id() ) {
+						$user_id = $order->get_customer_id();
+						update_user_meta( $user_id, '_ghl_contact_id', $contact_id );
+						update_user_meta( $user_id, '_ghl_last_sync', time() );
+						
+						// Store tags from payload
+						$payload_data = json_decode( $item->payload, true );
+						if ( ! empty( $payload_data['tags'] ) && is_array( $payload_data['tags'] ) ) {
+							update_user_meta( $user_id, '_ghl_contact_tags', $payload_data['tags'] );
 						}
 					}
 				}
