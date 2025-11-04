@@ -51,19 +51,14 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 	\GHL_CRM\Core\ScopeChecker::render_scope_notice( 'tags' );
 	?>
 
-	<p class="ghl-page-description">
-		<?php esc_html_e( 'Configure third-party integrations with WooCommerce, BuddyBoss, and LearnDash. Basic WordPress user sync is managed in General Settings.', 'ghl-crm-integration' ); ?>
-	</p>
-
 	<!-- Success/Error Messages -->
 	<div id="ghl-integrations-messages"></div>
 
 	<!-- Tabs Navigation -->
 	<div class="ghl-tabs-nav">
-		<button class="ghl-tab-button active" data-tab="woocommerce" disabled>
+		<button class="ghl-tab-button active" data-tab="woocommerce">
 			<span class="dashicons dashicons-cart"></span>
 			<?php esc_html_e( 'WooCommerce', 'ghl-crm-integration' ); ?>
-			<span class="ghl-badge ghl-badge-secondary"><?php esc_html_e( 'Soon', 'ghl-crm-integration' ); ?></span>
 		</button>
 		<button class="ghl-tab-button" data-tab="buddyboss">
 			<span class="dashicons dashicons-groups"></span>
@@ -78,18 +73,9 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 
 	<!-- Tabs Content -->
 	<div class="ghl-tabs-content">
-		<!-- Tab: WooCommerce (Coming Soon) -->
+		<!-- Tab: WooCommerce -->
 		<div class="ghl-tab-panel active" data-tab="woocommerce">
-			<div class="ghl-card ghl-coming-soon-card">
-				<div class="ghl-coming-soon-content">
-					<div class="ghl-coming-soon-icon">
-						<span class="dashicons dashicons-cart"></span>
-					</div>
-					<h2><?php esc_html_e( 'WooCommerce Integration', 'ghl-crm-integration' ); ?></h2>
-					<p><?php esc_html_e( 'Sync WooCommerce orders, customers, and products with GoHighLevel.', 'ghl-crm-integration' ); ?></p>
-					<span class="ghl-badge ghl-badge-large ghl-badge-secondary"><?php esc_html_e( 'Coming Soon', 'ghl-crm-integration' ); ?></span>
-				</div>
-			</div>
+			<?php require GHL_CRM_PATH . 'templates/admin/partials/integrations/woocommerce.php'; ?>
 		</div>
 
 		<!-- Tab: BuddyBoss -->
@@ -179,7 +165,7 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 
 	<!-- Save Button -->
 	<div class="ghl-form-actions">
-		<button type="button" id="save-integrations-settings" class="button button-primary button-large">
+		<button type="button" id="save-integrations-settings" class="ghl-button ghl-button-primary button-large">
 			<span class="button-text"><?php esc_html_e( 'Save Integration Settings', 'ghl-crm-integration' ); ?></span>
 			<span class="spinner"></span>
 		</button>
