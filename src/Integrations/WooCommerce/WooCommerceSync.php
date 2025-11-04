@@ -67,8 +67,24 @@ class WooCommerceSync {
 
 		// Auto-convert lead to customer on first purchase
 		if ( ! empty( $settings['wc_convert_lead_enabled'] ) ) {
-			add_action( 'woocommerce_order_status_completed', [ $this, 'handle_customer_conversion' ], 10, 2 );
-			add_action( 'woocommerce_order_status_processing', [ $this, 'handle_customer_conversion' ], 10, 2 );
+			$order_statuses = $settings['wc_convert_order_statuses'] ?? [];
+			
+			// If no specific statuses are set, hook into all order status changes
+			if ( empty( $order_statuses ) || ! is_array( $order_statuses ) ) {
+				// Default behavior: convert on any order (typically processing or completed)
+				add_action( 'woocommerce_order_status_processing', [ $this, 'handle_customer_conversion' ], 10, 2 );
+				add_action( 'woocommerce_order_status_completed', [ $this, 'handle_customer_conversion' ], 10, 2 );
+			} else {
+				// Hook into each selected status
+				foreach ( $order_statuses as $status ) {
+					// WooCommerce status format: 'wc-pending' but hook uses 'pending'
+					// Strip 'wc-' prefix if present
+					$status_slug = str_replace( 'wc-', '', $status );
+					
+					// Hook into this specific status transition
+					add_action( 'woocommerce_order_status_' . $status_slug, [ $this, 'handle_customer_conversion' ], 10, 2 );
+				}
+			}
 		}
 
 		// Abandoned cart tracking (future implementation)

@@ -22,6 +22,14 @@ $wc_abandoned_cart_time    = $settings['wc_abandoned_cart_time'] ?? 60;
 $wc_abandoned_cart_tag     = $settings['wc_abandoned_cart_tag'] ?? '';
 $wc_convert_lead_enabled   = $settings['wc_convert_lead_enabled'] ?? false;
 $wc_customer_tag           = $settings['wc_customer_tag'] ?? '';
+$wc_convert_order_statuses = $settings['wc_convert_order_statuses'] ?? [];
+
+// Get all WooCommerce order statuses
+$order_statuses = [];
+if ( $is_woocommerce_active ) {
+	$order_statuses = wc_get_order_statuses();
+}
+echo '<pre>'; print_r($wc_convert_order_statuses); echo '</pre>'; // Debug line
 ?>
 
 <?php if ( ! $is_woocommerce_active ) : ?>
@@ -74,7 +82,7 @@ $wc_customer_tag           = $settings['wc_customer_tag'] ?? '';
 				</div>
 			</div>
 			<div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
-				<label class="ghl-checkbox <?php echo $wc_enabled ? 'is-checked' : ''; ?>" style="margin: 0;">
+				<label class="ghl-checkbox <?php echo $wc_enabled ? 'is-checked' : ''; ?>" style="margin: 0; display: flex; align-items: center; gap: 8px;">
 					<input 
 						type="checkbox" 
 						class="ghl-checkbox-original"
@@ -111,7 +119,7 @@ $wc_customer_tag           = $settings['wc_customer_tag'] ?? '';
 					<!-- Auto-convert Lead to Customer -->
 					<div class="ghl-form-item">
 						<div class="ghl-form-item-content">
-							<label class="ghl-checkbox <?php echo $wc_convert_lead_enabled ? 'is-checked' : ''; ?>">
+							<label class="ghl-checkbox <?php echo $wc_convert_lead_enabled ? 'is-checked' : ''; ?>" style="display: flex; align-items: center; gap: 6px;">
 								<input 
 									type="checkbox" 
 									class="ghl-checkbox-original"
@@ -135,8 +143,8 @@ $wc_customer_tag           = $settings['wc_customer_tag'] ?? '';
 					<div class="ghl-form-item" id="wc-customer-tag-field" style="margin-left: 30px; <?php echo ! $wc_convert_lead_enabled ? 'display: none;' : ''; ?>">
 						<div class="ghl-form-item-content">
 							<div style="margin-bottom: 20px;">
-								<label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">
-									<?php esc_html_e( 'Customer Tags', 'ghl-crm-integration' ); ?>
+								<label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-weight: 600; font-size: 14px;">
+									<span><?php esc_html_e( 'Customer Tags', 'ghl-crm-integration' ); ?></span>
 									<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'These tags will be automatically applied to contacts in GoHighLevel when they complete their first purchase and are converted from lead to customer status.', 'ghl-crm-integration' ); ?>">?</span>
 								</label>
 								<select 
@@ -153,10 +161,39 @@ $wc_customer_tag           = $settings['wc_customer_tag'] ?? '';
 						</div>
 					</div>
 					
+					<!-- Order Status Trigger -->
+					<div class="ghl-form-item" id="wc-convert-order-status-field" style="margin-left: 30px; <?php echo ! $wc_convert_lead_enabled ? 'display: none;' : ''; ?>">
+						<div class="ghl-form-item-content">
+							<div style="margin-bottom: 20px;">
+								<label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-weight: 600; font-size: 14px;">
+									<span><?php esc_html_e( 'Convert on Order Status', 'ghl-crm-integration' ); ?></span>
+									<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Select which order statuses should trigger the conversion. Leave empty to convert immediately on purchase regardless of status. If you select specific statuses, conversion will only happen when the order reaches one of those statuses.', 'ghl-crm-integration' ); ?>">?</span>
+								</label>
+								<select 
+									id="wc_convert_order_statuses" 
+									name="wc_convert_order_statuses[]" 
+									multiple 
+									class="ghl-order-status-select"
+									style="width: 500px; max-width: 100%;"
+									data-placeholder="<?php esc_attr_e( 'Leave empty to convert on any order, or select specific statuses...', 'ghl-crm-integration' ); ?>">
+									<?php foreach ( $order_statuses as $status_key => $status_label ) : ?>
+										<option value="<?php echo esc_attr( $status_key ); ?>" 
+											<?php echo in_array( $status_key, (array) $wc_convert_order_statuses ) ? 'selected' : ''; ?>>
+											<?php echo esc_html( $status_label ); ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+								<p class="description" style="margin-top: 8px; font-size: 13px; color: #666;">
+									<?php esc_html_e( 'Examples: "Processing" for immediate conversion, or "Completed" to wait until order fulfillment.', 'ghl-crm-integration' ); ?>
+								</p>
+							</div>
+						</div>
+					</div>
+					
 					<!-- Abandoned Cart Tracking -->
 					<div class="ghl-form-item">
 						<div class="ghl-form-item-content">
-							<label class="ghl-checkbox <?php echo $wc_abandoned_cart_enabled ? 'is-checked' : ''; ?>">
+							<label class="ghl-checkbox <?php echo $wc_abandoned_cart_enabled ? 'is-checked' : ''; ?>" style="display: flex; align-items: center; gap: 6px;">
 								<input 
 									type="checkbox" 
 									class="ghl-checkbox-original"
@@ -183,8 +220,8 @@ $wc_customer_tag           = $settings['wc_customer_tag'] ?? '';
 						<div class="ghl-form-item">
 							<div class="ghl-form-item-content">
 								<div style="margin-bottom: 20px;">
-									<label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">
-										<?php esc_html_e( 'Consider Abandoned After (minutes)', 'ghl-crm-integration' ); ?>
+									<label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-weight: 600; font-size: 14px;">
+										<span><?php esc_html_e( 'Consider Abandoned After (minutes)', 'ghl-crm-integration' ); ?></span>
 										<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'How long to wait before considering a cart abandoned. Must be between 15 and 1440 minutes (24 hours). Recommended: 60 minutes for optimal follow-up timing.', 'ghl-crm-integration' ); ?>">?</span>
 									</label>
 									<input 
@@ -206,8 +243,8 @@ $wc_customer_tag           = $settings['wc_customer_tag'] ?? '';
 						<div class="ghl-form-item">
 							<div class="ghl-form-item-content">
 								<div style="margin-bottom: 20px;">
-									<label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">
-										<?php esc_html_e( 'Abandoned Cart Tags', 'ghl-crm-integration' ); ?>
+									<label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-weight: 600; font-size: 14px;">
+										<span><?php esc_html_e( 'Abandoned Cart Tags', 'ghl-crm-integration' ); ?></span>
 										<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'These tags will be automatically applied to contacts when they leave items in their cart without completing the purchase. Use these tags to trigger recovery workflows in GoHighLevel.', 'ghl-crm-integration' ); ?>">?</span>
 									</label>
 									<select 
