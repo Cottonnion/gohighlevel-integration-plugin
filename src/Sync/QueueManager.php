@@ -507,10 +507,19 @@ class QueueManager {
 			if ( $result ) {
 				
 				
-				// Extract contact ID from result if available
+				// Extract contact ID or opportunity ID from result if available
 				$contact_id = null;
+				$ghl_object_id = null;
 				if ( is_array( $result ) ) {
+					// For contacts
 					$contact_id = $result['contact']['id'] ?? $result['id'] ?? null;
+					
+					// For opportunities (WooCommerce)
+					if ( 'wc_customer' === $item->item_type && ! empty( $result['opportunity']['id'] ) ) {
+						$ghl_object_id = $result['opportunity']['id'];
+					} elseif ( ! empty( $contact_id ) ) {
+						$ghl_object_id = $contact_id;
+					}
 				}
 				
 				// Store contact ID, tags, and sync time in user meta (for admin columns and profile page)
@@ -577,7 +586,7 @@ class QueueManager {
 					(int) $item->item_id,
 					$item->action,
 					'success',
-					$contact_id,
+					$ghl_object_id, // Contact ID for users, Opportunity ID for WooCommerce
 					$payload, // Request data
 					is_array( $result ) ? $result : null, // Response data
 					null,

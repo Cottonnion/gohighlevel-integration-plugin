@@ -340,6 +340,8 @@ class QueueProcessor {
 	 * @throws \Exception
 	 */
 	private function execute_woocommerce_sync( string $action, int $order_id, array $payload ) {
+		error_log( sprintf( 'QueueProcessor: execute_woocommerce_sync() called - Action: %s, Order ID: %d', $action, $order_id ) );
+		
 		// Check if WooCommerce is active
 		if ( ! class_exists( 'WooCommerce' ) ) {
 			throw new \Exception( esc_html__( 'WooCommerce is not active', 'ghl-crm-integration' ) );
@@ -350,7 +352,13 @@ class QueueProcessor {
 
 		switch ( $action ) {
 			case 'convert_lead':
+				error_log( 'QueueProcessor: Routing to process_customer_conversion()' );
 				return $wc_sync->process_customer_conversion( $payload );
+
+			case 'create_opportunity':
+			case 'update_opportunity':
+				error_log( 'QueueProcessor: Routing to process_opportunity_sync()' );
+				return $wc_sync->process_opportunity_sync( $payload );
 
 			default:
 				throw new \Exception( esc_html( 'Unknown WooCommerce action: ' . $action ) );
