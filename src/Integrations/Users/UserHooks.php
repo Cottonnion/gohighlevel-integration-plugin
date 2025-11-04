@@ -300,8 +300,32 @@ class UserHooks {
 			$existing_tags = array_diff( $existing_tags, $tags_to_remove );
 		}
 
-		// Merge: existing tags (minus removed) + new role tags
-		$all_tags = array_unique( array_merge( $existing_tags, $role_based_tags ) );
+		// Check if user just made first WooCommerce purchase (within last 5 minutes)
+		$wc_customer_tags = [];
+		if ( class_exists( 'WooCommerce' ) ) {
+			$wc_settings = $settings['wc_convert_lead_enabled'] ?? false;
+			if ( $wc_settings ) {
+				// Check if user has exactly 1 completed order in the last 5 minutes
+				$recent_orders = wc_get_orders( [
+					'customer' => $user->user_email,
+					'status'   => [ 'completed', 'processing' ],
+					'limit'    => 2, // Get 2 to check if it's exactly 1
+					'date_created' => '>' . ( time() - 300 ), // Last 5 minutes
+				] );
+
+				// If exactly 1 recent order, user is a new customer - preserve customer tags
+				if ( count( $recent_orders ) === 1 ) {
+					$customer_tags_setting = $settings['wc_customer_tag'] ?? [];
+					if ( ! is_array( $customer_tags_setting ) ) {
+						$customer_tags_setting = ! empty( $customer_tags_setting ) ? [ $customer_tags_setting ] : [];
+					}
+					$wc_customer_tags = $customer_tags_setting;
+				}
+			}
+		}
+
+		// Merge: existing tags (minus removed) + new role tags + WooCommerce customer tags
+		$all_tags = array_unique( array_merge( $existing_tags, $role_based_tags, $wc_customer_tags ) );
 
 		if ( ! empty( $all_tags ) ) {
 			// Reindex array to ensure sequential keys for proper JSON encoding
