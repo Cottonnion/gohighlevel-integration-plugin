@@ -53,6 +53,18 @@ class AjaxHandler {
 					$integration_settings['wc_customer_tag'] = [];
 				}
 				
+				// Handle order statuses for conversion (can be array or string)
+				if ( isset( $_POST['wc_convert_order_statuses'] ) ) {
+					$order_statuses = wp_unslash( $_POST['wc_convert_order_statuses'] );
+					if ( is_array( $order_statuses ) ) {
+						$integration_settings['wc_convert_order_statuses'] = array_map( 'sanitize_text_field', $order_statuses );
+					} else {
+						$integration_settings['wc_convert_order_statuses'] = sanitize_text_field( $order_statuses );
+					}
+				} else {
+					$integration_settings['wc_convert_order_statuses'] = [];
+				}
+				
 				$integration_settings['wc_abandoned_cart_enabled'] = isset( $_POST['wc_abandoned_cart_enabled'] ) && sanitize_text_field( wp_unslash( $_POST['wc_abandoned_cart_enabled'] ) ) === '1';
 				$integration_settings['wc_abandoned_cart_time']    = isset( $_POST['wc_abandoned_cart_time'] ) ? absint( $_POST['wc_abandoned_cart_time'] ) : 60;
 				
