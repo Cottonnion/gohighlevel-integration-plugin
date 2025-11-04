@@ -97,7 +97,6 @@ class UserProfileFields {
 
 		// AJAX handlers
 		add_action( 'wp_ajax_ghl_crm_get_contact_data', [ $this, 'ajax_get_contact_data' ] );
-		add_action( 'wp_ajax_ghl_crm_get_available_tags', [ $this, 'ajax_get_available_tags' ] );
 		add_action( 'wp_ajax_ghl_crm_sync_user_now', [ $this, 'ajax_sync_user_now' ] );
 		add_action( 'wp_ajax_ghl_crm_generate_login_link', [ $this, 'ajax_generate_login_link' ] );
 		add_action( 'wp_ajax_ghl_crm_refresh_from_ghl', [ $this, 'ajax_refresh_from_ghl' ] );
@@ -152,7 +151,7 @@ class UserProfileFields {
 			'ghl-user-profile-js',
 			GHL_CRM_URL . 'assets/admin/js/user-profile.js',
 			[ 'jquery', 'select2' ],
-			'1.0.0',
+			'1.0.1',
 			true
 		);
 
@@ -490,83 +489,6 @@ class UserProfileFields {
 			}
 		} catch ( \Exception $e ) {
 			wp_send_json_error( [ 'message' => $e->getMessage() ] );
-		}
-	}
-
-	/**
-	 * AJAX: Get available tags from GHL
-	 *
-	 * @return void
-	 */
-	public function ajax_get_available_tags(): void {
-		// Verify nonce
-		check_ajax_referer( 'ghl_user_profile', 'nonce' );
-
-		// Check permissions
-		if ( ! current_user_can( 'edit_users' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ] );
-		}
-
-		$search = isset( $_POST['search'] ) ? sanitize_text_field( wp_unslash( $_POST['search'] ) ) : '';
-
-		try {
-			$client = Client::get_instance();
-			
-			// Get tags from GHL (Note: GHL API may not have a direct tags endpoint, so we'll use a cached approach)
-			$tags = $this->get_cached_tags();
-
-			// Filter by search term if provided
-			if ( ! empty( $search ) ) {
-				$tags = array_filter( $tags, function( $tag ) use ( $search ) {
-					return stripos( $tag, $search ) !== false;
-				});
-			}
-
-			wp_send_json_success( array_values( $tags ) );
-		} catch ( \Exception $e ) {
-			wp_send_json_error( [ 'message' => $e->getMessage() ] );
-		}
-	}
-
-	/**
-	 * Get cached tags (from transient or fetch from GHL)
-	 *
-	 * @return array Tags array
-	 */
-	private function get_cached_tags(): array {
-		$cache_key = 'ghl_available_tags_' . get_current_blog_id();
-		$cached = get_transient( $cache_key );
-
-		if ( false !== $cached && is_array( $cached ) ) {
-			return $cached;
-		}
-
-		// Fetch tags from GHL (collect from existing contacts)
-		try {
-			$client = Client::get_instance();
-			$response = $client->get( 'contacts/', [ 'limit' => 100 ] );
-			
-			$tags = [];
-			if ( ! empty( $response['contacts'] ) && is_array( $response['contacts'] ) ) {
-				foreach ( $response['contacts'] as $contact ) {
-					if ( ! empty( $contact['tags'] ) && is_array( $contact['tags'] ) ) {
-						$tags = array_merge( $tags, $contact['tags'] );
-					}
-				}
-			}
-
-			$tags = array_unique( $tags );
-			sort( $tags );
-
-			// Cache using configured duration
-			$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
-			$cache_duration   = absint( $settings_manager->get_setting( 'cache_duration', HOUR_IN_SECONDS ) );
-			set_transient( $cache_key, $tags, $cache_duration );
-
-			return $tags;
-		} catch ( \Exception $e ) {
-			
-			return [];
 		}
 	}
 
