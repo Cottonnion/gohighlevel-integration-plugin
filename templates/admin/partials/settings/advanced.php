@@ -99,6 +99,50 @@ $settings = $settings_manager->get_settings_array();
 						</p>
 					</td>
 				</tr>
+				
+				<tr>
+					<th scope="row">
+						<label for="enable_sync_logging">
+							<?php esc_html_e( 'Sync & Queue Logging', 'ghl-crm-integration' ); ?>
+						</label>
+					</th>
+					<td>
+						<label class="ghl-checkbox <?php echo ! empty( $settings['enable_sync_logging'] ) ? 'is-checked' : ''; ?>" style="display: flex; align-items: center; gap: 6px;">
+							<input 
+								type="checkbox" 
+								class="ghl-checkbox-original"
+								id="enable_sync_logging" 
+								name="enable_sync_logging" 
+								value="1"
+								<?php checked( ! empty( $settings['enable_sync_logging'] ), true ); ?>
+							>
+							<span class="ghl-checkbox-input <?php echo ! empty( $settings['enable_sync_logging'] ) ? 'is-checked' : ''; ?>">
+								<span class="ghl-checkbox-inner"></span>
+							</span>
+							<span class="ghl-checkbox-label">
+								<?php esc_html_e( 'Enable logging to database tables', 'ghl-crm-integration' ); ?>
+							</span>
+						</label>
+						<p class="description" style="margin-top: 8px;">
+							<?php esc_html_e( 'When enabled, sync events and queue operations will be logged to wp_ghl_sync_log and wp_ghl_sync_queue tables. This provides detailed tracking but may impact performance on high-traffic sites. Disable to reduce database writes.', 'ghl-crm-integration' ); ?>
+						</p>
+						<?php if ( ! empty( $settings['enable_sync_logging'] ) ) : ?>
+							<div style="margin-top: 12px; padding: 12px; background: #ecfdf5; border-left: 4px solid #10b981; border-radius: 4px;">
+								<p style="margin: 0; font-size: 13px; color: #065f46;">
+									<strong>✓ <?php esc_html_e( 'Active:', 'ghl-crm-integration' ); ?></strong>
+									<?php esc_html_e( 'Logging is enabled. You can view logs in the Sync Logs section.', 'ghl-crm-integration' ); ?>
+								</p>
+							</div>
+						<?php else : ?>
+							<div style="margin-top: 12px; padding: 12px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+								<p style="margin: 0; font-size: 13px; color: #92400e;">
+									<strong>⚠️ <?php esc_html_e( 'Disabled:', 'ghl-crm-integration' ); ?></strong>
+									<?php esc_html_e( 'Logging is currently disabled. No sync events or queue operations will be recorded to the database.', 'ghl-crm-integration' ); ?>
+								</p>
+							</div>
+						<?php endif; ?>
+					</td>
+				</tr>
 					</tbody>
 				</table>
 			</form>

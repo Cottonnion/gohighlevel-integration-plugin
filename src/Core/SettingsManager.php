@@ -57,6 +57,17 @@ class SettingsManager {
 	}
 
 	/**
+	 * Check if sync logging is enabled
+	 *
+	 * @return bool
+	 */
+	public static function is_sync_logging_enabled(): bool {
+		$instance = self::get_instance();
+		$settings = $instance->get_settings_array();
+		return ! empty( $settings['enable_sync_logging'] );
+	}
+
+	/**
 	 * Private constructor to prevent direct creation
 	 */
 	private function __construct() {
@@ -92,6 +103,9 @@ class SettingsManager {
 
 		// Integrations AJAX handlers (delegated to AjaxHandler)
 		add_action( 'wp_ajax_ghl_crm_save_integrations', [ $this, 'handle_save_integrations' ] );
+		add_action( 'wp_ajax_ghl_get_pipelines', [ $this, 'handle_get_pipelines' ] );
+		add_action( 'wp_ajax_ghl_get_pipeline_stages', [ $this, 'handle_get_pipeline_stages' ] );
+		add_action( 'wp_ajax_ghl_search_products', [ $this, 'handle_search_products' ] );
 	}
 
 	/**
@@ -1903,6 +1917,60 @@ class SettingsManager {
 
 		// Delegate to AjaxHandler
 		AjaxHandler::save_integrations();
+	}
+
+	/**
+	 * Handle get pipelines AJAX request
+	 *
+	 * @return void
+	 */
+	public function handle_get_pipelines(): void {
+		// Verify nonce
+		check_ajax_referer( 'ghl_crm_admin', 'nonce' );
+
+		// Check permissions
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ], 403 );
+		}
+
+		// Delegate to AjaxHandler
+		AjaxHandler::get_pipelines();
+	}
+
+	/**
+	 * Handle get pipeline stages AJAX request
+	 *
+	 * @return void
+	 */
+	public function handle_get_pipeline_stages(): void {
+		// Verify nonce
+		check_ajax_referer( 'ghl_crm_admin', 'nonce' );
+
+		// Check permissions
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ], 403 );
+		}
+
+		// Delegate to AjaxHandler
+		AjaxHandler::get_pipeline_stages();
+	}
+
+	/**
+	 * Handle search products AJAX request
+	 *
+	 * @return void
+	 */
+	public function handle_search_products(): void {
+		// Verify nonce
+		check_ajax_referer( 'ghl_crm_admin', 'nonce' );
+
+		// Check permissions
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ], 403 );
+		}
+
+		// Delegate to AjaxHandler
+		AjaxHandler::search_products();
 	}
 
 	/**

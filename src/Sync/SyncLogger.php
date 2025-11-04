@@ -55,6 +55,11 @@ class SyncLogger {
 	 * @return int|false Log ID on success, false on failure
 	 */
 	public function log( string $sync_type, int $item_id, string $action, string $status, string $message, array $metadata = [], string $ghl_id = '' ) {
+		// Check if sync logging is enabled
+		if ( ! \GHL_CRM\Core\SettingsManager::is_sync_logging_enabled() ) {
+			return false;
+		}
+
 		global $wpdb;
 
 		$table_name = $wpdb->prefix . 'ghl_sync_log';

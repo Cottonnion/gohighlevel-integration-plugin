@@ -66,6 +66,11 @@ class QueueLogger {
 		?string $error_message = null,
 		?float $execution_time = null
 	): void {
+		// Check if sync logging is enabled
+		if ( ! \GHL_CRM\Core\SettingsManager::is_sync_logging_enabled() ) {
+			return;
+		}
+
 		global $wpdb;
 
 		$table_name = $this->get_log_table_name();
