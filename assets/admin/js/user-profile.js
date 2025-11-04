@@ -187,6 +187,137 @@
         },
 
         /**
+         * Initialize refresh from GHL button
+         */
+        initRefreshFromGHL: function() {
+            const self = this;
+            
+            $(document).on('click', '.ghl-refresh-from-ghl-btn', function(e) {
+                e.preventDefault();
+                
+                const $button = $(this);
+                const userId = $button.data('user-id');
+                const contactId = $button.data('contact-id');
+                const $loading = $('.ghl-loading');
+                
+                if (!userId || !contactId) {
+                    alert('Invalid user ID or contact ID');
+                    return;
+                }
+
+                // Disable button and show loading
+                $button.prop('disabled', true);
+                const originalHtml = $button.html();
+                $button.html('<span class="dashicons dashicons-update"></span> Syncing...');
+                $loading.addClass('active is-active');
+
+                $.ajax({
+                    url: ghlUserProfile.ajaxUrl,
+                    type: 'POST',
+                    data: {
+                        action: 'ghl_crm_refresh_from_ghl',
+                        nonce: ghlUserProfile.nonce,
+                        user_id: userId,
+                        contact_id: contactId
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Show success message
+                            self.showNotice('success', response.data.message);
+                            
+                            // Update tags in Select2 if returned
+                            if (response.data.tags && response.data.tags.length > 0) {
+                                const $tagsSelect = $('#ghl-contact-tags');
+                                $tagsSelect.empty();
+                                
+                                response.data.tags.forEach(function(tag) {
+                                    const option = new Option(tag, tag, true, true);
+                                    $tagsSelect.append(option);
+                                });
+                                
+                                $tagsSelect.trigger('change');
+                            }
+                            
+                            // Reload page after 1.5 seconds to show all updated data
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            self.showNotice('error', response.data.message || 'Failed to sync from GoHighLevel');
+                            $button.html(originalHtml);
+                        }
+                    },
+                    error: function() {
+                        self.showNotice('error', 'Failed to sync from GoHighLevel. Please try again.');
+                        $button.html(originalHtml);
+                    },
+                    complete: function() {
+                        $button.prop('disabled', false);
+                        $loading.removeClass('active is-active');
+                    }
+                });
+            });
+        },
+
+        /**
+         * Initialize sync to GHL button
+         */
+        initSyncToGHL: function() {
+            const self = this;
+            
+            $(document).on('click', '.ghl-sync-to-ghl-btn', function(e) {
+                e.preventDefault();
+                
+                const $button = $(this);
+                const userId = $button.data('user-id');
+                const $loading = $('.ghl-loading');
+                
+                if (!userId) {
+                    alert('Invalid user ID');
+                    return;
+                }
+
+                // Disable button and show loading
+                $button.prop('disabled', true);
+                const originalHtml = $button.html();
+                $button.html('<span class="dashicons dashicons-update"></span> Syncing...');
+                $loading.addClass('active is-active');
+
+                $.ajax({
+                    url: ghlUserProfile.ajaxUrl,
+                    type: 'POST',
+                    data: {
+                        action: 'ghl_crm_sync_user_now',
+                        nonce: ghlUserProfile.nonce,
+                        user_id: userId
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Show success message
+                            self.showNotice('success', ghlUserProfile.strings.syncToSuccess || 'Successfully queued for sync to GoHighLevel!');
+                            
+                            // Reload page after 1.5 seconds
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            self.showNotice('error', response.data.message || ghlUserProfile.strings.syncToError || 'Failed to sync to GoHighLevel');
+                            $button.html(originalHtml);
+                        }
+                    },
+                    error: function() {
+                        self.showNotice('error', ghlUserProfile.strings.syncToError || 'Failed to sync to GoHighLevel. Please try again.');
+                        $button.html(originalHtml);
+                    },
+                    complete: function() {
+                        $button.prop('disabled', false);
+                        $loading.removeClass('active is-active');
+                    }
+                });
+            });
+        },
+
+        /**
          * Initialize auto-login functionality
          */
         initAutoLogin: function() {
@@ -289,6 +420,8 @@
     // Initialize on document ready
     $(document).ready(function() {
         GHLUserProfile.init();
+        GHLUserProfile.initRefreshFromGHL();
+        GHLUserProfile.initSyncToGHL();
         GHLUserProfile.initAutoLogin();
     });
 
