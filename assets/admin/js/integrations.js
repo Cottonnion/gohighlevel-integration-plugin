@@ -20,6 +20,7 @@
 			this.loadSettings();
 			this.initTagsSelect();
 			this.initOrderStatusSelect();
+			this.initOpportunitiesSelects();
 		},
 
 		/**
@@ -36,6 +37,11 @@
 			$('#wc_enabled').on('change', this.handleWooCommerceToggle.bind(this));
 			$('#wc_convert_lead_enabled').on('change', this.handleConvertLeadToggle.bind(this));
 			$('#wc_abandoned_cart_enabled').on('change', this.handleAbandonedCartToggle.bind(this));
+			
+			// Opportunities toggles
+			$('#wc_opportunities_enabled').on('change', this.handleOpportunitiesToggle.bind(this));
+			$('#wc_opportunities_pipeline').on('change', this.handlePipelineChange.bind(this));
+			$('#wc_opportunities_filter_type').on('change', this.handleFilterTypeChange.bind(this));
 
 			// Prevent form submission on enter
 			$(document).on('keypress', function (e) {
@@ -200,6 +206,25 @@
 				// Get abandoned cart tags (Select2 returns array)
 				const abandonedTags = $('#wc_abandoned_cart_tag').val();
 				data.wc_abandoned_cart_tag = Array.isArray(abandonedTags) ? abandonedTags : (abandonedTags ? [abandonedTags] : []);
+
+				// Opportunities Settings
+				data.wc_opportunities_enabled = $('#wc_opportunities_enabled').is(':checked') ? '1' : '0';
+				data.wc_opportunities_pipeline = $('#wc_opportunities_pipeline').val() || '';
+				data.wc_opportunities_stage_abandoned = $('#wc_opportunities_stage_abandoned').val() || '';
+				data.wc_opportunities_stage_pending = $('#wc_opportunities_stage_pending').val() || '';
+				data.wc_opportunities_stage_processing = $('#wc_opportunities_stage_processing').val() || '';
+				data.wc_opportunities_stage_completed = $('#wc_opportunities_stage_completed').val() || '';
+				data.wc_opportunities_stage_cancelled = $('#wc_opportunities_stage_cancelled').val() || '';
+				data.wc_opportunities_filter_type = $('#wc_opportunities_filter_type').val() || 'all';
+				data.wc_opportunities_min_value = $('#wc_opportunities_min_value').val() || 0;
+
+				// Get opportunities products (Select2 returns array)
+				const opportunityProducts = $('#wc_opportunities_products').val();
+				data.wc_opportunities_products = Array.isArray(opportunityProducts) ? opportunityProducts : (opportunityProducts ? [opportunityProducts] : []);
+
+				// Get opportunities categories (Select2 returns array)
+				const opportunityCategories = $('#wc_opportunities_categories').val();
+				data.wc_opportunities_categories = Array.isArray(opportunityCategories) ? opportunityCategories : (opportunityCategories ? [opportunityCategories] : []);
 			}
 
 			// Future: Add BuddyBoss, LearnDash settings here
@@ -420,6 +445,272 @@
 					$(this).remove();
 				});
 			}, 3000);
+		},
+
+		/**
+		 * Initialize Opportunities selects
+		 */
+		initOpportunitiesSelects() {
+			this.initPipelineSelect();
+			this.initProductsSelect();
+			this.initCategoriesSelect();
+		},
+
+		/**
+		 * Initialize pipeline Select2
+		 */
+		initPipelineSelect() {
+			const $pipelineSelect = $('#wc_opportunities_pipeline');
+			
+			if ($pipelineSelect.length === 0 || typeof $.fn.select2 === 'undefined') {
+				return;
+			}
+
+			// Get saved value
+			const savedValue = $pipelineSelect.data('saved-value');
+
+			// Store pipelines data for stage lookup
+			this.pipelinesData = {};
+
+			// Initialize Select2
+			$pipelineSelect.select2({
+				placeholder: $pipelineSelect.data('placeholder') || 'Select a pipeline...',
+				allowClear: true,
+				width: '100%',
+				ajax: {
+					url: ghl_crm_integrations_js_data.ajaxUrl,
+					dataType: 'json',
+					delay: 250,
+					data: (params) => ({
+						action: 'ghl_get_pipelines',
+						nonce: ghl_crm_integrations_js_data.nonce,
+						search: params.term,
+						page: params.page || 1
+					}),
+					processResults: (data) => {
+						if (data.success && data.data.pipelines) {
+							// Store pipelines with stages for later use
+							data.data.pipelines.forEach(pipeline => {
+								this.pipelinesData[pipeline.id] = pipeline;
+							});
+
+							return {
+								results: data.data.pipelines.map(pipeline => ({
+									id: pipeline.id,
+									text: pipeline.name
+								}))
+							};
+						}
+						return { results: [] };
+					},
+					cache: true
+				},
+				minimumInputLength: 0
+			});
+
+			// Set saved value if exists
+			if (savedValue) {
+				// Trigger change to load stages
+				setTimeout(() => {
+					$pipelineSelect.val(savedValue).trigger('change');
+				}, 500);
+			}
+		},
+
+		/**
+		 * Initialize stage selects for a pipeline
+		 */
+		initStageSelects(pipelineId) {
+			const $stageSelects = $('.ghl-stage-select');
+			
+			if ($stageSelects.length === 0 || !pipelineId) {
+				return;
+			}
+
+			// Get pipeline data from stored pipelines
+			const pipeline = this.pipelinesData[pipelineId];
+			
+			if (!pipeline || !pipeline.stages) {
+				// If pipeline not in cache, load all pipelines first
+				this.loadPipelineStages(pipelineId, $stageSelects);
+				return;
+			}
+
+			// Populate stage selects with stages from pipeline
+			$stageSelects.each(function() {
+				const $select = $(this);
+				const savedValue = $select.data('saved-value');
+
+				// Clear existing options
+				$select.empty().append('<option value="">Select stage...</option>');
+				
+				// Add stage options (sorted by position)
+				const sortedStages = pipeline.stages.sort((a, b) => a.position - b.position);
+				sortedStages.forEach(stage => {
+					const $option = $('<option></option>')
+						.val(stage.id)
+						.text(stage.name)
+						.prop('selected', stage.id === savedValue);
+					$select.append($option);
+				});
+
+				// Initialize Select2 on stage select
+				$select.select2({
+					placeholder: 'Select stage...',
+					allowClear: true,
+					width: '100%'
+				});
+			});
+		},
+
+		/**
+		 * Load pipeline stages if not in cache
+		 */
+		loadPipelineStages(pipelineId, $stageSelects) {
+			$.ajax({
+				url: ghl_crm_integrations_js_data.ajaxUrl,
+				type: 'POST',
+				dataType: 'json',
+				data: {
+					action: 'ghl_get_pipelines',
+					nonce: ghl_crm_integrations_js_data.nonce,
+					page: 1
+				},
+				success: (response) => {
+					if (response.success && response.data.pipelines) {
+						// Store all pipelines
+						response.data.pipelines.forEach(pipeline => {
+							this.pipelinesData[pipeline.id] = pipeline;
+						});
+						// Try again now that we have the data
+						this.initStageSelects(pipelineId);
+					}
+				},
+				error: () => {
+					$stageSelects.empty().append('<option value="">Failed to load stages</option>');
+				}
+			});
+		},
+
+		/**
+		 * Initialize products Select2 with AJAX search
+		 */
+		initProductsSelect() {
+			const $productsSelect = $('#wc_opportunities_products');
+			
+			if ($productsSelect.length === 0 || typeof $.fn.select2 === 'undefined') {
+				return;
+			}
+
+			$productsSelect.select2({
+				placeholder: $productsSelect.data('placeholder') || 'Search and select products...',
+				allowClear: true,
+				width: '100%',
+				closeOnSelect: false,
+				ajax: {
+					url: ghl_crm_integrations_js_data.ajaxUrl,
+					dataType: 'json',
+					delay: 250,
+					data: (params) => ({
+						action: 'ghl_search_products',
+						nonce: ghl_crm_integrations_js_data.nonce,
+						search: params.term,
+						page: params.page || 1
+					}),
+					processResults: (data) => {
+						if (data.success && data.data.products) {
+							return {
+								results: data.data.products.map(product => ({
+									id: product.id,
+									text: product.name
+								}))
+							};
+						}
+						return { results: [] };
+					},
+					cache: true
+				},
+				minimumInputLength: 2
+			});
+		},
+
+		/**
+		 * Initialize categories Select2
+		 */
+		initCategoriesSelect() {
+			const $categoriesSelect = $('#wc_opportunities_categories');
+			
+			if ($categoriesSelect.length === 0 || typeof $.fn.select2 === 'undefined') {
+				return;
+			}
+
+			$categoriesSelect.select2({
+				placeholder: $categoriesSelect.data('placeholder') || 'Select categories...',
+				allowClear: true,
+				width: '100%',
+				closeOnSelect: false
+			});
+		},
+
+		/**
+		 * Handle opportunities toggle
+		 */
+		handleOpportunitiesToggle(e) {
+			const $checkbox = $(e.currentTarget);
+			const isChecked = $checkbox.is(':checked');
+			const $settings = $('#wc-opportunities-settings');
+
+			if (isChecked) {
+				$settings.slideDown(300);
+			} else {
+				$settings.slideUp(300);
+			}
+
+			// Update checkbox UI
+			$checkbox.closest('.ghl-checkbox').toggleClass('is-checked', isChecked);
+			$checkbox.siblings('.ghl-checkbox-input').toggleClass('is-checked', isChecked);
+		},
+
+		/**
+		 * Handle pipeline change - load stages
+		 */
+		handlePipelineChange(e) {
+			const $select = $(e.currentTarget);
+			const pipelineId = $select.val();
+			const $stageMapping = $('#wc-opportunities-stage-mapping');
+
+			if (pipelineId) {
+				$stageMapping.slideDown(300);
+				this.initStageSelects(pipelineId);
+			} else {
+				$stageMapping.slideUp(300);
+			}
+		},
+
+		/**
+		 * Handle filter type change
+		 */
+		handleFilterTypeChange(e) {
+			const $select = $(e.currentTarget);
+			const filterType = $select.val();
+
+			// Hide all filter sections
+			$('#wc-opportunities-products-filter').hide();
+			$('#wc-opportunities-categories-filter').hide();
+			$('#wc-opportunities-minvalue-filter').hide();
+
+			// Show selected filter section
+			switch(filterType) {
+				case 'products':
+					$('#wc-opportunities-products-filter').slideDown(300);
+					break;
+				case 'categories':
+					$('#wc-opportunities-categories-filter').slideDown(300);
+					break;
+				case 'min_value':
+					$('#wc-opportunities-minvalue-filter').slideDown(300);
+					break;
+			}
 		},
 
 		/**
