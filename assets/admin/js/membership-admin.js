@@ -38,18 +38,26 @@
                     delay: 250,
                     data: function(params) {
                         return {
-                            action: 'ghl_crm_get_available_tags',
+                            action: 'ghl_crm_get_tags',
                             nonce: ghlMembership.nonce,
                             search: params.term || ''
                         };
                     },
                     processResults: function(response) {
-                        if (response.success && response.data) {
+                        if (response.success && response.data && response.data.tags) {
                             return {
-                                results: response.data.map(function(tag) {
+                                results: response.data.tags.map(function(tag) {
+                                    // Handle both object format {id, name} and string format
+                                    if (typeof tag === 'object' && tag !== null) {
+                                        return {
+                                            id: String(tag.name || tag.id || ''),
+                                            text: String(tag.name || tag.id || '')
+                                        };
+                                    }
+                                    // Fallback for string format
                                     return {
-                                        id: tag,
-                                        text: tag
+                                        id: String(tag || ''),
+                                        text: String(tag || '')
                                     };
                                 })
                             };

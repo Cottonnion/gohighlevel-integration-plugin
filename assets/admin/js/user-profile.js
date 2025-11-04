@@ -12,7 +12,6 @@
         init: function() {
             this.initSelect2();
             // this.initSyncButton();
-            this.loadAvailableTags();
         },
 
         /**
@@ -34,22 +33,31 @@
                 width: '100%',
                 ajax: {
                     url: ghlUserProfile.ajaxUrl,
+                    type: 'POST',
                     dataType: 'json',
                     delay: 250,
                     data: function(params) {
                         return {
-                            action: 'ghl_crm_get_available_tags',
+                            action: 'ghl_crm_get_tags',
                             nonce: ghlUserProfile.nonce,
-                            search: params.term
+                            search: params.term || ''
                         };
                     },
                     processResults: function(response) {
-                        if (response.success && response.data) {
+                        if (response.success && response.data && response.data.tags) {
                             return {
-                                results: response.data.map(function(tag) {
+                                results: response.data.tags.map(function(tag) {
+                                    // Handle both object format {id, name} and string format
+                                    if (typeof tag === 'object' && tag !== null) {
+                                        return {
+                                            id: String(tag.name || tag.id || ''),
+                                            text: String(tag.name || tag.id || '')
+                                        };
+                                    }
+                                    // Fallback for string format
                                     return {
-                                        id: tag,
-                                        text: tag
+                                        id: String(tag || ''),
+                                        text: String(tag || '')
                                     };
                                 })
                             };
@@ -64,34 +72,6 @@
             // Allow creating new tags by pressing Enter
             $tagsSelect.on('select2:select', function(e) {
                 console.log('Tag selected:', e.params.data);
-            });
-        },
-
-        /**
-         * Load available tags from GHL
-         */
-        loadAvailableTags: function() {
-            const $tagsSelect = $('#ghl-contact-tags');
-            
-            if ($tagsSelect.length === 0) {
-                return;
-            }
-
-            // Pre-load common tags
-            $.ajax({
-                url: ghlUserProfile.ajaxUrl,
-                type: 'POST',
-                data: {
-                    action: 'ghl_crm_get_available_tags',
-                    nonce: ghlUserProfile.nonce,
-                    search: ''
-                },
-                success: function(response) {
-                    if (response.success && response.data) {
-                        // Tags are loaded via AJAX in Select2
-                        console.log('Available tags loaded:', response.data.length);
-                    }
-                }
             });
         },
 

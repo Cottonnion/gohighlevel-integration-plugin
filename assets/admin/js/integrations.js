@@ -19,6 +19,7 @@
 			this.bindEvents();
 			this.loadSettings();
 			this.initTagsSelect();
+			this.initOrderStatusSelect();
 		},
 
 		/**
@@ -149,6 +150,29 @@
 		},
 
 		/**
+		 * Initialize Order Status Select2
+		 */
+		initOrderStatusSelect() {
+			const $orderStatusSelect = $('.ghl-order-status-select');
+
+			if ($orderStatusSelect.length === 0 || typeof $.fn.select2 === 'undefined') {
+				return;
+			}
+
+			// Initialize Select2 for order status (no AJAX needed, options already in HTML)
+			$orderStatusSelect.each(function() {
+				const $select = $(this);
+				
+				$select.select2({
+					placeholder: $select.data('placeholder') || 'Leave empty to convert on any order...',
+					allowClear: true,
+					width: '100%',
+					closeOnSelect: false
+				});
+			});
+		},
+
+		/**
 		 * Gather form data
 		 */
 		gatherFormData() {
@@ -165,6 +189,10 @@
 				// Get customer tags (Select2 returns array)
 				const customerTags = $('#wc_customer_tag').val();
 				data.wc_customer_tag = Array.isArray(customerTags) ? customerTags : (customerTags ? [customerTags] : []);
+				
+				// Get order statuses for conversion (Select2 returns array)
+				const orderStatuses = $('#wc_convert_order_statuses').val();
+				data.wc_convert_order_statuses = Array.isArray(orderStatuses) ? orderStatuses : (orderStatuses ? [orderStatuses] : []);
 				
 				data.wc_abandoned_cart_enabled = $('#wc_abandoned_cart_enabled').is(':checked') ? '1' : '0';
 				data.wc_abandoned_cart_time = $('#wc_abandoned_cart_time').val();
@@ -294,19 +322,22 @@
 			const $checkbox = $(e.target);
 			const $label = $checkbox.closest('.ghl-checkbox');
 			const $checkboxInput = $label.find('.ghl-checkbox-input');
-			const $field = $('#wc-customer-tag-field');
+			const $tagField = $('#wc-customer-tag-field');
+			const $statusField = $('#wc-convert-order-status-field');
 			
 			if ($checkbox.is(':checked')) {
 				$label.addClass('is-checked');
 				$checkboxInput.addClass('is-checked');
-				$field.slideDown(300);
+				$tagField.slideDown(300);
+				$statusField.slideDown(300);
 				
 				// Show success feedback
 				this.showInlineFeedback($checkbox, 'Lead-to-customer conversion enabled', 'success');
 			} else {
 				$label.removeClass('is-checked');
 				$checkboxInput.removeClass('is-checked');
-				$field.slideUp(300);
+				$tagField.slideUp(300);
+				$statusField.slideUp(300);
 				
 				// Show info feedback
 				this.showInlineFeedback($checkbox, 'Lead-to-customer conversion disabled', 'info');
