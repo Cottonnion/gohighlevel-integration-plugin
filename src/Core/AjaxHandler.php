@@ -282,5 +282,162 @@ class AjaxHandler {
 			wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
 		}
 	}
+
+	/**
+	 * Get logs via AJAX
+	 *
+	 * @return void
+	 */
+	public static function get_logs(): void {
+		try {
+			check_ajax_referer( 'ghl_sync_logs_nonce', 'nonce' );
+
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ], 403 );
+				return;
+			}
+
+			$page   = isset( $_POST['page'] ) ? max( 1, absint( $_POST['page'] ) ) : 1;
+			$status = isset( $_POST['status'] ) ? sanitize_text_field( wp_unslash( $_POST['status'] ) ) : '';
+			$search = isset( $_POST['search'] ) ? sanitize_text_field( wp_unslash( $_POST['search'] ) ) : '';
+
+			$per_page = 20;
+			$offset   = ( $page - 1 ) * $per_page;
+
+			// Build query args
+			$args = [
+				'limit'   => $per_page,
+				'offset'  => $offset,
+				'site_id' => get_current_blog_id(),
+			];
+
+			if ( ! empty( $status ) ) {
+				$args['status'] = $status;
+			}
+
+			if ( ! empty( $search ) ) {
+				$args['search'] = $search;
+			}
+
+			// Get logs
+			$sync_logger = \GHL_CRM\Sync\SyncLogger::get_instance();
+			$logs        = $sync_logger->get_logs( $args );
+
+			// Get total count
+			global $wpdb;
+			$site_id = get_current_blog_id();
+			
+			$where_clauses = [ 'site_id = %d' ];
+			$where_values  = [ $site_id ];
+
+			if ( ! empty( $status ) ) {
+				$where_clauses[] = 'status = %s';
+				$where_values[]  = $status;
+			}
+
+			if ( ! empty( $search ) ) {
+				$where_clauses[] = '(action LIKE %s OR message LIKE %s OR sync_type LIKE %s)';
+				$search_term     = '%' . $wpdb->esc_like( $search ) . '%';
+				$where_values[]  = $search_term;
+				$where_values[]  = $search_term;
+				$where_values[]  = $search_term;
+			}
+
+			$where_sql = implode( ' AND ', $where_clauses );
+			$log_count = $wpdb->get_var( $wpdb->prepare(
+				"SELECT COUNT(*) FROM {$wpdb->prefix}ghl_sync_log WHERE {$where_sql}", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$where_values
+			) );
+
+			$total_pages = ceil( $log_count / $per_page );
+
+			// Render table HTML
+			ob_start();
+			// Pass variables to template via closure/scope
+			// This avoids modifying global query vars which is safer for WordPress.org submission
+			include GHL_CRM_PATH . 'templates/admin/partials/sync-logs-table.php';
+			$html = ob_get_clean();
+
+			wp_send_json_success( [
+				'html'        => $html,
+				'total_pages' => $total_pages,
+				'total_logs'  => $log_count,
+			] );
+		} catch ( \Exception $e ) {
+			wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
+		}
+	}
+
+	/**
+	 * Delete old logs via AJAX
+	 *
+	 * @return void
+	 */
+	public static function delete_old_logs(): void {
+		try {
+			check_ajax_referer( 'ghl_sync_logs_nonce', 'nonce' );
+
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ], 403 );
+				return;
+			}
+
+			global $wpdb;
+			$site_id = get_current_blog_id();
+			$days_ago = 30;
+
+			$deleted = $wpdb->query( $wpdb->prepare(
+				"DELETE FROM {$wpdb->prefix}ghl_sync_log WHERE site_id = %d AND created_at < DATE_SUB(NOW(), INTERVAL %d DAY)",
+				$site_id,
+				$days_ago
+			) );
+
+			wp_send_json_success( [
+				'message' => sprintf(
+					/* translators: %d: Number of logs deleted */
+					__( 'Deleted %d old log entries', 'ghl-crm-integration' ),
+					$deleted
+				),
+				'deleted' => $deleted,
+			] );
+		} catch ( \Exception $e ) {
+			wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
+		}
+	}
+
+	/**
+	 * Clear all logs via AJAX
+	 *
+	 * @return void
+	 */
+	public static function clear_all_logs(): void {
+		try {
+			check_ajax_referer( 'ghl_sync_logs_nonce', 'nonce' );
+
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ], 403 );
+				return;
+			}
+
+			global $wpdb;
+			$site_id = get_current_blog_id();
+
+			$deleted = $wpdb->query( $wpdb->prepare(
+				"DELETE FROM {$wpdb->prefix}ghl_sync_log WHERE site_id = %d",
+				$site_id
+			) );
+
+			wp_send_json_success( [
+				'message' => sprintf(
+					/* translators: %d: Number of logs deleted */
+					__( 'Cleared %d log entries', 'ghl-crm-integration' ),
+					$deleted
+				),
+				'deleted' => $deleted,
+			] );
+		} catch ( \Exception $e ) {
+			wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
+		}
+	}
 }
 

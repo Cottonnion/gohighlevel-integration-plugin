@@ -170,6 +170,11 @@ class SyncLogger {
 		$where[] = $wpdb->prepare( 'item_id = %d', $args['item_id'] );
 	}
 
+	if ( ! empty( $args['search'] ) ) {
+		$search_term = '%' . $wpdb->esc_like( $args['search'] ) . '%';
+		$where[] = $wpdb->prepare( '(action LIKE %s OR message LIKE %s OR sync_type LIKE %s)', $search_term, $search_term, $search_term );
+	}
+
 	$where_clause = implode( ' AND ', $where );
 
 	// Build ORDER BY clause

@@ -106,6 +106,11 @@ class SettingsManager {
 		add_action( 'wp_ajax_ghl_get_pipelines', [ $this, 'handle_get_pipelines' ] );
 		add_action( 'wp_ajax_ghl_get_pipeline_stages', [ $this, 'handle_get_pipeline_stages' ] );
 		add_action( 'wp_ajax_ghl_search_products', [ $this, 'handle_search_products' ] );
+
+		// Sync Logs AJAX handlers (delegated to AjaxHandler)
+		add_action( 'wp_ajax_ghl_get_logs', [ $this, 'handle_get_logs' ] );
+		add_action( 'wp_ajax_ghl_delete_old_logs', [ $this, 'handle_delete_old_logs' ] );
+		add_action( 'wp_ajax_ghl_clear_all_logs', [ $this, 'handle_clear_all_logs' ] );
 	}
 
 	/**
@@ -1971,6 +1976,36 @@ class SettingsManager {
 
 		// Delegate to AjaxHandler
 		AjaxHandler::search_products();
+	}
+
+	/**
+	 * Handle get logs AJAX request
+	 *
+	 * @return void
+	 */
+	public function handle_get_logs(): void {
+		// Delegate to AjaxHandler (nonce and permissions checked there)
+		AjaxHandler::get_logs();
+	}
+
+	/**
+	 * Handle delete old logs AJAX request
+	 *
+	 * @return void
+	 */
+	public function handle_delete_old_logs(): void {
+		// Delegate to AjaxHandler (nonce and permissions checked there)
+		AjaxHandler::delete_old_logs();
+	}
+
+	/**
+	 * Handle clear all logs AJAX request
+	 *
+	 * @return void
+	 */
+	public function handle_clear_all_logs(): void {
+		// Delegate to AjaxHandler (nonce and permissions checked there)
+		AjaxHandler::clear_all_logs();
 	}
 
 	/**
