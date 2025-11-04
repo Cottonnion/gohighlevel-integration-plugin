@@ -37,6 +37,7 @@ class ScopeChecker {
 		'forms'          => array( 'forms.readonly' ),
 		'locations'      => array( 'locations.readonly' ),
 		'tasks'          => array( 'locations/tasks.write' ),
+		'opportunities'  => array( 'opportunities.readonly', 'opportunities.write' ),
 	);
 
 	/**
@@ -214,6 +215,12 @@ class ScopeChecker {
 			'tasks'          => array(
 				'path'   => 'locations/' . $location_id . '/tasks',
 				'params' => array( 'limit' => 1 ),
+			),
+			'opportunities'  => array(
+				'path'   => 'opportunities/pipelines',
+				'params' => array(
+					'locationId' => $location_id,
+				),
 			),
 		);
 
