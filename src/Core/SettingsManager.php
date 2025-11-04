@@ -693,13 +693,14 @@ class SettingsManager {
 
 		if (
 			! wp_verify_nonce( $nonce, 'ghl_crm_settings_nonce' ) &&
-			! wp_verify_nonce( $nonce, 'ghl_crm_admin' )
+			! wp_verify_nonce( $nonce, 'ghl_crm_admin' ) &&
+			! wp_verify_nonce( $nonce, 'ghl_user_profile' )
 		) {
 			wp_send_json_error( [ 'message' => 'Invalid nonce.' ], 403 );
 		}
 
-		// Check permissions
-		if ( ! current_user_can( 'manage_options' ) ) {
+		// Check permissions (allow edit_users capability for user profile pages)
+		if ( ! current_user_can( 'manage_options' ) && ! current_user_can( 'edit_users' ) ) {
 			wp_send_json_error(
 				[
 					'message' => __( 'You do not have permission to access tags.', 'ghl-crm-integration' ),
@@ -1088,6 +1089,19 @@ class SettingsManager {
 				OR option_name LIKE %s",
 				$wpdb->esc_like( '_transient_ghl_rate_' ) . '%',
 				$wpdb->esc_like( '_transient_timeout_ghl_rate_' ) . '%'
+			)
+		);
+
+		// Delete tags cache (use wildcard pattern to clear all tag caches for current site)
+		$site_id = get_current_blog_id();
+		$wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$wpdb->options} 
+				WHERE (option_name LIKE %s OR option_name LIKE %s)
+				AND option_name LIKE %s",
+				$wpdb->esc_like( '_transient_ghl_tags_' ) . '%',
+				$wpdb->esc_like( '_transient_timeout_ghl_tags_' ) . '%',
+				'%' . $wpdb->esc_like( '_site_' . $site_id )
 			)
 		);
 
