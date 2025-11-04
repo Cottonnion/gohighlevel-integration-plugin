@@ -145,6 +145,21 @@ class AssetsManager {
 	 */
 	private function define_admin_assets(): void {
 
+		// Tooltip System (loads on all GHL admin pages)
+		$this->add_admin_asset(
+			'ghl-crm-tooltip-system',
+			[
+				'toplevel_page_ghl-crm-admin',              // New SPA page
+				'toplevel_page_ghl-crm-settings',           // Legacy main tabbed page
+				'ghl-crm_page_ghl-crm-sync-logs',          // Sync logs page
+			],
+			'tooltip-system.js',
+			[],
+			[],
+			'1.0.0',
+			true
+		);
+
 		// Admin Menu Styling (loads on all admin pages to style the menu)
 		$this->add_admin_asset(
 			'ghl-crm-admin-menu-css',
