@@ -21,7 +21,7 @@ class Database {
 	 *
 	 * @var string
 	 */
-	private const DB_VERSION = '1.0.0';
+	private const DB_VERSION = '1.4.0';
 
 	/**
 	 * Singleton instance
@@ -59,8 +59,194 @@ class Database {
 		$installed_version = $settings_manager->get_option( 'ghl_crm_db_version', '0.0.0' );
 
 		if ( version_compare( $installed_version, self::DB_VERSION, '<' ) ) {
-			$this->create_tables();
+			// For new installations, create tables immediately
+			if ( '0.0.0' === $installed_version ) {
+				$this->migrate_database( $installed_version );
+				$settings_manager->update_option( 'ghl_crm_db_version', self::DB_VERSION );
+			} else {
+				// For existing installations, show admin notice for manual update
+				add_action( 'admin_notices', [ $this, 'show_database_update_notice' ] );
+				add_action( 'wp_ajax_ghl_crm_update_database', [ $this, 'handle_database_update' ] );
+			}
+		}
+	}
+
+	/**
+	 * Show database update notice
+	 *
+	 * @return void
+	 */
+	public function show_database_update_notice(): void {
+		$settings_manager  = SettingsManager::get_instance();
+		$installed_version = $settings_manager->get_option( 'ghl_crm_db_version', '0.0.0' );
+		
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		?>
+		<div class="notice notice-warning is-dismissible ghl-crm-db-update-notice">
+			<h3><?php esc_html_e( 'GHL CRM Integration - Database Update Required', 'ghl-crm-integration' ); ?></h3>
+			<p>
+				<?php 
+				printf(
+					/* translators: 1: current version, 2: new version */
+					esc_html__( 'The GHL CRM Integration plugin database needs to be updated from version %1$s to %2$s. This update will:', 'ghl-crm-integration' ),
+					'<strong>' . esc_html( $installed_version ) . '</strong>',
+					'<strong>' . esc_html( self::DB_VERSION ) . '</strong>'
+				);
+				?>
+			</p>
+			<ul style="margin-left: 20px;">
+				<li><?php esc_html_e( '✅ Fix sync logging to use the correct database columns', 'ghl-crm-integration' ); ?></li>
+				<li><?php esc_html_e( '✅ Remove duplicate queue entries that are causing conflicts', 'ghl-crm-integration' ); ?></li>
+				<li><?php esc_html_e( '✅ Update unique constraints to prevent future duplicates', 'ghl-crm-integration' ); ?></li>
+				<li><?php esc_html_e( '⚠️  Backup your database before proceeding (recommended)', 'ghl-crm-integration' ); ?></li>
+			</ul>
+			<p>
+				<button type="button" class="button button-primary" id="ghl-crm-update-database" data-nonce="<?php echo esc_attr( wp_create_nonce( 'ghl_crm_update_db' ) ); ?>">
+					<?php esc_html_e( 'Update Database Now', 'ghl-crm-integration' ); ?>
+				</button>
+				<button type="button" class="button button-secondary" onclick="jQuery(this).closest('.notice').slideUp();">
+					<?php esc_html_e( 'Remind Me Later', 'ghl-crm-integration' ); ?>
+				</button>
+			</p>
+		</div>
+		<script>
+		jQuery(document).ready(function($) {
+			$('#ghl-crm-update-database').on('click', function() {
+				var $button = $(this);
+				var $notice = $button.closest('.notice');
+				var nonce = $button.data('nonce');
+				
+				$button.prop('disabled', true).text('<?php esc_attr_e( 'Updating...', 'ghl-crm-integration' ); ?>');
+				
+				$.ajax({
+					url: ajaxurl,
+					type: 'POST',
+					data: {
+						action: 'ghl_crm_update_database',
+						nonce: nonce
+					},
+					success: function(response) {
+						if (response.success) {
+							$notice.removeClass('notice-warning').addClass('notice-success');
+							$notice.html('<p><strong><?php esc_attr_e( 'Database updated successfully!', 'ghl-crm-integration' ); ?></strong> <?php esc_attr_e( 'Sync logging should now work correctly.', 'ghl-crm-integration' ); ?></p>');
+							setTimeout(function() {
+								$notice.slideUp();
+							}, 3000);
+						} else {
+							$notice.removeClass('notice-warning').addClass('notice-error');
+							$notice.html('<p><strong><?php esc_attr_e( 'Update failed:', 'ghl-crm-integration' ); ?></strong> ' + (response.data || '<?php esc_attr_e( 'Unknown error', 'ghl-crm-integration' ); ?>') + '</p>');
+							$button.prop('disabled', false).text('<?php esc_attr_e( 'Retry Update', 'ghl-crm-integration' ); ?>');
+						}
+					},
+					error: function() {
+						$notice.removeClass('notice-warning').addClass('notice-error');
+						$notice.html('<p><strong><?php esc_attr_e( 'Update failed:', 'ghl-crm-integration' ); ?></strong> <?php esc_attr_e( 'Network error. Please try again.', 'ghl-crm-integration' ); ?></p>');
+						$button.prop('disabled', false).text('<?php esc_attr_e( 'Retry Update', 'ghl-crm-integration' ); ?>');
+					}
+				});
+			});
+		});
+		</script>
+		<?php
+	}
+
+	/**
+	 * Handle AJAX database update request
+	 *
+	 * @return void
+	 */
+	public function handle_database_update(): void {
+		// Verify nonce
+		if ( ! wp_verify_nonce( $_POST['nonce'] ?? '', 'ghl_crm_update_db' ) ) {
+			wp_send_json_error( __( 'Security check failed', 'ghl-crm-integration' ) );
+		}
+
+		// Check permissions
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions', 'ghl-crm-integration' ) );
+		}
+
+		try {
+			$settings_manager  = SettingsManager::get_instance();
+			$installed_version = $settings_manager->get_option( 'ghl_crm_db_version', '0.0.0' );
+			
+			// Perform the migration
+			$this->migrate_database( $installed_version );
 			$settings_manager->update_option( 'ghl_crm_db_version', self::DB_VERSION );
+			
+			wp_send_json_success( __( 'Database updated successfully', 'ghl-crm-integration' ) );
+		} catch ( Exception $e ) {
+			wp_send_json_error( __( 'Database update failed: ', 'ghl-crm-integration' ) . $e->getMessage() );
+		}
+	}
+
+	/**
+	 * Migrate database based on current version
+	 *
+	 * @param string $from_version Current database version
+	 * @return void
+	 */
+	private function migrate_database( string $from_version ): void {
+		global $wpdb;
+
+		// Clean up duplicate queue entries and fix constraints for version 1.4.0
+		if ( version_compare( $from_version, '1.4.0', '<' ) ) {
+			// First, clean up duplicate queue entries
+			$queue_table = $wpdb->prefix . 'ghl_sync_queue';
+			$log_table = $wpdb->prefix . 'ghl_sync_log';
+			
+			// Remove duplicate pending entries, keep the oldest one
+			$wpdb->query("
+				DELETE q1 FROM {$queue_table} q1
+				INNER JOIN {$queue_table} q2 
+				WHERE q1.id > q2.id 
+				AND q1.item_type = q2.item_type 
+				AND q1.item_id = q2.item_id 
+				AND q1.action = q2.action 
+				AND q1.site_id = q2.site_id 
+				AND q1.status = 'pending'
+			");
+
+			// Drop old constraint if exists
+			$wpdb->query("ALTER TABLE {$queue_table} DROP INDEX IF EXISTS unique_pending_item");
+
+			// Migrate sync_log table from old structure to new structure
+			$this->migrate_sync_log_table( $log_table );
+		}
+
+		// Create/update tables with new schema
+		$this->create_tables();
+	}
+
+	/**
+	 * Migrate sync log table from old structure to new structure
+	 *
+	 * @param string $table_name The sync log table name
+	 * @return void
+	 */
+	private function migrate_sync_log_table( string $table_name ): void {
+		global $wpdb;
+
+		// Check if table exists and has old structure
+		$columns = $wpdb->get_results("SHOW COLUMNS FROM {$table_name}");
+		if ( empty( $columns ) ) {
+			return; // Table doesn't exist, will be created fresh
+		}
+
+		$column_names = wp_list_pluck( $columns, 'Field' );
+		$has_old_structure = in_array( 'user_id', $column_names, true ) && in_array( 'contact_id', $column_names, true );
+		$has_new_structure = in_array( 'sync_type', $column_names, true ) && in_array( 'item_id', $column_names, true );
+
+		if ( $has_old_structure && ! $has_new_structure ) {
+			// Backup existing data by creating a temporary table
+			$backup_table = $table_name . '_backup_' . time();
+			$wpdb->query("CREATE TABLE {$backup_table} AS SELECT * FROM {$table_name}");
+
+			// Drop the old table completely
+			$wpdb->query("DROP TABLE IF EXISTS {$table_name}");
 		}
 	}
 
@@ -95,7 +281,7 @@ class Database {
 			processed_at datetime DEFAULT NULL,
 			site_id bigint(20) unsigned NOT NULL DEFAULT 1,
 			PRIMARY KEY (id),
-			UNIQUE KEY unique_pending_item (item_type, item_id, action, site_id, status),
+			UNIQUE KEY unique_item_action (item_type, item_id, action, site_id),
 			KEY status_created (status, created_at),
 			KEY item_lookup (item_type, item_id),
 			KEY status_attempts (status, attempts),
@@ -103,25 +289,25 @@ class Database {
 			KEY site_status (site_id, status)
 		) {$charset_collate};";
 
-		// SQL for sync log table
-		$sql_log = "CREATE TABLE IF NOT EXISTS {$sync_log_table} (
+		// SQL for sync log table  
+		$sql_log = "CREATE TABLE {$sync_log_table} (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-			user_id bigint(20) unsigned NOT NULL,
+			sync_type varchar(50) NOT NULL DEFAULT 'user',
+			item_id bigint(20) unsigned NOT NULL,
 			action varchar(50) NOT NULL,
 			status varchar(20) NOT NULL,
-			contact_id varchar(100) DEFAULT NULL,
-			request_data longtext DEFAULT NULL,
-			response_data longtext DEFAULT NULL,
-			error_message text DEFAULT NULL,
-			execution_time decimal(10,3) DEFAULT NULL,
+			message text DEFAULT NULL,
+			metadata longtext DEFAULT NULL,
+			ghl_id varchar(100) DEFAULT NULL,
 			created_at datetime NOT NULL,
 			site_id bigint(20) unsigned NOT NULL DEFAULT 1,
 			PRIMARY KEY (id),
-			KEY user_id (user_id),
+			KEY item_lookup (sync_type, item_id),
 			KEY action_status (action, status),
 			KEY created_at (created_at),
 			KEY site_id (site_id),
-			KEY site_user (site_id, user_id)
+			KEY site_item (site_id, sync_type, item_id),
+			KEY status_created (status, created_at)
 		) {$charset_collate};";
 
 		// Include WordPress upgrade functions
