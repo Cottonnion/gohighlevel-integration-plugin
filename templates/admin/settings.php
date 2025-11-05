@@ -2,7 +2,42 @@
 /**
  * Template: Settings Page with Side Menu
  *
+ * This template provides extensible settings tabs for developers.
+ * 
  * @package GHL_CRM_Integration
+ * 
+ * @example Adding a custom settings tab:
+ * 
+ * // Method 1: Using a callback function
+ * add_filter( 'ghl_crm_settings_tabs', function( $tabs ) {
+ *     $tabs['my_custom_tab'] = [
+ *         'label'    => __( 'My Custom Tab', 'my-plugin' ),
+ *         'icon'     => 'dashicons-admin-customizer',
+ *         'callback' => 'my_custom_tab_callback',
+ *         'requires_connection' => false,  // Optional: doesn't require GHL connection
+ *         'capability' => 'edit_posts',    // Optional: custom capability requirement
+ *     ];
+ *     return $tabs;
+ * });
+ * 
+ * function my_custom_tab_callback( $current_tab, $tab_data, $settings ) {
+ *     echo '<h2>My Custom Settings</h2>';
+ *     echo '<p>Custom content here...</p>';
+ * }
+ * 
+ * // Method 2: Using a custom file
+ * add_filter( 'ghl_crm_settings_tabs', function( $tabs ) {
+ *     $tabs['my_file_tab'] = [
+ *         'label' => __( 'My File Tab', 'my-plugin' ),
+ *         'icon'  => 'dashicons-media-document',
+ *         'file'  => plugin_dir_path( __FILE__ ) . 'my-custom-tab.php',
+ *     ];
+ *     return $tabs;
+ * });
+ * 
+ * @hook ghl_crm_settings_tabs         Filter to add custom settings tabs
+ * @hook ghl_crm_before_settings_tab_content  Action fired before tab content
+ * @hook ghl_crm_after_settings_tab_content   Action fired after tab content
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -74,6 +109,29 @@ $settings_tabs = [
 	],
 ];
 
+/**
+ * Allow developers to add custom settings tabs
+ * 
+ * @since 1.0.0
+ * @param array $settings_tabs Array of settings tabs
+ * @param bool  $is_connected  Whether the plugin is connected to GoHighLevel
+ * @param array $settings      Current plugin settings
+ * 
+ * @example
+ * add_filter( 'ghl_crm_settings_tabs', function( $tabs, $is_connected, $settings ) {
+ *     $tabs['my_custom_tab'] = [
+ *         'label'    => __( 'My Custom Tab', 'my-plugin' ),
+ *         'icon'     => 'dashicons-admin-customizer',
+ *         'callback' => 'my_custom_tab_callback', // Optional: custom callback function
+ *         'file'     => '/path/to/my/custom/tab.php', // Optional: custom file path
+ *         'requires_connection' => true, // Optional: whether tab requires GHL connection (default: true)
+ *         'capability' => 'manage_options', // Optional: required capability (default: manage_options)
+ *     ];
+ *     return $tabs;
+ * }, 10, 3 );
+ */
+$settings_tabs = apply_filters( 'ghl_crm_settings_tabs', $settings_tabs, $is_connected, $settings );
+
 ?>
 <div class="wrap ghl-crm-settings">
 	<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
@@ -113,14 +171,29 @@ $settings_tabs = [
 			<ul>
 				<?php foreach ( $settings_tabs as $tab_key => $tab_data ) : ?>
 					<?php 
-					// Disable non-general tabs when not connected
-					$is_disabled = ! $is_connected && 'general' !== $tab_key;
+					// Check if tab requires connection (default: true for non-general tabs)
+					$requires_connection = $tab_data['requires_connection'] ?? ( 'general' !== $tab_key );
+					
+					// Check if user has required capability (default: manage_options)
+					$required_capability = $tab_data['capability'] ?? 'manage_options';
+					$has_capability = current_user_can( $required_capability );
+					
+					// Disable tab if connection required but not connected, or user lacks capability
+					$is_disabled = ( $requires_connection && ! $is_connected ) || ! $has_capability;
+					
 					$li_class = $current_tab === $tab_key ? 'active' : '';
 					if ( $is_disabled ) {
 						$li_class .= ' disabled';
 					}
+					
+					$disabled_title = '';
+					if ( ! $has_capability ) {
+						$disabled_title = __( 'Insufficient permissions', 'ghl-crm-integration' );
+					} elseif ( $requires_connection && ! $is_connected ) {
+						$disabled_title = __( 'Connect to GoHighLevel first', 'ghl-crm-integration' );
+					}
 					?>
-					<li class="<?php echo esc_attr( $li_class ); ?>" data-tab="<?php echo esc_attr( $tab_key ); ?>" <?php echo $is_disabled ? 'title="' . esc_attr__( 'Connect to GoHighLevel first', 'ghl-crm-integration' ) . '"' : ''; ?>>
+					<li class="<?php echo esc_attr( $li_class ); ?>" data-tab="<?php echo esc_attr( $tab_key ); ?>" <?php echo $is_disabled ? 'title="' . esc_attr( $disabled_title ) . '"' : ''; ?>>
 						<span class="dashicons <?php echo esc_attr( $tab_data['icon'] ); ?>"></span>
 						<span class="ghl-tab-label"><?php echo esc_html( $tab_data['label'] ); ?></span>
 					</li>
@@ -137,11 +210,40 @@ $settings_tabs = [
 		<!-- Settings Content Area -->
 		<div class="ghl-settings-content">
 			<?php
-			$partial_file = GHL_CRM_PATH . 'templates/admin/partials/settings/' . $current_tab . '.php';
-			if ( file_exists( $partial_file ) ) {
-				include $partial_file;
-			} else {
+			// Check if current tab exists in settings tabs
+			if ( ! isset( $settings_tabs[ $current_tab ] ) ) {
 				echo '<div class="notice notice-error"><p>' . esc_html__( 'Settings tab not found.', 'ghl-crm-integration' ) . '</p></div>';
+			} else {
+				$tab_data = $settings_tabs[ $current_tab ];
+				
+				// Check if user has required capability
+				$required_capability = $tab_data['capability'] ?? 'manage_options';
+				if ( ! current_user_can( $required_capability ) ) {
+					echo '<div class="notice notice-error"><p>' . esc_html__( 'You do not have permission to access this settings tab.', 'ghl-crm-integration' ) . '</p></div>';
+				} else {
+					// Fire action before rendering tab content
+					do_action( 'ghl_crm_before_settings_tab_content', $current_tab, $tab_data, $settings );
+					
+					// Check if tab has a custom callback
+					if ( isset( $tab_data['callback'] ) && is_callable( $tab_data['callback'] ) ) {
+						// Call custom callback function
+						call_user_func( $tab_data['callback'], $current_tab, $tab_data, $settings );
+					} elseif ( isset( $tab_data['file'] ) && file_exists( $tab_data['file'] ) ) {
+						// Include custom file
+						include $tab_data['file'];
+					} else {
+						// Default: try to include standard partial file
+						$partial_file = GHL_CRM_PATH . 'templates/admin/partials/settings/' . $current_tab . '.php';
+						if ( file_exists( $partial_file ) ) {
+							include $partial_file;
+						} else {
+							echo '<div class="notice notice-error"><p>' . esc_html__( 'Settings tab content not found.', 'ghl-crm-integration' ) . '</p></div>';
+						}
+					}
+					
+					// Fire action after rendering tab content
+					do_action( 'ghl_crm_after_settings_tab_content', $current_tab, $tab_data, $settings );
+				}
 			}
 			?>
 		</div>
