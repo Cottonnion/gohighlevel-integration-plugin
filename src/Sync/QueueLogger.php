@@ -46,84 +46,63 @@ class QueueLogger {
 	/**
 	 * Log sync event to database
 	 *
-	 * @param int         $user_id        User ID
+	 * @param int         $item_id        Item ID (user ID, order ID, etc.)
 	 * @param string      $action         Action
 	 * @param string      $status         Status (success/error)
-	 * @param string|null $contact_id     Contact ID
+	 * @param string|null $contact_id     Contact ID / GHL Object ID
 	 * @param array|null  $request_data   Request payload
 	 * @param array|null  $response_data  Response data
 	 * @param string|null $error_message  Error message
 	 * @param float|null  $execution_time Execution time in seconds
+	 * @param string      $sync_type      Sync type (user, order, wc_customer, contact, etc.)
 	 * @return void
 	 */
 	public function log_event(
-		int $user_id,
+		int $item_id,
 		string $action,
 		string $status,
 		?string $contact_id = null,
 		?array $request_data = null,
 		?array $response_data = null,
 		?string $error_message = null,
-		?float $execution_time = null
+		?float $execution_time = null,
+		string $sync_type = 'user'
 	): void {
 		// Check if sync logging is enabled
 		if ( ! \GHL_CRM\Core\SettingsManager::is_sync_logging_enabled() ) {
 			return;
 		}
 
-		global $wpdb;
+		// Use SyncLogger for consistent logging
+		$sync_logger = SyncLogger::get_instance();
 
-		$table_name = $this->get_log_table_name();
-
-		$wpdb->insert(
-			$table_name,
-			[
-				'user_id'        => $user_id,
-				'action'         => $action,
-				'status'         => $status,
-				'contact_id'     => $contact_id,
-				'request_data'   => ! empty( $request_data ) ? wp_json_encode( $request_data ) : null,
-				'response_data'  => ! empty( $response_data ) ? wp_json_encode( $response_data ) : null,
-				'error_message'  => $error_message,
-				'execution_time' => $execution_time,
-				'created_at'     => current_time( 'mysql' ),
-				'site_id'        => get_current_blog_id(),
-			],
-			[
-				'%d',
-				'%s',
-				'%s',
-				'%s',
-				'%s',
-				'%s',
-				'%s',
-				'%f',
-				'%s',
-				'%d',
-			]
-		);
-
-		// Also log errors to error_log
-		if ( 'error' === $status ) {
-			error_log(
-				sprintf(
-					'GHL CRM Sync Error [Site %d]: User %d, Action %s, Message: %s',
-					get_current_blog_id(),
-					$user_id,
-					$action,
-					$error_message ?? 'Unknown error'
-				)
-			);
+		// Prepare metadata
+		$metadata = [];
+		if ( ! empty( $request_data ) ) {
+			$metadata['request'] = $request_data;
 		}
-	}
+		if ( ! empty( $response_data ) ) {
+			$metadata['response'] = $response_data;
+		}
+		if ( null !== $execution_time ) {
+			$metadata['execution_time'] = $execution_time;
+		}
 
-	/**
-	 * Get log table name (multisite-aware)
-	 *
-	 * @return string
-	 */
-	private function get_log_table_name(): string {
-		global $wpdb;
-		return $wpdb->prefix . 'ghl_sync_log';
+		// Prepare message
+		$message = $error_message ?? sprintf( '%s %s', ucfirst( $sync_type ), $action );
+
+		// Map status to SyncLogger format
+		$log_status = ( 'error' === $status ) ? 'failed' : $status;
+
+		// Log using SyncLogger
+		$sync_logger->log(
+			$sync_type,
+			$item_id,
+			$action,
+			$log_status,
+			$message,
+			$metadata,
+			$contact_id ?? ''
+		);
 	}
 }
