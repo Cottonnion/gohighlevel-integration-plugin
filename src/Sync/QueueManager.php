@@ -141,13 +141,6 @@ class QueueManager {
 	public function add_to_queue( string $item_type, int $item_id, string $action, array $payload ) {
 		global $wpdb;
 
-		error_log( sprintf(
-			'GHL CRM QueueManager: add_to_queue() called - Type: %s, ID: %d, Action: %s',
-			$item_type,
-			$item_id,
-			$action
-		) );
-
 		$table_name      = $this->get_queue_table_name();
 		$current_site_id = get_current_blog_id();
 
@@ -198,13 +191,6 @@ class QueueManager {
 		);
 
 		if ( $queue_count >= 10000 ) { // Max 10k pending items per site
-			error_log(
-				sprintf(
-					'GHL CRM Queue Limit Reached [Site %d]: Cannot add more items. Current pending: %d',
-					$current_site_id,
-					$queue_count
-				)
-			);
 			return false;
 		}
 
@@ -329,13 +315,6 @@ class QueueManager {
 			)
 		);
 
-		if ( $fixed_count > 0 ) {
-			error_log( sprintf(
-				'🔧 GHL CRM: Marked %d items as failed (reached max attempts)',
-				$fixed_count
-			) );
-		}
-
 		// Get pending items for current site (using configured batch size)
 		$items = $wpdb->get_results(
 			$wpdb->prepare(
@@ -410,11 +389,6 @@ class QueueManager {
 
 		// Safety check: If item already has MAX_ATTEMPTS, mark as failed immediately
 		if ( $item->attempts >= self::MAX_ATTEMPTS ) {
-			error_log( sprintf(
-				'🚫 GHL CRM: Item %d already has %d attempts, marking as failed',
-				$item->id,
-				$item->attempts
-			) );
 			
 			$table_name = $this->get_queue_table_name();
 			$wpdb->update(
@@ -569,7 +543,7 @@ class QueueManager {
 				}
 				
 				// Mark as completed
-				$wpdb->update(
+				$update_result = $wpdb->update(
 					$table_name,
 					[
 						'status'       => 'completed',
@@ -590,7 +564,8 @@ class QueueManager {
 					$payload, // Request data
 					is_array( $result ) ? $result : null, // Response data
 					null,
-					microtime( true ) - $start_time
+					microtime( true ) - $start_time,
+					$item->item_type // Sync type
 				);
 			} else {
 				throw new \Exception( 'Sync execution returned false' );
@@ -617,15 +592,6 @@ class QueueManager {
 					[ '%d' ]
 				);
 
-				// Log rate limit hit
-				error_log(
-					sprintf(
-						'GHL CRM Rate Limit Hit [Site %d]: Item %d paused for retry',
-						get_current_blog_id(),
-						$item->id
-					)
-				);
-
 				return; // Stop processing this batch
 			}
 
@@ -642,17 +608,8 @@ class QueueManager {
 			[ 'id' => $item->id ],
 			[ '%s', '%s', '%s' ],
 			[ '%d' ]
-		);
-
-		// Log when item is marked as failed
-		if ( $status === 'failed' ) {
-			error_log( sprintf(
-				'❌ GHL CRM: Item %d marked as FAILED after %d attempts. Error: %s',
-				$item->id,
-				$item->attempts,
-				$e->getMessage()
-			) );
-		}			// Log error with request data (using QueueLogger helper)
+		);		
+		// Log error with request data (using QueueLogger helper)
 			$this->logger->log_event(
 				(int) $item->item_id,
 				$item->action,
@@ -661,7 +618,8 @@ class QueueManager {
 				$payload, // Request data that failed
 				null, // No response data on error
 				$e->getMessage(),
-				microtime( true ) - $start_time
+				microtime( true ) - $start_time,
+				$item->item_type // Sync type
 			);
 		}
 	}
