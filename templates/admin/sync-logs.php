@@ -20,7 +20,6 @@ $is_connected     = $oauth_status['connected'] || ! empty( $settings['api_token'
 
 // Check if logging is enabled
 $is_logging_enabled = \GHL_CRM\Core\SettingsManager::is_sync_logging_enabled();
-
 // Get current page
 $current_page = isset( $_GET['paged'] ) ? max( 1, intval( $_GET['paged'] ) ) : 1;
 $per_page = 20;
@@ -33,7 +32,6 @@ $logs = $sync_logger->get_logs( [
 	'offset'  => $offset,
 	'site_id' => get_current_blog_id(),
 ] );
-
 // Count pending queue and total logs
 global $wpdb;
 $site_id = get_current_blog_id();
@@ -102,7 +100,6 @@ $total_pages = ceil( $log_count / $per_page );
 					<option value=""><?php esc_html_e( 'All Statuses', 'ghl-crm-integration' ); ?></option>
 					<option value="success"><?php esc_html_e( 'Success', 'ghl-crm-integration' ); ?></option>
 					<option value="error"><?php esc_html_e( 'Error', 'ghl-crm-integration' ); ?></option>
-					<option value="pending"><?php esc_html_e( 'Pending', 'ghl-crm-integration' ); ?></option>
 				</select>
 			</div>
 
@@ -137,16 +134,23 @@ $total_pages = ceil( $log_count / $per_page );
 				<thead>
 					<tr>
 						<th style="width: 180px;"><?php esc_html_e( 'Date', 'ghl-crm-integration' ); ?></th>
-						<th style="width: 150px;"><?php esc_html_e( 'Type', 'ghl-crm-integration' ); ?></th>
+						<th style="width: 100px;"><?php esc_html_e( 'Type', 'ghl-crm-integration' ); ?></th>
+						<th style="width: 80px;"><?php esc_html_e( 'Item ID', 'ghl-crm-integration' ); ?></th>
 						<th><?php esc_html_e( 'Action', 'ghl-crm-integration' ); ?></th>
-						<th style="width: 120px;"><?php esc_html_e( 'Status', 'ghl-crm-integration' ); ?></th>
-						<th style="width: 140px;"><?php esc_html_e( 'Details', 'ghl-crm-integration' ); ?></th>
+						<th style="width: 100px;"><?php esc_html_e( 'Status', 'ghl-crm-integration' ); ?></th>
+						<th style="width: 120px;"><?php esc_html_e( 'Details', 'ghl-crm-integration' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
 					<?php if ( ! empty( $logs ) ) : ?>
 						<?php foreach ( $logs as $log ) : ?>
 							<?php
+							// Parse metadata if it's a JSON string
+							$metadata = $log['metadata'] ?? null;
+							if ( is_string( $metadata ) ) {
+								$metadata = json_decode( $metadata, true );
+							}
+							
 							$details_json = wp_json_encode( [
 								'sync_type'      => $log['sync_type'] ?? '',
 								'item_id'        => $log['item_id'] ?? '',
@@ -154,7 +158,7 @@ $total_pages = ceil( $log_count / $per_page );
 								'status'         => $log['status'] ?? '',
 								'message'        => $log['message'] ?? '',
 								'ghl_id'         => $log['ghl_id'] ?? '',
-								'metadata'       => $log['metadata'] ?? null,
+								'metadata'       => $metadata,
 								'created_at'     => $log['created_at'] ?? '',
 							], JSON_PRETTY_PRINT );
 							?>
@@ -164,9 +168,21 @@ $total_pages = ceil( $log_count / $per_page );
 								</td>
 								<td>
 									<span class="ghl-log-type">
-										<span class="dashicons dashicons-admin-users"></span>
-										<?php echo esc_html( ucfirst( $log['sync_type'] ?? 'unknown' ) ); ?>
+										<?php 
+										$sync_type = $log['sync_type'] ?? 'unknown';
+										$icon = 'admin-users';
+										if ( 'wc_customer' === $sync_type || 'order' === $sync_type ) {
+											$icon = 'cart';
+										} elseif ( 'contact' === $sync_type ) {
+											$icon = 'id';
+										}
+										?>
+										<span class="dashicons dashicons-<?php echo esc_attr( $icon ); ?>"></span>
+										<?php echo esc_html( ucfirst( str_replace( '_', ' ', $sync_type ) ) ); ?>
 									</span>
+								</td>
+								<td>
+									<code style="font-size: 12px;"><?php echo esc_html( $log['item_id'] ?? 'N/A' ); ?></code>
 								</td>
 								<td>
 									<span class="ghl-log-action"><?php echo esc_html( $log['action'] ?? 'N/A' ); ?></span>
@@ -186,7 +202,7 @@ $total_pages = ceil( $log_count / $per_page );
 						<?php endforeach; ?>
 					<?php else : ?>
 						<tr>
-							<td colspan="5">
+							<td colspan="6">
 								<div class="ghl-logs-empty">
 									<div class="ghl-logs-empty-icon">
 										<span class="dashicons dashicons-database-view"></span>

@@ -19,10 +19,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<thead>
 			<tr>
 				<th style="width: 180px;"><?php esc_html_e( 'Date', 'ghl-crm-integration' ); ?></th>
-				<th style="width: 150px;"><?php esc_html_e( 'Type', 'ghl-crm-integration' ); ?></th>
+				<th style="width: 100px;"><?php esc_html_e( 'Type', 'ghl-crm-integration' ); ?></th>
+				<th style="width: 80px;"><?php esc_html_e( 'Item ID', 'ghl-crm-integration' ); ?></th>
 				<th><?php esc_html_e( 'Action', 'ghl-crm-integration' ); ?></th>
-				<th style="width: 120px;"><?php esc_html_e( 'Status', 'ghl-crm-integration' ); ?></th>
-				<th style="width: 140px;"><?php esc_html_e( 'Details', 'ghl-crm-integration' ); ?></th>
+				<th style="width: 100px;"><?php esc_html_e( 'Status', 'ghl-crm-integration' ); ?></th>
+				<th style="width: 120px;"><?php esc_html_e( 'Details', 'ghl-crm-integration' ); ?></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -46,9 +47,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 						</td>
 						<td>
 							<span class="ghl-log-type">
-								<span class="dashicons dashicons-admin-users"></span>
-								<?php echo esc_html( ucfirst( $log['sync_type'] ?? 'unknown' ) ); ?>
+								<?php 
+								$sync_type = $log['sync_type'] ?? 'unknown';
+								$icon = 'admin-users';
+								if ( 'wc_customer' === $sync_type || 'order' === $sync_type ) {
+									$icon = 'cart';
+								} elseif ( 'contact' === $sync_type ) {
+									$icon = 'id';
+								}
+								?>
+								<span class="dashicons dashicons-<?php echo esc_attr( $icon ); ?>"></span>
+								<?php echo esc_html( ucfirst( str_replace( '_', ' ', $sync_type ) ) ); ?>
 							</span>
+						</td>
+						<td>
+							<code style="font-size: 12px;"><?php echo esc_html( $log['item_id'] ?? 'N/A' ); ?></code>
 						</td>
 						<td>
 							<span class="ghl-log-action"><?php echo esc_html( $log['action'] ?? 'N/A' ); ?></span>
@@ -68,7 +81,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<?php endforeach; ?>
 			<?php else : ?>
 				<tr>
-					<td colspan="5">
+					<td colspan="6">
 						<div class="ghl-logs-empty">
 							<div class="ghl-logs-empty-icon">
 								<span class="dashicons dashicons-database-view"></span>
