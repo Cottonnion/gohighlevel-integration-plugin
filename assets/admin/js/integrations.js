@@ -227,7 +227,22 @@
 				data.wc_opportunities_categories = Array.isArray(opportunityCategories) ? opportunityCategories : (opportunityCategories ? [opportunityCategories] : []);
 			}
 
-			// Future: Add BuddyBoss, LearnDash settings here
+			// BuddyBoss Settings
+			if ($('#buddyboss_groups_enabled').length) {
+				data.buddyboss_groups_enabled = $('#buddyboss_groups_enabled').is(':checked') ? '1' : '0';
+				data.buddyboss_auto_delete_custom_objects = $('#buddyboss_auto_delete_custom_objects').is(':checked') ? '1' : '0';
+				data.buddyboss_field_length_limit = $('#buddyboss_field_length_limit').val() || 250;
+				data.buddyboss_sync_private_groups = $('#buddyboss_sync_private_groups').is(':checked') ? '1' : '0';
+				data.buddyboss_sync_hidden_groups = $('#buddyboss_sync_hidden_groups').is(':checked') ? '1' : '0';
+				data.buddyboss_real_time_sync = $('#buddyboss_real_time_sync').is(':checked') ? '1' : '0';
+				data.buddyboss_log_sync_operations = $('#buddyboss_log_sync_operations').is(':checked') ? '1' : '0';
+				
+				// Association behavior settings
+				data.buddyboss_missing_contact_strategy = $('input[name="buddyboss_missing_contact_strategy"]:checked').val() || 'skip';
+				data.buddyboss_default_group_type = $('#buddyboss_default_group_type').val() || '';
+			}
+
+			// Future: Add LearnDash settings here
 
 			return data;
 		},
