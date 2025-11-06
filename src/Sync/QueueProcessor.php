@@ -70,6 +70,40 @@ class QueueProcessor {
 	 */
 	public function execute_sync( string $item_type, string $action, int $item_id, array $payload ) {
 		
+		// Check for dependency before executing
+		if ( isset( $payload['_depends_on_queue_id'] ) ) {
+			$depends_on_id = absint( $payload['_depends_on_queue_id'] );
+			
+			error_log( sprintf(
+				'GHL Queue: Task has dependency - Type: %s, Item ID: %d, Depends on Queue ID: %d',
+				$item_type,
+				$item_id,
+				$depends_on_id
+			) );
+			
+			if ( $depends_on_id > 0 && ! $this->is_dependency_completed( $depends_on_id ) ) {
+				error_log( sprintf(
+					'GHL Queue: Dependency not satisfied - Skipping task (Type: %s, Item ID: %d) until Queue ID %d completes',
+					$item_type,
+					$item_id,
+					$depends_on_id
+				) );
+				
+				// Dependency not completed yet - return special status to skip but not fail
+				return [
+					'success' => false,
+					'error'   => 'Waiting for dependency to complete',
+					'skip'    => true, // Signal to not increment retry counter
+				];
+			}
+			
+			error_log( sprintf(
+				'GHL Queue: Dependency satisfied - Executing task (Type: %s, Item ID: %d), Queue ID %d is completed',
+				$item_type,
+				$item_id,
+				$depends_on_id
+			) );
+		}
 
 		try {
 			// Route to appropriate integration handler
@@ -373,5 +407,34 @@ class QueueProcessor {
 	private function get_location_id(): ?string {
 		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 		return $settings_manager->get_setting( 'location_id' );
+	}
+
+	/**
+	 * Check if a dependency queue item has been completed
+	 *
+	 * @param int $queue_id The queue item ID to check
+	 * @return bool True if completed or not found, false if still pending/processing
+	 */
+	private function is_dependency_completed( int $queue_id ): bool {
+		global $wpdb;
+		
+		$table_name = $wpdb->prefix . 'ghl_sync_queue';
+		
+		$status = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT status FROM {$table_name} WHERE id = %d LIMIT 1",
+				$queue_id
+			)
+		);
+		
+		error_log( sprintf(
+			'GHL Queue: Checking dependency Queue ID %d - Status: %s',
+			$queue_id,
+			$status ? $status : 'NOT FOUND'
+		) );
+		
+		// If not found or completed, dependency is satisfied
+		// If pending or processing, dependency is not satisfied
+		return ( null === $status || 'completed' === $status );
 	}
 }

@@ -132,13 +132,14 @@ class QueueManager {
 	 * Prevents duplicates: Updates payload if pending item exists (ensures latest data synced)
 	 * Multisite-aware: Uses current site's table prefix
 	 *
-	 * @param string $item_type Item type (user, order, group, course, etc.)
-	 * @param int    $item_id   Item ID
-	 * @param string $action    Action (create, update, delete, etc.)
-	 * @param array  $payload   Data payload
+	 * @param string   $item_type         Item type (user, order, group, course, etc.)
+	 * @param int      $item_id           Item ID
+	 * @param string   $action            Action (create, update, delete, etc.)
+	 * @param array    $payload           Data payload
+	 * @param int|null $depends_on_queue_id Optional queue ID this task depends on
 	 * @return int|false Queue item ID or false on failure
 	 */
-	public function add_to_queue( string $item_type, int $item_id, string $action, array $payload ) {
+	public function add_to_queue( string $item_type, int $item_id, string $action, array $payload, ?int $depends_on_queue_id = null ) {
 		global $wpdb;
 
 		$table_name      = $this->get_queue_table_name();
@@ -163,8 +164,6 @@ class QueueManager {
 				$current_site_id
 			)
 		);
-
-		
 
 		// If duplicate exists, UPDATE payload with latest data (don't create new row)
 		if ( $existing ) {
@@ -192,6 +191,18 @@ class QueueManager {
 
 		if ( $queue_count >= 10000 ) { // Max 10k pending items per site
 			return false;
+		}
+
+		// Store dependency in payload if provided
+		if ( null !== $depends_on_queue_id ) {
+			$payload['_depends_on_queue_id'] = $depends_on_queue_id;
+			error_log( sprintf(
+				'GHL Queue: Adding queue item with dependency - Type: %s, Item ID: %d, Action: %s, Depends on Queue ID: %d',
+				$item_type,
+				$item_id,
+				$action,
+				$depends_on_queue_id
+			) );
 		}
 
 		// Insert new queue item
@@ -478,13 +489,47 @@ class QueueManager {
 				$this->rate_limiter->track_request( $location_id );
 			}
 
-			// Check if result indicates success
+			// Check if result indicates success or should be skipped (dependency waiting)
 			// Some integrations return arrays with 'success' => false
 			$is_success = false;
+			$should_skip = false;
+			
 			if ( is_array( $result ) && isset( $result['success'] ) ) {
 				$is_success = $result['success'];
+				// Check if this is a dependency wait (don't increment retry counter)
+				$should_skip = ! empty( $result['skip'] );
 			} elseif ( $result ) {
 				$is_success = true;
+			}
+
+			// If waiting for dependency, skip processing but don't fail
+			if ( $should_skip ) {
+				// Check if payload needs to be updated with dependency info
+				if ( ! empty( $result['update_payload'] ) && is_array( $result['update_payload'] ) ) {
+					$wpdb->update(
+						$table_name,
+						[
+							'payload'    => wp_json_encode( $result['update_payload'] ),
+							'updated_at' => current_time( 'mysql' ),
+						],
+						[ 'id' => $item->id ],
+						[ '%s', '%s' ],
+						[ '%d' ]
+					);
+					
+					error_log( sprintf(
+						'GHL Queue: Updated payload with dependency for Queue ID: %d',
+						$item->id
+					) );
+				}
+				
+				error_log( sprintf(
+					'GHL Queue: Skipping task due to dependency wait - Type: %s, Item ID: %d, Queue ID: %d stays pending',
+					$item->item_type,
+					$item->item_id,
+					$item->id
+				) );
+				return; // Leave item pending, will retry later when dependency completes
 			}
 
 			if ( $is_success ) {
