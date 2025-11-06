@@ -123,10 +123,43 @@ class CustomObjectResource extends AbstractResource {
 	}
 
 	/**
+	 * Create a custom object schema
+	 *
+	 * @param array $schema_data Schema definition including key, locationId, labels, and primaryDisplayPropertyDetails
+	 * @return array Created schema data
+	 * @throws \Exception If creation fails
+	 */
+	public function create_schema( array $schema_data ): array {
+		try {
+			// Validate required fields per GHL API
+			if ( empty( $schema_data['key'] ) ) {
+				throw new \Exception( 'Schema key is required' );
+			}
+			if ( empty( $schema_data['locationId'] ) ) {
+				throw new \Exception( 'Location ID is required' );
+			}
+			if ( empty( $schema_data['primaryDisplayPropertyDetails'] ) ) {
+				throw new \Exception( 'Primary display property details are required' );
+			}
+			
+			// POST to /objects/ to create a new custom object schema
+			// locationId should be in the body, NOT as query param
+			$response = $this->client->post( 'objects/', $schema_data, false );
+			
+			// Clear cache after creating new schema
+			$this->clear_cache();
+			
+			return $response['schema'] ?? $response['object'] ?? $response;
+		} catch ( \Exception $e ) {
+			throw new \Exception( 'Failed to create custom object schema: ' . $e->getMessage() );
+		}
+	}
+
+	/**
 	 * Create a custom object record
 	 *
-	 * @param string $schema_id Schema ID
-	 * @param array  $data      Record data
+	 * @param string $schema_id Schema ID (not key)
+	 * @param array  $data      Record data with properties wrapped in "properties" object
 	 * @return array Created record data
 	 * @throws \Exception If creation fails
 	 */
@@ -136,7 +169,7 @@ class CustomObjectResource extends AbstractResource {
 				throw new \Exception( 'Schema ID is required to create custom object record' );
 			}
 			
-			// Use the correct GHL API endpoint format: /objects/:schemaKey/records
+			// Use the correct GHL API endpoint format: /objects/:schemaId/records
 			$endpoint = "objects/{$schema_id}/records";
 			
 			$response = $this->client->post( $endpoint, $data, false );
@@ -220,6 +253,49 @@ class CustomObjectResource extends AbstractResource {
 	}
 
 	/**
+	 * Create an association definition between a custom object and contacts
+	 * This defines the relationship type (e.g., "School has many Students")
+	 *
+	 * @param string $schema_key Custom object schema key (e.g., 'custom_objects.schools')
+	 * @param string $singular_label Singular label for the relationship (e.g., 'Student')
+	 * @param string $plural_label Plural label for the relationship (e.g., 'Students')
+	 * @param string $cardinality Relationship type: 'ONE_TO_MANY' or 'MANY_TO_MANY'
+	 * @return array Association definition including ID
+	 * @throws \Exception If creation fails
+	 */
+	public function create_association( string $schema_key, string $singular_label, string $plural_label, string $cardinality = 'ONE_TO_MANY' ): array {
+		try {
+			$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+			$location_id      = $settings_manager->get_setting( 'location_id', '' );
+
+			// Association definition structure per GHL API
+			// Based on error: needs 'key', but NOT 'cardinality' or 'labels'
+			// The key should be a unique identifier for this association
+			// Format: association between two objects
+			$association_key = str_replace( 'custom_objects.', '', $schema_key ) . '_members';
+			
+			$data = [
+				'key'             => $association_key,   // e.g., "classrooms_members"
+				'locationId'      => $location_id,
+				'firstObjectKey'  => $schema_key,        // Custom object key
+				'secondObjectKey' => 'contact',          // Standard contacts object
+			];
+
+			error_log( 'GHL BuddyBoss: Creating association with data: ' . wp_json_encode( $data ) );
+
+			$endpoint = 'associations/';
+			$response = $this->client->post( $endpoint, $data, false );
+
+			error_log( 'GHL BuddyBoss: Association created successfully: ' . wp_json_encode( $response ) );
+
+			return $response;
+		} catch ( \Exception $e ) {
+			error_log( 'GHL BuddyBoss: Failed to create association: ' . $e->getMessage() );
+			throw new \Exception( 'Failed to create association: ' . $e->getMessage() );
+		}
+	}
+
+	/**
 	 * Associate a custom object record with a contact
 	 *
 	 * @param string $record_id   Custom object record ID
@@ -265,7 +341,20 @@ class CustomObjectResource extends AbstractResource {
 				'secondRecordId' => $second_id,
 			];
 			
+			error_log( 'yahya sent: ' . wp_json_encode( $data ) );
+			
+			error_log( sprintf(
+				'GHL Association: Creating relation - Location: %s, Association: %s, First: %s, Second: %s, Direction: %s',
+				$location_id,
+				$association_id,
+				$first_id,
+				$second_id,
+				$direction ?? 'first (default)'
+			) );
+			
 			$response = $this->client->post( $endpoint, $data, false );
+			
+			error_log( 'yahya response: ' . wp_json_encode( $response ) );
 			
 			return $response;
 		} catch ( \Exception $e ) {
