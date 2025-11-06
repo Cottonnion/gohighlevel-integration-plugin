@@ -36,7 +36,7 @@ $logs = $sync_logger->get_logs( [
 global $wpdb;
 $site_id = get_current_blog_id();
 $queue_count = $wpdb->get_var( $wpdb->prepare(
-	"SELECT COUNT(*) FROM {$wpdb->prefix}ghl_crm_sync_queue WHERE status = %s AND site_id = %d",
+	"SELECT COUNT(*) FROM {$wpdb->prefix}ghl_sync_queue WHERE status = %s AND site_id = %d",
 	'pending',
 	$site_id
 ) );
@@ -99,7 +99,8 @@ $total_pages = ceil( $log_count / $per_page );
 				<select id="ghl-filter-status">
 					<option value=""><?php esc_html_e( 'All Statuses', 'ghl-crm-integration' ); ?></option>
 					<option value="success"><?php esc_html_e( 'Success', 'ghl-crm-integration' ); ?></option>
-					<option value="error"><?php esc_html_e( 'Error', 'ghl-crm-integration' ); ?></option>
+					<option value="failed"><?php esc_html_e( 'Error', 'ghl-crm-integration' ); ?></option>
+					<option value="pending"><?php esc_html_e( 'Pending', 'ghl-crm-integration' ); ?></option>
 				</select>
 			</div>
 
@@ -107,14 +108,7 @@ $total_pages = ceil( $log_count / $per_page );
 				<label for="ghl-search-logs"><?php esc_html_e( 'Search Logs', 'ghl-crm-integration' ); ?></label>
 				<input type="text" id="ghl-search-logs" placeholder="<?php esc_attr_e( 'Search by action, message...', 'ghl-crm-integration' ); ?>">
 			</div>
-
 			<div class="ghl-actions-group">
-				<?php if ( $queue_count > 0 ) : ?>
-					<button type="button" id="ghl-process-queue" class="ghl-button ghl-button-primary">
-						<span class="dashicons dashicons-update"></span>
-						<span class="ghl-button-text"><?php esc_html_e( 'Process Queue', 'ghl-crm-integration' ); ?></span>
-					</button>
-				<?php endif; ?>
 				<button type="button" id="ghl-delete-logs" class="ghl-button ghl-button-secondary">
 					<span class="dashicons dashicons-trash"></span>
 					<span class="ghl-button-text"><?php esc_html_e( 'Delete Old Logs', 'ghl-crm-integration' ); ?></span>
