@@ -123,7 +123,33 @@ class AjaxHandler {
 				}
 			}
 
-			// BuddyBoss settings (future)
+			// BuddyBoss settings
+			if ( isset( $_POST['buddyboss_groups_enabled'] ) ) {
+				$integration_settings['buddyboss_groups_enabled']              = sanitize_text_field( wp_unslash( $_POST['buddyboss_groups_enabled'] ) ) === '1';
+				$integration_settings['buddyboss_auto_delete_custom_objects']  = isset( $_POST['buddyboss_auto_delete_custom_objects'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_auto_delete_custom_objects'] ) ) === '1';
+				$integration_settings['buddyboss_field_length_limit']          = absint( $_POST['buddyboss_field_length_limit'] ?? 250 );
+				$integration_settings['buddyboss_sync_private_groups']         = isset( $_POST['buddyboss_sync_private_groups'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_sync_private_groups'] ) ) === '1';
+				$integration_settings['buddyboss_sync_hidden_groups']          = isset( $_POST['buddyboss_sync_hidden_groups'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_sync_hidden_groups'] ) ) === '1';
+				$integration_settings['buddyboss_real_time_sync']              = isset( $_POST['buddyboss_real_time_sync'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_real_time_sync'] ) ) === '1';
+				$integration_settings['buddyboss_log_sync_operations']         = isset( $_POST['buddyboss_log_sync_operations'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_log_sync_operations'] ) ) === '1';
+
+				// Association behavior settings
+				$integration_settings['buddyboss_missing_contact_strategy']    = isset( $_POST['buddyboss_missing_contact_strategy'] ) ? sanitize_key( wp_unslash( $_POST['buddyboss_missing_contact_strategy'] ) ) : 'skip';
+				$integration_settings['buddyboss_default_group_type']          = isset( $_POST['buddyboss_default_group_type'] ) ? sanitize_key( wp_unslash( $_POST['buddyboss_default_group_type'] ) ) : '';
+
+				// Validate missing contact strategy (only allow 'create' or 'skip')
+				if ( ! in_array( $integration_settings['buddyboss_missing_contact_strategy'], [ 'create', 'skip' ], true ) ) {
+					$integration_settings['buddyboss_missing_contact_strategy'] = 'skip';
+				}
+
+				// Validate field length limit (100-500 characters)
+				if ( $integration_settings['buddyboss_field_length_limit'] < 100 ) {
+					$integration_settings['buddyboss_field_length_limit'] = 100;
+				} elseif ( $integration_settings['buddyboss_field_length_limit'] > 500 ) {
+					$integration_settings['buddyboss_field_length_limit'] = 500;
+				}
+			}
+
 			// LearnDash settings (future)
 
 			// Merge with current settings

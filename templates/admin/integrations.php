@@ -80,72 +80,15 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 
 		<!-- Tab: BuddyBoss -->
 		<div class="ghl-tab-panel" data-tab="buddyboss">
-			<div class="ghl-card">
-				<div class="ghl-card-header">
-					<div class="ghl-card-header-left">
-						<div class="ghl-integration-icon">
-							<span class="dashicons dashicons-groups"></span>
-						</div>
-						<div>
-							<h2><?php esc_html_e( 'BuddyBoss Groups ↔ GoHighLevel Companies', 'ghl-crm-integration' ); ?></h2>
-							<p><?php esc_html_e( 'Create BuddyBoss groups from GoHighLevel companies and sync member data', 'ghl-crm-integration' ); ?></p>
-						</div>
-					</div>
-					<div class="ghl-card-header-right">
-						<label class="ghl-toggle-switch">
-							<input 
-								type="checkbox" 
-								id="enable_buddyboss_sync" 
-								name="enable_buddyboss_sync"
-								disabled
-							>
-							<span class="ghl-toggle-slider"></span>
-						</label>
-						<span class="ghl-toggle-label">
-							<?php esc_html_e( 'Coming Soon', 'ghl-crm-integration' ); ?>
-						</span>
-					</div>
-				</div>
-
-				<div class="ghl-card-body">
-					<div class="ghl-settings-section">
-						<h3><?php esc_html_e( 'Test Tab Switching', 'ghl-crm-integration' ); ?></h3>
-						<p class="description">
-							<?php esc_html_e( 'This tab is enabled for testing purposes. The actual BuddyBoss integration features are coming soon.', 'ghl-crm-integration' ); ?>
-						</p>
-
-						<div class="ghl-info-box" style="background: #f0fdf4; border-color: #86efac;">
-							<span class="dashicons dashicons-yes-alt" style="color: #22c55e;"></span>
-							<div>
-								<strong style="color: #166534;"><?php esc_html_e( 'Tab Navigation Working!', 'ghl-crm-integration' ); ?></strong>
-								<p style="color: #166534; margin: 4px 0 0 0;">
-									<?php esc_html_e( 'You can switch between tabs and see the content change. This confirms the tab system is functioning correctly.', 'ghl-crm-integration' ); ?>
-								</p>
-							</div>
-						</div>
-					</div>
-
-					<div class="ghl-settings-section">
-						<h3><?php esc_html_e( 'Planned Features', 'ghl-crm-integration' ); ?></h3>
-						<ul style="list-style: disc; padding-left: 20px; color: var(--ghl-text-secondary);">
-							<li><?php esc_html_e( 'Create BuddyBoss groups from GHL companies', 'ghl-crm-integration' ); ?></li>
-							<li><?php esc_html_e( 'Sync group members with company contacts', 'ghl-crm-integration' ); ?></li>
-							<li><?php esc_html_e( 'Map custom fields between platforms', 'ghl-crm-integration' ); ?></li>
-							<li><?php esc_html_e( 'Automatic group creation on company events', 'ghl-crm-integration' ); ?></li>
-						</ul>
-					</div>
-
-					<div class="ghl-settings-section">
-						<div class="ghl-info-box">
-							<span class="dashicons dashicons-info"></span>
-							<div>
-								<strong><?php esc_html_e( 'Development in Progress', 'ghl-crm-integration' ); ?></strong>
-								<p><?php esc_html_e( 'BuddyBoss integration will be added in a future update. Focus is currently on WordPress Users sync.', 'ghl-crm-integration' ); ?></p>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
+			<?php
+			// Include BuddyBoss settings directly
+			$buddyboss_template = GHL_CRM_PATH . 'templates/admin/partials/settings/buddyboss-groups.php';
+			if ( file_exists( $buddyboss_template ) ) {
+				include $buddyboss_template;
+			} else {
+				echo '<div class="notice notice-error"><p>' . esc_html__( 'BuddyBoss settings template not found.', 'ghl-crm-integration' ) . '</p></div>';
+			}
+			?>
 		</div>
 
 		<!-- Tab: LearnDash (Coming Soon) -->
