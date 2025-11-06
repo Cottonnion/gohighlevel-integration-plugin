@@ -33,6 +33,13 @@ class GroupMetaBox {
 	private QueueManager $queue_manager;
 
 	/**
+	 * Settings Manager
+	 *
+	 * @var \GHL_CRM\Core\SettingsManager
+	 */
+	private \GHL_CRM\Core\SettingsManager $settings_manager;
+
+	/**
 	 * Get instance
 	 *
 	 * @return self
@@ -49,6 +56,7 @@ class GroupMetaBox {
 	 */
 	private function __construct() {
 		$this->queue_manager = QueueManager::get_instance();
+		$this->settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 		$this->register_hooks();
 	}
 
@@ -60,6 +68,11 @@ class GroupMetaBox {
 			return;
 		}
 
+		// Check if BuddyBoss integration is enabled
+		if ( ! $this->is_integration_enabled() ) {
+			return;
+		}
+
 		// Add custom admin field to group edit screen
 		add_action( 'bp_groups_admin_meta_boxes', [ $this, 'add_meta_box' ] );
 		
@@ -68,6 +81,16 @@ class GroupMetaBox {
 		
 		// AJAX handler for manual sync
 		add_action( 'wp_ajax_ghl_sync_buddyboss_group', [ $this, 'handle_manual_sync' ] );
+	}
+
+	/**
+	 * Check if BuddyBoss integration is enabled
+	 *
+	 * @return bool
+	 */
+	private function is_integration_enabled(): bool {
+		$settings = $this->settings_manager->get_settings_array();
+		return ! empty( $settings['buddyboss_groups_enabled'] );
 	}
 
 	/**
@@ -252,9 +275,9 @@ class GroupMetaBox {
 	public function enqueue_scripts( string $hook ): void {
 		// Only load on BuddyBoss group edit screen
 		$screen = get_current_screen();
-		if ( ! $screen || strpos( $screen->id, 'toplevel_page_bp-groups' ) === false ) {
-			return;
-		}
+		// if ( ! $screen || strpos( $screen->id, 'toplevel_page_bp-groups' ) === false ) {
+		// 	return;
+		// }
 
 		// Enqueue globals CSS for consistent design
 		wp_enqueue_style(
