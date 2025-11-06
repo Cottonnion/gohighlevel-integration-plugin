@@ -26,7 +26,7 @@ class QueueManager {
 	/**
 	 * Max retry attempts
 	 */
-	private const MAX_ATTEMPTS = 5;
+	private const MAX_ATTEMPTS = 3;
 
 	/**
 	 * Batch size for processing
@@ -478,7 +478,16 @@ class QueueManager {
 				$this->rate_limiter->track_request( $location_id );
 			}
 
-			if ( $result ) {
+			// Check if result indicates success
+			// Some integrations return arrays with 'success' => false
+			$is_success = false;
+			if ( is_array( $result ) && isset( $result['success'] ) ) {
+				$is_success = $result['success'];
+			} elseif ( $result ) {
+				$is_success = true;
+			}
+
+			if ( $is_success ) {
 				
 				
 				// Extract contact ID or opportunity ID from result if available
@@ -568,7 +577,12 @@ class QueueManager {
 					$item->item_type // Sync type
 				);
 			} else {
-				throw new \Exception( 'Sync execution returned false' );
+				// Extract error message if available
+				$error_message = 'Sync execution failed';
+				if ( is_array( $result ) && ! empty( $result['error'] ) ) {
+					$error_message = $result['error'];
+				}
+				throw new \Exception( $error_message );
 			}
 		} catch ( \Exception $e ) {
 			
