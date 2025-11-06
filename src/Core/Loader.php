@@ -89,6 +89,8 @@ class Loader {
 			'integrations.users'      => \GHL_CRM\Integrations\Users\UserHooks::class,
 			'integrations.role_tags'  => \GHL_CRM\Integrations\Users\RoleTagsManager::class,
 			'integrations.woocommerce' => \GHL_CRM\Integrations\WooCommerce\WooCommerceSync::class,
+			'integrations.buddyboss'  => \GHL_CRM\Integrations\BuddyBoss\GroupsSync::class,
+			'integrations.buddyboss.metabox' => \GHL_CRM\Integrations\BuddyBoss\GroupMetaBox::class,
 
 			// Membership components
 			'membership.metaboxes'    => \GHL_CRM\Membership\Admin\MetaBoxes::class,
