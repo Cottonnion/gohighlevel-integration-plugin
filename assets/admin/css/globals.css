@@ -172,3 +172,255 @@ li.select2-results__option.select2-results__option--highlighted {
 .select2-results__option[aria-selected="true"] {
 	background-color: lightgray !important;
 }
+
+/* ========================================
+   FORM ELEMENTS - Consistent Styling
+   ======================================== */
+
+/* Select Dropdowns */
+.ghl-select,
+select.ghl-select {
+	display: block;
+	width: 100%;
+	min-height: 36px;
+	padding: 6px 12px;
+	font-size: var(--ghl-font-size-base);
+	font-family: var(--ghl-font-family);
+	line-height: var(--ghl-line-height-base);
+	color: var(--ghl-text-primary);
+	background-color: var(--ghl-bg-primary);
+	background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill="%236b7280" d="M4.427 6.427l3.396 3.396a.25.25 0 00.354 0l3.396-3.396A.25.25 0 0011.396 6H4.604a.25.25 0 00-.177.427z"/></svg>');
+	background-repeat: no-repeat;
+	background-position: right 10px center;
+	background-size: 16px 16px;
+	border: 1px solid var(--ghl-border-primary);
+	border-radius: var(--ghl-radius-base);
+	box-shadow: var(--ghl-shadow-xs);
+	transition: border-color var(--ghl-transition-fast), box-shadow var(--ghl-transition-fast);
+	appearance: none;
+	cursor: pointer;
+}
+
+.ghl-select:hover {
+	border-color: var(--ghl-border-secondary);
+}
+
+.ghl-select:focus {
+	outline: none;
+	border-color: var(--ghl-border-focus);
+	box-shadow: var(--ghl-shadow-focus);
+}
+
+.ghl-select:disabled {
+	background-color: var(--ghl-bg-tertiary);
+	color: var(--ghl-text-disabled);
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.ghl-select--small {
+	min-height: 32px;
+	padding: 4px 10px;
+	font-size: var(--ghl-font-size-sm);
+}
+
+.ghl-select--large {
+	min-height: 44px;
+	padding: 10px 16px;
+	font-size: var(--ghl-font-size-lg);
+}
+
+/* Input Fields */
+.ghl-input,
+input.ghl-input[type="text"],
+input.ghl-input[type="email"],
+input.ghl-input[type="number"],
+input.ghl-input[type="password"],
+input.ghl-input[type="url"],
+textarea.ghl-input {
+	display: block;
+	width: 100%;
+	min-height: 36px;
+	padding: 6px 12px;
+	font-size: var(--ghl-font-size-base);
+	font-family: var(--ghl-font-family);
+	line-height: var(--ghl-line-height-base);
+	color: var(--ghl-text-primary);
+	background-color: var(--ghl-bg-primary);
+	border: 1px solid var(--ghl-border-primary);
+	border-radius: var(--ghl-radius-base);
+	box-shadow: var(--ghl-shadow-xs);
+	transition: border-color var(--ghl-transition-fast), box-shadow var(--ghl-transition-fast);
+}
+
+.ghl-input:hover {
+	border-color: var(--ghl-border-secondary);
+}
+
+.ghl-input:focus {
+	outline: none;
+	border-color: var(--ghl-border-focus);
+	box-shadow: var(--ghl-shadow-focus);
+}
+
+.ghl-input:disabled {
+	background-color: var(--ghl-bg-tertiary);
+	color: var(--ghl-text-disabled);
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.ghl-input--small {
+	min-height: 32px;
+	padding: 4px 10px;
+	font-size: var(--ghl-font-size-sm);
+}
+
+.ghl-input--large {
+	min-height: 44px;
+	padding: 10px 16px;
+	font-size: var(--ghl-font-size-lg);
+}
+
+/* Textarea specific */
+textarea.ghl-input {
+	min-height: 100px;
+	resize: vertical;
+}
+
+/* Tables */
+.ghl-table {
+	width: 100%;
+	border-collapse: separate;
+	border-spacing: 0;
+	background-color: var(--ghl-bg-primary);
+	border: 1px solid var(--ghl-border-primary);
+	border-radius: var(--ghl-radius-md);
+	overflow: hidden;
+	box-shadow: var(--ghl-shadow-sm);
+	margin-bottom: var(--ghl-spacing-lg);
+}
+
+.ghl-table thead {
+	background-color: var(--ghl-bg-secondary);
+}
+
+.ghl-table thead th {
+	padding: var(--ghl-spacing-md) var(--ghl-spacing-base);
+	font-size: var(--ghl-font-size-sm);
+	font-weight: var(--ghl-font-weight-semibold);
+	color: var(--ghl-text-secondary);
+	text-align: left;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	border-bottom: 2px solid var(--ghl-border-primary);
+}
+
+.ghl-table tbody tr {
+	border-bottom: 1px solid var(--ghl-border-primary);
+	transition: background-color var(--ghl-transition-fast);
+}
+
+.ghl-table tbody tr:last-child {
+	border-bottom: none;
+}
+
+.ghl-table tbody tr:hover {
+	background-color: var(--ghl-bg-hover);
+}
+
+.ghl-table tbody td {
+	padding: var(--ghl-spacing-base);
+	font-size: var(--ghl-font-size-base);
+	color: var(--ghl-text-primary);
+	vertical-align: top;
+}
+
+.ghl-table tbody td strong {
+	color: var(--ghl-text-primary);
+	font-weight: var(--ghl-font-weight-semibold);
+}
+
+.ghl-table tbody td code {
+	display: inline-block;
+	padding: 2px 6px;
+	margin-top: 4px;
+	font-size: var(--ghl-font-size-xs);
+	font-family: var(--ghl-font-family-mono);
+	color: var(--ghl-text-secondary);
+	background-color: var(--ghl-bg-tertiary);
+	border-radius: var(--ghl-radius-sm);
+}
+
+/* Table row highlighting for mapped fields */
+.ghl-table tbody tr.ghl-mapped-field {
+	background-color: var(--ghl-success-light) !important;
+}
+
+.ghl-table tbody tr.ghl-required-field {
+	background-color: var(--ghl-primary-light) !important;
+}
+
+/* Field category badges */
+.ghl-field-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	margin-left: 8px;
+	font-size: var(--ghl-font-size-xs);
+	font-weight: var(--ghl-font-weight-medium);
+	border-radius: var(--ghl-radius-full);
+	vertical-align: middle;
+}
+
+.ghl-field-badge--woocommerce {
+	background-color: #f3e8ff;
+	color: #7c3aed;
+}
+
+.ghl-field-badge--buddyboss {
+	background-color: #dbeafe;
+	color: #2563eb;
+}
+
+.ghl-field-badge--default {
+	background-color: var(--ghl-bg-tertiary);
+	color: var(--ghl-text-secondary);
+}
+
+.ghl-field-badge--custom {
+	background-color: #fef3c7;
+	color: #d97706;
+}
+
+/* Field section headers */
+.ghl-field-section-header {
+	margin-top: var(--ghl-spacing-2xl);
+	margin-bottom: var(--ghl-spacing-base);
+}
+
+.ghl-field-section-header h3 {
+	margin: 0 0 var(--ghl-spacing-sm) 0;
+	font-size: var(--ghl-font-size-xl);
+	font-weight: var(--ghl-font-weight-semibold);
+	color: var(--ghl-text-primary);
+}
+
+.ghl-field-section-header .description {
+	margin: 0;
+	font-size: var(--ghl-font-size-sm);
+	color: var(--ghl-text-secondary);
+	line-height: var(--ghl-line-height-relaxed);
+}
+
+/* Required field indicator */
+.ghl-required-indicator {
+	display: inline-block;
+	margin-top: 4px;
+	padding: 2px 8px;
+	font-size: var(--ghl-font-size-xs);
+	font-weight: var(--ghl-font-weight-medium);
+	color: var(--ghl-error);
+	background-color: var(--ghl-error-light);
+	border-radius: var(--ghl-radius-sm);
+}
+

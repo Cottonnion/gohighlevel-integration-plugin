@@ -318,11 +318,11 @@
 					$status.html('<span style="color: #46b450;">' + message + '</span>');
 					
 					// Show notice at top only on manual reload
-					if (!isInitialLoad) {
-						$('#ghl-field-mapping-messages').html(
-							'<div class="notice notice-success is-dismissible"><p>' + message + '</p></div>'
-						);
-					}
+					// if (!isInitialLoad) {
+					// 	$('#ghl-field-mapping-messages').html(
+					// 		'<div class="notice notice-success is-dismissible"><p>' + message + '</p></div>'
+					// 	);
+					// }
 					
 					setTimeout(function() {
 						$status.fadeOut();

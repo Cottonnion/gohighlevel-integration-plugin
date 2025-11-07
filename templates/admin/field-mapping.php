@@ -82,6 +82,7 @@ $all_meta_keys = $wpdb->get_col(
 );
 
 $custom_user_fields = array();
+$woocommerce_fields = array();
 
 // Filter meta keys to find custom fields
 foreach ( $all_meta_keys as $meta_key ) {
@@ -102,6 +103,21 @@ foreach ( $all_meta_keys as $meta_key ) {
 	
 	// Skip BuddyPress internal fields (starting with bp_)
 	if ( strpos( $meta_key, 'bp_' ) === 0 ) {
+		continue;
+	}
+	
+	// Skip our own plugin fields (starting with ghl_ or _ghl_)
+	if ( strpos( $meta_key, 'ghl_' ) === 0 || strpos( $meta_key, '_ghl_' ) === 0 ) {
+		continue;
+	}
+	
+	// Categorize WooCommerce fields
+	if ( class_exists( 'WooCommerce' ) && ( 
+		strpos( $meta_key, 'billing_' ) === 0 || 
+		strpos( $meta_key, 'shipping_' ) === 0 ||
+		strpos( $meta_key, 'wc_' ) === 0
+	) ) {
+		$woocommerce_fields[ $meta_key ] = ucwords( str_replace( array( '_', '-' ), ' ', $meta_key ) );
 		continue;
 	}
 	
@@ -129,10 +145,28 @@ if ( function_exists( 'bp_is_active' ) && bp_is_active( 'xprofile' ) ) {
 						continue;
 					}
 					
-					// Add field with group context
+					// Add field with group context and field type
+					$field_type_label = '';
+					if ( ! empty( $field->type ) ) {
+						$type_labels = array(
+							'textbox'        => 'Text',
+							'textarea'       => 'Textarea',
+							'number'         => 'Number',
+							'datebox'        => 'Date',
+							'selectbox'      => 'Dropdown',
+							'multiselectbox' => 'Multi-Select',
+							'radio'          => 'Radio',
+							'checkbox'       => 'Checkbox',
+							'url'            => 'URL',
+							'telephone'      => 'Phone',
+						);
+						$field_type_label = isset( $type_labels[ $field->type ] ) ? ' [' . $type_labels[ $field->type ] . ']' : '';
+					}
+					
 					$buddyboss_fields[ $field_key ] = sprintf(
-						'%s (%s)',
+						'%s%s (%s)',
 						$field->name,
+						$field_type_label,
 						$group->name
 					);
 				}
@@ -144,6 +178,7 @@ if ( function_exists( 'bp_is_active' ) && bp_is_active( 'xprofile' ) ) {
 // Sort custom fields alphabetically
 asort( $custom_user_fields );
 asort( $buddyboss_fields );
+asort( $woocommerce_fields );
 
 // GoHighLevel contact field list (placeholder - will be loaded dynamically via AJAX on page load)
 // This is just a fallback in case AJAX fails
@@ -185,9 +220,6 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 	\GHL_CRM\Core\ScopeChecker::render_scope_notice( 'custom_fields' );
 	?>
 
-	<!-- Message Area for AJAX responses -->
-	<div id="ghl-field-mapping-messages"></div>
-
 	<div style="margin: 20px 0;">
 		<button type="button" id="ghl-load-custom-fields" class="ghl-button ghl-button-primary" data-nonce="<?php echo esc_attr( wp_create_nonce( 'ghl_crm_field_mapping_nonce' ) ); ?>">
 			<span class="dashicons dashicons-update" style="margin-top: 3px;"></span>
@@ -204,9 +236,21 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 	<form id="ghl-field-mapping-form" method="post" action="">
 		<?php wp_nonce_field( 'ghl_crm_field_mapping', 'ghl_crm_mapping_nonce' ); ?>
 		
-
+		<!-- Default WordPress Fields -->
+		<div class="ghl-field-section-header">
+			<h3><?php esc_html_e( 'Default WordPress Fields', 'ghl-crm-integration' ); ?></h3>
+			<p class="description">
+				<?php 
+				printf(
+					/* translators: %d: number of default fields */
+					esc_html__( 'Standard WordPress user fields (%d fields).', 'ghl-crm-integration' ),
+					count( $default_wp_fields )
+				);
+				?>
+			</p>
+		</div>
 		
-		<table class="form-table widefat striped" role="presentation">
+		<table class="ghl-table" role="presentation">
 			<thead>
 				<tr>
 					<th style="width: 30%;"><?php esc_html_e( 'WordPress Field', 'ghl-crm-integration' ); ?></th>
@@ -238,16 +282,17 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 					// Email field should be disabled (required by GHL)
 					$is_email_field = ( $key === 'user_email' );
 				?>
-					<tr>
+					<tr<?php echo $is_email_field ? ' class="ghl-required-field"' : ''; ?>>
 						<td>
-							<strong><?php echo esc_html( $label ); ?></strong><br>
-							<code style="color: #666;"><?php echo esc_html( $key ); ?></code>
+							<strong><?php echo esc_html( $label ); ?></strong>
+							<span class="ghl-field-badge ghl-field-badge--default"><?php esc_html_e( 'Core', 'ghl-crm-integration' ); ?></span><br>
+							<code><?php echo esc_html( $key ); ?></code>
 							<?php if ( $is_email_field ) : ?>
-								<br><span style="color: #d63638; font-size: 11px;"><?php esc_html_e( '* Required field', 'ghl-crm-integration' ); ?></span>
+								<br><span class="ghl-required-indicator"><?php esc_html_e( '* Required field', 'ghl-crm-integration' ); ?></span>
 							<?php endif; ?>
 						</td>
 						<td>
-							<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="regular-text" data-saved-value="<?php echo esc_attr( $saved_ghl_field ); ?>" <?php echo $is_email_field ? 'disabled' : ''; ?>>
+							<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="ghl-select" data-saved-value="<?php echo esc_attr( $saved_ghl_field ); ?>" <?php echo $is_email_field ? 'disabled' : ''; ?>>
 								<?php foreach ( $ghl_fields as $ghl_key => $ghl_label ) : ?>
 									<option value="<?php echo esc_attr( $ghl_key ); ?>" <?php selected( $saved_ghl_field, $ghl_key ); ?>>
 										<?php echo esc_html( $ghl_label ); ?>
@@ -260,7 +305,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 							<?php endif; ?>
 						</td>
 						<td>
-							<select name="sync_direction_<?php echo esc_attr( $key ); ?>">
+							<select name="sync_direction_<?php echo esc_attr( $key ); ?>" class="ghl-select">
 								<option value="both" <?php selected( $saved_direction, 'both' ); ?>><?php esc_html_e( '↔ Both Ways', 'ghl-crm-integration' ); ?></option>
 								<option value="to_ghl" <?php selected( $saved_direction, 'to_ghl' ); ?>><?php esc_html_e( '→ To GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
 								<option value="from_ghl" <?php selected( $saved_direction, 'from_ghl' ); ?>><?php esc_html_e( '← From GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
@@ -273,18 +318,20 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 
 		<?php if ( ! empty( $buddyboss_fields ) ) : ?>
 			<!-- BuddyBoss Profile Fields -->
-			<h3 style="margin-top: 30px;"><?php esc_html_e( 'BuddyBoss Profile Fields', 'ghl-crm-integration' ); ?></h3>
-			<p class="description" style="margin-bottom: 15px;">
-				<?php 
-				printf(
-					/* translators: %d: number of BuddyBoss fields found */
-					esc_html__( 'Custom profile fields from BuddyBoss (%d fields found).', 'ghl-crm-integration' ),
-					count( $buddyboss_fields )
-				);
-				?>
-			</p>
+			<div class="ghl-field-section-header">
+				<h3><?php esc_html_e( 'BuddyBoss Profile Fields', 'ghl-crm-integration' ); ?></h3>
+				<p class="description">
+					<?php 
+					printf(
+						/* translators: %d: number of BuddyBoss fields found */
+						esc_html__( 'Custom profile fields from BuddyBoss (%d fields found).', 'ghl-crm-integration' ),
+						count( $buddyboss_fields )
+					);
+					?>
+				</p>
+			</div>
 			
-			<table class="form-table widefat striped" role="presentation">
+			<table class="ghl-table" role="presentation">
 				<thead>
 					<tr>
 						<th style="width: 30%;"><?php esc_html_e( 'BuddyBoss Field', 'ghl-crm-integration' ); ?></th>
@@ -299,11 +346,12 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 					?>
 						<tr>
 							<td>
-								<strong><?php echo esc_html( $label ); ?></strong><br>
-								<code style="color: #666;"><?php echo esc_html( $key ); ?></code>
+								<strong><?php echo esc_html( $label ); ?></strong>
+								<span class="ghl-field-badge ghl-field-badge--buddyboss"><?php esc_html_e( 'BuddyBoss', 'ghl-crm-integration' ); ?></span><br>
+								<code><?php echo esc_html( $key ); ?></code>
 							</td>
 							<td>
-								<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="regular-text" data-saved-value="<?php echo esc_attr( $saved_ghl_field ); ?>">
+								<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="ghl-select" data-saved-value="<?php echo esc_attr( $saved_ghl_field ); ?>">
 									<?php foreach ( $ghl_fields as $ghl_key => $ghl_label ) : ?>
 										<option value="<?php echo esc_attr( $ghl_key ); ?>" <?php selected( $saved_ghl_field, $ghl_key ); ?>>
 											<?php echo esc_html( $ghl_label ); ?>
@@ -312,7 +360,63 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 								</select>
 							</td>
 							<td>
-								<select name="sync_direction_<?php echo esc_attr( $key ); ?>">
+								<select name="sync_direction_<?php echo esc_attr( $key ); ?>" class="ghl-select">
+									<option value="both" <?php selected( $saved_direction, 'both' ); ?>><?php esc_html_e( '↔ Both Ways', 'ghl-crm-integration' ); ?></option>
+									<option value="to_ghl" <?php selected( $saved_direction, 'to_ghl' ); ?>><?php esc_html_e( '→ To GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
+									<option value="from_ghl" <?php selected( $saved_direction, 'from_ghl' ); ?>><?php esc_html_e( '← From GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
+								</select>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+		<?php endif; ?>
+
+		<?php if ( ! empty( $woocommerce_fields ) ) : ?>
+			<!-- WooCommerce Fields -->
+			<div class="ghl-field-section-header">
+				<h3><?php esc_html_e( 'WooCommerce Customer Fields', 'ghl-crm-integration' ); ?></h3>
+				<p class="description">
+					<?php 
+					printf(
+						/* translators: %d: number of WooCommerce fields found */
+						esc_html__( 'Billing and shipping fields from WooCommerce (%d fields found).', 'ghl-crm-integration' ),
+						count( $woocommerce_fields )
+					);
+					?>
+				</p>
+			</div>
+			
+			<table class="ghl-table" role="presentation">
+				<thead>
+					<tr>
+						<th style="width: 30%;"><?php esc_html_e( 'WooCommerce Field', 'ghl-crm-integration' ); ?></th>
+						<th style="width: 35%;"><?php esc_html_e( 'GoHighLevel Field', 'ghl-crm-integration' ); ?></th>
+						<th style="width: 35%;"><?php esc_html_e( 'Sync Direction', 'ghl-crm-integration' ); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php foreach ( $woocommerce_fields as $key => $label ) : 
+						$saved_ghl_field = isset( $saved_mappings[ $key ]['ghl_field'] ) ? $saved_mappings[ $key ]['ghl_field'] : '';
+						$saved_direction = isset( $saved_mappings[ $key ]['direction'] ) ? $saved_mappings[ $key ]['direction'] : 'both';
+					?>
+						<tr>
+							<td>
+								<strong><?php echo esc_html( $label ); ?></strong>
+								<span class="ghl-field-badge ghl-field-badge--woocommerce"><?php esc_html_e( 'WooCommerce', 'ghl-crm-integration' ); ?></span><br>
+								<code><?php echo esc_html( $key ); ?></code>
+							</td>
+							<td>
+								<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="ghl-select" data-saved-value="<?php echo esc_attr( $saved_ghl_field ); ?>">
+									<?php foreach ( $ghl_fields as $ghl_key => $ghl_label ) : ?>
+										<option value="<?php echo esc_attr( $ghl_key ); ?>" <?php selected( $saved_ghl_field, $ghl_key ); ?>>
+											<?php echo esc_html( $ghl_label ); ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+							</td>
+							<td>
+								<select name="sync_direction_<?php echo esc_attr( $key ); ?>" class="ghl-select">
 									<option value="both" <?php selected( $saved_direction, 'both' ); ?>><?php esc_html_e( '↔ Both Ways', 'ghl-crm-integration' ); ?></option>
 									<option value="to_ghl" <?php selected( $saved_direction, 'to_ghl' ); ?>><?php esc_html_e( '→ To GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
 									<option value="from_ghl" <?php selected( $saved_direction, 'from_ghl' ); ?>><?php esc_html_e( '← From GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
@@ -326,18 +430,20 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 
 		<?php if ( ! empty( $custom_user_fields ) ) : ?>
 			<!-- Custom Fields -->
-			<h3 style="margin-top: 30px;"><?php esc_html_e( 'Custom & Plugin Fields', 'ghl-crm-integration' ); ?></h3>
-			<p class="description" style="margin-bottom: 15px;">
-				<?php 
-				printf(
-					/* translators: %d: number of custom fields found */
-					esc_html__( 'Custom user meta fields and fields added by other plugins or themes (%d fields found).', 'ghl-crm-integration' ),
-					count( $custom_user_fields )
-				);
-				?>
-			</p>
+			<div class="ghl-field-section-header">
+				<h3><?php esc_html_e( 'Custom & Plugin Fields', 'ghl-crm-integration' ); ?></h3>
+				<p class="description">
+					<?php 
+					printf(
+						/* translators: %d: number of custom fields found */
+						esc_html__( 'Custom user meta fields and fields added by other plugins or themes (%d fields found).', 'ghl-crm-integration' ),
+						count( $custom_user_fields )
+					);
+					?>
+				</p>
+			</div>
 			
-			<table class="form-table widefat striped" role="presentation">
+			<table class="ghl-table" role="presentation">
 				<thead>
 					<tr>
 						<th style="width: 30%;"><?php esc_html_e( 'WordPress Field', 'ghl-crm-integration' ); ?></th>
@@ -352,11 +458,12 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 					?>
 						<tr>
 							<td>
-								<strong><?php echo esc_html( $label ); ?></strong><br>
-								<code style="color: #666;"><?php echo esc_html( $key ); ?></code>
+								<strong><?php echo esc_html( $label ); ?></strong>
+								<span class="ghl-field-badge ghl-field-badge--custom"><?php esc_html_e( 'Custom', 'ghl-crm-integration' ); ?></span><br>
+								<code><?php echo esc_html( $key ); ?></code>
 							</td>
 							<td>
-								<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="regular-text" data-saved-value="<?php echo esc_attr( $saved_ghl_field ); ?>">
+								<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="ghl-select" data-saved-value="<?php echo esc_attr( $saved_ghl_field ); ?>">
 									<?php foreach ( $ghl_fields as $ghl_key => $ghl_label ) : ?>
 										<option value="<?php echo esc_attr( $ghl_key ); ?>" <?php selected( $saved_ghl_field, $ghl_key ); ?>>
 											<?php echo esc_html( $ghl_label ); ?>
@@ -365,7 +472,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 								</select>
 							</td>
 							<td>
-								<select name="sync_direction_<?php echo esc_attr( $key ); ?>">
+								<select name="sync_direction_<?php echo esc_attr( $key ); ?>" class="ghl-select">
 									<option value="both" <?php selected( $saved_direction, 'both' ); ?>><?php esc_html_e( '↔ Both Ways', 'ghl-crm-integration' ); ?></option>
 									<option value="to_ghl" <?php selected( $saved_direction, 'to_ghl' ); ?>><?php esc_html_e( '→ To GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
 									<option value="from_ghl" <?php selected( $saved_direction, 'from_ghl' ); ?>><?php esc_html_e( '← From GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
@@ -377,7 +484,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 			</table>
 		<?php endif; ?>
 
-		<?php if ( empty( $buddyboss_fields ) && empty( $custom_user_fields ) ) : ?>
+		<?php if ( empty( $buddyboss_fields ) && empty( $custom_user_fields ) && empty( $woocommerce_fields ) ) : ?>
 			<div class="notice notice-warning inline" style="margin-top: 30px;">
 				<p><?php esc_html_e( 'No custom fields found. Custom fields will appear here once they are added to user profiles by plugins or themes.', 'ghl-crm-integration' ); ?></p>
 			</div>
@@ -392,19 +499,5 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 	@keyframes rotation {
 		from { transform: rotate(0deg); }
 		to { transform: rotate(359deg); }
-	}
-	
-	/* Style for disabled email field */
-	select[name="ghl_field_user_email"]:disabled {
-		background-color: #f0f0f1;
-		color: #2c3338;
-		cursor: not-allowed;
-		opacity: 0.7;
-	}
-	
-	/* Highlight mapped fields with light green background */
-	.form-table tr.ghl-mapped-field {
-		background-color: #c3e6cb !important;
-		transition: background-color 0.3s ease;
 	}
 </style>
