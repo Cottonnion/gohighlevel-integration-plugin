@@ -185,7 +185,7 @@ $global_tags = is_array( $global_tags_raw ) ? implode( ',', $global_tags_raw ) :
 						</label>
 					</th>
 					<td>
-						<select id="bulk_role_select" class="regular-text">
+						<select id="bulk_role_select" class="regular-text ghl-select">
 							<option value=""><?php esc_html_e( '-- Select a Role --', 'ghl-crm-integration' ); ?></option>
 							<?php foreach ( $wp_roles as $role_key => $role_name ) : ?>
 								<option value="<?php echo esc_attr( $role_key ); ?>">
