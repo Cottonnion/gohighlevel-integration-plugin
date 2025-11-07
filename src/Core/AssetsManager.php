@@ -77,6 +77,9 @@ class AssetsManager {
 
 		// Define admin page assets
 		$this->define_admin_assets();
+
+		// Define frontend assets
+		$this->define_frontend_assets();
 	}
 
 	/**
@@ -144,6 +147,8 @@ class AssetsManager {
 	 * @return void
 	 */
 	private function define_admin_assets(): void {
+		$settings           = SettingsManager::get_instance()->get_settings_array();
+		$white_label_domain = $settings['ghl_white_label_domain'] ?? '';
 
 		// Tooltip System (loads on all GHL admin pages)
 		$this->add_admin_asset(
@@ -528,6 +533,46 @@ class AssetsManager {
 			'1.0.1',
 			true
 		);
+
+		// Forms page assets (SPA)
+		$this->add_admin_asset(
+			'ghl-crm-forms-css',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'forms.css',
+			[],
+			[],
+			GHL_CRM_VERSION
+		);
+
+		$this->add_admin_asset(
+			'ghl-crm-forms-js',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'forms.js',
+			[ 'jquery' ],
+			[
+				'ajaxUrl'          => admin_url( 'admin-ajax.php' ),
+				'nonce'            => wp_create_nonce( 'ghl_crm_forms_nonce' ),
+				'whiteLabelDomain' => $white_label_domain,
+				'strings'          => [
+					'errorLoad'       => __( 'Failed to load forms', 'ghl-crm-integration' ),
+					'ajaxError'       => __( 'AJAX error: ', 'ghl-crm-integration' ),
+					'noForms'         => __( 'No Forms Found', 'ghl-crm-integration' ),
+					'noFormsDesc'     => __( 'Create forms in your GoHighLevel account to display them here.', 'ghl-crm-integration' ),
+					'untitledForm'    => __( 'Untitled Form', 'ghl-crm-integration' ),
+					'formName'        => __( 'Form Name', 'ghl-crm-integration' ),
+					'formId'          => __( 'Form ID', 'ghl-crm-integration' ),
+					'submissions'     => __( 'Submissions', 'ghl-crm-integration' ),
+					'shortcode'       => __( 'Shortcode', 'ghl-crm-integration' ),
+					'actions'         => __( 'Actions', 'ghl-crm-integration' ),
+					'clickToCopy'     => __( 'Click to copy shortcode', 'ghl-crm-integration' ),
+					'preview'         => __( 'Preview', 'ghl-crm-integration' ),
+					'copy'            => __( 'Copy', 'ghl-crm-integration' ),
+					'whiteLabelNotice'=> __( 'Using white label domain', 'ghl-crm-integration' ),
+				],
+			],
+			GHL_CRM_VERSION,
+			true
+		);
 	}   /**
 		 * Adds an admin script or style to the array of admin assets.
 		 *
@@ -665,6 +710,36 @@ class AssetsManager {
 			'enqueue_in_footer' => $enqueue_in_footer,
 			'localization'      => $localization,
 		];
+	}
+
+	/**
+	 * Define frontend/public assets
+	 *
+	 * @return void
+	 */
+	private function define_frontend_assets(): void {
+		// GHL Forms frontend CSS
+		$this->add_public_asset(
+			'ghl-crm-forms-frontend-css',
+			'forms.css',
+			[],
+			[],
+			GHL_CRM_VERSION,
+			false
+		);
+
+		// GHL Forms frontend JS
+		$this->add_public_asset(
+			'ghl-crm-forms-frontend-js',
+			'form-handler.js',
+			[ 'jquery' ],
+			[
+				'ajax_url' => admin_url( 'admin-ajax.php' ),
+				'nonce'    => wp_create_nonce( 'ghl_form_submission' ),
+			],
+			GHL_CRM_VERSION,
+			true
+		);
 	}
 
 	/**
