@@ -203,7 +203,7 @@ endif;
 				<form class="ghl-form" method="post">
 					
 					<!-- Auto-convert Lead to Customer -->
-					<div class="ghl-form-item">
+					<div class=>
 						<div class="ghl-form-item-content">
 							<label class="ghl-checkbox <?php echo $wc_convert_lead_enabled ? 'is-checked' : ''; ?>" style="display: flex; align-items: center; gap: 6px;">
 								<input 
@@ -226,7 +226,7 @@ endif;
 					</div>
 					
 					<!-- Customer Tags -->
-					<div class="ghl-form-item" id="wc-customer-tag-field" style="margin-left: 30px; <?php echo ! $wc_convert_lead_enabled ? 'display: none;' : ''; ?>">
+					<div class= id="wc-customer-tag-field" style="margin-left: 30px; <?php echo ! $wc_convert_lead_enabled ? 'display: none;' : ''; ?>">
 						<div class="ghl-form-item-content">
 							<div style="margin-bottom: 20px;">
 								<label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-weight: 600; font-size: 14px;">
@@ -248,7 +248,7 @@ endif;
 					</div>
 					
 					<!-- Order Status Trigger -->
-					<div class="ghl-form-item" id="wc-convert-order-status-field" style="margin-left: 30px; <?php echo ! $wc_convert_lead_enabled ? 'display: none;' : ''; ?>">
+					<div class= id="wc-convert-order-status-field" style="margin-left: 30px; <?php echo ! $wc_convert_lead_enabled ? 'display: none;' : ''; ?>">
 						<div class="ghl-form-item-content">
 							<div style="margin-bottom: 20px;">
 								<label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-weight: 600; font-size: 14px;">
@@ -277,7 +277,7 @@ endif;
 					</div>
 					
 					<!-- Abandoned Cart Tracking -->
-					<div class="ghl-form-item">
+					<div class=>
 						<div class="ghl-form-item-content">
 							<label class="ghl-checkbox <?php echo $wc_abandoned_cart_enabled ? 'is-checked' : ''; ?>" style="display: flex; align-items: center; gap: 6px;">
 								<input 
@@ -303,7 +303,7 @@ endif;
 					<div id="wc-abandoned-cart-settings" style="margin-left: 30px; <?php echo ! $wc_abandoned_cart_enabled ? 'display: none;' : ''; ?>">
 						
 						<!-- Abandoned Cart Time -->
-						<div class="ghl-form-item">
+						<div class=>
 							<div class="ghl-form-item-content">
 								<div style="margin-bottom: 20px;">
 									<label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-weight: 600; font-size: 14px;">
@@ -326,7 +326,7 @@ endif;
 						</div>
 						
 						<!-- Abandoned Cart Tags -->
-						<div class="ghl-form-item">
+						<div class=>
 							<div class="ghl-form-item-content">
 								<div style="margin-bottom: 20px;">
 									<label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-weight: 600; font-size: 14px;">
@@ -397,7 +397,7 @@ endif;
 					<form class="ghl-form" method="post">
 						
 						<!-- Enable Opportunities -->
-						<div class="ghl-form-item">
+						<div class=>
 							<div class="ghl-form-item-content">
 								<label class="ghl-checkbox <?php echo $wc_opportunities_enabled ? 'is-checked' : ''; ?>" style="display: flex; align-items: center; gap: 6px;">
 									<input 
@@ -423,7 +423,7 @@ endif;
 						<div id="wc-opportunities-settings" style="margin-left: 30px; <?php echo ! $wc_opportunities_enabled ? 'display: none;' : ''; ?>">
 							
 							<!-- Pipeline Selection -->
-							<div class="ghl-form-item">
+							<div class=>
 								<div class="ghl-form-item-content">
 									<div style="margin-bottom: 20px;">
 										<label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-weight: 600; font-size: 14px;">
@@ -458,7 +458,7 @@ endif;
 								</div>
 
 								<!-- Abandoned Cart Stage -->
-								<div class="ghl-form-item">
+								<div class=>
 									<div class="ghl-form-item-content">
 										<div style="margin-bottom: 16px;">
 											<label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-weight: 500; font-size: 13px;">
@@ -479,7 +479,7 @@ endif;
 								</div>
 
 								<!-- Pending Payment Stage -->
-								<div class="ghl-form-item">
+								<div class=>
 									<div class="ghl-form-item-content">
 										<div style="margin-bottom: 16px;">
 											<label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-weight: 500; font-size: 13px;">
@@ -500,7 +500,7 @@ endif;
 								</div>
 
 								<!-- Processing Stage -->
-								<div class="ghl-form-item">
+								<div class=>
 									<div class="ghl-form-item-content">
 										<div style="margin-bottom: 16px;">
 											<label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-weight: 500; font-size: 13px;">
@@ -521,7 +521,7 @@ endif;
 								</div>
 
 								<!-- Completed Stage -->
-								<div class="ghl-form-item">
+								<div class=>
 									<div class="ghl-form-item-content">
 										<div style="margin-bottom: 16px;">
 											<label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-weight: 500; font-size: 13px;">
@@ -542,7 +542,7 @@ endif;
 								</div>
 
 								<!-- Cancelled/Failed Stage -->
-								<div class="ghl-form-item">
+								<div class=>
 									<div class="ghl-form-item-content">
 										<div style="margin-bottom: 16px;">
 											<label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-weight: 500; font-size: 13px;">

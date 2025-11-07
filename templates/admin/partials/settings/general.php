@@ -15,6 +15,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 $settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 $settings = $settings_manager->get_settings_array();
 
+// White label domain setting
+$ghl_white_label_domain = $settings['ghl_white_label_domain'] ?? '';
+
 // WordPress User sync settings
 $enable_user_sync              = $settings['enable_user_sync'] ?? false;
 $user_sync_actions             = $settings['user_sync_actions'] ?? [];
@@ -24,6 +27,45 @@ $user_register_tags            = $settings['user_register_tags'] ?? [];
 
 <div class="ghl-settings-wrapper">
 	<?php wp_nonce_field( 'ghl_crm_settings_nonce', 'ghl_crm_nonce' ); ?>
+	
+	<!-- White Label Domain Section -->
+	<div class="ghl-settings-section ghl-settings-card">
+		<div class="ghl-settings-header">
+			<h2>
+				<span class="dashicons dashicons-admin-site"></span>
+				<?php esc_html_e( 'White Label Domain', 'ghl-crm-integration' ); ?>
+			</h2>
+			<p class="description">
+				<?php esc_html_e( 'Configure your custom GoHighLevel white label domain if you are using one', 'ghl-crm-integration' ); ?>
+			</p>
+		</div>
+		
+		<hr>
+		
+		<div class="ghl-form-builder">
+			<form class="ghl-form" method="post">
+				<div class="ghl-form-item">
+					<div class="ghl-form-item-content">
+						<label for="ghl_white_label_domain" style="display: block; margin-bottom: 10px; font-weight: 600;">
+							<?php esc_html_e( 'White Label Domain URL', 'ghl-crm-integration' ); ?>
+						</label>
+						<input 
+							type="text" 
+							id="ghl_white_label_domain" 
+							name="ghl_white_label_domain" 
+							class="ghl-input" 
+							value="<?php echo esc_attr( $ghl_white_label_domain ); ?>"
+							placeholder="https://app.yourdomain.com"
+							style="width: 100%; max-width: 500px;"
+						>
+						<p class="description" style="margin-top: 8px;">
+							<?php esc_html_e( 'Enter your custom white label domain if you have one (e.g., https://app.yourdomain.com). Leave empty to use the default GoHighLevel domain (app.gohighlevel.com). This will be used for links to GHL records.', 'ghl-crm-integration' ); ?>
+						</p>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
 	
 	<!-- Auto Sync User Data Section -->
 	<div class="ghl-settings-section ghl-settings-card">
