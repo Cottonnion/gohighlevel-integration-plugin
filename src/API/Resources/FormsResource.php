@@ -18,7 +18,7 @@ defined( 'ABSPATH' ) || exit;
  * - NO field definitions, NO settings, NO embed codes
  * - NO custom domain information from location or company endpoints
  * 
- * We manually generate embed URLs using a custom_domain setting (defaults to link.leadconnectorhq.com).
+ * We manually generate embed URLs using the configured white-label domain (defaults to link.leadconnectorhq.com).
  * Until GHL provides more comprehensive form data via their API, customization is limited.
  *
  * @package    GHL_CRM_Integration
@@ -31,6 +31,13 @@ class FormsResource {
 	 * @var Client
 	 */
 	private Client $client;
+
+	/**
+	 * Cached base URL for form embeds derived from the white-label domain.
+	 *
+	 * @var string|null
+	 */
+	private ?string $form_embed_base_url = null;
 
 	/**
 	 * Cache key for forms list
@@ -78,25 +85,43 @@ class FormsResource {
 		];
 		$response = $this->client->get( $endpoint, $params, false );
 
-	if ( ! isset( $response['forms'] ) || ! is_array( $response['forms'] ) ) {
-		// If no 'forms' key, check if response is array of forms directly
-		if ( is_array( $response ) && ! empty( $response ) ) {
-			$forms = $response;
+		if ( ! isset( $response['forms'] ) || ! is_array( $response['forms'] ) ) {
+			// If no 'forms' key, check if response is array of forms directly
+			if ( is_array( $response ) && ! empty( $response ) ) {
+				$forms = $response;
+			} else {
+				$forms = [];
+			}
 		} else {
-			$forms = [];
+			$forms = $response['forms'];
 		}
-	} else {
-		$forms = $response['forms'];
-	}
 
-	// Process and normalize forms data
-	$processed_forms = $this->process_forms( $forms );
+		// Process and normalize forms data
+		$processed_forms = $this->process_forms( $forms );
 
-	// Cache the results using configured duration
-	$cache_duration = absint( $settings_manager->get_setting( 'cache_duration', HOUR_IN_SECONDS ) );
-	set_transient( self::CACHE_KEY, $processed_forms, $cache_duration );
+		// Fetch submission counts for each form from the submissions endpoint
+		foreach ( $processed_forms as $index => $form ) {
+			if ( ! empty( $form['id'] ) ) {
+				try {
+					$submissions_data = $this->get_form_submissions( $form['id'], 1, 1 );
+					// The meta.total contains the total count of submissions for this form
+					$processed_forms[ $index ]['submissions'] = $submissions_data['meta']['total'] ?? 0;
+				} catch ( \Exception $e ) {
+					// Keep zero if submissions fetch fails
+					$processed_forms[ $index ]['submissions'] = 0;
+					// Log error if debug mode
+					if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+						error_log( sprintf( 'Failed to fetch submissions for form %s: %s', $form['id'], $e->getMessage() ) );
+					}
+				}
+			}
+		}
 
-	return $processed_forms;
+		// Cache the results using configured duration
+		$cache_duration = absint( $settings_manager->get_setting( 'cache_duration', HOUR_IN_SECONDS ) );
+		set_transient( self::CACHE_KEY, $processed_forms, $cache_duration );
+
+		return $processed_forms;
 	}
 
 	/**
@@ -189,21 +214,20 @@ class FormsResource {
 	private function process_form( array $form ): array {
 		$form_id     = $form['id'] ?? '';
 		$location_id = $form['locationId'] ?? '';
+		$embed_host  = $this->get_form_embed_base_url();
 		
-		// Get the custom domain from settings (multisite-safe).
-		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
-		$settings         = $settings_manager->get_settings_array();
-		$custom_domain    = $settings['custom_domain'] ?? 'link.leadconnectorhq.com'; // GHL default
-		
-		// Generate embed URL (without notrack parameter)
-		$embed_url   = ! empty( $form_id ) 
-			? "https://{$custom_domain}/widget/form/{$form_id}" 
-			: '';
-		
-		$iframe_code = ! empty( $embed_url )
+		// Ensure both widget and direct form URLs honour the white-label host.
+		$widget_url = '';
+		$form_url   = '';
+		if ( ! empty( $form_id ) ) {
+			$widget_url = \trailingslashit( $embed_host ) . 'widget/form/' . rawurlencode( $form_id );
+			$form_url   = \trailingslashit( $embed_host ) . 'form/' . rawurlencode( $form_id );
+		}
+
+		$iframe_code = ! empty( $widget_url )
 			? sprintf(
 				'<iframe src="%s" style="width:100%%;height:100%%;border:none;overflow:hidden;" scrolling="no"></iframe>',
-				esc_url( $embed_url )
+				esc_url( $widget_url )
 			)
 			: '';
 		
@@ -211,14 +235,71 @@ class FormsResource {
 			'id'          => $form_id,
 			'name'        => $form['name'] ?? __( 'Untitled Form', 'ghl-crm-integration' ),
 			'locationId'  => $location_id,
-			'submissions' => $form['submissions'] ?? 0,
+			'submissions' => 0, // Will be fetched separately
 			'createdAt'   => $form['createdAt'] ?? '',
 			'updatedAt'   => $form['updatedAt'] ?? '',
-			'embedUrl'    => $embed_url,
+			'embedUrl'    => $widget_url,
+			'widgetUrl'   => $widget_url,
+			'formUrl'     => $form_url,
 			'embedCode'   => $iframe_code,
 			'fields'      => $form['fields'] ?? [],
 			'settings'    => $form['settings'] ?? [],
 		];
+	}
+
+	/**
+	 * Build the base URL for form embeds using the white-label domain (app → link).
+	 */
+	private function get_form_embed_base_url(): string {
+		if ( null !== $this->form_embed_base_url ) {
+			return $this->form_embed_base_url;
+		}
+
+		$settings      = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
+		$white_label   = $settings['ghl_white_label_domain'] ?? '';
+		$scheme        = 'https';
+		$host          = '';
+
+		if ( ! empty( $white_label ) ) {
+			$parsed = \wp_parse_url( $white_label );
+			if ( is_array( $parsed ) ) {
+				if ( ! empty( $parsed['scheme'] ) ) {
+					$scheme = $parsed['scheme'];
+				}
+				$host = $parsed['host'] ?? '';
+			}
+
+			if ( empty( $host ) ) {
+				$normalized = preg_replace( '#^https?://#i', '', $white_label );
+				if ( is_string( $normalized ) ) {
+					$host_candidate = strtok( $normalized, '/' );
+					if ( false !== $host_candidate ) {
+						$host = (string) $host_candidate;
+					}
+				}
+			}
+		}
+
+		if ( empty( $host ) ) {
+			$this->form_embed_base_url = 'https://link.leadconnectorhq.com';
+			return $this->form_embed_base_url;
+		}
+
+		$host_parts = explode( '.', $host );
+		if ( ! empty( $host_parts ) ) {
+			if ( isset( $host_parts[0] ) && 'link' === strtolower( $host_parts[0] ) ) {
+				// Already using link subdomain.
+			} elseif ( count( $host_parts ) >= 3 ) {
+				$host_parts[0] = 'link';
+			} else {
+				array_unshift( $host_parts, 'link' );
+			}
+		}
+
+		$link_host = implode( '.', $host_parts );
+		$this->form_embed_base_url = $scheme . '://' . $link_host;
+
+		return $this->form_embed_base_url;
 	}
 
 	/**
@@ -235,4 +316,47 @@ class FormsResource {
 			return 0;
 		}
 	}
+
+	/**
+	 * Get form submissions from the dedicated submissions endpoint
+	 *
+	 * @param string $form_id The form ID (optional - if empty, gets all submissions).
+	 * @param int    $page    Page number for pagination.
+	 * @param int    $limit   Number of submissions per page (max 100).
+	 * @return array Submissions data with count and submissions array.
+	 * @throws APIException When API request fails.
+	 */
+	public function get_form_submissions( string $form_id = '', int $page = 1, int $limit = 20 ): array {
+		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings         = $settings_manager->get_settings_array();
+		$location_id      = $settings['location_id'] ?? '';
+		
+		if ( empty( $location_id ) ) {
+			throw new APIException( __( 'Location ID not configured.', 'ghl-crm-integration' ) );
+		}
+
+		$endpoint = '/forms/submissions';
+		$params   = [
+			'locationId' => $location_id,
+			'page'       => max( 1, $page ),
+			'limit'      => min( 100, max( 1, $limit ) ),
+		];
+
+		if ( ! empty( $form_id ) ) {
+			$params['formId'] = $form_id;
+		}
+
+		$response = $this->client->get( $endpoint, $params, false );
+
+		return [
+			'submissions' => $response['submissions'] ?? [],
+			'meta'        => $response['meta'] ?? [
+				'total'       => 0,
+				'currentPage' => $page,
+				'nextPage'    => null,
+				'prevPage'    => null,
+			],
+		];
+	}
 }
+
