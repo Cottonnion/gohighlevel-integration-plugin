@@ -15,8 +15,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Get current settings
 $settings = $settings ?? \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
 $is_buddyboss_active = function_exists( 'bp_is_active' ) && bp_is_active( 'groups' );
-echo '<pre>';
-// print_r( $settings );
 ?>
 
 <?php if ( ! $is_buddyboss_active ) : ?>
@@ -115,10 +113,12 @@ echo '<pre>';
 			<hr>
 
 		<!-- Auto-Creation Settings -->
-		<div class="ghl-form-section">
-			<h3><?php esc_html_e( 'Custom Object Management', 'ghl-crm-integration' ); ?></h3>
+		<div class="ghl-form-section" style="margin-bottom: 24px;">
+			<h3 style="margin: 0 0 16px; font-size: 18px; font-weight: 600; color: #1e293b;">
+				<?php esc_html_e( 'Custom Object Management', 'ghl-crm-integration' ); ?>
+			</h3>
 			
-			<div class="ghl-info-box">
+			<div class="ghl-info-box" style="margin-bottom: 20px;">
 				<span class="dashicons dashicons-info"></span>
 				<div>
 					<h4><?php esc_html_e( 'Automatic Custom Object Creation', 'ghl-crm-integration' ); ?></h4>
@@ -126,7 +126,7 @@ echo '<pre>';
 				</div>
 			</div>
 
-			<div class="ghl-form-row">
+			<div class="ghl-form-row" style="margin-top: 16px;">
 				<label class="ghl-toggle">
 					<input type="checkbox" name="buddyboss_auto_delete_custom_objects" value="1" <?php checked( ! empty( $settings['buddyboss_auto_delete_custom_objects'] ) ); ?>>
 					<span class="ghl-toggle-slider"></span>
@@ -134,17 +134,19 @@ echo '<pre>';
 						<?php esc_html_e( 'Auto-delete Custom Objects when group types are removed', 'ghl-crm-integration' ); ?>
 					</span>
 				</label>
-				<p class="description">
+				<p class="description" style="margin-top: 8px;">
 					<?php esc_html_e( 'When disabled, Custom Objects will remain in GoHighLevel even if the corresponding group type is removed from BuddyBoss. This preserves historical data.', 'ghl-crm-integration' ); ?>
 				</p>
 			</div>
 		</div>
 
 		<!-- Member Association Sync -->
-		<div class="ghl-form-section">
-			<h3><?php esc_html_e( 'Member Association Sync', 'ghl-crm-integration' ); ?></h3>
+		<div class="ghl-form-section" style="margin-bottom: 24px;">
+			<h3 style="margin: 0 0 16px; font-size: 18px; font-weight: 600; color: #1e293b;">
+				<?php esc_html_e( 'Member Association Sync', 'ghl-crm-integration' ); ?>
+			</h3>
 		
-			<div class="ghl-info-box">
+			<div class="ghl-info-box" style="margin-bottom: 16px;">
 				<span class="dashicons dashicons-admin-users"></span>
 				<div>
 					<h4><?php esc_html_e( 'Automatic Member Linking', 'ghl-crm-integration' ); ?></h4>
@@ -152,7 +154,7 @@ echo '<pre>';
 				</div>
 			</div>
 
-			<p class="description">
+			<p class="description" style="margin-bottom: 12px;">
 				<?php esc_html_e( 'When a user joins or leaves a BuddyBoss group, the plugin queues a background job to add or remove the GoHighLevel association. Group visibility rules still apply, and contacts must already exist in GoHighLevel to be linked.', 'ghl-crm-integration' ); ?>
 			</p>
 
@@ -198,37 +200,33 @@ echo '<pre>';
 					<label for="buddyboss_default_group_type" class="screen-reader-text">
 						<?php esc_html_e( 'Default BuddyBoss group type', 'ghl-crm-integration' ); ?>
 					</label>
-					<input 
-						type="text" 
+					<select 
 						id="buddyboss_default_group_type" 
 						name="buddyboss_default_group_type" 
-						list="buddyboss-group-type-suggestions" 
-						value="<?php echo esc_attr( $default_group_type ); ?>" 
-						placeholder="<?php esc_attr_e( 'Leave blank to skip groups without a type', 'ghl-crm-integration' ); ?>"
-						style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5f5; border-radius: 8px; font-size: 14px;">
-					<p style="margin: 8px 0 0; color: #64748b; font-size: 13px;">
-						<?php esc_html_e( 'Suggestions include any BuddyBoss group types detected on this site. You can also enter a custom slug.', 'ghl-crm-integration' ); ?>
-					</p>
+						class="ghl-group-type-select"
+						style="width: 100%;">
+						<option value=""><?php esc_html_e( 'Skip groups without a type', 'ghl-crm-integration' ); ?></option>
+						<?php if ( ! empty( $group_type_suggestions ) ) : ?>
+							<?php foreach ( $group_type_suggestions as $slug => $type_obj ) : ?>
+								<?php
+								$label = '';
+								if ( is_object( $type_obj ) ) {
+									$labels = isset( $type_obj->labels ) && is_array( $type_obj->labels ) ? $type_obj->labels : [];
+									$label  = $labels['name'] ?? $labels['singular_name'] ?? $type_obj->name ?? ucfirst( str_replace( '_', ' ', $slug ) );
+								} elseif ( is_string( $type_obj ) ) {
+									$label = $type_obj;
+								} else {
+									$label = ucfirst( str_replace( '_', ' ', (string) $slug ) );
+								}
+								?>
+								<option value="<?php echo esc_attr( $slug ); ?>" <?php selected( $default_group_type, $slug ); ?>>
+									<?php echo esc_html( $label ); ?>
+								</option>
+							<?php endforeach; ?>
+						<?php endif; ?>
+					</select>
 				</div>
 			</div>
-			<?php if ( ! empty( $group_type_suggestions ) ) : ?>
-				<datalist id="buddyboss-group-type-suggestions">
-					<?php foreach ( $group_type_suggestions as $slug => $type_obj ) : ?>
-						<?php
-						$label = '';
-						if ( is_object( $type_obj ) ) {
-							$labels = isset( $type_obj->labels ) && is_array( $type_obj->labels ) ? $type_obj->labels : [];
-							$label  = $labels['name'] ?? $labels['singular_name'] ?? $type_obj->name ?? ucfirst( str_replace( '_', ' ', $slug ) );
-						} elseif ( is_string( $type_obj ) ) {
-							$label = $type_obj;
-						} else {
-							$label = ucfirst( str_replace( '_', ' ', (string) $slug ) );
-						}
-						?>
-						<option value="<?php echo esc_attr( $slug ); ?>"><?php echo esc_html( $label ); ?></option>
-					<?php endforeach; ?>
-				</datalist>
-			<?php endif; ?>
 		</div>
 
 		<!-- Sync Options -->

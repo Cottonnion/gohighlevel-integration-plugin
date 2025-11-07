@@ -123,9 +123,44 @@ class GroupMetaBox {
 		// Get GHL sync data
 		$record_id      = groups_get_groupmeta( $group_id, 'ghl_custom_object_record_id', true );
 		$object_id      = groups_get_groupmeta( $group_id, 'ghl_custom_object_id', true );
+		$object_slug    = groups_get_groupmeta( $group_id, 'ghl_custom_object_slug', true );
 		$association_id = groups_get_groupmeta( $group_id, 'ghl_association_id', true );
 		$group_types    = bp_groups_get_group_type( $group_id, false );
 		$group_type     = ! empty( $group_types ) ? $group_types[0] : '';
+
+		// Get settings for white label domain and location ID
+		$settings    = $this->settings_manager->get_settings_array();
+		$location_id = $settings['location_id'] ?? '';
+		$white_label_domain = $settings['ghl_white_label_domain'] ?? '';
+		
+		// Determine base domain (white label or default)
+		$base_domain = ! empty( $white_label_domain ) ? rtrim( $white_label_domain, '/' ) : 'https://app.leadconnectorhq.com';
+
+		// Build GHL URLs (v2 format)
+		$record_url = '';
+		$object_url = '';
+		if ( ! empty( $location_id ) && ! empty( $object_slug ) ) {
+			// Object list URL
+			$object_url = sprintf(
+				'%s/v2/location/%s/objects/%s/list',
+				$base_domain,
+				rawurlencode( $location_id ),
+				rawurlencode( $object_slug )
+			);
+			
+			// Specific record URL with sort and recordId parameters
+			if ( ! empty( $record_id ) ) {
+				$sort_param = rawurlencode( '[{"field":"createdAt","dir":"desc"}]' );
+				$record_url = sprintf(
+					'%s/v2/location/%s/objects/%s/list?sort=%s&recordId=%s&t=a',
+					$base_domain,
+					rawurlencode( $location_id ),
+					rawurlencode( $object_slug ),
+					$sort_param,
+					rawurlencode( $record_id )
+				);
+			}
+		}
 
 		wp_nonce_field( 'ghl_sync_group_' . $group_id, 'ghl_sync_nonce' );
 		?>
@@ -157,6 +192,19 @@ class GroupMetaBox {
 					max-width: 60%;
 					text-align: right;
 					word-break: break-all;
+				}
+				.ghl-sync-value a {
+					color: var(--ghl-primary);
+					text-decoration: none;
+				}
+				.ghl-sync-value a:hover {
+					text-decoration: underline;
+				}
+				.ghl-sync-value .dashicons {
+					font-size: 14px;
+					width: 14px;
+					height: 14px;
+					vertical-align: text-top;
 				}
 				.ghl-sync-badge {
 					display: inline-block;
@@ -217,14 +265,32 @@ class GroupMetaBox {
 				<?php if ( ! empty( $record_id ) ) : ?>
 					<div class="ghl-sync-status-item">
 						<span class="ghl-sync-label"><?php esc_html_e( 'GHL Record ID:', 'ghl-crm-integration' ); ?></span>
-						<span class="ghl-sync-value"><?php echo esc_html( $record_id ); ?></span>
+						<span class="ghl-sync-value">
+							<?php if ( ! empty( $record_url ) ) : ?>
+								<a href="<?php echo esc_url( $record_url ); ?>" target="_blank" rel="noopener noreferrer">
+									<?php echo esc_html( $record_id ); ?>
+									<span class="dashicons dashicons-external"></span>
+								</a>
+							<?php else : ?>
+								<?php echo esc_html( $record_id ); ?>
+							<?php endif; ?>
+						</span>
 					</div>
 				<?php endif; ?>
 
 				<?php if ( ! empty( $object_id ) ) : ?>
 					<div class="ghl-sync-status-item">
 						<span class="ghl-sync-label"><?php esc_html_e( 'Object ID:', 'ghl-crm-integration' ); ?></span>
-						<span class="ghl-sync-value"><?php echo esc_html( $object_id ); ?></span>
+						<span class="ghl-sync-value">
+							<?php if ( ! empty( $object_url ) ) : ?>
+								<a href="<?php echo esc_url( $object_url ); ?>" target="_blank" rel="noopener noreferrer">
+									<?php echo esc_html( $object_id ); ?>
+									<span class="dashicons dashicons-external"></span>
+								</a>
+							<?php else : ?>
+								<?php echo esc_html( $object_id ); ?>
+							<?php endif; ?>
+						</span>
 					</div>
 				<?php endif; ?>
 

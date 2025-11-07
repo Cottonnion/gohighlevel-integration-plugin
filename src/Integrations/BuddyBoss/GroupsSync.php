@@ -465,9 +465,13 @@ class GroupsSync {
 			}
 			
 			groups_update_groupmeta( $group_id, 'ghl_custom_object_id', $custom_object_id );
+			
+			// Store object slug for URL building (convert name to lowercase slug)
+			$object_slug = strtolower( str_replace( ' ', '_', $custom_object_name ) );
+			groups_update_groupmeta( $group_id, 'ghl_custom_object_slug', $object_slug );
 
 			// Get or create association definition
-			$schema_key = 'custom_objects.' . strtolower( str_replace( ' ', '_', $custom_object_name ) );
+			$schema_key = 'custom_objects.' . $object_slug;
 			$association_id = $this->get_or_create_association( $schema_key, $custom_object_name, $group_type );
 			
 			if ( $association_id ) {
