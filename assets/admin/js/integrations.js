@@ -21,6 +21,7 @@
 			this.initTagsSelect();
 			this.initOrderStatusSelect();
 			this.initOpportunitiesSelects();
+			this.initGroupTypeSelect();
 		},
 
 		/**
@@ -174,6 +175,29 @@
 					allowClear: true,
 					width: '100%',
 					closeOnSelect: false
+				});
+			});
+		},
+
+		/**
+		 * Initialize Group Type Select2 for BuddyBoss
+		 */
+		initGroupTypeSelect() {
+			const $groupTypeSelect = $('.ghl-group-type-select');
+
+			if ($groupTypeSelect.length === 0 || typeof $.fn.select2 === 'undefined') {
+				return;
+			}
+
+			// Initialize Select2 for group type (no AJAX needed, options already in HTML)
+			$groupTypeSelect.each(function() {
+				const $select = $(this);
+				
+				$select.select2({
+					placeholder: $select.find('option:first').text() || 'Skip groups without a type',
+					allowClear: true,
+					width: '100%',
+					minimumResultsForSearch: 5 // Show search if more than 5 options
 				});
 			});
 		},

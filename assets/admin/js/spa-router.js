@@ -220,6 +220,17 @@
                         window.GHLSyncLogs.init();
                     }
                     break;
+                case 'forms':
+                    // Re-initialize forms handlers
+                    if (typeof window.GHLFormsManager !== 'undefined') {
+                        if (typeof window.GHLFormsManager.reset === 'function') {
+                            window.GHLFormsManager.reset();
+                        }
+                        if (typeof window.GHLFormsManager.init === 'function') {
+                            window.GHLFormsManager.init();
+                        }
+                    }
+                    break;
             }
         }
 
