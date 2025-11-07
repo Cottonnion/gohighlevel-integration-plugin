@@ -164,8 +164,13 @@ class SettingsManager {
 					if ( $value === '__EMPTY_ARRAY__' ) {
 						$new_settings[ $key ] = [];
 					} else {
-						// Handle scalar values
-						$new_settings[ $key ] = sanitize_text_field( wp_unslash( $value ) );
+						// Handle URL fields with proper sanitization
+						if ( $key === 'ghl_white_label_domain' ) {
+							$new_settings[ $key ] = ! empty( $value ) ? esc_url_raw( wp_unslash( $value ) ) : '';
+						} else {
+							// Handle scalar values
+							$new_settings[ $key ] = sanitize_text_field( wp_unslash( $value ) );
+						}
 					}
 
 					// Check if API credentials changed
@@ -390,9 +395,19 @@ class SettingsManager {
 			$forms_resource = new \GHL_CRM\API\Resources\FormsResource();
 			$forms = $forms_resource->get_forms( true ); // Force refresh
 
+			// Get white label domain for iframe URLs
+			$settings = $this->get_settings_array();
+			$white_label_domain = $settings['ghl_white_label_domain'] ?? '';
+
+			// Debug log to check submissions
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'Forms data: ' . print_r( $forms, true ) );
+			}
+
 			wp_send_json_success(
 				[
-					'forms' => $forms,
+					'forms'              => $forms,
+					'white_label_domain' => $white_label_domain,
 				]
 			);
 		} catch ( \Exception $e ) {
