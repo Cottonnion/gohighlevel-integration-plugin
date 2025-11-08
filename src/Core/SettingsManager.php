@@ -399,11 +399,6 @@ class SettingsManager {
 			$settings = $this->get_settings_array();
 			$white_label_domain = $settings['ghl_white_label_domain'] ?? '';
 
-			// Debug log to check submissions
-			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-				error_log( 'Forms data: ' . print_r( $forms, true ) );
-			}
-
 			wp_send_json_success(
 				[
 					'forms'              => $forms,
@@ -723,7 +718,19 @@ class SettingsManager {
 	 * @return void
 	 */
 	public function get_tags(): void {
-		$nonce = $_POST['nonce'] ?? '';
+		$request_data = $_POST;
+
+		if ( empty( $request_data ) ) {
+			$raw_body = file_get_contents( 'php://input' );
+			if ( ! empty( $raw_body ) ) {
+				$decoded = json_decode( $raw_body, true );
+				if ( json_last_error() === JSON_ERROR_NONE && is_array( $decoded ) ) {
+					$request_data = $decoded;
+				}
+			}
+		}
+
+		$nonce = $request_data['nonce'] ?? '';
 
 		if (
 			! wp_verify_nonce( $nonce, 'ghl_crm_settings_nonce' ) &&

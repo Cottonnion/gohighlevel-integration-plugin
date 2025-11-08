@@ -529,7 +529,20 @@ class UserHooks {
 		$tags     = $settings[ "user_sync_tags_{$action}" ] ?? [];
 		if ( ! empty( $tags ) && is_array( $tags ) ) {
 			try {
-				$this->contact_resource->add_tags( $contact_id, $tags );
+				// Fetch existing tags to merge (don't overwrite)
+				$client = \GHL_CRM\API\Client\Client::get_instance();
+				$contact_details = $client->get( "contacts/{$contact_id}" );
+				
+				$existing_tags = [];
+				if ( ! empty( $contact_details['contact']['tags'] ) && is_array( $contact_details['contact']['tags'] ) ) {
+					$existing_tags = $contact_details['contact']['tags'];
+				}
+
+				// Merge existing + new tags, remove duplicates
+				$merged_tags = array_values( array_unique( array_merge( $existing_tags, $tags ) ) );
+
+				// Update with merged tags
+				$this->contact_resource->update( $contact_id, [ 'tags' => $merged_tags ] );
 			} catch ( \Exception $e ) {
 				// Silent fail for tags.
 				unset( $e );
