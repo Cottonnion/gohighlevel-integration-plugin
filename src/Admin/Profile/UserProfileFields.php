@@ -194,7 +194,7 @@ class UserProfileFields {
 		$last_sync      = get_user_meta( $user->ID, '_ghl_last_sync', true );
 		$synced_on_reg  = get_user_meta( $user->ID, '_ghl_synced_on_register', true );
 		$current_tags   = get_user_meta( $user->ID, '_ghl_contact_tags', true );
-		
+		print_r($current_tags);
 		if ( ! is_array( $current_tags ) ) {
 			$current_tags = [];
 		}
@@ -584,6 +584,51 @@ class UserProfileFields {
 			] );
 		} catch ( \Exception $e ) {
 			wp_send_json_error( [ 'message' => $e->getMessage() ] );
+		}
+	}
+
+	/**
+	 * Refresh user data from GHL (public wrapper for queue manager)
+	 * 
+	 * @param int $user_id User ID
+	 * @param string $contact_id GHL Contact ID
+	 * @return bool Success status
+	 */
+	public function refresh_user_from_ghl( int $user_id, string $contact_id ): bool {
+		if ( empty( $user_id ) || empty( $contact_id ) ) {
+			return false;
+		}
+
+		try {
+			$client = Client::get_instance();
+			
+			// Fetch fresh contact data from GHL
+			$response = $client->get( "contacts/{$contact_id}" );
+
+			if ( empty( $response['contact'] ) ) {
+				return false;
+			}
+
+			$contact = $response['contact'];
+
+			// Update user meta with fresh data
+			update_user_meta( $user_id, '_ghl_contact_id', $contact_id );
+			update_user_meta( $user_id, '_ghl_last_sync', time() );
+
+			// Update tags if available
+			if ( ! empty( $contact['tags'] ) && is_array( $contact['tags'] ) ) {
+				update_user_meta( $user_id, '_ghl_contact_tags', $contact['tags'] );
+			}
+
+			// Update contact type if available
+			if ( ! empty( $contact['type'] ) ) {
+				update_user_meta( $user_id, '_ghl_contact_type', $contact['type'] );
+			}
+
+			return true;
+
+		} catch ( \Exception $e ) {
+			return false;
 		}
 	}
 

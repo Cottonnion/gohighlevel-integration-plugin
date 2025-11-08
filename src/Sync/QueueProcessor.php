@@ -188,9 +188,20 @@ class QueueProcessor {
 			throw new \Exception( 'Contact ID and tags are required' );
 		}
 
+		// Fetch existing tags to merge (don't overwrite)
+		$client = \GHL_CRM\API\Client\Client::get_instance();
+		$contact_details = $client->get( "contacts/{$contact_id}" );
 		
-		
-		$result = $contact_resource->add_tags( $contact_id, $tags );
+		$existing_tags = [];
+		if ( ! empty( $contact_details['contact']['tags'] ) && is_array( $contact_details['contact']['tags'] ) ) {
+			$existing_tags = $contact_details['contact']['tags'];
+		}
+
+		// Merge existing + new tags, remove duplicates
+		$merged_tags = array_values( array_unique( array_merge( $existing_tags, $tags ) ) );
+
+		// Update with merged tags
+		$result = $contact_resource->update( $contact_id, [ 'tags' => $merged_tags ] );
 		return ! empty( $result ) ? $result : false;
 	}
 
@@ -388,6 +399,10 @@ class QueueProcessor {
 			case 'convert_lead':
 				error_log( 'QueueProcessor: Routing to process_customer_conversion()' );
 				return $wc_sync->process_customer_conversion( $payload );
+
+			case 'apply_tags':
+				error_log( 'QueueProcessor: Routing to process_product_tags()' );
+				return $wc_sync->process_product_tags( $payload );
 
 			case 'create_opportunity':
 			case 'update_opportunity':

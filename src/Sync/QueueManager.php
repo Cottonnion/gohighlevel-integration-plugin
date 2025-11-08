@@ -609,6 +609,9 @@ class QueueManager {
 					[ '%d' ]
 				);
 
+				// Automatically sync contact tags from GHL after successful completion
+				$this->sync_contact_tags_from_ghl( $item, $contact_id );
+
 				// Log success with full request/response data (using QueueLogger helper)
 				$this->logger->log_event(
 					(int) $item->item_id,
@@ -622,19 +625,34 @@ class QueueManager {
 					$item->item_type // Sync type
 				);
 			} else {
+				// Build detailed error context for logging
+				$error_context = [
+					'queue_id'    => $item->id,
+					'item_type'   => $item->item_type,
+					'item_id'     => $item->item_id,
+					'action'      => $item->action,
+					'attempts'    => $item->attempts,
+					'payload'     => $payload,
+					'result_type' => gettype( $result ),
+					'result'      => $result,
+				];
+				
+				// Log detailed context with asiya log prefix
+				error_log( 'asiya log: Sync execution failed - ' . wp_json_encode( $error_context ) );
+				
 				// Extract error message if available
 				$error_message = 'Sync execution failed';
 				if ( is_array( $result ) && ! empty( $result['error'] ) ) {
-					$error_message = $result['error'];
+					$error_message .= ': ' . $result['error'];
+				} elseif ( empty( $result ) ) {
+					$error_message .= ': Empty result returned from sync processor';
+				} else {
+					$error_message .= ': ' . print_r( $result, true );
 				}
+				
 				throw new \Exception( $error_message );
 			}
 		} catch ( \Exception $e ) {
-			
-			
-			
-			
-			
 			// Check if it's a rate limit error (using RateLimiter helper)
 			if ( $this->rate_limiter->is_rate_limit_error( $e ) ) {
 				// Don't increment attempts for rate limit errors
@@ -654,31 +672,32 @@ class QueueManager {
 				return; // Stop processing this batch
 			}
 
-		// Mark as failed if max attempts reached (attempts already incremented above)
-		$status = ( $item->attempts >= self::MAX_ATTEMPTS ) ? 'failed' : 'pending';
+			// Mark as failed if max attempts reached (attempts already incremented above)
+			$status = ( $item->attempts >= self::MAX_ATTEMPTS ) ? 'failed' : 'pending';
 
-		$wpdb->update(
-			$table_name,
-			[
-				'status'        => $status,
-				'error_message' => $e->getMessage(),
-				'updated_at'    => current_time( 'mysql' ),
-			],
-			[ 'id' => $item->id ],
-			[ '%s', '%s', '%s' ],
-			[ '%d' ]
-		);		
-		// Log error with request data (using QueueLogger helper)
+			$wpdb->update(
+				$table_name,
+				[
+					'status'        => $status,
+					'error_message' => $e->getMessage(),
+					'updated_at'    => current_time( 'mysql' ),
+				],
+				[ 'id' => $item->id ],
+				[ '%s', '%s', '%s' ],
+				[ '%d' ]
+			);
+
+			// Log error with request/response details
 			$this->logger->log_event(
 				(int) $item->item_id,
 				$item->action,
 				'error',
 				null,
-				$payload, // Request data that failed
-				null, // No response data on error
+				$payload,
+				is_array( $result ?? null ) ? $result : null,
 				$e->getMessage(),
 				microtime( true ) - $start_time,
-				$item->item_type // Sync type
+				$item->item_type
 			);
 		}
 	}
@@ -924,6 +943,91 @@ class QueueManager {
 			if ( $timestamp ) {
 				wp_unschedule_event( $timestamp, 'ghl_crm_process_queue' );
 			}
+		}
+	}
+
+	/**
+	 * Sync contact tags from GHL after successful queue completion
+	 * Delegates to UserProfileFields refresh logic for consistency
+	 *
+	 * @param object $item Queue item
+	 * @param string|null $contact_id GHL Contact ID
+	 * @return void
+	 */
+	private function sync_contact_tags_from_ghl( object $item, ?string $contact_id ): void {
+		// Only sync for user-related items with a contact ID
+		if ( empty( $contact_id ) ) {
+			return;
+		}
+
+		$user_id = null;
+
+		// Determine user ID based on item type
+		if ( 'user' === $item->item_type ) {
+			$user_id = (int) $item->item_id;
+		} elseif ( 'wc_customer' === $item->item_type && class_exists( 'WooCommerce' ) ) {
+			$order = wc_get_order( $item->item_id );
+			if ( $order ) {
+				$user_id = (int) $order->get_customer_id();
+			}
+		} elseif ( 'wc_product_tags' === $item->item_type ) {
+			// Get user from order
+			$payload = json_decode( $item->payload, true );
+			$order_id = $payload['order_id'] ?? 0;
+			if ( $order_id ) {
+				$order = wc_get_order( $order_id );
+				if ( $order ) {
+					$user_id = (int) $order->get_customer_id();
+				}
+			}
+		}
+
+		if ( empty( $user_id ) ) {
+			return;
+		}
+
+		try {
+			// Use the same refresh logic from UserProfileFields
+			$profile_fields = \GHL_CRM\Admin\Profile\UserProfileFields::get_instance();
+			
+			// Call the internal refresh method (we'll create a public wrapper)
+			if ( method_exists( $profile_fields, 'refresh_user_from_ghl' ) ) {
+				$profile_fields->refresh_user_from_ghl( $user_id, $contact_id );
+			} else {
+				// Fallback: Use Client directly (same pattern as AJAX action)
+				$client = \GHL_CRM\API\Client\Client::get_instance();
+				$response = $client->get( "contacts/{$contact_id}" );
+
+				if ( ! empty( $response['contact'] ) ) {
+					$contact = $response['contact'];
+					
+					update_user_meta( $user_id, '_ghl_contact_id', $contact_id );
+					update_user_meta( $user_id, '_ghl_last_sync', time() );
+
+					if ( ! empty( $contact['tags'] ) && is_array( $contact['tags'] ) ) {
+						update_user_meta( $user_id, '_ghl_contact_tags', $contact['tags'] );
+					}
+
+					if ( ! empty( $contact['type'] ) ) {
+						update_user_meta( $user_id, '_ghl_contact_type', $contact['type'] );
+					}
+				}
+			}
+
+			error_log( sprintf(
+				'GHL Queue: Auto-synced from GHL | user #%d | contact %s',
+				$user_id,
+				$contact_id
+			) );
+
+		} catch ( \Throwable $e ) {
+			// Log error but don't fail the queue item
+			error_log( sprintf(
+				'GHL Queue: Failed to auto-sync | user #%d | contact %s | error %s',
+				$user_id,
+				$contact_id,
+				$e->getMessage()
+			) );
 		}
 	}
 }
