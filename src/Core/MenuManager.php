@@ -70,13 +70,16 @@ class MenuManager {
 	 * @return void
 	 */
 	public function add_admin_menu(): void {
+		// Get SVG icon
+		$icon_svg = $this->get_menu_icon();
+		
 		$page_hook = add_menu_page(
 			__( 'GoHighLevel CRM', 'ghl-crm-integration' ),
 			__( 'GHL CRM', 'ghl-crm-integration' ),
 			'manage_options',
 			'ghl-crm-admin',
 			[ $this, 'render_spa_app' ],
-			'dashicons-cloud',
+			$icon_svg,
 			58
 		);
 
@@ -821,6 +824,26 @@ class MenuManager {
 			</div>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Get menu icon SVG
+	 *
+	 * Returns the custom SVG icon for the admin menu.
+	 * Uses base64 encoded SVG for WordPress menu compatibility.
+	 *
+	 * @return string Base64 encoded SVG data URI.
+	 */
+	private function get_menu_icon(): string {
+		$icon_path = GHL_CRM_PATH . 'assets/images/ghl-icon.svg';
+		$icon_url  = GHL_CRM_URL . 'assets/images/ghl-icon.svg';
+
+		if ( file_exists( $icon_path ) ) {
+			return $icon_url;
+		}
+
+		// Fallback to dashicon if file not found
+		return 'dashicons-cloud';
 	}
 
 	/**
