@@ -220,6 +220,39 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 	\GHL_CRM\Core\ScopeChecker::render_scope_notice( 'custom_fields' );
 	?>
 
+	<!-- Helpful Information Notice -->
+	<div class="notice notice-info" style="margin: 20px 0; padding: 15px; border-left-color: #2271b1;">
+		<h3 style="margin-top: 0;">
+			<span class="dashicons dashicons-info" style="color: #2271b1;"></span>
+			<?php esc_html_e( 'About Field Mapping', 'ghl-crm-integration' ); ?>
+		</h3>
+		<p>
+			<?php esc_html_e( 'Field mapping connects WordPress user data with GoHighLevel contact fields. When users are created, updated, or synced, data flows between the systems based on your mappings.', 'ghl-crm-integration' ); ?>
+		</p>
+		<ul style="list-style: disc; margin-left: 20px;">
+			<li>
+				<strong><?php esc_html_e( 'WordPress Field:', 'ghl-crm-integration' ); ?></strong> 
+				<?php esc_html_e( 'The source field from WordPress (user profile, WooCommerce, BuddyBoss, etc.)', 'ghl-crm-integration' ); ?>
+			</li>
+			<li>
+				<strong><?php esc_html_e( 'GoHighLevel Field:', 'ghl-crm-integration' ); ?></strong> 
+				<?php esc_html_e( 'The destination field in your GHL contact record. Select "— Do Not Sync —" to skip syncing this field.', 'ghl-crm-integration' ); ?>
+			</li>
+			<li>
+				<strong><?php esc_html_e( 'Sync Direction:', 'ghl-crm-integration' ); ?></strong>
+				<ul style="list-style: circle; margin-left: 20px; margin-top: 5px;">
+					<li><strong>↔ Both Ways:</strong> <?php esc_html_e( 'Data syncs in both directions (WordPress ⇄ GHL)', 'ghl-crm-integration' ); ?></li>
+					<li><strong>→ To GoHighLevel Only:</strong> <?php esc_html_e( 'Data only flows from WordPress to GHL', 'ghl-crm-integration' ); ?></li>
+					<li><strong>← From GoHighLevel Only:</strong> <?php esc_html_e( 'Data only flows from GHL to WordPress', 'ghl-crm-integration' ); ?></li>
+				</ul>
+			</li>
+		</ul>
+		<p style="margin-bottom: 0;">
+			<strong><?php esc_html_e( 'Tip:', 'ghl-crm-integration' ); ?></strong> 
+			<?php esc_html_e( 'Use "— Do Not Sync —" for fields you want to keep separate between systems, or for sensitive data that shouldn\'t be shared.', 'ghl-crm-integration' ); ?>
+		</p>
+	</div>
+
 	<div style="margin: 20px 0;">
 		<button type="button" id="ghl-load-custom-fields" class="ghl-button ghl-button-primary" data-nonce="<?php echo esc_attr( wp_create_nonce( 'ghl_crm_field_mapping_nonce' ) ); ?>">
 			<span class="dashicons dashicons-update" style="margin-top: 3px;"></span>

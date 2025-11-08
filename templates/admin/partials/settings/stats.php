@@ -154,6 +154,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 			<h2>
 				<span class="dashicons dashicons-performance"></span>
 				<?php esc_html_e( 'API Rate Limits', 'ghl-crm-integration' ); ?>
+				<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'GoHighLevel enforces two rate limits: 100 requests per 10 seconds (burst) and 200,000 requests per day. Exceeding these will temporarily block API calls. Monitor usage here to avoid hitting limits.', 'ghl-crm-integration' ); ?>">?</span>
 			</h2>
 			<p class="description">
 				<?php esc_html_e( 'Current API request usage for burst and daily limits.', 'ghl-crm-integration' ); ?>

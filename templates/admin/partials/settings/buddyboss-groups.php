@@ -132,6 +132,7 @@ $is_buddyboss_active = function_exists( 'bp_is_active' ) && bp_is_active( 'group
 					<span class="ghl-toggle-slider"></span>
 					<span class="ghl-toggle-label">
 						<?php esc_html_e( 'Auto-delete Custom Objects when group types are removed', 'ghl-crm-integration' ); ?>
+						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'When enabled, deleting a BuddyBoss group type automatically removes its corresponding Custom Object schema from GoHighLevel. Disable to keep historical data even after group types are deleted.', 'ghl-crm-integration' ); ?>">?</span>
 					</span>
 				</label>
 				<p class="description" style="margin-top: 8px;">
@@ -175,6 +176,7 @@ $is_buddyboss_active = function_exists( 'bp_is_active' ) && bp_is_active( 'group
 				<div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; background: #f8fafc;">
 					<h4 style="margin: 0 0 10px; color: #1e293b; font-size: 16px; font-weight: 600;">
 						<?php esc_html_e( 'Missing Contacts', 'ghl-crm-integration' ); ?>
+						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Controls what happens when a BuddyBoss group member doesn\'t have a GoHighLevel contact. Create = automatically sync them to GHL. Skip = log error and wait for manual sync.', 'ghl-crm-integration' ); ?>">?</span>
 					</h4>
 					<p style="margin: 0 0 14px; color: #475569; font-size: 14px; line-height: 1.5;">
 						<?php esc_html_e( 'Choose whether the plugin should automatically create GoHighLevel contacts when a group member is missing one during association.', 'ghl-crm-integration' ); ?>
@@ -193,6 +195,7 @@ $is_buddyboss_active = function_exists( 'bp_is_active' ) && bp_is_active( 'group
 				<div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; background: #f8fafc;">
 					<h4 style="margin: 0 0 10px; color: #1e293b; font-size: 16px; font-weight: 600;">
 						<?php esc_html_e( 'Default Group Type', 'ghl-crm-integration' ); ?>
+						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Fallback group type for BuddyBoss groups that have no type assigned. Leave blank to skip untyped groups. Useful if you have legacy groups without types but still want to sync them.', 'ghl-crm-integration' ); ?>">?</span>
 					</h4>
 					<p style="margin: 0 0 14px; color: #475569; font-size: 14px; line-height: 1.5;">
 						<?php esc_html_e( 'Provide a fallback BuddyBoss group type slug for groups that have no type assigned. Leave blank to skip those groups entirely.', 'ghl-crm-integration' ); ?>
@@ -248,6 +251,7 @@ $is_buddyboss_active = function_exists( 'bp_is_active' ) && bp_is_active( 'group
 					</span>
 					<span class="ghl-checkbox-label">
 						<?php esc_html_e( 'Sync private groups', 'ghl-crm-integration' ); ?>
+						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Includes private BuddyBoss groups in sync operations. When disabled, only public and hidden groups sync to GoHighLevel. Useful for keeping sensitive communities local-only.', 'ghl-crm-integration' ); ?>">?</span>
 					</span>
 				</label>
 				

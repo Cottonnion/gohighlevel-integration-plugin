@@ -64,6 +64,7 @@ $allowed_tags = $settings['restrictions_allowed_tags'] ?? [];
 							</span>
 							<span class="ghl-checkbox-label">
 								<?php esc_html_e( 'Enable content restrictions system', 'ghl-crm-integration' ); ?>
+								<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Activates tag-based content protection. When enabled, pages/posts/courses/products with assigned tags will only be accessible to users who have matching tags in GoHighLevel.', 'ghl-crm-integration' ); ?>">?</span>
 							</span>
 						</label>
 					</div>
@@ -84,6 +85,7 @@ $allowed_tags = $settings['restrictions_allowed_tags'] ?? [];
 					<th scope="row">
 						<label for="restrictions_default_redirect">
 							<?php esc_html_e( 'Default Redirect URL', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Where to send users who try accessing restricted content. Can be a membership page, login page, or pricing page. Leave empty to show an access denied message instead of redirecting.', 'ghl-crm-integration' ); ?>">?</span>
 						</label>
 					</th>
 					<td>
@@ -176,6 +178,7 @@ $allowed_tags = $settings['restrictions_allowed_tags'] ?? [];
 							</span>
 							<span class="ghl-checkbox-label">
 								<?php esc_html_e( 'Show login link to logged-out users', 'ghl-crm-integration' ); ?>
+								<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Displays a clickable login link on access denied pages. After logging in, users return to the restricted page they tried to access.', 'ghl-crm-integration' ); ?>">?</span>
 							</span>
 						</label>
 						<p class="description" style="margin-left: 54px; margin-top: 8px;">
@@ -227,6 +230,7 @@ $allowed_tags = $settings['restrictions_allowed_tags'] ?? [];
 							</span>
 							<span class="ghl-checkbox-label">
 								<?php esc_html_e( 'Completely hide restricted content from archive pages and search results', 'ghl-crm-integration' ); ?>
+								<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Removes restricted items entirely from blog listings, category pages, and search results. When disabled, restricted items still appear but show the archive message instead of content.', 'ghl-crm-integration' ); ?>">?</span>
 							</span>
 						</label>
 						<p class="description" style="margin-left: 54px; margin-top: 8px;">

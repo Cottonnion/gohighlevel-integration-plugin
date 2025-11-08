@@ -51,6 +51,35 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 	\GHL_CRM\Core\ScopeChecker::render_scope_notice( 'tags' );
 	?>
 
+	<!-- Helpful Information Notice -->
+	<div class="notice notice-info" style="margin: 20px 0; padding: 15px; border-left-color: #2271b1;">
+		<h3 style="margin-top: 0;">
+			<span class="dashicons dashicons-info" style="color: #2271b1;"></span>
+			<?php esc_html_e( 'About Integration Settings', 'ghl-crm-integration' ); ?>
+		</h3>
+		<p>
+			<?php esc_html_e( 'Control how WordPress integrates with GoHighLevel for WooCommerce, BuddyBoss, and other platforms.', 'ghl-crm-integration' ); ?>
+		</p>
+		<ul style="list-style: disc; margin-left: 20px;">
+			<li>
+				<strong><?php esc_html_e( 'Master Toggle:', 'ghl-crm-integration' ); ?></strong> 
+				<?php esc_html_e( 'Each integration has a master toggle at the top. Disabling it immediately stops ALL sync activities for that integration.', 'ghl-crm-integration' ); ?>
+			</li>
+			<li>
+				<strong><?php esc_html_e( 'Individual Settings:', 'ghl-crm-integration' ); ?></strong> 
+				<?php esc_html_e( 'Fine-tune which events trigger syncs (orders, groups, courses, etc.) and configure tags for automation.', 'ghl-crm-integration' ); ?>
+			</li>
+			<li>
+				<strong><?php esc_html_e( 'Tags:', 'ghl-crm-integration' ); ?></strong> 
+				<?php esc_html_e( 'Assign tags to contacts based on WordPress events. These tags can trigger workflows in GoHighLevel.', 'ghl-crm-integration' ); ?>
+			</li>
+		</ul>
+		<p style="margin-bottom: 0;">
+			<strong><?php esc_html_e( 'Important:', 'ghl-crm-integration' ); ?></strong> 
+			<?php esc_html_e( 'When you disable a master toggle, all related sync operations stop immediately. Existing data remains in GoHighLevel but no new syncs will occur until you re-enable it.', 'ghl-crm-integration' ); ?>
+		</p>
+	</div>
+
 	<!-- Success/Error Messages -->
 	<div id="ghl-integrations-messages"></div>
 

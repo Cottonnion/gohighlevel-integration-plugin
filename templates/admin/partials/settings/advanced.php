@@ -41,6 +41,7 @@ $settings = $settings_manager->get_settings_array();
 					<th scope="row">
 						<label for="cache_duration">
 							<?php esc_html_e( 'Cache Duration', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'How long to store API responses in memory before fetching fresh data. Longer caching reduces API calls but may show stale data. Set to 0 to disable.', 'ghl-crm-integration' ); ?>">?</span>
 						</label>
 					</th>
 					<td>
@@ -62,6 +63,7 @@ $settings = $settings_manager->get_settings_array();
 					<th scope="row">
 						<label for="batch_size">
 							<?php esc_html_e( 'Batch Size', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'How many items to process at once during bulk sync operations. Higher values = faster sync but more server load. Lower values = slower but safer for shared hosting.', 'ghl-crm-integration' ); ?>">?</span>
 						</label>
 					</th>
 					<td>
@@ -83,6 +85,7 @@ $settings = $settings_manager->get_settings_array();
 					<th scope="row">
 						<label for="log_retention_days">
 							<?php esc_html_e( 'Log Retention Period', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'How long to keep historical sync logs and completed queue items before automatic deletion. Older logs are permanently removed to save database space.', 'ghl-crm-integration' ); ?>">?</span>
 						</label>
 					</th>
 					<td>
@@ -104,6 +107,7 @@ $settings = $settings_manager->get_settings_array();
 					<th scope="row">
 						<label for="enable_sync_logging">
 							<?php esc_html_e( 'Sync & Queue Logging', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Records all sync operations and queue activities to the database for troubleshooting. Disable only if you need to minimize database writes or have confirmed everything works correctly.', 'ghl-crm-integration' ); ?>">?</span>
 						</label>
 					</th>
 					<td>

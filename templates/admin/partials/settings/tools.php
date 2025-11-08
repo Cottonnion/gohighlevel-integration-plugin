@@ -38,7 +38,9 @@ $settings = $settings_manager->get_settings_array();
 				<tbody>
 					<tr>
 						<th scope="row">
-							<label><?php esc_html_e( 'Clear Cache', 'ghl-crm-integration' ); ?></label>
+							<label><?php esc_html_e( 'Clear Cache', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Deletes all temporarily stored data including contact info, API responses, and rate limit counters. Use when troubleshooting sync issues or after making major changes in GoHighLevel.', 'ghl-crm-integration' ); ?>">?</span>
+							</label>
 						</th>
 						<td>
 							<button type="button" class="ghl-button ghl-button-secondary" id="clear-cache-btn">
@@ -53,7 +55,9 @@ $settings = $settings_manager->get_settings_array();
 					
 					<tr>
 						<th scope="row">
-							<label><?php esc_html_e( 'Reset Settings', 'ghl-crm-integration' ); ?></label>
+							<label><?php esc_html_e( 'Reset Settings', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Restores ALL settings to factory defaults while keeping your GoHighLevel connection intact. All field mappings, role tags, and notification configs will be lost.', 'ghl-crm-integration' ); ?>">?</span>
+							</label>
 						</th>
 						<td>
 							<button type="button" class="ghl-button ghl-button-secondary" id="reset-settings-btn">
@@ -93,7 +97,9 @@ $settings = $settings_manager->get_settings_array();
 				<tbody>
 					<tr>
 						<th scope="row">
-							<label><?php esc_html_e( 'Export Settings', 'ghl-crm-integration' ); ?></label>
+							<label><?php esc_html_e( 'Export Settings', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Downloads a JSON file with all your current settings (field mappings, role tags, notification configs, etc). API credentials are excluded for security. Perfect for backups or migrating to staging.', 'ghl-crm-integration' ); ?>">?</span>
+							</label>
 						</th>
 						<td>
 							<button type="button" class="ghl-button ghl-button-secondary" id="export-settings-btn">
@@ -108,7 +114,9 @@ $settings = $settings_manager->get_settings_array();
 					
 					<tr>
 						<th scope="row">
-							<label for="import-settings-file"><?php esc_html_e( 'Import Settings', 'ghl-crm-integration' ); ?></label>
+							<label for="import-settings-file"><?php esc_html_e( 'Import Settings', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Uploads a previously exported JSON file to restore settings. This will overwrite ALL current configurations except API credentials. Great for duplicating setups across multiple sites.', 'ghl-crm-integration' ); ?>">?</span>
+							</label>
 						</th>
 						<td>
 							<input type="file" id="import-settings-file" accept=".json" style="display: none;">

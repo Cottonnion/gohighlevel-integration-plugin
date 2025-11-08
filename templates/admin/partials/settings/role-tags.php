@@ -52,9 +52,18 @@ $global_tags = is_array( $global_tags_raw ) ? implode( ',', $global_tags_raw ) :
 				<thead>
 					<tr>
 						<th style="width: 25%;"><?php esc_html_e( 'WordPress Role', 'ghl-crm-integration' ); ?></th>
-						<th style="width: 35%;"><?php esc_html_e( 'GoHighLevel Tags', 'ghl-crm-integration' ); ?></th>
-						<th style="width: 20%;"><?php esc_html_e( 'Auto-Apply', 'ghl-crm-integration' ); ?></th>
-						<th style="width: 20%;"><?php esc_html_e( 'Remove on Role Change', 'ghl-crm-integration' ); ?></th>
+						<th style="width: 35%;">
+							<?php esc_html_e( 'GoHighLevel Tags', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Enter one or more tags to apply to users with this role. Tags are synced to their GoHighLevel contact record. You can select existing tags or create new ones by typing.', 'ghl-crm-integration' ); ?>">?</span>
+						</th>
+						<th style="width: 20%;">
+							<?php esc_html_e( 'Auto-Apply', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'When enabled, these tags are automatically applied when a user is assigned this role. Disable if you want to manually trigger tag assignment via bulk actions instead.', 'ghl-crm-integration' ); ?>">?</span>
+						</th>
+						<th style="width: 20%;">
+							<?php esc_html_e( 'Remove on Role Change', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'When enabled, these tags are removed from the contact when the user loses this role. Useful for access-based tags. Keep disabled if you want to preserve role history in tags.', 'ghl-crm-integration' ); ?>">?</span>
+						</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -129,6 +138,7 @@ $global_tags = is_array( $global_tags_raw ) ? implode( ',', $global_tags_raw ) :
 					<th scope="row">
 						<label for="global_tags">
 							<?php esc_html_e( 'Global Tags', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'These tags are applied to EVERY contact synced from WordPress to GoHighLevel, regardless of their role.', 'ghl-crm-integration' ); ?>">?</span>
 						</label>
 					</th>
 					<td>
@@ -156,11 +166,6 @@ $global_tags = is_array( $global_tags_raw ) ? implode( ',', $global_tags_raw ) :
 						</select>
 						<p class="description" style="margin-top: 8px;">
 							<?php esc_html_e( 'Tags to apply to all synced contacts regardless of role.', 'ghl-crm-integration' ); ?>
-						</p>
-						<p class="description" style="margin-top: 8px; padding: 10px; background: #f0f6fc; border-left: 3px solid #2271b1; border-radius: 3px;">
-							<span class="dashicons dashicons-info" style="color: #2271b1;"></span>
-							<strong><?php esc_html_e( 'Note:', 'ghl-crm-integration' ); ?></strong>
-							<?php esc_html_e( 'Global tags will be applied when users register, update their profile, or change roles. They are not applied immediately upon saving - use "Bulk Tag Operations" below to tag existing users.', 'ghl-crm-integration' ); ?>
 						</p>
 					</td>
 				</tr>

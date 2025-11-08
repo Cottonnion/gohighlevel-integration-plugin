@@ -52,9 +52,34 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 	\GHL_CRM\Core\ScopeChecker::render_scope_notice( 'associations' );
 	?>
 
-	<p class="description">
-		<?php esc_html_e( 'View and manage Custom Objects from your GoHighLevel account. Custom Objects allow you to store structured data beyond standard contacts.', 'ghl-crm-integration' ); ?>
-	</p>
+	<!-- Helpful Information Notice -->
+	<div class="notice notice-info" style="margin: 20px 0; padding: 15px; border-left-color: #2271b1;">
+		<h3 style="margin-top: 0;">
+			<span class="dashicons dashicons-info" style="color: #2271b1;"></span>
+			<?php esc_html_e( 'About Custom Objects', 'ghl-crm-integration' ); ?>
+		</h3>
+		<p>
+			<?php esc_html_e( 'Custom Objects in GoHighLevel allow you to store structured data beyond standard contacts. Use this page to view, manage, and map your custom objects to WordPress data.', 'ghl-crm-integration' ); ?>
+		</p>
+		<ul style="list-style: disc; margin-left: 20px;">
+			<li>
+				<strong><?php esc_html_e( 'Schemas:', 'ghl-crm-integration' ); ?></strong> 
+				<?php esc_html_e( 'Define the structure of your custom objects (fields, data types, validation rules)', 'ghl-crm-integration' ); ?>
+			</li>
+			<li>
+				<strong><?php esc_html_e( 'Mappings:', 'ghl-crm-integration' ); ?></strong> 
+				<?php esc_html_e( 'Connect WordPress data (users, orders, posts) to your custom objects in GoHighLevel', 'ghl-crm-integration' ); ?>
+			</li>
+			<li>
+				<strong><?php esc_html_e( 'Associations:', 'ghl-crm-integration' ); ?></strong> 
+				<?php esc_html_e( 'Link custom object records with contacts and other objects for relationship tracking', 'ghl-crm-integration' ); ?>
+			</li>
+		</ul>
+		<p style="margin-bottom: 0;">
+			<strong><?php esc_html_e( 'Getting Started:', 'ghl-crm-integration' ); ?></strong> 
+			<?php esc_html_e( 'First create a custom object schema in GoHighLevel, then click "Refresh Schemas" to sync it here. After that, create a mapping to connect it with your WordPress data.', 'ghl-crm-integration' ); ?>
+		</p>
+	</div>
 	
 	<?php if ( $is_connected ) : ?>
 		

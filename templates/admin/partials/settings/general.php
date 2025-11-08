@@ -48,6 +48,7 @@ $user_register_tags            = $settings['user_register_tags'] ?? [];
 					<div class="ghl-form-item-content">
 						<label for="ghl_white_label_domain" style="display: block; margin-bottom: 10px; font-weight: 600;">
 							<?php esc_html_e( 'White Label Domain URL', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'If you have a custom branded domain in GoHighLevel (like app.yourbusiness.com instead of app.gohighlevel.com), enter it here. This ensures links to GHL records use your branded URL. Leave empty if you use the standard GoHighLevel domain.', 'ghl-crm-integration' ); ?>">?</span>
 						</label>
 						<input 
 							type="text" 
@@ -99,6 +100,7 @@ $user_register_tags            = $settings['user_register_tags'] ?? [];
 							</span>
 							<span class="ghl-checkbox-label">
 								<?php esc_html_e( 'Enable Sync between WP User Data and GoHighLevel Contact Data', 'ghl-crm-integration' ); ?>
+								<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'When enabled, WordPress user profile changes (name, email, custom fields) automatically sync to their GoHighLevel contact record. This keeps data consistent across both platforms.', 'ghl-crm-integration' ); ?>">?</span>
 							</span>
 						</label>
 					</div>
@@ -119,6 +121,7 @@ $user_register_tags            = $settings['user_register_tags'] ?? [];
 							</span>
 							<span class="ghl-checkbox-label">
 								<?php esc_html_e( 'Delete GoHighLevel contact on WP User delete', 'ghl-crm-integration' ); ?>
+								<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Warning: When a WordPress user is deleted, their GoHighLevel contact will also be permanently deleted. Disable this if you want to keep GHL contacts even after removing WordPress users (recommended for preserving customer history).', 'ghl-crm-integration' ); ?>">?</span>
 							</span>
 						</label>
 					</div>
@@ -161,6 +164,7 @@ $user_register_tags            = $settings['user_register_tags'] ?? [];
 					<div class="ghl-form-item-content">
 						<label style="display: block; margin-bottom: 10px; font-weight: 600;">
 							<?php esc_html_e( 'Default Tags on User Registration', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'These tags are automatically applied to contacts in GoHighLevel when someone creates a new account on your WordPress site. Use these tags to trigger welcome emails, onboarding workflows, or segment new users in GHL.', 'ghl-crm-integration' ); ?>">?</span>
 						</label>
 						<select 
 							id="user_register_tags" 

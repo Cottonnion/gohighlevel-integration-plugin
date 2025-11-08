@@ -67,6 +67,7 @@ $settings        = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_a
 					<span class="dashicons dashicons-admin-tools"></span>
 					<?php esc_html_e( 'Test Webhook Endpoint', 'ghl-crm-integration' ); ?>
 				</button>
+				<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Sends a test request to verify your webhook endpoint is working correctly. This checks that your WordPress site can receive webhook data from GoHighLevel.', 'ghl-crm-integration' ); ?>">?</span>
 			</p>
 		</div>
 	</div>

@@ -63,6 +63,7 @@ if ( empty( $rest_api_key ) ) {
 							</span>
 							<span class="ghl-checkbox-label">
 								<?php esc_html_e( 'Enable REST API endpoints', 'ghl-crm-integration' ); ?>
+								<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Allows external applications (like Zapier, Make.com, or custom integrations) to interact with your GoHighLevel data through secure API endpoints. Only enable if you need programmatic access.', 'ghl-crm-integration' ); ?>">?</span>
 							</span>
 						</label>
 					</div>
@@ -101,7 +102,7 @@ if ( empty( $rest_api_key ) ) {
 							/>
 							<button type="button" class="button button-secondary" id="ghl-generate-api-key">
 								<span class="dashicons dashicons-update" style="vertical-align: middle;"></span>
-								<?php esc_html_e( 'Regenerate', 'ghl-crm-integration' ); ?>
+								<span data-ghl-tooltip="<?php esc_attr_e( 'Creates a new random API key and invalidates the old one. Update all external integrations with the new key after regenerating.', 'ghl-crm-integration' ); ?>"><?php esc_html_e( 'Regenerate', 'ghl-crm-integration' ); ?></span>
 							</button>
 							<button type="button" class="button button-secondary" id="ghl-copy-api-key" title="<?php esc_attr_e( 'Copy to clipboard', 'ghl-crm-integration' ); ?>">
 								<span class="dashicons dashicons-clipboard" style="vertical-align: middle;"></span>
@@ -130,6 +131,7 @@ if ( empty( $rest_api_key ) ) {
 					<th scope="row">
 						<label for="rest_api_ip_whitelist">
 							<?php esc_html_e( 'IP Whitelist', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Restricts API access to specific IP addresses. Enter one IP or CIDR range per line (e.g., 192.168.1.1 or 10.0.0.0/8). Leave empty to allow requests from any IP address.', 'ghl-crm-integration' ); ?>">?</span>
 						</label>
 					</th>
 					<td>
@@ -150,6 +152,7 @@ if ( empty( $rest_api_key ) ) {
 				<tr>
 					<th scope="row">
 						<?php esc_html_e( 'Rate Limiting', 'ghl-crm-integration' ); ?>
+						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Prevents API abuse by limiting how many requests each IP address can make per minute. Recommended for production sites to prevent server overload.', 'ghl-crm-integration' ); ?>">?</span>
 					</th>
 					<td>
 						<label class="ghl-checkbox <?php echo $rest_api_rate_limit ? 'is-checked' : ''; ?>" style="display: inline-flex; align-items: center;">
@@ -189,7 +192,9 @@ if ( empty( $rest_api_key ) ) {
 
 	<!-- Endpoint Configuration -->
 	<div class="ghl-settings-section ghl-settings-card">
-		<h2><?php esc_html_e( 'Allowed Endpoints', 'ghl-crm-integration' ); ?></h2>
+		<h2><?php esc_html_e( 'Allowed Endpoints', 'ghl-crm-integration' ); ?>
+		<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Control which specific API endpoints are accessible. Only enable endpoints you need to minimize security exposure. Uncheck unused endpoints to disable them.', 'ghl-crm-integration' ); ?>">?</span>
+		</h2>
 		<p><?php esc_html_e( 'Choose which REST API endpoints are available for external access.', 'ghl-crm-integration' ); ?></p>
 		<hr>
 		

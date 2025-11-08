@@ -14,17 +14,6 @@ $white_label_domain = $settings['ghl_white_label_domain'] ?? '';
 ?>
 
 <div class="ghl-forms-container">
-	<!-- Page Header -->
-	<div class="ghl-page-header">
-		<h1>
-			<span class="dashicons dashicons-media-document"></span>
-			<?php esc_html_e( 'Forms Management', 'ghl-crm-integration' ); ?>
-		</h1>
-		<p class="description">
-			<?php esc_html_e( 'Manage and embed GoHighLevel forms in your WordPress site using shortcodes.', 'ghl-crm-integration' ); ?>
-		</p>
-	</div>
-
 	<!-- Connection Check -->
 	<?php
 	$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
@@ -58,6 +47,41 @@ $white_label_domain = $settings['ghl_white_label_domain'] ?? '';
 
 	// Check scope access for Forms
 	\GHL_CRM\Core\ScopeChecker::render_scope_notice( 'forms' );
+	
+	// Helpful Information Notice
+	?>
+	<div class="notice notice-info" style="margin: 20px 0; padding: 15px; border-left-color: #2271b1;">
+		<h3 style="margin-top: 0;">
+			<span class="dashicons dashicons-info" style="color: #2271b1;"></span>
+			<?php esc_html_e( 'How to Use Forms', 'ghl-crm-integration' ); ?>
+		</h3>
+		<p>
+			<?php esc_html_e( 'Embed your GoHighLevel forms anywhere on your WordPress site using shortcodes or the block editor.', 'ghl-crm-integration' ); ?>
+		</p>
+		<ul style="list-style: disc; margin-left: 20px;">
+			<li>
+				<strong><?php esc_html_e( 'Copy Shortcode:', 'ghl-crm-integration' ); ?></strong> 
+				<?php esc_html_e( 'Click "Copy Shortcode" on any form below and paste it into any page, post, or widget.', 'ghl-crm-integration' ); ?>
+			</li>
+			<li>
+				<strong><?php esc_html_e( 'Use in Block Editor:', 'ghl-crm-integration' ); ?></strong> 
+				<?php esc_html_e( 'Add a "Shortcode" block and paste the shortcode to embed the form.', 'ghl-crm-integration' ); ?>
+			</li>
+			<li>
+				<strong><?php esc_html_e( 'Use in Classic Editor:', 'ghl-crm-integration' ); ?></strong> 
+				<?php esc_html_e( 'Simply paste the shortcode directly into your content.', 'ghl-crm-integration' ); ?>
+			</li>
+			<li>
+				<strong><?php esc_html_e( 'Use in PHP Templates:', 'ghl-crm-integration' ); ?></strong> 
+				<?php esc_html_e( 'Use do_shortcode() function in your theme files.', 'ghl-crm-integration' ); ?>
+			</li>
+		</ul>
+		<p style="margin-bottom: 0;">
+			<strong><?php esc_html_e( 'Note:', 'ghl-crm-integration' ); ?></strong> 
+			<?php esc_html_e( 'Form submissions go directly to GoHighLevel. You can manage submissions and automations in your GHL account.', 'ghl-crm-integration' ); ?>
+		</p>
+	</div>
+	<?php
 	
 	// White Label Domain Notice
 	if ( empty( $white_label_domain ) ) :
