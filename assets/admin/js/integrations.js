@@ -115,26 +115,34 @@
 								search: params.term || ''
 							};
 						},
-						processResults: function(response) {
-							if (response.success && response.data && response.data.tags) {
-								return {
-									results: response.data.tags.map(function(tag) {
-										// Handle both object format {id, name} and string format
-										if (typeof tag === 'object' && tag !== null) {
-											return {
-												id: String(tag.name || tag.id || ''),
-												text: String(tag.name || tag.id || '')
-											};
-										}
-										// Fallback for string format
-										return {
-											id: String(tag || ''),
-											text: String(tag || '')
-										};
-									})
-								};
+						processResults: function(response, params) {
+							if (!response.success || !response.data || !response.data.tags) {
+								return { results: [] };
 							}
-							return { results: [] };
+
+							var items = response.data.tags.map(function(tag) {
+								if (typeof tag === 'object' && tag !== null) {
+									var label = String(tag.name || tag.id || '');
+									return {
+										id: label,
+										text: label
+									};
+								}
+								var value = String(tag || '');
+								return {
+									id: value,
+									text: value
+								};
+							});
+
+							if (params && params.term) {
+								var term = params.term.toLowerCase();
+								items = items.filter(function(item) {
+									return item.text && item.text.toLowerCase().indexOf(term) !== -1;
+								});
+							}
+
+							return { results: items };
 						},
 						cache: true
 					},
