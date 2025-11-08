@@ -4,7 +4,7 @@ Here’s the updated version — includes **domain-driven architecture** instruc
 
 ```
 applyTo: '**'
-
+ask me about logic before applying it, cause in some cases the logic already exists but you missed it
 # 🎯 Plugin Spec & Requirements (for Claude or dev AI)
 
 ## 1. WordPress.org Publishing Requirements  
