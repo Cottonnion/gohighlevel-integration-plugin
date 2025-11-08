@@ -71,10 +71,17 @@ class WooCommerceSync {
 	 * @return void
 	 */
 	public function init(): void {
-		// Only hook if WooCommerce is active and integration is enabled
+		// Only hook if WooCommerce is active
 		if ( ! class_exists( 'WooCommerce' ) ) {
 			return;
 		}
+
+		// Product purchase tags - always enabled (independent of wc_enabled setting)
+		add_action( 'woocommerce_order_status_completed', [ $this, 'handle_product_tags' ], 10, 2 );
+		add_action( 'woocommerce_payment_complete', [ $this, 'handle_product_tags' ], 10, 1 );
+		
+		// Register queue processor handler for product tags
+		add_filter( 'ghl_crm_execute_sync', [ $this, 'handle_queue_execution' ], 10, 5 );
 
 		$settings = $this->settings_manager->get_settings_array();
 		if ( empty( $settings['wc_enabled'] ) ) {
@@ -192,9 +199,9 @@ class WooCommerceSync {
 	 * This method is called by the queue processor
 	 *
 	 * @param array $payload Customer data payload from queue.
-	 * @return bool Success status.
+	 * @return array|bool Array with contact data on success, false on failure.
 	 */
-	public function process_customer_conversion( array $payload ): bool {
+	public function process_customer_conversion( array $payload ) {
 		try {
 			$email = $payload['email'] ?? '';
 			$tags  = $payload['tags'] ?? [];
@@ -223,9 +230,37 @@ class WooCommerceSync {
 
 			$contact_id = $result['contact']['id'];
 
-			// Add customer tags if any
+			// Add customer tags if any - MERGE with existing tags
 			if ( ! empty( $tags ) && is_array( $tags ) ) {
-				$this->contact_resource->add_tags( $contact_id, $tags );
+				// Fetch existing tags from the contact
+				$existing_tags = $result['contact']['tags'] ?? [];
+				
+				error_log( sprintf(
+					'asiya log: convert_lead existing tags | contact %s | tags [%s]',
+					$contact_id,
+					implode( ', ', $existing_tags )
+				) );
+
+				// Merge: combine existing + new tags, remove duplicates
+				$merged_tags = array_values( array_unique( array_merge( $existing_tags, $tags ) ) );
+
+				error_log( sprintf(
+					'asiya log: convert_lead merging tags | contact %s | existing [%s] + new [%s] = merged [%s]',
+					$contact_id,
+					implode( ', ', $existing_tags ),
+					implode( ', ', $tags ),
+					implode( ', ', $merged_tags )
+				) );
+
+				// Update with merged tags
+				$tag_result = $this->contact_resource->update( $contact_id, [ 'tags' => $merged_tags ] );
+
+				error_log( sprintf(
+					'asiya log: convert_lead update tags response | contact %s | merged tags [%s] | response %s',
+					$contact_id,
+					implode( ', ', $merged_tags ),
+					json_encode( $tag_result )
+				) );
 			}
 
 			// Log success
@@ -236,7 +271,13 @@ class WooCommerceSync {
 				implode( ', ', $tags )
 			) );
 
-			return true;
+			// Return contact data for auto-sync
+			return [
+				'success' => true,
+				'contact' => [
+					'id' => $contact_id,
+				],
+			];
 
 		} catch ( \Exception $e ) {
 			error_log( 'GHL WooCommerce: Error processing customer conversion - ' . $e->getMessage() );
@@ -263,6 +304,217 @@ class WooCommerceSync {
 		] );
 
 		return is_array( $orders ) ? $orders : [];
+	}
+
+	/**
+	 * Handle product purchase tags
+	 *
+	 * @param int       $order_id Order ID.
+	 * @param \WC_Order $order    Order object (optional).
+	 * @return void
+	 */
+	public function handle_product_tags( int $order_id, $order = null ): void {
+		try {
+			error_log( sprintf( 'asiya log: handle_product_tags start | order #%d', $order_id ) );
+
+			if ( ! $order ) {
+				$order = wc_get_order( $order_id );
+			}
+
+			if ( ! $order ) {
+				error_log( sprintf( 'asiya log: handle_product_tags abort | order #%d | reason no order found', $order_id ) );
+				return;
+			}
+
+			$email = $order->get_billing_email();
+			if ( empty( $email ) ) {
+				error_log( sprintf( 'asiya log: handle_product_tags abort | order #%d | reason empty email', $order_id ) );
+				return;
+			}
+
+			// Collect all tags from purchased products
+			$product_tags    = [];
+			$product_details = [];
+
+			foreach ( $order->get_items() as $item ) {
+				$product_id = $item->get_product_id();
+				$tags       = ProductMetaBox::get_product_tags( $product_id );
+
+				if ( ! empty( $tags ) && is_array( $tags ) ) {
+					$product_tags    = array_merge( $product_tags, $tags );
+					$product_details[] = sprintf( '#%d (%s)', $product_id, implode( ', ', $tags ) );
+				}
+			}
+
+			// Remove duplicates
+			$product_tags = array_unique( $product_tags );
+
+			if ( empty( $product_tags ) ) {
+				error_log( sprintf( 'asiya log: handle_product_tags abort | order #%d | reason no product tags configured', $order_id ) );
+				return;
+			}
+
+			$tag_data = [
+				'email'      => $email,
+				'firstName'  => $order->get_billing_first_name(),
+				'lastName'   => $order->get_billing_last_name(),
+				'phone'      => $order->get_billing_phone(),
+				'tags'       => $product_tags,
+				'source'     => 'woocommerce_product_purchase',
+				'order_id'   => $order_id,
+			];
+
+			error_log( sprintf( 'asiya log: handle_product_tags payload | order #%d | data %s', $order_id, wp_json_encode( $tag_data ) ) );
+			error_log( sprintf( 'asiya log: handle_product_tags products | order #%d | %s', $order_id, implode( ' | ', $product_details ) ) );
+
+			// Check if there's a pending profile_update for this user (to create dependency)
+			$user_id           = $order->get_user_id();
+			$depends_on_queue_id = null;
+			
+			if ( $user_id ) {
+				// Get the most recent pending profile_update queue item for this user
+				global $wpdb;
+				$table_name = $wpdb->prefix . 'ghl_sync_queue';
+				$depends_on_queue_id = $wpdb->get_var(
+					$wpdb->prepare(
+						"SELECT id FROM {$table_name} 
+						WHERE item_type = 'user' 
+						AND item_id = %d 
+						AND action = 'profile_update' 
+						AND status = 'pending' 
+						ORDER BY created_at DESC 
+						LIMIT 1",
+						$user_id
+					)
+				);
+				
+				if ( $depends_on_queue_id ) {
+					error_log( sprintf( 
+						'asiya log: handle_product_tags dependency | order #%d | depends on queue_id %d (user #%d profile_update)', 
+						$order_id, 
+						$depends_on_queue_id,
+						$user_id
+					) );
+				}
+			}
+
+			$this->queue_manager->add_to_queue(
+				'wc_product_tags',
+				$order_id,
+				'apply_tags',
+				$tag_data,
+				$depends_on_queue_id // Add dependency parameter
+			);
+
+			error_log( sprintf( 'asiya log: handle_product_tags queued | order #%d', $order_id ) );
+
+		} catch ( \Throwable $error ) {
+			error_log( sprintf( 'asiya log: handle_product_tags error | order #%d | message %s', $order_id, $error->getMessage() ) );
+		} catch ( \Error $error ) {
+			error_log( sprintf( 'asiya log: handle_product_tags error | order #%d | message %s', $order_id, $error->getMessage() ) );
+		}
+	}
+
+	/**
+	 * Process product tags sync from queue
+	 *
+	 * @param array $payload Product tags data payload.
+	 * @return array|bool Array with contact data on success, false on failure.
+	 */
+	public function process_product_tags( array $payload ) {
+		try {
+			error_log( 'asiya log: process_product_tags start | payload ' . wp_json_encode( $payload ) );
+
+			$email = $payload['email'] ?? '';
+			$tags  = $payload['tags'] ?? [];
+
+			if ( empty( $email ) || empty( $tags ) ) {
+				error_log( 'asiya log: process_product_tags abort | reason missing email or tags' );
+				return false;
+			}
+
+			$contact_data = [
+				'email'     => $email,
+				'firstName' => $payload['firstName'] ?? '',
+				'lastName'  => $payload['lastName'] ?? '',
+				'phone'     => $payload['phone'] ?? '',
+			];
+
+			error_log( 'asiya log: process_product_tags upsert data ' . wp_json_encode( $contact_data ) );
+
+			$result = $this->contact_resource->upsert( $contact_data );
+			error_log( 'asiya log: process_product_tags upsert response ' . wp_json_encode( $result ) );
+
+			$contact_id = $result['contact']['id'] ?? $result['id'] ?? '';
+
+			if ( empty( $contact_id ) ) {
+				error_log( 'asiya log: process_product_tags abort | reason missing contact ID after upsert' );
+				return false;
+			}
+
+			// Fetch existing contact tags to merge with new ones
+			$existing_tags = [];
+			try {
+				$contact_details = $this->contact_resource->get( $contact_id );
+				if ( ! empty( $contact_details['contact']['tags'] ) && is_array( $contact_details['contact']['tags'] ) ) {
+					$existing_tags = $contact_details['contact']['tags'];
+					error_log( sprintf(
+						'asiya log: process_product_tags existing tags | contact %s | tags [%s]',
+						$contact_id,
+						implode( ', ', $existing_tags )
+					) );
+				}
+			} catch ( \Throwable $fetch_error ) {
+				error_log( sprintf(
+					'asiya log: process_product_tags could not fetch existing tags | contact %s | error %s',
+					$contact_id,
+					$fetch_error->getMessage()
+				) );
+				// Continue anyway, we'll just add the new tags
+			}
+
+			// Merge tags: combine existing + new, remove duplicates
+			$merged_tags = array_unique( array_merge( $existing_tags, $tags ) );
+			
+			error_log( sprintf(
+				'asiya log: process_product_tags merging tags | contact %s | existing [%s] + new [%s] = merged [%s]',
+				$contact_id,
+				implode( ', ', $existing_tags ),
+				implode( ', ', $tags ),
+				implode( ', ', $merged_tags )
+			) );
+
+			try {
+				// Update contact with merged tags (not just add, to ensure all tags are present)
+				$update_result = $this->contact_resource->update( $contact_id, [ 'tags' => $merged_tags ] );
+				error_log( sprintf(
+					'asiya log: process_product_tags update tags response | contact %s | merged tags [%s] | response %s',
+					$contact_id,
+					implode( ', ', $merged_tags ),
+					wp_json_encode( $update_result )
+				) );
+				
+				// Return contact data for QueueManager to extract contact_id
+				return [
+					'success' => true,
+					'contact' => [
+						'id'   => $contact_id,
+						'tags' => $merged_tags,
+					],
+				];
+			} catch ( \Throwable $tag_error ) {
+				error_log( sprintf(
+					'asiya log: process_product_tags add_tags error | contact %s | message %s',
+					$contact_id,
+					$tag_error->getMessage()
+				) );
+				return false;
+			}
+
+		} catch ( \Throwable $error ) {
+			error_log( 'asiya log: error processing product tags - ' . $error->getMessage() );
+			return false;
+		}
 	}
 
 	/**
@@ -563,5 +815,31 @@ class WooCommerceSync {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Handle queue execution for WooCommerce-specific item types
+	 *
+	 * @param mixed  $result    Current result (false by default).
+	 * @param string $item_type Item type.
+	 * @param string $action    Action.
+	 * @param int    $item_id   Item ID.
+	 * @param array  $payload   Payload data.
+	 * @return mixed Result from handler or false.
+	 */
+	public function handle_queue_execution( $result, string $item_type, string $action, int $item_id, array $payload ) {
+		// Only handle WooCommerce product tags
+		if ( 'wc_product_tags' !== $item_type ) {
+			return $result;
+		}
+
+		// Route to appropriate handler based on action
+		switch ( $action ) {
+			case 'apply_tags':
+				return $this->process_product_tags( $payload );
+
+			default:
+				return $result;
+		}
 	}
 }
