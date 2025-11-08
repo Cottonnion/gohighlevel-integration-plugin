@@ -79,7 +79,7 @@ class MenuManager {
 			'manage_options',
 			'ghl-crm-admin',
 			[ $this, 'render_spa_app' ],
-			$icon_svg,
+			'dashicons-randomize',
 			58
 		);
 
