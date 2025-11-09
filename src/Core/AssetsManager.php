@@ -66,9 +66,6 @@ class AssetsManager {
 		add_action( 'admin_enqueue_scripts', [ $this, 'register_external_libraries' ], 5 );
 		add_action( 'wp_enqueue_scripts', [ $this, 'register_external_libraries' ], 5 );
 
-		// Enqueue Font Awesome on all admin pages
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_global_admin_assets' ], 6 );
-
 		// Register admin assets
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
 
@@ -105,14 +102,6 @@ class AssetsManager {
 			true
 		);
 
-		// Register Font Awesome
-		wp_register_style(
-			'font-awesome',
-			'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css',
-			[],
-			'6.6.0'
-		);
-
 		// Register Select2 (local files) with plugin-specific handles to avoid conflicts
 		wp_register_style(
 			'ghl-crm-select2-css',
@@ -128,17 +117,6 @@ class AssetsManager {
 			'4.1.0',
 			true
 		);
-	}
-
-	/**
-	 * Enqueue global admin assets (Font Awesome, etc.)
-	 * These load on all admin pages
-	 *
-	 * @return void
-	 */
-	public function enqueue_global_admin_assets(): void {
-		// Enqueue Font Awesome on all admin pages
-		wp_enqueue_style( 'font-awesome' );
 	}
 
 	/**
@@ -171,7 +149,7 @@ class AssetsManager {
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'admin-menu.css',
 			[],
-			[ 'font-awesome' ], // Add Font Awesome as a dependency
+			[],
 			'1.0.0'
 		);
 
