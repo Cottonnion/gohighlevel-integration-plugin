@@ -274,6 +274,15 @@ class UserHooks {
 			}
 		}
 
+		// Prefer tags managed via user profile when available
+		$profile_tags = get_user_meta( $user_id, '_ghl_contact_tags', true );
+		if ( is_array( $profile_tags ) ) {
+			$sanitized_profile_tags = array_map( 'sanitize_text_field', $profile_tags );
+			$existing_tags          = array_values( array_filter( $sanitized_profile_tags, static function ( $tag ) {
+				return $tag !== '';
+			} ) );
+		}
+
 		// Handle role-based tags
 		$role_tags_manager = RoleTagsManager::get_instance();
 		$settings          = $this->settings_manager->get_settings_array();
@@ -296,8 +305,8 @@ class UserHooks {
 		$role_based_tags = $role_tags_manager->get_user_role_tags( $user_id );
 
 		// Remove old role tags from existing tags
-		if ( ! empty( $tags_to_remove ) ) {
-			$existing_tags = array_diff( $existing_tags, $tags_to_remove );
+		if ( ! empty( $tags_to_remove ) && ! empty( $existing_tags ) ) {
+			$existing_tags = array_values( array_diff( $existing_tags, $tags_to_remove ) );
 		}
 
 		// Check if user just made first WooCommerce purchase (within last 5 minutes)
