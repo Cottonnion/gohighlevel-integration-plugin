@@ -89,7 +89,7 @@ class QueueManager {
 		$this->contact_cache = ContactCache::get_instance();
 		$this->processor     = QueueProcessor::get_instance();
 		$this->logger        = QueueLogger::get_instance();
-		
+
 		$this->init_hooks();
 	}
 
@@ -115,7 +115,7 @@ class QueueManager {
 		// Schedule recurring action via Action Scheduler (runs every 10 seconds)
 		if ( function_exists( 'as_next_scheduled_action' ) ) {
 			$next_scheduled = as_next_scheduled_action( 'ghl_crm_process_queue' );
-			
+
 			if ( false === $next_scheduled ) {
 				as_schedule_recurring_action( time(), 10, 'ghl_crm_process_queue', [], 'ghl-crm' );
 			}
@@ -144,9 +144,6 @@ class QueueManager {
 
 		$table_name      = $this->get_queue_table_name();
 		$current_site_id = get_current_blog_id();
-
-		
-		
 
 		// Check for existing pending item
 		$existing = $wpdb->get_var(
@@ -196,13 +193,15 @@ class QueueManager {
 		// Store dependency in payload if provided
 		if ( null !== $depends_on_queue_id ) {
 			$payload['_depends_on_queue_id'] = $depends_on_queue_id;
-			error_log( sprintf(
-				'GHL Queue: Adding queue item with dependency - Type: %s, Item ID: %d, Action: %s, Depends on Queue ID: %d',
-				$item_type,
-				$item_id,
-				$action,
-				$depends_on_queue_id
-			) );
+			error_log(
+				sprintf(
+					'GHL Queue: Adding queue item with dependency - Type: %s, Item ID: %d, Action: %s, Depends on Queue ID: %d',
+					$item_type,
+					$item_id,
+					$action,
+					$depends_on_queue_id
+				)
+			);
 		}
 
 		// Insert new queue item
@@ -231,9 +230,9 @@ class QueueManager {
 		);
 
 		if ( $inserted ) {
-			
+
 		} else {
-			
+
 		}
 
 		return $inserted ? $wpdb->insert_id : false;
@@ -247,22 +246,20 @@ class QueueManager {
 	 * @return void
 	 */
 	public function process_queue(): void {
-		
-		
+
 		// Prevent concurrent processing (race condition protection)
 		$lock_key = 'ghl_crm_queue_processing';
 		if ( get_transient( $lock_key ) ) {
-			
+
 			return; // Already processing
 		}
 
 		// Set lock for 2 minutes
 		set_transient( $lock_key, time(), 2 * MINUTE_IN_SECONDS );
-		
 
 		try {
 			if ( is_multisite() ) {
-				
+
 				// Process each site's queue
 				$sites = get_sites(
 					[
@@ -271,14 +268,13 @@ class QueueManager {
 				);
 
 				foreach ( $sites as $site ) {
-					
+
 					switch_to_blog( $site->blog_id );
-					
+
 					// CRITICAL: Reload Client settings after blog switch (multisite fix)
 					// The Client singleton caches settings on first init, before blog switch
 					\GHL_CRM\API\Client\Client::get_instance()->reload_settings();
-					
-					
+
 					$this->process_site_queue();
 					restore_current_blog();
 				}
@@ -288,7 +284,7 @@ class QueueManager {
 		} finally {
 			// Always release lock
 			delete_transient( $lock_key );
-			
+
 		}
 	}
 
@@ -302,8 +298,6 @@ class QueueManager {
 
 		$table_name      = $this->get_queue_table_name();
 		$current_site_id = get_current_blog_id();
-
-		
 
 		// Get batch size from settings via SettingsManager
 		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
@@ -341,19 +335,15 @@ class QueueManager {
 			)
 		);
 
-		
-
 		if ( empty( $items ) ) {
-			
+
 			return;
 		}
 
 		foreach ( $items as $item ) {
-			
+
 			$this->process_queue_item( $item );
 		}
-		
-		
 	}
 
 	/**
@@ -396,11 +386,9 @@ class QueueManager {
 	private function process_queue_item( object $item ): void {
 		global $wpdb;
 
-		
-
 		// Safety check: If item already has MAX_ATTEMPTS, mark as failed immediately
 		if ( $item->attempts >= self::MAX_ATTEMPTS ) {
-			
+
 			$table_name = $this->get_queue_table_name();
 			$wpdb->update(
 				$table_name,
@@ -418,32 +406,25 @@ class QueueManager {
 
 		try {
 			$table_name = $this->get_queue_table_name();
-			
-			
+
 			$start_time = microtime( true );
-			
 
 			// Check rate limits before processing (using RateLimiter helper)
-			
+
 			$location_id = $this->get_ghl_location_id();
-			$rate_ok = $location_id ? $this->rate_limiter->check_limits( $location_id ) : true;
-			
-			
+			$rate_ok     = $location_id ? $this->rate_limiter->check_limits( $location_id ) : true;
+
 			if ( ! $rate_ok ) {
-				
+
 				return;
 			}
 		} catch ( \Exception $e ) {
-			
-			
+
 			return;
 		} catch ( \Throwable $e ) {
-			
-			
+
 			return;
 		}
-
-		
 
 		// Increment attempts
 		$wpdb->update(
@@ -457,32 +438,26 @@ class QueueManager {
 			[ '%d' ]
 		);
 
-		
-
 		// Update item object to reflect database change
 		$item->attempts = $item->attempts + 1;
 
 		try {
 			$payload = json_decode( $item->payload, true );
-			
 
 			// Execute sync based on item type
-			
-			
-			
-			
+
 			// Register fatal error handler
-			register_shutdown_function( function() use ( $item ) {
-				$error = error_get_last();
-				if ( $error && in_array( $error['type'], [ E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR ] ) ) {
-					
-					
+			register_shutdown_function(
+				function () use ( $item ) {
+					$error = error_get_last();
+					if ( $error && in_array( $error['type'], [ E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR ] ) ) {
+
+					}
 				}
-			} );
-			
+			);
+
 			// Execute sync using QueueProcessor helper
 			$result = $this->processor->execute_sync( $item->item_type, $item->action, (int) $item->item_id, $payload );
-			
 
 			// Track API request using RateLimiter helper
 			if ( $location_id ) {
@@ -491,9 +466,9 @@ class QueueManager {
 
 			// Check if result indicates success or should be skipped (dependency waiting)
 			// Some integrations return arrays with 'success' => false
-			$is_success = false;
+			$is_success  = false;
 			$should_skip = false;
-			
+
 			if ( is_array( $result ) && isset( $result['success'] ) ) {
 				$is_success = $result['success'];
 				// Check if this is a dependency wait (don't increment retry counter)
@@ -516,32 +491,35 @@ class QueueManager {
 						[ '%s', '%s' ],
 						[ '%d' ]
 					);
-					
-					error_log( sprintf(
-						'GHL Queue: Updated payload with dependency for Queue ID: %d',
-						$item->id
-					) );
+
+					error_log(
+						sprintf(
+							'GHL Queue: Updated payload with dependency for Queue ID: %d',
+							$item->id
+						)
+					);
 				}
-				
-				error_log( sprintf(
-					'GHL Queue: Skipping task due to dependency wait - Type: %s, Item ID: %d, Queue ID: %d stays pending',
-					$item->item_type,
-					$item->item_id,
-					$item->id
-				) );
+
+				error_log(
+					sprintf(
+						'GHL Queue: Skipping task due to dependency wait - Type: %s, Item ID: %d, Queue ID: %d stays pending',
+						$item->item_type,
+						$item->item_id,
+						$item->id
+					)
+				);
 				return; // Leave item pending, will retry later when dependency completes
 			}
 
 			if ( $is_success ) {
-				
-				
+
 				// Extract contact ID or opportunity ID from result if available
-				$contact_id = null;
+				$contact_id    = null;
 				$ghl_object_id = null;
 				if ( is_array( $result ) ) {
 					// For contacts
 					$contact_id = $result['contact']['id'] ?? $result['id'] ?? null;
-					
+
 					// For opportunities (WooCommerce)
 					if ( 'wc_customer' === $item->item_type && ! empty( $result['opportunity']['id'] ) ) {
 						$ghl_object_id = $result['opportunity']['id'];
@@ -549,15 +527,15 @@ class QueueManager {
 						$ghl_object_id = $contact_id;
 					}
 				}
-				
+
 				// Store contact ID, tags, and sync time in user meta (for admin columns and profile page)
 				if ( 'user' === $item->item_type && ! empty( $contact_id ) ) {
 					update_user_meta( (int) $item->item_id, '_ghl_contact_id', $contact_id );
 					update_user_meta( (int) $item->item_id, '_ghl_last_sync', time() );
-					
+
 					// Store tags from payload (what we sent) OR from response
 					$tags_to_cache = null;
-					
+
 					// First try to get tags from the API response
 					if ( is_array( $result ) ) {
 						$contact_data = $result['contact'] ?? $result;
@@ -565,7 +543,7 @@ class QueueManager {
 							$tags_to_cache = $contact_data['tags'];
 						}
 					}
-					
+
 					// If tags not in response, use what we sent in the payload
 					if ( null === $tags_to_cache ) {
 						$payload_data = json_decode( $item->payload, true );
@@ -573,13 +551,13 @@ class QueueManager {
 							$tags_to_cache = $payload_data['tags'];
 						}
 					}
-					
+
 					// Update user meta with tags
 					if ( ! empty( $tags_to_cache ) && is_array( $tags_to_cache ) ) {
 						update_user_meta( (int) $item->item_id, '_ghl_contact_tags', $tags_to_cache );
 					}
 				}
-				
+
 				// Handle WooCommerce customer conversion - update user meta for the customer
 				if ( 'wc_customer' === $item->item_type && ! empty( $contact_id ) && class_exists( 'WooCommerce' ) ) {
 					$order = wc_get_order( $item->item_id );
@@ -587,7 +565,7 @@ class QueueManager {
 						$user_id = $order->get_customer_id();
 						update_user_meta( $user_id, '_ghl_contact_id', $contact_id );
 						update_user_meta( $user_id, '_ghl_last_sync', time() );
-						
+
 						// Store tags from payload
 						$payload_data = json_decode( $item->payload, true );
 						if ( ! empty( $payload_data['tags'] ) && is_array( $payload_data['tags'] ) ) {
@@ -595,7 +573,7 @@ class QueueManager {
 						}
 					}
 				}
-				
+
 				// Mark as completed
 				$update_result = $wpdb->update(
 					$table_name,
@@ -636,10 +614,9 @@ class QueueManager {
 					'result_type' => gettype( $result ),
 					'result'      => $result,
 				];
-				
+
 				// Log detailed context with asiya log prefix
-				error_log( 'asiya log: Sync execution failed - ' . wp_json_encode( $error_context ) );
-				
+
 				// Extract error message if available
 				$error_message = 'Sync execution failed';
 				if ( is_array( $result ) && ! empty( $result['error'] ) ) {
@@ -649,7 +626,7 @@ class QueueManager {
 				} else {
 					$error_message .= ': ' . print_r( $result, true );
 				}
-				
+
 				throw new \Exception( $error_message );
 			}
 		} catch ( \Exception $e ) {
@@ -836,22 +813,22 @@ class QueueManager {
 		$location_id = $this->get_ghl_location_id();
 		if ( empty( $location_id ) ) {
 			return [
-				'burst'     => [
+				'burst'               => [
 					'limit'     => 100,
 					'used'      => 0,
 					'remaining' => 100,
 					'percent'   => 0,
 					'window'    => '10 seconds',
 				],
-				'daily'     => [
+				'daily'               => [
 					'limit'     => 200000,
 					'used'      => 0,
 					'remaining' => 200000,
 					'percent'   => 0,
 					'resets_at' => gmdate( 'Y-m-d H:i:s', strtotime( 'tomorrow midnight' ) ),
 				],
-				'throttled' => false,
-				'location_id' => null,
+				'throttled'           => false,
+				'location_id'         => null,
 				'shared_across_sites' => false,
 			];
 		}
@@ -950,7 +927,7 @@ class QueueManager {
 	 * Sync contact tags from GHL after successful queue completion
 	 * Delegates to UserProfileFields refresh logic for consistency
 	 *
-	 * @param object $item Queue item
+	 * @param object      $item Queue item
 	 * @param string|null $contact_id GHL Contact ID
 	 * @return void
 	 */
@@ -972,7 +949,7 @@ class QueueManager {
 			}
 		} elseif ( 'wc_product_tags' === $item->item_type ) {
 			// Get user from order
-			$payload = json_decode( $item->payload, true );
+			$payload  = json_decode( $item->payload, true );
 			$order_id = $payload['order_id'] ?? 0;
 			if ( $order_id ) {
 				$order = wc_get_order( $order_id );
@@ -989,18 +966,18 @@ class QueueManager {
 		try {
 			// Use the same refresh logic from UserProfileFields
 			$profile_fields = \GHL_CRM\Admin\Profile\UserProfileFields::get_instance();
-			
+
 			// Call the internal refresh method (we'll create a public wrapper)
 			if ( method_exists( $profile_fields, 'refresh_user_from_ghl' ) ) {
 				$profile_fields->refresh_user_from_ghl( $user_id, $contact_id );
 			} else {
 				// Fallback: Use Client directly (same pattern as AJAX action)
-				$client = \GHL_CRM\API\Client\Client::get_instance();
+				$client   = \GHL_CRM\API\Client\Client::get_instance();
 				$response = $client->get( "contacts/{$contact_id}" );
 
 				if ( ! empty( $response['contact'] ) ) {
 					$contact = $response['contact'];
-					
+
 					update_user_meta( $user_id, '_ghl_contact_id', $contact_id );
 					update_user_meta( $user_id, '_ghl_last_sync', time() );
 
@@ -1014,20 +991,24 @@ class QueueManager {
 				}
 			}
 
-			error_log( sprintf(
-				'GHL Queue: Auto-synced from GHL | user #%d | contact %s',
-				$user_id,
-				$contact_id
-			) );
+			error_log(
+				sprintf(
+					'GHL Queue: Auto-synced from GHL | user #%d | contact %s',
+					$user_id,
+					$contact_id
+				)
+			);
 
 		} catch ( \Throwable $e ) {
 			// Log error but don't fail the queue item
-			error_log( sprintf(
-				'GHL Queue: Failed to auto-sync | user #%d | contact %s | error %s',
-				$user_id,
-				$contact_id,
-				$e->getMessage()
-			) );
+			error_log(
+				sprintf(
+					'GHL Queue: Failed to auto-sync | user #%d | contact %s | error %s',
+					$user_id,
+					$contact_id,
+					$e->getMessage()
+				)
+			);
 		}
 	}
 }

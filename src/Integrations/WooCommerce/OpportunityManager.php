@@ -51,10 +51,10 @@ class OpportunityManager {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->settings_manager      = \GHL_CRM\Core\SettingsManager::get_instance();
-		$this->opportunity_resource  = new \GHL_CRM\API\Resources\OpportunityResource();
-		$this->contact_resource      = new \GHL_CRM\API\Resources\ContactResource();
-		$this->queue_manager         = \GHL_CRM\Sync\QueueManager::get_instance();
+		$this->settings_manager     = \GHL_CRM\Core\SettingsManager::get_instance();
+		$this->opportunity_resource = new \GHL_CRM\API\Resources\OpportunityResource();
+		$this->contact_resource     = new \GHL_CRM\API\Resources\ContactResource();
+		$this->queue_manager        = \GHL_CRM\Sync\QueueManager::get_instance();
 	}
 
 	/**
@@ -64,8 +64,8 @@ class OpportunityManager {
 	 */
 	public function is_enabled(): bool {
 		$settings = $this->settings_manager->get_settings_array();
-		
-		return ! empty( $settings['wc_opportunities_enabled'] ) 
+
+		return ! empty( $settings['wc_opportunities_enabled'] )
 			&& ! empty( $settings['wc_opportunities_pipeline'] );
 	}
 
@@ -76,7 +76,7 @@ class OpportunityManager {
 	 * @return bool
 	 */
 	public function matches_filter( $cart_or_order ): bool {
-		$settings = $this->settings_manager->get_settings_array();
+		$settings    = $this->settings_manager->get_settings_array();
 		$filter_type = $settings['wc_opportunities_filter_type'] ?? 'all';
 
 		// If filter type is 'all', always create opportunity
@@ -85,17 +85,17 @@ class OpportunityManager {
 		}
 
 		// Get items from cart or order
-		$items = $cart_or_order instanceof \WC_Order 
-			? $cart_or_order->get_items() 
+		$items = $cart_or_order instanceof \WC_Order
+			? $cart_or_order->get_items()
 			: $cart_or_order->get_cart();
 
 		// Minimum value filter
 		if ( $filter_type === 'min_value' ) {
 			$min_value = floatval( $settings['wc_opportunities_min_value'] ?? 0 );
-			$total = $cart_or_order instanceof \WC_Order 
+			$total     = $cart_or_order instanceof \WC_Order
 				? floatval( $cart_or_order->get_total() )
 				: floatval( $cart_or_order->get_cart_contents_total() );
-			
+
 			return $total >= $min_value;
 		}
 
@@ -107,10 +107,10 @@ class OpportunityManager {
 			}
 
 			foreach ( $items as $item ) {
-				$product_id = $cart_or_order instanceof \WC_Order 
-					? $item->get_product_id() 
+				$product_id = $cart_or_order instanceof \WC_Order
+					? $item->get_product_id()
 					: $item['product_id'];
-				
+
 				if ( in_array( $product_id, $allowed_products ) ) {
 					return true;
 				}
@@ -126,12 +126,12 @@ class OpportunityManager {
 			}
 
 			foreach ( $items as $item ) {
-				$product_id = $cart_or_order instanceof \WC_Order 
-					? $item->get_product_id() 
+				$product_id = $cart_or_order instanceof \WC_Order
+					? $item->get_product_id()
 					: $item['product_id'];
-				
+
 				$product_categories = wp_get_post_terms( $product_id, 'product_cat', [ 'fields' => 'ids' ] );
-				
+
 				if ( ! empty( array_intersect( $product_categories, $allowed_categories ) ) ) {
 					return true;
 				}
@@ -156,9 +156,9 @@ class OpportunityManager {
 
 		$settings = $this->settings_manager->get_settings_array();
 		$stage_id = $settings['wc_opportunities_stage_abandoned'] ?? '';
-		
+
 		if ( empty( $stage_id ) ) {
-			error_log( 'GHL Opportunities: Abandoned cart stage not configured' );
+
 			return false;
 		}
 
@@ -185,11 +185,13 @@ class OpportunityManager {
 		);
 
 		if ( $queue_id ) {
-			error_log( sprintf(
-				'GHL Opportunities: Queued abandoned cart opportunity for %s (Queue ID: %d)',
-				$email,
-				$queue_id
-			) );
+			error_log(
+				sprintf(
+					'GHL Opportunities: Queued abandoned cart opportunity for %s (Queue ID: %d)',
+					$email,
+					$queue_id
+				)
+			);
 			return true;
 		}
 
@@ -214,12 +216,12 @@ class OpportunityManager {
 		}
 
 		$settings = $this->settings_manager->get_settings_array();
-		$email = $order->get_billing_email();
+		$email    = $order->get_billing_email();
 
 		// Determine stage based on order status
 		$stage_id = $this->get_stage_for_order_status( $order->get_status() );
 		if ( empty( $stage_id ) ) {
-			error_log( 'GHL Opportunities: No stage configured for status ' . $order->get_status() );
+
 			return false;
 		}
 
@@ -255,12 +257,14 @@ class OpportunityManager {
 		);
 
 		if ( $queue_id ) {
-			error_log( sprintf(
-				'GHL Opportunities: Queued %s for order #%d (Queue ID: %d)',
-				$action === 'create_opportunity' ? 'opportunity creation' : 'opportunity update',
-				$order->get_id(),
-				$queue_id
-			) );
+			error_log(
+				sprintf(
+					'GHL Opportunities: Queued %s for order #%d (Queue ID: %d)',
+					$action === 'create_opportunity' ? 'opportunity creation' : 'opportunity update',
+					$order->get_id(),
+					$queue_id
+				)
+			);
 			return true;
 		}
 
@@ -275,7 +279,7 @@ class OpportunityManager {
 	 */
 	private function get_stage_for_order_status( string $order_status ): string {
 		$settings = $this->settings_manager->get_settings_array();
-		
+
 		// Map WC status to configured stage
 		$status_map = [
 			'pending'    => 'wc_opportunities_stage_pending',
@@ -322,7 +326,7 @@ class OpportunityManager {
 		try {
 			// Try to find existing contact
 			$contacts = $this->contact_resource->search( [ 'email' => $email ] );
-			
+
 			if ( ! empty( $contacts['contacts'][0] ) ) {
 				return $contacts['contacts'][0];
 			}
@@ -338,7 +342,7 @@ class OpportunityManager {
 			$result = $this->contact_resource->create( $contact_data );
 			return $result['contact'] ?? $result;
 		} catch ( \Exception $e ) {
-			error_log( 'GHL Opportunities: Error getting/creating contact - ' . $e->getMessage() );
+
 			return false;
 		}
 	}
@@ -354,7 +358,7 @@ class OpportunityManager {
 			$this->opportunity_resource->delete( $opportunity_id );
 			return true;
 		} catch ( \Exception $e ) {
-			error_log( 'GHL Opportunities: Error deleting opportunity - ' . $e->getMessage() );
+
 			return false;
 		}
 	}

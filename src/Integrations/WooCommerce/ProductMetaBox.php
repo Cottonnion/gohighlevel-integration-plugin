@@ -60,7 +60,7 @@ class ProductMetaBox {
 
 		// Enqueue assets for product edit page
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
-		
+
 		// Add custom tab icon styles
 		add_action( 'admin_head', [ $this, 'add_tab_icon_styles' ] );
 	}
@@ -131,8 +131,8 @@ class ProductMetaBox {
 	 */
 	public function save_product_data( int $post_id ): void {
 		// Save tags
-		$tags = isset( $_POST['ghl_purchase_tags'] ) && is_array( $_POST['ghl_purchase_tags'] ) 
-			? array_map( 'sanitize_text_field', $_POST['ghl_purchase_tags'] ) 
+		$tags = isset( $_POST['ghl_purchase_tags'] ) && is_array( $_POST['ghl_purchase_tags'] )
+			? array_map( 'sanitize_text_field', $_POST['ghl_purchase_tags'] )
 			: [];
 
 		if ( ! empty( $tags ) ) {
@@ -192,7 +192,7 @@ class ProductMetaBox {
 	 */
 	public static function get_product_tags( int $product_id ): array {
 		$tags = get_post_meta( $product_id, '_ghl_purchase_tags', true );
-		
+
 		if ( ! is_array( $tags ) ) {
 			$tags = ! empty( $tags ) ? [ $tags ] : [];
 		}
@@ -205,79 +205,78 @@ class ProductMetaBox {
 	 *
 	 * @return void
 	 */
-public function add_tab_icon_styles(): void {
-    $screen = get_current_screen();
-    if ( ! $screen || 'product' !== $screen->post_type ) {
-        return;
-    }
+	public function add_tab_icon_styles(): void {
+		$screen = get_current_screen();
+		if ( ! $screen || 'product' !== $screen->post_type ) {
+			return;
+		}
 
-    ?>
-    <style>
-        /* WooCommerce product tab icon */
-        #woocommerce-product-data ul.wc-tabs li.ghl_tags_tab a:before {
-            content: "\f335"; /* dashicons-admin-users */
-            font-family: Dashicons;
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            vertical-align: middle;
-            margin-right: 4px;
-            opacity: 0.6;
-        }
-        #woocommerce-product-data ul.wc-tabs li.ghl_tags_tab.active a:before {
-            opacity: 1;
-        }
+		?>
+	<style>
+		/* WooCommerce product tab icon */
+		#woocommerce-product-data ul.wc-tabs li.ghl_tags_tab a:before {
+			content: "\f335"; /* dashicons-admin-users */
+			font-family: Dashicons;
+			display: inline-block;
+			width: 16px;
+			height: 16px;
+			vertical-align: middle;
+			margin-right: 4px;
+			opacity: 0.6;
+		}
+		#woocommerce-product-data ul.wc-tabs li.ghl_tags_tab.active a:before {
+			opacity: 1;
+		}
 
-        /* Panel styling */
-        #ghl_product_tags_panel .ghl-product-tags-panel {
-            margin: 0 24px;
-            padding-top: 16px;
-        }
-        #ghl_product_tags_panel .ghl-product-tags-field label {
-            min-width: 160px;
-        }
-        #ghl_product_tags_panel .woocommerce-input-wrapper {
-            display: block;
-            max-width: 360px;
-        }
-        #ghl_product_tags_panel .select2-container {
-            width: 100%;
-        }
-        #ghl_product_tags_panel .ghl-product-tags-field .description {
-            display: block;
-            margin-top: 8px;
-            color: #555d66;
-        }
-        #ghl_product_tags_panel .ghl-product-tags-note {
-            margin: 8px 24px 24px;
-            padding: 16px;
-            border: 1px solid #dcdcde;
-            border-left: 4px solid #7e3bd0;
-            background: #f6f3fb;
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-            border-radius: 4px;
-        }
-        #ghl_product_tags_panel .ghl-product-tags-note .dashicons {
-            font-size: 20px;
-            color: #7e3bd0;
-            margin-top: 2px;
-        }
-        #ghl_product_tags_panel .ghl-product-tags-note .ghl-note-content {
-            margin: 0;
-        }
-        #ghl_product_tags_panel .ghl-product-tags-note ul {
-            margin: 6px 0 0;
-            padding-left: 18px;
-            list-style: disc;
-            color: #2c3338;
-        }
-        #ghl_product_tags_panel .ghl-product-tags-note li {
-            margin-bottom: 4px;
-        }
-    </style>
-    <?php
-}
-
+		/* Panel styling */
+		#ghl_product_tags_panel .ghl-product-tags-panel {
+			margin: 0 24px;
+			padding-top: 16px;
+		}
+		#ghl_product_tags_panel .ghl-product-tags-field label {
+			min-width: 160px;
+		}
+		#ghl_product_tags_panel .woocommerce-input-wrapper {
+			display: block;
+			max-width: 360px;
+		}
+		#ghl_product_tags_panel .select2-container {
+			width: 100%;
+		}
+		#ghl_product_tags_panel .ghl-product-tags-field .description {
+			display: block;
+			margin-top: 8px;
+			color: #555d66;
+		}
+		#ghl_product_tags_panel .ghl-product-tags-note {
+			margin: 8px 24px 24px;
+			padding: 16px;
+			border: 1px solid #dcdcde;
+			border-left: 4px solid #7e3bd0;
+			background: #f6f3fb;
+			display: flex;
+			gap: 12px;
+			align-items: flex-start;
+			border-radius: 4px;
+		}
+		#ghl_product_tags_panel .ghl-product-tags-note .dashicons {
+			font-size: 20px;
+			color: #7e3bd0;
+			margin-top: 2px;
+		}
+		#ghl_product_tags_panel .ghl-product-tags-note .ghl-note-content {
+			margin: 0;
+		}
+		#ghl_product_tags_panel .ghl-product-tags-note ul {
+			margin: 6px 0 0;
+			padding-left: 18px;
+			list-style: disc;
+			color: #2c3338;
+		}
+		#ghl_product_tags_panel .ghl-product-tags-note li {
+			margin-bottom: 4px;
+		}
+	</style>
+		<?php
+	}
 }

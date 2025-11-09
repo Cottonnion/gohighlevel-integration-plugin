@@ -79,7 +79,7 @@ class Database {
 	public function show_database_update_notice(): void {
 		$settings_manager  = SettingsManager::get_instance();
 		$installed_version = $settings_manager->get_option( 'ghl_crm_db_version', '0.0.0' );
-		
+
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
@@ -88,7 +88,7 @@ class Database {
 		<div class="notice notice-warning is-dismissible ghl-crm-db-update-notice">
 			<h3><?php esc_html_e( 'GHL CRM Integration - Database Update Required', 'ghl-crm-integration' ); ?></h3>
 			<p>
-				<?php 
+				<?php
 				printf(
 					/* translators: 1: current version, 2: new version */
 					esc_html__( 'The GHL CRM Integration plugin database needs to be updated from version %1$s to %2$s. This update will:', 'ghl-crm-integration' ),
@@ -172,11 +172,11 @@ class Database {
 		try {
 			$settings_manager  = SettingsManager::get_instance();
 			$installed_version = $settings_manager->get_option( 'ghl_crm_db_version', '0.0.0' );
-			
+
 			// Perform the migration
 			$this->migrate_database( $installed_version );
 			$settings_manager->update_option( 'ghl_crm_db_version', self::DB_VERSION );
-			
+
 			wp_send_json_success( __( 'Database updated successfully', 'ghl-crm-integration' ) );
 		} catch ( Exception $e ) {
 			wp_send_json_error( __( 'Database update failed: ', 'ghl-crm-integration' ) . $e->getMessage() );
@@ -196,10 +196,11 @@ class Database {
 		if ( version_compare( $from_version, '1.4.0', '<' ) ) {
 			// First, clean up duplicate queue entries
 			$queue_table = $wpdb->prefix . 'ghl_sync_queue';
-			$log_table = $wpdb->prefix . 'ghl_sync_log';
-			
+			$log_table   = $wpdb->prefix . 'ghl_sync_log';
+
 			// Remove duplicate pending entries, keep the oldest one
-			$wpdb->query("
+			$wpdb->query(
+				"
 				DELETE q1 FROM {$queue_table} q1
 				INNER JOIN {$queue_table} q2 
 				WHERE q1.id > q2.id 
@@ -208,10 +209,11 @@ class Database {
 				AND q1.action = q2.action 
 				AND q1.site_id = q2.site_id 
 				AND q1.status = 'pending'
-			");
+			"
+			);
 
 			// Drop old constraint if exists
-			$wpdb->query("ALTER TABLE {$queue_table} DROP INDEX IF EXISTS unique_pending_item");
+			$wpdb->query( "ALTER TABLE {$queue_table} DROP INDEX IF EXISTS unique_pending_item" );
 
 			// Migrate sync_log table from old structure to new structure
 			$this->migrate_sync_log_table( $log_table );
@@ -231,22 +233,22 @@ class Database {
 		global $wpdb;
 
 		// Check if table exists and has old structure
-		$columns = $wpdb->get_results("SHOW COLUMNS FROM {$table_name}");
+		$columns = $wpdb->get_results( "SHOW COLUMNS FROM {$table_name}" );
 		if ( empty( $columns ) ) {
 			return; // Table doesn't exist, will be created fresh
 		}
 
-		$column_names = wp_list_pluck( $columns, 'Field' );
+		$column_names      = wp_list_pluck( $columns, 'Field' );
 		$has_old_structure = in_array( 'user_id', $column_names, true ) && in_array( 'contact_id', $column_names, true );
 		$has_new_structure = in_array( 'sync_type', $column_names, true ) && in_array( 'item_id', $column_names, true );
 
 		if ( $has_old_structure && ! $has_new_structure ) {
 			// Backup existing data by creating a temporary table
 			$backup_table = $table_name . '_backup_' . time();
-			$wpdb->query("CREATE TABLE {$backup_table} AS SELECT * FROM {$table_name}");
+			$wpdb->query( "CREATE TABLE {$backup_table} AS SELECT * FROM {$table_name}" );
 
 			// Drop the old table completely
-			$wpdb->query("DROP TABLE IF EXISTS {$table_name}");
+			$wpdb->query( "DROP TABLE IF EXISTS {$table_name}" );
 		}
 	}
 
@@ -289,7 +291,7 @@ class Database {
 			KEY site_status (site_id, status)
 		) {$charset_collate};";
 
-		// SQL for sync log table  
+		// SQL for sync log table
 		$sql_log = "CREATE TABLE {$sync_log_table} (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			sync_type varchar(50) NOT NULL DEFAULT 'user',

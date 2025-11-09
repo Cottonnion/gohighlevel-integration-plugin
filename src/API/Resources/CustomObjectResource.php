@@ -43,7 +43,7 @@ class CustomObjectResource extends AbstractResource {
 
 			// Endpoint: GET /objects/ returns all objects for a location
 			$response = $this->all();
-			
+
 			// The response structure is { "objects": [...] } according to GHL docs
 			$objects = $response['objects'] ?? [];
 
@@ -71,10 +71,10 @@ class CustomObjectResource extends AbstractResource {
 			if ( empty( $schema_id ) ) {
 				throw new \Exception( 'Schema ID is required to delete custom object record' );
 			}
-			
+
 			// Use the correct GHL API endpoint format: /objects/:schemaKey/records/:recordId
 			$endpoint = "objects/{$schema_id}/records/{$record_id}";
-			
+
 			$this->client->delete( $endpoint, false );
 
 			return true;
@@ -101,12 +101,12 @@ class CustomObjectResource extends AbstractResource {
 
 			// If not in cache, try API call
 			$response = $this->get( $schema_id );
-			
+
 			// GHL API might return the schema directly or wrapped in a property
 			if ( isset( $response['id'] ) && $response['id'] === $schema_id ) {
 				return $response; // Schema returned directly
 			}
-			
+
 			return $response['schema'] ?? $response['object'] ?? null;
 		} catch ( \Exception $e ) {
 			return null;
@@ -141,14 +141,14 @@ class CustomObjectResource extends AbstractResource {
 			if ( empty( $schema_data['primaryDisplayPropertyDetails'] ) ) {
 				throw new \Exception( 'Primary display property details are required' );
 			}
-			
+
 			// POST to /objects/ to create a new custom object schema
 			// locationId should be in the body, NOT as query param
 			$response = $this->client->post( 'objects/', $schema_data, false );
-			
+
 			// Clear cache after creating new schema
 			$this->clear_cache();
-			
+
 			return $response['schema'] ?? $response['object'] ?? $response;
 		} catch ( \Exception $e ) {
 			throw new \Exception( 'Failed to create custom object schema: ' . $e->getMessage() );
@@ -168,14 +168,14 @@ class CustomObjectResource extends AbstractResource {
 			if ( empty( $schema_id ) ) {
 				throw new \Exception( 'Schema ID is required to create custom object record' );
 			}
-			
+
 			// Use the correct GHL API endpoint format: /objects/:schemaId/records
 			$endpoint = "objects/{$schema_id}/records";
-			
+
 			$response = $this->client->post( $endpoint, $data, false );
 
 			$result = $response['record'] ?? $response;
-			
+
 			return $result;
 		} catch ( \Exception $e ) {
 			throw new \Exception( 'Failed to create custom object record: ' . $e->getMessage() );
@@ -196,12 +196,12 @@ class CustomObjectResource extends AbstractResource {
 			if ( empty( $schema_key ) ) {
 				throw new \Exception( 'Schema KEY is required to update custom object record' );
 			}
-			
+
 			// GHL API UPDATE endpoint: PUT /objects/:schemaKey/records/:id?locationId=xxx
 			// Per GHL docs: schemaKey format is "custom_objects.object_name"
 			// locationId MUST be included as query parameter
 			$endpoint = "objects/{$schema_key}/records/{$record_id}";
-			
+
 			// Pass true to include locationId in query params (required by GHL API)
 			$response = $this->client->put( $endpoint, $data, true );
 
@@ -223,10 +223,10 @@ class CustomObjectResource extends AbstractResource {
 			if ( empty( $schema_id ) ) {
 				throw new \Exception( 'Schema ID is required to get custom object record' );
 			}
-			
+
 			// Use the correct GHL API endpoint format: /objects/:schemaKey/records/:recordId
 			$endpoint = "objects/{$schema_id}/records/{$record_id}";
-			
+
 			$response = $this->client->get( $endpoint, [], false );
 
 			return $response['record'] ?? $response;
@@ -243,9 +243,9 @@ class CustomObjectResource extends AbstractResource {
 	 */
 	public function get_associations(): array {
 		try {
-			$endpoint = "associations/";
+			$endpoint = 'associations/';
 			$response = $this->client->get( $endpoint, [], true );
-			
+
 			return $response['associations'] ?? $response;
 		} catch ( \Exception $e ) {
 			throw new \Exception( 'Failed to get associations: ' . $e->getMessage() );
@@ -273,7 +273,7 @@ class CustomObjectResource extends AbstractResource {
 			// The key should be a unique identifier for this association
 			// Format: association between two objects
 			$association_key = str_replace( 'custom_objects.', '', $schema_key ) . '_members';
-			
+
 			$data = [
 				'key'             => $association_key,   // e.g., "classrooms_members"
 				'locationId'      => $location_id,
@@ -281,16 +281,12 @@ class CustomObjectResource extends AbstractResource {
 				'secondObjectKey' => 'contact',          // Standard contacts object
 			];
 
-			error_log( 'GHL BuddyBoss: Creating association with data: ' . wp_json_encode( $data ) );
-
 			$endpoint = 'associations/';
 			$response = $this->client->post( $endpoint, $data, false );
 
-			error_log( 'GHL BuddyBoss: Association created successfully: ' . wp_json_encode( $response ) );
-
 			return $response;
 		} catch ( \Exception $e ) {
-			error_log( 'GHL BuddyBoss: Failed to create association: ' . $e->getMessage() );
+
 			throw new \Exception( 'Failed to create association: ' . $e->getMessage() );
 		}
 	}
@@ -298,10 +294,10 @@ class CustomObjectResource extends AbstractResource {
 	/**
 	 * Associate a custom object record with a contact
 	 *
-	 * @param string $record_id   Custom object record ID
-	 * @param string $contact_id  Contact ID to associate with
-	 * @param string $schema_key  Schema key (e.g., 'custom_objects.my_custom_objects')
-	 * @param string $association_id Association definition ID
+	 * @param string      $record_id   Custom object record ID
+	 * @param string      $contact_id  Contact ID to associate with
+	 * @param string      $schema_key  Schema key (e.g., 'custom_objects.my_custom_objects')
+	 * @param string      $association_id Association definition ID
 	 * @param string|null $direction Which position custom object is in: 'first' or 'second' (null = assume first)
 	 * @return array Response data
 	 * @throws \Exception If association fails
@@ -310,19 +306,19 @@ class CustomObjectResource extends AbstractResource {
 		try {
 			// CORRECT GHL API endpoint: POST /associations/relations
 			// Documentation: https://marketplace.gohighlevel.com/docs/ghl/associations/create-relation
-			$endpoint = "associations/relations";
-			
+			$endpoint = 'associations/relations';
+
 			// Required fields per GHL API docs:
 			// - locationId: The location ID
 			// - associationId: The association's ID (not key!)
 			// - firstRecordId: First object's record ID (order matters!)
 			// - secondRecordId: Second object's record ID (order matters!)
-			// 
+			//
 			// IMPORTANT: The order must match the association definition!
 			// If association is: contact → custom_object, then firstRecordId = contact, secondRecordId = custom_object
 			$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 			$location_id      = $settings_manager->get_setting( 'location_id', '' );
-			
+
 			// Determine correct order based on association direction
 			if ( $direction === 'second' ) {
 				// Association is: contact (first) → custom_object (second)
@@ -333,29 +329,27 @@ class CustomObjectResource extends AbstractResource {
 				$first_id  = $record_id;
 				$second_id = $contact_id;
 			}
-			
+
 			$data = [
 				'locationId'     => $location_id,
 				'associationId'  => $association_id,
 				'firstRecordId'  => $first_id,
 				'secondRecordId' => $second_id,
 			];
-			
-			error_log( 'yahya sent: ' . wp_json_encode( $data ) );
-			
-			error_log( sprintf(
-				'GHL Association: Creating relation - Location: %s, Association: %s, First: %s, Second: %s, Direction: %s',
-				$location_id,
-				$association_id,
-				$first_id,
-				$second_id,
-				$direction ?? 'first (default)'
-			) );
-			
+
+			error_log(
+				sprintf(
+					'GHL Association: Creating relation - Location: %s, Association: %s, First: %s, Second: %s, Direction: %s',
+					$location_id,
+					$association_id,
+					$first_id,
+					$second_id,
+					$direction ?? 'first (default)'
+				)
+			);
+
 			$response = $this->client->post( $endpoint, $data, false );
-			
-			error_log( 'yahya response: ' . wp_json_encode( $response ) );
-			
+
 			return $response;
 		} catch ( \Exception $e ) {
 			throw new \Exception( 'Failed to associate record with contact: ' . $e->getMessage() );

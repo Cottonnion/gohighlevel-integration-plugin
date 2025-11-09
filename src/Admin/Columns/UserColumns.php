@@ -73,7 +73,7 @@ class UserColumns {
 		add_filter( 'manage_users_columns', [ $this, 'add_custom_columns' ] );
 		add_filter( 'manage_users_custom_column', [ $this, 'render_custom_column' ], 10, 3 );
 		add_filter( 'manage_users_sortable_columns', [ $this, 'make_columns_sortable' ] );
-		
+
 		// Handle sorting
 		add_action( 'pre_get_users', [ $this, 'handle_column_sorting' ] );
 
@@ -90,23 +90,23 @@ class UserColumns {
 	public function add_custom_columns( array $columns ): array {
 		// Insert GHL columns before the "Posts" column (or at the end if it doesn't exist)
 		$new_columns = [];
-		
+
 		foreach ( $columns as $key => $value ) {
 			$new_columns[ $key ] = $value;
-			
+
 			// Add GHL columns after email column
 			if ( 'email' === $key ) {
-				$new_columns['ghl_contact_id'] = __( 'GHL Contact ID', 'ghl-crm-integration' );
+				$new_columns['ghl_contact_id']  = __( 'GHL Contact ID', 'ghl-crm-integration' );
 				$new_columns['ghl_sync_status'] = __( 'GHL Sync Status', 'ghl-crm-integration' );
 			}
 		}
-		
+
 		// If email column doesn't exist, add at the end
 		if ( ! isset( $columns['email'] ) ) {
-			$new_columns['ghl_contact_id'] = __( 'GHL Contact ID', 'ghl-crm-integration' );
+			$new_columns['ghl_contact_id']  = __( 'GHL Contact ID', 'ghl-crm-integration' );
 			$new_columns['ghl_sync_status'] = __( 'GHL Sync Status', 'ghl-crm-integration' );
 		}
-		
+
 		return $new_columns;
 	}
 
@@ -122,10 +122,10 @@ class UserColumns {
 		switch ( $column_name ) {
 			case 'ghl_contact_id':
 				return $this->render_contact_id_column( $user_id );
-			
+
 			case 'ghl_sync_status':
 				return $this->render_sync_status_column( $user_id );
-			
+
 			default:
 				return $output;
 		}
@@ -139,15 +139,15 @@ class UserColumns {
 	 */
 	private function render_contact_id_column( int $user_id ): string {
 		$contact_id = get_user_meta( $user_id, '_ghl_contact_id', true );
-		
+
 		if ( empty( $contact_id ) ) {
 			return '<span class="ghl-column-empty">—</span>';
 		}
-		
+
 		// Get location ID for building GHL link
-		$settings   = $this->settings_manager->get_settings_array();
+		$settings    = $this->settings_manager->get_settings_array();
 		$location_id = $settings['location_id'] ?? '';
-		
+
 		if ( ! empty( $location_id ) ) {
 			// Build link to GHL contact
 			$ghl_url = sprintf(
@@ -155,7 +155,7 @@ class UserColumns {
 				esc_attr( $location_id ),
 				esc_attr( $contact_id )
 			);
-			
+
 			return sprintf(
 				'<a href="%s" target="_blank" rel="noopener noreferrer" class="ghl-contact-link" title="%s">
 					<code>%s</code>
@@ -166,7 +166,7 @@ class UserColumns {
 				esc_html( substr( $contact_id, 0, 8 ) . '...' )
 			);
 		}
-		
+
 		return sprintf( '<code>%s</code>', esc_html( substr( $contact_id, 0, 8 ) . '...' ) );
 	}
 
@@ -180,41 +180,45 @@ class UserColumns {
 		$synced_on_register = get_user_meta( $user_id, '_ghl_synced_on_register', true );
 		$last_sync_time     = get_user_meta( $user_id, '_ghl_last_sync', true );
 		$contact_id         = get_user_meta( $user_id, '_ghl_contact_id', true );
-		
+
 		if ( empty( $contact_id ) ) {
 			// Not synced yet
 			return '<span class="ghl-sync-status ghl-sync-never" title="' . esc_attr__( 'Never synced to GoHighLevel', 'ghl-crm-integration' ) . '">
-				<span class="dashicons dashicons-warning" style="color: #dba617;"></span> ' . 
-				esc_html__( 'Not Synced', 'ghl-crm-integration' ) . 
+				<span class="dashicons dashicons-warning" style="color: #dba617;"></span> ' .
+				esc_html__( 'Not Synced', 'ghl-crm-integration' ) .
 				'</span>';
 		}
-		
+
 		// Synced - show last sync time
 		$sync_time = $last_sync_time ?: $synced_on_register;
-		
+
 		if ( $sync_time ) {
 			$time_diff = human_time_diff( (int) $sync_time, current_time( 'timestamp' ) );
-			
+
 			return sprintf(
 				'<span class="ghl-sync-status ghl-sync-success" title="%s">
 					<span class="dashicons dashicons-yes-alt" style="color: #46b450;"></span> %s
 				</span>',
-				esc_attr( sprintf(
+				esc_attr(
+					sprintf(
 					/* translators: %s: Time difference */
-					__( 'Last synced: %s ago', 'ghl-crm-integration' ),
-					$time_diff
-				) ),
-				esc_html( sprintf(
+						__( 'Last synced: %s ago', 'ghl-crm-integration' ),
+						$time_diff
+					)
+				),
+				esc_html(
+					sprintf(
 					/* translators: %s: Time difference */
-					__( '%s ago', 'ghl-crm-integration' ),
-					$time_diff
-				) )
+						__( '%s ago', 'ghl-crm-integration' ),
+						$time_diff
+					)
+				)
 			);
 		}
-		
+
 		return '<span class="ghl-sync-status ghl-sync-success">
-			<span class="dashicons dashicons-yes-alt" style="color: #46b450;"></span> ' . 
-			esc_html__( 'Synced', 'ghl-crm-integration' ) . 
+			<span class="dashicons dashicons-yes-alt" style="color: #46b450;"></span> ' .
+			esc_html__( 'Synced', 'ghl-crm-integration' ) .
 			'</span>';
 	}
 
@@ -227,7 +231,7 @@ class UserColumns {
 	public function make_columns_sortable( array $columns ): array {
 		$columns['ghl_contact_id']  = 'ghl_contact_id';
 		$columns['ghl_sync_status'] = 'ghl_sync_status';
-		
+
 		return $columns;
 	}
 
@@ -242,15 +246,15 @@ class UserColumns {
 		if ( ! is_admin() ) {
 			return;
 		}
-		
+
 		$orderby = $query->get( 'orderby' );
-		
+
 		switch ( $orderby ) {
 			case 'ghl_contact_id':
 				$query->set( 'meta_key', '_ghl_contact_id' );
 				$query->set( 'orderby', 'meta_value' );
 				break;
-			
+
 			case 'ghl_sync_status':
 				$query->set( 'meta_key', '_ghl_last_sync' );
 				$query->set( 'orderby', 'meta_value_num' );

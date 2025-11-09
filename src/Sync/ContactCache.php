@@ -57,7 +57,7 @@ class ContactCache {
 	private function get_cache_ttl(): int {
 		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 		$cache_duration   = absint( $settings_manager->get_setting( 'cache_duration', self::DEFAULT_CACHE_TTL ) );
-		
+
 		// If set to 0, disable caching
 		return max( 0, min( 86400, $cache_duration ) ); // Clamp between 0-86400 (24 hours)
 	}
@@ -92,7 +92,7 @@ class ContactCache {
 		}
 
 		$cache_ttl = $this->get_cache_ttl();
-		
+
 		// If caching is disabled (0), don't cache
 		if ( 0 === $cache_ttl ) {
 			return true; // Return true but don't cache

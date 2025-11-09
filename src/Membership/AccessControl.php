@@ -109,7 +109,7 @@ class AccessControl {
 	 */
 	private function user_has_any_tag( array $user_tags, array $required_tags ): bool {
 		$required_tags_lower = array_map( 'strtolower', $required_tags );
-		
+
 		foreach ( $user_tags as $user_tag ) {
 			if ( in_array( $user_tag, $required_tags_lower, true ) ) {
 				return true;
@@ -128,7 +128,7 @@ class AccessControl {
 	 */
 	private function user_has_all_tags( array $user_tags, array $required_tags ): bool {
 		$required_tags_lower = array_map( 'strtolower', $required_tags );
-		
+
 		foreach ( $required_tags_lower as $required_tag ) {
 			if ( ! in_array( $required_tag, $user_tags, true ) ) {
 				return false;
@@ -147,7 +147,7 @@ class AccessControl {
 	 */
 	private function user_not_has_tags( array $user_tags, array $restricted_tags ): bool {
 		$restricted_tags_lower = array_map( 'strtolower', $restricted_tags );
-		
+
 		foreach ( $user_tags as $user_tag ) {
 			if ( in_array( $user_tag, $restricted_tags_lower, true ) ) {
 				return false; // User has a restricted tag, deny access
@@ -165,7 +165,7 @@ class AccessControl {
 	 */
 	public function get_redirect_url( int $post_id ): string {
 		$redirect_url = get_post_meta( $post_id, '_ghl_redirect_url', true );
-		
+
 		if ( empty( $redirect_url ) ) {
 			return '';
 		}
@@ -180,7 +180,7 @@ class AccessControl {
 	 * @return string HTML message
 	 */
 	public function get_denial_message( int $post_id ): string {
-		$message = apply_filters( 
+		$message = apply_filters(
 			'ghl_crm_access_denial_message',
 			__( 'You do not have permission to view this content.', 'ghl-crm-integration' ),
 			$post_id

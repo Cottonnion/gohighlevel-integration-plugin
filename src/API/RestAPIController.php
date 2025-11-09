@@ -65,7 +65,7 @@ class RestAPIController {
 	 * @return void
 	 */
 	public function register_routes(): void {
-		$settings = $this->settings_manager->get_settings_array();
+		$settings         = $this->settings_manager->get_settings_array();
 		$rest_api_enabled = $settings['rest_api_enabled'] ?? false;
 
 		// Only register routes if REST API is enabled
@@ -142,12 +142,12 @@ class RestAPIController {
 	 * @return bool|\ WP_Error
 	 */
 	public function check_api_permission( \WP_REST_Request $request ) {
-		$settings = $this->settings_manager->get_settings_array();
+		$settings   = $this->settings_manager->get_settings_array();
 		$stored_key = $settings['rest_api_key'] ?? '';
 
 		// Get API key from Authorization header
 		$auth_header = $request->get_header( 'Authorization' );
-		
+
 		if ( empty( $auth_header ) ) {
 			return new \WP_Error(
 				'rest_forbidden',
@@ -225,7 +225,7 @@ class RestAPIController {
 			if ( $user ) {
 				// Update existing user
 				$user_data = [ 'ID' => $user->ID ];
-				
+
 				if ( ! empty( $params['first_name'] ) ) {
 					$user_data['first_name'] = sanitize_text_field( $params['first_name'] );
 				}
@@ -299,7 +299,7 @@ class RestAPIController {
 	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function trigger_sync( \WP_REST_Request $request ) {
-		$params = $request->get_json_params();
+		$params    = $request->get_json_params();
 		$sync_type = $params['type'] ?? 'users';
 
 		try {
@@ -330,7 +330,7 @@ class RestAPIController {
 	 */
 	public function get_status( \WP_REST_Request $request ) {
 		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
-		$status = $queue_manager->get_queue_status();
+		$status        = $queue_manager->get_queue_status();
 
 		return new \WP_REST_Response(
 			[
@@ -375,9 +375,9 @@ class RestAPIController {
 	 * @return true|\WP_Error
 	 */
 	private function check_rate_limit() {
-		$settings = $this->settings_manager->get_settings_array();
+		$settings            = $this->settings_manager->get_settings_array();
 		$requests_per_minute = $settings['rest_api_requests_per_minute'] ?? 60;
-		$client_ip = $this->get_client_ip();
+		$client_ip           = $this->get_client_ip();
 
 		$transient_key = 'ghl_rest_api_rate_' . md5( $client_ip );
 		$request_count = get_transient( $transient_key );
@@ -397,10 +397,10 @@ class RestAPIController {
 					$requests_per_minute
 				),
 				[
-					'status'       => 429,
-					'retry_after'  => 60,
-					'limit'        => $requests_per_minute,
-					'remaining'    => 0,
+					'status'      => 429,
+					'retry_after' => 60,
+					'limit'       => $requests_per_minute,
+					'remaining'   => 0,
 				]
 			);
 		}
@@ -475,9 +475,9 @@ class RestAPIController {
 	private function ip_in_cidr( string $ip, string $cidr ): bool {
 		list( $subnet, $mask ) = explode( '/', $cidr );
 
-		$ip_long = ip2long( $ip );
+		$ip_long     = ip2long( $ip );
 		$subnet_long = ip2long( $subnet );
-		$mask_long = -1 << ( 32 - (int) $mask );
+		$mask_long   = -1 << ( 32 - (int) $mask );
 
 		return ( $ip_long & $mask_long ) === ( $subnet_long & $mask_long );
 	}

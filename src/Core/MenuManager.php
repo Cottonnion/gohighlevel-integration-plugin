@@ -72,7 +72,7 @@ class MenuManager {
 	public function add_admin_menu(): void {
 		// Get SVG icon
 		$icon_svg = $this->get_menu_icon();
-		
+
 		$page_hook = add_menu_page(
 			__( 'GoHighLevel CRM', 'ghl-crm-integration' ),
 			__( 'GHL CRM', 'ghl-crm-integration' ),
@@ -129,7 +129,7 @@ class MenuManager {
 			'ghl-crm-admin#/sync-logs',
 			'__return_false'
 		);
-		
+
 				add_submenu_page(
 					'ghl-crm-admin',
 					__( 'Forms', 'ghl-crm-integration' ),
@@ -303,46 +303,46 @@ class MenuManager {
 				403
 			);
 		}
-		try{
+		try {
 
-		$view   = isset( $_POST['view'] ) ? sanitize_text_field( wp_unslash( $_POST['view'] ) ) : 'dashboard';
-		$params = isset( $_POST['params'] ) && is_array( $_POST['params'] ) ? $_POST['params'] : [];
+			$view   = isset( $_POST['view'] ) ? sanitize_text_field( wp_unslash( $_POST['view'] ) ) : 'dashboard';
+			$params = isset( $_POST['params'] ) && is_array( $_POST['params'] ) ? $_POST['params'] : [];
 
-		switch ( $view ) {
-			case 'dashboard':
-				$this->get_dashboard_data();
-				break;
+			switch ( $view ) {
+				case 'dashboard':
+					$this->get_dashboard_data();
+					break;
 
-			case 'settings':
-				$this->get_settings_data( $params );
-				break;
+				case 'settings':
+					$this->get_settings_data( $params );
+					break;
 
-			case 'integrations':
-				$this->get_integrations_data();
-				break;
+				case 'integrations':
+					$this->get_integrations_data();
+					break;
 
-			case 'field-mapping':
-				$this->get_field_mapping_data();
-				break;
+				case 'field-mapping':
+					$this->get_field_mapping_data();
+					break;
 
-		case 'custom-objects':
-			$this->get_custom_objects_data( $params );
-			break;
+				case 'custom-objects':
+					$this->get_custom_objects_data( $params );
+					break;
 
-		case 'forms':
-			$this->get_forms_data();
-			break;
+				case 'forms':
+					$this->get_forms_data();
+					break;
 
-		case 'sync-logs':
-			$this->get_sync_logs_data( $params );
-			break;			default:
-				wp_send_json_error(
-					[
-						'message' => __( 'Invalid view requested.', 'ghl-crm-integration' ),
-					],
-					404
-				);
-		}
+				case 'sync-logs':
+					$this->get_sync_logs_data( $params );
+					break;          default:
+					wp_send_json_error(
+						[
+							'message' => __( 'Invalid view requested.', 'ghl-crm-integration' ),
+						],
+						404
+					);
+			}
 		} catch ( \Exception $e ) {
 			wp_send_json_error(
 				[
@@ -431,7 +431,7 @@ class MenuManager {
 		}
 
 		// Test the connection using Client helper method
-		$client = \GHL_CRM\API\Client\Client::get_instance();
+		$client      = \GHL_CRM\API\Client\Client::get_instance();
 		$test_result = $client->test_manual_connection( $api_token, $location_id );
 
 		if ( ! $test_result['success'] ) {
@@ -445,18 +445,18 @@ class MenuManager {
 
 		// Connection successful, prepare settings
 		$new_settings = [
-			'api_token'              => $api_token,
-			'location_id'            => $location_id,
-			'location_name'          => 'Location: ' . $location_id,
+			'api_token'           => $api_token,
+			'location_id'         => $location_id,
+			'location_name'       => 'Location: ' . $location_id,
 			// Clear OAuth tokens to prevent conflicts
-			'oauth_access_token'     => '',
-			'oauth_refresh_token'    => '',
-			'oauth_expires_at'       => '',
+			'oauth_access_token'  => '',
+			'oauth_refresh_token' => '',
+			'oauth_expires_at'    => '',
 		];
 
 		// Save settings using SettingsManager helper method
 		$settings_manager = SettingsManager::get_instance();
-		$save_result = $settings_manager->save_manual_connection_settings( $new_settings );
+		$save_result      = $settings_manager->save_manual_connection_settings( $new_settings );
 
 		if ( ! $save_result['success'] ) {
 			wp_send_json_error(
@@ -504,14 +504,14 @@ class MenuManager {
 
 		// Clear API credentials
 		$settings_manager = SettingsManager::get_instance();
-		$new_settings = [
-			'api_token'              => '',
-			'location_id'            => '',
-			'location_name'          => '',
+		$new_settings     = [
+			'api_token'           => '',
+			'location_id'         => '',
+			'location_name'       => '',
 			// Also clear OAuth tokens to ensure clean state
-			'oauth_access_token'     => '',
-			'oauth_refresh_token'    => '',
-			'oauth_expires_at'       => '',
+			'oauth_access_token'  => '',
+			'oauth_refresh_token' => '',
+			'oauth_expires_at'    => '',
 		];
 
 		$save_result = $settings_manager->save_manual_connection_settings( $new_settings );

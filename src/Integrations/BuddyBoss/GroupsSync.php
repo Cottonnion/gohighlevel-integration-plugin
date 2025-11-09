@@ -144,7 +144,7 @@ class GroupsSync {
 		$group_types = bp_groups_get_group_type( $group->id, false );
 		$settings    = $this->settings_manager->get_settings_array();
 		$fallback    = ! empty( $settings['buddyboss_default_group_type'] ) ? sanitize_key( $settings['buddyboss_default_group_type'] ) : '';
-		
+
 		// Skip groups without a group type
 		if ( empty( $group_types ) ) {
 			if ( empty( $fallback ) ) {
@@ -153,14 +153,16 @@ class GroupsSync {
 
 			$group_types = [ $fallback ];
 		}
-		
-		error_log( sprintf( 
-			'GHL BuddyBoss: handle_group_save called - Group ID: %d, Group Name: %s, Group Type: %s', 
-			$group->id,
-			$group->name,
-			$group_types[0]
-		) );
-		
+
+		error_log(
+			sprintf(
+				'GHL BuddyBoss: handle_group_save called - Group ID: %d, Group Name: %s, Group Type: %s',
+				$group->id,
+				$group->name,
+				$group_types[0]
+			)
+		);
+
 		// Queue group sync
 		$this->queue_manager->add_to_queue(
 			'buddyboss_group',
@@ -171,11 +173,13 @@ class GroupsSync {
 				'group_id'   => $group->id,
 			]
 		);
-		
-		error_log( sprintf( 
-			'GHL BuddyBoss: Group sync task queued - Group ID: %d', 
-			$group->id
-		) );
+
+		error_log(
+			sprintf(
+				'GHL BuddyBoss: Group sync task queued - Group ID: %d',
+				$group->id
+			)
+		);
 	}
 
 	/**
@@ -218,16 +222,16 @@ class GroupsSync {
 	/**
 	 * Handle group type assignment events so new types sync immediately.
 	 *
-	 * @param int        $group_id   The group ID.
+	 * @param int          $group_id   The group ID.
 	 * @param string|array $group_type Group type slug or array of slugs.
-	 * @param bool       $append     Whether additional types were appended.
+	 * @param bool         $append     Whether additional types were appended.
 	 */
 	public function handle_group_type_assignment( int $group_id, $group_type, bool $append = false ): void {
 		if ( $group_id <= 0 ) {
 			return;
 		}
 
-		$raw_types = is_array( $group_type ) ? $group_type : [ $group_type ];
+		$raw_types       = is_array( $group_type ) ? $group_type : [ $group_type ];
 		$sanitized_types = array_filter( array_map( 'sanitize_key', $raw_types ) );
 
 		if ( empty( $sanitized_types ) ) {
@@ -241,12 +245,14 @@ class GroupsSync {
 			return;
 		}
 
-		error_log( sprintf(
-			'GHL BuddyBoss: Group type assignment detected - Group ID: %d, Type: %s, Append: %s',
-			$group_id,
-			$primary_group_type,
-			$append ? 'true' : 'false'
-		) );
+		error_log(
+			sprintf(
+				'GHL BuddyBoss: Group type assignment detected - Group ID: %d, Type: %s, Append: %s',
+				$group_id,
+				$primary_group_type,
+				$append ? 'true' : 'false'
+			)
+		);
 
 		$this->queue_manager->add_to_queue(
 			'buddyboss_group',
@@ -263,45 +269,47 @@ class GroupsSync {
 	/**
 	 * Handle group type save - auto-create Custom Object
 	 *
-	 * @param int     $post_id The post ID
+	 * @param int      $post_id The post ID
 	 * @param \WP_Post $post    The post object
 	 */
 	public function handle_group_type_save( int $post_id, \WP_Post $post ): void {
-		error_log( sprintf( 
-			'GHL BuddyBoss: handle_group_type_save called - Post ID: %d, Post Type: %s, Post Status: %s', 
-			$post_id,
-			$post->post_type,
-			$post->post_status
-		) );
-		
+		error_log(
+			sprintf(
+				'GHL BuddyBoss: handle_group_type_save called - Post ID: %d, Post Type: %s, Post Status: %s',
+				$post_id,
+				$post->post_type,
+				$post->post_status
+			)
+		);
+
 		// Check if this is a group type post
 		if ( ! $this->is_group_type_post( $post ) ) {
-			error_log( 'GHL BuddyBoss: Not a group type post, skipping' );
+
 			return;
 		}
 
-		error_log( 'GHL BuddyBoss: Confirmed as group type post' );
-
 		// Skip if this is an autosave, revision, or trashed post
 		if ( wp_is_post_autosave( $post_id ) || wp_is_post_revision( $post_id ) || $post->post_status === 'trash' ) {
-			error_log( 'GHL BuddyBoss: Skipping - autosave, revision, or trash' );
+
 			return;
 		}
 
 		// Only proceed if post is published
 		if ( $post->post_status !== 'publish' ) {
-			error_log( sprintf( 'GHL BuddyBoss: Skipping - post not published (status: %s)', $post->post_status ) );
+
 			return;
 		}
 
 		// Use post slug as group type identifier
 		$group_type = $post->post_name;
 
-		error_log( sprintf( 
-			'GHL BuddyBoss: Queueing Custom Object creation - Group Type: %s, Post Slug: %s', 
-			$group_type,
-			$post->post_name
-		) );
+		error_log(
+			sprintf(
+				'GHL BuddyBoss: Queueing Custom Object creation - Group Type: %s, Post Slug: %s',
+				$group_type,
+				$post->post_name
+			)
+		);
 
 		// Queue Custom Object creation
 		$this->queue_manager->add_to_queue(
@@ -313,17 +321,19 @@ class GroupsSync {
 				'post_id'    => $post_id,
 			]
 		);
-		
-		error_log( sprintf( 
-			'GHL BuddyBoss: Group type sync task queued - Group Type: %s', 
-			$group_type
-		) );
+
+		error_log(
+			sprintf(
+				'GHL BuddyBoss: Group type sync task queued - Group Type: %s',
+				$group_type
+			)
+		);
 	}
 
 	/**
 	 * Handle group type deletion
 	 *
-	 * @param int     $post_id The post ID
+	 * @param int      $post_id The post ID
 	 * @param \WP_Post $post    The post object
 	 */
 	public function handle_group_type_delete( int $post_id, \WP_Post $post ): void {
@@ -333,7 +343,7 @@ class GroupsSync {
 		}
 
 		$settings = $this->settings_manager->get_settings_array();
-		
+
 		// Check if auto-deletion is enabled
 		if ( ! empty( $settings['buddyboss_auto_delete_custom_objects'] ) ) {
 			// Use post slug as group type identifier
@@ -364,11 +374,13 @@ class GroupsSync {
 		$association_id = groups_get_groupmeta( $group_id, 'ghl_association_id', true );
 
 		if ( empty( $record_id ) || empty( $association_id ) ) {
-			error_log( sprintf( 
-				'GHL BuddyBoss: Cannot queue association for user %d - Group %d missing record_id or association_id', 
-				$user_id,
-				$group_id
-			) );
+			error_log(
+				sprintf(
+					'GHL BuddyBoss: Cannot queue association for user %d - Group %d missing record_id or association_id',
+					$user_id,
+					$group_id
+				)
+			);
 			return;
 		}
 
@@ -384,12 +396,14 @@ class GroupsSync {
 			]
 		);
 
-		error_log( sprintf( 
-			'GHL BuddyBoss: Queued %s for user %d in group %d', 
-			$action,
-			$user_id,
-			$group_id
-		) );
+		error_log(
+			sprintf(
+				'GHL BuddyBoss: Queued %s for user %d in group %d',
+				$action,
+				$user_id,
+				$group_id
+			)
+		);
 	}
 
 	/**
@@ -424,7 +438,7 @@ class GroupsSync {
 
 		// Prepare group data
 		$location_id = $this->settings_manager->get_setting( 'location_id' );
-		
+
 		// Build the record data - wrap properties in a "properties" object
 		$group_data = [
 			'locationId' => $location_id,
@@ -437,61 +451,69 @@ class GroupsSync {
 		try {
 			// Check if record already exists
 			$existing_record_id = groups_get_groupmeta( $group_id, 'ghl_custom_object_record_id', true );
-			
+
 			if ( $existing_record_id ) {
-				error_log( sprintf( 
-					'GHL BuddyBoss: Group %d already has record %s, skipping record creation', 
-					$group_id,
-					$existing_record_id
-				) );
+				error_log(
+					sprintf(
+						'GHL BuddyBoss: Group %d already has record %s, skipping record creation',
+						$group_id,
+						$existing_record_id
+					)
+				);
 				$record_id = $existing_record_id;
 			} else {
 				// Create new record
 				$result = $this->custom_object_resource->create_record( $custom_object_id, $group_data );
-				
+
 				// Store GHL record ID for future updates
 				$record_id = $result['id'] ?? null;
 				if ( ! $record_id ) {
 					throw new \Exception( 'No record ID returned from create_record' );
 				}
-				
-				error_log( sprintf( 
-					'GHL BuddyBoss: Created new record %s for group %d', 
-					$record_id,
-					$group_id
-				) );
-				
+
+				error_log(
+					sprintf(
+						'GHL BuddyBoss: Created new record %s for group %d',
+						$record_id,
+						$group_id
+					)
+				);
+
 				groups_update_groupmeta( $group_id, 'ghl_custom_object_record_id', $record_id );
 			}
-			
+
 			groups_update_groupmeta( $group_id, 'ghl_custom_object_id', $custom_object_id );
-			
+
 			// Store object slug for URL building (convert name to lowercase slug)
 			$object_slug = strtolower( str_replace( ' ', '_', $custom_object_name ) );
 			groups_update_groupmeta( $group_id, 'ghl_custom_object_slug', $object_slug );
 
 			// Get or create association definition
-			$schema_key = 'custom_objects.' . $object_slug;
+			$schema_key     = 'custom_objects.' . $object_slug;
 			$association_id = $this->get_or_create_association( $schema_key, $custom_object_name, $group_type );
-			
+
 			if ( $association_id ) {
 				// Store association ID for later use
 				groups_update_groupmeta( $group_id, 'ghl_association_id', $association_id );
-				
-				error_log( sprintf( 
-					'GHL BuddyBoss: About to queue member associations - Group: %d, Record: %s, Association: %s', 
-					$group_id,
-					$record_id,
-					$association_id
-				) );
-				
+
+				error_log(
+					sprintf(
+						'GHL BuddyBoss: About to queue member associations - Group: %d, Record: %s, Association: %s',
+						$group_id,
+						$record_id,
+						$association_id
+					)
+				);
+
 				// Queue association creation for all group members
 				$this->queue_member_associations( $group_id, $record_id, $association_id );
 			} else {
-				error_log( sprintf( 
-					'GHL BuddyBoss: Warning - Could not create association for group %d, members will not be linked', 
-					$group_id
-				) );
+				error_log(
+					sprintf(
+						'GHL BuddyBoss: Warning - Could not create association for group %d, members will not be linked',
+						$group_id
+					)
+				);
 			}
 
 			return [
@@ -517,38 +539,41 @@ class GroupsSync {
 	 * @return string|null Custom Object ID or null on failure
 	 */
 	private function get_or_create_custom_object( string $object_name, string $group_type ): ?string {
-		error_log( sprintf( 
-			'GHL BuddyBoss: Attempting to get or create Custom Object - Name: %s, Group Type: %s', 
-			$object_name, 
-			$group_type 
-		) );
+		error_log(
+			sprintf(
+				'GHL BuddyBoss: Attempting to get or create Custom Object - Name: %s, Group Type: %s',
+				$object_name,
+				$group_type
+			)
+		);
 
 		// Check if Custom Object already exists
 		try {
 			$existing_objects = $this->custom_object_resource->get_schemas();
-			error_log( sprintf( 'GHL BuddyBoss: Found %d existing Custom Objects', count( $existing_objects ) ) );
-			
+
 			// Log the first object structure to understand the schema
 			if ( ! empty( $existing_objects ) ) {
-				error_log( sprintf( 'GHL BuddyBoss: First Custom Object structure: %s', wp_json_encode( $existing_objects[0] ) ) );
+
 			}
-			
+
 			foreach ( $existing_objects as $object ) {
 				// GHL Custom Objects use labels.plural for the display name
 				$obj_name = $object['labels']['plural'] ?? $object['name'] ?? '';
 				$obj_id   = $object['id'] ?? '';
-				
+
 				if ( $obj_name === $object_name ) {
-					error_log( sprintf( 'GHL BuddyBoss: Custom Object already exists - ID: %s, Name: %s', $obj_id, $object_name ) );
+
 					return $obj_id;
 				}
 			}
 		} catch ( \Exception $e ) {
-			error_log( sprintf( 
-				'GHL BuddyBoss: Error fetching existing Custom Objects - Error: %s, Trace: %s', 
-				$e->getMessage(),
-				$e->getTraceAsString()
-			) );
+			error_log(
+				sprintf(
+					'GHL BuddyBoss: Error fetching existing Custom Objects - Error: %s, Trace: %s',
+					$e->getMessage(),
+					$e->getTraceAsString()
+				)
+			);
 			return null;
 		}
 
@@ -557,31 +582,31 @@ class GroupsSync {
 			'name'        => $object_name,
 			'description' => sprintf( 'BuddyBoss %s groups', ucfirst( $group_type ) ),
 			'properties'  => [
-				'name' => [
+				'name'         => [
 					'type'        => 'text',
 					'label'       => 'Group Name',
 					'required'    => true,
 					'description' => 'The name of the group',
 				],
-				'description' => [
+				'description'  => [
 					'type'        => 'textarea',
 					'label'       => 'Description',
 					'required'    => false,
 					'description' => 'Group description',
 				],
-				'status' => [
+				'status'       => [
 					'type'        => 'text',
 					'label'       => 'Status',
 					'required'    => false,
 					'description' => 'Group status (public, private, hidden)',
 				],
-				'slug' => [
+				'slug'         => [
 					'type'        => 'text',
 					'label'       => 'Slug',
 					'required'    => false,
 					'description' => 'Group URL slug',
 				],
-				'created' => [
+				'created'      => [
 					'type'        => 'date',
 					'label'       => 'Created Date',
 					'required'    => false,
@@ -593,7 +618,7 @@ class GroupsSync {
 					'required'    => false,
 					'description' => 'Total number of members',
 				],
-				'group_type' => [
+				'group_type'   => [
 					'type'        => 'text',
 					'label'       => 'Group Type',
 					'required'    => false,
@@ -609,83 +634,95 @@ class GroupsSync {
 		];
 
 		// Try to create the Custom Object schema via API
-		error_log( sprintf( 
-			'GHL BuddyBoss: Custom Object "%s" not found. Attempting to create via API...', 
-			$object_name
-		) );
-		
+		error_log(
+			sprintf(
+				'GHL BuddyBoss: Custom Object "%s" not found. Attempting to create via API...',
+				$object_name
+			)
+		);
+
 		try {
 			// Get location ID from settings
 			$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 			$location_id      = $settings_manager->get_setting( 'location_id', '' );
-			
+
 			if ( empty( $location_id ) ) {
 				throw new \Exception( 'Location ID not configured in plugin settings' );
 			}
-			
+
 			// Generate key from object name (lowercase with underscores)
 			$base_key = strtolower( str_replace( ' ', '_', $object_name ) );
-			
+
 			// GHL requires custom objects to have 'custom_objects.' prefix in the key
 			$object_key = "custom_objects.{$base_key}";
-			
+
 			// The primary display property key also needs the full custom_objects prefix
 			$primary_property_key = "{$object_key}.name";
-			
+
 			// Prepare schema data according to GHL API format
 			// Based on example: custom_objects.pet with primaryDisplayPropertyDetails.key = custom_objects.pet.name
 			$schema_data = [
-				'key'         => $object_key,
-				'locationId'  => $location_id,
-				'labels'      => [
+				'key'                           => $object_key,
+				'locationId'                    => $location_id,
+				'labels'                        => [
 					'singular' => rtrim( $object_name, 's' ), // e.g., "School"
 					'plural'   => $object_name,                // e.g., "Schools"
 				],
-				'description' => sprintf( 'BuddyBoss %s groups', ucfirst( $group_type ) ),
+				'description'                   => sprintf( 'BuddyBoss %s groups', ucfirst( $group_type ) ),
 				'primaryDisplayPropertyDetails' => [
 					'key'      => $primary_property_key,  // e.g., "custom_objects.schools.name"
 					'name'     => 'Group Name',            // Display label for the property
 					'dataType' => 'TEXT',                  // Must be uppercase: TEXT, NUMBER, DATE, etc.
 				],
 			];
-			
-			error_log( sprintf( 
-				'GHL BuddyBoss: Creating Custom Object schema with data: %s', 
-				wp_json_encode( $schema_data )
-			) );
-			
+
+			error_log(
+				sprintf(
+					'GHL BuddyBoss: Creating Custom Object schema with data: %s',
+					wp_json_encode( $schema_data )
+				)
+			);
+
 			$created_schema = $this->custom_object_resource->create_schema( $schema_data );
-			
+
 			if ( ! empty( $created_schema['id'] ) ) {
-				error_log( sprintf( 
-					'GHL BuddyBoss: Successfully created Custom Object - ID: %s, Name: %s', 
-					$created_schema['id'],
-					$object_name
-				) );
+				error_log(
+					sprintf(
+						'GHL BuddyBoss: Successfully created Custom Object - ID: %s, Name: %s',
+						$created_schema['id'],
+						$object_name
+					)
+				);
 				return $created_schema['id'];
 			}
-			
-			error_log( sprintf( 
-				'GHL BuddyBoss: API returned but no ID found in response: %s', 
-				wp_json_encode( $created_schema )
-			) );
+
+			error_log(
+				sprintf(
+					'GHL BuddyBoss: API returned but no ID found in response: %s',
+					wp_json_encode( $created_schema )
+				)
+			);
 			return null;
-			
+
 		} catch ( \Exception $e ) {
-			error_log( sprintf( 
-				'GHL BuddyBoss: Failed to create Custom Object schema - Error: %s, Trace: %s', 
-				$e->getMessage(),
-				$e->getTraceAsString()
-			) );
-			
+			error_log(
+				sprintf(
+					'GHL BuddyBoss: Failed to create Custom Object schema - Error: %s, Trace: %s',
+					$e->getMessage(),
+					$e->getTraceAsString()
+				)
+			);
+
 			// Log manual creation instructions as fallback
-			error_log( sprintf( 
-				'GHL BuddyBoss: If automatic creation failed, create Custom Object manually in GoHighLevel dashboard - Name (plural): %s, Key: %s, Properties: %s', 
-				$object_name,
-				strtolower( str_replace( ' ', '_', $object_name ) ),
-				wp_json_encode( array_keys( $object_data['properties'] ) )
-			) );
-			
+			error_log(
+				sprintf(
+					'GHL BuddyBoss: If automatic creation failed, create Custom Object manually in GoHighLevel dashboard - Name (plural): %s, Key: %s, Properties: %s',
+					$object_name,
+					strtolower( str_replace( ' ', '_', $object_name ) ),
+					wp_json_encode( array_keys( $object_data['properties'] ) )
+				)
+			);
+
 			return null;
 		}
 	}
@@ -699,49 +736,53 @@ class GroupsSync {
 	 * @return string|null Association ID or null on failure
 	 */
 	private function get_or_create_association( string $schema_key, string $object_name, string $group_type ): ?string {
-		error_log( sprintf( 
-			'GHL BuddyBoss: Getting or creating association - Schema Key: %s, Object Name: %s, Group Type: %s', 
-			$schema_key, 
-			$object_name,
-			$group_type
-		) );
+		error_log(
+			sprintf(
+				'GHL BuddyBoss: Getting or creating association - Schema Key: %s, Object Name: %s, Group Type: %s',
+				$schema_key,
+				$object_name,
+				$group_type
+			)
+		);
 
 		try {
 			// Get existing associations
 			$associations = $this->custom_object_resource->get_associations();
-			error_log( sprintf( 'GHL BuddyBoss: Found %d existing associations', count( $associations ) ) );
-			
+
 			// Look for existing association between this custom object and contacts
 			foreach ( $associations as $association ) {
-				$first_key = $association['firstObjectKey'] ?? '';
+				$first_key  = $association['firstObjectKey'] ?? '';
 				$second_key = $association['secondObjectKey'] ?? '';
-				
+
 				// Check if this association matches our custom object <-> contact relationship
-				if ( 
-					( $first_key === $schema_key && $second_key === 'contact' ) ||
+				if ( ( $first_key === $schema_key && $second_key === 'contact' ) ||
 					( $first_key === 'contact' && $second_key === $schema_key )
 				) {
 					$assoc_id = $association['id'] ?? '';
-					error_log( sprintf( 
-						'GHL BuddyBoss: Association already exists - ID: %s, %s <-> contact', 
-						$assoc_id,
-						$schema_key
-					) );
+					error_log(
+						sprintf(
+							'GHL BuddyBoss: Association already exists - ID: %s, %s <-> contact',
+							$assoc_id,
+							$schema_key
+						)
+					);
 					return $assoc_id;
 				}
 			}
 
 			// Association doesn't exist, create it
-			error_log( sprintf( 
-				'GHL BuddyBoss: Association not found. Creating new association for %s <-> contact', 
-				$schema_key
-			) );
-			
+			error_log(
+				sprintf(
+					'GHL BuddyBoss: Association not found. Creating new association for %s <-> contact',
+					$schema_key
+				)
+			);
+
 			// Generate labels based on group type
 			// e.g., "School" -> "Member", "Members"
 			$singular_label = 'Member';
-			$plural_label = 'Members';
-			
+			$plural_label   = 'Members';
+
 			// Create the association
 			// ONE_TO_MANY: One custom object record (e.g., School) can have many contacts (Members)
 			$created_association = $this->custom_object_resource->create_association(
@@ -752,26 +793,32 @@ class GroupsSync {
 			);
 
 			if ( ! empty( $created_association['id'] ) ) {
-				error_log( sprintf( 
-					'GHL BuddyBoss: Successfully created association - ID: %s, %s <-> contact (ONE_TO_MANY)', 
-					$created_association['id'],
-					$schema_key
-				) );
+				error_log(
+					sprintf(
+						'GHL BuddyBoss: Successfully created association - ID: %s, %s <-> contact (ONE_TO_MANY)',
+						$created_association['id'],
+						$schema_key
+					)
+				);
 				return $created_association['id'];
 			}
 
-			error_log( sprintf( 
-				'GHL BuddyBoss: Failed to create association - Response: %s', 
-				wp_json_encode( $created_association )
-			) );
+			error_log(
+				sprintf(
+					'GHL BuddyBoss: Failed to create association - Response: %s',
+					wp_json_encode( $created_association )
+				)
+			);
 			return null;
 
 		} catch ( \Exception $e ) {
-			error_log( sprintf( 
-				'GHL BuddyBoss: Error with association - Error: %s, Trace: %s', 
-				$e->getMessage(),
-				$e->getTraceAsString()
-			) );
+			error_log(
+				sprintf(
+					'GHL BuddyBoss: Error with association - Error: %s, Trace: %s',
+					$e->getMessage(),
+					$e->getTraceAsString()
+				)
+			);
 			return null;
 		}
 	}
@@ -782,7 +829,7 @@ class GroupsSync {
 	public function handle_bulk_sync(): void {
 		// Verify nonce and capabilities
 		check_ajax_referer( 'ghl_buddyboss_bulk_sync', 'nonce' );
-		
+
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( esc_html__( 'Insufficient permissions', 'ghl-crm-integration' ) );
 		}
@@ -822,12 +869,14 @@ class GroupsSync {
 			return $result;
 		}
 
-		error_log( sprintf( 
-			'GHL BuddyBoss: Executing sync - Type: %s, Action: %s, Item ID: %d', 
-			$item_type,
-			$action,
-			$item_id
-		) );
+		error_log(
+			sprintf(
+				'GHL BuddyBoss: Executing sync - Type: %s, Action: %s, Item ID: %d',
+				$item_type,
+				$action,
+				$item_id
+			)
+		);
 
 		switch ( $item_type ) {
 			case 'buddyboss_group':
@@ -855,11 +904,13 @@ class GroupsSync {
 		// Quick skip: if group already has a GHL record, mark task as successful and skip work
 		$existing_record_id = groups_get_groupmeta( $group_id, 'ghl_custom_object_record_id', true );
 		if ( $action === 'sync_group' && ! empty( $existing_record_id ) ) {
-			error_log( sprintf(
-				'GHL BuddyBoss: Skipping sync_group for Group %d because record %s already exists - marking queue item completed',
-				$group_id,
-				$existing_record_id
-			) );
+			error_log(
+				sprintf(
+					'GHL BuddyBoss: Skipping sync_group for Group %d because record %s already exists - marking queue item completed',
+					$group_id,
+					$existing_record_id
+				)
+			);
 
 			return [
 				'success'   => true,
@@ -895,14 +946,16 @@ class GroupsSync {
 		$record_id      = $payload['record_id'] ?? '';
 		$association_id = $payload['association_id'] ?? '';
 
-		error_log( sprintf(
-			'GHL BuddyBoss: Processing member association - User: %d, Group: %d, Record: %s, Association: %s, Payload: %s',
-			$user_id,
-			$group_id,
-			$record_id,
-			$association_id,
-			wp_json_encode( $payload )
-		) );
+		error_log(
+			sprintf(
+				'GHL BuddyBoss: Processing member association - User: %d, Group: %d, Record: %s, Association: %s, Payload: %s',
+				$user_id,
+				$group_id,
+				$record_id,
+				$association_id,
+				wp_json_encode( $payload )
+			)
+		);
 
 		if ( empty( $record_id ) || empty( $association_id ) ) {
 			return [
@@ -917,11 +970,13 @@ class GroupsSync {
 
 				// If invalid record id returned from GHL, log and return a clear error so operator can recreate record
 				if ( empty( $result['success'] ) && ! empty( $result['error'] ) && strpos( $result['error'], 'Invalid record id' ) !== false ) {
-					error_log( sprintf(
-						'GHL BuddyBoss: Aborting retries for member association - Invalid record id for Group %d, Record %s. Please re-create group record.',
-						$group_id,
-						$record_id
-					) );
+					error_log(
+						sprintf(
+							'GHL BuddyBoss: Aborting retries for member association - Invalid record id for Group %d, Record %s. Please re-create group record.',
+							$group_id,
+							$record_id
+						)
+					);
 
 					// Return failure but include an 'abort' flag for visibility
 					return [
@@ -960,197 +1015,213 @@ class GroupsSync {
 		$contact_id = get_user_meta( $user_id, '_ghl_contact_id', true );
 		$settings   = $this->settings_manager->get_settings_array();
 		$strategy   = $settings['buddyboss_missing_contact_strategy'] ?? 'skip';
-		
+
 		// Debug: Check all possible meta keys
 		$all_meta = get_user_meta( $user_id );
-		error_log( sprintf( 
-			'GHL BuddyBoss: User %d meta check - _ghl_contact_id: %s, All meta keys: %s', 
-			$user_id,
-			$contact_id ? $contact_id : 'EMPTY',
-			implode( ', ', array_keys( $all_meta ) )
-		) );
-		
+		error_log(
+			sprintf(
+				'GHL BuddyBoss: User %d meta check - _ghl_contact_id: %s, All meta keys: %s',
+				$user_id,
+				$contact_id ? $contact_id : 'EMPTY',
+				implode( ', ', array_keys( $all_meta ) )
+			)
+		);
+
 		if ( ! $contact_id ) {
 			if ( 'create' === $strategy ) {
 				// Attempt to create contact automatically
 				$pending_flag = get_user_meta( $user_id, self::CONTACT_SYNC_PENDING_META_KEY, true );
-				
+
 				if ( ! empty( $pending_flag ) && ( time() - (int) $pending_flag < 300 ) ) {
-					error_log( sprintf(
-						'GHL BuddyBoss: User %d contact creation already queued recently (flag: %s), will retry later',
-						$user_id,
-						$pending_flag
-					) );
+					error_log(
+						sprintf(
+							'GHL BuddyBoss: User %d contact creation already queued recently (flag: %s), will retry later',
+							$user_id,
+							$pending_flag
+						)
+					);
 					return [
 						'success' => false,
 						'error'   => 'Contact creation already pending - will retry',
 					];
 				}
-				
+
 				// Queue contact creation
 				$user = get_userdata( $user_id );
 				if ( ! $user ) {
-					error_log( sprintf( 'GHL BuddyBoss: User %d not found', $user_id ) );
+
 					return [
 						'success' => false,
 						'error'   => 'User not found',
 					];
 				}
-				
+
 				// Mark as pending to avoid duplicate queue
 				update_user_meta( $user_id, self::CONTACT_SYNC_PENDING_META_KEY, time() );
-				
+
 				// Prepare contact data
 				$contact_data = $this->prepare_contact_data_for_user( $user );
-				
-				$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
+
+				$queue_manager    = \GHL_CRM\Sync\QueueManager::get_instance();
 				$contact_queue_id = $queue_manager->add_to_queue( 'user', $user_id, 'profile_update', $contact_data );
-				
-				error_log( sprintf(
-					'GHL BuddyBoss: User %d missing contact - queued creation with queue ID %d',
-					$user_id,
-					$contact_queue_id
-				) );
-				
+
+				error_log(
+					sprintf(
+						'GHL BuddyBoss: User %d missing contact - queued creation with queue ID %d',
+						$user_id,
+						$contact_queue_id
+					)
+				);
+
 				// Build the updated payload with dependency, preserving all original data
 				$updated_payload = [
-					'user_id'               => $user_id,
-					'group_id'              => $group_id,
-					'record_id'             => $record_id,
-					'association_id'        => $association_id,
-					'_depends_on_queue_id'  => $contact_queue_id,
+					'user_id'              => $user_id,
+					'group_id'             => $group_id,
+					'record_id'            => $record_id,
+					'association_id'       => $association_id,
+					'_depends_on_queue_id' => $contact_queue_id,
 				];
-				
-				error_log( sprintf(
-					'GHL BuddyBoss: Updated current association task payload with dependency on contact queue ID %d, merged payload: %s',
-					$contact_queue_id,
-					wp_json_encode( $updated_payload )
-				) );
-				
+
+				error_log(
+					sprintf(
+						'GHL BuddyBoss: Updated current association task payload with dependency on contact queue ID %d, merged payload: %s',
+						$contact_queue_id,
+						wp_json_encode( $updated_payload )
+					)
+				);
+
 				return [
-					'success' => false,
-					'error'   => 'Contact creation queued - will retry association after contact is created',
-					'skip'    => true, // Don't increment retry counter
+					'success'        => false,
+					'error'          => 'Contact creation queued - will retry association after contact is created',
+					'skip'           => true, // Don't increment retry counter
 					'update_payload' => $updated_payload, // Signal to update the queue item payload
 				];
 			}
-			
+
 			// Skip strategy
-			error_log( sprintf( 
-				'GHL BuddyBoss: User %d has no GHL contact ID - skipping association (strategy: skip)', 
-				$user_id
-			) );
+			error_log(
+				sprintf(
+					'GHL BuddyBoss: User %d has no GHL contact ID - skipping association (strategy: skip)',
+					$user_id
+				)
+			);
 			return [
 				'success' => false,
 				'error'   => 'User not synced to GoHighLevel - please sync user first',
 			];
 		}
-		
+
 		// Clear pending flag if contact now exists
 		delete_user_meta( $user_id, self::CONTACT_SYNC_PENDING_META_KEY );
 
 			// --- New: log and validate group/schema/record/association details ---
 			$stored_schema_id = groups_get_groupmeta( $group_id, 'ghl_custom_object_id', true );
-			error_log( sprintf(
-				'GHL BuddyBoss: Group %d meta - ghl_custom_object_id: %s, ghl_custom_object_record_id: %s, association_id (from queue): %s',
-				$group_id,
-				$stored_schema_id ?: 'EMPTY',
-				$record_id,
-				$association_id
-			) );
+			error_log(
+				sprintf(
+					'GHL BuddyBoss: Group %d meta - ghl_custom_object_id: %s, ghl_custom_object_record_id: %s, association_id (from queue): %s',
+					$group_id,
+					$stored_schema_id ?: 'EMPTY',
+					$record_id,
+					$association_id
+				)
+			);
 
 			// Try to fetch schema info (if we have an ID) to log the schema key/name
 			$schema_info = null;
-			if ( ! empty( $stored_schema_id ) ) {
-				$schema_info = $this->custom_object_resource->get_schema( $stored_schema_id );
-				error_log( sprintf( 'GHL BuddyBoss: Fetched schema info for id %s: %s', $stored_schema_id, wp_json_encode( $schema_info ) ) );
-			}
+		if ( ! empty( $stored_schema_id ) ) {
+			$schema_info = $this->custom_object_resource->get_schema( $stored_schema_id );
+
+		}
 
 			// Verify that the record exists under the stored schema (if available)
-			if ( ! empty( $stored_schema_id ) ) {
-				$record_check = $this->custom_object_resource->get_record( $record_id, $stored_schema_id );
-				error_log( sprintf( 'GHL BuddyBoss: Record existence check for record %s under schema %s: %s', $record_id, $stored_schema_id, wp_json_encode( $record_check ) ) );
-				if ( empty( $record_check ) ) {
-					error_log( sprintf( 'GHL BuddyBoss: Record %s NOT found under schema %s. Aborting association to avoid repeated failures.', $record_id, $stored_schema_id ) );
-					return [
-						'success' => false,
-						'error'   => sprintf( 'Record %s not found under schema %s', $record_id, $stored_schema_id ),
-						'abort'   => true,
-					];
-				}
+		if ( ! empty( $stored_schema_id ) ) {
+			$record_check = $this->custom_object_resource->get_record( $record_id, $stored_schema_id );
+
+			if ( empty( $record_check ) ) {
+
+				return [
+					'success' => false,
+					'error'   => sprintf( 'Record %s not found under schema %s', $record_id, $stored_schema_id ),
+					'abort'   => true,
+				];
 			}
+		}
 
 			// Fetch association definition and log it
 			$assoc_def = null;
-			try {
-				$associations = $this->custom_object_resource->get_associations();
-				foreach ( $associations as $a ) {
-					if ( isset( $a['id'] ) && $a['id'] === $association_id ) {
-						$assoc_def = $a;
-						break;
-					}
+		try {
+			$associations = $this->custom_object_resource->get_associations();
+			foreach ( $associations as $a ) {
+				if ( isset( $a['id'] ) && $a['id'] === $association_id ) {
+					$assoc_def = $a;
+					break;
 				}
-				if ( $assoc_def ) {
-					error_log( sprintf( 'GHL BuddyBoss: Association definition for %s: %s', $association_id, wp_json_encode( $assoc_def ) ) );
-				} else {
-					error_log( sprintf( 'GHL BuddyBoss: Could not find association definition for id %s in available associations', $association_id ) );
-				}
-			} catch ( \Exception $e ) {
-				error_log( sprintf( 'GHL BuddyBoss: Error fetching associations: %s', $e->getMessage() ) );
 			}
+			if ( $assoc_def ) {
+
+			} else {
+
+			}
+		} catch ( \Exception $e ) {
+
+		}
 
 			// Determine correct direction based on association definition
 			$direction = 'first'; // default: custom_object first, contact second
-			if ( ! empty( $assoc_def ) ) {
-				$first_key = $assoc_def['firstObjectKey'] ?? '';
-				// If association puts contact as the first object, switch direction
-				if ( $first_key === 'contact' ) {
-					$direction = 'second';
-				}
-				// Log decision
-				error_log( sprintf( 'GHL BuddyBoss: Association direction resolved for assoc %s -> firstObjectKey=%s, using direction=%s', $association_id, $first_key, $direction ) );
+		if ( ! empty( $assoc_def ) ) {
+			$first_key = $assoc_def['firstObjectKey'] ?? '';
+			// If association puts contact as the first object, switch direction
+			if ( $first_key === 'contact' ) {
+				$direction = 'second';
 			}
+			// Log decision
+
+		}
 			// --- End new validation/logging ---
 
 			// Get group type to determine schema key (used for logging/fallback)
 			$group_types = bp_groups_get_group_type( $group_id, false );
 			$group_type  = ! empty( $group_types ) ? $group_types[0] : 'community';
-			
+
 			$custom_object_name = $this->group_type_mappings[ $group_type ] ?? 'Communities';
-			$schema_key = 'custom_objects.' . strtolower( str_replace( ' ', '_', $custom_object_name ) );
+			$schema_key         = 'custom_objects.' . strtolower( str_replace( ' ', '_', $custom_object_name ) );
 
-			try {
-				// Create the association relation
-				// Direction: determined above
-				$result = $this->custom_object_resource->associate_with_contact(
-					$record_id,
-					$contact_id,
-					$schema_key,
-					$association_id,
-					$direction
-				);
-
-				error_log( sprintf( 
-				'GHL BuddyBoss: Successfully associated user %d (contact %s) with record %s (assoc %s, direction %s)', 
-				$user_id,
-				$contact_id,
+		try {
+			// Create the association relation
+			// Direction: determined above
+			$result = $this->custom_object_resource->associate_with_contact(
 				$record_id,
+				$contact_id,
+				$schema_key,
 				$association_id,
 				$direction
-				) );
+			);
 
-				return [
-					'success' => true,
-					'result'  => $result,
-				];
-			} catch ( \Exception $e ) {
-				error_log( sprintf( 
-				'GHL BuddyBoss: Failed to associate user %d with record %s - Error: %s', 
-				$user_id,
-				$record_id,
-				$e->getMessage()
-			) );
-			
+			error_log(
+				sprintf(
+					'GHL BuddyBoss: Successfully associated user %d (contact %s) with record %s (assoc %s, direction %s)',
+					$user_id,
+					$contact_id,
+					$record_id,
+					$association_id,
+					$direction
+				)
+			);
+
+			return [
+				'success' => true,
+				'result'  => $result,
+			];
+		} catch ( \Exception $e ) {
+			error_log(
+				sprintf(
+					'GHL BuddyBoss: Failed to associate user %d with record %s - Error: %s',
+					$user_id,
+					$record_id,
+					$e->getMessage()
+				)
+			);
+
 			return [
 				'success' => false,
 				'error'   => $e->getMessage(),
@@ -1173,7 +1244,7 @@ class GroupsSync {
 			case 'create_custom_object':
 				$custom_object_name = $this->group_type_mappings[ $group_type ] ?? ucfirst( $group_type ) . 's';
 				$object_id          = $this->get_or_create_custom_object( $custom_object_name, $group_type );
-				
+
 				return [
 					'success'          => ! empty( $object_id ),
 					'custom_object_id' => $object_id,
@@ -1209,7 +1280,7 @@ class GroupsSync {
 
 		try {
 			$this->custom_object_resource->delete_record( $custom_object_id, $record_id );
-			
+
 			// Clean up meta
 			groups_delete_groupmeta( $group_id, 'ghl_custom_object_id' );
 			groups_delete_groupmeta( $group_id, 'ghl_custom_object_record_id' );
@@ -1235,11 +1306,11 @@ class GroupsSync {
 	 */
 	private function delete_custom_object_for_group_type( string $group_type ): array {
 		$custom_object_name = $this->group_type_mappings[ $group_type ] ?? ucfirst( $group_type ) . 's';
-		
+
 		// Find the Custom Object
 		$existing_objects = $this->custom_object_resource->get_schemas();
 		$object_id        = null;
-		
+
 		foreach ( $existing_objects as $object ) {
 			if ( $object['name'] === $custom_object_name ) {
 				$object_id = $object['id'];
@@ -1256,10 +1327,10 @@ class GroupsSync {
 
 		try {
 			$this->custom_object_resource->delete_schema( $object_id );
-			
+
 			return [
-				'success'           => true,
-				'custom_object_id'  => $object_id,
+				'success'            => true,
+				'custom_object_id'   => $object_id,
 				'custom_object_name' => $custom_object_name,
 			];
 		} catch ( \Exception $e ) {
@@ -1276,10 +1347,12 @@ class GroupsSync {
 	 * @return array Result of bulk sync
 	 */
 	private function bulk_sync_all_groups(): array {
-		$groups = groups_get_groups([
-			'type'     => 'alphabetical',
-			'per_page' => -1,
-		]);
+		$groups = groups_get_groups(
+			[
+				'type'     => 'alphabetical',
+				'per_page' => -1,
+			]
+		);
 
 		$queued = 0;
 		foreach ( $groups['groups'] as $group ) {
@@ -1292,7 +1365,7 @@ class GroupsSync {
 					'group_name' => $group->name,
 				]
 			);
-			$queued++;
+			++$queued;
 		}
 
 		return [
@@ -1313,9 +1386,9 @@ class GroupsSync {
 		foreach ( $group_types as $type_key => $type_name ) {
 			$custom_object_name = $this->group_type_mappings[ $type_key ] ?? ucfirst( $type_key ) . 's';
 			$object_id          = $this->get_or_create_custom_object( $custom_object_name, $type_key );
-			
+
 			if ( $object_id ) {
-				$created++;
+				++$created;
 			}
 		}
 

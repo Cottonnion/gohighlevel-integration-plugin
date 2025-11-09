@@ -62,72 +62,74 @@ class ScopeChecker {
 		try {
 			// Get Client instance
 			$client = \GHL_CRM\API\Client\Client::get_instance();
-			
+
 			$endpoint = self::get_test_endpoint( $scope_name );
-			
+
 			// Debug logging
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-				error_log( sprintf( 'ScopeChecker: Checking scope=%s, endpoint=%s', $scope_name, wp_json_encode( $endpoint ) ) );
+
 			}
-			
+
 			// Call the API - endpoint is an array with 'path' and 'params'
 			if ( $endpoint && isset( $endpoint['path'] ) ) {
 				// Make the API call - if it succeeds without exception, we have access
 				$response = $client->get( $endpoint['path'], $endpoint['params'] ?? array() );
 				// If we get here without an exception, access is granted
-				$has_access = true;
+				$has_access        = true;
 				$result['message'] = __( 'Access granted', 'ghl-crm-integration' );
-				
+
 				// Debug logging for success
 				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-					error_log( sprintf( 'ScopeChecker: SUCCESS - Scope=%s, has_access=true', $scope_name ) );
+
 				}
 			} else {
 				$result['message'] = __( 'Invalid endpoint configuration', 'ghl-crm-integration' );
-				
+
 				// Debug logging for invalid endpoint
 				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-					error_log( sprintf( 'ScopeChecker: INVALID ENDPOINT - Scope=%s', $scope_name ) );
+
 				}
 			}
 		} catch ( \Exception $e ) {
 			$error_message = $e->getMessage();
-			
+
 			// Debug logging for exceptions
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-				error_log( sprintf( 
-					'ScopeChecker: EXCEPTION - Scope=%s, Type=%s, Message=%s', 
-					$scope_name, 
-					get_class( $e ),
-					$error_message 
-				) );
+				error_log(
+					sprintf(
+						'ScopeChecker: EXCEPTION - Scope=%s, Type=%s, Message=%s',
+						$scope_name,
+						get_class( $e ),
+						$error_message
+					)
+				);
 			}
-			
+
 			// Check if the error message contains the scope unauthorized message
 			if ( strpos( $error_message, 'not authorized for this scope' ) !== false ) {
-				$has_access = false;
+				$has_access        = false;
 				$result['message'] = $error_message;
 				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-					error_log( sprintf( 'ScopeChecker: Scope=%s, Error=UNAUTHORIZED, Message=%s', $scope_name, $error_message ) );
+
 				}
 			} elseif ( method_exists( $e, 'get_status_code' ) ) {
 				// Check status code from ApiException
 				$status_code = $e->get_status_code();
 				if ( in_array( $status_code, [ 401, 403, 404 ], true ) ) {
-					$has_access = false;
+					$has_access        = false;
 					$result['message'] = $error_message;
 					if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-						error_log( sprintf( 'ScopeChecker: Scope=%s, Status=%d, Message=%s', $scope_name, $status_code, $error_message ) );
+
 					}
 				}
 			} elseif ( method_exists( $e, 'get_response_body' ) ) {
 				// Check response body for status code
 				$response_body = $e->get_response_body();
 				if ( isset( $response_body['statusCode'] ) && in_array( $response_body['statusCode'], [ 401, 403, 404 ], true ) ) {
-					$has_access = false;
+					$has_access        = false;
 					$result['message'] = $error_message;
 					if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-						error_log( sprintf( 'ScopeChecker: Scope=%s, Status=%d, Message=%s', $scope_name, $response_body['statusCode'], $error_message ) );
+
 					}
 				}
 			}
@@ -135,15 +137,17 @@ class ScopeChecker {
 
 		// Update result with access status
 		$result['has_access'] = $has_access;
-		
+
 		// Final debug logging
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( sprintf( 
-				'ScopeChecker: FINAL RESULT - Scope=%s, has_access=%s, message=%s', 
-				$scope_name, 
-				$has_access ? 'true' : 'false',
-				$result['message']
-			) );
+			error_log(
+				sprintf(
+					'ScopeChecker: FINAL RESULT - Scope=%s, has_access=%s, message=%s',
+					$scope_name,
+					$has_access ? 'true' : 'false',
+					$result['message']
+				)
+			);
 		}
 
 		return $result;

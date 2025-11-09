@@ -109,7 +109,7 @@ class MetaBoxes {
 
 		// Enqueue our custom assets
 		$plugin_dir = plugin_dir_url( dirname( dirname( dirname( __DIR__ ) ) ) . '/gohighlevel-crm-integration.php' );
-		
+
 		// Enqueue globals CSS
 		wp_enqueue_style(
 			'ghl-globals',
@@ -117,7 +117,7 @@ class MetaBoxes {
 			[],
 			GHL_CRM_VERSION
 		);
-		
+
 		wp_enqueue_style(
 			'ghl-membership-admin',
 			$plugin_dir . 'assets/admin/css/membership-admin.css',
@@ -134,10 +134,14 @@ class MetaBoxes {
 		);
 
 		// Localize script
-		wp_localize_script( 'ghl-membership-admin', 'ghlMembership', [
-			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-			'nonce'   => wp_create_nonce( 'ghl_user_profile' ),
-		] );
+		wp_localize_script(
+			'ghl-membership-admin',
+			'ghlMembership',
+			[
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'ghl_user_profile' ),
+			]
+		);
 	}
 
 	/**
@@ -350,7 +354,7 @@ class MetaBoxes {
 		wp_enqueue_script(
 			'ghl-membership-admin',
 			GHL_CRM_URL . 'assets/admin/js/membership-admin.js',
-			[ 'jquery', 'ghl-crm-select2', ],
+			[ 'jquery', 'ghl-crm-select2' ],
 			'1.0.0',
 			true
 		);
@@ -366,7 +370,9 @@ class MetaBoxes {
 		);
 
 		// Add inline styles
-		wp_add_inline_style( 'ghl-crm-select2-css', '
+		wp_add_inline_style(
+			'ghl-crm-select2-css',
+			'
 			.ghl-membership-meta-box .select2-container {
 				width: 100% !important;
 			}
@@ -380,7 +386,8 @@ class MetaBoxes {
 			.ghl-membership-meta-box details[open] summary {
 				margin-bottom: 10px;
 			}
-		' );
+		'
+		);
 	}
 
 	/**

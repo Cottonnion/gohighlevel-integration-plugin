@@ -55,7 +55,7 @@ class GroupMetaBox {
 	 * Private constructor
 	 */
 	private function __construct() {
-		$this->queue_manager = QueueManager::get_instance();
+		$this->queue_manager    = QueueManager::get_instance();
 		$this->settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 		$this->register_hooks();
 	}
@@ -75,10 +75,10 @@ class GroupMetaBox {
 
 		// Add custom admin field to group edit screen
 		add_action( 'bp_groups_admin_meta_boxes', [ $this, 'add_meta_box' ] );
-		
+
 		// Enqueue scripts
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
-		
+
 		// AJAX handler for manual sync
 		add_action( 'wp_ajax_ghl_sync_buddyboss_group', [ $this, 'handle_manual_sync' ] );
 	}
@@ -119,7 +119,7 @@ class GroupMetaBox {
 		}
 
 		$group_id = absint( $item->id );
-		
+
 		// Get GHL sync data
 		$record_id      = groups_get_groupmeta( $group_id, 'ghl_custom_object_record_id', true );
 		$object_id      = groups_get_groupmeta( $group_id, 'ghl_custom_object_id', true );
@@ -129,10 +129,10 @@ class GroupMetaBox {
 		$group_type     = ! empty( $group_types ) ? $group_types[0] : '';
 
 		// Get settings for white label domain and location ID
-		$settings    = $this->settings_manager->get_settings_array();
-		$location_id = $settings['location_id'] ?? '';
+		$settings           = $this->settings_manager->get_settings_array();
+		$location_id        = $settings['location_id'] ?? '';
 		$white_label_domain = $settings['ghl_white_label_domain'] ?? '';
-		
+
 		// Determine base domain (white label or default)
 		$base_domain = ! empty( $white_label_domain ) ? rtrim( $white_label_domain, '/' ) : 'https://app.leadconnectorhq.com';
 
@@ -147,7 +147,7 @@ class GroupMetaBox {
 				rawurlencode( $location_id ),
 				rawurlencode( $object_slug )
 			);
-			
+
 			// Specific record URL with sort and recordId parameters
 			if ( ! empty( $record_id ) ) {
 				$sort_param = rawurlencode( '[{"field":"createdAt","dir":"desc"}]' );
@@ -342,7 +342,7 @@ class GroupMetaBox {
 		// Only load on BuddyBoss group edit screen
 		$screen = get_current_screen();
 		// if ( ! $screen || strpos( $screen->id, 'toplevel_page_bp-groups' ) === false ) {
-		// 	return;
+		// return;
 		// }
 
 		// Enqueue globals CSS for consistent design
@@ -369,15 +369,19 @@ class GroupMetaBox {
 			true
 		);
 
-		wp_localize_script( 'ghl-buddyboss-group-meta-box', 'ghlBuddyBossGroup', [
-			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-			'strings' => [
-				'syncing'       => __( 'Syncing...', 'ghl-crm-integration' ),
-				'syncSuccess'   => __( 'Sync completed successfully!', 'ghl-crm-integration' ),
-				'syncError'     => __( 'Sync failed. Check logs for details.', 'ghl-crm-integration' ),
-				'membersQueued' => __( 'Members queued for sync!', 'ghl-crm-integration' ),
-			],
-		] );
+		wp_localize_script(
+			'ghl-buddyboss-group-meta-box',
+			'ghlBuddyBossGroup',
+			[
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'strings' => [
+					'syncing'       => __( 'Syncing...', 'ghl-crm-integration' ),
+					'syncSuccess'   => __( 'Sync completed successfully!', 'ghl-crm-integration' ),
+					'syncError'     => __( 'Sync failed. Check logs for details.', 'ghl-crm-integration' ),
+					'membersQueued' => __( 'Members queued for sync!', 'ghl-crm-integration' ),
+				],
+			]
+		);
 	}
 
 	/**
@@ -390,8 +394,8 @@ class GroupMetaBox {
 			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ] );
 		}
 
-		$group_id   = absint( $_POST['group_id'] ?? 0 );
-		$sync_type  = sanitize_text_field( $_POST['sync_type'] ?? 'group' );
+		$group_id  = absint( $_POST['group_id'] ?? 0 );
+		$sync_type = sanitize_text_field( $_POST['sync_type'] ?? 'group' );
 
 		if ( ! $group_id ) {
 			wp_send_json_error( [ 'message' => __( 'Invalid group ID', 'ghl-crm-integration' ) ] );
@@ -414,10 +418,12 @@ class GroupMetaBox {
 				]
 			);
 
-			wp_send_json_success( [
-				'message'  => __( 'Group queued for sync', 'ghl-crm-integration' ),
-				'queue_id' => $queue_id,
-			] );
+			wp_send_json_success(
+				[
+					'message'  => __( 'Group queued for sync', 'ghl-crm-integration' ),
+					'queue_id' => $queue_id,
+				]
+			);
 		} elseif ( 'members' === $sync_type ) {
 			// Queue all members for association
 			$members = groups_get_group_members( [ 'group_id' => $group_id ] );
@@ -427,9 +433,11 @@ class GroupMetaBox {
 			$association_id = groups_get_groupmeta( $group_id, 'ghl_association_id', true );
 
 			if ( empty( $record_id ) || empty( $association_id ) ) {
-				wp_send_json_error( [ 
-					'message' => __( 'Group must be synced first', 'ghl-crm-integration' ),
-				] );
+				wp_send_json_error(
+					[
+						'message' => __( 'Group must be synced first', 'ghl-crm-integration' ),
+					]
+				);
 			}
 
 			if ( ! empty( $members['members'] ) ) {
@@ -445,18 +453,20 @@ class GroupMetaBox {
 							'association_id' => $association_id,
 						]
 					);
-					$queued++;
+					++$queued;
 				}
 			}
 
-			wp_send_json_success( [
-				'message' => sprintf(
-					/* translators: %d: number of members */
-					__( '%d members queued for sync', 'ghl-crm-integration' ),
-					$queued
-				),
-				'queued' => $queued,
-			] );
+			wp_send_json_success(
+				[
+					'message' => sprintf(
+						/* translators: %d: number of members */
+						__( '%d members queued for sync', 'ghl-crm-integration' ),
+						$queued
+					),
+					'queued'  => $queued,
+				]
+			);
 		}
 
 		wp_send_json_error( [ 'message' => __( 'Invalid sync type', 'ghl-crm-integration' ) ] );

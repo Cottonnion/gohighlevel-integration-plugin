@@ -38,9 +38,9 @@ class AjaxHandler {
 
 			// WooCommerce settings
 			if ( isset( $_POST['wc_enabled'] ) ) {
-				$integration_settings['wc_enabled']                = sanitize_text_field( wp_unslash( $_POST['wc_enabled'] ) ) === '1';
-				$integration_settings['wc_convert_lead_enabled']   = isset( $_POST['wc_convert_lead_enabled'] ) && sanitize_text_field( wp_unslash( $_POST['wc_convert_lead_enabled'] ) ) === '1';
-				
+				$integration_settings['wc_enabled']              = sanitize_text_field( wp_unslash( $_POST['wc_enabled'] ) ) === '1';
+				$integration_settings['wc_convert_lead_enabled'] = isset( $_POST['wc_convert_lead_enabled'] ) && sanitize_text_field( wp_unslash( $_POST['wc_convert_lead_enabled'] ) ) === '1';
+
 				// Handle customer tag (can be array or string)
 				if ( isset( $_POST['wc_customer_tag'] ) ) {
 					$customer_tag = wp_unslash( $_POST['wc_customer_tag'] );
@@ -52,7 +52,7 @@ class AjaxHandler {
 				} else {
 					$integration_settings['wc_customer_tag'] = [];
 				}
-				
+
 				// Handle order statuses for conversion (can be array or string)
 				if ( isset( $_POST['wc_convert_order_statuses'] ) ) {
 					$order_statuses = wp_unslash( $_POST['wc_convert_order_statuses'] );
@@ -64,10 +64,10 @@ class AjaxHandler {
 				} else {
 					$integration_settings['wc_convert_order_statuses'] = [];
 				}
-				
+
 				$integration_settings['wc_abandoned_cart_enabled'] = isset( $_POST['wc_abandoned_cart_enabled'] ) && sanitize_text_field( wp_unslash( $_POST['wc_abandoned_cart_enabled'] ) ) === '1';
 				$integration_settings['wc_abandoned_cart_time']    = isset( $_POST['wc_abandoned_cart_time'] ) ? absint( $_POST['wc_abandoned_cart_time'] ) : 60;
-				
+
 				// Handle abandoned cart tag (can be array or string)
 				if ( isset( $_POST['wc_abandoned_cart_tag'] ) ) {
 					$abandoned_tag = wp_unslash( $_POST['wc_abandoned_cart_tag'] );
@@ -88,15 +88,15 @@ class AjaxHandler {
 				}
 
 				// Opportunities settings
-				$integration_settings['wc_opportunities_enabled']         = isset( $_POST['wc_opportunities_enabled'] ) && sanitize_text_field( wp_unslash( $_POST['wc_opportunities_enabled'] ) ) === '1';
-				$integration_settings['wc_opportunities_pipeline']        = isset( $_POST['wc_opportunities_pipeline'] ) ? sanitize_text_field( wp_unslash( $_POST['wc_opportunities_pipeline'] ) ) : '';
-				$integration_settings['wc_opportunities_stage_abandoned'] = isset( $_POST['wc_opportunities_stage_abandoned'] ) ? sanitize_text_field( wp_unslash( $_POST['wc_opportunities_stage_abandoned'] ) ) : '';
-				$integration_settings['wc_opportunities_stage_pending']   = isset( $_POST['wc_opportunities_stage_pending'] ) ? sanitize_text_field( wp_unslash( $_POST['wc_opportunities_stage_pending'] ) ) : '';
+				$integration_settings['wc_opportunities_enabled']          = isset( $_POST['wc_opportunities_enabled'] ) && sanitize_text_field( wp_unslash( $_POST['wc_opportunities_enabled'] ) ) === '1';
+				$integration_settings['wc_opportunities_pipeline']         = isset( $_POST['wc_opportunities_pipeline'] ) ? sanitize_text_field( wp_unslash( $_POST['wc_opportunities_pipeline'] ) ) : '';
+				$integration_settings['wc_opportunities_stage_abandoned']  = isset( $_POST['wc_opportunities_stage_abandoned'] ) ? sanitize_text_field( wp_unslash( $_POST['wc_opportunities_stage_abandoned'] ) ) : '';
+				$integration_settings['wc_opportunities_stage_pending']    = isset( $_POST['wc_opportunities_stage_pending'] ) ? sanitize_text_field( wp_unslash( $_POST['wc_opportunities_stage_pending'] ) ) : '';
 				$integration_settings['wc_opportunities_stage_processing'] = isset( $_POST['wc_opportunities_stage_processing'] ) ? sanitize_text_field( wp_unslash( $_POST['wc_opportunities_stage_processing'] ) ) : '';
-				$integration_settings['wc_opportunities_stage_completed'] = isset( $_POST['wc_opportunities_stage_completed'] ) ? sanitize_text_field( wp_unslash( $_POST['wc_opportunities_stage_completed'] ) ) : '';
-				$integration_settings['wc_opportunities_stage_cancelled'] = isset( $_POST['wc_opportunities_stage_cancelled'] ) ? sanitize_text_field( wp_unslash( $_POST['wc_opportunities_stage_cancelled'] ) ) : '';
-				$integration_settings['wc_opportunities_filter_type']     = isset( $_POST['wc_opportunities_filter_type'] ) ? sanitize_text_field( wp_unslash( $_POST['wc_opportunities_filter_type'] ) ) : 'all';
-				$integration_settings['wc_opportunities_min_value']       = isset( $_POST['wc_opportunities_min_value'] ) ? floatval( $_POST['wc_opportunities_min_value'] ) : 0;
+				$integration_settings['wc_opportunities_stage_completed']  = isset( $_POST['wc_opportunities_stage_completed'] ) ? sanitize_text_field( wp_unslash( $_POST['wc_opportunities_stage_completed'] ) ) : '';
+				$integration_settings['wc_opportunities_stage_cancelled']  = isset( $_POST['wc_opportunities_stage_cancelled'] ) ? sanitize_text_field( wp_unslash( $_POST['wc_opportunities_stage_cancelled'] ) ) : '';
+				$integration_settings['wc_opportunities_filter_type']      = isset( $_POST['wc_opportunities_filter_type'] ) ? sanitize_text_field( wp_unslash( $_POST['wc_opportunities_filter_type'] ) ) : 'all';
+				$integration_settings['wc_opportunities_min_value']        = isset( $_POST['wc_opportunities_min_value'] ) ? floatval( $_POST['wc_opportunities_min_value'] ) : 0;
 
 				// Handle opportunities products array
 				if ( isset( $_POST['wc_opportunities_products'] ) ) {
@@ -125,17 +125,17 @@ class AjaxHandler {
 
 			// BuddyBoss settings
 			if ( isset( $_POST['buddyboss_groups_enabled'] ) ) {
-				$integration_settings['buddyboss_groups_enabled']              = sanitize_text_field( wp_unslash( $_POST['buddyboss_groups_enabled'] ) ) === '1';
-				$integration_settings['buddyboss_auto_delete_custom_objects']  = isset( $_POST['buddyboss_auto_delete_custom_objects'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_auto_delete_custom_objects'] ) ) === '1';
-				$integration_settings['buddyboss_field_length_limit']          = absint( $_POST['buddyboss_field_length_limit'] ?? 250 );
-				$integration_settings['buddyboss_sync_private_groups']         = isset( $_POST['buddyboss_sync_private_groups'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_sync_private_groups'] ) ) === '1';
-				$integration_settings['buddyboss_sync_hidden_groups']          = isset( $_POST['buddyboss_sync_hidden_groups'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_sync_hidden_groups'] ) ) === '1';
-				$integration_settings['buddyboss_real_time_sync']              = isset( $_POST['buddyboss_real_time_sync'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_real_time_sync'] ) ) === '1';
-				$integration_settings['buddyboss_log_sync_operations']         = isset( $_POST['buddyboss_log_sync_operations'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_log_sync_operations'] ) ) === '1';
+				$integration_settings['buddyboss_groups_enabled']             = sanitize_text_field( wp_unslash( $_POST['buddyboss_groups_enabled'] ) ) === '1';
+				$integration_settings['buddyboss_auto_delete_custom_objects'] = isset( $_POST['buddyboss_auto_delete_custom_objects'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_auto_delete_custom_objects'] ) ) === '1';
+				$integration_settings['buddyboss_field_length_limit']         = absint( $_POST['buddyboss_field_length_limit'] ?? 250 );
+				$integration_settings['buddyboss_sync_private_groups']        = isset( $_POST['buddyboss_sync_private_groups'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_sync_private_groups'] ) ) === '1';
+				$integration_settings['buddyboss_sync_hidden_groups']         = isset( $_POST['buddyboss_sync_hidden_groups'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_sync_hidden_groups'] ) ) === '1';
+				$integration_settings['buddyboss_real_time_sync']             = isset( $_POST['buddyboss_real_time_sync'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_real_time_sync'] ) ) === '1';
+				$integration_settings['buddyboss_log_sync_operations']        = isset( $_POST['buddyboss_log_sync_operations'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_log_sync_operations'] ) ) === '1';
 
 				// Association behavior settings
-				$integration_settings['buddyboss_missing_contact_strategy']    = isset( $_POST['buddyboss_missing_contact_strategy'] ) ? sanitize_key( wp_unslash( $_POST['buddyboss_missing_contact_strategy'] ) ) : 'skip';
-				$integration_settings['buddyboss_default_group_type']          = isset( $_POST['buddyboss_default_group_type'] ) ? sanitize_key( wp_unslash( $_POST['buddyboss_default_group_type'] ) ) : '';
+				$integration_settings['buddyboss_missing_contact_strategy'] = isset( $_POST['buddyboss_missing_contact_strategy'] ) ? sanitize_key( wp_unslash( $_POST['buddyboss_missing_contact_strategy'] ) ) : 'skip';
+				$integration_settings['buddyboss_default_group_type']       = isset( $_POST['buddyboss_default_group_type'] ) ? sanitize_key( wp_unslash( $_POST['buddyboss_default_group_type'] ) ) : '';
 
 				// Validate missing contact strategy (only allow 'create' or 'skip')
 				if ( ! in_array( $integration_settings['buddyboss_missing_contact_strategy'], [ 'create', 'skip' ], true ) ) {
@@ -193,17 +193,17 @@ class AjaxHandler {
 				500
 			);
 		} catch ( \Error $err ) {
-            wp_send_json_error(
-                [
-                    'message' => sprintf(
-                        /* translators: %s: error message */
-                        __( 'A fatal error occurred while saving integration settings: %s', 'ghl-crm-integration' ),
-                        $err->getMessage()
-                    ),
-                ],
-                500
-            );
-        }
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: error message */
+						__( 'A fatal error occurred while saving integration settings: %s', 'ghl-crm-integration' ),
+						$err->getMessage()
+					),
+				],
+				500
+			);
+		}
 	}
 
 	/**
@@ -352,7 +352,7 @@ class AjaxHandler {
 			// Get total count
 			global $wpdb;
 			$site_id = get_current_blog_id();
-			
+
 			$where_clauses = [ 'site_id = %d' ];
 			$where_values  = [ $site_id ];
 
@@ -370,10 +370,12 @@ class AjaxHandler {
 			}
 
 			$where_sql = implode( ' AND ', $where_clauses );
-			$log_count = $wpdb->get_var( $wpdb->prepare(
-				"SELECT COUNT(*) FROM {$wpdb->prefix}ghl_sync_log WHERE {$where_sql}", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-				$where_values
-			) );
+			$log_count = $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT COUNT(*) FROM {$wpdb->prefix}ghl_sync_log WHERE {$where_sql}", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					$where_values
+				)
+			);
 
 			$total_pages = ceil( $log_count / $per_page );
 
@@ -384,11 +386,13 @@ class AjaxHandler {
 			include GHL_CRM_PATH . 'templates/admin/partials/sync-logs-table.php';
 			$html = ob_get_clean();
 
-			wp_send_json_success( [
-				'html'        => $html,
-				'total_pages' => $total_pages,
-				'total_logs'  => $log_count,
-			] );
+			wp_send_json_success(
+				[
+					'html'        => $html,
+					'total_pages' => $total_pages,
+					'total_logs'  => $log_count,
+				]
+			);
 		} catch ( \Exception $e ) {
 			wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
 		}
@@ -409,23 +413,27 @@ class AjaxHandler {
 			}
 
 			global $wpdb;
-			$site_id = get_current_blog_id();
+			$site_id  = get_current_blog_id();
 			$days_ago = 30;
 
-			$deleted = $wpdb->query( $wpdb->prepare(
-				"DELETE FROM {$wpdb->prefix}ghl_sync_log WHERE site_id = %d AND created_at < DATE_SUB(NOW(), INTERVAL %d DAY)",
-				$site_id,
-				$days_ago
-			) );
+			$deleted = $wpdb->query(
+				$wpdb->prepare(
+					"DELETE FROM {$wpdb->prefix}ghl_sync_log WHERE site_id = %d AND created_at < DATE_SUB(NOW(), INTERVAL %d DAY)",
+					$site_id,
+					$days_ago
+				)
+			);
 
-			wp_send_json_success( [
-				'message' => sprintf(
-					/* translators: %d: Number of logs deleted */
-					__( 'Deleted %d old log entries', 'ghl-crm-integration' ),
-					$deleted
-				),
-				'deleted' => $deleted,
-			] );
+			wp_send_json_success(
+				[
+					'message' => sprintf(
+						/* translators: %d: Number of logs deleted */
+						__( 'Deleted %d old log entries', 'ghl-crm-integration' ),
+						$deleted
+					),
+					'deleted' => $deleted,
+				]
+			);
 		} catch ( \Exception $e ) {
 			wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
 		}
@@ -448,22 +456,25 @@ class AjaxHandler {
 			global $wpdb;
 			$site_id = get_current_blog_id();
 
-			$deleted = $wpdb->query( $wpdb->prepare(
-				"DELETE FROM {$wpdb->prefix}ghl_sync_log WHERE site_id = %d",
-				$site_id
-			) );
+			$deleted = $wpdb->query(
+				$wpdb->prepare(
+					"DELETE FROM {$wpdb->prefix}ghl_sync_log WHERE site_id = %d",
+					$site_id
+				)
+			);
 
-			wp_send_json_success( [
-				'message' => sprintf(
-					/* translators: %d: Number of logs deleted */
-					__( 'Cleared %d log entries', 'ghl-crm-integration' ),
-					$deleted
-				),
-				'deleted' => $deleted,
-			] );
+			wp_send_json_success(
+				[
+					'message' => sprintf(
+						/* translators: %d: Number of logs deleted */
+						__( 'Cleared %d log entries', 'ghl-crm-integration' ),
+						$deleted
+					),
+					'deleted' => $deleted,
+				]
+			);
 		} catch ( \Exception $e ) {
 			wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
 		}
 	}
 }
-

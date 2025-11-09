@@ -64,10 +64,10 @@ class GHLToWordPressSync {
 	 * Constructor
 	 */
 	private function __construct() {
-		$this->settings_manager  = SettingsManager::get_instance();
-		$client                  = Client::get_instance();
-		$this->contact_resource  = new ContactResource( $client );
-		$this->logger            = SyncLogger::get_instance();
+		$this->settings_manager = SettingsManager::get_instance();
+		$client                 = Client::get_instance();
+		$this->contact_resource = new ContactResource( $client );
+		$this->logger           = SyncLogger::get_instance();
 	}
 
 	/**
@@ -422,10 +422,10 @@ class GHLToWordPressSync {
 			if ( ! is_array( $mapping_data ) ) {
 				continue;
 			}
-			
+
 			$ghl_field = $mapping_data['ghl_field'] ?? '';
 			$direction = $mapping_data['direction'] ?? 'both';
-			
+
 			// Only include if direction allows GHL to WP sync
 			if ( ! empty( $ghl_field ) && ( 'ghl_to_wp' === $direction || 'both' === $direction ) ) {
 				$reversed[ $ghl_field ] = $wp_field;
@@ -469,14 +469,14 @@ class GHLToWordPressSync {
 	 * @return bool
 	 */
 	private function should_sync_field( string $field, string $direction ): bool {
-		$settings        = $this->settings_manager->get_settings_array();
-		$field_mappings  = $settings['user_field_mapping'] ?? [];
-		
+		$settings       = $this->settings_manager->get_settings_array();
+		$field_mappings = $settings['user_field_mapping'] ?? [];
+
 		// If field not mapped, don't sync
 		if ( ! isset( $field_mappings[ $field ] ) ) {
 			return false;
 		}
-		
+
 		$field_direction = $field_mappings[ $field ]['direction'] ?? 'both';
 
 		// 'both' means bidirectional sync is enabled
@@ -505,7 +505,7 @@ class GHLToWordPressSync {
 		// Append numbers until we find unique username
 		$counter = 1;
 		while ( username_exists( $base_name . $counter ) ) {
-			$counter++;
+			++$counter;
 		}
 
 		return $base_name . $counter;

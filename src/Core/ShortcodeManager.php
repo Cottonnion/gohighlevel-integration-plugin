@@ -76,7 +76,7 @@ class ShortcodeManager {
 
 		// Get form embed URL
 		$embed_url = $this->get_form_embed_url( $atts['id'] );
-		
+
 		if ( ! $embed_url ) {
 			return $this->render_error( __( 'Unable to load form. Please check your GoHighLevel connection.', 'ghl-crm-integration' ) );
 		}
@@ -124,7 +124,7 @@ class ShortcodeManager {
 
 		try {
 			// Get white-label domain from settings
-			$settings_manager = SettingsManager::get_instance();
+			$settings_manager   = SettingsManager::get_instance();
 			$white_label_domain = $settings_manager->get_setting( 'ghl_white_label_domain', '' );
 
 			// Build base URL (use white-label domain or default)
@@ -136,7 +136,7 @@ class ShortcodeManager {
 					if ( count( $host_parts ) >= 2 ) {
 						// Replace first subdomain with "link"
 						$host_parts[0] = 'link';
-						$base_url = 'https://' . implode( '.', $host_parts );
+						$base_url      = 'https://' . implode( '.', $host_parts );
 					} else {
 						$base_url = 'https://link.leadconnectorhq.com';
 					}
@@ -153,7 +153,7 @@ class ShortcodeManager {
 			return $form_url;
 
 		} catch ( \Exception $e ) {
-			error_log( 'GHL CRM: Error getting form embed URL: ' . $e->getMessage() );
+
 			return false;
 		}
 	}
@@ -167,7 +167,7 @@ class ShortcodeManager {
 	private function sanitize_dimension( string $dimension ): string {
 		// Allow numeric values with px, %, vh, vw, em, rem
 		$dimension = trim( $dimension );
-		
+
 		// If just a number, add px
 		if ( is_numeric( $dimension ) ) {
 			return $dimension . 'px';

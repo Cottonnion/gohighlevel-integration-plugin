@@ -59,7 +59,7 @@ class ConnectionManager {
 	 */
 	public function save_manual_connection_settings( array $new_settings ): array {
 		$current_settings = $this->settings_repository->get_settings_array();
-		
+
 		// Merge new settings with current settings
 		$settings = array_merge(
 			$current_settings,
@@ -74,7 +74,7 @@ class ConnectionManager {
 		if ( isset( $new_settings['api_token'] ) || isset( $new_settings['location_id'] ) ) {
 			// Only validate if at least one is not empty (i.e., user is trying to set credentials)
 			$is_setting_credentials = ! empty( $new_settings['api_token'] ) || ! empty( $new_settings['location_id'] );
-			
+
 			if ( $is_setting_credentials && ( empty( $settings['api_token'] ) || empty( $settings['location_id'] ) ) ) {
 				return [
 					'success' => false,
@@ -241,7 +241,7 @@ class ConnectionManager {
 	 */
 	public function disconnect( ?int $site_id = null ): bool {
 		$settings = $this->settings_repository->get_settings_array( $site_id );
-		
+
 		// Clear API credentials
 		$settings['api_token']   = '';
 		$settings['location_id'] = '';

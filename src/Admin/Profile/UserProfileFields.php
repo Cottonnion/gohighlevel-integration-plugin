@@ -60,11 +60,11 @@ class UserProfileFields {
 	 */
 	private function __construct() {
 		$this->settings_manager = SettingsManager::get_instance();
-		
+
 		// Initialize ContactResource with Client
 		$client                 = Client::get_instance();
 		$this->contact_resource = new ContactResource( $client );
-		
+
 		$this->register_hooks();
 	}
 
@@ -148,18 +148,18 @@ class UserProfileFields {
 			'ghl-user-profile-js',
 			'ghlUserProfile',
 			[
-				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
-				'nonce'         => wp_create_nonce( 'ghl_user_profile' ),
-				'strings'       => [
-					'loading'         => __( 'Loading...', 'ghl-crm-integration' ),
-					'syncSuccess'     => __( 'User synced successfully!', 'ghl-crm-integration' ),
-					'syncError'       => __( 'Sync failed. Please try again.', 'ghl-crm-integration' ),
-					'confirmSync'     => __( 'Are you sure you want to sync this user now?', 'ghl-crm-integration' ),
-					'searchTags'      => __( 'Search or type to add tags...', 'ghl-crm-integration' ),
-					'refreshSuccess'  => __( 'Successfully synced from GoHighLevel!', 'ghl-crm-integration' ),
-					'refreshError'    => __( 'Failed to sync from GoHighLevel. Please try again.', 'ghl-crm-integration' ),
-					'syncToSuccess'   => __( 'Successfully queued for sync to GoHighLevel!', 'ghl-crm-integration' ),
-					'syncToError'     => __( 'Failed to sync to GoHighLevel. Please try again.', 'ghl-crm-integration' ),
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'ghl_user_profile' ),
+				'strings' => [
+					'loading'        => __( 'Loading...', 'ghl-crm-integration' ),
+					'syncSuccess'    => __( 'User synced successfully!', 'ghl-crm-integration' ),
+					'syncError'      => __( 'Sync failed. Please try again.', 'ghl-crm-integration' ),
+					'confirmSync'    => __( 'Are you sure you want to sync this user now?', 'ghl-crm-integration' ),
+					'searchTags'     => __( 'Search or type to add tags...', 'ghl-crm-integration' ),
+					'refreshSuccess' => __( 'Successfully synced from GoHighLevel!', 'ghl-crm-integration' ),
+					'refreshError'   => __( 'Failed to sync from GoHighLevel. Please try again.', 'ghl-crm-integration' ),
+					'syncToSuccess'  => __( 'Successfully queued for sync to GoHighLevel!', 'ghl-crm-integration' ),
+					'syncToError'    => __( 'Failed to sync to GoHighLevel. Please try again.', 'ghl-crm-integration' ),
 				],
 			]
 		);
@@ -178,11 +178,11 @@ class UserProfileFields {
 		}
 
 		// Get GHL data
-		$contact_id     = get_user_meta( $user->ID, '_ghl_contact_id', true );
-		$last_sync      = get_user_meta( $user->ID, '_ghl_last_sync', true );
-		$synced_on_reg  = get_user_meta( $user->ID, '_ghl_synced_on_register', true );
-		$current_tags   = get_user_meta( $user->ID, '_ghl_contact_tags', true );
-		print_r($current_tags);
+		$contact_id    = get_user_meta( $user->ID, '_ghl_contact_id', true );
+		$last_sync     = get_user_meta( $user->ID, '_ghl_last_sync', true );
+		$synced_on_reg = get_user_meta( $user->ID, '_ghl_synced_on_register', true );
+		$current_tags  = get_user_meta( $user->ID, '_ghl_contact_tags', true );
+		print_r( $current_tags );
 		if ( ! is_array( $current_tags ) ) {
 			$current_tags = [];
 		}
@@ -227,8 +227,8 @@ class UserProfileFields {
 					<div class="value <?php echo empty( $contact_id ) ? 'empty' : ''; ?>">
 						<?php if ( ! empty( $contact_id ) && ! empty( $location_id ) ) : ?>
 							<a href="<?php echo esc_url( sprintf( 'https://app.leadconnectorhq.com/v2/location/%s/contacts/detail/%s', $location_id, $contact_id ) ); ?>" 
-							   target="_blank" 
-							   rel="noopener noreferrer">
+								target="_blank" 
+								rel="noopener noreferrer">
 								<?php echo esc_html( $contact_id ); ?>
 								<span class="dashicons dashicons-external" style="font-size: 14px;"></span>
 							</a>
@@ -392,7 +392,7 @@ class UserProfileFields {
 		}
 
 		// Get submitted tags
-		$submitted_tags = isset( $_POST['ghl_contact_tags'] ) && is_array( $_POST['ghl_contact_tags'] ) 
+		$submitted_tags = isset( $_POST['ghl_contact_tags'] ) && is_array( $_POST['ghl_contact_tags'] )
 			? array_map( 'sanitize_text_field', wp_unslash( $_POST['ghl_contact_tags'] ) )
 			: [];
 
@@ -430,7 +430,7 @@ class UserProfileFields {
 			$result = $this->contact_resource->update( $contact_id, [ 'tags' => $tags ] );
 			return ! empty( $result );
 		} catch ( \Exception $e ) {
-			
+
 			return false;
 		}
 	}
@@ -462,7 +462,7 @@ class UserProfileFields {
 		}
 
 		try {
-			$client = Client::get_instance();
+			$client  = Client::get_instance();
 			$contact = $client->get( "contacts/{$contact_id}" );
 
 			if ( ! empty( $contact ) ) {
@@ -508,19 +508,21 @@ class UserProfileFields {
 
 		// Trigger sync via UserHooks
 		$user_hooks = \GHL_CRM\Integrations\Users\UserHooks::get_instance();
-		
+
 		// Prepare contact data
 		$contact_data = apply_filters( 'ghl_crm_prepare_user_contact_data', [], $user );
 
 		// Add to queue
 		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
-		$queue_id = $queue_manager->add_to_queue( 'user', $user_id, 'profile_update', $contact_data );
+		$queue_id      = $queue_manager->add_to_queue( 'user', $user_id, 'profile_update', $contact_data );
 
 		if ( $queue_id ) {
-			wp_send_json_success( [
-				'message' => __( 'User queued for sync successfully', 'ghl-crm-integration' ),
-				'queue_id' => $queue_id,
-			] );
+			wp_send_json_success(
+				[
+					'message'  => __( 'User queued for sync successfully', 'ghl-crm-integration' ),
+					'queue_id' => $queue_id,
+				]
+			);
 		} else {
 			wp_send_json_error( [ 'message' => __( 'Failed to queue user for sync', 'ghl-crm-integration' ) ] );
 		}
@@ -559,17 +561,19 @@ class UserProfileFields {
 
 		try {
 			$auto_login_manager = \GHL_CRM\Core\AutoLoginManager::get_instance();
-			$token_data = $auto_login_manager->generate_token( $user_id );
+			$token_data         = $auto_login_manager->generate_token( $user_id );
 
 			// Get WordPress date/time format using SettingsManager (multisite-aware)
 			$date_format = $this->settings_manager->get_option( 'date_format' );
 			$time_format = $this->settings_manager->get_option( 'time_format' );
 
-			wp_send_json_success( [
-				'login_url' => $token_data['login_url'],
-				'expires'   => date_i18n( $date_format . ' ' . $time_format, $token_data['expires'] ),
-				'message'   => __( 'Login link generated successfully', 'ghl-crm-integration' ),
-			] );
+			wp_send_json_success(
+				[
+					'login_url' => $token_data['login_url'],
+					'expires'   => date_i18n( $date_format . ' ' . $time_format, $token_data['expires'] ),
+					'message'   => __( 'Login link generated successfully', 'ghl-crm-integration' ),
+				]
+			);
 		} catch ( \Exception $e ) {
 			wp_send_json_error( [ 'message' => $e->getMessage() ] );
 		}
@@ -577,8 +581,8 @@ class UserProfileFields {
 
 	/**
 	 * Refresh user data from GHL (public wrapper for queue manager)
-	 * 
-	 * @param int $user_id User ID
+	 *
+	 * @param int    $user_id User ID
 	 * @param string $contact_id GHL Contact ID
 	 * @return bool Success status
 	 */
@@ -589,7 +593,7 @@ class UserProfileFields {
 
 		try {
 			$client = Client::get_instance();
-			
+
 			// Fetch fresh contact data from GHL
 			$response = $client->get( "contacts/{$contact_id}" );
 
@@ -635,7 +639,7 @@ class UserProfileFields {
 			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ] );
 		}
 
-		$user_id = isset( $_POST['user_id'] ) ? (int) $_POST['user_id'] : 0;
+		$user_id    = isset( $_POST['user_id'] ) ? (int) $_POST['user_id'] : 0;
 		$contact_id = isset( $_POST['contact_id'] ) ? sanitize_text_field( wp_unslash( $_POST['contact_id'] ) ) : '';
 
 		if ( empty( $user_id ) || empty( $contact_id ) ) {
@@ -644,7 +648,7 @@ class UserProfileFields {
 
 		try {
 			$client = Client::get_instance();
-			
+
 			// Fetch fresh contact data from GHL
 			$response = $client->get( "contacts/{$contact_id}" );
 
@@ -668,21 +672,25 @@ class UserProfileFields {
 				update_user_meta( $user_id, '_ghl_contact_type', $contact['type'] );
 			}
 
-			wp_send_json_success( [
-				'message' => __( 'Successfully synced from GoHighLevel!', 'ghl-crm-integration' ),
-				'contact' => $contact,
-				'tags' => $contact['tags'] ?? [],
-				'type' => $contact['type'] ?? 'lead',
-			] );
+			wp_send_json_success(
+				[
+					'message' => __( 'Successfully synced from GoHighLevel!', 'ghl-crm-integration' ),
+					'contact' => $contact,
+					'tags'    => $contact['tags'] ?? [],
+					'type'    => $contact['type'] ?? 'lead',
+				]
+			);
 
 		} catch ( \Exception $e ) {
-			wp_send_json_error( [ 
-				'message' => sprintf( 
-					/* translators: %s: Error message */
-					__( 'Failed to sync from GoHighLevel: %s', 'ghl-crm-integration' ),
-					$e->getMessage()
-				)
-			] );
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: Error message */
+						__( 'Failed to sync from GoHighLevel: %s', 'ghl-crm-integration' ),
+						$e->getMessage()
+					),
+				]
+			);
 		}
 	}
 

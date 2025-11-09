@@ -88,7 +88,7 @@ class WebhookHandler {
 	 */
 	private function init_hooks(): void {
 		add_action( 'rest_api_init', [ $this, 'register_webhook_endpoint' ] );
-        add_action( 'wp_ajax_ghl_crm_test_webhook', [ $this, 'handle_test_webhook' ] );
+		add_action( 'wp_ajax_ghl_crm_test_webhook', [ $this, 'handle_test_webhook' ] );
 		add_action( 'ghl_process_webhook_async', [ $this, 'process_webhook_async' ], 10, 2 );
 	}
 
@@ -132,10 +132,10 @@ class WebhookHandler {
 
 	/**
 	 * Handle incoming webhook from GoHighLevel
-	 * 
+	 *
 	 * Processes webhook according to GHL documentation:
 	 * - Accept POST with JSON payload
-	 * - Process data (type, data payload)  
+	 * - Process data (type, data payload)
 	 * - Return 200 OK quickly for best performance
 	 *
 	 * @param \WP_REST_Request $request Request object
@@ -147,7 +147,7 @@ class WebhookHandler {
 		// Return 200 OK immediately for performance (as per GHL docs)
 		// Process the webhook asynchronously
 		wp_schedule_single_event( time(), 'ghl_process_webhook_async', [ $body, $request->get_headers() ] );
-		
+
 		return new \WP_REST_Response(
 			[
 				'success' => true,
@@ -159,7 +159,7 @@ class WebhookHandler {
 
 	/**
 	 * Process webhook asynchronously
-	 * 
+	 *
 	 * @param array $body    Webhook payload
 	 * @param array $headers Request headers
 	 * @return void
@@ -167,7 +167,7 @@ class WebhookHandler {
 	public function process_webhook_async( array $body, array $headers ): void {
 		// Detect webhook format and normalize
 		$normalized = $this->normalize_webhook_payload( $body );
-		
+
 		// Log webhook receipt
 		$this->logger->log(
 			'webhook_received',
@@ -176,8 +176,8 @@ class WebhookHandler {
 			'success',
 			'Webhook received from GoHighLevel',
 			[
-				'type'    => $normalized['type'] ?? 'unknown',
-				'raw_payload' => $body,
+				'type'               => $normalized['type'] ?? 'unknown',
+				'raw_payload'        => $body,
 				'normalized_payload' => $normalized,
 			]
 		);
@@ -206,8 +206,8 @@ class WebhookHandler {
 				'error',
 				'Webhook processing failed: ' . $result->get_error_message(),
 				[
-					'type' => $normalized['type'] ?? 'unknown',
-					'error' => $result->get_error_message()
+					'type'  => $normalized['type'] ?? 'unknown',
+					'error' => $result->get_error_message(),
 				]
 			);
 		}
@@ -215,10 +215,10 @@ class WebhookHandler {
 
 	/**
 	 * Normalize webhook payload from GHL's actual format to our expected format
-	 * 
+	 *
 	 * GHL sends data like: {contact_id, first_name, last_name, email, tags, ...}
 	 * We need it like: {type, data: {id, firstName, lastName, email, tags, ...}}
-	 * 
+	 *
 	 * @param array $payload Raw webhook payload from GHL
 	 * @return array Normalized payload
 	 */
@@ -233,30 +233,30 @@ class WebhookHandler {
 		if ( isset( $payload['contact_id'] ) ) {
 			// Determine if it's create, update, or delete based on available fields
 			$type = 'ContactUpdate'; // Default to update for existing contacts
-			
+
 			// If minimal fields, might be a delete
 			$field_count = count( array_filter( $payload ) );
 			if ( $field_count <= 3 ) {
 				$type = 'ContactDelete';
 			}
-			
+
 			// Normalize to our format
 			return [
-				'type' => $type,
+				'type'       => $type,
 				'locationId' => $payload['location']['id'] ?? '',
-				'data' => [
-					'id' => $payload['contact_id'],
-					'email' => $payload['email'] ?? '',
-					'name' => $payload['full_name'] ?? ( ( $payload['first_name'] ?? '' ) . ' ' . ( $payload['last_name'] ?? '' ) ),
-					'firstName' => $payload['first_name'] ?? '',
-					'lastName' => $payload['last_name'] ?? '',
-					'phone' => $payload['phone'] ?? '',
-					'tags' => isset( $payload['tags'] ) ? ( is_array( $payload['tags'] ) ? $payload['tags'] : explode( ',', $payload['tags'] ) ) : [],
-					'source' => $payload['contact_source'] ?? '',
-					'country' => $payload['country'] ?? '',
-					'address' => $payload['full_address'] ?? '',
+				'data'       => [
+					'id'           => $payload['contact_id'],
+					'email'        => $payload['email'] ?? '',
+					'name'         => $payload['full_name'] ?? ( ( $payload['first_name'] ?? '' ) . ' ' . ( $payload['last_name'] ?? '' ) ),
+					'firstName'    => $payload['first_name'] ?? '',
+					'lastName'     => $payload['last_name'] ?? '',
+					'phone'        => $payload['phone'] ?? '',
+					'tags'         => isset( $payload['tags'] ) ? ( is_array( $payload['tags'] ) ? $payload['tags'] : explode( ',', $payload['tags'] ) ) : [],
+					'source'       => $payload['contact_source'] ?? '',
+					'country'      => $payload['country'] ?? '',
+					'address'      => $payload['full_address'] ?? '',
 					'customFields' => $payload['customData'] ?? [],
-				]
+				],
 			];
 		}
 
@@ -419,7 +419,7 @@ class WebhookHandler {
 				wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ] );
 			}
 
-			$webhook_handler = \GHL_CRM\API\Webhooks\WebhookHandler::get_instance();
+			$webhook_handler = self::get_instance();
 			$result          = $webhook_handler->test_webhook_endpoint();
 
 			if ( is_wp_error( $result ) ) {
@@ -428,15 +428,17 @@ class WebhookHandler {
 				wp_send_json_success( $result );
 			}
 		} catch ( \Exception $e ) {
-			wp_send_json_error( [
-				'message' => sprintf(
-					/* translators: %s: Error message */
-					__( 'Failed to test webhook: %s', 'ghl-crm-integration' ),
-					$e->getMessage()
-				),
-				'code'    => 'exception',
-				'details' => $e->getCode(),
-			] );
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: Error message */
+						__( 'Failed to test webhook: %s', 'ghl-crm-integration' ),
+						$e->getMessage()
+					),
+					'code'    => 'exception',
+					'details' => $e->getCode(),
+				]
+			);
 		}
 	}
 	/**
@@ -463,13 +465,13 @@ class WebhookHandler {
 	 */
 	public function get_webhook_setup_instructions(): array {
 		$webhook_url = $this->get_webhook_url();
-		
+
 		return [
-			'webhook_url' => $webhook_url,
-			'instructions' => [
-				'title' => 'Manual Webhook Setup in GoHighLevel',
+			'webhook_url'      => $webhook_url,
+			'instructions'     => [
+				'title'       => 'Manual Webhook Setup in GoHighLevel',
 				'description' => 'Copy the webhook URL below and create an automation in your GoHighLevel account.',
-				'steps' => [
+				'steps'       => [
 					'1. Copy this webhook URL: ' . $webhook_url,
 					'2. Log into your GoHighLevel account',
 					'3. Go to Automation → Workflows',
@@ -480,90 +482,93 @@ class WebhookHandler {
 					'8. Set method to POST',
 					'9. Set Content-Type header to application/json',
 					'10. Configure the JSON body with contact data',
-					'11. Save and activate the workflow'
-				]
+					'11. Save and activate the workflow',
+				],
 			],
 			'payload_examples' => [
 				'contact_created' => [
-					'type' => 'ContactCreate',
+					'type'       => 'ContactCreate',
 					'locationId' => '{{location.id}}',
-					'data' => [
-						'id' => '{{contact.id}}',
-						'email' => '{{contact.email}}',
-						'name' => '{{contact.name}}',
+					'data'       => [
+						'id'        => '{{contact.id}}',
+						'email'     => '{{contact.email}}',
+						'name'      => '{{contact.name}}',
 						'firstName' => '{{contact.first_name}}',
-						'lastName' => '{{contact.last_name}}',
-						'phone' => '{{contact.phone}}',
-						'tags' => ['{{contact.tags}}']
-					]
+						'lastName'  => '{{contact.last_name}}',
+						'phone'     => '{{contact.phone}}',
+						'tags'      => [ '{{contact.tags}}' ],
+					],
 				],
 				'contact_updated' => [
-					'type' => 'ContactUpdate',
+					'type'       => 'ContactUpdate',
 					'locationId' => '{{location.id}}',
-					'data' => [
-						'id' => '{{contact.id}}',
-						'email' => '{{contact.email}}',
-						'name' => '{{contact.name}}',
+					'data'       => [
+						'id'        => '{{contact.id}}',
+						'email'     => '{{contact.email}}',
+						'name'      => '{{contact.name}}',
 						'firstName' => '{{contact.first_name}}',
-						'lastName' => '{{contact.last_name}}',
-						'phone' => '{{contact.phone}}',
-						'tags' => ['{{contact.tags}}']
-					]
+						'lastName'  => '{{contact.last_name}}',
+						'phone'     => '{{contact.phone}}',
+						'tags'      => [ '{{contact.tags}}' ],
+					],
 				],
 				'contact_deleted' => [
-					'type' => 'ContactDelete',
+					'type'       => 'ContactDelete',
 					'locationId' => '{{location.id}}',
-					'data' => [
-						'id' => '{{contact.id}}'
-					]
-				]
+					'data'       => [
+						'id' => '{{contact.id}}',
+					],
+				],
 			],
 			'supported_events' => [
 				'ContactCreate' => 'When a contact is created',
 				'ContactUpdate' => 'When a contact is updated',
-				'ContactDelete' => 'When a contact is deleted'
-			]
+				'ContactDelete' => 'When a contact is deleted',
+			],
 		];
 	}
 
 	/**
 	 * Test webhook endpoint to verify it's working
-	 * 
+	 *
 	 * @return array|\WP_Error
 	 */
 	public function test_webhook_endpoint() {
 		$webhook_url = $this->get_webhook_url();
-		
+
 		// Sample contact create payload
 		$sample_payload = [
-			'type' => 'ContactCreate',
+			'type'       => 'ContactCreate',
 			'locationId' => 'test_location_123',
-			'data' => [
-				'id' => 'test_contact_' . time(),
-				'email' => 'test@example.com',
-				'name' => 'Test Contact',
+			'data'       => [
+				'id'        => 'test_contact_' . time(),
+				'email'     => 'test@example.com',
+				'name'      => 'Test Contact',
 				'firstName' => 'Test',
-				'lastName' => 'Contact',
-				'phone' => '+1234567890'
-			]
+				'lastName'  => 'Contact',
+				'phone'     => '+1234567890',
+			],
 		];
 
 		try {
 			// Test the endpoint
-			$response = wp_remote_post( $webhook_url, [
-				'headers' => [
-					'Content-Type' => 'application/json',
-					'User-Agent' => 'GHL-Webhook-Test/1.0'
-				],
-				'body' => json_encode( $sample_payload ),
-				'timeout' => 30
-			] );
+			$response = wp_remote_post(
+				$webhook_url,
+				[
+					'headers' => [
+						'Content-Type' => 'application/json',
+						'User-Agent'   => 'GHL-Webhook-Test/1.0',
+					],
+					'body'    => json_encode( $sample_payload ),
+					'timeout' => 30,
+				]
+			);
 
 			if ( is_wp_error( $response ) ) {
 				return new \WP_Error( 'webhook_test_failed', $response->get_error_message() );
 			}
 
-			$status_code = wp_remote_retrieve_response_code( $response );
+			$status_code   = wp_remote_retrieve_response_code( $response );
 			$response_body = wp_remote_retrieve_body( $response );
 
 			$this->logger->log(
@@ -574,17 +579,17 @@ class WebhookHandler {
 				'Webhook endpoint test completed',
 				[
 					'status_code' => $status_code,
-					'response' => $response_body,
-					'url' => $webhook_url
+					'response'    => $response_body,
+					'url'         => $webhook_url,
 				]
 			);
 
 			return [
-				'success' => $status_code === 200,
+				'success'     => $status_code === 200,
 				'status_code' => $status_code,
-				'response' => json_decode( $response_body, true ),
-				'url' => $webhook_url,
-				'message' => $status_code === 200 ? 'Webhook endpoint is working correctly!' : 'Webhook endpoint returned an error.'
+				'response'    => json_decode( $response_body, true ),
+				'url'         => $webhook_url,
+				'message'     => $status_code === 200 ? 'Webhook endpoint is working correctly!' : 'Webhook endpoint returned an error.',
 			];
 
 		} catch ( \Exception $e ) {
@@ -593,43 +598,47 @@ class WebhookHandler {
 	}
 
 	/**
-	 * Test webhook endpoint to verify it's working	/**
+	 * Test webhook endpoint to verify it's working /**
 	 * Check if webhook has been set up (basic validation)
-	 * 
+	 *
 	 * @return array
 	 */
 	public function get_webhook_status(): array {
 		$webhook_url = $this->get_webhook_url();
-		
+
 		// Check if we've received any webhooks recently
 		global $wpdb;
-	$table_name = $wpdb->prefix . 'ghl_sync_logs';
-	$like_pattern = $wpdb->esc_like( 'webhook_' ) . '%';
-	
-	$recent_webhooks = $wpdb->get_var( $wpdb->prepare(
-		"SELECT COUNT(*) FROM {$table_name} 
+		$table_name   = $wpdb->prefix . 'ghl_sync_logs';
+		$like_pattern = $wpdb->esc_like( 'webhook_' ) . '%';
+
+		$recent_webhooks = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table_name} 
 		 WHERE sync_type = 'ghl_to_wp' 
 		 AND operation LIKE %s 
 		 AND created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)",
-		$like_pattern
-	) );
+				$like_pattern
+			)
+		);
 
-	$last_webhook = $wpdb->get_row( $wpdb->prepare(
-		"SELECT * FROM {$table_name} 
+		$last_webhook = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$table_name} 
 		 WHERE sync_type = 'ghl_to_wp' 
 		 AND operation LIKE %s 
 		 ORDER BY created_at DESC 
 		 LIMIT 1",
-		$like_pattern
-	) );		return [
-			'webhook_url' => $webhook_url,
-			'is_configured' => $recent_webhooks > 0,
-			'recent_webhooks_24h' => (int) $recent_webhooks,
+				$like_pattern
+			)
+		);        return [
+			'webhook_url'           => $webhook_url,
+			'is_configured'         => $recent_webhooks > 0,
+			'recent_webhooks_24h'   => (int) $recent_webhooks,
 			'last_webhook_received' => $last_webhook ? $last_webhook->created_at : null,
-			'status' => $recent_webhooks > 0 ? 'active' : 'not_configured',
-			'message' => $recent_webhooks > 0 
+			'status'                => $recent_webhooks > 0 ? 'active' : 'not_configured',
+			'message'               => $recent_webhooks > 0
 				? sprintf( 'Webhook is active. Received %d webhooks in the last 24 hours.', $recent_webhooks )
-				: 'No webhooks received. Please set up the webhook in your GoHighLevel account.'
+				: 'No webhooks received. Please set up the webhook in your GoHighLevel account.',
 		];
 	}
 }

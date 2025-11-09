@@ -122,7 +122,7 @@ class Restrictions {
 	 */
 	public function enqueue_frontend_assets(): void {
 		$plugin_dir = plugin_dir_url( dirname( dirname( __DIR__ ) ) . '/gohighlevel-crm-integration.php' );
-		
+
 		wp_enqueue_style(
 			'ghl-restrictions',
 			$plugin_dir . 'assets/frontend/css/restrictions.css',
@@ -150,9 +150,9 @@ class Restrictions {
 		// Check additional allowed tags
 		$allowed_tags = $this->settings_manager->get_setting( 'restrictions_allowed_tags', [] );
 		if ( ! empty( $allowed_tags ) && is_array( $allowed_tags ) ) {
-			$user_id = get_current_user_id();
+			$user_id   = get_current_user_id();
 			$user_tags = get_user_meta( $user_id, 'ghl_contact_tags', true );
-			
+
 			if ( ! empty( $user_tags ) && is_array( $user_tags ) ) {
 				// Check if user has any of the allowed tags
 				foreach ( $allowed_tags as $allowed_tag ) {
@@ -216,14 +216,14 @@ class Restrictions {
 	private function handle_access_denial( int $post_id, string $reason ): void {
 		// Allow plugins to modify behavior
 		$should_deny = apply_filters( 'ghl_crm_should_deny_access', true, $post_id, $reason );
-		
+
 		if ( ! $should_deny ) {
 			return;
 		}
 
 		// Get redirect URL (page-specific or global default)
 		$redirect_url = $this->access_control->get_redirect_url( $post_id );
-		
+
 		// If no page-specific redirect, use global default
 		if ( empty( $redirect_url ) ) {
 			$redirect_url = $this->settings_manager->get_setting( 'restrictions_default_redirect', '' );
@@ -253,7 +253,7 @@ class Restrictions {
 				'restrictions_login_message',
 				__( 'Please log in to access this content.', 'ghl-crm-integration' )
 			);
-			
+
 			// Add login link if enabled
 			$show_login_link = $this->settings_manager->get_setting( 'restrictions_show_login_link', true );
 			if ( $show_login_link ) {
@@ -348,7 +348,7 @@ class Restrictions {
 			__( 'This content is restricted.', 'ghl-crm-integration' )
 		);
 
-		$message = '<div class="ghl-restricted-content">';
+		$message  = '<div class="ghl-restricted-content">';
 		$message .= '<p class="ghl-restricted-notice">';
 		$message .= '🔒 ' . esc_html( $archive_msg );
 		$message .= '</p>';
@@ -402,7 +402,7 @@ class Restrictions {
 		}
 
 		// Filter based on user access
-		$user_id = is_user_logged_in() ? get_current_user_id() : 0;
+		$user_id     = is_user_logged_in() ? get_current_user_id() : 0;
 		$exclude_ids = [];
 
 		foreach ( $restricted_ids as $post_id ) {
@@ -413,10 +413,13 @@ class Restrictions {
 
 		if ( ! empty( $exclude_ids ) ) {
 			// phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in -- Necessary for content restriction security
-			$query->set( 'post__not_in', array_merge(
-				(array) $query->get( 'post__not_in' ),
-				$exclude_ids
-			) );
+			$query->set(
+				'post__not_in',
+				array_merge(
+					(array) $query->get( 'post__not_in' ),
+					$exclude_ids
+				)
+			);
 		}
 	}
 
@@ -455,7 +458,7 @@ class Restrictions {
 	/**
 	 * Exclude restricted posts from REST API responses
 	 *
-	 * @param array           $args    Query args
+	 * @param array            $args    Query args
 	 * @param \WP_REST_Request $request REST request
 	 * @return array Modified query args
 	 */
@@ -479,7 +482,7 @@ class Restrictions {
 		}
 
 		// Filter based on user access
-		$user_id = get_current_user_id();
+		$user_id     = get_current_user_id();
 		$exclude_ids = [];
 
 		foreach ( $restricted_ids as $post_id ) {

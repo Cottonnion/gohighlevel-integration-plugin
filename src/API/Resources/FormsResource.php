@@ -17,7 +17,7 @@ defined( 'ABSPATH' ) || exit;
  * - id, name, locationId (and sometimes submissions count)
  * - NO field definitions, NO settings, NO embed codes
  * - NO custom domain information from location or company endpoints
- * 
+ *
  * We manually generate embed URLs using the configured white-label domain (defaults to link.leadconnectorhq.com).
  * Until GHL provides more comprehensive form data via their API, customization is limited.
  *
@@ -111,7 +111,7 @@ class FormsResource {
 					$processed_forms[ $index ]['submissions'] = 0;
 					// Log error if debug mode
 					if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-						error_log( sprintf( 'Failed to fetch submissions for form %s: %s', $form['id'], $e->getMessage() ) );
+
 					}
 				}
 			}
@@ -215,7 +215,7 @@ class FormsResource {
 		$form_id     = $form['id'] ?? '';
 		$location_id = $form['locationId'] ?? '';
 		$embed_host  = $this->get_form_embed_base_url();
-		
+
 		// Ensure both widget and direct form URLs honour the white-label host.
 		$widget_url = '';
 		$form_url   = '';
@@ -230,7 +230,7 @@ class FormsResource {
 				esc_url( $widget_url )
 			)
 			: '';
-		
+
 		return [
 			'id'          => $form_id,
 			'name'        => $form['name'] ?? __( 'Untitled Form', 'ghl-crm-integration' ),
@@ -255,10 +255,10 @@ class FormsResource {
 			return $this->form_embed_base_url;
 		}
 
-		$settings      = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
-		$white_label   = $settings['ghl_white_label_domain'] ?? '';
-		$scheme        = 'https';
-		$host          = '';
+		$settings    = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
+		$white_label = $settings['ghl_white_label_domain'] ?? '';
+		$scheme      = 'https';
+		$host        = '';
 
 		if ( ! empty( $white_label ) ) {
 			$parsed = \wp_parse_url( $white_label );
@@ -296,7 +296,7 @@ class FormsResource {
 			}
 		}
 
-		$link_host = implode( '.', $host_parts );
+		$link_host                 = implode( '.', $host_parts );
 		$this->form_embed_base_url = $scheme . '://' . $link_host;
 
 		return $this->form_embed_base_url;
@@ -330,7 +330,7 @@ class FormsResource {
 		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 		$settings         = $settings_manager->get_settings_array();
 		$location_id      = $settings['location_id'] ?? '';
-		
+
 		if ( empty( $location_id ) ) {
 			throw new APIException( __( 'Location ID not configured.', 'ghl-crm-integration' ) );
 		}
@@ -359,4 +359,3 @@ class FormsResource {
 		];
 	}
 }
-

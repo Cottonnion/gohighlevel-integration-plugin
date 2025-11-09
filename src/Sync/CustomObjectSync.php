@@ -52,10 +52,10 @@ class CustomObjectSync {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->queue_manager           = QueueManager::get_instance();
-		$this->logger                  = SyncLogger::get_instance();
-		$this->settings                = SettingsManager::get_instance();
-		$this->custom_object_resource  = new CustomObjectResource();
+		$this->queue_manager          = QueueManager::get_instance();
+		$this->logger                 = SyncLogger::get_instance();
+		$this->settings               = SettingsManager::get_instance();
+		$this->custom_object_resource = new CustomObjectResource();
 	}
 
 	/**
@@ -66,10 +66,10 @@ class CustomObjectSync {
 	public function init(): void {
 		// Hook into post save
 		add_action( 'save_post', array( $this, 'handle_post_save' ), 10, 3 );
-		
+
 		// Hook into post trash
 		add_action( 'wp_trash_post', array( $this, 'handle_post_trash' ) );
-		
+
 		// Hook into post delete
 		add_action( 'before_delete_post', array( $this, 'handle_post_delete' ) );
 
@@ -179,12 +179,14 @@ class CustomObjectSync {
 		);
 
 		// Logging disabled due to schema mismatch - using error_log instead
-		error_log( sprintf(
-			'GHL CRM CustomObjectSync: Queued %s operation for post %d (mapping: %s)',
-			$action,
-			$post_id,
-			$mapping['id'] ?? 'unknown'
-		) );
+		error_log(
+			sprintf(
+				'GHL CRM CustomObjectSync: Queued %s operation for post %d (mapping: %s)',
+				$action,
+				$post_id,
+				$mapping['id'] ?? 'unknown'
+			)
+		);
 	}
 
 	/**
@@ -204,19 +206,20 @@ class CustomObjectSync {
 			return $result;
 		}
 
-		error_log( sprintf(
-			'GHL CRM CustomObjectSync: execute_custom_object_sync() called - Post ID: %d, Action: %s',
-			$item_id,
-			$action
-		) );
+		error_log(
+			sprintf(
+				'GHL CRM CustomObjectSync: execute_custom_object_sync() called - Post ID: %d, Action: %s',
+				$item_id,
+				$action
+			)
+		);
 
 		$post_id = $item_id;
 		$mapping = $payload['mapping'] ?? array();
 
 		if ( empty( $mapping ) ) {
 			$error_msg = 'Invalid queue item - missing mapping';
-			error_log( 'GHL CRM CustomObjectSync ERROR: ' . $error_msg );
-			error_log( 'GHL CRM CustomObjectSync: Payload: ' . wp_json_encode( $payload ) );
+
 			return false;
 		}
 
@@ -226,22 +229,22 @@ class CustomObjectSync {
 			} elseif ( in_array( $action, array( 'sync_custom_object', 'sync' ), true ) ) {
 				$result = $this->sync_post( $post_id, $mapping );
 			} else {
-				error_log( 'GHL CRM CustomObjectSync ERROR: Unknown action: ' . $action );
+
 				return false;
 			}
-			
-			error_log( sprintf(
-				'GHL CRM CustomObjectSync: Sync completed - Post ID: %d, Result: %s',
-				$post_id,
-				$result ? 'SUCCESS' : 'FAILED'
-			) );
-			
+
+			error_log(
+				sprintf(
+					'GHL CRM CustomObjectSync: Sync completed - Post ID: %d, Result: %s',
+					$post_id,
+					$result ? 'SUCCESS' : 'FAILED'
+				)
+			);
+
 			return $result;
 		} catch ( \Exception $e ) {
-			$error_msg = "Sync failed: " . $e->getMessage();
-			error_log( 'GHL CRM CustomObjectSync EXCEPTION: ' . $error_msg );
-			error_log( 'GHL CRM CustomObjectSync TRACE: ' . $e->getTraceAsString() );
-			error_log( 'GHL CRM CustomObjectSync: Post ID: ' . $post_id . ', Action: ' . $action );
+			$error_msg = 'Sync failed: ' . $e->getMessage();
+
 			return false;
 		}
 	}
@@ -254,194 +257,204 @@ class CustomObjectSync {
 	 * @return bool Success status
 	 */
 	private function sync_post( int $post_id, array $mapping ): bool {
-		error_log( sprintf(
-			'GHL CRM CustomObjectSync: sync_post() started - Post ID: %d',
-			$post_id
-		) );
+		error_log(
+			sprintf(
+				'GHL CRM CustomObjectSync: sync_post() started - Post ID: %d',
+				$post_id
+			)
+		);
 
 		$post = get_post( $post_id );
 		if ( ! $post ) {
-			error_log( 'GHL CRM CustomObjectSync ERROR: Post not found' );
+
 			return false;
 		}
 
 		// Get contact ID
 		$contact_id = $this->get_contact_id( $post_id, $mapping );
-		error_log( sprintf(
-			'GHL CRM CustomObjectSync: Contact ID: %s',
-			$contact_id ? $contact_id : 'NONE'
-		) );
+		error_log(
+			sprintf(
+				'GHL CRM CustomObjectSync: Contact ID: %s',
+				$contact_id ? $contact_id : 'NONE'
+			)
+		);
 
 		if ( ! $contact_id ) {
 			$not_found_action = $mapping['contact_not_found'] ?? 'skip';
-			
+
 			if ( 'skip' === $not_found_action ) {
-				error_log( 'GHL CRM CustomObjectSync: Skipping - no contact ID and action is "skip"' );
+
 				return false;
 			}
 
 			// TODO: Implement contact creation if needed
 			if ( 'create' === $not_found_action ) {
-				error_log( 'GHL CRM CustomObjectSync: Skipping - contact creation not implemented' );
+
 				return false;
 			}
 
 			// 'log' action - continue without contact
-			error_log( 'GHL CRM CustomObjectSync: WARNING - Continuing without contact association' );
+
 		}
 
 		// Check if record already exists
 		$ghl_record_id = get_post_meta( $post_id, '_ghl_custom_object_record_id', true );
 		$is_update     = ! empty( $ghl_record_id );
-		
-		error_log( sprintf(
-			'GHL CRM CustomObjectSync: Existing record ID: %s',
-			$ghl_record_id ? $ghl_record_id : 'NONE (will create new)'
-		) );
+
+		error_log(
+			sprintf(
+				'GHL CRM CustomObjectSync: Existing record ID: %s',
+				$ghl_record_id ? $ghl_record_id : 'NONE (will create new)'
+			)
+		);
 
 		// Build GHL payload (different for create vs update)
 		$payload = $this->build_payload( $post, $mapping, $contact_id, $is_update );
-		error_log( 'GHL CRM CustomObjectSync: Payload built - ' . wp_json_encode( $payload ) );
 
 		// Get schema ID from mapping
 		$schema_id  = $mapping['ghl_object'] ?? '';
 		$schema_key = $mapping['ghl_object_key'] ?? '';
-		
+
 		if ( empty( $schema_id ) ) {
-			error_log( 'GHL CRM CustomObjectSync ERROR: Schema ID not found in mapping' );
+
 			return false;
 		}
-		
+
 		// IMPORTANT: GHL API uses schema ID for BOTH create and update
 		// The documentation/error messages are misleading - always use the hex ID
-		error_log( sprintf(
-			'GHL CRM CustomObjectSync: Using schema ID: %s for %s operation',
-			$schema_id,
-			$is_update ? 'UPDATE' : 'CREATE'
-		) );
+		error_log(
+			sprintf(
+				'GHL CRM CustomObjectSync: Using schema ID: %s for %s operation',
+				$schema_id,
+				$is_update ? 'UPDATE' : 'CREATE'
+			)
+		);
 
 		try {
 			if ( $is_update ) {
 				// Update existing record
-				error_log( 'GHL CRM CustomObjectSync: Updating existing record...' );
-				
+
 				// First, verify the record still exists
-				error_log( 'GHL CRM CustomObjectSync: Verifying record exists before update...' );
+
 				$existing_record = $this->custom_object_resource->get_record( $ghl_record_id, $schema_id );
-				
+
 				if ( ! $existing_record ) {
-					error_log( 'GHL CRM CustomObjectSync: WARNING - Record not found in GHL, will recreate' );
+
 					// Record doesn't exist, delete local meta and recreate
 					delete_post_meta( $post_id, '_ghl_custom_object_record_id' );
 					$is_update = false;
 					// Fall through to CREATE
 				} else {
-					error_log( 'GHL CRM CustomObjectSync: Record verified, proceeding with update' );
-					
+
 					// UPDATE requires schema KEY (dot-notation), not schema ID
 					if ( empty( $schema_key ) ) {
 						throw new \Exception( 'Schema KEY (ghl_object_key) is required for UPDATE operations' );
 					}
-					
-					error_log( sprintf(
-						'GHL CRM CustomObjectSync: Using schema KEY for UPDATE: %s',
-						$schema_key
-					) );
-					
+
+					error_log(
+						sprintf(
+							'GHL CRM CustomObjectSync: Using schema KEY for UPDATE: %s',
+							$schema_key
+						)
+					);
+
 					$response = $this->custom_object_resource->update_record( $schema_key, $ghl_record_id, $payload );
 					$action   = 'update';
 				}
 			}
-			
-			
+
 			// CREATE operation (either new post or record was deleted from GHL)
 			if ( ! $is_update ) {
-				error_log( 'GHL CRM CustomObjectSync: Creating new record...' );
-				$response      = $this->custom_object_resource->create_record( $schema_id, $payload );
-				error_log( 'GHL CRM CustomObjectSync: API Response - ' . wp_json_encode( $response ) );
-				
+
+				$response = $this->custom_object_resource->create_record( $schema_id, $payload );
+
 				$ghl_record_id = $response['id'] ?? null;
 				$action        = 'create';
 
 				// Store record ID
 				if ( $ghl_record_id ) {
 					update_post_meta( $post_id, '_ghl_custom_object_record_id', $ghl_record_id );
-					error_log( 'GHL CRM CustomObjectSync: Stored record ID: ' . $ghl_record_id );
+
 				} else {
-					error_log( 'GHL CRM CustomObjectSync: WARNING - No record ID in response!' );
+
 				}
-				
+
 				// Associate with contact using the correct API endpoint
 				// Endpoint: POST /associations/relations
 				// Documentation: https://marketplace.gohighlevel.com/docs/ghl/associations/create-relation
 				// NOTE: Requires associationId (the ID of the association definition, not the key/name)
 				if ( $ghl_record_id && $contact_id && ! empty( $schema_key ) ) {
 					// Get association ID and direction from mapping configuration or fetch from GHL
-					$association_id = $mapping['association_id'] ?? '';
+					$association_id        = $mapping['association_id'] ?? '';
 					$association_direction = null; // Track if custom object is 'first' or 'second'
-					
+
 					// If not configured, try to auto-fetch it from GHL
 					if ( empty( $association_id ) ) {
-						error_log( 'GHL CRM CustomObjectSync: association_id not configured, fetching from GHL API...' );
-						
+
 						try {
 							// Fetch all associations from GHL
 							$all_associations = $this->custom_object_resource->get_associations();
-							
-							error_log( 'GHL CRM CustomObjectSync: Found ' . count( $all_associations ) . ' associations' );
-							
+
 							// Find the association that links our custom object to contacts
 							foreach ( $all_associations as $assoc ) {
 								$first_key  = $assoc['firstObjectKey'] ?? '';
 								$second_key = $assoc['secondObjectKey'] ?? '';
-								
+
 								// Check if this association links our custom object to contacts (either direction)
 								if ( $first_key === $schema_key && $second_key === 'contact' ) {
-									$association_id = $assoc['id'] ?? '';
+									$association_id        = $assoc['id'] ?? '';
 									$association_direction = 'first'; // Custom object is first
-									error_log( sprintf(
-										'GHL CRM CustomObjectSync: Auto-discovered association ID: %s (key: %s, direction: %s → %s)',
-										$association_id,
-										$assoc['key'] ?? 'N/A',
-										$first_key,
-										$second_key
-									) );
+									error_log(
+										sprintf(
+											'GHL CRM CustomObjectSync: Auto-discovered association ID: %s (key: %s, direction: %s → %s)',
+											$association_id,
+											$assoc['key'] ?? 'N/A',
+											$first_key,
+											$second_key
+										)
+									);
 									break;
 								} elseif ( $first_key === 'contact' && $second_key === $schema_key ) {
-									$association_id = $assoc['id'] ?? '';
+									$association_id        = $assoc['id'] ?? '';
 									$association_direction = 'second'; // Custom object is second
-									error_log( sprintf(
-										'GHL CRM CustomObjectSync: Auto-discovered association ID: %s (key: %s, direction: %s → %s)',
-										$association_id,
-										$assoc['key'] ?? 'N/A',
-										$first_key,
-										$second_key
-									) );
+									error_log(
+										sprintf(
+											'GHL CRM CustomObjectSync: Auto-discovered association ID: %s (key: %s, direction: %s → %s)',
+											$association_id,
+											$assoc['key'] ?? 'N/A',
+											$first_key,
+											$second_key
+										)
+									);
 									break;
 								}
 							}
-							
+
 							if ( empty( $association_id ) ) {
-								error_log( sprintf(
-									'GHL CRM CustomObjectSync: No association found for %s ↔ contact. Create one in GHL first.',
-									$schema_key
-								) );
+								error_log(
+									sprintf(
+										'GHL CRM CustomObjectSync: No association found for %s ↔ contact. Create one in GHL first.',
+										$schema_key
+									)
+								);
 							}
 						} catch ( \Exception $fetch_error ) {
-							error_log( 'GHL CRM CustomObjectSync: Failed to fetch associations: ' . $fetch_error->getMessage() );
+
 						}
 					}
-					
+
 					if ( ! empty( $association_id ) ) {
 						try {
-							error_log( sprintf(
-								'GHL CRM CustomObjectSync: Attempting to associate record %s with contact %s (associationId: %s, direction: %s)',
-								$ghl_record_id,
-								$contact_id,
-								$association_id,
-								$association_direction ?? 'unknown'
-							) );
-							
+							error_log(
+								sprintf(
+									'GHL CRM CustomObjectSync: Attempting to associate record %s with contact %s (associationId: %s, direction: %s)',
+									$ghl_record_id,
+									$contact_id,
+									$association_id,
+									$association_direction ?? 'unknown'
+								)
+							);
+
 							$this->custom_object_resource->associate_with_contact(
 								$ghl_record_id,
 								$contact_id,
@@ -449,15 +462,14 @@ class CustomObjectSync {
 								$association_id,
 								$association_direction
 							);
-							
-							error_log( 'GHL CRM CustomObjectSync: Successfully associated record with contact' );
+
 						} catch ( \Exception $assoc_error ) {
 							// Log but don't fail the whole sync
-							error_log( 'GHL CRM CustomObjectSync: Association WARNING - ' . $assoc_error->getMessage() );
+
 						}
 					}
 				} elseif ( $ghl_record_id && ! $schema_key ) {
-					error_log( 'GHL CRM CustomObjectSync: Cannot associate - schema_key not available' );
+
 				}
 			}
 
@@ -465,19 +477,19 @@ class CustomObjectSync {
 			update_post_meta( $post_id, '_ghl_last_sync_time', current_time( 'timestamp' ) );
 			update_post_meta( $post_id, '_ghl_sync_status', 'synced' );
 
-			error_log( sprintf(
-				'GHL CRM CustomObjectSync: SUCCESS - %s completed for post %d (GHL Record ID: %s)',
-				$action,
-				$post_id,
-				$ghl_record_id ?? 'none'
-			) );
+			error_log(
+				sprintf(
+					'GHL CRM CustomObjectSync: SUCCESS - %s completed for post %d (GHL Record ID: %s)',
+					$action,
+					$post_id,
+					$ghl_record_id ?? 'none'
+				)
+			);
 
 			return true;
 
 		} catch ( \Exception $e ) {
-			error_log( 'GHL CRM CustomObjectSync EXCEPTION in sync_post: ' . $e->getMessage() );
-			error_log( 'GHL CRM CustomObjectSync TRACE: ' . $e->getTraceAsString() );
-			
+
 			// Update sync status
 			update_post_meta( $post_id, '_ghl_sync_status', 'error' );
 			update_post_meta( $post_id, '_ghl_sync_error', $e->getMessage() );
@@ -495,7 +507,7 @@ class CustomObjectSync {
 	 */
 	private function delete_record( int $post_id, array $mapping ): bool {
 		$ghl_record_id = get_post_meta( $post_id, '_ghl_custom_object_record_id', true );
-		
+
 		if ( ! $ghl_record_id ) {
 			// Nothing to delete
 			return true;
@@ -507,7 +519,7 @@ class CustomObjectSync {
 			if ( empty( $schema_id ) ) {
 				throw new \Exception( 'Schema ID not found in mapping configuration' );
 			}
-			
+
 			$this->custom_object_resource->delete_record( $ghl_record_id, $schema_id );
 
 			// Clean up metadata
@@ -516,21 +528,25 @@ class CustomObjectSync {
 			delete_post_meta( $post_id, '_ghl_sync_status' );
 			delete_post_meta( $post_id, '_ghl_sync_error' );
 
-			error_log( sprintf(
-				'GHL CRM CustomObjectSync: Successfully deleted record %s for post %d',
-				$ghl_record_id,
-				$post_id
-			) );
+			error_log(
+				sprintf(
+					'GHL CRM CustomObjectSync: Successfully deleted record %s for post %d',
+					$ghl_record_id,
+					$post_id
+				)
+			);
 
 			return true;
 
 		} catch ( \Exception $e ) {
-			error_log( sprintf(
-				'GHL CRM CustomObjectSync: Failed to delete record %s for post %d - %s',
-				$ghl_record_id,
-				$post_id,
-				$e->getMessage()
-			) );
+			error_log(
+				sprintf(
+					'GHL CRM CustomObjectSync: Failed to delete record %s for post %d - %s',
+					$ghl_record_id,
+					$post_id,
+					$e->getMessage()
+				)
+			);
 
 			throw $e;
 		}
@@ -577,17 +593,19 @@ class CustomObjectSync {
 	 */
 	private function build_payload( \WP_Post $post, array $mapping, ?string $contact_id, bool $is_update = false ): array {
 		$location_id = $this->settings->get_setting( 'location_id', '' );
-		
+
 		$properties = array();
 
 		// Note: Contact associations are handled separately via POST /associations/relations
 		// They are not included in the record properties
 		// The association will be created after the record is successfully created
 		if ( ! empty( $contact_id ) ) {
-			error_log( sprintf(
-				'GHL CRM CustomObjectSync: Contact ID %s will be associated after record creation',
-				$contact_id
-			) );
+			error_log(
+				sprintf(
+					'GHL CRM CustomObjectSync: Contact ID %s will be associated after record creation',
+					$contact_id
+				)
+			);
 		}
 
 		// Map fields
@@ -613,7 +631,7 @@ class CustomObjectSync {
 					$field_key = $parts[2]; // Get the field name part
 				}
 			}
-			
+
 			if ( null !== $value && '' !== $value ) {
 				$properties[ $field_key ] = $value;
 			}
@@ -735,8 +753,8 @@ class CustomObjectSync {
 
 		foreach ( $mappings as $mapping ) {
 			if ( isset( $mapping['wp_post_type'], $mapping['active'] ) &&
-				 $mapping['wp_post_type'] === $post_type &&
-				 true === $mapping['active'] ) {
+				$mapping['wp_post_type'] === $post_type &&
+				true === $mapping['active'] ) {
 				return $mapping;
 			}
 		}

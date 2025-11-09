@@ -65,38 +65,38 @@ class Loader {
 	private function define_components(): void {
 		$this->components = array(
 			// Core components
-			'core.database'      => \GHL_CRM\Core\Database::class,
-			'core.settings'      => \GHL_CRM\Core\SettingsManager::class,
-			'core.assets'        => \GHL_CRM\Core\AssetsManager::class,
-			'core.menu'          => \GHL_CRM\Core\MenuManager::class,
-			'core.notices'       => \GHL_CRM\Core\AdminNotices::class,
-			'core.autologin'     => \GHL_CRM\Core\AutoLoginManager::class,
-			'core.shortcodes'    => \GHL_CRM\Core\ShortcodeManager::class,
+			'core.database'                            => \GHL_CRM\Core\Database::class,
+			'core.settings'                            => \GHL_CRM\Core\SettingsManager::class,
+			'core.assets'                              => \GHL_CRM\Core\AssetsManager::class,
+			'core.menu'                                => \GHL_CRM\Core\MenuManager::class,
+			'core.notices'                             => \GHL_CRM\Core\AdminNotices::class,
+			'core.autologin'                           => \GHL_CRM\Core\AutoLoginManager::class,
+			'core.shortcodes'                          => \GHL_CRM\Core\ShortcodeManager::class,
 
 			// Admin UI components
-			'admin.ui'           => \GHL_CRM\Admin\AdminUI::class,
+			'admin.ui'                                 => \GHL_CRM\Admin\AdminUI::class,
 
 			// API components
-			'api.oauth'          => \GHL_CRM\API\OAuth\OAuthHandler::class,
-			'api.webhooks'       => \GHL_CRM\API\Webhooks\WebhookHandler::class,
-			'api.rest'           => \GHL_CRM\API\RestAPIController::class,
+			'api.oauth'                                => \GHL_CRM\API\OAuth\OAuthHandler::class,
+			'api.webhooks'                             => \GHL_CRM\API\Webhooks\WebhookHandler::class,
+			'api.rest'                                 => \GHL_CRM\API\RestAPIController::class,
 
 			// Sync components
-			'sync.queue'         => \GHL_CRM\Sync\QueueManager::class,
-			'sync.ghl_to_wp'     => \GHL_CRM\Sync\GHLToWordPressSync::class,
-			'sync.custom_object' => \GHL_CRM\Sync\CustomObjectSync::class,
+			'sync.queue'                               => \GHL_CRM\Sync\QueueManager::class,
+			'sync.ghl_to_wp'                           => \GHL_CRM\Sync\GHLToWordPressSync::class,
+			'sync.custom_object'                       => \GHL_CRM\Sync\CustomObjectSync::class,
 
 			// Integration components
-			'integrations.users'      => \GHL_CRM\Integrations\Users\UserHooks::class,
-			'integrations.role_tags'  => \GHL_CRM\Integrations\Users\RoleTagsManager::class,
-			'integrations.woocommerce' => \GHL_CRM\Integrations\WooCommerce\WooCommerceSync::class,
+			'integrations.users'                       => \GHL_CRM\Integrations\Users\UserHooks::class,
+			'integrations.role_tags'                   => \GHL_CRM\Integrations\Users\RoleTagsManager::class,
+			'integrations.woocommerce'                 => \GHL_CRM\Integrations\WooCommerce\WooCommerceSync::class,
 			'integrations.woocommerce.product_metabox' => \GHL_CRM\Integrations\WooCommerce\ProductMetaBox::class,
-			'integrations.buddyboss'  => \GHL_CRM\Integrations\BuddyBoss\GroupsSync::class,
-			'integrations.buddyboss.metabox' => \GHL_CRM\Integrations\BuddyBoss\GroupMetaBox::class,
+			'integrations.buddyboss'                   => \GHL_CRM\Integrations\BuddyBoss\GroupsSync::class,
+			'integrations.buddyboss.metabox'           => \GHL_CRM\Integrations\BuddyBoss\GroupMetaBox::class,
 
 			// Membership components
-			'membership.metaboxes'    => \GHL_CRM\Membership\Admin\MetaBoxes::class,
-			'membership.restrictions' => \GHL_CRM\Membership\Restrictions::class,
+			'membership.metaboxes'                     => \GHL_CRM\Membership\Admin\MetaBoxes::class,
+			'membership.restrictions'                  => \GHL_CRM\Membership\Restrictions::class,
 		);
 	}
 

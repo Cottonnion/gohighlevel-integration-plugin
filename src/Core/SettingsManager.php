@@ -195,7 +195,7 @@ class SettingsManager {
 			// Validate critical fields only if user is actively trying to set up manual API connection
 			// Don't validate on imports or when only location_id is present
 			$is_setting_manual_api = isset( $new_settings['api_token'] ) && ! empty( $new_settings['api_token'] );
-			
+
 			if ( $is_setting_manual_api ) {
 				// User is trying to set manual API token - require location_id too
 				if ( empty( $settings['location_id'] ) ) {
@@ -210,7 +210,7 @@ class SettingsManager {
 
 			// Save settings (multisite faware) - use repository
 			$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
-			$saved = $repository->save_site_settings( $settings );
+			$saved      = $repository->save_site_settings( $settings );
 
 			// If credentials changed, invalidate verification
 			if ( $credentials_changed && $saved ) {
@@ -240,7 +240,7 @@ class SettingsManager {
 		} catch ( \Exception $e ) {
 			wp_send_json_error(
 				[
-					'message' => sprintf(
+					'message'       => sprintf(
 						/* translators: %s: error message */
 						__( 'An error occurred while saving settings: %s', 'ghl-crm-integration' ),
 						$e->getMessage()
@@ -255,7 +255,7 @@ class SettingsManager {
 		} catch ( \Error $e ) {
 			wp_send_json_error(
 				[
-					'message' => sprintf(
+					'message'       => sprintf(
 						/* translators: %s: error message */
 						__( 'A fatal error occurred while saving settings: %s', 'ghl-crm-integration' ),
 						$e->getMessage()
@@ -272,10 +272,10 @@ class SettingsManager {
 
 	/**
 	 * Save manual connection settings programmatically
-	 * 
+	 *
 	 * This method is used for internal/programmatic settings updates
 	 * and does NOT require nonce verification. Used by MenuManager for manual API key connections.
-	 * 
+	 *
 	 * @param array $new_settings Settings array to merge with existing settings.
 	 * @return array Result array with 'success' boolean and 'message' string.
 	 */
@@ -304,14 +304,14 @@ class SettingsManager {
 		}
 
 		// Check connection status
-		$settings = $this->get_settings_array();
+		$settings      = $this->get_settings_array();
 		$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
-		$oauth_status = $oauth_handler->get_connection_status();
-		$is_connected = $oauth_status['connected'] || ! empty( $settings['api_token'] );
+		$oauth_status  = $oauth_handler->get_connection_status();
+		$is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 
 		wp_send_json_success(
 			[
-				'settings' => $settings,
+				'settings'     => $settings,
 				'is_connected' => $is_connected,
 			]
 		);
@@ -363,10 +363,10 @@ class SettingsManager {
 
 
 		/**
-	 * Handle AJAX request to get forms from GoHighLevel
-	 *
-	 * @return void Outputs JSON response and exits.
-	 */
+		 * Handle AJAX request to get forms from GoHighLevel
+		 *
+		 * @return void Outputs JSON response and exits.
+		 */
 	public function handle_get_forms(): void {
 		check_ajax_referer( 'ghl_crm_forms_nonce', 'nonce' );
 
@@ -380,7 +380,7 @@ class SettingsManager {
 		}
 
 		// Check if connection is verified
-		$settings_manager = SettingsManager::get_instance();
+		$settings_manager = self::get_instance();
 		if ( ! $settings_manager->is_connection_verified() ) {
 			wp_send_json_error(
 				[
@@ -393,10 +393,10 @@ class SettingsManager {
 		try {
 			// Get forms from GHL API
 			$forms_resource = new \GHL_CRM\API\Resources\FormsResource();
-			$forms = $forms_resource->get_forms( true ); // Force refresh
+			$forms          = $forms_resource->get_forms( true ); // Force refresh
 
 			// Get white label domain for iframe URLs
-			$settings = $this->get_settings_array();
+			$settings           = $this->get_settings_array();
 			$white_label_domain = $settings['ghl_white_label_domain'] ?? '';
 
 			wp_send_json_success(
@@ -522,19 +522,19 @@ class SettingsManager {
 	 */
 	private function sanitize_role_tags( array $role_tags ): array {
 		$sanitized = [];
-		
+
 		foreach ( $role_tags as $role => $config ) {
 			if ( ! is_array( $config ) ) {
 				continue;
 			}
-			
+
 			$sanitized_config = [];
-			
+
 			// Sanitize role key (if present)
 			if ( isset( $config['role'] ) ) {
 				$sanitized_config['role'] = sanitize_text_field( wp_unslash( $config['role'] ) );
 			}
-			
+
 			// Sanitize tags (can be array from Select2 or string)
 			if ( isset( $config['tags'] ) ) {
 				if ( is_array( $config['tags'] ) ) {
@@ -549,14 +549,14 @@ class SettingsManager {
 			} else {
 				$sanitized_config['tags'] = [];
 			}
-			
+
 			// Sanitize checkboxes
-			$sanitized_config['auto_apply'] = isset( $config['auto_apply'] ) && $config['auto_apply'] === '1';
+			$sanitized_config['auto_apply']       = isset( $config['auto_apply'] ) && $config['auto_apply'] === '1';
 			$sanitized_config['remove_on_change'] = isset( $config['remove_on_change'] ) && $config['remove_on_change'] === '1';
-			
+
 			$sanitized[ sanitize_text_field( wp_unslash( $role ) ) ] = $sanitized_config;
 		}
-		
+
 		return $sanitized;
 	}
 
@@ -765,12 +765,12 @@ class SettingsManager {
 			}
 
 			// Create site-specific transient key (not network-wide)
-			$site_id = get_current_blog_id();
+			$site_id       = get_current_blog_id();
 			$transient_key = 'ghl_tags_' . $location_id . '_site_' . $site_id;
 
 			// Check for cached tags (site-specific transient)
 			$cached_tags = get_transient( $transient_key );
-			
+
 			if ( false !== $cached_tags && is_array( $cached_tags ) ) {
 				wp_send_json_success(
 					[
@@ -822,7 +822,7 @@ class SettingsManager {
 			wp_send_json_error(
 				[
 					/* translators: %s: Error message when fetching tags fails */
-					'message' => sprintf(__( 'Failed to fetch tags: %s', 'ghl-crm-integration' ), $t->getMessage()),
+					'message' => sprintf( __( 'Failed to fetch tags: %s', 'ghl-crm-integration' ), $t->getMessage() ),
 				],
 				500
 			);
@@ -849,7 +849,7 @@ class SettingsManager {
 		}
 
 		try {
-			$settings = $this->get_settings_array();
+			$settings    = $this->get_settings_array();
 			$location_id = $settings['location_id'] ?? '';
 
 			if ( empty( $location_id ) ) {
@@ -862,7 +862,7 @@ class SettingsManager {
 			}
 
 			$client = \GHL_CRM\API\Client\Client::get_instance();
-			
+
 			// Fetch custom fields from GHL API
 			// Endpoint: GET /locations/{locationId}/customFields (no hyphen)
 			// Pass empty array to prevent auto-adding locationId as query param
@@ -872,7 +872,7 @@ class SettingsManager {
 				// Return standard fields if no custom fields found
 				wp_send_json_success(
 					[
-						'fields' => $this->get_standard_ghl_fields(),
+						'fields'  => $this->get_standard_ghl_fields(),
 						'message' => __( 'No custom fields found. Showing standard fields only.', 'ghl-crm-integration' ),
 					]
 				);
@@ -881,11 +881,11 @@ class SettingsManager {
 
 			// Combine standard fields + custom fields
 			$all_fields = $this->get_standard_ghl_fields();
-			
+
 			foreach ( $response['customFields'] as $field ) {
-				$field_id = $field['id'] ?? '';
+				$field_id   = $field['id'] ?? '';
 				$field_name = $field['name'] ?? '';
-				
+
 				if ( $field_id && $field_name ) {
 					$all_fields[ 'custom.' . $field_id ] = $field_name . ' (Custom)';
 				}
@@ -894,32 +894,30 @@ class SettingsManager {
 			wp_send_json_success(
 				[
 					'fields' => $all_fields,
-					'count' => count( $response['customFields'] ),
+					'count'  => count( $response['customFields'] ),
 				]
 			);
 
 		} catch ( \Exception $e ) {
-			
-			
-			
+
 			// Get detailed debug info
 			$debug_info = [
 				'exception_message' => $e->getMessage(),
-				'exception_file' => $e->getFile(),
-				'exception_line' => $e->getLine(),
-				'location_id' => $location_id ?? 'not set',
-				'has_oauth' => ! empty( $settings['oauth_access_token'] ),
-				'has_api_token' => ! empty( $settings['api_token'] ),
-				'endpoint' => 'locations/' . ( $location_id ?? '{locationId}' ) . '/customFields',
-			];			
-			
+				'exception_file'    => $e->getFile(),
+				'exception_line'    => $e->getLine(),
+				'location_id'       => $location_id ?? 'not set',
+				'has_oauth'         => ! empty( $settings['oauth_access_token'] ),
+				'has_api_token'     => ! empty( $settings['api_token'] ),
+				'endpoint'          => 'locations/' . ( $location_id ?? '{locationId}' ) . '/customFields',
+			];
+
 			// Fallback to standard fields
 			wp_send_json_success(
 				[
-					'fields' => $this->get_standard_ghl_fields(),
+					'fields'  => $this->get_standard_ghl_fields(),
 					'message' => __( 'Could not fetch custom fields. Showing standard fields only.', 'ghl-crm-integration' ),
-					'error' => $e->getMessage(),
-					'debug' => $debug_info,
+					'error'   => $e->getMessage(),
+					'debug'   => $debug_info,
 				]
 			);
 		}
@@ -995,8 +993,6 @@ class SettingsManager {
 			);
 		}
 
-		
-
 		try {
 			// Get queue manager
 			$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
@@ -1005,15 +1001,13 @@ class SettingsManager {
 			global $wpdb;
 			$table_name      = $wpdb->prefix . 'ghl_sync_queue';
 			$current_site_id = get_current_blog_id();
-			
+
 			$pending_before = (int) $wpdb->get_var(
 				$wpdb->prepare(
 					"SELECT COUNT(*) FROM {$table_name} WHERE status = 'pending' AND site_id = %d",
 					$current_site_id
 				)
 			);
-
-			
 
 			// Manually trigger queue processing
 			$queue_manager->process_queue();
@@ -1027,8 +1021,6 @@ class SettingsManager {
 			);
 
 			$processed = $pending_before - $pending_after;
-
-			
 
 			wp_send_json_success(
 				[
@@ -1044,8 +1036,6 @@ class SettingsManager {
 			);
 
 		} catch ( \Exception $e ) {
-			
-			
 
 			wp_send_json_error(
 				[
@@ -1058,8 +1048,6 @@ class SettingsManager {
 				500
 			);
 		} catch ( \Error $err ) {
-			
-			
 
 			wp_send_json_error(
 				[
@@ -1072,8 +1060,6 @@ class SettingsManager {
 				500
 			);
 		} catch ( \Throwable $throwable ) {
-			
-			
 
 			wp_send_json_error(
 				[
@@ -1110,7 +1096,7 @@ class SettingsManager {
 		// Clear all GHL CRM transients
 		global $wpdb;
 		$site_id = get_current_blog_id();
-		
+
 		// Delete contact cache transients
 		$wpdb->query(
 			$wpdb->prepare(
@@ -1180,22 +1166,22 @@ class SettingsManager {
 
 		// Get current settings to preserve connection credentials
 		$current_settings = $this->get_settings_array();
-		
+
 		// Preserve ALL connection-related settings (OAuth + Manual API)
 		$preserved_credentials = [
 			// OAuth credentials
-			'oauth_access_token'   => $current_settings['oauth_access_token'] ?? '',
-			'oauth_refresh_token'  => $current_settings['oauth_refresh_token'] ?? '',
-			'oauth_expires_at'     => $current_settings['oauth_expires_at'] ?? '',
-			'oauth_token_type'     => $current_settings['oauth_token_type'] ?? '',
-			'oauth_location_id'    => $current_settings['oauth_location_id'] ?? '',
-			'oauth_company_id'     => $current_settings['oauth_company_id'] ?? '',
-			'oauth_user_type'      => $current_settings['oauth_user_type'] ?? '',
-			'oauth_connected_at'   => $current_settings['oauth_connected_at'] ?? '',
+			'oauth_access_token'  => $current_settings['oauth_access_token'] ?? '',
+			'oauth_refresh_token' => $current_settings['oauth_refresh_token'] ?? '',
+			'oauth_expires_at'    => $current_settings['oauth_expires_at'] ?? '',
+			'oauth_token_type'    => $current_settings['oauth_token_type'] ?? '',
+			'oauth_location_id'   => $current_settings['oauth_location_id'] ?? '',
+			'oauth_company_id'    => $current_settings['oauth_company_id'] ?? '',
+			'oauth_user_type'     => $current_settings['oauth_user_type'] ?? '',
+			'oauth_connected_at'  => $current_settings['oauth_connected_at'] ?? '',
 			// Manual API connection credentials
-			'api_token'            => $current_settings['api_token'] ?? '',
-			'location_id'          => $current_settings['location_id'] ?? '',
-			'api_version'          => $current_settings['api_version'] ?? '2021-07-28',
+			'api_token'           => $current_settings['api_token'] ?? '',
+			'location_id'         => $current_settings['location_id'] ?? '',
+			'api_version'         => $current_settings['api_version'] ?? '2021-07-28',
 		];
 
 		// Default settings (everything except credentials)
@@ -1283,18 +1269,18 @@ class SettingsManager {
 
 		// 2. Check Database Tables
 		global $wpdb;
-		$table_prefix      = $wpdb->prefix;
-		$required_tables   = [
+		$table_prefix     = $wpdb->prefix;
+		$required_tables  = [
 			'ghl_sync_queue',
 			'ghl_sync_log',
 		];
-		$tables_status     = [];
-		$tables_all_exist  = true;
+		$tables_status    = [];
+		$tables_all_exist = true;
 
 		foreach ( $required_tables as $table ) {
-			$table_name  = $table_prefix . $table;
+			$table_name   = $table_prefix . $table;
 			$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) === $table_name;
-			
+
 			$tables_status[] = [
 				'label'  => $table_name,
 				'value'  => $table_exists ? __( 'Exists', 'ghl-crm-integration' ) : __( 'Missing', 'ghl-crm-integration' ),
@@ -1313,11 +1299,11 @@ class SettingsManager {
 		];
 
 		// 3. Check API Connection
-		$settings         = $this->get_settings_array();
-		$has_oauth        = ! empty( $settings['oauth_access_token'] );
-		$has_manual_api   = ! empty( $settings['api_token'] ) && ! empty( $settings['location_id'] );
+		$settings           = $this->get_settings_array();
+		$has_oauth          = ! empty( $settings['oauth_access_token'] );
+		$has_manual_api     = ! empty( $settings['api_token'] ) && ! empty( $settings['location_id'] );
 		$has_any_connection = $has_oauth || $has_manual_api;
-		$is_verified      = $this->is_connection_verified();
+		$is_verified        = $this->is_connection_verified();
 
 		$checks['api_connection'] = [
 			'label'  => __( 'API Connection', 'ghl-crm-integration' ),
@@ -1343,15 +1329,15 @@ class SettingsManager {
 
 		// 4. Check PHP Extensions
 		$required_extensions = [
-			'curl'    => __( 'cURL', 'ghl-crm-integration' ),
-			'json'    => __( 'JSON', 'ghl-crm-integration' ),
+			'curl'     => __( 'cURL', 'ghl-crm-integration' ),
+			'json'     => __( 'JSON', 'ghl-crm-integration' ),
 			'mbstring' => __( 'Multibyte String', 'ghl-crm-integration' ),
 		];
 		$extensions_status   = [];
 		$all_extensions_ok   = true;
 
 		foreach ( $required_extensions as $ext => $label ) {
-			$loaded = extension_loaded( $ext );
+			$loaded              = extension_loaded( $ext );
 			$extensions_status[] = [
 				'label'  => $label,
 				'value'  => $loaded ? __( 'Loaded', 'ghl-crm-integration' ) : __( 'Missing', 'ghl-crm-integration' ),
@@ -1370,23 +1356,23 @@ class SettingsManager {
 		];
 
 		// 5. Check Queue Status
-		$queue_table    = $wpdb->prefix . 'ghl_sync_queue';
+		$queue_table     = $wpdb->prefix . 'ghl_sync_queue';
 		$current_site_id = get_current_blog_id();
-		
-		$pending_count  = (int) $wpdb->get_var(
+
+		$pending_count = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$queue_table} WHERE status = 'pending' AND site_id = %d",
 				$current_site_id
 			)
 		);
-		
-		$failed_count   = (int) $wpdb->get_var(
+
+		$failed_count = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$queue_table} WHERE status = 'failed' AND site_id = %d",
 				$current_site_id
 			)
 		);
-		
+
 		$processing_count = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$queue_table} WHERE status = 'processing' AND site_id = %d",
@@ -1442,7 +1428,7 @@ class SettingsManager {
 		// 7. Check Memory & Performance
 		$memory_limit       = ini_get( 'memory_limit' );
 		$max_execution_time = ini_get( 'max_execution_time' );
-		
+
 		$checks['performance'] = [
 			'label'  => __( 'Performance Settings', 'ghl-crm-integration' ),
 			'status' => 'success',
@@ -1486,9 +1472,9 @@ class SettingsManager {
 				'overall_status' => $overall_status,
 				'checks'         => $checks,
 				'timestamp'      => current_time( 'mysql' ),
-				'message'        => $overall_status === 'success' 
+				'message'        => $overall_status === 'success'
 					? __( 'All system checks passed!', 'ghl-crm-integration' )
-					: ( $overall_status === 'warning' 
+					: ( $overall_status === 'warning'
 						? __( 'System checks passed with warnings.', 'ghl-crm-integration' )
 						: __( 'Some system checks failed. Please review the details.', 'ghl-crm-integration' ) ),
 			]
@@ -1539,7 +1525,7 @@ class SettingsManager {
 			);
 
 			// Get the endpoint being called
-			$reflection = new \ReflectionClass( $custom_object_resource );
+			$reflection        = new \ReflectionClass( $custom_object_resource );
 			$endpoint_property = $reflection->getProperty( 'endpoint' );
 			$endpoint_property->setAccessible( true );
 			$endpoint_value = $endpoint_property->getValue( $custom_object_resource );
@@ -1548,17 +1534,17 @@ class SettingsManager {
 
 			// Prepare debug data
 			$debug_data = [
-				'endpoint'         => $endpoint_value,
-				'full_url'         => 'https://services.leadconnectorhq.com/' . $endpoint_value,
-				'has_oauth'        => $oauth_status['connected'],
-				'has_manual_api'   => ! empty( $settings['api_token'] ),
-				'location_id'      => $settings['location_id'] ?? 'not set',
-				'oauth_token'      => ! empty( $settings['oauth_access_token'] ) ? 'present' : 'not set',
-				'api_token'        => ! empty( $settings['api_token'] ) ? 'present' : 'not set',
-				'force_refresh'    => $force_refresh,
-				'cache_used'       => ! $force_refresh,
-				'schemas_count'    => count( $schemas ),
-				'raw_response'     => $schemas, // Include full response for debugging
+				'endpoint'       => $endpoint_value,
+				'full_url'       => 'https://services.leadconnectorhq.com/' . $endpoint_value,
+				'has_oauth'      => $oauth_status['connected'],
+				'has_manual_api' => ! empty( $settings['api_token'] ),
+				'location_id'    => $settings['location_id'] ?? 'not set',
+				'oauth_token'    => ! empty( $settings['oauth_access_token'] ) ? 'present' : 'not set',
+				'api_token'      => ! empty( $settings['api_token'] ) ? 'present' : 'not set',
+				'force_refresh'  => $force_refresh,
+				'cache_used'     => ! $force_refresh,
+				'schemas_count'  => count( $schemas ),
+				'raw_response'   => $schemas, // Include full response for debugging
 			];
 
 			wp_send_json_success(
@@ -1570,8 +1556,6 @@ class SettingsManager {
 				]
 			);
 		} catch ( \Exception $e ) {
-			
-			
 
 			// Debug data on error
 			$error_debug = [
@@ -1588,12 +1572,13 @@ class SettingsManager {
 			wp_send_json_error(
 				[
 					'message' => sprintf(
-						/* translators: %s: Error message */
+						/*
+						translators: %s: Error message */
 						/* translators: %s: Error message */
 						__( 'Failed to fetch Custom Objects: %s', 'ghl-crm-integration' ),
 						$e->getMessage()
 					),
-					'debug' => $error_debug,
+					'debug'   => $error_debug,
 				],
 				500
 			);
@@ -1634,7 +1619,7 @@ class SettingsManager {
 		try {
 			// Get the API client instance
 			$client = \GHL_CRM\API\Client\Client::get_instance();
-			
+
 			// Use the CustomObjectResource
 			$custom_object_resource = new \GHL_CRM\API\Resources\CustomObjectResource( $client );
 
@@ -1659,49 +1644,49 @@ class SettingsManager {
 					$schema = array_merge( $schema, $detailed_schema );
 				}
 			} catch ( \Exception $fields_error ) {
-				error_log( 'GHL CRM: Could not fetch detailed schema fields: ' . $fields_error->getMessage() );
+
 				// Continue without detailed fields
 			}
 
 			// Fetch custom object fields from the Custom Fields V2 API
 			// GET /custom-fields/object-key/:objectKey returns all fields for a specific custom object
 			try {
-				$settings = $this->get_settings_array();
+				$settings    = $this->get_settings_array();
 				$location_id = $settings['location_id'] ?? '';
-				$object_key = $schema['key'] ?? '';
-				
+				$object_key  = $schema['key'] ?? '';
+
 				if ( ! empty( $location_id ) && ! empty( $object_key ) ) {
 					// Fetch custom fields for this specific object using the object key
 					// Endpoint: GET /custom-fields/object-key/:objectKey?locationId=xxx
-					$custom_fields_response = $client->get( 
-						'custom-fields/object-key/' . $object_key, 
+					$custom_fields_response = $client->get(
+						'custom-fields/object-key/' . $object_key,
 						[ 'locationId' => $location_id ],
 						false // Don't auto-add locationId to path
 					);
-					
+
 					if ( ! empty( $custom_fields_response['fields'] ) ) {
 						// Add custom fields to schema
 						$schema['fields'] = $custom_fields_response['fields'];
-						error_log( 'GHL CRM: Loaded ' . count( $custom_fields_response['fields'] ) . ' custom fields for object ' . $object_key );
+
 					}
-					
+
 					// Also add folders if available
 					if ( ! empty( $custom_fields_response['folders'] ) ) {
 						$schema['folders'] = $custom_fields_response['folders'];
 					}
 				}
 			} catch ( \Exception $custom_fields_error ) {
-				error_log( 'GHL CRM: Could not fetch custom fields for object key: ' . $custom_fields_error->getMessage() );
+
 				// Continue without custom fields
 			}
 
 			// Fetch associations from the separate associations API endpoint
 			$relevant_associations = [];
-			
+
 			try {
 				// Get the object key from schema
 				$object_key = $schema['key'] ?? '';
-				
+
 				if ( ! empty( $object_key ) ) {
 					// GET /associations/objectKey/:objectKey - Returns associations for this specific object
 					// This endpoint returns all associations where this object is involved
@@ -1709,7 +1694,7 @@ class SettingsManager {
 					$relevant_associations = $associations_response['associations'] ?? [];
 				}
 			} catch ( \Exception $assoc_error ) {
-				error_log( 'GHL CRM: Failed to fetch associations for object key: ' . $assoc_error->getMessage() );
+
 				// Continue without associations - not critical
 			}
 
@@ -1724,11 +1709,10 @@ class SettingsManager {
 				]
 			);
 		} catch ( \Exception $e ) {
-			error_log( 'GHL CRM: Failed to fetch schema details: ' . $e->getMessage() );
 
 			wp_send_json_error(
 				[
-					'message' => sprintf(
+					'message'   => sprintf(
 						/* translators: %s: Error message */
 						__( 'Failed to fetch schema details: %s', 'ghl-crm-integration' ),
 						$e->getMessage()
@@ -1738,11 +1722,10 @@ class SettingsManager {
 				500
 			);
 		} catch ( \Error $t ) {
-			error_log( 'GHL CRM: Unexpected error fetching schema details: ' . $t->getMessage() );
 
 			wp_send_json_error(
 				[
-					'message' => sprintf(
+					'message'   => sprintf(
 						/* translators: %s: Error message */
 						__( 'An unexpected error occurred while fetching schema details: %s', 'ghl-crm-integration' ),
 						$t->getMessage()
@@ -1793,30 +1776,30 @@ class SettingsManager {
 
 		$mapping_id   = sanitize_text_field( $_POST['mapping_id'] ?? '' );
 		$mapping_data = [
-			'id'                    => $mapping_id ? $mapping_id : 'mapping_' . time(),
-			'name'                  => sanitize_text_field( $_POST['mapping_name'] ?? '' ),
-			'wp_post_type'          => sanitize_text_field( $_POST['wp_post_type'] ?? '' ),
-			'wp_post_type_label'    => get_post_type_object( $_POST['wp_post_type'] ?? '' )->label ?? '',
-			'ghl_object'            => sanitize_text_field( $_POST['ghl_object'] ?? '' ),
-			'ghl_object_key'        => sanitize_text_field( $_POST['ghl_object_key'] ?? '' ),
-			'active'                => isset( $_POST['mapping_active'] ) && 'true' === $_POST['mapping_active'],
-			'triggers'              => array_map( 'sanitize_text_field', $_POST['triggers'] ?? [] ),
-			
+			'id'                  => $mapping_id ? $mapping_id : 'mapping_' . time(),
+			'name'                => sanitize_text_field( $_POST['mapping_name'] ?? '' ),
+			'wp_post_type'        => sanitize_text_field( $_POST['wp_post_type'] ?? '' ),
+			'wp_post_type_label'  => get_post_type_object( $_POST['wp_post_type'] ?? '' )->label ?? '',
+			'ghl_object'          => sanitize_text_field( $_POST['ghl_object'] ?? '' ),
+			'ghl_object_key'      => sanitize_text_field( $_POST['ghl_object_key'] ?? '' ),
+			'active'              => isset( $_POST['mapping_active'] ) && 'true' === $_POST['mapping_active'],
+			'triggers'            => array_map( 'sanitize_text_field', $_POST['triggers'] ?? [] ),
+
 			// Legacy fields for backward compatibility
-			'contact_source'        => sanitize_text_field( $_POST['contact_source'] ?? '' ),
-			'contact_field'         => sanitize_text_field( $_POST['contact_field'] ?? '' ),
-			'contact_not_found'     => sanitize_text_field( $_POST['contact_not_found'] ?? 'skip' ),
-			
+			'contact_source'      => sanitize_text_field( $_POST['contact_source'] ?? '' ),
+			'contact_field'       => sanitize_text_field( $_POST['contact_field'] ?? '' ),
+			'contact_not_found'   => sanitize_text_field( $_POST['contact_not_found'] ?? 'skip' ),
+
 			// New multi-association support
-			'associations'          => [],
-			
-			'field_mappings'        => [],
-			'enable_batch_sync'     => isset( $_POST['enable_batch_sync'] ) && 'true' === $_POST['enable_batch_sync'],
-			'log_sync_operations'   => isset( $_POST['log_sync_operations'] ) && 'true' === $_POST['log_sync_operations'],
-			'created_at'            => $mapping_id ? null : current_time( 'mysql' ),
-			'updated_at'            => current_time( 'mysql' ),
+			'associations'        => [],
+
+			'field_mappings'      => [],
+			'enable_batch_sync'   => isset( $_POST['enable_batch_sync'] ) && 'true' === $_POST['enable_batch_sync'],
+			'log_sync_operations' => isset( $_POST['log_sync_operations'] ) && 'true' === $_POST['log_sync_operations'],
+			'created_at'          => $mapping_id ? null : current_time( 'mysql' ),
+			'updated_at'          => current_time( 'mysql' ),
 		];
-		
+
 		// Process associations (new format)
 		if ( ! empty( $_POST['associations'] ) && is_array( $_POST['associations'] ) ) {
 			foreach ( $_POST['associations'] as $assoc ) {

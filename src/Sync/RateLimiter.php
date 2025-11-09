@@ -58,7 +58,7 @@ class RateLimiter {
 	 */
 	public function check_limits( ?string $location_id = null ): bool {
 		if ( empty( $location_id ) ) {
-			
+
 			return true;
 		}
 
@@ -154,7 +154,7 @@ class RateLimiter {
 		$burst_key   = $this->get_burst_key( $location_id );
 		$burst_data  = get_site_transient( $burst_key );
 		$burst_count = $burst_data ? (int) $burst_data : 0;
-		
+
 		set_site_transient( $burst_key, $burst_count + 1, self::RATE_LIMIT_BURST_WINDOW );
 	}
 
@@ -198,22 +198,22 @@ class RateLimiter {
 		$daily_percent   = ( $daily_count / self::RATE_LIMIT_DAILY ) * 100;
 
 		return [
-			'burst'     => [
+			'burst'               => [
 				'limit'     => self::RATE_LIMIT_BURST,
 				'used'      => $burst_count,
 				'remaining' => $burst_remaining,
 				'percent'   => round( $burst_percent, 2 ),
 				'window'    => self::RATE_LIMIT_BURST_WINDOW . ' seconds',
 			],
-			'daily'     => [
+			'daily'               => [
 				'limit'     => self::RATE_LIMIT_DAILY,
 				'used'      => $daily_count,
 				'remaining' => $daily_remaining,
 				'percent'   => round( $daily_percent, 2 ),
 				'resets_at' => gmdate( 'Y-m-d H:i:s', strtotime( 'tomorrow midnight' ) ),
 			],
-			'throttled' => $burst_count >= self::RATE_LIMIT_BURST || $daily_count >= self::RATE_LIMIT_DAILY,
-			'location_id' => $location_id,
+			'throttled'           => $burst_count >= self::RATE_LIMIT_BURST || $daily_count >= self::RATE_LIMIT_DAILY,
+			'location_id'         => $location_id,
 			'shared_across_sites' => is_multisite(),
 		];
 	}
@@ -225,22 +225,22 @@ class RateLimiter {
 	 */
 	private function get_empty_status(): array {
 		return [
-			'burst'     => [
+			'burst'               => [
 				'limit'     => self::RATE_LIMIT_BURST,
 				'used'      => 0,
 				'remaining' => self::RATE_LIMIT_BURST,
 				'percent'   => 0,
 				'window'    => self::RATE_LIMIT_BURST_WINDOW . ' seconds',
 			],
-			'daily'     => [
+			'daily'               => [
 				'limit'     => self::RATE_LIMIT_DAILY,
 				'used'      => 0,
 				'remaining' => self::RATE_LIMIT_DAILY,
 				'percent'   => 0,
 				'resets_at' => gmdate( 'Y-m-d H:i:s', strtotime( 'tomorrow midnight' ) ),
 			],
-			'throttled' => false,
-			'location_id' => null,
+			'throttled'           => false,
+			'location_id'         => null,
 			'shared_across_sites' => false,
 		];
 	}

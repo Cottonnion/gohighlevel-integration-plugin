@@ -110,8 +110,7 @@ class ContactResource extends AbstractResource {
 		}
 
 		// Check if contact exists
-		$existing = !empty($data['email']) ? $this->find_by_email($data['email']) : null;
-
+		$existing = ! empty( $data['email'] ) ? $this->find_by_email( $data['email'] ) : null;
 
 		if ( $existing ) {
 			// Update existing contact

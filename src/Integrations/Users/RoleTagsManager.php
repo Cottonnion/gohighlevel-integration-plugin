@@ -94,7 +94,7 @@ class RoleTagsManager {
 	 * @return void
 	 */
 	public function handle_role_change( int $user_id, string $new_role, array $old_roles ): void {
-		$settings = $this->settings_manager->get_settings_array();
+		$settings  = $this->settings_manager->get_settings_array();
 		$role_tags = $settings['role_tags'] ?? [];
 
 		// Get contact ID
@@ -103,14 +103,14 @@ class RoleTagsManager {
 			return; // User not synced with GHL
 		}
 
-		$tags_to_add = [];
+		$tags_to_add    = [];
 		$tags_to_remove = [];
 
 		// Remove tags from old roles (if configured)
 		foreach ( $old_roles as $old_role ) {
 			$role_config = $role_tags[ $old_role ] ?? [];
 			if ( ! empty( $role_config['remove_on_change'] ) && ! empty( $role_config['tags'] ) ) {
-				$tags = $this->parse_tags( $role_config['tags'] );
+				$tags           = $this->parse_tags( $role_config['tags'] );
 				$tags_to_remove = array_merge( $tags_to_remove, $tags );
 			}
 		}
@@ -118,12 +118,12 @@ class RoleTagsManager {
 		// Add tags for new role (if configured)
 		$new_role_config = $role_tags[ $new_role ] ?? [];
 		if ( ! empty( $new_role_config['auto_apply'] ) && ! empty( $new_role_config['tags'] ) ) {
-			$tags = $this->parse_tags( $new_role_config['tags'] );
+			$tags        = $this->parse_tags( $new_role_config['tags'] );
 			$tags_to_add = array_merge( $tags_to_add, $tags );
 		}
 
 		// Remove duplicates
-		$tags_to_add = array_unique( $tags_to_add );
+		$tags_to_add    = array_unique( $tags_to_add );
 		$tags_to_remove = array_unique( $tags_to_remove );
 
 		// Queue tag updates
@@ -144,7 +144,7 @@ class RoleTagsManager {
 	 * @return void
 	 */
 	public function handle_role_added( int $user_id, string $role ): void {
-		$settings = $this->settings_manager->get_settings_array();
+		$settings  = $this->settings_manager->get_settings_array();
 		$role_tags = $settings['role_tags'] ?? [];
 
 		// Get contact ID
@@ -172,7 +172,7 @@ class RoleTagsManager {
 	 * @return void
 	 */
 	public function handle_role_removed( int $user_id, string $role ): void {
-		$settings = $this->settings_manager->get_settings_array();
+		$settings  = $this->settings_manager->get_settings_array();
 		$role_tags = $settings['role_tags'] ?? [];
 
 		// Get contact ID
@@ -201,43 +201,38 @@ class RoleTagsManager {
 	public function get_user_role_tags( int $user_id ): array {
 		$user = get_userdata( $user_id );
 		if ( ! $user ) {
-			
+
 			return [];
 		}
 
-		$settings = $this->settings_manager->get_settings_array();
-		$role_tags = $settings['role_tags'] ?? [];
+		$settings    = $this->settings_manager->get_settings_array();
+		$role_tags   = $settings['role_tags'] ?? [];
 		$global_tags = $settings['global_tags'] ?? '';
-
-		
-		
 
 		$all_tags = [];
 
 		// Add role-based tags
 		foreach ( $user->roles as $role ) {
 			$role_config = $role_tags[ $role ] ?? [];
-			
-			
+
 			if ( ! empty( $role_config['tags'] ) ) {
 				$tags = $this->parse_tags( $role_config['tags'] );
-				
+
 				$all_tags = array_merge( $all_tags, $tags );
 			} else {
-				
+
 			}
 		}
 
 		// Add global tags
 		if ( ! empty( $global_tags ) ) {
 			$global_tags_array = $this->parse_tags( $global_tags );
-			
+
 			$all_tags = array_merge( $all_tags, $global_tags_array );
 		}
 
 		// Ensure array has sequential keys for proper JSON encoding
 		$final_tags = array_values( array_unique( $all_tags ) );
-		
 
 		return $final_tags;
 	}
@@ -250,29 +245,27 @@ class RoleTagsManager {
 	 * @return array Array of tags for this role
 	 */
 	public function get_tags_for_role( string $role ): array {
-		$settings = $this->settings_manager->get_settings_array();
-		$role_tags = $settings['role_tags'] ?? [];
+		$settings    = $this->settings_manager->get_settings_array();
+		$role_tags   = $settings['role_tags'] ?? [];
 		$global_tags = $settings['global_tags'] ?? '';
-
-		
 
 		$all_tags = [];
 
 		// Get tags for this specific role
 		$role_config = $role_tags[ $role ] ?? [];
-		
+
 		if ( ! empty( $role_config['tags'] ) ) {
 			$tags = $this->parse_tags( $role_config['tags'] );
-			
+
 			$all_tags = array_merge( $all_tags, $tags );
 		} else {
-			
+
 		}
 
 		// Add global tags
 		if ( ! empty( $global_tags ) ) {
 			$global_tags_array = $this->parse_tags( $global_tags );
-			
+
 			$all_tags = array_merge( $all_tags, $global_tags_array );
 		}
 
@@ -326,7 +319,7 @@ class RoleTagsManager {
 				]
 			);
 		} catch ( \Exception $e ) {
-			
+
 		}
 	}
 
@@ -351,7 +344,7 @@ class RoleTagsManager {
 				]
 			);
 		} catch ( \Exception $e ) {
-			
+
 		}
 	}
 
@@ -371,7 +364,7 @@ class RoleTagsManager {
 				return;
 			}
 
-			$role = isset( $_POST['role'] ) ? sanitize_text_field( wp_unslash( $_POST['role'] ) ) : '';
+			$role        = isset( $_POST['role'] ) ? sanitize_text_field( wp_unslash( $_POST['role'] ) ) : '';
 			$tags_string = isset( $_POST['tags'] ) ? sanitize_text_field( wp_unslash( $_POST['tags'] ) ) : '';
 
 			if ( empty( $role ) || empty( $tags_string ) ) {
@@ -388,7 +381,7 @@ class RoleTagsManager {
 
 			// Get all users with this role
 			$users = get_users( [ 'role' => $role ] );
-			
+
 			if ( empty( $users ) ) {
 				wp_send_json_error( [ 'message' => __( 'No users found with this role', 'ghl-crm-integration' ) ] );
 				return;
@@ -402,11 +395,11 @@ class RoleTagsManager {
 					$contact_id = get_user_meta( $user->ID, '_ghl_contact_id', true );
 					if ( ! empty( $contact_id ) ) {
 						$this->queue_tag_addition( $user->ID, $contact_id, $tags );
-						$queued++;
+						++$queued;
 					}
 				} catch ( \Exception $e ) {
 					$errors[] = sprintf( 'User %d: %s', $user->ID, $e->getMessage() );
-					
+
 				}
 			}
 
@@ -417,35 +410,35 @@ class RoleTagsManager {
 						__( '%d users queued for tag addition.', 'ghl-crm-integration' ),
 						$queued
 					),
-					'queued' => $queued,
-					'total' => count( $users ),
-					'errors' => $errors,
+					'queued'  => $queued,
+					'total'   => count( $users ),
+					'errors'  => $errors,
 				]
 			);
 		} catch ( \Exception $e ) {
-			
+
 			wp_send_json_error(
 				[
-					'message' => sprintf(
+					'message'       => sprintf(
 						/* translators: %s: Error message */
 						__( 'Error: %s', 'ghl-crm-integration' ),
 						$e->getMessage()
 					),
 					'error_details' => $e->getMessage(),
-					'error_trace' => $e->getTraceAsString(),
+					'error_trace'   => $e->getTraceAsString(),
 				]
 			);
 		} catch ( \Error $e ) {
-			
+
 			wp_send_json_error(
 				[
-					'message' => sprintf(
+					'message'       => sprintf(
 						/* translators: %s: Error message */
 						__( 'Error: %s', 'ghl-crm-integration' ),
 						$e->getMessage()
 					),
 					'error_details' => $e->getMessage(),
-					'error_trace' => $e->getTraceAsString(),
+					'error_trace'   => $e->getTraceAsString(),
 				]
 			);
 		}
@@ -467,7 +460,7 @@ class RoleTagsManager {
 				return;
 			}
 
-			$role = isset( $_POST['role'] ) ? sanitize_text_field( wp_unslash( $_POST['role'] ) ) : '';
+			$role        = isset( $_POST['role'] ) ? sanitize_text_field( wp_unslash( $_POST['role'] ) ) : '';
 			$tags_string = isset( $_POST['tags'] ) ? sanitize_text_field( wp_unslash( $_POST['tags'] ) ) : '';
 
 			if ( empty( $role ) || empty( $tags_string ) ) {
@@ -484,7 +477,7 @@ class RoleTagsManager {
 
 			// Get all users with this role
 			$users = get_users( [ 'role' => $role ] );
-			
+
 			if ( empty( $users ) ) {
 				wp_send_json_error( [ 'message' => __( 'No users found with this role', 'ghl-crm-integration' ) ] );
 				return;
@@ -498,11 +491,11 @@ class RoleTagsManager {
 					$contact_id = get_user_meta( $user->ID, '_ghl_contact_id', true );
 					if ( ! empty( $contact_id ) ) {
 						$this->queue_tag_removal( $user->ID, $contact_id, $tags );
-						$queued++;
+						++$queued;
 					}
 				} catch ( \Exception $e ) {
 					$errors[] = sprintf( 'User %d: %s', $user->ID, $e->getMessage() );
-					
+
 				}
 			}
 
@@ -513,22 +506,22 @@ class RoleTagsManager {
 						__( '%d users queued for tag removal.', 'ghl-crm-integration' ),
 						$queued
 					),
-					'queued' => $queued,
-					'total' => count( $users ),
-					'errors' => $errors,
+					'queued'  => $queued,
+					'total'   => count( $users ),
+					'errors'  => $errors,
 				]
 			);
 		} catch ( \Exception $e ) {
-			
+
 			wp_send_json_error(
 				[
-					'message' => sprintf(
+					'message'       => sprintf(
 						/* translators: %s: Error message */
 						__( 'Error: %s', 'ghl-crm-integration' ),
 						$e->getMessage()
 					),
 					'error_details' => $e->getMessage(),
-					'error_trace' => $e->getTraceAsString(),
+					'error_trace'   => $e->getTraceAsString(),
 				]
 			);
 		}

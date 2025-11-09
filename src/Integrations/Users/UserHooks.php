@@ -278,9 +278,14 @@ class UserHooks {
 		$profile_tags = get_user_meta( $user_id, '_ghl_contact_tags', true );
 		if ( is_array( $profile_tags ) ) {
 			$sanitized_profile_tags = array_map( 'sanitize_text_field', $profile_tags );
-			$existing_tags          = array_values( array_filter( $sanitized_profile_tags, static function ( $tag ) {
-				return $tag !== '';
-			} ) );
+			$existing_tags          = array_values(
+				array_filter(
+					$sanitized_profile_tags,
+					static function ( $tag ) {
+						return $tag !== '';
+					}
+				)
+			);
 		}
 
 		// Handle role-based tags
@@ -315,12 +320,14 @@ class UserHooks {
 			$wc_settings = $settings['wc_convert_lead_enabled'] ?? false;
 			if ( $wc_settings ) {
 				// Check if user has exactly 1 completed order in the last 5 minutes
-				$recent_orders = wc_get_orders( [
-					'customer' => $user->user_email,
-					'status'   => [ 'completed', 'processing' ],
-					'limit'    => 2, // Get 2 to check if it's exactly 1
-					'date_created' => '>' . ( time() - 300 ), // Last 5 minutes
-				] );
+				$recent_orders = wc_get_orders(
+					[
+						'customer'     => $user->user_email,
+						'status'       => [ 'completed', 'processing' ],
+						'limit'        => 2, // Get 2 to check if it's exactly 1
+						'date_created' => '>' . ( time() - 300 ), // Last 5 minutes
+					]
+				);
 
 				// If exactly 1 recent order, user is a new customer - preserve customer tags
 				if ( count( $recent_orders ) === 1 ) {
@@ -539,9 +546,9 @@ class UserHooks {
 		if ( ! empty( $tags ) && is_array( $tags ) ) {
 			try {
 				// Fetch existing tags to merge (don't overwrite)
-				$client = \GHL_CRM\API\Client\Client::get_instance();
+				$client          = \GHL_CRM\API\Client\Client::get_instance();
 				$contact_details = $client->get( "contacts/{$contact_id}" );
-				
+
 				$existing_tags = [];
 				if ( ! empty( $contact_details['contact']['tags'] ) && is_array( $contact_details['contact']['tags'] ) ) {
 					$existing_tags = $contact_details['contact']['tags'];
