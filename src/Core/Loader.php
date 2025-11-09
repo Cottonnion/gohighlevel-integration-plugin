@@ -38,6 +38,13 @@ class Loader {
 	private array $components = array();
 
 	/**
+	 * Tracks which components have had their init() hook executed.
+	 *
+	 * @var array<string, bool>
+	 */
+	private array $initialized = array();
+
+	/**
 	 * Get class instance | singleton pattern
 	 *
 	 * @return self
@@ -63,7 +70,7 @@ class Loader {
 	 * @return void
 	 */
 	private function define_components(): void {
-		$this->components = array(
+		$components = array(
 			// Core components
 			'core.database'                            => \GHL_CRM\Core\Database::class,
 			'core.settings'                            => \GHL_CRM\Core\SettingsManager::class,
@@ -98,6 +105,12 @@ class Loader {
 			'membership.metaboxes'                     => \GHL_CRM\Membership\Admin\MetaBoxes::class,
 			'membership.restrictions'                  => \GHL_CRM\Membership\Restrictions::class,
 		);
+
+		if ( function_exists( 'apply_filters' ) ) {
+			$this->components = apply_filters( 'ghl_crm_loader_components', $components );
+		} else {
+			$this->components = $components;
+		}
 	}
 
 	/**
@@ -142,18 +155,7 @@ class Loader {
 	 */
 	public function init_components(): void {
 		foreach ( $this->components as $key => $class ) {
-			if ( ! isset( $this->container[ $key ] ) ) {
-				if ( method_exists( $class, 'get_instance' ) ) {
-					$this->container[ $key ] = $class::get_instance();
-				} else {
-					$this->container[ $key ] = new $class();
-				}
-
-				// Call init method if it exists
-				if ( method_exists( $this->container[ $key ], 'init' ) ) {
-					$this->container[ $key ]->init();
-				}
-			}
+			$this->resolve_component( $key, $class, true );
 		}
 
 		// Fire action after all components are loaded
@@ -233,10 +235,36 @@ class Loader {
 	 * @return object|null The component instance or null if not found.
 	 */
 	public function get_component( string $key ): ?object {
-		if ( ! isset( $this->container[ $key ] ) && isset( $this->components[ $key ] ) ) {
-			$this->container[ $key ] = new $this->components[ $key ]();
+		if ( ! isset( $this->components[ $key ] ) ) {
+			return null;
 		}
-		return $this->container[ $key ] ?? null;
+
+		return $this->resolve_component( $key, $this->components[ $key ], true );
+	}
+
+	/**
+	 * Instantiate a component and optionally run its init() method.
+	 *
+	 * @param string       $key        Component key.
+	 * @param class-string $class_name Fully qualified class name.
+	 * @param bool         $run_init   Whether to call init() immediately.
+	 * @return object|null The component instance.
+	 */
+	private function resolve_component( string $key, string $class_name, bool $run_init = false ): ?object {
+		if ( ! isset( $this->container[ $key ] ) ) {
+			$this->container[ $key ] = method_exists( $class_name, 'get_instance' )
+				? $class_name::get_instance()
+				: new $class_name();
+		}
+
+		$instance = $this->container[ $key ];
+
+		if ( $run_init && ! ( $this->initialized[ $key ] ?? false ) && method_exists( $instance, 'init' ) ) {
+			$instance->init();
+			$this->initialized[ $key ] = true;
+		}
+
+		return $instance;
 	}
 
 	/**
