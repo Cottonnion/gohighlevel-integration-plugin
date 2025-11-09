@@ -103,6 +103,7 @@
 					allowClear: true,
 					width: '100%',
 					closeOnSelect: false,
+					scrollAfterSelect: false,
 					ajax: {
 						url: ghl_crm_integrations_js_data.ajaxUrl,
 						type: 'POST',
@@ -182,7 +183,8 @@
 					placeholder: $select.data('placeholder') || 'Leave empty to convert on any order...',
 					allowClear: true,
 					width: '100%',
-					closeOnSelect: false
+					closeOnSelect: false,
+					scrollAfterSelect: false
 				});
 			});
 		},
@@ -205,7 +207,8 @@
 					placeholder: $select.find('option:first').text() || 'Skip groups without a type',
 					allowClear: true,
 					width: '100%',
-					minimumResultsForSearch: 5 // Show search if more than 5 options
+					minimumResultsForSearch: 5, // Show search if more than 5 options
+					scrollAfterSelect: false
 				});
 			});
 		},
@@ -524,6 +527,7 @@
 				placeholder: $pipelineSelect.data('placeholder') || 'Select a pipeline...',
 				allowClear: true,
 				width: '100%',
+				scrollAfterSelect: false,
 				ajax: {
 					url: ghl_crm_integrations_js_data.ajaxUrl,
 					dataType: 'json',
@@ -605,7 +609,8 @@
 				$select.select2({
 					placeholder: 'Select stage...',
 					allowClear: true,
-					width: '100%'
+					width: '100%',
+					scrollAfterSelect: false
 				});
 			});
 		},
@@ -654,6 +659,7 @@
 				allowClear: true,
 				width: '100%',
 				closeOnSelect: false,
+				scrollAfterSelect: false,
 				ajax: {
 					url: ghl_crm_integrations_js_data.ajaxUrl,
 					dataType: 'json',
@@ -695,7 +701,8 @@
 				placeholder: $categoriesSelect.data('placeholder') || 'Select categories...',
 				allowClear: true,
 				width: '100%',
-				closeOnSelect: false
+				closeOnSelect: false,
+				scrollAfterSelect: false
 			});
 		},
 

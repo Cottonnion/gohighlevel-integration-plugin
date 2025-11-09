@@ -761,7 +761,8 @@
 							placeholder: 'Select tags to apply on user registration',
 							allowClear: true,
 							width: '100%',
-							closeOnSelect: false // Keep dropdown open when selecting multiple tags
+							closeOnSelect: false, // Keep dropdown open when selecting multiple tags
+							scrollAfterSelect: false
 						});
 					}
 				} else {
@@ -792,6 +793,7 @@
 			allowClear: true,
 			width: '100%',
 			closeOnSelect: false,
+			scrollAfterSelect: false,
 			ajax: {
 				url: ajaxurl,
 				type: 'POST',
@@ -884,6 +886,7 @@
 				allowClear: true,
 				width: '100%',
 				closeOnSelect: false, // Keep dropdown open when selecting multiple tags
+				scrollAfterSelect: false,
 				ajax: {
 					url: ajaxurl,
 					type: 'POST',

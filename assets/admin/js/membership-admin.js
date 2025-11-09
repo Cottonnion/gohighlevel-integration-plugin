@@ -31,6 +31,7 @@
                 closeOnSelect: false,
                 allowClear: true,
                 width: '100%',
+                scrollAfterSelect: false,
                 ajax: {
                     url: ghlMembership.ajaxUrl,
                     dataType: 'json',

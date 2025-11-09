@@ -36,6 +36,9 @@
         $select.select2({
             placeholder: $select.data('placeholder') || 'Select tags...',
             allowClear: true,
+            closeOnSelect: false,
+            tags: false,
+            scrollAfterSelect: false,
             width: '100%',
             ajax: {
                 url: ghlProductMetaBox.ajaxUrl + '?action=' + encodeURIComponent(ghlProductMetaBox.action),
@@ -83,6 +86,20 @@
                 cache: true
             },
             minimumInputLength: 0
+        });
+
+        // Prevent dropdown from auto-scrolling on selection/unselection
+        $select.on('select2:select select2:unselect', function(e) {
+            var $dropdown = $(this).data('select2').$dropdown;
+            if ($dropdown) {
+                var $results = $dropdown.find('.select2-results__options');
+                if ($results.length) {
+                    var scrollPos = $results.scrollTop();
+                    setTimeout(function() {
+                        $results.scrollTop(scrollPos);
+                    }, 1);
+                }
+            }
         });
 
         // Load saved tags on initialization
