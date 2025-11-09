@@ -18,18 +18,53 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class QueueProcessor {
 	/**
-	 * Rate Limiter
+	 * Rate limiter dependency.
 	 *
 	 * @var RateLimiter
 	 */
 	private RateLimiter $rate_limiter;
 
 	/**
-	 * Contact Cache
+	 * Contact cache dependency.
 	 *
 	 * @var ContactCache
 	 */
 	private ContactCache $contact_cache;
+
+	/**
+	 * Event dispatcher callback.
+	 *
+	 * @var callable
+	 */
+	private $event_dispatcher;
+
+	/**
+	 * Registered execution handlers keyed by item type.
+	 *
+	 * @var array<string, callable>
+	 */
+	private array $handlers = array();
+
+	/**
+	 * Factory for WooCommerce sync handler instances.
+	 *
+	 * @var callable
+	 */
+	private $woocommerce_sync_factory;
+
+	/**
+	 * Factory for API client instances.
+	 *
+	 * @var callable
+	 */
+	private $client_factory;
+
+	/**
+	 * Factory for contact resource instances.
+	 *
+	 * @var callable
+	 */
+	private $contact_resource_factory;
 
 	/**
 	 * Singleton instance
@@ -43,19 +78,66 @@ class QueueProcessor {
 	 *
 	 * @return self
 	 */
-	public static function get_instance(): self {
+	public static function get_instance(
+		?RateLimiter $rate_limiter = null,
+		?ContactCache $contact_cache = null,
+		?callable $event_dispatcher = null,
+		?callable $woocommerce_sync_factory = null,
+		?callable $client_factory = null,
+		?callable $contact_resource_factory = null
+	): self {
 		if ( null === self::$instance ) {
-			self::$instance = new self();
+			self::$instance = new self(
+				$rate_limiter,
+				$contact_cache,
+				$event_dispatcher,
+				$woocommerce_sync_factory,
+				$client_factory,
+				$contact_resource_factory
+			);
 		}
 		return self::$instance;
 	}
 
 	/**
 	 * Private constructor
+	 *
+	 * @param RateLimiter|null                                  $rate_limiter              Rate limiter dependency.
+	 * @param ContactCache|null                                 $contact_cache             Contact cache dependency.
+	 * @param callable|null                                     $event_dispatcher          Event dispatcher callback.
+	 * @param callable|null                                     $woocommerce_sync_factory  WooCommerce sync factory.
+	 * @param callable|null                                     $client_factory            API client factory.
+	 * @param callable|null                                     $contact_resource_factory  Contact resource factory.
 	 */
-	private function __construct() {
-		$this->rate_limiter  = RateLimiter::get_instance();
-		$this->contact_cache = ContactCache::get_instance();
+	private function __construct(
+		?RateLimiter $rate_limiter = null,
+		?ContactCache $contact_cache = null,
+		?callable $event_dispatcher = null,
+		?callable $woocommerce_sync_factory = null,
+		?callable $client_factory = null,
+		?callable $contact_resource_factory = null
+	) {
+		$this->rate_limiter  = $rate_limiter ?? RateLimiter::get_instance();
+		$this->contact_cache = $contact_cache ?? ContactCache::get_instance();
+
+		$this->event_dispatcher = $event_dispatcher ?? static function ( string $event, array $context ): void {
+			do_action( 'ghl_crm_queue_processor_event', $event, $context );
+			do_action( "ghl_crm_queue_processor_{$event}", $context );
+		};
+
+		$this->woocommerce_sync_factory = $woocommerce_sync_factory ?? static function (): \GHL_CRM\Integrations\WooCommerce\WooCommerceSync {
+			return new \GHL_CRM\Integrations\WooCommerce\WooCommerceSync();
+		};
+
+		$this->client_factory = $client_factory ?? static function (): \GHL_CRM\API\Client\Client {
+			return \GHL_CRM\API\Client\Client::get_instance();
+		};
+
+		$this->contact_resource_factory = $contact_resource_factory ?? static function ( \GHL_CRM\API\Client\Client $client ): \GHL_CRM\API\Resources\ContactResource {
+			return new \GHL_CRM\API\Resources\ContactResource( $client );
+		};
+
+		$this->boot_default_handlers();
 	}
 
 	/**
@@ -69,28 +151,27 @@ class QueueProcessor {
 	 * @throws \Exception
 	 */
 	public function execute_sync( string $item_type, string $action, int $item_id, array $payload ) {
+		$context = array(
+			'item_type' => $item_type,
+			'action'    => $action,
+			'item_id'   => $item_id,
+			'payload'   => $payload,
+		);
+
+		$this->dispatch_event( 'before_execute', $context );
 
 		// Check for dependency before executing
 		if ( isset( $payload['_depends_on_queue_id'] ) ) {
 			$depends_on_id = absint( $payload['_depends_on_queue_id'] );
-
-			error_log(
-				sprintf(
-					'GHL Queue: Task has dependency - Type: %s, Item ID: %d, Depends on Queue ID: %d',
-					$item_type,
-					$item_id,
-					$depends_on_id
-				)
+			$this->dispatch_event(
+				'dependency_detected',
+				$context + array( 'depends_on' => $depends_on_id )
 			);
 
 			if ( $depends_on_id > 0 && ! $this->is_dependency_completed( $depends_on_id ) ) {
-				error_log(
-					sprintf(
-						'GHL Queue: Dependency not satisfied - Skipping task (Type: %s, Item ID: %d) until Queue ID %d completes',
-						$item_type,
-						$item_id,
-						$depends_on_id
-					)
+				$this->dispatch_event(
+					'dependency_waiting',
+					$context + array( 'depends_on' => $depends_on_id )
 				);
 
 				// Dependency not completed yet - return special status to skip but not fail
@@ -101,44 +182,140 @@ class QueueProcessor {
 				];
 			}
 
-			error_log(
-				sprintf(
-					'GHL Queue: Dependency satisfied - Executing task (Type: %s, Item ID: %d), Queue ID %d is completed',
-					$item_type,
-					$item_id,
-					$depends_on_id
-				)
+			$this->dispatch_event(
+				'dependency_ready',
+				$context + array( 'depends_on' => $depends_on_id )
 			);
 		}
 
 		try {
-			// Route to appropriate integration handler
-			switch ( $item_type ) {
-				case 'user':
-					return $this->execute_user_sync( $action, $item_id, $payload );
+			$handler = $this->resolve_handler( $item_type );
 
-				case 'contact':
-					return $this->execute_contact_sync( $action, $item_id, $payload );
-
-				case 'wc_customer':
-					return $this->execute_woocommerce_sync( $action, $item_id, $payload );
-
-				case 'order':
-					return apply_filters( 'ghl_crm_execute_order_sync', false, $action, $item_id, $payload );
-
-				case 'group':
-					return apply_filters( 'ghl_crm_execute_group_sync', false, $action, $item_id, $payload );
-
-				case 'course':
-					return apply_filters( 'ghl_crm_execute_course_sync', false, $action, $item_id, $payload );
-
-				default:
-					return apply_filters( 'ghl_crm_execute_sync', false, $item_type, $action, $item_id, $payload );
+			if ( $handler ) {
+				$result = $handler( $action, $item_id, $payload );
+			} else {
+				$result = $this->execute_via_filters( $item_type, $action, $item_id, $payload );
 			}
-		} catch ( \Exception $e ) {
 
+			$this->dispatch_event(
+				'after_execute',
+				$context + array( 'result' => $result )
+			);
+
+			return $result;
+		} catch ( \Exception $e ) {
+			$this->dispatch_event(
+				'error',
+				$context + array( 'exception' => $e )
+			);
 			throw $e;
 		}
+	}
+
+	/**
+	 * Register a handler for a specific item type.
+	 *
+	 * @param string   $item_type Item type key.
+	 * @param callable $handler   Callable that processes the item.
+	 * @return void
+	 */
+	public function register_handler( string $item_type, callable $handler ): void {
+		$this->handlers[ strtolower( $item_type ) ] = $handler;
+	}
+
+	/**
+	 * Determine if a handler exists for the provided item type.
+	 *
+	 * @param string $item_type Item type key.
+	 * @return bool
+	 */
+	public function has_handler( string $item_type ): bool {
+		return isset( $this->handlers[ strtolower( $item_type ) ] );
+	}
+
+	/**
+	 * Register the built-in queue handlers.
+	 *
+	 * @return void
+	 */
+	private function boot_default_handlers(): void {
+		$this->handlers = array(
+			'user'        => function ( string $action, int $item_id, array $payload ) {
+				return $this->execute_user_sync( $action, $item_id, $payload );
+			},
+			'contact'     => function ( string $action, int $item_id, array $payload ) {
+				return $this->execute_contact_sync( $action, (string) $item_id, $payload );
+			},
+			'wc_customer' => function ( string $action, int $item_id, array $payload ) {
+				return $this->execute_woocommerce_sync( $action, $item_id, $payload );
+			},
+		);
+	}
+
+	/**
+	 * Resolve a handler for the provided item type.
+	 *
+	 * @param string $item_type Item type key.
+	 * @return callable|null
+	 */
+	private function resolve_handler( string $item_type ): ?callable {
+		$normalized = strtolower( $item_type );
+		return $this->handlers[ $normalized ] ?? null;
+	}
+
+	/**
+	 * Execute handler via WordPress filters when no direct handler is registered.
+	 *
+	 * @param string $item_type Item type.
+	 * @param string $action    Action name.
+	 * @param int    $item_id   Item identifier.
+	 * @param array  $payload   Payload.
+	 * @return mixed
+	 */
+	private function execute_via_filters( string $item_type, string $action, int $item_id, array $payload ) {
+		$this->dispatch_event(
+			'delegated_to_filters',
+			array(
+				'item_type' => $item_type,
+				'action'    => $action,
+				'item_id'   => $item_id,
+			)
+		);
+
+		switch ( strtolower( $item_type ) ) {
+			case 'order':
+				return apply_filters( 'ghl_crm_execute_order_sync', false, $action, $item_id, $payload );
+
+			case 'group':
+				return apply_filters( 'ghl_crm_execute_group_sync', false, $action, $item_id, $payload );
+
+			case 'course':
+				return apply_filters( 'ghl_crm_execute_course_sync', false, $action, $item_id, $payload );
+
+			default:
+				return apply_filters( 'ghl_crm_execute_sync', false, $item_type, $action, $item_id, $payload );
+		}
+	}
+
+	/**
+	 * Dispatch queue processor event.
+	 *
+	 * @param string $event   Event name.
+	 * @param array  $context Event context.
+	 * @return void
+	 */
+	private function dispatch_event( string $event, array $context = array() ): void {
+		$dispatcher = $this->event_dispatcher;
+		$dispatcher(
+			$event,
+			array_merge(
+				$context,
+				array(
+					'event'     => $event,
+					'timestamp' => time(),
+				)
+			)
+		);
 	}
 
 	/**
@@ -152,8 +329,10 @@ class QueueProcessor {
 	 */
 	private function execute_user_sync( string $action, int $user_id, array $payload ) {
 
-		$client           = \GHL_CRM\API\Client\Client::get_instance();
-		$contact_resource = new \GHL_CRM\API\Resources\ContactResource( $client );
+		$client_factory           = $this->client_factory;
+		$contact_resource_factory = $this->contact_resource_factory;
+		$client                   = $client_factory();
+		$contact_resource         = $contact_resource_factory( $client );
 
 		switch ( $action ) {
 			case 'user_register':
@@ -194,7 +373,8 @@ class QueueProcessor {
 		}
 
 		// Fetch existing tags to merge (don't overwrite)
-		$client          = \GHL_CRM\API\Client\Client::get_instance();
+		$client_factory  = $this->client_factory;
+		$client          = $client_factory();
 		$contact_details = $client->get( "contacts/{$contact_id}" );
 
 		$existing_tags = [];
@@ -406,7 +586,8 @@ class QueueProcessor {
 		}
 
 		// Get WooCommerce sync handler
-		$wc_sync = new \GHL_CRM\Integrations\WooCommerce\WooCommerceSync();
+		$factory = $this->woocommerce_sync_factory;
+		$wc_sync = $factory();
 
 		switch ( $action ) {
 			case 'convert_lead':
@@ -453,11 +634,11 @@ class QueueProcessor {
 			)
 		);
 
-		error_log(
-			sprintf(
-				'GHL Queue: Checking dependency Queue ID %d - Status: %s',
-				$queue_id,
-				$status ? $status : 'NOT FOUND'
+		$this->dispatch_event(
+			'dependency_status_checked',
+			array(
+				'queue_id' => $queue_id,
+				'status'   => $status ?? 'not_found',
 			)
 		);
 
