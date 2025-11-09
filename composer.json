@@ -30,11 +30,14 @@
     "fix": "phpcbf",
     "check-file": "phpcs --file-list=-",
     "fix-file": "phpcbf --file-list=-",
-    "standards": "phpcs -i"
+    "standards": "phpcs -i",
+    "test": "phpunit"
   },
   "require-dev": {
     "dealerdirect/phpcodesniffer-composer-installer": "^1.1",
     "squizlabs/php_codesniffer": "^3.13",
-    "wp-coding-standards/wpcs": "^3.2"
+    "wp-coding-standards/wpcs": "^3.2",
+    "phpunit/phpunit": "^9.6",
+    "brain/monkey": "^2.6"
   }
 }
