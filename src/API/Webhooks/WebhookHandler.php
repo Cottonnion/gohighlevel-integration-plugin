@@ -611,6 +611,7 @@ class WebhookHandler {
 		$table_name   = $wpdb->prefix . 'ghl_sync_logs';
 		$like_pattern = $wpdb->esc_like( 'webhook_' ) . '%';
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Inspecting webhook activity in plugin log table.
 		$recent_webhooks = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$table_name} 
@@ -621,6 +622,7 @@ class WebhookHandler {
 			)
 		);
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Retrieving latest webhook log entry for status overview.
 		$last_webhook = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT * FROM {$table_name} 
@@ -630,7 +632,8 @@ class WebhookHandler {
 		 LIMIT 1",
 				$like_pattern
 			)
-		);        return [
+		);
+		return [
 			'webhook_url'           => $webhook_url,
 			'is_configured'         => $recent_webhooks > 0,
 			'recent_webhooks_24h'   => (int) $recent_webhooks,

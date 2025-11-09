@@ -79,7 +79,14 @@ class CustomObjectResource extends AbstractResource {
 
 			return true;
 		} catch ( \Exception $e ) {
-			throw new \Exception( 'Failed to delete custom object record: ' . $e->getMessage() );
+			$reason = $this->sanitize_exception_message( $e->getMessage() );
+			throw new \Exception(
+				sprintf(
+					/* translators: %s: error reason */
+					esc_html__( 'Failed to delete custom object record: %s', 'ghl-crm-integration' ),
+					esc_html( $reason )
+				)
+			);
 		}
 	}
 
@@ -151,7 +158,14 @@ class CustomObjectResource extends AbstractResource {
 
 			return $response['schema'] ?? $response['object'] ?? $response;
 		} catch ( \Exception $e ) {
-			throw new \Exception( 'Failed to create custom object schema: ' . $e->getMessage() );
+			$reason = $this->sanitize_exception_message( $e->getMessage() );
+			throw new \Exception(
+				sprintf(
+					/* translators: %s: error reason */
+					esc_html__( 'Failed to create custom object schema: %s', 'ghl-crm-integration' ),
+					esc_html( $reason )
+				)
+			);
 		}
 	}
 
@@ -178,7 +192,14 @@ class CustomObjectResource extends AbstractResource {
 
 			return $result;
 		} catch ( \Exception $e ) {
-			throw new \Exception( 'Failed to create custom object record: ' . $e->getMessage() );
+			$reason = $this->sanitize_exception_message( $e->getMessage() );
+			throw new \Exception(
+				sprintf(
+					/* translators: %s: error reason */
+					esc_html__( 'Failed to create custom object record: %s', 'ghl-crm-integration' ),
+					esc_html( $reason )
+				)
+			);
 		}
 	}
 
@@ -207,7 +228,14 @@ class CustomObjectResource extends AbstractResource {
 
 			return $response['record'] ?? $response;
 		} catch ( \Exception $e ) {
-			throw new \Exception( 'Failed to update custom object record: ' . $e->getMessage() );
+			$reason = $this->sanitize_exception_message( $e->getMessage() );
+			throw new \Exception(
+				sprintf(
+					/* translators: %s: error reason */
+					esc_html__( 'Failed to update custom object record: %s', 'ghl-crm-integration' ),
+					esc_html( $reason )
+				)
+			);
 		}
 	}
 
@@ -248,7 +276,14 @@ class CustomObjectResource extends AbstractResource {
 
 			return $response['associations'] ?? $response;
 		} catch ( \Exception $e ) {
-			throw new \Exception( 'Failed to get associations: ' . $e->getMessage() );
+			$reason = $this->sanitize_exception_message( $e->getMessage() );
+			throw new \Exception(
+				sprintf(
+					/* translators: %s: error reason */
+					esc_html__( 'Failed to get associations: %s', 'ghl-crm-integration' ),
+					esc_html( $reason )
+				)
+			);
 		}
 	}
 
@@ -286,8 +321,14 @@ class CustomObjectResource extends AbstractResource {
 
 			return $response;
 		} catch ( \Exception $e ) {
-
-			throw new \Exception( 'Failed to create association: ' . $e->getMessage() );
+			$reason = $this->sanitize_exception_message( $e->getMessage() );
+			throw new \Exception(
+				sprintf(
+					/* translators: %s: error reason */
+					esc_html__( 'Failed to create association: %s', 'ghl-crm-integration' ),
+					esc_html( $reason )
+				)
+			);
 		}
 	}
 
@@ -352,7 +393,24 @@ class CustomObjectResource extends AbstractResource {
 
 			return $response;
 		} catch ( \Exception $e ) {
-			throw new \Exception( 'Failed to associate record with contact: ' . $e->getMessage() );
+			$reason = $this->sanitize_exception_message( $e->getMessage() );
+			throw new \Exception(
+				sprintf(
+					/* translators: %s: error reason */
+					esc_html__( 'Failed to associate record with contact: %s', 'ghl-crm-integration' ),
+					esc_html( $reason )
+				)
+			);
 		}
+	}
+
+	/**
+	 * Sanitize exception message content before rethrowing.
+	 *
+	 * @param string $message Raw exception message.
+	 * @return string Sanitized exception message.
+	 */
+	private function sanitize_exception_message( string $message ): string {
+		return sanitize_text_field( wp_strip_all_tags( $message ) );
 	}
 }

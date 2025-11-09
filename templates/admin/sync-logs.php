@@ -9,8 +9,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Assets are enqueued via AssetsManager
-
 // Check connection status
 $settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
@@ -20,8 +18,9 @@ $is_connected     = $oauth_status['connected'] || ! empty( $settings['api_token'
 
 // Check if logging is enabled
 $is_logging_enabled = \GHL_CRM\Core\SettingsManager::is_sync_logging_enabled();
-// Get current page
-$current_page = isset( $_GET['paged'] ) ? max( 1, intval( $_GET['paged'] ) ) : 1;
+// Get current page from request (pagination only affects view state)
+$raw_page     = filter_input( INPUT_GET, 'paged', FILTER_SANITIZE_NUMBER_INT );
+$current_page = $raw_page ? max( 1, (int) $raw_page ) : 1;
 $per_page = 20;
 $offset = ( $current_page - 1 ) * $per_page;
 
@@ -35,15 +34,21 @@ $logs = $sync_logger->get_logs( [
 // Count pending queue and total logs
 global $wpdb;
 $site_id = get_current_blog_id();
-$queue_count = $wpdb->get_var( $wpdb->prepare(
-	"SELECT COUNT(*) FROM {$wpdb->prefix}ghl_sync_queue WHERE status = %s AND site_id = %d",
-	'pending',
-	$site_id
-) );
-$log_count = $wpdb->get_var( $wpdb->prepare(
-	"SELECT COUNT(*) FROM {$wpdb->prefix}ghl_sync_log WHERE site_id = %d",
-	$site_id
-) );
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Counts rely on custom plugin tables and are safe without additional caching.
+$queue_count = $wpdb->get_var(
+	$wpdb->prepare(
+		"SELECT COUNT(*) FROM {$wpdb->prefix}ghl_sync_queue WHERE status = %s AND site_id = %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		'pending',
+		$site_id
+	)
+);
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Counts rely on custom plugin tables and are safe without additional caching.
+$log_count = $wpdb->get_var(
+	$wpdb->prepare(
+		"SELECT COUNT(*) FROM {$wpdb->prefix}ghl_sync_log WHERE site_id = %d",
+		$site_id
+	)
+);
 $total_pages = ceil( $log_count / $per_page );
 ?>
 
@@ -82,11 +87,17 @@ $total_pages = ceil( $log_count / $per_page );
 			</span>
 		<?php endif; ?>
 		<span style="margin-left: 20px; color: #666;">
-			<?php printf( esc_html__( 'Total Logs: %s', 'ghl-crm-integration' ), '<strong>' . number_format( $log_count ) . '</strong>' ); ?>
+			<?php
+			/* translators: %s: formatted number of log entries */
+			printf( esc_html__( 'Total Logs: %s', 'ghl-crm-integration' ), '<strong>' . number_format( $log_count ) . '</strong>' );
+			?>
 		</span>
 		<?php if ( $queue_count > 0 ) : ?>
 			<span style="margin-left: 20px; color: #f0b849;">
-				<?php printf( esc_html__( 'Queue: %s pending', 'ghl-crm-integration' ), '<strong>' . number_format( $queue_count ) . '</strong>' ); ?>
+				<?php
+				/* translators: %s: formatted number of queue items */
+				printf( esc_html__( 'Queue: %s pending', 'ghl-crm-integration' ), '<strong>' . number_format( $queue_count ) . '</strong>' );
+				?>
 			</span>
 		<?php endif; ?>
 	</div>
@@ -215,13 +226,13 @@ $total_pages = ceil( $log_count / $per_page );
 					<div class="ghl-pagination-info">
 						<?php
 						$start = $offset + 1;
-						$end = min( $offset + $per_page, $log_count );
+						$end   = min( $offset + $per_page, $log_count );
 						printf(
 							/* translators: 1: Start number, 2: End number, 3: Total count */
 							esc_html__( 'Showing %1$d-%2$d of %3$d logs', 'ghl-crm-integration' ),
-							$start,
-							$end,
-							$log_count
+							absint( $start ),
+							absint( $end ),
+							absint( $log_count )
 						);
 						?>
 					</div>
@@ -233,7 +244,8 @@ $total_pages = ceil( $log_count / $per_page );
 
 						// Previous button
 						if ( $current_page > 1 ) {
-							echo '<a href="' . esc_url( add_query_arg( 'paged', $current_page - 1 ) ) . '" class="ghl-pagination-link" data-page="' . ( $current_page - 1 ) . '">←</a>';
+							$prev_page = $current_page - 1;
+							echo '<a href="' . esc_url( add_query_arg( 'paged', $prev_page ) ) . '" class="ghl-pagination-link" data-page="' . esc_attr( (string) $prev_page ) . '">←</a>';
 						}
 
 						// First page
@@ -247,7 +259,7 @@ $total_pages = ceil( $log_count / $per_page );
 						// Page numbers
 						for ( $i = $start_page; $i <= $end_page; $i++ ) {
 							$class = $i === $current_page ? 'ghl-pagination-link active' : 'ghl-pagination-link';
-							echo '<a href="' . esc_url( add_query_arg( 'paged', $i ) ) . '" class="' . $class . '" data-page="' . $i . '">' . $i . '</a>';
+							echo '<a href="' . esc_url( add_query_arg( 'paged', $i ) ) . '" class="' . esc_attr( $class ) . '" data-page="' . esc_attr( (string) $i ) . '">' . esc_html( (string) $i ) . '</a>';
 						}
 
 						// Last page
@@ -255,12 +267,13 @@ $total_pages = ceil( $log_count / $per_page );
 							if ( $end_page < $total_pages - 1 ) {
 								echo '<span class="ghl-pagination-link disabled">...</span>';
 							}
-							echo '<a href="' . esc_url( add_query_arg( 'paged', $total_pages ) ) . '" class="ghl-pagination-link" data-page="' . $total_pages . '">' . $total_pages . '</a>';
+							echo '<a href="' . esc_url( add_query_arg( 'paged', $total_pages ) ) . '" class="ghl-pagination-link" data-page="' . esc_attr( (string) $total_pages ) . '">' . esc_html( (string) $total_pages ) . '</a>';
 						}
 
 						// Next button
 						if ( $current_page < $total_pages ) {
-							echo '<a href="' . esc_url( add_query_arg( 'paged', $current_page + 1 ) ) . '" class="ghl-pagination-link" data-page="' . ( $current_page + 1 ) . '">→</a>';
+							$next_page = $current_page + 1;
+							echo '<a href="' . esc_url( add_query_arg( 'paged', $next_page ) ) . '" class="ghl-pagination-link" data-page="' . esc_attr( (string) $next_page ) . '">→</a>';
 						}
 						?>
 					</div>

@@ -1002,6 +1002,7 @@ class SettingsManager {
 			$table_name      = $wpdb->prefix . 'ghl_sync_queue';
 			$current_site_id = get_current_blog_id();
 
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Checking queue size before manual run against plugin-managed table.
 			$pending_before = (int) $wpdb->get_var(
 				$wpdb->prepare(
 					"SELECT COUNT(*) FROM {$table_name} WHERE status = 'pending' AND site_id = %d",
@@ -1013,6 +1014,7 @@ class SettingsManager {
 			$queue_manager->process_queue();
 
 			// Get count after processing
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Checking queue size after manual run against plugin-managed table.
 			$pending_after = (int) $wpdb->get_var(
 				$wpdb->prepare(
 					"SELECT COUNT(*) FROM {$table_name} WHERE status = 'pending' AND site_id = %d",
@@ -1098,6 +1100,7 @@ class SettingsManager {
 		$site_id = get_current_blog_id();
 
 		// Delete contact cache transients
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Removing plugin transient rows directly from options table.
 		$wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$wpdb->options} 
@@ -1109,6 +1112,7 @@ class SettingsManager {
 		);
 
 		// Delete rate limit transients
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Removing plugin transient rows directly from options table.
 		$wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$wpdb->options} 
@@ -1121,6 +1125,7 @@ class SettingsManager {
 
 		// Delete tags cache (use wildcard pattern to clear all tag caches for current site)
 		$site_id = get_current_blog_id();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Removing plugin transient rows directly from options table.
 		$wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$wpdb->options} 
@@ -1279,6 +1284,7 @@ class SettingsManager {
 
 		foreach ( $required_tables as $table ) {
 			$table_name   = $table_prefix . $table;
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Inspecting table existence during diagnostics.
 			$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) === $table_name;
 
 			$tables_status[] = [
@@ -1359,6 +1365,7 @@ class SettingsManager {
 		$queue_table     = $wpdb->prefix . 'ghl_sync_queue';
 		$current_site_id = get_current_blog_id();
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Collecting queue metrics for system health report.
 		$pending_count = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$queue_table} WHERE status = 'pending' AND site_id = %d",
@@ -1366,6 +1373,7 @@ class SettingsManager {
 			)
 		);
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Collecting queue metrics for system health report.
 		$failed_count = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$queue_table} WHERE status = 'failed' AND site_id = %d",
@@ -1373,6 +1381,7 @@ class SettingsManager {
 			)
 		);
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Collecting queue metrics for system health report.
 		$processing_count = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$queue_table} WHERE status = 'processing' AND site_id = %d",

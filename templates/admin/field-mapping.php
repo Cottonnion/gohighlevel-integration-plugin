@@ -75,11 +75,18 @@ $excluded_meta_keys = array(
 	'wp_user-settings-time',
 );
 
-// Get all unique meta keys from all users
+// Get all unique meta keys from all users (cached to avoid repeated uncached direct queries)
 global $wpdb;
-$all_meta_keys = $wpdb->get_col( 
-	"SELECT DISTINCT meta_key FROM {$wpdb->usermeta} ORDER BY meta_key" 
-);
+$meta_keys_cache_group = 'ghl_crm_field_mapping';
+$meta_keys_cache_key   = 'user_meta_keys_' . get_current_blog_id();
+
+$all_meta_keys = wp_cache_get( $meta_keys_cache_key, $meta_keys_cache_group );
+
+if ( false === $all_meta_keys ) {
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Querying core usermeta table for distinct keys is necessary and cached immediately after.
+	$all_meta_keys = $wpdb->get_col( "SELECT DISTINCT meta_key FROM {$wpdb->usermeta} ORDER BY meta_key" );
+	wp_cache_set( $meta_keys_cache_key, $all_meta_keys, $meta_keys_cache_group, 5 * MINUTE_IN_SECONDS );
+}
 
 $custom_user_fields = array();
 $woocommerce_fields = array();

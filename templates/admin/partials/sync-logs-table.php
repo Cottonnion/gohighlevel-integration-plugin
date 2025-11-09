@@ -100,13 +100,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<div class="ghl-pagination-info">
 				<?php
 				$start = $offset + 1;
-				$end = min( $offset + $per_page, $log_count );
+				$end   = min( $offset + $per_page, $log_count );
 				printf(
 					/* translators: 1: Start number, 2: End number, 3: Total count */
 					esc_html__( 'Showing %1$d-%2$d of %3$d logs', 'ghl-crm-integration' ),
-					$start,
-					$end,
-					$log_count
+					absint( $start ),
+					absint( $end ),
+					absint( $log_count )
 				);
 				?>
 			</div>
@@ -119,7 +119,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 				// Previous button
 				if ( $current_page > 1 ) {
-					echo '<a href="#" class="ghl-pagination-link" data-page="' . ( $current_page - 1 ) . '">←</a>';
+					$prev_page = $current_page - 1;
+					echo '<a href="#" class="ghl-pagination-link" data-page="' . esc_attr( (string) $prev_page ) . '">←</a>';
 				}
 
 				// First page
@@ -133,7 +134,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				// Page numbers
 				for ( $i = $start_page; $i <= $end_page; $i++ ) {
 					$class = $i === $current_page ? 'ghl-pagination-link active' : 'ghl-pagination-link';
-					echo '<a href="#" class="' . esc_attr( $class ) . '" data-page="' . $i . '">' . $i . '</a>';
+					echo '<a href="#" class="' . esc_attr( $class ) . '" data-page="' . esc_attr( (string) $i ) . '">' . esc_html( (string) $i ) . '</a>';
 				}
 
 				// Last page
@@ -141,12 +142,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 					if ( $end_page < $total_pages - 1 ) {
 						echo '<span class="ghl-pagination-link disabled">...</span>';
 					}
-					echo '<a href="#" class="ghl-pagination-link" data-page="' . $total_pages . '">' . $total_pages . '</a>';
+					echo '<a href="#" class="ghl-pagination-link" data-page="' . esc_attr( (string) $total_pages ) . '">' . esc_html( (string) $total_pages ) . '</a>';
 				}
 
 				// Next button
 				if ( $current_page < $total_pages ) {
-					echo '<a href="#" class="ghl-pagination-link" data-page="' . ( $current_page + 1 ) . '">→</a>';
+					$next_page = $current_page + 1;
+					echo '<a href="#" class="ghl-pagination-link" data-page="' . esc_attr( (string) $next_page ) . '">→</a>';
 				}
 				?>
 			</div>

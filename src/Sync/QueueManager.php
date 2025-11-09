@@ -146,6 +146,7 @@ class QueueManager {
 		$current_site_id = get_current_blog_id();
 
 		// Check for existing pending item
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Inspecting queue table for duplicate pending entry.
 		$existing = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT id FROM {$table_name} 
@@ -164,6 +165,7 @@ class QueueManager {
 
 		// If duplicate exists, UPDATE payload with latest data (don't create new row)
 		if ( $existing ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Updating existing queue payload to avoid duplicate rows.
 			$updated = $wpdb->update(
 				$table_name,
 				[
@@ -179,6 +181,7 @@ class QueueManager {
 		}
 
 		// Safety check: Limit queue size per site (prevent bloat)
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Counting pending queue items for throttling.
 		$queue_count = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$table_name} WHERE site_id = %d AND status = 'pending'",
@@ -205,6 +208,7 @@ class QueueManager {
 		}
 
 		// Insert new queue item
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Inserting new job into plugin queue table.
 		$inserted = $wpdb->insert(
 			$table_name,
 			[
@@ -308,6 +312,7 @@ class QueueManager {
 		$this->cleanup_stale_items();
 
 		// Mark items with MAX_ATTEMPTS as failed (fix for stuck items)
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Resetting stuck queue items in plugin table.
 		$fixed_count = $wpdb->query(
 			$wpdb->prepare(
 				"UPDATE {$table_name} 
@@ -321,6 +326,7 @@ class QueueManager {
 		);
 
 		// Get pending items for current site (using configured batch size)
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Fetching pending jobs for processing from plugin queue table.
 		$items = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT * FROM {$table_name} 
@@ -359,6 +365,7 @@ class QueueManager {
 		$current_site_id = get_current_blog_id();
 
 		// Reset items that have been processing for too long
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Restoring stuck jobs in plugin queue table.
 		$wpdb->query(
 			$wpdb->prepare(
 				"UPDATE {$table_name} 
@@ -390,6 +397,7 @@ class QueueManager {
 		if ( $item->attempts >= self::MAX_ATTEMPTS ) {
 
 			$table_name = $this->get_queue_table_name();
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Marking exhausted job as failed in queue table.
 			$wpdb->update(
 				$table_name,
 				[
@@ -427,6 +435,7 @@ class QueueManager {
 		}
 
 		// Increment attempts
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Incrementing job attempt metadata.
 		$wpdb->update(
 			$table_name,
 			[
@@ -481,6 +490,7 @@ class QueueManager {
 			if ( $should_skip ) {
 				// Check if payload needs to be updated with dependency info
 				if ( ! empty( $result['update_payload'] ) && is_array( $result['update_payload'] ) ) {
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Persisting updated dependency payload to queue table.
 					$wpdb->update(
 						$table_name,
 						[
@@ -575,6 +585,7 @@ class QueueManager {
 				}
 
 				// Mark as completed
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Updating queue row status in custom table after successful sync.
 				$update_result = $wpdb->update(
 					$table_name,
 					[
@@ -634,6 +645,7 @@ class QueueManager {
 			if ( $this->rate_limiter->is_rate_limit_error( $e ) ) {
 				// Don't increment attempts for rate limit errors
 				// Reset attempt counter so it will retry
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Resetting queue item to pending after rate limit to ensure retry.
 				$wpdb->update(
 					$table_name,
 					[
@@ -652,6 +664,7 @@ class QueueManager {
 			// Mark as failed if max attempts reached (attempts already incremented above)
 			$status = ( $item->attempts >= self::MAX_ATTEMPTS ) ? 'failed' : 'pending';
 
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Persisting failure state for queue record in custom table.
 			$wpdb->update(
 				$table_name,
 				[
@@ -718,6 +731,7 @@ class QueueManager {
 		$table_name      = $this->get_queue_table_name();
 		$current_site_id = get_current_blog_id();
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Gathering queue metrics for status dashboard.
 		$pending = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$table_name} WHERE status = 'pending' AND site_id = %d",
@@ -725,6 +739,7 @@ class QueueManager {
 			)
 		);
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Gathering queue metrics for status dashboard.
 		$failed = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$table_name} WHERE status = 'failed' AND site_id = %d",
@@ -732,6 +747,7 @@ class QueueManager {
 			)
 		);
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Gathering queue metrics for status dashboard.
 		$completed_24h = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$table_name} WHERE status = 'completed' AND site_id = %d AND processed_at > %s",
@@ -740,6 +756,7 @@ class QueueManager {
 			)
 		);
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Gathering queue metrics for status dashboard.
 		$total_items = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$table_name} WHERE site_id = %d",
@@ -747,7 +764,7 @@ class QueueManager {
 			)
 		);
 
-		// Get oldest pending item age (minutes)
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Calculating age of oldest pending job for alerting.
 		$oldest_pending = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT TIMESTAMPDIFF(MINUTE, created_at, NOW()) as age 

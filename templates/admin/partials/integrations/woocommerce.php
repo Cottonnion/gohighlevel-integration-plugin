@@ -60,52 +60,6 @@ if ( $is_woocommerce_active ) {
 $oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
 $oauth_status  = $oauth_handler->get_connection_status();
 $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
-
-// Check if debug mode is enabled (same constant used in dashboard.php)
-$show_debug = defined( 'GHL_SHOW_DEBUG' ) && GHL_SHOW_DEBUG === true;
-
-if ( $show_debug ) :
-	// Debug: Show saved abandoned cart settings
-	echo '<pre style="background: #f5f5f5; padding: 15px; border: 1px solid #ddd; border-radius: 4px; margin: 20px 0;">';
-	echo '<strong>Abandoned Cart Settings (Debug):</strong>' . "\n";
-	echo json_encode([
-		'wc_abandoned_cart_enabled' => $wc_abandoned_cart_enabled,
-		'wc_abandoned_cart_time' => $wc_abandoned_cart_time,
-		'wc_abandoned_cart_tag' => $wc_abandoned_cart_tag,
-	], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-	echo '</pre>';
-
-	// Debug: Show active abandoned cart transients
-	global $wpdb;
-	$transient_prefix = $wpdb->esc_like( '_transient_ghl_cart_' ) . '%';
-	$transients = $wpdb->get_col(
-		$wpdb->prepare(
-			"SELECT option_name FROM {$wpdb->options} 
-			WHERE option_name LIKE %s 
-			AND option_name NOT LIKE %s",
-			$transient_prefix,
-			'%_timeout_%'
-		)
-	);
-
-	echo '<pre style="background: #f5f5f5; padding: 15px; border: 1px solid #ddd; border-radius: 4px; margin: 20px 0;">';
-	echo '<strong>Active Abandoned Carts (Debug):</strong>' . "\n";
-	echo '<strong>Total: ' . count($transients) . ' cart(s)</strong>' . "\n\n";
-
-	if (!empty($transients)) {
-		foreach ($transients as $transient_name) {
-			$cart_key = str_replace('_transient_ghl_cart_', '', $transient_name);
-			$cart_data = get_transient('ghl_cart_' . $cart_key);
-			
-			echo '--- Cart Key: ' . $cart_key . ' ---' . "\n";
-			echo json_encode($cart_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-			echo "\n\n";
-		}
-	} else {
-		echo 'No abandoned carts found.' . "\n";
-	}
-	echo '</pre>';
-endif;
 ?>
 
 <?php
@@ -193,7 +147,7 @@ endif;
 				printf(
 					/* translators: %s: WooCommerce version */
 					esc_html__( 'WooCommerce %s detected. Configure your integration settings below.', 'ghl-crm-integration' ),
-					defined( 'WC_VERSION' ) ? WC_VERSION : ''
+					defined( 'WC_VERSION' ) ? absint( WC_VERSION ) : ''
 				);
 				?>
 			</p>

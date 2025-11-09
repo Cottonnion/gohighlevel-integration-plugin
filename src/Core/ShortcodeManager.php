@@ -101,7 +101,10 @@ class ShortcodeManager {
 				style="width: 100%; <?php echo $height === 'auto' ? 'height: 800px;' : 'height: ' . esc_attr( $height ) . ';'; ?> border: none; display: none;"
 				scrolling="yes"
 				id="<?php echo esc_attr( $wrapper_id ); ?>-iframe"
-				title="<?php echo esc_attr( sprintf( __( 'GoHighLevel Form %s', 'ghl-crm-integration' ), $atts['id'] ) ); ?>"
+				title="<?php
+				/* translators: %s: GoHighLevel form ID */
+				echo esc_attr( sprintf( __( 'GoHighLevel Form %s', 'ghl-crm-integration' ), $atts['id'] ) );
+				?>"
 				onload="this.style.display='block'; this.parentElement.setAttribute('data-loading', 'false');"
 			></iframe>
 		</div>

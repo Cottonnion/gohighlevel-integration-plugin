@@ -20,6 +20,23 @@ defined( 'ABSPATH' ) || exit;
  * Methods are called from SettingsManager's AJAX hooks.
  */
 class AjaxHandler {
+	/**
+	 * Verify admin AJAX nonce for SPA requests.
+	 *
+	 * @return void
+	 */
+	private static function verify_admin_nonce(): void {
+		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
+
+		if ( ! wp_verify_nonce( $nonce, 'ghl_crm_admin' ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'Security check failed. Please reload the page and try again.', 'ghl-crm-integration' ),
+				],
+				403
+			);
+		}
+	}
 
 	/**
 	 * Save integration settings
@@ -28,6 +45,8 @@ class AjaxHandler {
 	 * @return void
 	 */
 	public static function save_integrations(): void {
+		self::verify_admin_nonce();
+
 		try {
 			// Get current settings
 			$settings_manager = SettingsManager::get_instance();
@@ -66,7 +85,7 @@ class AjaxHandler {
 				}
 
 				$integration_settings['wc_abandoned_cart_enabled'] = isset( $_POST['wc_abandoned_cart_enabled'] ) && sanitize_text_field( wp_unslash( $_POST['wc_abandoned_cart_enabled'] ) ) === '1';
-				$integration_settings['wc_abandoned_cart_time']    = isset( $_POST['wc_abandoned_cart_time'] ) ? absint( $_POST['wc_abandoned_cart_time'] ) : 60;
+				$integration_settings['wc_abandoned_cart_time']    = isset( $_POST['wc_abandoned_cart_time'] ) ? absint( wp_unslash( $_POST['wc_abandoned_cart_time'] ) ) : 60;
 
 				// Handle abandoned cart tag (can be array or string)
 				if ( isset( $_POST['wc_abandoned_cart_tag'] ) ) {
@@ -96,7 +115,7 @@ class AjaxHandler {
 				$integration_settings['wc_opportunities_stage_completed']  = isset( $_POST['wc_opportunities_stage_completed'] ) ? sanitize_text_field( wp_unslash( $_POST['wc_opportunities_stage_completed'] ) ) : '';
 				$integration_settings['wc_opportunities_stage_cancelled']  = isset( $_POST['wc_opportunities_stage_cancelled'] ) ? sanitize_text_field( wp_unslash( $_POST['wc_opportunities_stage_cancelled'] ) ) : '';
 				$integration_settings['wc_opportunities_filter_type']      = isset( $_POST['wc_opportunities_filter_type'] ) ? sanitize_text_field( wp_unslash( $_POST['wc_opportunities_filter_type'] ) ) : 'all';
-				$integration_settings['wc_opportunities_min_value']        = isset( $_POST['wc_opportunities_min_value'] ) ? floatval( $_POST['wc_opportunities_min_value'] ) : 0;
+				$integration_settings['wc_opportunities_min_value']        = isset( $_POST['wc_opportunities_min_value'] ) ? floatval( wp_unslash( $_POST['wc_opportunities_min_value'] ) ) : 0;
 
 				// Handle opportunities products array
 				if ( isset( $_POST['wc_opportunities_products'] ) ) {
@@ -127,7 +146,7 @@ class AjaxHandler {
 			if ( isset( $_POST['buddyboss_groups_enabled'] ) ) {
 				$integration_settings['buddyboss_groups_enabled']             = sanitize_text_field( wp_unslash( $_POST['buddyboss_groups_enabled'] ) ) === '1';
 				$integration_settings['buddyboss_auto_delete_custom_objects'] = isset( $_POST['buddyboss_auto_delete_custom_objects'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_auto_delete_custom_objects'] ) ) === '1';
-				$integration_settings['buddyboss_field_length_limit']         = absint( $_POST['buddyboss_field_length_limit'] ?? 250 );
+				$integration_settings['buddyboss_field_length_limit']         = isset( $_POST['buddyboss_field_length_limit'] ) ? absint( wp_unslash( $_POST['buddyboss_field_length_limit'] ) ) : 250;
 				$integration_settings['buddyboss_sync_private_groups']        = isset( $_POST['buddyboss_sync_private_groups'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_sync_private_groups'] ) ) === '1';
 				$integration_settings['buddyboss_sync_hidden_groups']         = isset( $_POST['buddyboss_sync_hidden_groups'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_sync_hidden_groups'] ) ) === '1';
 				$integration_settings['buddyboss_real_time_sync']             = isset( $_POST['buddyboss_real_time_sync'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_real_time_sync'] ) ) === '1';
@@ -212,6 +231,8 @@ class AjaxHandler {
 	 * @return void
 	 */
 	public static function get_pipelines(): void {
+		self::verify_admin_nonce();
+
 		try {
 			$settings_manager = SettingsManager::get_instance();
 			$settings         = $settings_manager->get_settings_array();
@@ -242,6 +263,8 @@ class AjaxHandler {
 	 * @return void
 	 */
 	public static function get_pipeline_stages(): void {
+		self::verify_admin_nonce();
+
 		try {
 			$pipeline_id = isset( $_POST['pipeline_id'] ) ? sanitize_text_field( wp_unslash( $_POST['pipeline_id'] ) ) : '';
 
@@ -270,6 +293,8 @@ class AjaxHandler {
 	 * @return void
 	 */
 	public static function search_products(): void {
+		self::verify_admin_nonce();
+
 		try {
 			if ( ! class_exists( 'WooCommerce' ) ) {
 				wp_send_json_error( [ 'message' => __( 'WooCommerce not active', 'ghl-crm-integration' ) ], 400 );
@@ -277,7 +302,7 @@ class AjaxHandler {
 			}
 
 			$search = isset( $_POST['search'] ) ? sanitize_text_field( wp_unslash( $_POST['search'] ) ) : '';
-			$page   = isset( $_POST['page'] ) ? absint( $_POST['page'] ) : 1;
+			$page   = isset( $_POST['page'] ) ? absint( wp_unslash( $_POST['page'] ) ) : 1;
 
 			$args = [
 				'post_type'      => 'product',
@@ -323,7 +348,7 @@ class AjaxHandler {
 				return;
 			}
 
-			$page   = isset( $_POST['page'] ) ? max( 1, absint( $_POST['page'] ) ) : 1;
+			$page   = isset( $_POST['page'] ) ? max( 1, absint( wp_unslash( $_POST['page'] ) ) ) : 1;
 			$status = isset( $_POST['status'] ) ? sanitize_text_field( wp_unslash( $_POST['status'] ) ) : '';
 			$search = isset( $_POST['search'] ) ? sanitize_text_field( wp_unslash( $_POST['search'] ) ) : '';
 
@@ -370,12 +395,10 @@ class AjaxHandler {
 			}
 
 			$where_sql = implode( ' AND ', $where_clauses );
-			$log_count = $wpdb->get_var(
-				$wpdb->prepare(
-					"SELECT COUNT(*) FROM {$wpdb->prefix}ghl_sync_log WHERE {$where_sql}", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-					$where_values
-				)
-			);
+			$sql       = "SELECT COUNT(*) FROM {$wpdb->prefix}ghl_sync_log WHERE {$where_sql}"; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$prepared  = call_user_func_array( [ $wpdb, 'prepare' ], array_merge( [ $sql ], $where_values ) );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Counting log rows for pagination against plugin-managed table.
+			$log_count = (int) $wpdb->get_var( $prepared );
 
 			$total_pages = ceil( $log_count / $per_page );
 
@@ -416,6 +439,7 @@ class AjaxHandler {
 			$site_id  = get_current_blog_id();
 			$days_ago = 30;
 
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Removing old entries from plugin log table (administrative action, not suitable for caching).
 			$deleted = $wpdb->query(
 				$wpdb->prepare(
 					"DELETE FROM {$wpdb->prefix}ghl_sync_log WHERE site_id = %d AND created_at < DATE_SUB(NOW(), INTERVAL %d DAY)",
@@ -456,6 +480,7 @@ class AjaxHandler {
 			global $wpdb;
 			$site_id = get_current_blog_id();
 
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Clearing plugin log table on demand for current site.
 			$deleted = $wpdb->query(
 				$wpdb->prepare(
 					"DELETE FROM {$wpdb->prefix}ghl_sync_log WHERE site_id = %d",

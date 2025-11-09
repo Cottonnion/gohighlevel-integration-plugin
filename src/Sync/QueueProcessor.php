@@ -445,6 +445,7 @@ class QueueProcessor {
 
 		$table_name = $wpdb->prefix . 'ghl_sync_queue';
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Inspecting queue dependency status in custom table; caching would risk stale orchestration data.
 		$status = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT status FROM {$table_name} WHERE id = %d LIMIT 1",

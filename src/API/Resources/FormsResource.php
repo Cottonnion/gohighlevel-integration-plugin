@@ -74,7 +74,7 @@ class FormsResource {
 		$settings         = $settings_manager->get_settings_array();
 		$location_id      = $settings['location_id'] ?? '';
 		if ( empty( $location_id ) ) {
-			throw new APIException( __( 'Location ID not configured.', 'ghl-crm-integration' ) );
+			throw new APIException( esc_html__( 'Location ID not configured.', 'ghl-crm-integration' ) );
 		}
 
 		// Fetch forms from API
@@ -141,7 +141,7 @@ class FormsResource {
 		$settings         = $settings_manager->get_settings_array();
 		$location_id      = $settings['location_id'] ?? '';
 		if ( empty( $location_id ) ) {
-			throw new APIException( __( 'Location ID not configured.', 'ghl-crm-integration' ) );
+			throw new APIException( esc_html__( 'Location ID not configured.', 'ghl-crm-integration' ) );
 		}
 
 		// Try to get from cache first
@@ -332,7 +332,7 @@ class FormsResource {
 		$location_id      = $settings['location_id'] ?? '';
 
 		if ( empty( $location_id ) ) {
-			throw new APIException( __( 'Location ID not configured.', 'ghl-crm-integration' ) );
+			throw new APIException( esc_html__( 'Location ID not configured.', 'ghl-crm-integration' ) );
 		}
 
 		$endpoint = '/forms/submissions';

@@ -76,6 +76,7 @@ class SyncLogger {
 			'site_id'    => get_current_blog_id(),
 		];
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Logging sync events directly to plugin-managed table.
 		$result = $wpdb->insert( $table_name, $data );
 
 		if ( $result === false ) {
@@ -190,6 +191,7 @@ class SyncLogger {
 		);
 
 		// Execute query
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Retrieving log entries from plugin-managed table.
 		$results = $wpdb->get_results(
 			$query, // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 			ARRAY_A
@@ -226,6 +228,7 @@ class SyncLogger {
 
 		$where_clause = implode( ' AND ', $where );
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Counting log entries in plugin-managed table.
 		$count = $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name} WHERE {$where_clause}" );
 
 		return (int) $count;
@@ -243,6 +246,7 @@ class SyncLogger {
 		$table_name = $wpdb->prefix . 'ghl_sync_log';
 		$date_limit = gmdate( 'Y-m-d H:i:s', strtotime( "-{$days} days" ) );
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Purging old entries from plugin log table.
 		return $wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$table_name} WHERE created_at < %s AND site_id = %d",
@@ -262,6 +266,7 @@ class SyncLogger {
 
 		$table_name = $wpdb->prefix . 'ghl_sync_log';
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Clearing plugin log table for current site.
 		return $wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$table_name} WHERE site_id = %d",

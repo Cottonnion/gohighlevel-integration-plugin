@@ -426,12 +426,15 @@ class Client implements ClientInterface {
 		$decoded     = json_decode( $body, true );
 
 		if ( $status_code !== 200 || empty( $decoded['access_token'] ) ) {
-			throw new ApiException( // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+			$decoded_array = $this->sanitize_response_payload( $decoded );
+			throw new ApiException(
 				esc_html__( 'Failed to obtain access token from GoHighLevel', 'ghl-crm-integration' ),
 				(int) $status_code,
-				(array) $decoded
+				$decoded_array // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- sanitized via sanitize_response_payload(
 			);
-		}       // Store tokens
+		}
+
+		// Store tokens
 		$this->access_token  = $decoded['access_token'];
 		$this->refresh_token = $decoded['refresh_token'] ?? '';
 
@@ -497,12 +500,15 @@ class Client implements ClientInterface {
 		$decoded     = json_decode( $body, true );
 
 		if ( $status_code !== 200 || empty( $decoded['access_token'] ) ) {
-			throw new ApiException( // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+			$decoded_array = is_array( $decoded ) ? $decoded : [];
+			throw new ApiException(
 				esc_html__( 'Failed to refresh access token', 'ghl-crm-integration' ),
 				(int) $status_code,
-				(array) $decoded
+				$decoded_array // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- sanitized via sanitize_response_payload()
 			);
-		}       // Update tokens
+		}
+
+		// Update tokens
 		$this->access_token = $decoded['access_token'];
 		if ( ! empty( $decoded['refresh_token'] ) ) {
 			$this->refresh_token = $decoded['refresh_token'];
@@ -564,12 +570,15 @@ class Client implements ClientInterface {
 		$decoded     = json_decode( $body, true );
 
 		if ( $status_code !== 200 || empty( $decoded['authorizationCode'] ) ) {
-			throw new ApiException( // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+			$decoded_array = $this->sanitize_response_payload( $decoded );
+			throw new ApiException(
 				esc_html__( 'Failed to get authorization code from HighLevel reconnect', 'ghl-crm-integration' ),
 				(int) $status_code,
-				(array) $decoded
+				$decoded_array // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- sanitized via sanitize_response_payload(
 			);
-		}       return $decoded['authorizationCode'];
+		}
+
+		return $decoded['authorizationCode'];
 	}
 
 	/**
@@ -762,12 +771,14 @@ class Client implements ClientInterface {
 		$decoded = json_decode( $body, true );
 
 		if ( json_last_error() !== JSON_ERROR_NONE ) {
-			throw new ApiException( // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+			throw new ApiException(
 				esc_html__( 'Invalid JSON response from API', 'ghl-crm-integration' ),
 				(int) $status_code,
-				[ 'raw_body' => (string) $body ]
-			);
-		}       // Handle error responses
+				[ 'raw_body' => $this->sanitize_response_scalar( (string) $body ) ] // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- sanitized via sanitize_response_scalar()
+			); 
+		}
+
+		// Handle error responses
 		$this->handle_error_response( $status_code, $decoded );
 
 		return $decoded;
@@ -909,6 +920,8 @@ class Client implements ClientInterface {
 			return; // Success
 		}
 
+		$sanitized_response = $this->sanitize_response_payload( $response );
+
 		// Extract error message - handle both string and array formats
 		$error_raw = $response['message'] ?? $response['error'] ?? esc_html__( 'Unknown API error', 'ghl-crm-integration' );
 
@@ -929,24 +942,84 @@ class Client implements ClientInterface {
 
 		// Rate limit exceeded
 		if ( 429 === $status_code ) {
-			$retry_after = $response['headers']['retry-after'] ?? 60;
-			throw new RateLimitException( // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+			$headers      = isset( $sanitized_response['headers'] ) && is_array( $sanitized_response['headers'] ) ? $sanitized_response['headers'] : [];
+			$retry_after  = $headers['retry-after'] ?? $headers['Retry-After'] ?? 60;
+			$response_body = $sanitized_response;
+			throw new RateLimitException(
 				sprintf(
 				/* translators: %d: Seconds until retry */
 					esc_html__( 'Rate limit exceeded. Retry after %d seconds.', 'ghl-crm-integration' ),
 					(int) $retry_after
 				),
 				(int) $retry_after,
-				(array) $response
-			);
+				$response_body // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- sanitized via sanitize_response_payload()
+			); 
 		}
 
 		// Authentication error
 		if ( 401 === $status_code || 403 === $status_code ) {
-			throw new AuthenticationException( esc_html( $error_message ), (array) $response ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+			$response_body = $sanitized_response;
+			throw new AuthenticationException( esc_html( $error_message ), $response_body ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- sanitized via sanitize_response_payload()
 		}
 
 		// Generic API error
-		throw new ApiException( esc_html( $error_message ), (int) $status_code, (array) $response ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+		$response_body = $sanitized_response;
+		throw new ApiException( esc_html( $error_message ), (int) $status_code, $response_body ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- sanitized via sanitize_response_payload()
+	}
+
+	/**
+	 * Sanitize response payload before attaching to exceptions.
+	 *
+	 * @param mixed $payload Raw payload data from the API.
+	 * @return array Sanitized payload safe for logging or exception context.
+	 */
+	private function sanitize_response_payload( $payload ): array {
+		if ( ! is_array( $payload ) ) {
+			return [];
+		}
+
+		$sanitized = [];
+
+		foreach ( $payload as $key => $value ) {
+			$sanitized[ $key ] = $this->sanitize_response_value( $value );
+		}
+
+		return $sanitized;
+	}
+
+	/**
+	 * Sanitize individual payload values recursively.
+	 *
+	 * @param mixed $value Payload value.
+	 * @return mixed Sanitized value.
+	 */
+	private function sanitize_response_value( $value ) {
+		if ( is_array( $value ) ) {
+			return $this->sanitize_response_payload( $value );
+		}
+
+		if ( is_object( $value ) ) {
+			return $this->sanitize_response_payload( (array) $value );
+		}
+
+		if ( is_string( $value ) ) {
+			return $this->sanitize_response_scalar( $value );
+		}
+
+		if ( is_bool( $value ) || is_int( $value ) || is_float( $value ) || null === $value ) {
+			return $value;
+		}
+
+		return $this->sanitize_response_scalar( (string) wp_json_encode( $value ) );
+	}
+
+	/**
+	 * Sanitize scalar payload value.
+	 *
+	 * @param string $value Raw string value.
+	 * @return string Sanitized string.
+	 */
+	private function sanitize_response_scalar( string $value ): string {
+		return sanitize_text_field( wp_strip_all_tags( $value ) );
 	}
 }

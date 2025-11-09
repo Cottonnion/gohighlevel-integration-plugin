@@ -336,8 +336,20 @@ class AbandonedCartTracker {
 				if ( $user_id > 0 ) {
 					$cart_key = 'user_' . $user_id;
 				} else {
-					// For guests without a session yet, use email hash
-					$cart_key = 'guest_' . md5( $email . $_SERVER['REMOTE_ADDR'] );
+					$remote_addr      = '';
+					$remote_addr_hash = 'unknown_ip';
+					if ( isset( $_SERVER['REMOTE_ADDR'] ) ) {
+						$remote_addr = wp_unslash( $_SERVER['REMOTE_ADDR'] );
+						$validated_ip = filter_var( $remote_addr, FILTER_VALIDATE_IP );
+						if ( false !== $validated_ip ) {
+							$remote_addr_hash = $validated_ip;
+						} else {
+							$remote_addr_hash = sanitize_text_field( $remote_addr );
+						}
+					}
+
+					// For guests without a session yet, use email hash combined with sanitized IP fallback
+					$cart_key = 'guest_' . md5( $email . $remote_addr_hash );
 				}
 			}
 		}
@@ -399,6 +411,7 @@ class AbandonedCartTracker {
 		$transient_prefix = $wpdb->esc_like( '_transient_ghl_cart_' ) . '%';
 		$site_id          = get_current_blog_id();
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Querying options table for plugin transients during scheduled cleanup.
 		$transients = $wpdb->get_col(
 			$wpdb->prepare(
 				"SELECT option_name FROM {$wpdb->options} 
@@ -572,7 +585,7 @@ class AbandonedCartTracker {
 						'cart_total'   => $cart_data['cart_total'],
 						'item_count'   => $cart_data['item_count'],
 						'user_id'      => $user_id,
-						'abandoned_at' => date( 'Y-m-d H:i:s', $cart_data['abandoned_at'] ),
+						'abandoned_at' => gmdate( 'Y-m-d H:i:s', (int) $cart_data['abandoned_at'] ),
 					]
 				);
 			}

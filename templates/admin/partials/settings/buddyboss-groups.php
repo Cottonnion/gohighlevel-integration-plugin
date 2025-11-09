@@ -103,7 +103,7 @@ $is_buddyboss_active = function_exists( 'bp_is_active' ) && bp_is_active( 'group
 					printf(
 						/* translators: %s: BuddyBoss version */
 						esc_html__( 'BuddyBoss Platform %s detected. Configure your integration settings below.', 'ghl-crm-integration' ),
-						BP_PLATFORM_VERSION
+						absint( BP_PLATFORM_VERSION )
 					);
 				} else {
 					esc_html_e( 'BuddyBoss Groups detected. Configure your integration settings below.', 'ghl-crm-integration' );

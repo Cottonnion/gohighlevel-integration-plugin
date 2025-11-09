@@ -306,7 +306,8 @@ class MenuManager {
 		try {
 
 			$view   = isset( $_POST['view'] ) ? sanitize_text_field( wp_unslash( $_POST['view'] ) ) : 'dashboard';
-			$params = isset( $_POST['params'] ) && is_array( $_POST['params'] ) ? $_POST['params'] : [];
+			$raw_params = isset( $_POST['params'] ) ? wp_unslash( $_POST['params'] ) : [];
+			$params     = is_array( $raw_params ) ? array_map( 'sanitize_text_field', $raw_params ) : [];
 
 			switch ( $view ) {
 				case 'dashboard':

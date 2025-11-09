@@ -391,6 +391,7 @@ class Restrictions {
 
 		// Get all posts with restrictions
 		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Pulling restricted post IDs from postmeta for runtime access control.
 		$restricted_ids = $wpdb->get_col(
 			"SELECT post_id FROM {$wpdb->postmeta} 
 			WHERE meta_key = '_ghl_restriction_type' 
@@ -466,6 +467,7 @@ class Restrictions {
 		global $wpdb;
 
 		// Get all posts with restrictions
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Pulling restricted post IDs from postmeta for REST filtering.
 		$restricted_ids = $wpdb->get_col(
 			"SELECT post_id FROM {$wpdb->postmeta} 
 			WHERE meta_key = '_ghl_restriction_type' 

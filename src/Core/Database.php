@@ -160,7 +160,8 @@ class Database {
 	 */
 	public function handle_database_update(): void {
 		// Verify nonce
-		if ( ! wp_verify_nonce( $_POST['nonce'] ?? '', 'ghl_crm_update_db' ) ) {
+		$raw_nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
+		if ( ! wp_verify_nonce( $raw_nonce, 'ghl_crm_update_db' ) ) {
 			wp_send_json_error( __( 'Security check failed', 'ghl-crm-integration' ) );
 		}
 
@@ -199,6 +200,8 @@ class Database {
 			$log_table   = $wpdb->prefix . 'ghl_sync_log';
 
 			// Remove duplicate pending entries, keep the oldest one
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Cleanup requires raw SQL against custom queue table.
+			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			$wpdb->query(
 				"
 				DELETE q1 FROM {$queue_table} q1
@@ -211,8 +214,10 @@ class Database {
 				AND q1.status = 'pending'
 			"
 			);
+			// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 			// Drop old constraint if exists
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Adjusting table indexes during migration.
 			$wpdb->query( "ALTER TABLE {$queue_table} DROP INDEX IF EXISTS unique_pending_item" );
 
 			// Migrate sync_log table from old structure to new structure
@@ -233,6 +238,7 @@ class Database {
 		global $wpdb;
 
 		// Check if table exists and has old structure
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Schema inspection required for migration.
 		$columns = $wpdb->get_results( "SHOW COLUMNS FROM {$table_name}" );
 		if ( empty( $columns ) ) {
 			return; // Table doesn't exist, will be created fresh
@@ -245,9 +251,11 @@ class Database {
 		if ( $has_old_structure && ! $has_new_structure ) {
 			// Backup existing data by creating a temporary table
 			$backup_table = $table_name . '_backup_' . time();
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Migration requires temporary table creation.
 			$wpdb->query( "CREATE TABLE {$backup_table} AS SELECT * FROM {$table_name}" );
 
 			// Drop the old table completely
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Removing legacy table structure.
 			$wpdb->query( "DROP TABLE IF EXISTS {$table_name}" );
 		}
 	}
@@ -316,7 +324,9 @@ class Database {
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
 		// Create tables
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange -- dbDelta handles schema creation/updates for plugin tables.
 		dbDelta( $sql_queue );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange -- dbDelta handles schema creation/updates for plugin tables.
 		dbDelta( $sql_log );
 	}
 
@@ -335,7 +345,7 @@ class Database {
 		];
 
 		foreach ( $tables as $table ) {
-			$wpdb->query( "DROP TABLE IF EXISTS {$table}" ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$wpdb->query( "DROP TABLE IF EXISTS {$table}" ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange -- Removing plugin-managed tables during uninstall.
 		}
 
 		$settings_manager = SettingsManager::get_instance();
@@ -386,6 +396,7 @@ class Database {
 		$retention_hours  = max( 1, $retention_days * 24 ); // Convert to hours, minimum 1 hour
 
 		// Delete completed queue items older than 1 day (keep it lean)
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Scheduled maintenance against plugin queue table.
 		$deleted_completed = $wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$sync_queue_table} WHERE status = 'completed' AND site_id = %d AND processed_at < %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
@@ -395,6 +406,7 @@ class Database {
 		);
 
 		// Delete failed queue items older than 7 days
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Scheduled maintenance against plugin queue table.
 		$deleted_failed = $wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$sync_queue_table} WHERE status = 'failed' AND site_id = %d AND created_at < %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
@@ -404,6 +416,7 @@ class Database {
 		);
 
 		// Delete logs older than configured retention period
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Scheduled maintenance against plugin log table.
 		$deleted_logs = $wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$sync_log_table} WHERE site_id = %d AND created_at < %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
@@ -413,6 +426,7 @@ class Database {
 		);
 
 		// Emergency cleanup: If queue table is too large (>50k rows), purge oldest completed
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Monitoring queue table size for emergency purge.
 		$queue_count = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$sync_queue_table} WHERE site_id = %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
@@ -423,6 +437,7 @@ class Database {
 		if ( $queue_count > 50000 ) {
 			// Delete oldest 25k completed/failed items regardless of age
 			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Emergency purge of oversized queue table.
 			$wpdb->query(
 				$wpdb->prepare(
 					"DELETE FROM {$sync_queue_table} 

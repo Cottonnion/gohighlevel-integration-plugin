@@ -126,6 +126,7 @@ class ContactCache {
 		global $wpdb;
 
 		// Delete all transients matching our pattern
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Purging custom transients from options table; this runs rarely and targets only our keys.
 		$wpdb->query(
 			"DELETE FROM {$wpdb->options} 
 			WHERE option_name LIKE '_transient_ghl_contact_%' 

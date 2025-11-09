@@ -93,18 +93,6 @@ class ScopeChecker {
 		} catch ( \Exception $e ) {
 			$error_message = $e->getMessage();
 
-			// Debug logging for exceptions
-			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-				error_log(
-					sprintf(
-						'ScopeChecker: EXCEPTION - Scope=%s, Type=%s, Message=%s',
-						$scope_name,
-						get_class( $e ),
-						$error_message
-					)
-				);
-			}
-
 			// Check if the error message contains the scope unauthorized message
 			if ( strpos( $error_message, 'not authorized for this scope' ) !== false ) {
 				$has_access        = false;
@@ -137,18 +125,6 @@ class ScopeChecker {
 
 		// Update result with access status
 		$result['has_access'] = $has_access;
-
-		// Final debug logging
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log(
-				sprintf(
-					'ScopeChecker: FINAL RESULT - Scope=%s, has_access=%s, message=%s',
-					$scope_name,
-					$has_access ? 'true' : 'false',
-					$result['message']
-				)
-			);
-		}
 
 		return $result;
 	}

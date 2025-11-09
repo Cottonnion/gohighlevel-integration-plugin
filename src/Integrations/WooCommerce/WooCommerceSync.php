@@ -383,6 +383,7 @@ class WooCommerceSync {
 				// Get the most recent pending profile_update queue item for this user
 				global $wpdb;
 				$table_name          = $wpdb->prefix . 'ghl_sync_queue';
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Checking plugin queue table for dependency chaining.
 				$depends_on_queue_id = $wpdb->get_var(
 					$wpdb->prepare(
 						"SELECT id FROM {$table_name} 
@@ -598,11 +599,11 @@ class WooCommerceSync {
 				// Get contact's previous orders and close any open opportunities
 				if ( ! empty( $payload['order_id'] ) ) {
 					$customer_email  = $payload['email'];
-					$previous_orders = wc_get_orders(
+					$previous_orders = wc_get_orders( // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude -- exclude used with small limit to skip current order
 						[
 							'billing_email' => $customer_email,
 							'limit'         => 10,
-							'exclude'       => [ $payload['order_id'] ], // Exclude current order
+							'exclude'       => [ $payload['order_id'] ], // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude
 							'return'        => 'ids',
 						]
 					);
