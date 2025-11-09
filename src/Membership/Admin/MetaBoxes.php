@@ -103,21 +103,9 @@ class MetaBoxes {
 			return;
 		}
 
-		// Enqueue Select2
-		wp_enqueue_style(
-			'select2',
-			'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
-			[],
-			'4.1.0'
-		);
-		
-		wp_enqueue_script(
-			'select2',
-			'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
-			[ 'jquery' ],
-			'4.1.0',
-			true
-		);
+		// Enqueue Select2 (registered globally with plugin-specific handles)
+		wp_enqueue_style( 'ghl-crm-select2-css' );
+		wp_enqueue_script( 'ghl-crm-select2' );
 
 		// Enqueue our custom assets
 		$plugin_dir = plugin_dir_url( dirname( dirname( dirname( __DIR__ ) ) ) . '/gohighlevel-crm-integration.php' );
@@ -133,14 +121,14 @@ class MetaBoxes {
 		wp_enqueue_style(
 			'ghl-membership-admin',
 			$plugin_dir . 'assets/admin/css/membership-admin.css',
-			[ 'select2', 'ghl-globals' ],
+			[ 'ghl-crm-select2-css', 'ghl-globals' ],
 			GHL_CRM_VERSION
 		);
 
 		wp_enqueue_script(
 			'ghl-membership-admin',
 			$plugin_dir . 'assets/admin/js/membership-admin.js',
-			[ 'jquery', 'select2' ],
+			[ 'jquery', 'ghl-crm-select2' ],
 			GHL_CRM_VERSION,
 			true
 		);
@@ -354,27 +342,15 @@ class MetaBoxes {
 			return;
 		}
 
-		// Enqueue Select2
-		wp_enqueue_style( 
-			'select2', 
-			'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
-			[],
-			'4.1.0'
-		);
-		
-		wp_enqueue_script( 
-			'select2', 
-			'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
-			[ 'jquery' ],
-			'4.1.0',
-			true
-		);
+		// Enqueue Select2 (registered globally with plugin-specific handles)
+		wp_enqueue_style( 'ghl-crm-select2-css' );
+		wp_enqueue_script( 'ghl-crm-select2' );
 
 		// Enqueue custom script
 		wp_enqueue_script(
 			'ghl-membership-admin',
 			GHL_CRM_URL . 'assets/admin/js/membership-admin.js',
-			[ 'jquery', 'select2', ],
+			[ 'jquery', 'ghl-crm-select2', ],
 			'1.0.0',
 			true
 		);
@@ -390,7 +366,7 @@ class MetaBoxes {
 		);
 
 		// Add inline styles
-		wp_add_inline_style( 'select2', '
+		wp_add_inline_style( 'ghl-crm-select2-css', '
 			.ghl-membership-meta-box .select2-container {
 				width: 100% !important;
 			}

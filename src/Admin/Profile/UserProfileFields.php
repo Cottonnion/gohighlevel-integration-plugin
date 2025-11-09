@@ -114,21 +114,9 @@ class UserProfileFields {
 			return;
 		}
 
-		// Enqueue Select2 (local files)
-		wp_enqueue_style( 
-			'select2', 
-			GHL_CRM_URL . 'assets/admin/css/select2.min.css',
-			[],
-			'1.0.0'
-		);
-		
-		wp_enqueue_script( 
-			'select2', 
-			GHL_CRM_URL . 'assets/admin/js/select2.min.js',
-			[ 'jquery' ],
-			'1.0.0',
-			true
-		);
+		// Enqueue Select2 (registered by AssetsManager with plugin-specific handles)
+		wp_enqueue_style( 'ghl-crm-select2-css' );
+		wp_enqueue_script( 'ghl-crm-select2' );
 
 		// Enqueue settings CSS (for button styles and layout)
 		wp_enqueue_style(
@@ -142,7 +130,7 @@ class UserProfileFields {
 		wp_enqueue_style(
 			'ghl-user-profile',
 			GHL_CRM_URL . 'assets/admin/css/user-profile.css',
-			[ 'select2', 'ghl-settings' ],
+			[ 'ghl-crm-select2-css', 'ghl-settings' ],
 			'1.0.0'
 		);
 
@@ -150,7 +138,7 @@ class UserProfileFields {
 		wp_enqueue_script(
 			'ghl-user-profile-js',
 			GHL_CRM_URL . 'assets/admin/js/user-profile.js',
-			[ 'jquery', 'select2' ],
+			[ 'jquery', 'ghl-crm-select2' ],
 			'1.0.1',
 			true
 		);

@@ -113,16 +113,16 @@ class AssetsManager {
 			'6.6.0'
 		);
 
-		// Register Select2 (local files)
+		// Register Select2 (local files) with plugin-specific handles to avoid conflicts
 		wp_register_style(
-			'select2',
+			'ghl-crm-select2-css',
 			GHL_CRM_URL . 'assets/admin/css/select2.min.css',
 			[],
 			'4.1.0'
 		);
 
 		wp_register_script(
-			'select2',
+			'ghl-crm-select2',
 			GHL_CRM_URL . 'assets/admin/js/select2.min.js',
 			[ 'jquery' ],
 			'4.1.0',
@@ -289,7 +289,7 @@ class AssetsManager {
 			'ghl-crm-settings-css',
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'settings.css',
-			[ 'sweetalert2', 'select2' ],
+			[ 'sweetalert2', 'ghl-crm-select2-css' ],
 			[],
 			'1.0.3'
 		);
@@ -317,7 +317,7 @@ class AssetsManager {
 			'ghl-crm-settings-js',
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'settings.js',
-			[ 'jquery', 'sweetalert2', 'select2' ],
+			[ 'jquery', 'sweetalert2', 'ghl-crm-select2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
@@ -345,7 +345,7 @@ class AssetsManager {
 			'ghl-crm-settings-css',
 			[ 'toplevel_page_ghl-crm-settings' ],
 			'settings.css',
-			[ 'ghl-crm-globals-css', 'sweetalert2', 'select2' ],
+			[ 'ghl-crm-globals-css', 'sweetalert2', 'ghl-crm-select2-css' ],
 			[],
 			'1.0.2'
 		);
@@ -355,7 +355,7 @@ class AssetsManager {
 			'ghl-crm-settings-js',
 			[ 'toplevel_page_ghl-crm-settings' ],
 			'settings.js',
-			[ 'jquery', 'sweetalert2', 'select2' ],
+			[ 'jquery', 'sweetalert2', 'ghl-crm-select2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),

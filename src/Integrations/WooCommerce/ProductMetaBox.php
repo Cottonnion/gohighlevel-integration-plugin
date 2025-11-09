@@ -159,15 +159,15 @@ class ProductMetaBox {
 			return;
 		}
 
-		// Enqueue Select2 (already registered by AssetsManager)
-		wp_enqueue_style( 'select2' );
-		wp_enqueue_script( 'select2' );
+		// Enqueue Select2 (already registered by AssetsManager with plugin-specific handles)
+		wp_enqueue_style( 'ghl-crm-select2-css' );
+		wp_enqueue_script( 'ghl-crm-select2' );
 
 		// Enqueue our custom script for the meta box
 		wp_enqueue_script(
 			'ghl-product-meta-box',
 			GHL_CRM_URL . 'assets/admin/js/product-meta-box.js',
-			[ 'jquery', 'select2' ],
+			[ 'jquery', 'ghl-crm-select2' ],
 			GHL_CRM_VERSION,
 			true
 		);
