@@ -16,6 +16,7 @@
 		initTabSwitching();
 		initManualConnectionForm();
 		initDisconnectButton();
+		initQuickActions();
 	}
 	
 	// Expose init function globally for SPA router
@@ -36,6 +37,205 @@
 			$('.ghl-tab-content').removeClass('active');
 			$('#' + tabId + '-tab').addClass('active');
 		});
+	}
+
+	/**
+	 * Initialize dashboard quick action buttons (manual sync, cache clear, etc.)
+	 */
+	function initQuickActions() {
+		const ajaxEndpoint = typeof ajaxurl !== 'undefined' ? ajaxurl : ghl_crm_dashboard_js_data.ajaxUrl;
+
+		const $manualSyncBtn   = jQuery( '#ghl-trigger-sync' );
+		const $clearCacheBtn   = jQuery( '#ghl-clear-cache' );
+		const $testConnBtn     = jQuery( '#ghl-test-connection' );
+		const $refreshMetaBtn  = jQuery( '#ghl-refresh-tags-fields' );
+		const i18n             = ghl_crm_dashboard_js_data.i18n || {};
+
+		if ( $manualSyncBtn.length ) {
+			$manualSyncBtn.on( 'click', function( event ) {
+				event.preventDefault();
+				handleQuickAction( jQuery( this ), {
+					action: 'ghl_crm_manual_queue_trigger',
+					data: {
+						action: 'ghl_crm_manual_queue_trigger',
+						nonce: ghl_crm_dashboard_js_data.manualQueueNonce,
+					},
+					loadingText: i18n.manualSyncProcessing || 'Processing queue...',
+					successMessage: function( response ) {
+						if ( response?.data?.message ) {
+							return response.data.message;
+						}
+						const processed = response?.data?.processed ?? 0;
+						if ( processed ) {
+							return ( i18n.manualSyncSuccess || 'Manual sync completed successfully.' ) + ' (' + processed + ')';
+						}
+						return i18n.manualSyncSuccess || 'Manual sync completed successfully.';
+					},
+					errorMessage: function( response ) {
+						return response?.data?.message || i18n.manualSyncFailed || 'Manual sync failed.';
+					},
+					ajaxUrl: ajaxEndpoint,
+				} );
+			} );
+		}
+
+		if ( $clearCacheBtn.length ) {
+			$clearCacheBtn.on( 'click', function( event ) {
+				event.preventDefault();
+				handleQuickAction( jQuery( this ), {
+					action: 'ghl_crm_clear_cache',
+					data: {
+						action: 'ghl_crm_clear_cache',
+						nonce: ghl_crm_dashboard_js_data.settingsNonce,
+					},
+					loadingText: i18n.clearCacheProcessing || 'Clearing cache...',
+					successMessage: function( response ) {
+						return response?.data?.message || i18n.clearCacheSuccess || 'Cache cleared successfully!';
+					},
+					errorMessage: function( response ) {
+						return response?.data?.message || i18n.clearCacheFailed || 'Failed to clear cache.';
+					},
+					ajaxUrl: ajaxEndpoint,
+				} );
+			} );
+		}
+
+		if ( $testConnBtn.length ) {
+			$testConnBtn.on( 'click', function( event ) {
+				event.preventDefault();
+				handleQuickAction( jQuery( this ), {
+					action: 'ghl_crm_test_connection',
+					data: {
+						action: 'ghl_crm_test_connection',
+						nonce: ghl_crm_dashboard_js_data.settingsNonce,
+					},
+					loadingText: i18n.testConnectionProcessing || 'Testing connection...',
+					successMessage: function( response ) {
+						if ( response?.data?.message ) {
+							return response.data.message;
+						}
+						return i18n.testConnectionSuccess || 'Connection test completed successfully.';
+					},
+					errorMessage: function( response ) {
+						return response?.data?.message || i18n.testConnectionFailed || 'Connection test failed.';
+					},
+					ajaxUrl: ajaxEndpoint,
+				} );
+			} );
+		}
+
+		if ( $refreshMetaBtn.length ) {
+			$refreshMetaBtn.on( 'click', function( event ) {
+				event.preventDefault();
+				handleQuickAction( jQuery( this ), {
+					action: 'ghl_crm_refresh_metadata',
+					data: {
+						action: 'ghl_crm_refresh_metadata',
+						nonce: ghl_crm_dashboard_js_data.nonce,
+					},
+					loadingText: i18n.refreshMetadataProcessing || 'Refreshing metadata...',
+					successMessage: function( response ) {
+						const tagsCount   = response?.data?.tags_count ?? 0;
+						const fieldsCount = response?.data?.custom_fields_count ?? 0;
+						const baseMessage = response?.data?.message || i18n.refreshMetadataSuccess || 'Tags and fields refreshed successfully.';
+						return baseMessage + ' (' + tagsCount + ' tags, ' + fieldsCount + ' fields)';
+					},
+					errorMessage: function( response ) {
+						return response?.data?.message || i18n.refreshMetadataFailed || 'Failed to refresh tags and fields.';
+					},
+					ajaxUrl: ajaxEndpoint,
+				} );
+			} );
+		}
+	}
+
+	/**
+	 * Generic handler for dashboard quick action buttons.
+	 *
+	 * @param {jQuery} $button Button element.
+	 * @param {Object} config Configuration object.
+	 */
+	function handleQuickAction( $button, config ) {
+		if ( ! $button.length || $button.data( 'ghl-loading' ) ) {
+			return;
+		}
+
+		const originalHtml = $button.html();
+		const loadingText  = config.loadingText || 'Processing...';
+		const spinnerHtml  = '<span class="dashicons dashicons-update" style="animation: rotation 1s linear infinite; margin-right: 6px;"></span>';
+		const ajaxUrl      = config.ajaxUrl || ( typeof ajaxurl !== 'undefined' ? ajaxurl : ghl_crm_dashboard_js_data.ajaxUrl );
+
+		$button.data( 'ghl-loading', true )
+			.data( 'ghl-original-html', originalHtml )
+			.prop( 'disabled', true )
+			.html( spinnerHtml + loadingText );
+
+		jQuery.ajax( {
+			url: ajaxUrl,
+			type: 'POST',
+			data: config.data,
+			success: function( response ) {
+				if ( response && response.success ) {
+					const message = typeof config.successMessage === 'function'
+						? config.successMessage( response )
+						: ( config.successMessage || response?.data?.message || 'Success.' );
+					showNotice( 'success', message );
+					if ( typeof config.onSuccess === 'function' ) {
+						config.onSuccess( response );
+					}
+				} else {
+					const message = typeof config.errorMessage === 'function'
+						? config.errorMessage( response )
+						: ( config.errorMessage || response?.data?.message || 'Something went wrong.' );
+					showNotice( 'error', message );
+				}
+			},
+			error: function( jqXHR, textStatus ) {
+				const errorMsg = ( typeof config.errorMessage === 'function' )
+					? config.errorMessage()
+					: ( jQuery.trim( jqXHR.responseText ) || textStatus || 'Request failed.' );
+				showNotice( 'error', errorMsg );
+			},
+			complete: function() {
+				restoreButtonState( $button );
+			},
+		} );
+	}
+
+	/**
+	 * Restore button UI state after quick action completes.
+	 *
+	 * @param {jQuery} $button Button element.
+	 */
+	function restoreButtonState( $button ) {
+		const originalHtml = $button.data( 'ghl-original-html' );
+		$button.prop( 'disabled', false )
+			.removeData( 'ghl-loading' )
+			.removeData( 'ghl-original-html' )
+			.html( originalHtml );
+	}
+
+	/**
+	 * Display SweetAlert toast notifications (fallbacks to alert).
+	 *
+	 * @param {string} type Notification type.
+	 * @param {string} message Message to display.
+	 */
+	function showNotice( type, message ) {
+		if ( typeof Swal !== 'undefined' ) {
+			Swal.fire( {
+				toast: true,
+				icon: type === 'error' ? 'error' : 'success',
+				title: message,
+				position: 'top-end',
+				showConfirmButton: false,
+				timer: 4000,
+				timerProgressBar: true,
+			} );
+			return;
+		}
+
+		window.alert( message ); // Fallback when SweetAlert is not available.
 	}
 
 	/**
