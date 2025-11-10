@@ -19,6 +19,7 @@
             this.currentView = null;
             this.config = window.ghlCrmSpaConfig || {};
             this.viewCache = {};
+            this.currentParams = {};
             
             this.init();
         }
@@ -71,22 +72,44 @@
         parseRoute(hash) {
             // Remove leading slash
             hash = hash.replace(/^\//, '');
-            
+
             // If empty, default to dashboard
             if (!hash || hash === '') {
                 return { view: 'dashboard', params: {} };
             }
 
-            // Parse view and params
-            const parts = hash.split('/');
-            const view = parts[0] || 'dashboard';
+            // Separate query string from path
+            let pathPart = hash;
+            let queryString = '';
+
+            const queryIndex = hash.indexOf('?');
+            if (queryIndex !== -1) {
+                pathPart = hash.slice(0, queryIndex);
+                queryString = hash.slice(queryIndex + 1);
+            }
+
+            // Parse view and params from path segments
+            const pathSegments = pathPart.split('/').filter(Boolean);
+            const view = pathSegments.shift() || 'dashboard';
             const params = {};
 
-            // Parse additional path segments as params
-            for (let i = 1; i < parts.length; i += 2) {
-                if (parts[i] && parts[i + 1]) {
-                    params[parts[i]] = parts[i + 1];
+            for (let i = 0; i < pathSegments.length; i += 2) {
+                const key = pathSegments[i];
+                const value = pathSegments[i + 1];
+
+                if (key && typeof value !== 'undefined') {
+                    params[key] = decodeURIComponent(value);
                 }
+            }
+
+            // Merge query string parameters
+            if (queryString) {
+                const searchParams = new URLSearchParams(queryString);
+                searchParams.forEach((value, key) => {
+                    if (typeof params[key] === 'undefined') {
+                        params[key] = value;
+                    }
+                });
             }
 
             return { view, params };
@@ -102,9 +125,6 @@
         loadView(view, params = {}, callback = null) {
             // Show loading state
             this.showLoading();
-            
-            // Cache key
-            const cacheKey = `${view}_${JSON.stringify(params)}`;
 
             // Make AJAX request
             $.ajax({
@@ -119,7 +139,8 @@
                 success: (response) => {
                     if (response.success && response.data) {
                         this.currentView = view;
-                        this.renderView(response.data);
+                        this.currentParams = params;
+                        this.renderView(response.data, params);
                         
                         // Execute callback if provided
                         if (typeof callback === 'function') {
@@ -141,7 +162,7 @@
          * 
          * @param {Object} viewData - View data from server
          */
-        renderView(viewData) {
+        renderView(viewData, params = {}) {
             const view = viewData.view;
             const html = viewData.html;
 
@@ -149,7 +170,7 @@
             this.appContainer.html(html);
             
             // Re-initialize any event handlers based on view
-            this.initializeViewHandlers(view);
+            this.initializeViewHandlers(view, params);
         }
         
         /**
@@ -157,7 +178,7 @@
          * 
          * @param {string} view - View name
          */
-        initializeViewHandlers(view) {
+        initializeViewHandlers(view, params = {}) {
             switch (view) {
                 case 'dashboard':
                     // Re-initialize dashboard handlers
@@ -217,7 +238,7 @@
                 case 'sync-logs':
                     // Re-initialize sync logs handlers
                     if (typeof window.GHLSyncLogs !== 'undefined' && typeof window.GHLSyncLogs.init === 'function') {
-                        window.GHLSyncLogs.init();
+                        window.GHLSyncLogs.init(params);
                     }
                     break;
                 case 'forms':

@@ -11,16 +11,25 @@
         modal: null,
         closeBtn: null,
         content: null,
+        currentParams: {},
 
         /**
          * Initialize
          */
-        init: function() {
+        init: function(params = {}) {
+            this.currentParams = params || {};
+            this.cacheElements();
+            this.bindEvents();
+            this.applyRouteParams();
+        },
+
+        /**
+         * Cache frequently accessed DOM elements
+         */
+        cacheElements: function() {
             this.modal = $('#ghl-details-modal');
             this.closeBtn = $('#ghl-close-modal');
             this.content = $('#ghl-details-content');
-
-            this.bindEvents();
         },
 
         /**
@@ -30,68 +39,157 @@
             const self = this;
 
             // View details button
-            $(document).on('click', '.ghl-view-details', function(e) {
-                e.preventDefault();
-                const details = $(this).attr('data-details');
-                self.showDetailsModal(details);
-            });
+            $(document)
+                .off('click.ghlSyncLogs', '.ghl-view-details')
+                .on('click.ghlSyncLogs', '.ghl-view-details', function(e) {
+                    e.preventDefault();
+                    const details = $(this).attr('data-details');
+                    self.showDetailsModal(details);
+                });
 
             // Close modal button
-            this.closeBtn.on('click', function() {
-                self.hideModal();
-            });
+            if (this.closeBtn && this.closeBtn.length) {
+                this.closeBtn.off('click.ghlSyncLogs').on('click.ghlSyncLogs', function() {
+                    self.hideModal();
+                });
+            }
 
             // Click outside to close
-            this.modal.on('click', function(e) {
-                if (e.target === self.modal[0]) {
-                    self.hideModal();
-                }
-            });
+            if (this.modal && this.modal.length) {
+                this.modal.off('click.ghlSyncLogs').on('click.ghlSyncLogs', function(e) {
+                    if (e.target === self.modal[0]) {
+                        self.hideModal();
+                    }
+                });
+            }
 
             // ESC key to close
-            $(document).on('keydown', function(e) {
-                if (e.key === 'Escape' && self.modal.is(':visible')) {
-                    self.hideModal();
-                }
-            });
+            $(document)
+                .off('keydown.ghlSyncLogs')
+                .on('keydown.ghlSyncLogs', function(e) {
+                    if (e.key === 'Escape' && self.modal && self.modal.is(':visible')) {
+                        self.hideModal();
+                    }
+                });
 
             // Delete logs button
-            $('#ghl-delete-logs').on('click', function(e) {
+            $('#ghl-delete-logs').off('click.ghlSyncLogs').on('click.ghlSyncLogs', function(e) {
                 e.preventDefault();
                 self.deleteLogs();
             });
 
             // Clear logs button (different from delete, clears all)
-            $('#ghl-clear-all-logs').on('click', function(e) {
+            $('#ghl-clear-all-logs').off('click.ghlSyncLogs').on('click.ghlSyncLogs', function(e) {
                 e.preventDefault();
                 self.clearAllLogs();
             });
 
             // Process queue button
-            $('#ghl-process-queue').on('click', function(e) {
+            $('#ghl-process-queue').off('click.ghlSyncLogs').on('click.ghlSyncLogs', function(e) {
                 e.preventDefault();
                 self.processQueue();
             });
 
             // Pagination
-            $(document).on('click', '.ghl-pagination-link', function(e) {
-                e.preventDefault();
-                const page = $(this).data('page');
-                self.loadPage(page);
-            });
+            $(document)
+                .off('click.ghlSyncLogs', '.ghl-pagination-link')
+                .on('click.ghlSyncLogs', '.ghl-pagination-link', function(e) {
+                    e.preventDefault();
+                    const page = $(this).data('page');
+                    self.loadPage(page);
+                });
 
             // Filter by status
-            $('#ghl-filter-status').on('change', function() {
+            $('#ghl-filter-status').off('change.ghlSyncLogs').on('change.ghlSyncLogs', function() {
                 self.loadPage(1);
             });
 
             // Search/filter
-            $('#ghl-search-logs').on('keyup', function() {
+            $('#ghl-search-logs').off('keyup.ghlSyncLogs').on('keyup.ghlSyncLogs', function() {
                 clearTimeout(self.searchTimeout);
                 self.searchTimeout = setTimeout(function() {
                     self.loadPage(1);
                 }, 500);
             });
+        },
+
+        /**
+         * Apply hash/route parameters to the current view
+         */
+        applyRouteParams: function() {
+            const params = this.currentParams || {};
+            let statusParam = params.status || params.filter;
+
+            if (!statusParam) {
+                statusParam = this.extractStatusFromHash();
+            }
+
+            if (!statusParam) {
+                return;
+            }
+
+            const $statusSelect = $('#ghl-filter-status');
+
+            if (!$statusSelect.length) {
+                return;
+            }
+
+            const hasOption = $statusSelect.find('option[value="' + statusParam + '"]').length > 0;
+
+            if (!hasOption) {
+                return;
+            }
+
+            if ($statusSelect.val() === statusParam) {
+                return;
+            }
+
+            $statusSelect.val(statusParam).trigger('change');
+        },
+
+        /**
+         * Extract status parameter from window hash (fallback for non-SPA loads)
+         */
+        extractStatusFromHash: function() {
+            if (!window.location || !window.location.hash) {
+                return '';
+            }
+
+            const hash = window.location.hash.replace(/^#/, '');
+
+            if (!hash) {
+                return '';
+            }
+
+            const queryIndex = hash.indexOf('?');
+            let query = '';
+
+            if (queryIndex !== -1) {
+                query = hash.slice(queryIndex + 1);
+            }
+
+            // Support path-style parameters e.g. sync-logs/status/failed
+            const segments = hash.split('/');
+            const statusIndex = segments.indexOf('status');
+            if (statusIndex !== -1 && typeof segments[statusIndex + 1] !== 'undefined') {
+                return decodeURIComponent(segments[statusIndex + 1]);
+            }
+
+            if (query) {
+                try {
+                    const searchParams = new URLSearchParams(query);
+                    if (searchParams.has('status')) {
+                        return searchParams.get('status');
+                    }
+                    if (searchParams.has('filter')) {
+                        return searchParams.get('filter');
+                    }
+                } catch (error) {
+                    // Ignore invalid query strings
+                }
+            }
+
+            return '';
         },
 
         /**
