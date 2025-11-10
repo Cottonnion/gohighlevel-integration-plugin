@@ -114,46 +114,38 @@ $is_buddyboss_active = function_exists( 'bp_is_active' ) && bp_is_active( 'group
 
 		<!-- Auto-Creation Settings -->
 		<div class="ghl-form-section" style="margin-bottom: 24px;">
-			<h3 style="margin: 0 0 16px; font-size: 18px; font-weight: 600; color: #1e293b;">
+			<h3 style="margin: 0 0 16px; font-size: 18px; font-weight: 600; color: #1e293b; display: flex; align-items: center; gap: 8px;">
 				<?php esc_html_e( 'Custom Object Management', 'ghl-crm-integration' ); ?>
+				<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'When you enable the BuddyBoss Groups Integration master toggle above, the plugin automatically creates Custom Object schemas in GoHighLevel for each BuddyBoss group type (e.g., "Schools", "Communities", "Classrooms"). Individual group records are then created and synced whenever groups are added, updated, or removed in BuddyBoss. This happens automatically in the background—no manual setup required.', 'ghl-crm-integration' ); ?>">?</span>
 			</h3>
-			
-			<div class="ghl-info-box" style="margin-bottom: 20px;">
-				<span class="dashicons dashicons-info"></span>
-				<div>
-					<h4><?php esc_html_e( 'Automatic Custom Object Creation', 'ghl-crm-integration' ); ?></h4>
-					<p><?php esc_html_e( 'Custom Objects will be automatically created in GoHighLevel when new group types are added to BuddyBoss. Each group type gets its own Custom Object (e.g., "Schools", "Communities", "Classrooms").', 'ghl-crm-integration' ); ?></p>
-				</div>
-			</div>
 
-			<div class="ghl-form-row" style="margin-top: 16px;">
-				<label class="ghl-toggle">
-					<input type="checkbox" name="buddyboss_auto_delete_custom_objects" value="1" <?php checked( ! empty( $settings['buddyboss_auto_delete_custom_objects'] ) ); ?>>
-					<span class="ghl-toggle-slider"></span>
-					<span class="ghl-toggle-label">
+			<div class="ghl-checkbox-group" style="display: flex; flex-direction: column; gap: 12px;">
+				<label class="ghl-checkbox <?php echo ! empty( $settings['buddyboss_auto_delete_custom_objects'] ) ? 'is-checked' : ''; ?>" style="display: flex; align-items: center; gap: 8px; margin: 0;">
+					<input 
+						type="checkbox" 
+						class="ghl-checkbox-original"
+						id="buddyboss_auto_delete_custom_objects"
+						name="buddyboss_auto_delete_custom_objects" 
+						value="1" 
+						<?php checked( ! empty( $settings['buddyboss_auto_delete_custom_objects'] ) ); ?>
+					>
+					<span class="ghl-checkbox-input <?php echo ! empty( $settings['buddyboss_auto_delete_custom_objects'] ) ? 'is-checked' : ''; ?>">
+						<span class="ghl-checkbox-inner"></span>
+					</span>
+					<span class="ghl-checkbox-label">
 						<?php esc_html_e( 'Auto-delete Custom Objects when group types are removed', 'ghl-crm-integration' ); ?>
 						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'When enabled, deleting a BuddyBoss group type automatically removes its corresponding Custom Object schema from GoHighLevel. Disable to keep historical data even after group types are deleted.', 'ghl-crm-integration' ); ?>">?</span>
 					</span>
 				</label>
-				<p class="description" style="margin-top: 8px;">
-					<?php esc_html_e( 'When disabled, Custom Objects will remain in GoHighLevel even if the corresponding group type is removed from BuddyBoss. This preserves historical data.', 'ghl-crm-integration' ); ?>
-				</p>
 			</div>
 		</div>
 
 		<!-- Member Association Sync -->
 		<div class="ghl-form-section" style="margin-bottom: 24px;">
-			<h3 style="margin: 0 0 16px; font-size: 18px; font-weight: 600; color: #1e293b;">
+			<h3 style="margin: 0 0 16px; font-size: 18px; font-weight: 600; color: #1e293b; display: flex; align-items: center; gap: 8px;">
 				<?php esc_html_e( 'Member Association Sync', 'ghl-crm-integration' ); ?>
+				<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Members, organizers, admins, and moderators are linked to their BuddyBoss groups using GoHighLevel custom object associations. Contact custom fields are no longer required.', 'ghl-crm-integration' ); ?>">?</span>
 			</h3>
-		
-			<div class="ghl-info-box" style="margin-bottom: 16px;">
-				<span class="dashicons dashicons-admin-users"></span>
-				<div>
-					<h4><?php esc_html_e( 'Automatic Member Linking', 'ghl-crm-integration' ); ?></h4>
-					<p><?php esc_html_e( 'Members, organizers, admins, and moderators are linked to their BuddyBoss groups using GoHighLevel custom object associations. Contact custom fields are no longer required.', 'ghl-crm-integration' ); ?></p>
-				</div>
-			</div>
 
 			<p class="description" style="margin-bottom: 12px;">
 				<?php esc_html_e( 'When a user joins or leaves a BuddyBoss group, the plugin queues a background job to add or remove the GoHighLevel association. Group visibility rules still apply, and contacts must already exist in GoHighLevel to be linked.', 'ghl-crm-integration' ); ?>
@@ -168,7 +160,10 @@ $is_buddyboss_active = function_exists( 'bp_is_active' ) && bp_is_active( 'group
 
 		<!-- Association Behavior Controls -->
 		<div class="ghl-form-section">
-			<h3><?php esc_html_e( 'Association Behavior', 'ghl-crm-integration' ); ?></h3>
+			<h3 style="display: flex; align-items: center; gap: 8px;">
+				<?php esc_html_e( 'Association Behavior', 'ghl-crm-integration' ); ?>
+				<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Fine-tune how the plugin handles BuddyBoss groups that are missing metadata and members who have not yet been synced to GoHighLevel.', 'ghl-crm-integration' ); ?>">?</span>
+			</h3>
 			<p class="description" style="margin-bottom: 16px; color: #475569;">
 				<?php esc_html_e( 'Fine-tune how the plugin handles BuddyBoss groups that are missing metadata and members who have not yet been synced to GoHighLevel.', 'ghl-crm-integration' ); ?>
 			</p>
@@ -234,7 +229,10 @@ $is_buddyboss_active = function_exists( 'bp_is_active' ) && bp_is_active( 'group
 
 		<!-- Sync Options -->
 		<div class="ghl-form-section">
-			<h3><?php esc_html_e( 'Sync Options', 'ghl-crm-integration' ); ?></h3>
+			<h3 style="display: flex; align-items: center; gap: 8px;">
+				<?php esc_html_e( 'Sync Options', 'ghl-crm-integration' ); ?>
+				<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Control which BuddyBoss groups are synced to GoHighLevel based on visibility and status settings.', 'ghl-crm-integration' ); ?>">?</span>
+			</h3>
 			
 			<div class="ghl-checkbox-group" style="display: flex; flex-direction: column; gap: 12px;">
 				<label class="ghl-checkbox <?php echo ! empty( $settings['buddyboss_sync_private_groups'] ) ? 'is-checked' : ''; ?>" style="display: flex; align-items: center; gap: 8px; margin: 0;">

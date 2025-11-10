@@ -295,9 +295,10 @@
 				$buttonText.data('original-text', $buttonText.text());
 			}
 
-			// Disable button and show spinner
+			// Disable button and show loading state
 			$button.prop('disabled', true).addClass('is-loading');
 			$spinner.addClass('is-active');
+			$buttonText.text('Saving...');
 
 			// Gather form data
 			const formData = this.gatherFormData();
@@ -309,23 +310,51 @@
 				data: formData,
 				success: (response) => {
 					if (response.success) {
-						this.showMessage('success', response.data.message || ghl_crm_integrations_js_data.i18n.settingsSaved);
+						// Show success state on button
+						$buttonText.html('<span class="dashicons dashicons-yes-alt" style="font-size: 14px; margin-right: 4px;"></span>Saved!');
+						$button.addClass('is-success');
 						
-						// Add visual feedback to save button
-						$buttonText.html('<span class="dashicons dashicons-yes-alt" style="font-size: 14px; margin-right: 4px;"></span>Saved Successfully!');
+						// Show SweetAlert toast notification
+						if (typeof Swal !== 'undefined') {
+							Swal.fire({
+								toast: true,
+								position: 'top-end',
+								icon: 'success',
+								title: response.data.message || 'Settings saved successfully!',
+								showConfirmButton: false,
+								timer: 3000,
+								timerProgressBar: true,
+							});
+						}
 						
 						// Reset button text after 3 seconds
 						setTimeout(() => {
 							$buttonText.text($buttonText.data('original-text') || 'Save Integration Settings');
+							$button.removeClass('is-success');
 						}, 3000);
-						
-						// Scroll to top to show message
-						$('html, body').animate({ scrollTop: 0 }, 300);
 					} else {
-						this.showMessage('error', response.data.message || ghl_crm_integrations_js_data.i18n.saveFailed);
+						// Show error state on button
+						$buttonText.html('<span class="dashicons dashicons-dismiss" style="font-size: 14px; margin-right: 4px;"></span>Failed');
+						$button.addClass('is-error');
 						
-						// Scroll to top to show error message
-						$('html, body').animate({ scrollTop: 0 }, 300);
+						// Show SweetAlert toast notification
+						if (typeof Swal !== 'undefined') {
+							Swal.fire({
+								toast: true,
+								position: 'top-end',
+								icon: 'error',
+								title: response.data.message || 'Failed to save settings',
+								showConfirmButton: false,
+								timer: 4000,
+								timerProgressBar: true,
+							});
+						}
+						
+						// Reset button text after 3 seconds
+						setTimeout(() => {
+							$buttonText.text($buttonText.data('original-text') || 'Save Integration Settings');
+							$button.removeClass('is-error');
+						}, 3000);
 					}
 				},
 				error: (xhr, status, error) => {
@@ -348,10 +377,28 @@
 						}
 					}
 					
-					this.showMessage('error', errorMessage);
+					// Show error state on button
+					$buttonText.html('<span class="dashicons dashicons-dismiss" style="font-size: 14px; margin-right: 4px;"></span>Error');
+					$button.addClass('is-error');
 					
-					// Scroll to top to show error message
-					$('html, body').animate({ scrollTop: 0 }, 300);
+					// Show SweetAlert toast notification
+					if (typeof Swal !== 'undefined') {
+						Swal.fire({
+							toast: true,
+							position: 'top-end',
+							icon: 'error',
+							title: errorMessage,
+							showConfirmButton: false,
+							timer: 4000,
+							timerProgressBar: true,
+						});
+					}
+					
+					// Reset button text after 3 seconds
+					setTimeout(() => {
+						$buttonText.text($buttonText.data('original-text') || 'Save Integration Settings');
+						$button.removeClass('is-error');
+					}, 3000);
 				},
 				complete: () => {
 					// Re-enable button and hide spinner
