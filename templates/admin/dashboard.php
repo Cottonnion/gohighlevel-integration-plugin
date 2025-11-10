@@ -9,22 +9,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/**
- * Debug Mode Toggle
- * 
- * Set to TRUE to show debug information including:
- * - Settings dump
- * - Queue manager status
- * - Scheduled action details
- * - Pending queue items
- * - Error logs
- * - API connection test
- * - Manual queue trigger button
- * 
- * Set to FALSE for production (clean dashboard)
- */
-define( 'GHL_SHOW_DEBUG', true );
-
 // Get OAuth handler and status
 $oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
 $oauth_status  = $oauth_handler->get_connection_status();

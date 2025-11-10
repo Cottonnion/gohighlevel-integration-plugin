@@ -7,6 +7,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+use GHL_CRM\Sync\SyncStats;
+
 /**
  * Sync Logger
  *
@@ -82,6 +84,14 @@ class SyncLogger {
 		if ( $result === false ) {
 
 			return false;
+		}
+
+		// Track aggregate sync stats for dashboard insights.
+		try {
+			$stats = SyncStats::get_instance();
+			$stats->record_event( $data['status'], $data['sync_type'], $data['created_at'] );
+		} catch ( \Throwable $th ) {
+			// Swallow errors to avoid blocking sync logging if stats persistence fails.
 		}
 
 		return (int) $wpdb->insert_id;

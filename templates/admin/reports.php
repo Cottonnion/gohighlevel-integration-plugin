@@ -10,46 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Hardcoded data for now - will be replaced with real data later
-$report_data = [
-	'contacts' => [
-		'total_ghl'       => 1247,
-		'total_wp'        => 892,
-		'synced'          => 856,
-		'pending'         => 36,
-		'failed'          => 12,
-		'sync_rate'       => 96, // percentage
-	],
-	'sync_activity' => [
-		'last_24h'        => 127,
-		'last_7d'         => 543,
-		'last_30d'        => 1823,
-	],
-	'integrations' => [
-		'woocommerce'     => [
-			'enabled'     => true,
-			'orders'      => 234,
-			'synced'      => 228,
-		],
-		'buddyboss'       => [
-			'enabled'     => true,
-			'groups'      => 12,
-			'synced'      => 12,
-		],
-	],
-	'system_health' => [
-		'api_connection'  => 'healthy',
-		'queue_status'    => 'healthy',
-		'last_sync'       => '2 minutes ago',
-		'pending_jobs'    => 3,
-	],
-	'recent_activity' => [
-		['type' => 'success', 'message' => 'Contact synced: John Doe', 'time' => '2 minutes ago'],
-		['type' => 'success', 'message' => 'Order #1234 synced to GHL', 'time' => '15 minutes ago'],
-		['type' => 'warning', 'message' => 'Retry: Contact sync failed (will retry)', 'time' => '1 hour ago'],
-		['type' => 'success', 'message' => 'BuddyBoss group synced: Marketing Team', 'time' => '2 hours ago'],
-		['type' => 'success', 'message' => 'Contact synced: Jane Smith', 'time' => '3 hours ago'],
-	],
-];
+$report_data = \GHL_CRM\Core\Dashboard\StatsProvider::get_instance()->get_report_data();
 ?>
 
 <div class="ghl-reports-dashboard">
@@ -112,6 +73,11 @@ $report_data = [
 	<!-- Stats Overview Cards -->
 	<div class="ghl-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px;">
 		<!-- Total GHL Contacts -->
+		<?php
+		$contacts_link  = $report_data['links']['contacts'] ?? [ 'url' => '', 'available' => false ];
+		$contacts_href  = $contacts_link['available'] ? esc_url( $contacts_link['url'] ) : '#';
+		$contacts_attrs = $contacts_link['available'] ? ' target="_blank" rel="noopener"' : '';
+		?>
 		<div class="ghl-stat-card" style="background: white; border: 1px solid #e2e8f0; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);">
 			<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
 				<span class="dashicons dashicons-admin-users" style="font-size: 32px; color: #6366f1;"></span>
@@ -119,8 +85,8 @@ $report_data = [
 			</div>
 			<div style="font-size: 32px; font-weight: 700; margin-bottom: 4px; color: #1e293b;"><?php echo number_format( $report_data['contacts']['total_ghl'] ); ?></div>
 			<div style="font-size: 14px; color: #64748b; margin-bottom: 8px;">Total Contacts</div>
-			<a href="#" class="ghl-view-in-ghl" style="font-size: 12px; color: #6366f1; text-decoration: none; font-weight: 500;">
-				View in GoHighLevel →
+			<a href="<?php echo $contacts_href; ?>" class="ghl-view-in-ghl" style="font-size: 12px; color: #6366f1; text-decoration: none; font-weight: 500;"<?php echo $contacts_attrs; ?>>
+				<?php echo esc_html__( 'View in GoHighLevel →', 'ghl-crm-integration' ); ?>
 			</a>
 		</div>
 
@@ -151,15 +117,25 @@ $report_data = [
 		</div>
 
 		<!-- Pending/Failed -->
+		<?php
+		$pending_total = (int) $report_data['contacts']['pending'] + (int) $report_data['contacts']['failed'];
+		$has_pending   = $pending_total > 0;
+		$badge_text    = $has_pending ? esc_html__( 'Action Needed', 'ghl-crm-integration' ) : esc_html__( 'All Clear', 'ghl-crm-integration' );
+		$badge_style   = $has_pending ? 'color: #92400e; background: #fef3c7;' : 'color: #15803d; background: #dcfce7;';
+		$icon_color    = $has_pending ? '#f59e0b' : '#10b981';
+		$link_url      = $has_pending ? admin_url( 'admin.php?page=ghl-crm-admin#/sync-logs/status/failed' ) : admin_url( 'admin.php?page=ghl-crm-admin#/sync-logs' );
+		$link_color    = $has_pending ? '#f59e0b' : '#10b981';
+		$link_text     = $has_pending ? esc_html__( 'Fix Issues →', 'ghl-crm-integration' ) : esc_html__( 'View Sync Logs →', 'ghl-crm-integration' );
+		?>
 		<div class="ghl-stat-card" style="background: white; border: 1px solid #e2e8f0; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);">
 			<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-				<span class="dashicons dashicons-warning" style="font-size: 32px; color: #f59e0b;"></span>
-				<span style="font-size: 11px; color: #92400e; background: #fef3c7; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Action Needed</span>
+				<span class="dashicons dashicons-warning" style="font-size: 32px; color: <?php echo esc_attr( $icon_color ); ?>;"></span>
+				<span style="font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight: 600; <?php echo esc_attr( $badge_style ); ?>"><?php echo $badge_text; ?></span>
 			</div>
-			<div style="font-size: 32px; font-weight: 700; margin-bottom: 4px; color: #1e293b;"><?php echo number_format( $report_data['contacts']['pending'] + $report_data['contacts']['failed'] ); ?></div>
-			<div style="font-size: 14px; color: #64748b; margin-bottom: 8px;">Pending + Failed</div>
-			<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin#/sync-logs/status/failed' ) ); ?>" style="font-size: 12px; color: #f59e0b; text-decoration: none; font-weight: 500;">
-				Fix Issues →
+			<div style="font-size: 32px; font-weight: 700; margin-bottom: 4px; color: #1e293b;"><?php echo number_format( $pending_total ); ?></div>
+			<div style="font-size: 14px; color: #64748b; margin-bottom: 8px;"><?php echo esc_html__( 'Pending + Failed', 'ghl-crm-integration' ); ?></div>
+			<a href="<?php echo esc_url( $link_url ); ?>" style="font-size: 12px; color: <?php echo esc_attr( $link_color ); ?>; text-decoration: none; font-weight: 500;">
+				<?php echo $link_text; ?>
 			</a>
 		</div>
 	</div>
@@ -212,42 +188,41 @@ $report_data = [
 				</div>
 				
 				<div style="display: flex; flex-direction: column; gap: 16px;">
-					<!-- WooCommerce -->
-					<?php if ( $report_data['integrations']['woocommerce']['enabled'] ) : ?>
-					<div style="padding: 16px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #7c3aed; border: 1px solid #f1f5f9;">
-						<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-							<div style="display: flex; align-items: center; gap: 8px;">
-								<span class="dashicons dashicons-cart" style="color: #7c3aed;"></span>
-								<strong style="color: #1e293b;">WooCommerce</strong>
-							</div>
-							<span class="ghl-badge" style="background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">Active</span>
-						</div>
-						<div style="font-size: 14px; color: #64748b; margin-bottom: 8px;">
-							<?php echo number_format( $report_data['integrations']['woocommerce']['synced'] ); ?> / <?php echo number_format( $report_data['integrations']['woocommerce']['orders'] ); ?> orders synced
-						</div>
-						<div style="background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden;">
-							<div style="background: #10b981; height: 100%; width: <?php echo round( ( $report_data['integrations']['woocommerce']['synced'] / $report_data['integrations']['woocommerce']['orders'] ) * 100 ); ?>%; transition: width 0.3s;"></div>
-						</div>
-					</div>
-					<?php endif; ?>
+					<?php
+					$integrations       = $report_data['integrations'];
+					$integration_icons  = [
+						'woocommerce' => 'dashicons-cart',
+						'buddyboss'   => 'dashicons-groups',
+					];
+					?>
 
-					<!-- BuddyBoss -->
-					<?php if ( $report_data['integrations']['buddyboss']['enabled'] ) : ?>
-					<div style="padding: 16px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #f97316; border: 1px solid #f1f5f9;">
-						<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-							<div style="display: flex; align-items: center; gap: 8px;">
-								<span class="dashicons dashicons-groups" style="color: #f97316;"></span>
-								<strong style="color: #1e293b;">BuddyBoss</strong>
+					<?php if ( empty( $integrations ) ) : ?>
+						<p style="margin: 0; font-size: 14px; color: #64748b;">
+							<?php esc_html_e( 'No integrations detected yet. Visit the Integrations screen to configure available modules.', 'ghl-crm-integration' ); ?>
+						</p>
+					<?php else : ?>
+						<?php foreach ( $integrations as $integration ) :
+							$slug         = $integration['key'] ?? '';
+							$icon         = $integration_icons[ $slug ] ?? 'dashicons-admin-generic';
+							$is_enabled   = ! empty( $integration['enabled'] );
+							$status_text  = $is_enabled ? esc_html__( 'Active', 'ghl-crm-integration' ) : esc_html__( 'Inactive', 'ghl-crm-integration' );
+							$status_style = $is_enabled ? 'background: #dcfce7; color: #166534;' : 'background: #f1f5f9; color: #475569;';
+							$border_color = $is_enabled ? '#10b981' : '#e2e8f0';
+						?>
+						<div style="padding: 16px; background: #f8fafc; border-radius: 8px; border-left: 4px solid <?php echo esc_attr( $border_color ); ?>; border: 1px solid #f1f5f9;">
+							<div style="display: flex; align-items: center; justify-content: space-between;">
+								<div style="display: flex; align-items: center; gap: 8px;">
+									<span class="dashicons <?php echo esc_attr( $icon ); ?>" style="color: <?php echo esc_attr( $is_enabled ? '#1e293b' : '#64748b' ); ?>;"></span>
+									<strong style="color: #1e293b;">
+										<?php echo esc_html( $integration['label'] ?? ucfirst( $slug ) ); ?>
+									</strong>
+								</div>
+								<span class="ghl-badge" style="padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; <?php echo esc_attr( $status_style ); ?>">
+									<?php echo $status_text; ?>
+								</span>
 							</div>
-							<span class="ghl-badge" style="background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">Active</span>
 						</div>
-						<div style="font-size: 14px; color: #64748b; margin-bottom: 8px;">
-							<?php echo number_format( $report_data['integrations']['buddyboss']['synced'] ); ?> / <?php echo number_format( $report_data['integrations']['buddyboss']['groups'] ); ?> groups synced
-						</div>
-						<div style="background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden;">
-							<div style="background: #10b981; height: 100%; width: 100%; transition: width 0.3s;"></div>
-						</div>
-					</div>
+						<?php endforeach; ?>
 					<?php endif; ?>
 				</div>
 			</div>
