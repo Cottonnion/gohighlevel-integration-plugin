@@ -112,6 +112,11 @@ foreach ( $all_meta_keys as $meta_key ) {
 	if ( strpos( $meta_key, 'bp_' ) === 0 ) {
 		continue;
 	}
+
+	// Skip dynamic BuddyBoss profile slug hashes that flood the selector.
+	if ( strpos( $meta_key, 'bb_profile_slug_' ) === 0 ) {
+		continue;
+	}
 	
 	// Skip our own plugin fields (starting with ghl_ or _ghl_)
 	if ( strpos( $meta_key, 'ghl_' ) === 0 || strpos( $meta_key, '_ghl_' ) === 0 ) {
