@@ -102,6 +102,15 @@ class AssetsManager {
 			true
 		);
 
+		// Register Chart.js
+		wp_register_script(
+			'chartjs',
+			'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
+			[],
+			'4.4.0',
+			true
+		);
+
 		// Register Select2 (local files) with plugin-specific handles to avoid conflicts
 		wp_register_style(
 			'ghl-crm-select2-css',
@@ -198,12 +207,14 @@ class AssetsManager {
 			'ghl-crm-dashboard-js',
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'dashboard.js',
-			[ 'jquery', 'sweetalert2' ],
+			[ 'jquery', 'sweetalert2', 'chartjs' ],
 			[
 				'ajaxUrl'            => admin_url( 'admin-ajax.php' ),
 				'nonce'              => wp_create_nonce( 'ghl_crm_admin' ),
 				'manualConnectNonce' => wp_create_nonce( 'ghl_crm_manual_connect' ),
 				'disconnectNonce'    => wp_create_nonce( 'ghl_crm_oauth_disconnect' ),
+				'manualQueueNonce'   => wp_create_nonce( 'ghl_crm_manual_queue' ),
+				'settingsNonce'      => wp_create_nonce( 'ghl_crm_settings_nonce' ),
 				'i18n'               => [
 					'connecting'        => __( 'Connecting...', 'ghl-crm-integration' ),
 					'connectionFailed'  => __( 'Connection failed', 'ghl-crm-integration' ),
@@ -212,6 +223,18 @@ class AssetsManager {
 					'disconnecting'     => __( 'Disconnecting...', 'ghl-crm-integration' ),
 					'disconnectFailed'  => __( 'Failed to disconnect', 'ghl-crm-integration' ),
 					'disconnectError'   => __( 'An error occurred while disconnecting', 'ghl-crm-integration' ),
+					'manualSyncProcessing'     => __( 'Running manual sync...', 'ghl-crm-integration' ),
+					'manualSyncSuccess'        => __( 'Manual sync completed successfully.', 'ghl-crm-integration' ),
+					'manualSyncFailed'         => __( 'Manual sync failed.', 'ghl-crm-integration' ),
+					'clearCacheProcessing'     => __( 'Clearing cache...', 'ghl-crm-integration' ),
+					'clearCacheSuccess'        => __( 'Cache cleared successfully!', 'ghl-crm-integration' ),
+					'clearCacheFailed'         => __( 'Failed to clear cache.', 'ghl-crm-integration' ),
+					'testConnectionProcessing' => __( 'Testing connection...', 'ghl-crm-integration' ),
+					'testConnectionSuccess'    => __( 'Connection test completed successfully.', 'ghl-crm-integration' ),
+					'testConnectionFailed'     => __( 'Connection test failed.', 'ghl-crm-integration' ),
+					'refreshMetadataProcessing' => __( 'Refreshing tags and fields...', 'ghl-crm-integration' ),
+					'refreshMetadataSuccess'    => __( 'Tags and fields refreshed successfully.', 'ghl-crm-integration' ),
+					'refreshMetadataFailed'     => __( 'Failed to refresh tags and fields.', 'ghl-crm-integration' ),
 				],
 			],
 			'1.0.9',
