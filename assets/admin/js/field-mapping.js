@@ -14,6 +14,33 @@
 	 * Initialize field mapping functionality
 	 */
 	function initFieldMapping() {
+		const $customToggle = $('#ghl-toggle-custom-fields');
+		const $customWrapper = $('#ghl-custom-fields-wrapper');
+
+		if ($customToggle.length && $customWrapper.length) {
+			const showLabel = $customToggle.data('label-show');
+			const hideLabel = $customToggle.data('label-hide');
+			const $labelSpan = $customToggle.find('.ghl-toggle-button__label');
+
+			const setToggleState = (isOpen) => {
+				$customToggle.attr('aria-expanded', isOpen ? 'true' : 'false');
+				$customWrapper.toggleClass('ghl-is-collapsed', ! isOpen);
+
+				if ($labelSpan.length) {
+					$labelSpan.text(isOpen ? hideLabel : showLabel);
+				}
+			};
+
+			// Ensure initial collapsed state matches aria attribute.
+			setToggleState($customToggle.attr('aria-expanded') === 'true');
+
+			$customToggle.on('click', function (event) {
+				event.preventDefault();
+				const currentlyOpen = $customToggle.attr('aria-expanded') === 'true';
+				setToggleState(! currentlyOpen);
+			});
+		}
+
 		/**
 		 * Check for duplicate GHL field mappings and show warnings
 		 */

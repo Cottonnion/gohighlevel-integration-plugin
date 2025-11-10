@@ -225,7 +225,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 		</div>
 		<?php return; ?>
 	<?php endif; ?>
-	
+
 	<?php
 	// Check scope access for Contacts and Custom Fields
 	\GHL_CRM\Core\ScopeChecker::render_scope_notice( 'contacts' );
@@ -327,7 +327,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 					// Email field should be disabled (required by GHL)
 					$is_email_field = ( $key === 'user_email' );
 				?>
-					<tr<?php echo $is_email_field ? ' class="ghl-required-field"' : ''; ?>>
+					<tr class="ghl-field-row<?php echo $is_email_field ? ' ghl-required-field' : ''; ?>" data-section="default" data-key="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( wp_strip_all_tags( $label ) ); ?>" data-search="<?php echo esc_attr( strtolower( wp_strip_all_tags( $label ) . ' ' . $key ) ); ?>">
 						<td>
 							<strong><?php echo esc_html( $label ); ?></strong>
 							<span class="ghl-field-badge ghl-field-badge--default"><?php esc_html_e( 'Core', 'ghl-crm-integration' ); ?></span><br>
@@ -389,7 +389,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 						$saved_ghl_field = isset( $saved_mappings[ $key ]['ghl_field'] ) ? $saved_mappings[ $key ]['ghl_field'] : '';
 						$saved_direction = isset( $saved_mappings[ $key ]['direction'] ) ? $saved_mappings[ $key ]['direction'] : 'both';
 					?>
-						<tr>
+						<tr class="ghl-field-row" data-section="buddyboss" data-key="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( wp_strip_all_tags( $label ) ); ?>" data-search="<?php echo esc_attr( strtolower( wp_strip_all_tags( $label ) . ' ' . $key ) ); ?>">
 							<td>
 								<strong><?php echo esc_html( $label ); ?></strong>
 								<span class="ghl-field-badge ghl-field-badge--buddyboss"><?php esc_html_e( 'BuddyBoss', 'ghl-crm-integration' ); ?></span><br>
@@ -445,7 +445,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 						$saved_ghl_field = isset( $saved_mappings[ $key ]['ghl_field'] ) ? $saved_mappings[ $key ]['ghl_field'] : '';
 						$saved_direction = isset( $saved_mappings[ $key ]['direction'] ) ? $saved_mappings[ $key ]['direction'] : 'both';
 					?>
-						<tr>
+						<tr class="ghl-field-row" data-section="woocommerce" data-key="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( wp_strip_all_tags( $label ) ); ?>" data-search="<?php echo esc_attr( strtolower( wp_strip_all_tags( $label ) . ' ' . $key ) ); ?>">
 							<td>
 								<strong><?php echo esc_html( $label ); ?></strong>
 								<span class="ghl-field-badge ghl-field-badge--woocommerce"><?php esc_html_e( 'WooCommerce', 'ghl-crm-integration' ); ?></span><br>
@@ -486,8 +486,13 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 					);
 					?>
 				</p>
+				<button type="button" id="ghl-toggle-custom-fields" class="ghl-toggle-button" data-target="ghl-custom-fields-wrapper" data-label-show="<?php esc_attr_e( 'Show custom fields', 'ghl-crm-integration' ); ?>" data-label-hide="<?php esc_attr_e( 'Hide custom fields', 'ghl-crm-integration' ); ?>" aria-expanded="false">
+					<span class="dashicons dashicons-arrow-right"></span>
+					<span class="ghl-toggle-button__label"><?php esc_html_e( 'Show custom fields', 'ghl-crm-integration' ); ?></span>
+				</button>
 			</div>
-			
+
+			<div id="ghl-custom-fields-wrapper" class="ghl-collapsible ghl-is-collapsed" data-collapsible>
 			<table class="ghl-table" role="presentation">
 				<thead>
 					<tr>
@@ -501,7 +506,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 						$saved_ghl_field = isset( $saved_mappings[ $key ]['ghl_field'] ) ? $saved_mappings[ $key ]['ghl_field'] : '';
 						$saved_direction = isset( $saved_mappings[ $key ]['direction'] ) ? $saved_mappings[ $key ]['direction'] : 'both';
 					?>
-						<tr>
+						<tr class="ghl-field-row" data-section="custom" data-key="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( wp_strip_all_tags( $label ) ); ?>" data-search="<?php echo esc_attr( strtolower( wp_strip_all_tags( $label ) . ' ' . $key ) ); ?>">
 							<td>
 								<strong><?php echo esc_html( $label ); ?></strong>
 								<span class="ghl-field-badge ghl-field-badge--custom"><?php esc_html_e( 'Custom', 'ghl-crm-integration' ); ?></span><br>
@@ -527,6 +532,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 					<?php endforeach; ?>
 				</tbody>
 			</table>
+			</div>
 		<?php endif; ?>
 
 		<?php if ( empty( $buddyboss_fields ) && empty( $custom_user_fields ) && empty( $woocommerce_fields ) ) : ?>
