@@ -94,6 +94,7 @@ class SettingsManager {
 		add_action( 'wp_ajax_ghl_crm_get_custom_objects', [ $this, 'get_custom_objects' ] );
 		add_action( 'wp_ajax_ghl_crm_get_schema_details', [ $this, 'get_schema_details' ] );
 		add_action( 'wp_ajax_ghl_crm_get_forms', [ $this, 'handle_get_forms' ] );
+		add_action( 'wp_ajax_ghl_crm_refresh_metadata', [ $this, 'refresh_metadata' ] );
 
 		// Custom Object Mapping AJAX handlers
 		add_action( 'wp_ajax_ghl_crm_get_post_types', [ $this, 'get_post_types' ] );
@@ -919,6 +920,115 @@ class SettingsManager {
 					'error'   => $e->getMessage(),
 					'debug'   => $debug_info,
 				]
+			);
+		}
+	}
+
+	/**
+	 * Refresh tags and custom fields metadata via AJAX.
+	 *
+	 * @return void
+	 */
+	public function refresh_metadata(): void {
+		// Verify nonce for dashboard quick actions.
+		check_ajax_referer( 'ghl_crm_admin', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to perform this action.', 'ghl-crm-integration' ),
+				],
+				403
+			);
+		}
+
+		try {
+			$settings    = $this->get_settings_array();
+			$location_id = $settings['location_id'] ?? '';
+
+			if ( empty( $location_id ) ) {
+				wp_send_json_error(
+					[
+						'message' => __( 'Location ID not configured. Please connect to GoHighLevel first.', 'ghl-crm-integration' ),
+					],
+					400
+				);
+			}
+
+			$client = \GHL_CRM\API\Client\Client::get_instance();
+
+			// Fetch tags directly from API and refresh transient cache.
+			$tags_response = $client->get( 'locations/' . $location_id . '/tags' );
+			$tags          = [];
+
+			if ( isset( $tags_response['tags'] ) && is_array( $tags_response['tags'] ) ) {
+				$tags = $tags_response['tags'];
+			}
+
+			$site_id       = get_current_blog_id();
+			$cache_seconds = absint( $this->get_setting( 'cache_duration', HOUR_IN_SECONDS ) );
+			$tags_key      = 'ghl_tags_' . $location_id . '_site_' . $site_id;
+
+			set_transient( $tags_key, $tags, $cache_seconds );
+
+			// Fetch custom fields from API (no caching existed previously, but data returned to caller).
+			$fields_response   = $client->get( 'locations/' . $location_id . '/customFields', [] );
+			$custom_fields_raw = isset( $fields_response['customFields'] ) && is_array( $fields_response['customFields'] )
+				? $fields_response['customFields']
+				: [];
+
+			$all_fields = $this->get_standard_ghl_fields();
+
+			foreach ( $custom_fields_raw as $field ) {
+				$field_id   = $field['id'] ?? '';
+				$field_name = $field['name'] ?? '';
+
+				if ( $field_id && $field_name ) {
+					$all_fields[ 'custom.' . $field_id ] = $field_name . ' (Custom)';
+				}
+			}
+
+			wp_send_json_success(
+				[
+					'message'               => __( 'Tags and fields refreshed successfully.', 'ghl-crm-integration' ),
+					'tags_count'            => count( $tags ),
+					'custom_fields_count'   => count( $custom_fields_raw ),
+					'has_custom_fields'     => ! empty( $custom_fields_raw ),
+				]
+			);
+
+		} catch ( \Exception $e ) {
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: error message */
+						__( 'Failed to refresh metadata: %s', 'ghl-crm-integration' ),
+						$e->getMessage()
+					),
+				],
+				500
+			);
+		} catch ( \Error $err ) {
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: error message */
+						__( 'A fatal error occurred while refreshing metadata: %s', 'ghl-crm-integration' ),
+						$err->getMessage()
+					),
+				],
+				500
+			);
+		} catch ( \Throwable $throwable ) {
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: error message */
+						__( 'An unexpected error occurred while refreshing metadata: %s', 'ghl-crm-integration' ),
+						$throwable->getMessage()
+					),
+				],
+				500
 			);
 		}
 	}
