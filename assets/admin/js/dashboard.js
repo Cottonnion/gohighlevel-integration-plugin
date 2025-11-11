@@ -223,14 +223,20 @@
 	 */
 	function showNotice( type, message ) {
 		if ( typeof Swal !== 'undefined' ) {
-			Swal.fire( {
+			const toast = Swal.mixin( {
 				toast: true,
-				icon: type === 'error' ? 'error' : 'success',
-				title: message,
 				position: 'top-end',
 				showConfirmButton: false,
 				timer: 4000,
 				timerProgressBar: true,
+				customClass: {
+					popup: 'ghl-swal-top-toast',
+				},
+			} );
+
+			toast.fire( {
+				icon: type === 'error' ? 'error' : 'success',
+				title: message,
 			} );
 			return;
 		}

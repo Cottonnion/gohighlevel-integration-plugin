@@ -105,6 +105,9 @@
 				showConfirmButton: false,
 				timer: type === 'success' ? 3000 : 5000,
 				timerProgressBar: true,
+				customClass: {
+					popup: 'ghl-swal-top-toast',
+				},
 				didOpen: (toast) => {
 					toast.addEventListener('mouseenter', Swal.stopTimer);
 					toast.addEventListener('mouseleave', Swal.resumeTimer);

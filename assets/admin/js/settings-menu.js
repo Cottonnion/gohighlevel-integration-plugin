@@ -174,6 +174,14 @@
 						window.initSettings();
 					}
 					
+					// Re-initialize TinyMCE editors after content loads
+					setTimeout(function() {
+						if (typeof tinyMCE !== 'undefined') {
+							tinyMCE.EditorManager.execCommand('mceRemoveEditor', true, 'restrictions_denied_message');
+							tinyMCE.EditorManager.execCommand('mceAddEditor', true, 'restrictions_denied_message');
+						}
+					}, 100);
+					
 					// Re-initialize user register tags functionality (for general tab)
 					if (typeof window.initUserRegisterTags === 'function') {
 						window.initUserRegisterTags();
@@ -215,7 +223,7 @@
 	 */
 	function cleanupSettingsMenu() {
 		window.ghlSettingsMenuInitialized = false;
-		$(document).off('click.ghlSettingsMenu', '.ghl-settings-nav a');
+		$(document).off('click.ghlSettingsMenu', '.ghl-settings-nav li');
 		$(window).off('hashchange.ghlSettingsMenu');
 		$('#ghl-menu-toggle').off('click.ghlMenuToggle');
 		$(document).off('click.ghlMenuOverlay');

@@ -230,8 +230,11 @@
                     if (typeof window.initRoleTags === 'function') {
                         window.initRoleTags();
                     }
-                    // Initialize settings side menu for tab switching (only if not already initialized)
-                    if (typeof window.initSettingsMenu === 'function' && !window.ghlSettingsMenuInitialized) {
+                    // Reinitialize settings side menu to restore mobile toggle handlers and tab wiring
+                    if (typeof window.cleanupSettingsMenu === 'function') {
+                        window.cleanupSettingsMenu();
+                    }
+                    if (typeof window.initSettingsMenu === 'function') {
                         window.initSettingsMenu();
                     }
                     break;
@@ -290,19 +293,22 @@
          */
         showNotice(message, type = 'success') {
             if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    toast: true,
-                    position: 'top-end',
-                    icon: type,
-                    title: message,
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    didOpen: (toast) => {
-                        toast.addEventListener('mouseenter', Swal.stopTimer);
-                        toast.addEventListener('mouseleave', Swal.resumeTimer);
-                    }
-                });
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: type,
+                        title: message,
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                        customClass: {
+                            popup: 'ghl-swal-top-toast',
+                        },
+                        didOpen: (toast) => {
+                            toast.addEventListener('mouseenter', Swal.stopTimer);
+                            toast.addEventListener('mouseleave', Swal.resumeTimer);
+                        }
+                    });
             } else {
                 console.log(`[${type}] ${message}`);
             }

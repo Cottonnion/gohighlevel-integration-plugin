@@ -324,6 +324,9 @@
 								showConfirmButton: false,
 								timer: 3000,
 								timerProgressBar: true,
+								customClass: {
+									popup: 'ghl-swal-top-toast',
+								},
 							});
 						}
 						
@@ -347,6 +350,9 @@
 								showConfirmButton: false,
 								timer: 4000,
 								timerProgressBar: true,
+								customClass: {
+									popup: 'ghl-swal-top-toast',
+								},
 							});
 						}
 						
@@ -391,6 +397,9 @@
 							showConfirmButton: false,
 							timer: 4000,
 							timerProgressBar: true,
+							customClass: {
+								popup: 'ghl-swal-top-toast',
+							},
 						});
 					}
 					

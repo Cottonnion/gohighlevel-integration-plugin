@@ -20,6 +20,9 @@
 				showConfirmButton: false,
 				timer: 3000,
 				timerProgressBar: true,
+				customClass: {
+					popup: 'ghl-swal-top-toast',
+				},
 				didOpen: (toast) => {
 					toast.addEventListener('mouseenter', Swal.stopTimer);
 					toast.addEventListener('mouseleave', Swal.resumeTimer);
@@ -76,6 +79,11 @@
 			const $button = $(this);
 			const $buttonText = $button.find('.ghl-button-text, .button-text');
 			const originalText = $buttonText.text();
+			
+			// Trigger TinyMCE save before collecting form data
+			if (typeof tinyMCE !== 'undefined') {
+				tinyMCE.triggerSave();
+			}
 			
 			// Find the settings wrapper (could be in different containers)
 			const $settingsWrapper = $button.closest('.ghl-settings-wrapper').length 
