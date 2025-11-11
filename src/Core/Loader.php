@@ -82,6 +82,7 @@ class Loader {
 
 			// Admin UI components
 			'admin.ui'                                 => \GHL_CRM\Admin\AdminUI::class,
+			'admin.user_bulk_actions'                  => \GHL_CRM\Admin\Users\UserBulkActions::class,
 
 			// API components
 			'api.oauth'                                => \GHL_CRM\API\OAuth\OAuthHandler::class,
