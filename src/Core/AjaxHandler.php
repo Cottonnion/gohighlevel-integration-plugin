@@ -39,6 +39,24 @@ class AjaxHandler {
 	}
 
 	/**
+	 * Verify field mapping AJAX nonce.
+	 *
+	 * @return void
+	 */
+	private static function verify_field_mapping_nonce(): void {
+		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
+
+		if ( ! wp_verify_nonce( $nonce, 'ghl_crm_field_mapping_nonce' ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'Security check failed. Please reload the page and try again.', 'ghl-crm-integration' ),
+				],
+				403
+			);
+		}
+	}
+
+	/**
 	 * Save integration settings
 	 * Handles WooCommerce, BuddyBoss, and LearnDash integration settings
 	 *
@@ -498,6 +516,65 @@ class AjaxHandler {
 					'deleted' => $deleted,
 				]
 			);
+		} catch ( \Exception $e ) {
+			wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
+		}
+	}
+
+	/**
+	 * Get field mapping suggestions using pattern matching
+	 *
+	 * @return void
+	 */
+	public static function get_field_suggestions(): void {
+		self::verify_field_mapping_nonce();
+
+		try {
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ], 403 );
+				return;
+			}
+
+			// Get unmapped WP fields from request.
+			$wp_fields_raw = isset( $_POST['wp_fields'] ) ? wp_unslash( $_POST['wp_fields'] ) : array();
+			if ( ! is_array( $wp_fields_raw ) ) {
+				wp_send_json_error( [ 'message' => __( 'Invalid field data', 'ghl-crm-integration' ) ], 400 );
+				return;
+			}
+
+			$wp_fields = array_map( 'sanitize_text_field', $wp_fields_raw );
+
+			// Get GHL fields from request.
+			$ghl_fields_raw = isset( $_POST['ghl_fields'] ) ? wp_unslash( $_POST['ghl_fields'] ) : array();
+			if ( ! is_array( $ghl_fields_raw ) ) {
+				wp_send_json_error( [ 'message' => __( 'Invalid GHL field data', 'ghl-crm-integration' ) ], 400 );
+				return;
+			}
+
+			$ghl_fields = array_map( 'sanitize_text_field', $ghl_fields_raw );
+
+			// Get suggestions using FieldMatcher.
+			$matcher     = new \GHL_CRM\Utilities\FieldMatcher();
+			$suggestions = $matcher->get_suggestions( $wp_fields, $ghl_fields );
+
+			// Get detailed match info for each suggestion.
+			$detailed_suggestions = array();
+			foreach ( $suggestions as $wp_field => $ghl_field ) {
+				$details                            = $matcher->get_match_details( $wp_field, $ghl_field );
+				$detailed_suggestions[ $wp_field ] = $details;
+			}
+
+			wp_send_json_success(
+				array(
+					'message'     => sprintf(
+						/* translators: %d: number of suggestions found */
+						__( 'Found %d field mapping suggestions', 'ghl-crm-integration' ),
+						count( $suggestions )
+					),
+					'suggestions' => $detailed_suggestions,
+				)
+			);
+
 		} catch ( \Exception $e ) {
 			wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
 		}
