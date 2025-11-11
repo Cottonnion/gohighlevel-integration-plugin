@@ -9,6 +9,22 @@
  body{
 	line-height: normal !important;
  }
+
+.ghl-dashboard-layout {
+	display: grid;
+	grid-template-columns: 2fr 1fr;
+	gap: 20px;
+}
+
+.ghl-dashboard-column {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.ghl-dashboard-column--secondary {
+	min-width: 0;
+}
 /* Connection Tabs */
 .ghl-connection-tabs {
 	margin-top: 20px;
@@ -95,6 +111,14 @@
 @media (max-width: 782px) {
 	.ghl-tab-nav {
 		flex-direction: column;
+	}
+
+	.ghl-dashboard-layout {
+		grid-template-columns: 1fr;
+	}
+
+	.ghl-dashboard-column {
+		gap: 16px;
 	}
 	
 	.ghl-tab-button {

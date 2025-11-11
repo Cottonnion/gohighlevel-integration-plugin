@@ -141,9 +141,9 @@ $report_data = \GHL_CRM\Core\Dashboard\StatsProvider::get_instance()->get_report
 	</div>
 
 	<!-- Two Column Layout -->
-	<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+	<div class="ghl-dashboard-layout">
 		<!-- Left Column: Activity & Integrations -->
-		<div style="display: flex; flex-direction: column; gap: 20px;">
+		<div class="ghl-dashboard-column ghl-dashboard-column--primary">
 			<!-- Recent Sync Activity -->
 			<div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;">
 				<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
@@ -229,7 +229,7 @@ $report_data = \GHL_CRM\Core\Dashboard\StatsProvider::get_instance()->get_report
 		</div>
 
 		<!-- Right Column: Connection Status & Resources -->
-		<div style="display: flex; flex-direction: column; gap: 20px;">
+		<div class="ghl-dashboard-column ghl-dashboard-column--secondary">
 			<!-- Connection Status Widget -->
 			<?php
 			// Pass connection data to widget
@@ -298,7 +298,7 @@ $report_data = \GHL_CRM\Core\Dashboard\StatsProvider::get_instance()->get_report
 				<p style="margin: 0 0 16px; font-size: 13px; color: rgba(255,255,255,0.9); line-height: 1.5;">
 					Step-by-step guides, video tutorials, and troubleshooting help.
 				</p>
-				<a href="#" class="ghl-button" style="background: white; color: #6366f1; border: none; font-weight: 600; width: 100%; text-align: center; padding: 10px; text-decoration: none; display: block;">
+				<a href="#" class="ghl-button" style="background: white; color: #6366f1; border: none; font-weight: 600; text-align: center; padding: 10px; text-decoration: none; display: block;">
 					View Documentation
 				</a>
 			</div>
