@@ -196,6 +196,11 @@
 					if (typeof window.initRoleTags === 'function') {
 						window.initRoleTags();
 					}
+					
+					// Re-initialize sync preview functionality (for sync-preview tab)
+					if (typeof window.ghlSyncPreview.init === 'function') {
+						window.ghlSyncPreview.init();
+					}
 				} else {
 					$content.html('<div class="notice notice-error"><p>' + (response.data.message || 'Failed to load settings tab.') + '</p></div>');
 				}

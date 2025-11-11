@@ -1,0 +1,347 @@
+/**
+ * Sync Preview JavaScript
+ *
+ * @package GHL_CRM_Integration
+ */
+
+window.ghlSyncPreview = {
+	init: function() {
+		const $ = jQuery;
+		
+		console.log('ghlSyncPreview.init() called');
+		console.log('Form exists:', $('#ghl-sync-preview-form').length);
+		console.log('User select exists:', $('#user_identifier').length);
+		
+		// Initialize Select2 for user selection
+		if ($('#user_identifier').length) {
+			$('#user_identifier').select2({
+				placeholder: ghl_crm_sync_preview_js_data.i18n.searchPlaceholder,
+				allowClear: true,
+				width: '100%',
+				templateResult: this.formatUserOption,
+				templateSelection: this.formatUserSelection
+			});
+			console.log('Select2 initialized');
+		}
+
+		// Load SweetAlert2 if not already loaded
+		if (typeof Swal === 'undefined') {
+			var script = document.createElement('script');
+			script.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+			document.head.appendChild(script);
+		}
+
+		// Form submission handler
+		const self = this;
+		if ($('#ghl-sync-preview-form').length) {
+			$('#ghl-sync-preview-form').off('submit').on('submit', function(e) {
+				console.log('Form submit triggered');
+				e.preventDefault();
+
+				const userIdentifier = $('#user_identifier').val();
+				console.log('User identifier:', userIdentifier);
+
+				if (!userIdentifier) {
+					Swal.fire({
+						icon: 'warning',
+						title: ghl_crm_sync_preview_js_data.i18n.missingInfo,
+						text: ghl_crm_sync_preview_js_data.i18n.selectUser,
+						confirmButtonColor: '#635bff'
+					});
+					return;
+				}
+
+				// Start the preview process with animated steps
+				self.showPreviewProcess(userIdentifier);
+			});
+			console.log('Form handler attached');
+		} else {
+			console.error('Form #ghl-sync-preview-form not found!');
+		}
+	},
+
+	// Custom formatting for dropdown options
+	formatUserOption: function(user) {
+		if (!user.id) {
+			return user.text;
+		}
+		
+		var $user = jQuery(
+			'<div class="ghl-user-option">' +
+				'<div class="ghl-user-option-name">' + user.text.split(' (')[0] + '</div>' +
+				'<div class="ghl-user-option-email">' + user.element.value + '</div>' +
+			'</div>'
+		);
+		
+		return $user;
+	},
+
+	// Custom formatting for selected option
+	formatUserSelection: function(user) {
+		if (!user.id) {
+			return user.text;
+		}
+		return user.text.split(' (')[0] + ' (' + user.element.value + ')';
+	},
+
+	showPreviewProcess: async function(userIdentifier) {
+		const $ = jQuery;
+		const self = this;
+		
+		// Step 1: Validating user
+		Swal.fire({
+			title: ghl_crm_sync_preview_js_data.i18n.validatingUser,
+			html: '<div class="ghl-preview-step"><span class="dashicons dashicons-admin-users ghl-spin"></span><br>' + ghl_crm_sync_preview_js_data.i18n.lookingUpUser + '</div>',
+			allowOutsideClick: false,
+			showConfirmButton: false,
+			didOpen: () => {
+				Swal.showLoading();
+			}
+		});
+
+		await this.sleep(800);
+
+		// Step 2: Checking GHL connection
+		Swal.update({
+			title: ghl_crm_sync_preview_js_data.i18n.connectingGHL,
+			html: '<div class="ghl-preview-step"><span class="dashicons dashicons-cloud ghl-spin"></span><br>' + ghl_crm_sync_preview_js_data.i18n.establishingAPI + '</div>'
+		});
+
+		await this.sleep(600);
+
+		// Step 3: Analyzing fields
+		Swal.update({
+			title: ghl_crm_sync_preview_js_data.i18n.analyzingFields,
+			html: '<div class="ghl-preview-step"><span class="dashicons dashicons-update ghl-spin"></span><br>' + ghl_crm_sync_preview_js_data.i18n.comparingData + '</div>'
+		});
+
+		// Make the actual AJAX request
+		try {
+			const response = await $.ajax({
+				url: ghl_crm_sync_preview_js_data.ajaxUrl,
+				type: 'POST',
+				data: {
+					action: 'ghl_crm_preview_user_sync',
+					nonce: ghl_crm_sync_preview_js_data.nonce,
+					user_identifier: userIdentifier
+				}
+			});
+
+			await this.sleep(400);
+
+			if (response.success && response.data) {
+				self.showPreviewResults(response.data);
+			} else {
+				Swal.fire({
+					icon: 'error',
+					title: ghl_crm_sync_preview_js_data.i18n.previewFailed,
+					html: '<p>' + (response.data?.message || ghl_crm_sync_preview_js_data.i18n.unknownError) + '</p>',
+					confirmButtonColor: '#d63638'
+				});
+			}
+		} catch (error) {
+			Swal.fire({
+				icon: 'error',
+				title: ghl_crm_sync_preview_js_data.i18n.requestFailed,
+				html: '<p>' + ghl_crm_sync_preview_js_data.i18n.connectionError + '</p>',
+				confirmButtonColor: '#d63638'
+			});
+		}
+	},
+
+	showPreviewResults: function(data) {
+		const self = this;
+		
+		// Build the preview HTML
+		let html = '<div class="ghl-swal-preview-content">';
+
+		// Header with action badge
+		const actionColor = data.action === 'create' ? '#10b981' : '#635bff';
+		const actionIcon = data.action === 'create' ? 'plus-alt' : 'update';
+		
+		html += '<div class="ghl-preview-header">';
+		html += '<div class="ghl-action-badge" style="background: ' + actionColor + ';">';
+		html += '<span class="dashicons dashicons-' + actionIcon + '"></span> ';
+		html += data.action.toUpperCase();
+		html += '</div>';
+		html += '</div>';
+
+		// User Info Card
+		html += '<div class="ghl-user-card">';
+		html += '<div class="ghl-user-avatar"><span class="dashicons dashicons-admin-users"></span></div>';
+		html += '<div class="ghl-user-info">';
+		html += '<h3>' + self.escapeHtml(data.user_name || 'Unknown User') + '</h3>';
+		html += '<p class="user-email">' + self.escapeHtml(data.user_email || 'No email') + '</p>';
+		html += '</div>';
+		html += '</div>';
+
+		// Quick Stats
+		const fieldsToSync = data.fields_to_sync || [];
+		const fieldsChanged = data.fields_changed || [];
+		const fieldsUnchanged = fieldsToSync.length - fieldsChanged.length;
+		const tagsToAdd = data.tags_to_add || [];
+		
+		html += '<div class="ghl-quick-stats">';
+		html += '<div class="stat-item"><strong>' + fieldsToSync.length + '</strong><br><span>' + ghl_crm_sync_preview_js_data.i18n.totalFields + '</span></div>';
+		html += '<div class="stat-item stat-changed"><strong>' + fieldsChanged.length + '</strong><br><span>' + ghl_crm_sync_preview_js_data.i18n.willChange + '</span></div>';
+		html += '<div class="stat-item stat-unchanged"><strong>' + fieldsUnchanged + '</strong><br><span>' + ghl_crm_sync_preview_js_data.i18n.alreadySynced + '</span></div>';
+		html += '</div>';
+		
+		// Tags stats if any
+		if (tagsToAdd.length > 0) {
+			html += '<div class="ghl-tags-stat">';
+			html += '<span class="dashicons dashicons-tag"></span> ';
+			html += '<strong>' + tagsToAdd.length + '</strong> ' + ghl_crm_sync_preview_js_data.i18n.tagsWillApply;
+			html += '</div>';
+		}
+
+		// Existing GHL Contact (if updating)
+		if (data.ghl_contact && data.action === 'update') {
+			html += '<div class="ghl-existing-contact">';
+			html += '<span class="dashicons dashicons-cloud"></span> ';
+			html += '<strong>' + ghl_crm_sync_preview_js_data.i18n.updatingExisting + '</strong> ';
+			html += self.escapeHtml(data.ghl_contact.name || data.ghl_contact.email);
+			html += '</div>';
+		}
+
+		// Conflicts (show first)
+		if (data.conflicts && data.conflicts.length > 0) {
+			html += '<div class="ghl-alert ghl-alert-error">';
+			html += '<span class="dashicons dashicons-warning"></span>';
+			html += '<div><strong>' + ghl_crm_sync_preview_js_data.i18n.conflictsDetected + '</strong><ul>';
+			data.conflicts.forEach(function(conflict) {
+				html += '<li>' + self.escapeHtml(conflict.message) + '</li>';
+			});
+			html += '</ul></div></div>';
+		}
+
+		// Validations
+		if (data.validations && data.validations.length > 0) {
+			html += '<div class="ghl-alert ghl-alert-warning">';
+			html += '<span class="dashicons dashicons-info"></span>';
+			html += '<div><strong>' + ghl_crm_sync_preview_js_data.i18n.validationWarnings + '</strong><ul>';
+			data.validations.forEach(function(validation) {
+				html += '<li>' + self.escapeHtml(validation.message) + '</li>';
+			});
+			html += '</ul></div></div>';
+		}
+
+		// Show all fields - with changes highlighted
+		if (fieldsToSync.length > 0) {
+			html += '<div class="ghl-field-changes">';
+			html += '<h4><span class="dashicons dashicons-update"></span> ' + ghl_crm_sync_preview_js_data.i18n.fieldMapping + '</h4>';
+			
+			// Add column headers
+			html += '<div class="field-headers">';
+			html += '<div class="header-row">';
+			html += '<div class="header-field">' + ghl_crm_sync_preview_js_data.i18n.ghlField + '</div>';
+			html += '<div class="header-ghl">' + ghl_crm_sync_preview_js_data.i18n.currentGHL + '</div>';
+			html += '<div class="header-wp">' + ghl_crm_sync_preview_js_data.i18n.wpValue + '</div>';
+			html += '<div class="header-status">' + ghl_crm_sync_preview_js_data.i18n.status + '</div>';
+			html += '</div>';
+			html += '</div>';
+			
+			fieldsToSync.forEach(function(field) {
+				const hasError = field.validation && field.validation.status === 'error';
+				const hasWarning = field.validation && field.validation.status === 'warning';
+				const willChange = field.will_change;
+				
+				let itemClass = '';
+				if (hasError) {
+					itemClass = 'error';
+				} else if (hasWarning) {
+					itemClass = 'warning';
+				} else if (willChange) {
+					itemClass = 'changed';
+				} else {
+					itemClass = 'unchanged';
+				}
+				
+				html += '<div class="field-change-item ' + itemClass + '">';
+				
+				// Field name
+				html += '<div class="field-name">' + self.escapeHtml(field.ghl_field) + '</div>';
+				
+				// GHL current value
+				html += '<div class="old-value" title="Current value in GoHighLevel">' + (field.ghl_value ? self.escapeHtml(field.ghl_value) : '<em>empty</em>') + '</div>';
+				
+				// WordPress value
+				html += '<div class="new-value" title="Value from WordPress">' + (field.wp_value ? self.escapeHtml(field.wp_value) : '<em>empty</em>') + '</div>';
+				
+				// Status badge
+				html += '<div class="field-status">';
+				if (willChange) {
+					html += '<span class="change-badge">' + ghl_crm_sync_preview_js_data.i18n.willUpdate + '</span>';
+				} else {
+					html += '<span class="no-change-badge">' + ghl_crm_sync_preview_js_data.i18n.inSync + '</span>';
+				}
+				html += '</div>';
+				
+				if (field.validation && field.validation.message && (hasError || hasWarning)) {
+					html += '<div class="validation-msg">' + self.escapeHtml(field.validation.message) + '</div>';
+				}
+				html += '</div>';
+			});
+			html += '</div>';
+		}
+
+		// Tags
+		if (tagsToAdd.length > 0) {
+			html += '<div class="ghl-tags-section">';
+			html += '<h4><span class="dashicons dashicons-tag"></span> ' + ghl_crm_sync_preview_js_data.i18n.tagsToApply + '</h4>';
+			html += '<div class="ghl-tags-grid">';
+			tagsToAdd.forEach(function(tag) {
+				html += '<span class="ghl-tag-pill">' + self.escapeHtml(tag) + '</span>';
+			});
+			html += '</div></div>';
+		}
+
+		html += '</div>';
+
+		// Show the beautiful modal
+		Swal.fire({
+			title: '<span class="dashicons dashicons-visibility"></span> ' + ghl_crm_sync_preview_js_data.i18n.syncPreview,
+			html: html,
+			width: '900px',
+			showCloseButton: true,
+			showCancelButton: false,
+			confirmButtonText: ghl_crm_sync_preview_js_data.i18n.gotIt,
+			confirmButtonColor: '#635bff',
+			customClass: {
+				popup: 'ghl-preview-modal',
+				title: 'ghl-preview-title',
+				htmlContainer: 'ghl-preview-body'
+			},
+			didOpen: () => {
+				// Ensure content is scrollable
+				const content = document.querySelector('.ghl-swal-preview-content');
+				if (content && content.scrollHeight > content.clientHeight) {
+					content.style.paddingRight = '15px'; // Add padding for scrollbar
+				}
+			}
+		});
+	},
+
+	sleep: function(ms) {
+		return new Promise(resolve => setTimeout(resolve, ms));
+	},
+
+	escapeHtml: function(text) {
+		if (!text) return '';
+		const map = {
+			'&': '&amp;',
+			'<': '&lt;',
+			'>': '&gt;',
+			'"': '&quot;',
+			"'": '&#039;'
+		};
+		return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
+	}
+};
+
+// Auto-initialize on page load if not using SPA
+jQuery(document).ready(function($) {
+	if ($('#ghl-sync-preview-form').length) {
+		window.ghlSyncPreview.init();
+	}
+});
