@@ -95,6 +95,10 @@ $settings_tabs = [
 		'label' => __( 'Role-Based Tags', 'ghl-crm-integration' ),
 		'icon'  => 'dashicons-tag',
 	],
+	'sync-preview' => [
+		'label' => __( 'Sync Preview', 'ghl-crm-integration' ),
+		'icon'  => 'dashicons-visibility',
+	],
 	'advanced' => [
 		'label' => __( 'Advanced', 'ghl-crm-integration' ),
 		'icon'  => 'dashicons-admin-tools',

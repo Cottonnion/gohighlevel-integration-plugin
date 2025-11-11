@@ -730,6 +730,7 @@ class MenuManager {
 			'notifications',
 			'field-sync',
 			'role-tags',
+			'sync-preview',
 			'advanced',
 			'tools',
 			'stats',

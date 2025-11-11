@@ -330,6 +330,61 @@ class AssetsManager {
 			true
 		);
 
+		// Sync Preview assets
+		$this->add_admin_asset(
+			'ghl-crm-sync-preview-css',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'sync-preview.css',
+			[ 'ghl-crm-settings-css' ],
+			[],
+			'1.0.0'
+		);
+
+		$this->add_admin_asset(
+			'ghl-crm-sync-preview-js',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'sync-preview.js',
+			[ 'jquery', 'sweetalert2', 'ghl-crm-select2' ],
+			[
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
+				'i18n'    => [
+					'searchPlaceholder'  => __( 'Search for a user...', 'ghl-crm-integration' ),
+					'missingInfo'        => __( 'Missing Information', 'ghl-crm-integration' ),
+					'selectUser'         => __( 'Please select a user from the dropdown', 'ghl-crm-integration' ),
+					'validatingUser'     => __( 'Validating User...', 'ghl-crm-integration' ),
+					'lookingUpUser'      => __( 'Looking up WordPress user...', 'ghl-crm-integration' ),
+					'connectingGHL'      => __( 'Connecting to GoHighLevel...', 'ghl-crm-integration' ),
+					'establishingAPI'    => __( 'Establishing API connection...', 'ghl-crm-integration' ),
+					'analyzingFields'    => __( 'Analyzing Field Mappings...', 'ghl-crm-integration' ),
+					'comparingData'      => __( 'Comparing WordPress and GHL data...', 'ghl-crm-integration' ),
+					'previewFailed'      => __( 'Preview Failed', 'ghl-crm-integration' ),
+					'unknownError'       => __( 'Unknown error occurred', 'ghl-crm-integration' ),
+					'requestFailed'      => __( 'Request Failed', 'ghl-crm-integration' ),
+					'connectionError'    => __( 'Could not connect to server. Please check your connection and try again.', 'ghl-crm-integration' ),
+					'totalFields'        => __( 'Total Fields', 'ghl-crm-integration' ),
+					'willChange'         => __( 'Will Change', 'ghl-crm-integration' ),
+					'alreadySynced'      => __( 'Already Synced', 'ghl-crm-integration' ),
+					'tagsWillApply'      => __( 'tags will be applied', 'ghl-crm-integration' ),
+					'updatingExisting'   => __( 'Updating existing contact:', 'ghl-crm-integration' ),
+					'conflictsDetected'  => __( 'Conflicts Detected', 'ghl-crm-integration' ),
+					'validationWarnings' => __( 'Validation Warnings', 'ghl-crm-integration' ),
+					'fieldMapping'       => __( 'Field Mapping Comparison', 'ghl-crm-integration' ),
+					'ghlField'           => __( 'GHL Field', 'ghl-crm-integration' ),
+					'currentGHL'         => __( 'Current in GHL', 'ghl-crm-integration' ),
+					'wpValue'            => __( 'WordPress Value', 'ghl-crm-integration' ),
+					'status'             => __( 'Status', 'ghl-crm-integration' ),
+					'willUpdate'         => __( 'WILL UPDATE', 'ghl-crm-integration' ),
+					'inSync'             => __( 'IN SYNC', 'ghl-crm-integration' ),
+					'tagsToApply'        => __( 'Tags to Apply', 'ghl-crm-integration' ),
+					'syncPreview'        => __( 'Sync Preview', 'ghl-crm-integration' ),
+					'gotIt'              => __( 'Got it!', 'ghl-crm-integration' ),
+				],
+			],
+			'1.0.0',
+			true
+		);
+
 		// Global CSS for all admin pages (now includes tabbed main-settings page)
 		$this->add_admin_asset(
 			'ghl-crm-globals-css',
