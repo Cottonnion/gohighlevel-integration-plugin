@@ -113,6 +113,7 @@ $allowed_tags = $settings['restrictions_allowed_tags'] ?? [];
 					<th scope="row">
 						<label for="restrictions_denied_title">
 							<?php esc_html_e( 'Access Denied Title', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'The main heading displayed on the access denied page when users try to view restricted content without permission.', 'ghl-crm-integration' ); ?>">?</span>
 						</label>
 					</th>
 					<td>
@@ -127,27 +128,39 @@ $allowed_tags = $settings['restrictions_allowed_tags'] ?? [];
 					</td>
 				</tr>
 
-				<tr>
-					<th scope="row">
-						<label for="restrictions_denied_message">
-							<?php esc_html_e( 'Access Denied Message', 'ghl-crm-integration' ); ?>
-						</label>
-					</th>
-					<td>
-						<textarea id="restrictions_denied_message" 
-								  name="restrictions_denied_message" 
-								  rows="3" 
-								  class="large-text"><?php echo esc_textarea( $access_denied_message ); ?></textarea>
-						<p class="description">
-							<?php esc_html_e( 'Message shown to logged-in users without required tags.', 'ghl-crm-integration' ); ?>
-						</p>
-					</td>
-				</tr>
-
-				<tr>
+			<tr>
+				<th scope="row">
+					<label for="restrictions_denied_message">
+						<?php esc_html_e( 'Access Denied Message', 'ghl-crm-integration' ); ?>
+						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Rich text message shown to logged-in users who lack the required tags. Supports bold, italic, links, and lists.', 'ghl-crm-integration' ); ?>">?</span>
+					</label>
+				</th>
+				<td>
+					<?php
+					wp_editor(
+						$access_denied_message,
+						'restrictions_denied_message',
+						[
+							'textarea_name' => 'restrictions_denied_message',
+							'textarea_rows' => 5,
+							'media_buttons' => false,
+							'teeny'         => true,
+							'quicktags'     => false,
+							'tinymce'       => [
+								'branding' => false,
+							],
+						]
+					);
+					?>
+					<p class="description">
+						<?php esc_html_e( 'Message shown to logged-in users without required tags.', 'ghl-crm-integration' ); ?>
+					</p>
+				</td>
+			</tr>				<tr>
 					<th scope="row">
 						<label for="restrictions_login_message">
 							<?php esc_html_e( 'Login Required Message', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Message shown to visitors who are not logged in when they try to access restricted content.', 'ghl-crm-integration' ); ?>">?</span>
 						</label>
 					</th>
 					<td>
@@ -199,6 +212,7 @@ $allowed_tags = $settings['restrictions_allowed_tags'] ?? [];
 					<th scope="row">
 						<label for="restrictions_archive_message">
 							<?php esc_html_e( 'Archive Message', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Short message replacing restricted content in blog listings, category pages, and excerpts. Keep it brief.', 'ghl-crm-integration' ); ?>">?</span>
 						</label>
 					</th>
 					<td>
@@ -256,6 +270,7 @@ $allowed_tags = $settings['restrictions_allowed_tags'] ?? [];
 							</span>
 							<span class="ghl-checkbox-label">
 								<?php esc_html_e( 'Hide restricted content from WordPress REST API responses', 'ghl-crm-integration' ); ?>
+								<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Prevents restricted posts from appearing in REST API endpoints (/wp-json/wp/v2/posts). Useful for headless WordPress setups or third-party integrations.', 'ghl-crm-integration' ); ?>">?</span>
 							</span>
 						</label>
 						<p class="description" style="margin-left: 54px; margin-top: 8px;">
@@ -289,6 +304,7 @@ $allowed_tags = $settings['restrictions_allowed_tags'] ?? [];
 							</span>
 							<span class="ghl-checkbox-label">
 								<?php esc_html_e( 'Allow administrators to bypass all restrictions', 'ghl-crm-integration' ); ?>
+								<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Recommended: Allows admin users to view all restricted content regardless of their GoHighLevel tags, so they can manage and preview pages.', 'ghl-crm-integration' ); ?>">?</span>
 							</span>
 						</label>
 						<p class="description" style="margin-left: 54px; margin-top: 8px;">
@@ -301,6 +317,7 @@ $allowed_tags = $settings['restrictions_allowed_tags'] ?? [];
 					<th scope="row">
 						<label for="restrictions_allowed_tags">
 							<?php esc_html_e( 'Additional Allowed Tags', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Global bypass tags: Users with any of these tags can access ALL restricted content, regardless of individual page tag requirements.', 'ghl-crm-integration' ); ?>">?</span>
 						</label>
 					</th>
 					<td>

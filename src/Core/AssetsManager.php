@@ -72,6 +72,9 @@ class AssetsManager {
 		// Register public assets
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_public_assets' ] );
 
+		// Remove TinyMCE branding
+		add_filter( 'tiny_mce_before_init', [ $this, 'remove_tinymce_branding' ] );
+
 		// Define admin page assets
 		$this->define_admin_assets();
 
@@ -148,7 +151,7 @@ class AssetsManager {
 			'tooltip-system.js',
 			[],
 			[],
-			'1.0.0',
+			'1.0.2',
 			true
 		);
 
@@ -200,7 +203,7 @@ class AssetsManager {
 			'dashboard.css',
 			[],
 			[],
-			'1.0.0'
+			'1.0.2'
 		);
 
 		$this->add_admin_asset(
@@ -301,7 +304,7 @@ class AssetsManager {
 			'settings-menu.css',
 			[],
 			[],
-			'1.0.1'
+			'1.0.2'
 		);
 
 		$this->add_admin_asset(
@@ -619,6 +622,11 @@ class AssetsManager {
 		}
 
 		$screen_id = $current_screen->id;
+		
+		// Enqueue WordPress editor assets on admin pages that might need them
+		if ( in_array( $screen_id, [ 'toplevel_page_ghl-crm-admin', 'toplevel_page_ghl-crm-settings' ], true ) ) {
+			wp_enqueue_editor();
+		}
 
 		// Check if we have assets for this page
 		if ( ! isset( $this->admin_assets[ $screen_id ] ) ) {
@@ -752,6 +760,17 @@ class AssetsManager {
 		foreach ( $this->public_assets as $handle => $asset ) {
 			$this->enqueue_asset( $handle, $asset, 'public' );
 		}
+	}
+
+	/**
+	 * Remove TinyMCE branding
+	 *
+	 * @param array $options TinyMCE options.
+	 * @return array
+	 */
+	public function remove_tinymce_branding( array $options ): array {
+		$options['branding'] = false;
+		return $options;
 	}
 
 	/**
