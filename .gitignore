@@ -37,3 +37,11 @@ debug.log
 
 # Refreence files from other plugins
 /refrence-classes/
+
+# tests
+/tests/
+
+.*
+
+# todo
+TODO.md
