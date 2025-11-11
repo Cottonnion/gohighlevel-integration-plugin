@@ -236,31 +236,43 @@ class UserHooks {
 	 * @return void
 	 */
 	public function on_user_update( int $user_id, \WP_User $old_user_data ): void {
-		// Debounce: Prevent multiple API calls on rapid updates
+		$this->queue_user_profile_sync( $user_id, $old_user_data );
+	}
+
+	/**
+	 * Queue a user profile sync job for the specified user.
+	 *
+	 * @param int           $user_id        User ID.
+	 * @param \WP_User|null $old_user_data  Previous user data (optional for manual triggers).
+	 * @return bool Whether a queue item was created or updated.
+	 */
+	public function queue_user_profile_sync( int $user_id, ?\WP_User $old_user_data = null ): bool {
 		$lock_key = "ghl_sync_lock_{$user_id}";
 		if ( get_transient( $lock_key ) ) {
-			return;
-		}
-		set_transient( $lock_key, 1, 10 ); // 10 second lock
-		$user = get_userdata( $user_id );
-		if ( ! $user ) {
-			return;
+			return false;
 		}
 
-		// Detect role changes
+		set_transient( $lock_key, 1, 10 ); // 10 second lock
+
+		$user = get_userdata( $user_id );
+		if ( ! $user instanceof \WP_User ) {
+			return false;
+		}
+
+		if ( null === $old_user_data ) {
+			$old_user_data = clone $user;
+		}
+
 		$old_roles    = $old_user_data->roles;
 		$new_roles    = $user->roles;
 		$role_changed = ( $old_roles !== $new_roles );
 
-		// Prepare contact data
 		$contact_data = $this->prepare_contact_data( $user );
 
-		// Get existing tags from GHL to avoid overwriting them
 		$existing_tags = [];
 		$contact_id    = get_user_meta( $user_id, '_ghl_contact_id', true );
 
 		if ( $contact_id ) {
-			// Fetch existing contact from GHL to get current tags
 			try {
 				$client  = \GHL_CRM\API\Client\Client::get_instance();
 				$contact = $client->get( "contacts/{$contact_id}" );
@@ -269,31 +281,27 @@ class UserHooks {
 					$existing_tags = $contact['contact']['tags'];
 				}
 			} catch ( \Exception $e ) {
-				// Silently fail if we can't fetch existing tags.
 				unset( $e );
 			}
 		}
 
-		// Prefer tags managed via user profile when available
 		$profile_tags = get_user_meta( $user_id, '_ghl_contact_tags', true );
 		if ( is_array( $profile_tags ) ) {
 			$sanitized_profile_tags = array_map( 'sanitize_text_field', $profile_tags );
 			$existing_tags          = array_values(
 				array_filter(
 					$sanitized_profile_tags,
-					static function ( $tag ) {
+					static function ( $tag ): bool {
 						return $tag !== '';
 					}
 				)
 			);
 		}
 
-		// Handle role-based tags
 		$role_tags_manager = RoleTagsManager::get_instance();
 		$settings          = $this->settings_manager->get_settings_array();
 		$role_tags_config  = $settings['role_tags'] ?? [];
 
-		// If role changed, remove old role tags (if configured)
 		$tags_to_remove = [];
 		if ( $role_changed ) {
 			foreach ( $old_roles as $old_role ) {
@@ -306,30 +314,25 @@ class UserHooks {
 			}
 		}
 
-		// Get new role-based tags
 		$role_based_tags = $role_tags_manager->get_user_role_tags( $user_id );
 
-		// Remove old role tags from existing tags
 		if ( ! empty( $tags_to_remove ) && ! empty( $existing_tags ) ) {
 			$existing_tags = array_values( array_diff( $existing_tags, $tags_to_remove ) );
 		}
 
-		// Check if user just made first WooCommerce purchase (within last 5 minutes)
 		$wc_customer_tags = [];
 		if ( class_exists( 'WooCommerce' ) ) {
 			$wc_settings = $settings['wc_convert_lead_enabled'] ?? false;
 			if ( $wc_settings ) {
-				// Check if user has exactly 1 completed order in the last 5 minutes
 				$recent_orders = wc_get_orders(
 					[
 						'customer'     => $user->user_email,
 						'status'       => [ 'completed', 'processing' ],
-						'limit'        => 2, // Get 2 to check if it's exactly 1
-						'date_created' => '>' . ( time() - 300 ), // Last 5 minutes
+						'limit'        => 2,
+						'date_created' => '>' . ( time() - 300 ),
 					]
 				);
 
-				// If exactly 1 recent order, user is a new customer - preserve customer tags
 				if ( count( $recent_orders ) === 1 ) {
 					$customer_tags_setting = $settings['wc_customer_tag'] ?? [];
 					if ( ! is_array( $customer_tags_setting ) ) {
@@ -340,17 +343,16 @@ class UserHooks {
 			}
 		}
 
-		// Merge: existing tags (minus removed) + new role tags + WooCommerce customer tags
 		$all_tags = array_unique( array_merge( $existing_tags, $role_based_tags, $wc_customer_tags ) );
 
 		if ( ! empty( $all_tags ) ) {
-			// Reindex array to ensure sequential keys for proper JSON encoding
 			$contact_data['tags'] = array_values( $all_tags );
 		}
 
-		// Queue for async processing
 		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
-		$queue_manager->add_to_queue( 'user', $user_id, 'profile_update', $contact_data );
+		$queue_id      = $queue_manager->add_to_queue( 'user', $user_id, 'profile_update', $contact_data );
+
+		return false !== $queue_id;
 	}
 	/**
 	 * Handle user deletion
