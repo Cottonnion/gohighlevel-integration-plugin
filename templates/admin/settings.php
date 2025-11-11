@@ -87,8 +87,8 @@ $settings_tabs = [
 		'label' => __( 'Email Notifications', 'ghl-crm-integration' ),
 		'icon'  => 'dashicons-email',
 	],
-	'field-sync' => [
-		'label' => __( 'Field Sync', 'ghl-crm-integration' ),
+	'sync-options' => [
+		'label' => __( 'Sync Options', 'ghl-crm-integration' ),
 		'icon'  => 'dashicons-update',
 	],
 	'role-tags' => [

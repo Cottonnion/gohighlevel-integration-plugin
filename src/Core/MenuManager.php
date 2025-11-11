@@ -728,7 +728,7 @@ class MenuManager {
 			'rest-api',
 			'webhooks',
 			'notifications',
-			'field-sync',
+			'sync-options',
 			'role-tags',
 			'sync-preview',
 			'advanced',
