@@ -496,27 +496,53 @@ class QueueProcessor {
 	 * @return array|bool
 	 */
 	private function handle_user_login( $client, $contact_resource, array $payload ) {
-		$email   = $payload['email'] ?? '';
+		$email = $payload['email'] ?? '';
+		
+		if ( empty( $email ) ) {
+			return false;
+		}
+		
 		$contact = $this->contact_cache->get( $email );
 
 		if ( ! $contact ) {
-			$existing = $client->get( 'contacts?query=' . urlencode( $email ) );
-			if ( ! empty( $existing['contacts'][0] ) ) {
-				$contact = $existing['contacts'][0];
-				$this->contact_cache->set( $email, $contact );
+			try {
+				// Use same format as handle_user_register_update for consistency
+				$existing = $client->get( 'contacts/', [ 'query' => $email ] );
+				if ( ! empty( $existing['contacts'][0] ) ) {
+					$contact = $existing['contacts'][0];
+					$this->contact_cache->set( $email, $contact );
+				}
+			} catch ( \Exception $e ) {
+				// Log the error but don't fail - contact might not exist in GHL yet
+				error_log( sprintf(
+					'[GHL CRM] User login sync failed for %s: %s',
+					$email,
+					$e->getMessage()
+				) );
+				return false;
 			}
 		}
 
 		if ( $contact ) {
-			// Just update email to trigger GHL automations on login
-			// Don't send customFields to avoid "customFields must be an array" error
-			$result = $contact_resource->update(
-				$contact['id'],
-				[
-					'email' => $payload['email'],
-				]
-			);
-			return ! empty( $result ) ? $result : false;
+			try {
+				// Just update email to trigger GHL automations on login
+				// Don't send customFields to avoid "customFields must be an array" error
+				$result = $contact_resource->update(
+					$contact['id'],
+					[
+						'email' => $payload['email'],
+					]
+				);
+				return ! empty( $result ) ? $result : false;
+			} catch ( \Exception $e ) {
+				// Log but don't fail - this is non-critical
+				error_log( sprintf(
+					'[GHL CRM] User login update failed for contact %s: %s',
+					$contact['id'],
+					$e->getMessage()
+				) );
+				return false;
+			}
 		}
 
 		return false;
