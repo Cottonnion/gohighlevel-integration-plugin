@@ -26,10 +26,13 @@
 
     // Tooltip state
     let activeTooltip = null;
+    let activeElement = null;
     let showTimeout = null;
     let hideTimeout = null;
     let mouseX = 0;
     let mouseY = 0;
+    let suppressClick = false;
+    let dismissHandlersBound = false;
 
     // Track mouse position for dynamic positioning
     document.addEventListener('mousemove', (e) => {
@@ -151,6 +154,15 @@
             // Create new tooltip
             activeTooltip = createTooltip(content);
             document.body.appendChild(activeTooltip);
+
+            if ((!Number.isFinite(mouseX) || !Number.isFinite(mouseY)) || (mouseX === 0 && mouseY === 0)) {
+                const rect = element.getBoundingClientRect();
+                mouseX = rect.left + rect.width / 2;
+                mouseY = rect.top + rect.height / 2;
+            }
+
+            activeElement = element;
+            element.classList.add('has-ghl-tooltip-active');
             
             // Position tooltip
             positionTooltip(activeTooltip, element);
@@ -191,6 +203,11 @@
             
             activeTooltip = null;
         }
+
+        if (activeElement) {
+            activeElement.classList.remove('has-ghl-tooltip-active');
+            activeElement = null;
+        }
     }
 
     /**
@@ -201,8 +218,6 @@
         const content = element.getAttribute(TOOLTIP_CONFIG.attribute);
         
         if (content && content.trim()) {
-            // Add active class for styling purposes
-            element.classList.add('has-ghl-tooltip-active');
             showTooltip(element, content.trim());
         }
     }
@@ -219,6 +234,114 @@
     }
 
     /**
+     * Handle click interactions (desktop and touch fallbacks)
+     */
+    function handleTooltipClick(event) {
+        if (event.type === 'click' && suppressClick) {
+            event.preventDefault();
+            return;
+        }
+
+        const element = event.currentTarget;
+        const content = element.getAttribute(TOOLTIP_CONFIG.attribute);
+
+        if (!content || !content.trim()) {
+            return;
+        }
+
+        event.preventDefault();
+
+        if (typeof event.clientX === 'number' && typeof event.clientY === 'number') {
+            mouseX = event.clientX;
+            mouseY = event.clientY;
+        } else if (event instanceof KeyboardEvent) {
+            const rect = element.getBoundingClientRect();
+            mouseX = rect.left + rect.width / 2;
+            mouseY = rect.top + rect.height / 2;
+        }
+
+        if (activeElement === element && activeTooltip) {
+            hideTooltip();
+            return;
+        }
+
+        showTooltip(element, content.trim());
+    }
+
+    /**
+     * Handle touch interactions to suppress checkbox/label toggles
+     */
+    function handleTooltipTouch(event) {
+        // Allow preventDefault to stop label activation on touch devices
+        event.preventDefault();
+
+        suppressClick = true;
+        setTimeout(() => {
+            suppressClick = false;
+        }, 400);
+
+        if (event.touches && event.touches[0]) {
+            mouseX = event.touches[0].clientX;
+            mouseY = event.touches[0].clientY;
+        }
+
+        handleTooltipClick(event);
+    }
+
+    /**
+     * Handle keyboard activation for accessibility
+     */
+    function handleTooltipKeyDown(event) {
+        if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar' || event.key === 'Space') {
+            handleTooltipClick(event);
+        }
+    }
+
+    /**
+     * Handle document clicks/touches to dismiss active tooltip
+     */
+    function handleDocumentInteraction(event) {
+        if (!activeTooltip) {
+            return;
+        }
+
+        const target = event.target instanceof Element ? event.target : null;
+
+        if (activeElement && target && target.closest(`[${TOOLTIP_CONFIG.attribute}]`) === activeElement) {
+            return;
+        }
+
+        hideTooltip();
+    }
+
+    /**
+     * Handle global keyboard interactions (e.g., Escape to close)
+     */
+    function handleDocumentKeyDown(event) {
+        if (!activeTooltip) {
+            return;
+        }
+
+        if (event.key === 'Escape' || event.key === 'Esc') {
+            hideTooltip();
+        }
+    }
+
+    /**
+     * Set up global listeners for dismissing tooltips
+     */
+    function setupDismissHandlers() {
+        if (dismissHandlersBound) {
+            return;
+        }
+
+        document.addEventListener('click', handleDocumentInteraction, true);
+        document.addEventListener('touchstart', handleDocumentInteraction, { passive: true, capture: true });
+        document.addEventListener('keydown', handleDocumentKeyDown);
+        dismissHandlersBound = true;
+    }
+
+    /**
      * Initialize tooltips for existing elements
      */
     function initializeTooltips() {
@@ -228,14 +351,24 @@
             // Remove existing listeners to prevent duplicates
             element.removeEventListener('mouseenter', handleMouseEnter);
             element.removeEventListener('mouseleave', handleMouseLeave);
+            element.removeEventListener('click', handleTooltipClick);
+            element.removeEventListener('touchstart', handleTooltipTouch);
+            element.removeEventListener('keydown', handleTooltipKeyDown);
             
             // Add new listeners
             element.addEventListener('mouseenter', handleMouseEnter);
             element.addEventListener('mouseleave', handleMouseLeave);
+            element.addEventListener('click', handleTooltipClick);
+            element.addEventListener('touchstart', handleTooltipTouch, { passive: false });
+            element.addEventListener('keydown', handleTooltipKeyDown);
             
             // Add hover cursor if not already set
             if (!element.style.cursor && !element.classList.contains('ghl-tooltip-icon')) {
                 element.style.cursor = 'help';
+            }
+
+            if (typeof element.tabIndex === 'number' && element.tabIndex < 0) {
+                element.setAttribute('tabindex', '0');
             }
         });
     }
@@ -292,18 +425,9 @@
      * Handle scroll and resize events
      */
     function handleWindowEvents() {
-        let scrollTimeout;
-        
         window.addEventListener('scroll', () => {
             if (activeTooltip) {
-                activeTooltip.style.opacity = '0.6';
-                
-                clearTimeout(scrollTimeout);
-                scrollTimeout = setTimeout(() => {
-                    if (activeTooltip) {
-                        activeTooltip.style.opacity = '1';
-                    }
-                }, 150);
+                hideTooltip();
             }
         }, { passive: true });
         
@@ -391,6 +515,7 @@
         initializeTooltips();
         setupMutationObserver();
         handleWindowEvents();
+        setupDismissHandlers();
     }
 
     // Initialize based on document state
