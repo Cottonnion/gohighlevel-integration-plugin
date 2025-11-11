@@ -95,6 +95,7 @@ class SettingsManager {
 		add_action( 'wp_ajax_ghl_crm_get_schema_details', [ $this, 'get_schema_details' ] );
 		add_action( 'wp_ajax_ghl_crm_get_forms', [ $this, 'handle_get_forms' ] );
 		add_action( 'wp_ajax_ghl_crm_refresh_metadata', [ $this, 'refresh_metadata' ] );
+		add_action( 'wp_ajax_ghl_crm_preview_user_sync', [ $this, 'preview_user_sync' ] );
 
 		// Custom Object Mapping AJAX handlers
 		add_action( 'wp_ajax_ghl_crm_get_post_types', [ $this, 'get_post_types' ] );
@@ -2135,6 +2136,65 @@ class SettingsManager {
 	public function handle_clear_all_logs(): void {
 		// Delegate to AjaxHandler (nonce and permissions checked there)
 		AjaxHandler::clear_all_logs();
+	}
+
+	/**
+	 * Preview user sync (dry-run)
+	 *
+	 * @return void Outputs JSON response and exits.
+	 */
+	public function preview_user_sync(): void {
+		check_ajax_referer( 'ghl_crm_admin', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				[ 'message' => __( 'You do not have permission to preview syncs.', 'ghl-crm-integration' ) ],
+				403
+			);
+		}
+
+		$user_identifier = isset( $_POST['user_identifier'] ) ? sanitize_text_field( wp_unslash( $_POST['user_identifier'] ) ) : '';
+
+		if ( empty( $user_identifier ) ) {
+			wp_send_json_error( [ 'message' => __( 'Please provide a username or email.', 'ghl-crm-integration' ) ] );
+		}
+
+		// Try to find user by email or username
+		$user = get_user_by( 'email', $user_identifier );
+		if ( ! $user ) {
+			$user = get_user_by( 'login', $user_identifier );
+		}
+
+		if ( ! $user ) {
+			wp_send_json_error( [ 'message' => __( 'User not found.', 'ghl-crm-integration' ) ] );
+		}
+
+		try {
+			$sync_preview = \GHL_CRM\Sync\SyncPreview::get_instance();
+			$preview_data = $sync_preview->preview_user_sync( $user->ID );
+
+			wp_send_json_success( $preview_data );
+		} catch ( \Exception $e ) {
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: error message */
+						__( 'Preview failed: %s', 'ghl-crm-integration' ),
+						$e->getMessage()
+					),
+				]
+			);
+		} catch ( \Error $t ) {
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: error message */
+						__( 'An unexpected error occurred: %s', 'ghl-crm-integration' ),
+						$t->getMessage()
+					),
+				]
+			);
+		}
 	}
 
 	/**
