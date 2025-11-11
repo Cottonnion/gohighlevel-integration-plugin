@@ -88,6 +88,10 @@
 	box-shadow: var(--ghl-shadow-xs);
 	padding: var(--ghl-spacing-xl);
 	min-height: 420px;
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+	overflow-x: hidden;
 }
 
 .ghl-settings-content h2 {
@@ -155,7 +159,7 @@
 }
 
 /* Responsive */
-@media screen and (max-width: 782px) {
+@media screen and (max-width: 960px) {
 	.ghl-settings-with-sidebar {
 		position: relative;
 	}
@@ -197,15 +201,19 @@
 
 	.ghl-settings-content {
 		margin-left: 60px;
-		transition: margin-left 0.3s ease;
+		width: calc(100% - 60px);
+		transition: margin-left 0.3s ease, width 0.3s ease;
 	}
 
 	.ghl-settings-nav.expanded ~ .ghl-settings-content {
 		margin-left: 220px;
+		width: calc(100% - 220px);
 	}
 
 	.ghl-settings-menu-toggle {
 		display: flex;
+		bottom: 24px;
+		right: 24px;
 	}
 
 	.ghl-settings-nav.expanded + .ghl-settings-menu-toggle .dashicons-menu {
@@ -230,13 +238,18 @@
 		box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
 	}
 
-	.ghl-settings-content {
-		margin-left: 0;
-	}
+		.ghl-settings-content {
+			margin: 0;
+			max-width: 100%;
+			width: 100%;
+			box-sizing: border-box;
+			overflow-x: hidden;
+			padding: var(--ghl-spacing-lg) var(--ghl-spacing-md);
+		}
 
-	.ghl-settings-nav.expanded ~ .ghl-settings-content {
-		margin-left: 0;
-	}
+		.ghl-settings-nav.expanded ~ .ghl-settings-content {
+			margin-left: 0;
+		}
 
 	/* Overlay when menu is open */
 	body.ghl-menu-open::before {

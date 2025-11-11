@@ -194,13 +194,13 @@
 .ghl-header-nav {
     background: #ffffff;
     border-bottom: 1px solid #e5e7eb;
-    padding: 0;
-    margin: 0 0 20px -20px;
-    margin-left: -20px;
-    margin-right: -20px;
+    padding: 0 20px;
+    margin: 0 0 20px;
     position: sticky;
     top: 32px;
     z-index: 9;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* WordPress admin bar offset */
@@ -316,16 +316,18 @@ body.admin-bar .ghl-header-nav {
 
 @media screen and (max-width: 782px) {
     .ghl-header-nav {
-        margin-left: -10px;
-        margin-right: -10px;
+        padding: 0 12px;
     }
-    
+
     .ghl-nav-tabs {
-        padding: 0 10px;
+        padding: 0;
+        flex-wrap: wrap;
+        justify-content: center;
     }
     
     .ghl-nav-tab {
-        padding: 12px 14px;
+        padding: 10px 10px;
+        gap: 0;
     }
     
     /* Hide labels on mobile, show icons only */

@@ -97,6 +97,10 @@
 	gap: 8px;
 }
 
+html.wp-toolbar {
+    overflow-x: hidden;
+}
+
 /* Loading Animation */
 @keyframes rotation {
 	from {
@@ -134,4 +138,10 @@
 	.ghl-tab-inner {
 		padding: 20px 15px;
 	}
+
+	.auto-fold #wpcontent {
+    position: relative;
+    margin-left: 0;
+    padding-left: 0;
+}
 }

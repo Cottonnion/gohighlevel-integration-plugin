@@ -178,9 +178,9 @@ li.select2-results__option.select2-results__option--highlighted {
    Enhanced Select2 with checkbox-style multi-select
    ======================================== */
 
-.select2-container {
+/* .select2-container {
 	min-width: 400px;
-}
+} */
 
 .select2-results__option {
 	padding-right: 20px;
