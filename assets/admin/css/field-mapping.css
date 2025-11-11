@@ -27,7 +27,7 @@
 
 /* Visual feedback when field mapping changes */
 .ghl-field-changed {
-	background-color: #fffbcc !important;
+	background-color: #d1fae5 !important; /* Green highlight for applied suggestions */
 	transition: background-color 0.3s ease;
 }
 

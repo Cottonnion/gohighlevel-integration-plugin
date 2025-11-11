@@ -265,10 +265,14 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 		</p>
 	</div>
 
-	<div style="margin: 20px 0;">
+	<div style="margin: 20px 0; display: flex; gap: 12px; align-items: center;">
 		<button type="button" id="ghl-load-custom-fields" class="ghl-button ghl-button-primary" data-nonce="<?php echo esc_attr( wp_create_nonce( 'ghl_crm_field_mapping_nonce' ) ); ?>">
 			<span class="dashicons dashicons-update" style="margin-top: 3px;"></span>
 			<?php esc_html_e( 'Reload Fields from GoHighLevel', 'ghl-crm-integration' ); ?>
+		</button>
+		<button type="button" id="ghl-auto-suggest-mappings" class="ghl-button ghl-button-secondary">
+			<span class="dashicons dashicons-lightbulb" style="margin-top: 3px;"></span>
+			<?php esc_html_e( 'Auto-Suggest Mappings', 'ghl-crm-integration' ); ?>
 		</button>
 		<span id="ghl-custom-fields-status" style="margin-left: 10px;">
 			<span style="color: #666;">
@@ -306,12 +310,13 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 			<tbody>
 				<?php 
 				foreach ( $default_wp_fields as $key => $label ) : 
-					// Set default mappings if not configured yet
+					// Set default mapping only for required email field
 					$default_mappings = [
 						'user_email'  => 'email',
-						'first_name'  => 'firstName',
-						'last_name'   => 'lastName',
 					];
+					
+					// Check if this field has been explicitly saved by user
+					$is_explicitly_saved = isset( $saved_mappings[ $key ] );
 					
 					// Use saved value if exists, otherwise use default mapping if available
 					if ( isset( $saved_mappings[ $key ]['ghl_field'] ) ) {
@@ -327,7 +332,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 					// Email field should be disabled (required by GHL)
 					$is_email_field = ( $key === 'user_email' );
 				?>
-					<tr class="ghl-field-row<?php echo $is_email_field ? ' ghl-required-field' : ''; ?>" data-section="default" data-key="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( wp_strip_all_tags( $label ) ); ?>" data-search="<?php echo esc_attr( strtolower( wp_strip_all_tags( $label ) . ' ' . $key ) ); ?>">
+					<tr class="ghl-field-row<?php echo $is_email_field ? ' ghl-required-field' : ''; ?>" data-section="default" data-key="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( wp_strip_all_tags( $label ) ); ?>" data-search="<?php echo esc_attr( strtolower( wp_strip_all_tags( $label ) . ' ' . $key ) ); ?>" data-explicitly-saved="<?php echo $is_explicitly_saved ? '1' : '0'; ?>">
 						<td>
 							<strong><?php echo esc_html( $label ); ?></strong>
 							<span class="ghl-field-badge ghl-field-badge--default"><?php esc_html_e( 'Core', 'ghl-crm-integration' ); ?></span><br>
@@ -386,10 +391,11 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 				</thead>
 				<tbody>
 					<?php foreach ( $buddyboss_fields as $key => $label ) : 
+						$is_explicitly_saved = isset( $saved_mappings[ $key ] );
 						$saved_ghl_field = isset( $saved_mappings[ $key ]['ghl_field'] ) ? $saved_mappings[ $key ]['ghl_field'] : '';
 						$saved_direction = isset( $saved_mappings[ $key ]['direction'] ) ? $saved_mappings[ $key ]['direction'] : 'both';
 					?>
-						<tr class="ghl-field-row" data-section="buddyboss" data-key="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( wp_strip_all_tags( $label ) ); ?>" data-search="<?php echo esc_attr( strtolower( wp_strip_all_tags( $label ) . ' ' . $key ) ); ?>">
+						<tr class="ghl-field-row" data-section="buddyboss" data-key="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( wp_strip_all_tags( $label ) ); ?>" data-search="<?php echo esc_attr( strtolower( wp_strip_all_tags( $label ) . ' ' . $key ) ); ?>" data-explicitly-saved="<?php echo $is_explicitly_saved ? '1' : '0'; ?>">
 							<td>
 								<strong><?php echo esc_html( $label ); ?></strong>
 								<span class="ghl-field-badge ghl-field-badge--buddyboss"><?php esc_html_e( 'BuddyBoss', 'ghl-crm-integration' ); ?></span><br>
@@ -442,10 +448,11 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 				</thead>
 				<tbody>
 					<?php foreach ( $woocommerce_fields as $key => $label ) : 
+						$is_explicitly_saved = isset( $saved_mappings[ $key ] );
 						$saved_ghl_field = isset( $saved_mappings[ $key ]['ghl_field'] ) ? $saved_mappings[ $key ]['ghl_field'] : '';
 						$saved_direction = isset( $saved_mappings[ $key ]['direction'] ) ? $saved_mappings[ $key ]['direction'] : 'both';
 					?>
-						<tr class="ghl-field-row" data-section="woocommerce" data-key="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( wp_strip_all_tags( $label ) ); ?>" data-search="<?php echo esc_attr( strtolower( wp_strip_all_tags( $label ) . ' ' . $key ) ); ?>">
+						<tr class="ghl-field-row" data-section="woocommerce" data-key="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( wp_strip_all_tags( $label ) ); ?>" data-search="<?php echo esc_attr( strtolower( wp_strip_all_tags( $label ) . ' ' . $key ) ); ?>" data-explicitly-saved="<?php echo $is_explicitly_saved ? '1' : '0'; ?>">
 							<td>
 								<strong><?php echo esc_html( $label ); ?></strong>
 								<span class="ghl-field-badge ghl-field-badge--woocommerce"><?php esc_html_e( 'WooCommerce', 'ghl-crm-integration' ); ?></span><br>
@@ -541,7 +548,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 			</div>
 		<?php endif; ?>
 
-		<?php submit_button( __( 'Save Field Mapping', 'ghl-crm-integration' ) ); ?>
+			<?php submit_button( __( 'Save Field Mapping', 'ghl-crm-integration' ) ); ?>
 	</form>
 </div>
 
