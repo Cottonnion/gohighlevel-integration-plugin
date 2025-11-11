@@ -59,6 +59,33 @@ class MenuManager {
 		add_action( 'wp_ajax_ghl_crm_manual_connect', [ $this, 'handle_manual_connect' ] );
 		add_action( 'wp_ajax_ghl_crm_disconnect_api', [ $this, 'handle_disconnect_api' ] );
 		add_filter( 'admin_footer_text', [ $this, 'custom_admin_footer_text' ] );
+		add_action( 'admin_head', [ $this, 'adjust_admin_viewport' ] );
+	}
+
+	/**
+	 * Adjust viewport meta tag on plugin admin screens to prevent zooming.
+	 *
+	 * @return void
+	 */
+	public function adjust_admin_viewport(): void {
+		$current_screen = get_current_screen();
+
+		if ( ! $current_screen || strpos( (string) $current_screen->id, 'ghl-crm' ) === false ) {
+			return;
+		}
+
+		// Update the existing viewport meta tag so the toolbar uses full width on mobile.
+		?>
+		<script>
+		(function () {
+			var meta = document.querySelector('meta[name="viewport"]');
+			if (!meta) {
+				return;
+			}
+			meta.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+		})();
+		</script>
+		<?php
 	}
 
 	/**

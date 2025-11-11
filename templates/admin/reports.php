@@ -291,17 +291,6 @@ $report_data = \GHL_CRM\Core\Dashboard\StatsProvider::get_instance()->get_report
 					</div>
 				</div>
 			</div>
-
-			<!-- Support Resources -->
-			<div style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(99,102,241,0.2);">
-				<h3 style="margin: 0 0 12px; font-size: 16px; font-weight: 600; color: white;">Documentation</h3>
-				<p style="margin: 0 0 16px; font-size: 13px; color: rgba(255,255,255,0.9); line-height: 1.5;">
-					Step-by-step guides, video tutorials, and troubleshooting help.
-				</p>
-				<a href="#" class="ghl-button" style="background: white; color: #6366f1; border: none; font-weight: 600; text-align: center; padding: 10px; text-decoration: none; display: block;">
-					View Documentation
-				</a>
-			</div>
 		</div>
 	</div>
 </div>

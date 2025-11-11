@@ -100,7 +100,7 @@ if ( empty( $rest_api_key ) ) {
 								readonly
 								style="font-family: monospace; background: #f0f0f1;"
 							/>
-							<button type="button" class="button button-secondary" id="ghl-generate-api-key">
+							<button type="button" class="ghl-button ghl-button-secondary" id="ghl-generate-api-key">
 								<span class="dashicons dashicons-update" style="vertical-align: middle;"></span>
 								<span data-ghl-tooltip="<?php esc_attr_e( 'Creates a new random API key and invalidates the old one. Update all external integrations with the new key after regenerating.', 'ghl-crm-integration' ); ?>"><?php esc_html_e( 'Regenerate', 'ghl-crm-integration' ); ?></span>
 							</button>

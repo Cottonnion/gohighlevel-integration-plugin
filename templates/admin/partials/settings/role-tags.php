@@ -44,7 +44,7 @@ $global_tags = is_array( $global_tags_raw ) ? implode( ',', $global_tags_raw ) :
 
 		<div class="ghl-table-info">
 			<span class="dashicons dashicons-info"></span>
-			<p><?php esc_html_e( 'The table below is scrollable. Configure tags for each WordPress role by selecting from existing GHL tags or creating new ones.', 'ghl-crm-integration' ); ?></p>
+			<p><?php esc_html_e( 'Swipe horizontally to view all columns. Configure tags for each WordPress role by selecting from existing GHL tags or creating new ones.', 'ghl-crm-integration' ); ?></p>
 		</div>
 
 		<div class="ghl-role-tag-mappings">
@@ -54,7 +54,7 @@ $global_tags = is_array( $global_tags_raw ) ? implode( ',', $global_tags_raw ) :
 						<th style="width: 25%;"><?php esc_html_e( 'WordPress Role', 'ghl-crm-integration' ); ?></th>
 						<th style="width: 35%;">
 							<?php esc_html_e( 'GoHighLevel Tags', 'ghl-crm-integration' ); ?>
-							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Enter one or more tags to apply to users with this role. Tags are synced to their GoHighLevel contact record. You can select existing tags or create new ones by typing.', 'ghl-crm-integration' ); ?>">?</span>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Enter one or more tags to apply to users with this role. Tags are synced to their GoHighLevel contact record. You can select existing tags from the dropdown below.', 'ghl-crm-integration' ); ?>">?</span>
 						</th>
 						<th style="width: 20%;">
 							<?php esc_html_e( 'Auto-Apply', 'ghl-crm-integration' ); ?>

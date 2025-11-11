@@ -45,8 +45,8 @@ $user_register_tags            = $settings['user_register_tags'] ?? [];
 		<div class="ghl-form-builder">
 			<form class="ghl-form" method="post">
 				<div class="ghl-form-item">
-					<div class="ghl-form-item-content">
-						<label for="ghl_white_label_domain" style="display: block; margin-bottom: 10px; font-weight: 600;">
+					<div class="ghl-form-item-content ghl-form-item-content--column">
+						<label for="ghl_white_label_domain" class="ghl-form-label">
 							<?php esc_html_e( 'White Label Domain URL', 'ghl-crm-integration' ); ?>
 							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'If you have a custom branded domain in GoHighLevel (like app.yourbusiness.com instead of app.gohighlevel.com), enter it here. This ensures links to GHL records use your branded URL. Leave empty if you use the standard GoHighLevel domain.', 'ghl-crm-integration' ); ?>">?</span>
 						</label>
@@ -54,12 +54,11 @@ $user_register_tags            = $settings['user_register_tags'] ?? [];
 							type="text" 
 							id="ghl_white_label_domain" 
 							name="ghl_white_label_domain" 
-							class="ghl-input" 
+							class="ghl-input ghl-input--wide" 
 							value="<?php echo esc_attr( $ghl_white_label_domain ); ?>"
 							placeholder="https://app.yourdomain.com"
-							style="width: 100%; max-width: 500px;"
 						>
-						<p class="description" style="margin-top: 8px;">
+						<p class="description ghl-form-description">
 							<?php esc_html_e( 'Enter your custom white label domain if you have one (e.g., https://app.yourdomain.com). Leave empty to use the default GoHighLevel domain (app.gohighlevel.com). This will be used for links to GHL records.', 'ghl-crm-integration' ); ?>
 						</p>
 					</div>
@@ -160,9 +159,9 @@ $user_register_tags            = $settings['user_register_tags'] ?? [];
 				</div>
 				
 				<!-- Conditional Tags Dropdown -->
-				<div class="ghl-form-item" id="user_register_tags_section" style="margin-left: 30px; <?php echo ! in_array( 'user_register', $user_sync_actions, true ) ? 'display: none;' : ''; ?>">
-					<div class="ghl-form-item-content">
-						<label style="display: block; margin-bottom: 10px; font-weight: 600;">
+				<div class="ghl-form-item ghl-form-item--nested" id="user_register_tags_section" <?php echo ! in_array( 'user_register', $user_sync_actions, true ) ? 'style="display: none;"' : ''; ?>>
+					<div class="ghl-form-item-content ghl-form-item-content--column">
+						<label for="user_register_tags" class="ghl-form-label">
 							<?php esc_html_e( 'Default Tags on User Registration', 'ghl-crm-integration' ); ?>
 							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'These tags are automatically applied to contacts in GoHighLevel when someone creates a new account on your WordPress site. Use these tags to trigger welcome emails, onboarding workflows, or segment new users in GHL.', 'ghl-crm-integration' ); ?>">?</span>
 						</label>
@@ -171,12 +170,11 @@ $user_register_tags            = $settings['user_register_tags'] ?? [];
 							name="user_register_tags[]" 
 							multiple 
 							class="ghl-tags-select"
-							style="width: 100%; max-width: 500px;"
 							data-saved-tags='<?php echo wp_json_encode( $user_register_tags ); ?>'
 							data-placeholder="<?php esc_attr_e( 'Select tags to apply when user registers...', 'ghl-crm-integration' ); ?>">
 							<option value=""><?php esc_html_e( 'Loading tags...', 'ghl-crm-integration' ); ?></option>
 						</select>
-						<p class="description" style="margin-top: 8px;">
+						<p class="description ghl-form-description">
 							<?php esc_html_e( 'These tags will be automatically added to contacts when users register in WordPress.', 'ghl-crm-integration' ); ?>
 						</p>
 					</div>
@@ -192,7 +190,7 @@ $user_register_tags            = $settings['user_register_tags'] ?? [];
 	</button>
 
 	<!-- Help Section -->
-	<div class="ghl-help-box" style="margin-top: 30px;">
+	<div class="ghl-help-box ghl-help-box--spaced">
 		<h3>
 			<span class="dashicons dashicons-info"></span>
 			<?php esc_html_e( 'How User Sync Works', 'ghl-crm-integration' ); ?>

@@ -161,6 +161,11 @@ class SettingsManager {
 						$new_settings[ $key ] = $this->sanitize_array_recursive( $value );
 					}
 				} else {
+					if ( 'restrictions_denied_message' === $key ) {
+						$new_settings[ $key ] = wp_kses_post( wp_unslash( (string) $value ) );
+						continue;
+					}
+
 					// Check if this is an empty array marker from JavaScript
 					if ( $value === '__EMPTY_ARRAY__' ) {
 						$new_settings[ $key ] = [];
