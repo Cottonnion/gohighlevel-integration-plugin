@@ -75,11 +75,9 @@ class AssetsManager {
 		// Remove TinyMCE branding
 		add_filter( 'tiny_mce_before_init', [ $this, 'remove_tinymce_branding' ] );
 
-		// Define admin page assets
-		$this->define_admin_assets();
-
-		// Define frontend assets
-		$this->define_frontend_assets();
+		// Define assets after WordPress has loaded text domain
+		add_action( 'init', [ $this, 'define_admin_assets' ] );
+		add_action( 'init', [ $this, 'define_frontend_assets' ] );
 	}
 
 	/**
@@ -133,10 +131,11 @@ class AssetsManager {
 
 	/**
 	 * Define admin page assets
+	 * Called on 'init' hook to ensure translations are available
 	 *
 	 * @return void
 	 */
-	private function define_admin_assets(): void {
+	public function define_admin_assets(): void {
 		$settings           = SettingsManager::get_instance()->get_settings_array();
 		$white_label_domain = $settings['ghl_white_label_domain'] ?? '';
 
@@ -778,10 +777,11 @@ class AssetsManager {
 
 	/**
 	 * Define frontend/public assets
+	 * Called on 'init' hook to ensure translations are available
 	 *
 	 * @return void
 	 */
-	private function define_frontend_assets(): void {
+	public function define_frontend_assets(): void {
 		// GHL Forms frontend CSS
 		$this->add_public_asset(
 			'ghl-crm-forms-frontend-css',
