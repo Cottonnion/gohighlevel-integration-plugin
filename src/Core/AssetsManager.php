@@ -477,7 +477,7 @@ class AssetsManager {
 			'sync-logs.css',
 			[ 'ghl-crm-globals-css' ],
 			[],
-			'1.0.1'
+			'1.0.3'
 		);
 
 		$this->add_admin_asset(
