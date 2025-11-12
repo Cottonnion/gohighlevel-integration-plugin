@@ -79,7 +79,7 @@ class StatsProvider {
 			'total_wp'  => $total_users,
 			'synced'    => $total_synced,
 			'pending'   => $this->get_pending_queue_count(),
-			'failed'    => $total_failed,
+			'failed'    => $this->get_failed_queue_count(),
 			'sync_rate' => $sync_rate,
 		];
 	}
@@ -228,6 +228,25 @@ class StatsProvider {
 		return (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$table} WHERE site_id = %d AND status = 'pending'",
+				$site
+			)
+		);
+	}
+
+	/**
+	 * Get count of failed items in queue.
+	 *
+	 * @return int
+	 */
+	private function get_failed_queue_count(): int {
+		global $wpdb;
+		$table = $wpdb->prefix . 'ghl_sync_queue';
+		$site  = get_current_blog_id();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Counting failed queue rows for dashboard.
+		return (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table} WHERE site_id = %d AND status = 'failed'",
 				$site
 			)
 		);
