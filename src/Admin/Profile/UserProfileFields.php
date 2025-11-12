@@ -332,7 +332,7 @@ class UserProfileFields {
 			<!-- Auto Login Section (Admin Only) -->
 			<?php if ( current_user_can( 'administrator' ) && $user->ID !== get_current_user_id() ) : ?>
 				<div class="ghl-autologin-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e5e5;">
-					<h3><?php esc_html_e( 'Admin Tools', 'ghl-crm-integration' ); ?></h3>
+					<h3 style="margin-top:0px;"><?php esc_html_e( 'Admin Tools', 'ghl-crm-integration' ); ?></h3>
 					<p class="description">
 						<?php esc_html_e( 'Generate a secure one-time login link to access this user account. Link expires in 15 minutes.', 'ghl-crm-integration' ); ?>
 					</p>
