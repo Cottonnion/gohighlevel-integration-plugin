@@ -164,14 +164,14 @@
 	--ghl-sidemenu-transition: var(--ghl-transition-base);
 }
 
-li.select2-results__option.select2-results__option--highlighted {
+/* li.select2-results__option.select2-results__option--highlighted {
     background: lightgray;
     cursor: pointer;
 }
 
 .select2-results__option[aria-selected="true"] {
 	background-color: lightgray !important;
-}
+} */
 
 /* ========================================
    SELECT2 CUSTOM CHECKBOX STYLING
@@ -182,7 +182,7 @@ li.select2-results__option.select2-results__option--highlighted {
 	min-width: 400px;
 } */
 
-.select2-results__option {
+/* .select2-results__option {
 	padding-right: 20px;
 	vertical-align: middle;
 }
@@ -236,6 +236,7 @@ li.select2-results__option.select2-results__option--highlighted {
 }
 
 /* Prevent scroll to top on selection */
+/*
 .select2-results__options {
 	scroll-behavior: auto !important;
 }
@@ -249,10 +250,9 @@ li.select2-results__option.select2-results__option--highlighted {
 	scroll-margin: 0 !important;
 }
 
-/* Additional scroll prevention for checkbox multi-select */
 .select2-container--default .select2-results__option[aria-selected] {
 	scroll-snap-align: none !important;
-}
+} */
 
 /* ========================================
    FORM ELEMENTS - Consistent Styling

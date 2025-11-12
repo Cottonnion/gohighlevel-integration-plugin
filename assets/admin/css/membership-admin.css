@@ -48,23 +48,6 @@
     box-shadow: 0 0 0 1px #2271b1;
 }
 
-.select2-container--default .select2-selection--multiple .select2-selection__choice {
-    background-color: #2271b1;
-    border-color: #135e96;
-    color: #fff;
-    padding: 3px 8px;
-    margin-top: 5px;
-}
-
-.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
-    color: #fff;
-    margin-right: 5px;
-}
-
-.select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
-    color: #f0f0f1;
-}
-
 /* Redirect Container */
 #ghl-redirect-container {
     margin-bottom: 15px;
