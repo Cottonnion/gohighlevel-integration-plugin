@@ -182,14 +182,17 @@ class UserProfileFields {
 		$last_sync     = get_user_meta( $user->ID, '_ghl_last_sync', true );
 		$synced_on_reg = get_user_meta( $user->ID, '_ghl_synced_on_register', true );
 		$current_tags  = get_user_meta( $user->ID, '_ghl_contact_tags', true );
-		print_r( $current_tags );
 		if ( ! is_array( $current_tags ) ) {
 			$current_tags = [];
 		}
 
 		// Get settings
-		$settings    = $this->settings_manager->get_settings_array();
-		$location_id = $settings['location_id'] ?? '';
+		$settings           = $this->settings_manager->get_settings_array();
+		$location_id        = $settings['location_id'] ?? '';
+		$white_label_domain = $settings['ghl_white_label_domain'] ?? '';
+
+		// Determine base domain (white label or default)
+		$base_domain = ! empty( $white_label_domain ) ? rtrim( $white_label_domain, '/' ) : 'https://app.leadconnectorhq.com';
 
 		// Determine sync status
 		$is_synced = ! empty( $contact_id );
@@ -320,7 +323,7 @@ class UserProfileFields {
 					<button 
 						type="button"
 						class="ghl-button ghl-button-secondary ghl-view-in-ghl-btn"
-						onclick="window.open('<?php echo esc_url( sprintf( 'https://app.leadconnectorhq.com/v2/location/%s/contacts/detail/%s', $location_id, $contact_id ) ); ?>', '_blank', 'noopener,noreferrer')">
+						onclick="window.open('<?php echo esc_url( sprintf( '%s/v2/location/%s/contacts/detail/%s', $base_domain, $location_id, $contact_id ) ); ?>', '_blank', 'noopener,noreferrer')">
 						<span class="dashicons dashicons-external"></span>
 						<?php esc_html_e( 'View in GoHighLevel', 'ghl-crm-integration' ); ?>
 					</button>

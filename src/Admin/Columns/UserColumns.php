@@ -141,17 +141,22 @@ class UserColumns {
 		$contact_id = get_user_meta( $user_id, '_ghl_contact_id', true );
 
 		if ( empty( $contact_id ) ) {
-			return '<span class="ghl-column-empty">—</span>';
+			return '<span class="ghl-no-contact">—</span>';
 		}
 
-		// Get location ID for building GHL link
-		$settings    = $this->settings_manager->get_settings_array();
-		$location_id = $settings['location_id'] ?? '';
+		// Get location ID and white label domain from settings
+		$settings           = $this->settings_manager->get_settings_array();
+		$location_id        = $settings['location_id'] ?? '';
+		$white_label_domain = $settings['ghl_white_label_domain'] ?? '';
+
+		// Determine base domain (white label or default)
+		$base_domain = ! empty( $white_label_domain ) ? rtrim( $white_label_domain, '/' ) : 'https://app.leadconnectorhq.com';
 
 		if ( ! empty( $location_id ) ) {
 			// Build link to GHL contact
 			$ghl_url = sprintf(
-				'https://app.leadconnectorhq.com/v2/location/%s/contacts/detail/%s',
+				'%s/v2/location/%s/contacts/detail/%s',
+				$base_domain,
 				esc_attr( $location_id ),
 				esc_attr( $contact_id )
 			);
@@ -168,9 +173,7 @@ class UserColumns {
 		}
 
 		return sprintf( '<code>%s</code>', esc_html( substr( $contact_id, 0, 8 ) . '...' ) );
-	}
-
-	/**
+	}	/**
 	 * Render sync status column
 	 *
 	 * @param int $user_id User ID
