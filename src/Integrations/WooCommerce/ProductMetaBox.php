@@ -96,12 +96,22 @@ class ProductMetaBox {
 			$saved_tags = ! empty( $saved_tags ) ? [ $saved_tags ] : [];
 		}
 
+		// Get saved order statuses
+		$saved_statuses = get_post_meta( $post->ID, '_ghl_purchase_order_statuses', true );
+		if ( ! is_array( $saved_statuses ) ) {
+			$saved_statuses = ! empty( $saved_statuses ) ? [ $saved_statuses ] : [ 'completed' ];
+		}
+
+		// Get all available WooCommerce order statuses
+		$all_statuses = wc_get_order_statuses();
+
 		?>
 		<div id="ghl_product_tags_panel" class="panel woocommerce_options_panel hidden">
 			<div class="options_group ghl-product-tags-panel">
 				<p class="form-field ghl-product-tags-field">
 					<label for="ghl_purchase_tags">
-						<?php esc_html_e( 'Tags to Apply on Purchase', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'GoHighLevel Tags', 'ghl-crm-integration' ); ?>
+						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Select which tags to automatically apply to customers when they purchase this product. Tags will be applied when the order reaches the status(es) you select below.', 'ghl-crm-integration' ); ?>">?</span>
 					</label>
 					<span class="woocommerce-input-wrapper">
 						<select
@@ -110,12 +120,34 @@ class ProductMetaBox {
 							class="ghl-tags-select wc-enhanced-select"
 							multiple
 							data-saved-tags='<?php echo wp_json_encode( $saved_tags ); ?>'
-							data-placeholder="<?php esc_attr_e( 'Select tags to apply when this product is purchased...', 'ghl-crm-integration' ); ?>">
+							data-placeholder="<?php esc_attr_e( 'Select tags to apply...', 'ghl-crm-integration' ); ?>">
 							<option value=""><?php esc_html_e( 'Loading tags...', 'ghl-crm-integration' ); ?></option>
 						</select>
 					</span>
-					<span class="description">
-						<?php esc_html_e( 'Customers will receive the selected GoHighLevel tags automatically once this product is purchased.', 'ghl-crm-integration' ); ?>
+				</p>
+
+				<p class="form-field ghl-product-order-statuses-field">
+					<label for="ghl_purchase_order_statuses">
+						<?php esc_html_e( 'Trigger on Order Status', 'ghl-crm-integration' ); ?>
+						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Choose when to apply the tags above. For example, select "Completed" to apply tags only when payment is confirmed and order is complete. You can select multiple statuses if needed.', 'ghl-crm-integration' ); ?>">?</span>
+					</label>
+					<span class="woocommerce-input-wrapper">
+						<select
+							id="ghl_purchase_order_statuses"
+							name="ghl_purchase_order_statuses[]"
+							class="wc-enhanced-select"
+							multiple
+							data-placeholder="<?php esc_attr_e( 'Select order statuses...', 'ghl-crm-integration' ); ?>">
+							<?php foreach ( $all_statuses as $status_slug => $status_name ) : ?>
+								<?php
+								// Remove 'wc-' prefix from status slug for comparison
+								$clean_slug = str_replace( 'wc-', '', $status_slug );
+								?>
+								<option value="<?php echo esc_attr( $clean_slug ); ?>" <?php selected( in_array( $clean_slug, $saved_statuses, true ) ); ?>>
+									<?php echo esc_html( $status_name ); ?>
+								</option>
+							<?php endforeach; ?>
+						</select>
 					</span>
 				</p>
 			</div>
@@ -140,6 +172,22 @@ class ProductMetaBox {
 		} else {
 			delete_post_meta( $post_id, '_ghl_purchase_tags' );
 		}
+
+		// Save order statuses
+		$order_statuses = isset( $_POST['ghl_purchase_order_statuses'] ) && is_array( $_POST['ghl_purchase_order_statuses'] )
+			? array_map( 'sanitize_text_field', $_POST['ghl_purchase_order_statuses'] )
+			: [];
+
+		// Default to 'completed' if no statuses selected but tags are configured
+		if ( empty( $order_statuses ) && ! empty( $tags ) ) {
+			$order_statuses = [ 'completed' ];
+		}
+
+		if ( ! empty( $order_statuses ) ) {
+			update_post_meta( $post_id, '_ghl_purchase_order_statuses', $order_statuses );
+		} else {
+			delete_post_meta( $post_id, '_ghl_purchase_order_statuses' );
+		}
 	}
 
 	/**
@@ -159,6 +207,15 @@ class ProductMetaBox {
 			return;
 		}
 
+		// Enqueue tooltip system for the help icons
+		wp_enqueue_script(
+			'ghl-crm-tooltip-system',
+			GHL_CRM_URL . 'assets/admin/js/tooltip-system.js',
+			[],
+			GHL_CRM_VERSION,
+			true
+		);
+
 		// Enqueue Select2 (already registered by AssetsManager with plugin-specific handles)
 		wp_enqueue_style( 'ghl-crm-select2-css' );
 		wp_enqueue_script( 'ghl-crm-select2' );
@@ -167,7 +224,7 @@ class ProductMetaBox {
 		wp_enqueue_script(
 			'ghl-product-meta-box',
 			GHL_CRM_URL . 'assets/admin/js/product-meta-box.js',
-			[ 'jquery', 'ghl-crm-select2' ],
+			[ 'jquery', 'ghl-crm-select2', 'ghl-crm-tooltip-system' ],
 			GHL_CRM_VERSION,
 			true
 		);
@@ -201,6 +258,27 @@ class ProductMetaBox {
 	}
 
 	/**
+	 * Get order statuses for a product
+	 *
+	 * @param int $product_id Product ID.
+	 * @return array Array of order status slugs (without 'wc-' prefix).
+	 */
+	public static function get_product_order_statuses( int $product_id ): array {
+		$statuses = get_post_meta( $product_id, '_ghl_purchase_order_statuses', true );
+
+		if ( ! is_array( $statuses ) ) {
+			$statuses = ! empty( $statuses ) ? [ $statuses ] : [ 'completed' ];
+		}
+
+		// Default to 'completed' if empty
+		if ( empty( $statuses ) ) {
+			$statuses = [ 'completed' ];
+		}
+
+		return $statuses;
+	}
+
+	/**
 	 * Add custom icon styles for the tab
 	 *
 	 * @return void
@@ -231,50 +309,32 @@ class ProductMetaBox {
 		/* Panel styling */
 		#ghl_product_tags_panel .ghl-product-tags-panel {
 			margin: 0 24px;
-			padding-top: 16px;
+			padding: 20px 0;
 		}
-		#ghl_product_tags_panel .ghl-product-tags-field label {
+
+		#ghl_product_tags_panel .form-field {
+			margin-bottom: 20px;
+		}
+
+		#ghl_product_tags_panel .form-field:last-child {
+			margin-bottom: 0;
+		}
+
+		#ghl_product_tags_panel .form-field label {
+			display: flex;
+			align-items: center;
 			min-width: 160px;
+			font-weight: 500;
+			color: #23282d;
 		}
+
 		#ghl_product_tags_panel .woocommerce-input-wrapper {
 			display: block;
-			max-width: 360px;
+			max-width: 400px;
 		}
+
 		#ghl_product_tags_panel .select2-container {
-			width: 100%;
-		}
-		#ghl_product_tags_panel .ghl-product-tags-field .description {
-			display: block;
-			margin-top: 8px;
-			color: #555d66;
-		}
-		#ghl_product_tags_panel .ghl-product-tags-note {
-			margin: 8px 24px 24px;
-			padding: 16px;
-			border: 1px solid #dcdcde;
-			border-left: 4px solid #7e3bd0;
-			background: #f6f3fb;
-			display: flex;
-			gap: 12px;
-			align-items: flex-start;
-			border-radius: 4px;
-		}
-		#ghl_product_tags_panel .ghl-product-tags-note .dashicons {
-			font-size: 20px;
-			color: #7e3bd0;
-			margin-top: 2px;
-		}
-		#ghl_product_tags_panel .ghl-product-tags-note .ghl-note-content {
-			margin: 0;
-		}
-		#ghl_product_tags_panel .ghl-product-tags-note ul {
-			margin: 6px 0 0;
-			padding-left: 18px;
-			list-style: disc;
-			color: #2c3338;
-		}
-		#ghl_product_tags_panel .ghl-product-tags-note li {
-			margin-bottom: 4px;
+			width: 100% !important;
 		}
 	</style>
 		<?php

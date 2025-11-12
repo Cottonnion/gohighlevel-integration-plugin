@@ -76,9 +76,8 @@ class WooCommerceSync {
 			return;
 		}
 
-		// Product purchase tags - always enabled (independent of wc_enabled setting)
-		add_action( 'woocommerce_order_status_completed', [ $this, 'handle_product_tags' ], 10, 2 );
-		add_action( 'woocommerce_payment_complete', [ $this, 'handle_product_tags' ], 10, 1 );
+		// Product purchase tags - hook to order status changed to handle product-specific statuses
+		add_action( 'woocommerce_order_status_changed', [ $this, 'handle_product_tags_on_status_change' ], 10, 4 );
 
 		// Register queue processor handler for product tags
 		add_filter( 'ghl_crm_execute_sync', [ $this, 'handle_queue_execution' ], 10, 5 );
@@ -319,60 +318,84 @@ class WooCommerceSync {
 	}
 
 	/**
-	 * Handle product purchase tags
+	 * Handle product purchase tags on order status change
 	 *
-	 * @param int       $order_id Order ID.
-	 * @param \WC_Order $order    Order object (optional).
+	 * Checks each product's configured order statuses and applies tags when matched.
+	 *
+	 * @param int       $order_id   Order ID.
+	 * @param string    $old_status Old order status.
+	 * @param string    $new_status New order status.
+	 * @param \WC_Order $order      Order object.
 	 * @return void
 	 */
-	public function handle_product_tags( int $order_id, $order = null ): void {
+	public function handle_product_tags_on_status_change( int $order_id, string $old_status, string $new_status, $order ): void {
 		try {
-
 			if ( ! $order ) {
 				$order = wc_get_order( $order_id );
 			}
 
 			if ( ! $order ) {
-
 				return;
 			}
 
 			$email = $order->get_billing_email();
 			if ( empty( $email ) ) {
-
 				return;
 			}
 
-			// Collect all tags from purchased products
+			// Check if we've already processed this order for this status
+			$processed_statuses = get_post_meta( $order_id, '_ghl_processed_tag_statuses', true );
+			if ( ! is_array( $processed_statuses ) ) {
+				$processed_statuses = [];
+			}
+
+			// If already processed for this status, skip
+			if ( in_array( $new_status, $processed_statuses, true ) ) {
+				return;
+			}
+
+			// Collect tags from products that match the new order status
 			$product_tags    = [];
 			$product_details = [];
+			$has_matching_products = false;
 
 			foreach ( $order->get_items() as $item ) {
 				$product_id = $item->get_product_id();
 				$tags       = ProductMetaBox::get_product_tags( $product_id );
+				
+				// Skip if no tags configured for this product
+				if ( empty( $tags ) || ! is_array( $tags ) ) {
+					continue;
+				}
 
-				if ( ! empty( $tags ) && is_array( $tags ) ) {
-					$product_tags      = array_merge( $product_tags, $tags );
-					$product_details[] = sprintf( '#%d (%s)', $product_id, implode( ', ', $tags ) );
+				// Get the configured order statuses for this product
+				$product_statuses = ProductMetaBox::get_product_order_statuses( $product_id );
+
+				// Check if the new status matches any of the product's configured statuses
+				if ( in_array( $new_status, $product_statuses, true ) ) {
+					$has_matching_products = true;
+					$product_tags          = array_merge( $product_tags, $tags );
+					$product_details[]     = sprintf( '#%d (%s) [%s]', $product_id, implode( ', ', $tags ), $new_status );
 				}
 			}
 
 			// Remove duplicates
 			$product_tags = array_unique( $product_tags );
 
-			if ( empty( $product_tags ) ) {
-
+			// Only proceed if we have tags to apply
+			if ( empty( $product_tags ) || ! $has_matching_products ) {
 				return;
 			}
 
 			$tag_data = [
-				'email'     => $email,
-				'firstName' => $order->get_billing_first_name(),
-				'lastName'  => $order->get_billing_last_name(),
-				'phone'     => $order->get_billing_phone(),
-				'tags'      => $product_tags,
-				'source'    => 'woocommerce_product_purchase',
-				'order_id'  => $order_id,
+				'email'        => $email,
+				'firstName'    => $order->get_billing_first_name(),
+				'lastName'     => $order->get_billing_last_name(),
+				'phone'        => $order->get_billing_phone(),
+				'tags'         => $product_tags,
+				'source'       => 'woocommerce_product_purchase',
+				'order_id'     => $order_id,
+				'order_status' => $new_status,
 			];
 
 			// Check if there's a pending profile_update for this user (to create dependency)
@@ -400,7 +423,7 @@ class WooCommerceSync {
 				if ( $depends_on_queue_id ) {
 					error_log(
 						sprintf(
-							'asiya log: handle_product_tags dependency | order #%d | depends on queue_id %d (user #%d profile_update)',
+							'GHL Product Tags: Order #%d depends on queue_id %d (user #%d profile_update)',
 							$order_id,
 							$depends_on_queue_id,
 							$user_id
@@ -414,13 +437,26 @@ class WooCommerceSync {
 				$order_id,
 				'apply_tags',
 				$tag_data,
-				$depends_on_queue_id // Add dependency parameter
+				$depends_on_queue_id
+			);
+
+			// Mark this status as processed to avoid duplicate tag applications
+			$processed_statuses[] = $new_status;
+			update_post_meta( $order_id, '_ghl_processed_tag_statuses', $processed_statuses );
+
+			error_log(
+				sprintf(
+					'GHL Product Tags: Queued tags for order #%d (status: %s) - Products: %s',
+					$order_id,
+					$new_status,
+					implode( ', ', $product_details )
+				)
 			);
 
 		} catch ( \Throwable $error ) {
-
+			error_log( 'GHL Product Tags Error: ' . $error->getMessage() );
 		} catch ( \Error $error ) {
-
+			error_log( 'GHL Product Tags Error: ' . $error->getMessage() );
 		}
 	}
 
