@@ -526,6 +526,8 @@ class QueueManager {
 				// Extract contact ID or opportunity ID from result if available
 				$contact_id    = null;
 				$ghl_object_id = null;
+				
+				// Try to get contact_id from result first
 				if ( is_array( $result ) ) {
 					// For contacts
 					$contact_id = $result['contact']['id'] ?? $result['id'] ?? null;
@@ -534,6 +536,15 @@ class QueueManager {
 					if ( 'wc_customer' === $item->item_type && ! empty( $result['opportunity']['id'] ) ) {
 						$ghl_object_id = $result['opportunity']['id'];
 					} elseif ( ! empty( $contact_id ) ) {
+						$ghl_object_id = $contact_id;
+					}
+				}
+
+				// If contact_id not in result, try to get it from payload (for add_tags/remove_tags actions)
+				if ( empty( $contact_id ) ) {
+					$payload_data = json_decode( $item->payload, true );
+					$contact_id   = $payload_data['contact_id'] ?? null;
+					if ( ! empty( $contact_id ) ) {
 						$ghl_object_id = $contact_id;
 					}
 				}
@@ -548,9 +559,15 @@ class QueueManager {
 
 					// First try to get tags from the API response
 					if ( is_array( $result ) ) {
-						$contact_data = $result['contact'] ?? $result;
-						if ( ! empty( $contact_data['tags'] ) && is_array( $contact_data['tags'] ) ) {
-							$tags_to_cache = $contact_data['tags'];
+						// For remove_tags/add_tags actions, tags are directly in result
+						if ( ! empty( $result['tags'] ) && is_array( $result['tags'] ) ) {
+							$tags_to_cache = $result['tags'];
+						} else {
+							// For other actions, tags might be nested in contact data
+							$contact_data = $result['contact'] ?? $result;
+							if ( ! empty( $contact_data['tags'] ) && is_array( $contact_data['tags'] ) ) {
+								$tags_to_cache = $contact_data['tags'];
+							}
 						}
 					}
 

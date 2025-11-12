@@ -628,12 +628,13 @@ class Client implements ClientInterface {
 	 *
 	 * @param string $endpoint            API endpoint
 	 * @param bool   $include_location_id Whether to include locationId in query params (default: true)
+	 * @param array  $data                Optional request body data
 	 * @return array Response data
 	 * @throws ApiException
 	 */
-	public function delete( string $endpoint, bool $include_location_id = true ): array {
+	public function delete( string $endpoint, bool $include_location_id = true, array $data = [] ): array {
 		$url = $this->build_url( $endpoint, [], $include_location_id );
-		return $this->request( 'DELETE', $url );
+		return $this->request( 'DELETE', $url, $data );
 	}
 
 	/**
@@ -717,8 +718,8 @@ class Client implements ClientInterface {
 			'timeout' => 30,
 		];
 
-		// Add body for POST/PUT requests
-		if ( in_array( $method, [ 'POST', 'PUT' ], true ) && ! empty( $data ) ) {
+		// Add body for POST/PUT/DELETE requests
+		if ( in_array( $method, [ 'POST', 'PUT', 'DELETE' ], true ) && ! empty( $data ) ) {
 			$args['body'] = wp_json_encode( $data );
 		}
 

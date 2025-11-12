@@ -80,7 +80,9 @@ class ContactResource extends AbstractResource {
 	 */
 	public function remove_tags( string $contact_id, array $tags ): array {
 		return $this->client->delete(
-			$this->build_endpoint( "{$contact_id}/tags" ) . '?' . http_build_query( [ 'tags' => $tags ] )
+			$this->build_endpoint( "{$contact_id}/tags" ),
+			true,
+			[ 'tags' => $tags ]
 		);
 	}
 
