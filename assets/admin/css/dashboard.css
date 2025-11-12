@@ -101,6 +101,10 @@ html.wp-toolbar {
     overflow-x: hidden;
 }
 
+#wpcontent {
+    padding-left: 0;
+}
+
 /* Loading Animation */
 @keyframes rotation {
 	from {
