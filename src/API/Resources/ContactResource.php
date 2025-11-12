@@ -132,7 +132,7 @@ class ContactResource extends AbstractResource {
 	 * @return array Response data
 	 */
 	public function get_notes( string $contact_id ): array {
-		return $this->client->get( $this->build_endpoint( "{$contact_id}/notes" ) );
+		return $this->client->get( $this->build_endpoint( "{$contact_id}/notes" ), [], false );
 	}
 
 	/**
@@ -146,6 +146,34 @@ class ContactResource extends AbstractResource {
 		return $this->client->post(
 			$this->build_endpoint( "{$contact_id}/notes" ),
 			[ 'body' => $note ]
+		);
+	}
+
+	/**
+	 * Update note for contact
+	 *
+	 * @param string $contact_id Contact ID
+	 * @param string $note_id    Note ID
+	 * @param string $note       Note content
+	 * @return array Response data
+	 */
+	public function update_note( string $contact_id, string $note_id, string $note ): array {
+		return $this->client->put(
+			$this->build_endpoint( "{$contact_id}/notes/{$note_id}" ),
+			[ 'body' => $note ]
+		);
+	}
+
+	/**
+	 * Delete note from contact
+	 *
+	 * @param string $contact_id Contact ID
+	 * @param string $note_id    Note ID
+	 * @return array Response data
+	 */
+	public function delete_note( string $contact_id, string $note_id ): array {
+		return $this->client->delete(
+			$this->build_endpoint( "{$contact_id}/notes/{$note_id}" )
 		);
 	}
 
