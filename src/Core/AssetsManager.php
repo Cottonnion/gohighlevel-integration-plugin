@@ -815,6 +815,26 @@ class AssetsManager {
 			GHL_CRM_VERSION,
 			true
 		);
+
+		// Family Manager frontend CSS
+		$this->add_public_asset(
+			'ghl-family-manager-css',
+			'family-manager.css',
+			[],
+			[],
+			GHL_CRM_VERSION,
+			false
+		);
+
+		// Family Manager frontend JS
+		$this->add_public_asset(
+			'ghl-family-manager',
+			'family-manager.js',
+			[ 'jquery', 'sweetalert2' ],
+			[], // Localization will be done in ShortcodeManager when shortcode is rendered
+			GHL_CRM_VERSION,
+			true
+		);
 	}
 
 	/**
