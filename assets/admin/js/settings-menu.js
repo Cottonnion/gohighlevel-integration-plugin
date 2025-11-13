@@ -197,6 +197,11 @@
 						window.initRoleTags();
 					}
 					
+					// Re-initialize family accounts functionality (for advanced tab)
+					if (typeof window.initFamilyAccounts === 'function') {
+						window.initFamilyAccounts();
+					}
+					
 					// Re-initialize sync preview functionality (for sync-preview tab)
 					if (typeof window.ghlSyncPreview.init === 'function') {
 						window.ghlSyncPreview.init();

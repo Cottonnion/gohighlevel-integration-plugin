@@ -1112,18 +1112,121 @@
 		}
 	}
 
+	/**
+	 * Load tags for family parent tag selector
+	 */
+	function loadFamilyParentTags() {
+		const $tagsSelect = $('#family_parent_tag');
+		const savedTag = $tagsSelect.data('saved-tag') || '';
+		
+		// Show loading state
+		$tagsSelect.html('<option value="">Loading tags...</option>').prop('disabled', true);
+
+		$.ajax({
+			url: ajaxurl,
+			type: 'POST',
+			data: {
+				action: 'ghl_crm_get_tags',
+				nonce: $('#ghl_crm_nonce').val()
+			},
+			success: function(response) {
+				if (response.success && response.data.tags) {
+					const tags = response.data.tags;
+					$tagsSelect.empty();
+
+					if (tags.length === 0) {
+						$tagsSelect.append('<option value="">No tags found in your GoHighLevel location</option>');
+					} else {
+						// Add placeholder option
+						$tagsSelect.append('<option value="">-- Select a tag --</option>');
+
+						// Add each tag as an option
+						tags.forEach(function(tag) {
+							const tagId = tag.id || tag;
+							const tagName = tag.name || tag;
+							const isSelected = savedTag === tagId;
+							$tagsSelect.append(
+								$('<option></option>')
+									.attr('value', tagId)
+									.text(tagName)
+									.prop('selected', isSelected)
+							);
+						});
+					}
+
+					$tagsSelect.prop('disabled', false);
+
+					// Initialize Select2 if available
+					if (typeof $.fn.select2 !== 'undefined') {
+						$tagsSelect.select2({
+							placeholder: '-- Select a tag --',
+							allowClear: true,
+							width: '300px'
+						});
+					}
+				} else {
+					$tagsSelect.html('<option value="">Failed to load tags</option>');
+					console.error('Failed to load tags:', response);
+				}
+			},
+			error: function(xhr, status, error) {
+				$tagsSelect.html('<option value="">Error loading tags</option>').prop('disabled', false);
+				console.error('Error loading tags:', error);
+			}
+		});
+	}
+
+	/**
+	 * Handle refresh tags button for family accounts
+	 */
+	function initFamilyAccountsRefresh() {
+		$(document).off('click.ghlFamilyRefresh', '#refresh-family-tags')
+			.on('click.ghlFamilyRefresh', '#refresh-family-tags', function(e) {
+				e.preventDefault();
+				loadFamilyParentTags();
+			});
+	}
+
+	/**
+	 * Initialize family accounts functionality
+	 */
+	function initFamilyAccounts() {
+		const $tagsSelect = $('#family_parent_tag');
+		
+		// Only initialize if on advanced tab with family accounts section
+		if ($tagsSelect.length > 0) {
+			// Load tags on page load if select exists and has minimal options (not already loaded)
+			if ($tagsSelect.find('option').length <= 1) {
+				loadFamilyParentTags();
+			} else {
+				// Just initialize Select2 on existing options
+				if (typeof $.fn.select2 !== 'undefined') {
+					$tagsSelect.select2({
+						placeholder: '-- Select a tag --',
+						allowClear: true,
+						width: '300px'
+					});
+				}
+			}
+			
+			initFamilyAccountsRefresh();
+		}
+	}
+
 	// Export to global scope for SPA to call
 	window.initSettings = initSettings;
 	window.cleanupSettings = cleanupSettings;
 	window.initUserRegisterTags = initUserRegisterTags;
 	window.initRestrictionsTagsSelect = initRestrictionsTagsSelect;
 	window.initRoleTags = initRoleTags;
+	window.initFamilyAccounts = initFamilyAccounts;
 
 	// Initialize on document ready (for non-SPA page loads)
 	$(document).ready(function() {
 		initUserRegisterTags();
 		initRestrictionsTagsSelect();
 		initRoleTags();
+		initFamilyAccounts();
 		initSettings();
 	});
 

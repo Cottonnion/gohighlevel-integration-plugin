@@ -245,6 +245,10 @@
                     if (typeof window.initRoleTags === 'function') {
                         window.initRoleTags();
                     }
+                    // Initialize family accounts functionality
+                    if (typeof window.initFamilyAccounts === 'function') {
+                        window.initFamilyAccounts();
+                    }
                     // Reinitialize settings side menu to restore mobile toggle handlers and tab wiring
                     if (typeof window.cleanupSettingsMenu === 'function') {
                         window.cleanupSettingsMenu();
