@@ -21,7 +21,7 @@ class Database {
 	 *
 	 * @var string
 	 */
-	private const DB_VERSION = '1.5.0';
+	private const DB_VERSION = '1.6.1';
 
 	/**
 	 * Singleton instance
@@ -308,8 +308,9 @@ class Database {
 		$charset_collate = $wpdb->get_charset_collate();
 
 		// Table names (with current site prefix)
-		$sync_queue_table = $wpdb->prefix . 'ghl_sync_queue';
-		$sync_log_table   = $wpdb->prefix . 'ghl_sync_log';
+		$sync_queue_table         = $wpdb->prefix . 'ghl_sync_queue';
+		$sync_log_table           = $wpdb->prefix . 'ghl_sync_log';
+		$family_relationships_table = $wpdb->prefix . 'ghl_family_relationships';
 
 		// SQL for sync queue table
 		// Supports all integrations: users, orders, groups, courses, etc.
@@ -363,11 +364,32 @@ class Database {
 		// Include WordPress upgrade functions
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
+		// SQL for family relationships table
+		$sql_family = "CREATE TABLE {$family_relationships_table} (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			parent_user_id bigint(20) unsigned NOT NULL,
+			child_user_id bigint(20) unsigned NOT NULL,
+			family_group_id char(36) NOT NULL DEFAULT '',
+			status enum('active','inactive','pending') NOT NULL DEFAULT 'active',
+			created_at datetime NOT NULL,
+			updated_at datetime DEFAULT NULL,
+			site_id bigint(20) unsigned NOT NULL DEFAULT 1,
+			PRIMARY KEY (id),
+			UNIQUE KEY unique_child (child_user_id, site_id),
+			KEY parent_lookup (parent_user_id, site_id),
+			KEY family_group (family_group_id, site_id),
+			KEY status (status),
+			KEY site_id (site_id),
+			KEY updated_at (updated_at)
+		) {$charset_collate};";
+
 		// Create tables
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange -- dbDelta handles schema creation/updates for plugin tables.
 		dbDelta( $sql_queue );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange -- dbDelta handles schema creation/updates for plugin tables.
 		dbDelta( $sql_log );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange -- dbDelta handles schema creation/updates for plugin tables.
+		dbDelta( $sql_family );
 	}
 
 	/**
@@ -382,6 +404,7 @@ class Database {
 		$tables = [
 			$wpdb->prefix . 'ghl_sync_queue',
 			$wpdb->prefix . 'ghl_sync_log',
+			$wpdb->prefix . 'ghl_family_relationships',
 		];
 
 		foreach ( $tables as $table ) {
