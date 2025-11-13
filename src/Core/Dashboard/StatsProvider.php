@@ -363,6 +363,203 @@ class StatsProvider {
 	}
 
 	/**
+	 * Get analytics data for charts
+	 *
+	 * @return array Analytics data for dashboard charts.
+	 */
+	public function get_analytics_data(): array {
+		return [
+			'daily_activity'   => $this->get_daily_activity( 30 ),
+			'sync_type_breakdown' => $this->get_sync_type_breakdown(),
+			'hourly_activity'  => $this->get_hourly_activity(),
+			'success_failure_rates' => $this->get_success_failure_rates( 7 ),
+		];
+	}
+
+	/**
+	 * Get daily sync activity for the last N days
+	 *
+	 * @param int $days Number of days to retrieve.
+	 * @return array Array with dates and counts.
+	 */
+	private function get_daily_activity( int $days = 30 ): array {
+		global $wpdb;
+		$table = $wpdb->prefix . 'ghl_sync_log';
+		$site  = get_current_blog_id();
+
+		$start_date = gmdate( 'Y-m-d', strtotime( "-{$days} days" ) );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		$results = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT DATE(created_at) as date, COUNT(*) as count, status
+				FROM {$table}
+				WHERE site_id = %d AND created_at >= %s
+				GROUP BY DATE(created_at), status
+				ORDER BY date ASC",
+				$site,
+				$start_date
+			),
+			ARRAY_A
+		);
+
+		// Format data for Chart.js
+		$activity_data = [];
+		$dates = [];
+		for ( $i = $days - 1; $i >= 0; $i-- ) {
+			$dates[] = gmdate( 'Y-m-d', strtotime( "-{$i} days" ) );
+		}
+
+		foreach ( $dates as $date ) {
+			$activity_data[ $date ] = [
+				'success' => 0,
+				'failed'  => 0,
+			];
+		}
+
+		foreach ( $results as $row ) {
+			$date   = $row['date'];
+			$status = $row['status'];
+			$count  = (int) $row['count'];
+
+			if ( isset( $activity_data[ $date ] ) && in_array( $status, [ 'success', 'failed' ], true ) ) {
+				$activity_data[ $date ][ $status ] = $count;
+			}
+		}
+
+		return $activity_data;
+	}
+
+	/**
+	 * Get sync breakdown by type (user, order, group)
+	 *
+	 * @return array Type breakdown with counts.
+	 */
+	private function get_sync_type_breakdown(): array {
+		global $wpdb;
+		$table = $wpdb->prefix . 'ghl_sync_log';
+		$site  = get_current_blog_id();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		$results = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT sync_type, COUNT(*) as count
+				FROM {$table}
+				WHERE site_id = %d
+				GROUP BY sync_type",
+				$site
+			),
+			ARRAY_A
+		);
+
+		$breakdown = [];
+		foreach ( $results as $row ) {
+			$type = $row['sync_type'] ?? 'unknown';
+			$breakdown[ $type ] = (int) $row['count'];
+		}
+
+		return $breakdown;
+	}
+
+	/**
+	 * Get hourly sync activity (last 24 hours)
+	 *
+	 * @return array Hourly activity counts.
+	 */
+	private function get_hourly_activity(): array {
+		global $wpdb;
+		$table = $wpdb->prefix . 'ghl_sync_log';
+		$site  = get_current_blog_id();
+
+		$start_time = gmdate( 'Y-m-d H:i:s', strtotime( '-24 hours' ) );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		$results = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT HOUR(created_at) as hour, COUNT(*) as count
+				FROM {$table}
+				WHERE site_id = %d AND created_at >= %s
+				GROUP BY HOUR(created_at)
+				ORDER BY hour ASC",
+				$site,
+				$start_time
+			),
+			ARRAY_A
+		);
+
+		// Create array for all 24 hours
+		$hourly_data = array_fill( 0, 24, 0 );
+
+		foreach ( $results as $row ) {
+			$hour  = (int) $row['hour'];
+			$count = (int) $row['count'];
+			$hourly_data[ $hour ] = $count;
+		}
+
+		return $hourly_data;
+	}
+
+	/**
+	 * Get success/failure rates over the last N days
+	 *
+	 * @param int $days Number of days.
+	 * @return array Daily success and failure percentages.
+	 */
+	private function get_success_failure_rates( int $days = 7 ): array {
+		global $wpdb;
+		$table = $wpdb->prefix . 'ghl_sync_log';
+		$site  = get_current_blog_id();
+
+		$start_date = gmdate( 'Y-m-d', strtotime( "-{$days} days" ) );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		$results = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT DATE(created_at) as date, status, COUNT(*) as count
+				FROM {$table}
+				WHERE site_id = %d AND created_at >= %s
+				GROUP BY DATE(created_at), status
+				ORDER BY date ASC",
+				$site,
+				$start_date
+			),
+			ARRAY_A
+		);
+
+		$rates = [];
+		$dates = [];
+		for ( $i = $days - 1; $i >= 0; $i-- ) {
+			$dates[] = gmdate( 'Y-m-d', strtotime( "-{$i} days" ) );
+		}
+
+		foreach ( $dates as $date ) {
+			$rates[ $date ] = [
+				'success_rate' => 0,
+				'failure_rate' => 0,
+			];
+		}
+
+		$daily_totals = [];
+		foreach ( $results as $row ) {
+			$date = $row['date'];
+			if ( ! isset( $daily_totals[ $date ] ) ) {
+				$daily_totals[ $date ] = [ 'success' => 0, 'failed' => 0 ];
+			}
+			$daily_totals[ $date ][ $row['status'] ] = (int) $row['count'];
+		}
+
+		foreach ( $daily_totals as $date => $totals ) {
+			$total = $totals['success'] + $totals['failed'];
+			if ( $total > 0 ) {
+				$rates[ $date ]['success_rate'] = round( ( $totals['success'] / $total ) * 100, 1 );
+				$rates[ $date ]['failure_rate'] = round( ( $totals['failed'] / $total ) * 100, 1 );
+			}
+		}
+
+		return $rates;
+	}
+
+	/**
 	 * Hydrate stats from existing sync logs when option data is missing.
 	 */
 	private function hydrate_stats_from_logs( array $stats ): array {

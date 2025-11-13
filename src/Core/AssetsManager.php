@@ -242,6 +242,17 @@ class AssetsManager {
 			'1.0.9',
 			true
 		);
+
+		// Analytics assets (loads on SPA page for analytics view)
+		$this->add_admin_asset(
+			'ghl-crm-analytics-js',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'analytics.js',
+			[ 'jquery', 'sweetalert2', 'chartjs' ],
+			[],
+			'1.0.0',
+			true
+		);
 		// Field Mapping assets (need to load on SPA page)
 		$this->add_admin_asset(
 			'ghl-crm-field-mapping-css',

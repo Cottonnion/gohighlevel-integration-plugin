@@ -185,6 +185,21 @@
                     if (typeof window.initDashboard === 'function') {
                         window.initDashboard();
                     }
+
+                    if (typeof window.initAnalytics === 'function') {
+                        // Get analytics data from JSON script tag
+                        const analyticsDataElement = document.getElementById('ghl-analytics-data');
+                        if (analyticsDataElement) {
+                            try {
+                                const analyticsData = JSON.parse(analyticsDataElement.textContent);
+                                window.initAnalytics(analyticsData);
+                            } catch (e) {
+                                console.error('Failed to parse analytics data:', e);
+                            }
+                        } else {
+                            console.warn('Analytics data element not found');
+                        }
+                    }
                     break;
                 case 'field-mapping':
                     // Re-initialize field mapping handlers
