@@ -1211,6 +1211,37 @@
 			
 			initFamilyAccountsRefresh();
 		}
+
+		// Initialize collapsible family docs toggle
+		const $familyToggle = $('#ghl-toggle-family-docs');
+		const $familyWrapper = $('#ghl-family-docs-wrapper');
+
+		if ($familyToggle.length && $familyWrapper.length) {
+			const showLabel = $familyToggle.data('label-show');
+			const hideLabel = $familyToggle.data('label-hide');
+			const $labelSpan = $familyToggle.find('.ghl-toggle-button__label');
+
+			const setToggleState = (isOpen) => {
+				$familyToggle.attr('aria-expanded', isOpen ? 'true' : 'false');
+				$familyWrapper.toggleClass('ghl-is-collapsed', !isOpen);
+
+				if ($labelSpan.length) {
+					$labelSpan.text(isOpen ? hideLabel : showLabel);
+				}
+			};
+
+			// Ensure initial collapsed state matches aria attribute
+			setToggleState($familyToggle.attr('aria-expanded') === 'true');
+
+			// Remove any existing handlers
+			$familyToggle.off('click.ghlFamilyDocs');
+
+			$familyToggle.on('click.ghlFamilyDocs', function(event) {
+				event.preventDefault();
+				const currentlyOpen = $familyToggle.attr('aria-expanded') === 'true';
+				setToggleState(!currentlyOpen);
+			});
+		}
 	}
 
 	// Export to global scope for SPA to call

@@ -354,7 +354,7 @@ $notification_throttle = $settings['notification_throttle'] ?? '3600';
 		
 		<hr>
 		
-		<button type="button" id="send-test-notification" class="button button-secondary">
+		<button type="button" id="send-test-notification" class="ghl-button ghl-button-secondary">
 			<span class="dashicons dashicons-email-alt"></span>
 			<?php esc_html_e( 'Send Test Notification', 'ghl-crm-integration' ); ?>
 		</button>

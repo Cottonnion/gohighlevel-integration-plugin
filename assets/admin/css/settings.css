@@ -915,3 +915,45 @@ select.ghl-tags-select {
 	margin: 0;
 	line-height: 1.5;
 }
+
+/* ===========================
+   Collapsible Toggle Sections
+   =========================== */
+
+.ghl-toggle-button {
+	margin-top: 8px;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 12px;
+	border-radius: 4px;
+	border: 1px solid #d1d5db;
+	background: #f8fafc;
+	color: #1f2937;
+	cursor: pointer;
+	font-size: 12px;
+	font-weight: 600;
+	transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.ghl-toggle-button:hover,
+.ghl-toggle-button:focus {
+	background: #eef2ff;
+	border-color: #c7d2fe;
+}
+
+.ghl-toggle-button .dashicons {
+	transition: transform 0.2s ease;
+}
+
+.ghl-toggle-button[aria-expanded="true"] .dashicons {
+	transform: rotate(90deg);
+}
+
+.ghl-collapsible {
+	margin-top: 12px;
+}
+
+.ghl-collapsible.ghl-is-collapsed {
+	display: none;
+}

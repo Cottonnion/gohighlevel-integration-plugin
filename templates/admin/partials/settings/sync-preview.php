@@ -18,7 +18,7 @@ $settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 $users = get_users( array(
 	'orderby' => 'display_name',
 	'order'   => 'ASC',
-	'number'  => 500, // Limit to 500 users for performance
+	'number'  => 9999, // Limit to 500 users for performance
 ) );
 ?>
 

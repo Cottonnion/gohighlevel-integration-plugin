@@ -226,7 +226,7 @@ $settings = $settings_manager->get_settings_array();
 						<p class="description" style="margin-top: 8px;">
 							<?php esc_html_e( 'Choose an existing GHL tag to mark parent accounts. We recommend creating a dedicated tag like "Parent Account" or "Family Lead" in GoHighLevel first.', 'ghl-crm-integration' ); ?>
 							<br>
-							<button type="button" id="refresh-family-tags" class="button button-secondary" style="margin-top: 8px;">
+							<button type="button" id="refresh-family-tags" class="ghl-button ghl-button-secondary" style="margin-top: 8px;">
 								<span class="dashicons dashicons-update"></span>
 								<?php esc_html_e( 'Refresh Tags', 'ghl-crm-integration' ); ?>
 							</button>
@@ -307,11 +307,6 @@ $settings = $settings_manager->get_settings_array();
 								<div style="font-size: 13px; color: #78350f; margin-top: 4px;"><?php esc_html_e( 'Child Accounts', 'ghl-crm-integration' ); ?></div>
 							</div>
 						</div>
-						<p class="description" style="margin-top: 12px;">
-							<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-family-accounts' ) ); ?>" class="button button-secondary">
-								<?php esc_html_e( 'Manage Family Relationships →', 'ghl-crm-integration' ); ?>
-							</a>
-						</p>
 					</td>
 				</tr>
 				<?php endif; ?>
@@ -330,6 +325,17 @@ $settings = $settings_manager->get_settings_array();
 				</h3>
 			</div>
 			<div class="ghl-card-body">
+				<p><?php esc_html_e( 'Family Accounts allow you to link users together in a parent-child hierarchy. When a parent user updates their tags in GoHighLevel, those tags are automatically applied to all their linked children.', 'ghl-crm-integration' ); ?></p>
+				<button type="button" id="ghl-toggle-family-docs" class="ghl-toggle-button" data-target="ghl-family-docs-wrapper" data-label-show="<?php esc_attr_e( 'Show usage examples', 'ghl-crm-integration' ); ?>" data-label-hide="<?php esc_attr_e( 'Hide usage examples', 'ghl-crm-integration' ); ?>" aria-expanded="false">
+					<span class="dashicons dashicons-arrow-right"></span>
+					<span class="ghl-toggle-button__label"><?php esc_html_e( 'Show usage examples', 'ghl-crm-integration' ); ?></span>
+				</button>
+			</div>
+		</div>
+
+		<div id="ghl-family-docs-wrapper" class="ghl-collapsible ghl-is-collapsed" data-collapsible>
+			<div class="ghl-card" style="margin-top: 12px;">
+				<div class="ghl-card-body">
 				<h4><?php esc_html_e( '1. Add Shortcode to Your Site', 'ghl-crm-integration' ); ?></h4>
 				<p><?php esc_html_e( 'Use this shortcode to let parents manage their children:', 'ghl-crm-integration' ); ?></p>
 				<div style="background: #f8f9fa; padding: 16px; border-radius: 4px; border: 1px solid #dee2e6; margin: 12px 0;">
@@ -382,6 +388,7 @@ $settings = $settings_manager->get_settings_array();
 					<br>
 					<div style="color: #7f848e;">// Check if user is a parent</div>
 					<div>$is_parent = $repo-&gt;is_parent(<span style="color: #98c379;">123</span>);</div>
+				</div>
 				</div>
 			</div>
 		</div>
