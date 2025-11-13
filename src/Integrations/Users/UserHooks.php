@@ -287,15 +287,16 @@ class UserHooks {
 
 		$profile_tags = get_user_meta( $user_id, '_ghl_contact_tags', true );
 		if ( is_array( $profile_tags ) ) {
+			// Profile tags are now stored as IDs - convert to names for payload
+			$tag_manager            = \GHL_CRM\Core\TagManager::get_instance();
 			$sanitized_profile_tags = array_map( 'sanitize_text_field', $profile_tags );
-			$existing_tags          = array_values(
-				array_filter(
-					$sanitized_profile_tags,
-					static function ( $tag ): bool {
-						return $tag !== '';
-					}
-				)
+			$tag_ids                = array_filter(
+				$sanitized_profile_tags,
+				static function ( $tag ): bool {
+					return $tag !== '';
+				}
 			);
+			$existing_tags = $tag_manager->convert_ids_to_names( $tag_ids );
 		}
 
 		$role_tags_manager = RoleTagsManager::get_instance();

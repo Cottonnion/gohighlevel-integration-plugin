@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace GHL_CRM\Sync;
 
+use GHL_CRM\Core\TagManager;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -579,9 +581,9 @@ class QueueManager {
 						}
 					}
 
-					// Update user meta with tags
+					// Update user meta with tags (store as IDs)
 					if ( ! empty( $tags_to_cache ) && is_array( $tags_to_cache ) ) {
-						update_user_meta( (int) $item->item_id, '_ghl_contact_tags', $tags_to_cache );
+						TagManager::get_instance()->store_user_tags( (int) $item->item_id, $tags_to_cache );
 					}
 				}
 
@@ -596,7 +598,7 @@ class QueueManager {
 						// Store tags from payload
 						$payload_data = json_decode( $item->payload, true );
 						if ( ! empty( $payload_data['tags'] ) && is_array( $payload_data['tags'] ) ) {
-							update_user_meta( $user_id, '_ghl_contact_tags', $payload_data['tags'] );
+							TagManager::get_instance()->store_user_tags( $user_id, $payload_data['tags'] );
 						}
 					}
 				}
@@ -1016,7 +1018,7 @@ class QueueManager {
 					update_user_meta( $user_id, '_ghl_last_sync', time() );
 
 					if ( ! empty( $contact['tags'] ) && is_array( $contact['tags'] ) ) {
-						update_user_meta( $user_id, '_ghl_contact_tags', $contact['tags'] );
+						TagManager::get_instance()->store_user_tags( $user_id, $contact['tags'] );
 					}
 
 					if ( ! empty( $contact['type'] ) ) {

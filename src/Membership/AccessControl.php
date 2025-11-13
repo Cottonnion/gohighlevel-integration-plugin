@@ -91,13 +91,17 @@ class AccessControl {
 	 * @return array Array of tag names
 	 */
 	public function get_user_tags( int $user_id ): array {
-		$tags = get_user_meta( $user_id, '_ghl_contact_tags', true );
+		$tag_manager = \GHL_CRM\Core\TagManager::get_instance();
+		$tags        = $tag_manager->get_user_tag_names( $user_id );
 
-		if ( ! is_array( $tags ) ) {
-			return [];
+		if ( get_option( 'ghl_crm_family_accounts_enabled', false ) && class_exists( '\\GHL_CRM\\Core\\FamilyManager' ) ) {
+			$family_manager = \GHL_CRM\Core\FamilyManager::get_instance();
+			$tags           = $family_manager->get_inherited_tags( $user_id, $tags );
 		}
 
-		return array_map( 'strtolower', $tags ); // Normalize to lowercase for comparison
+		$tags = apply_filters( 'ghl_user_effective_tags', $tags, $user_id );
+
+		return array_map( 'strtolower', array_unique( array_filter( $tags ) ) );
 	}
 
 	/**

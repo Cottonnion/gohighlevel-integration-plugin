@@ -423,13 +423,10 @@ class ConditionalMenus {
 	 * @return array Array of tag names (lowercase).
 	 */
 	private function get_user_tags( int $user_id ): array {
-		$tags = get_user_meta( $user_id, self::META_USER_TAGS, true );
+		$tag_manager = TagManager::get_instance();
+		$names       = $tag_manager->get_user_tag_names( $user_id );
 
-		if ( ! is_array( $tags ) ) {
-			return [];
-		}
-
-		return array_map( 'strtolower', $tags );
+		return array_map( 'strtolower', $names );
 	}
 
 	/**
@@ -438,18 +435,7 @@ class ConditionalMenus {
 	 * @return array Array of tag objects from GHL API.
 	 */
 	private function get_cached_tags(): array {
-		$settings    = get_option( 'ghl_crm_settings', [] );
-		$location_id = $settings['location_id'] ?? '';
-
-		if ( empty( $location_id ) ) {
-			return [];
-		}
-
-		$site_id       = get_current_blog_id();
-		$transient_key = sprintf( self::TRANSIENT_TAG_PATTERN, $location_id, $site_id );
-		$cached_tags   = get_transient( $transient_key );
-
-		return is_array( $cached_tags ) ? $cached_tags : [];
+		return TagManager::get_instance()->get_tags();
 	}
 
 	/**
@@ -459,31 +445,7 @@ class ConditionalMenus {
 	 * @return array Array of tag names (fallback to ID if not found).
 	 */
 	private function convert_tag_ids_to_names( array $tag_ids ): array {
-		if ( empty( $tag_ids ) ) {
-			return [];
-		}
-
-		$all_tags = $this->get_cached_tags();
-		if ( empty( $all_tags ) ) {
-			// No cache available, return IDs as fallback
-			return $tag_ids;
-		}
-
-		// Build ID => name map
-		$tag_map = [];
-		foreach ( $all_tags as $tag ) {
-			if ( isset( $tag['id'], $tag['name'] ) ) {
-				$tag_map[ $tag['id'] ] = $tag['name'];
-			}
-		}
-
-		// Convert IDs to names (use ID as fallback if name not found)
-		$tag_names = [];
-		foreach ( $tag_ids as $tag_id ) {
-			$tag_names[] = $tag_map[ $tag_id ] ?? $tag_id;
-		}
-
-		return $tag_names;
+		return TagManager::get_instance()->convert_ids_to_names( $tag_ids );
 	}
 
 	/**
@@ -497,20 +459,7 @@ class ConditionalMenus {
 			return [];
 		}
 
-		$all_tags = $this->get_cached_tags();
-		if ( empty( $all_tags ) ) {
-			return [];
-		}
-
-		// Build filtered map for requested IDs only
-		$tag_names_map = [];
-		foreach ( $all_tags as $tag ) {
-			if ( isset( $tag['id'], $tag['name'] ) && in_array( $tag['id'], $tag_ids, true ) ) {
-				$tag_names_map[ $tag['id'] ] = $tag['name'];
-			}
-		}
-
-		return $tag_names_map;
+		return TagManager::get_instance()->map_ids_to_names( $tag_ids );
 	}
 
 	/**

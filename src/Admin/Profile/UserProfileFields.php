@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace GHL_CRM\Admin\Profile;
 
 use GHL_CRM\Core\SettingsManager;
+use GHL_CRM\Core\TagManager;
 use GHL_CRM\API\Client\Client;
 use GHL_CRM\API\Resources\ContactResource;
 
@@ -37,6 +38,11 @@ class UserProfileFields {
 	private ContactResource $contact_resource;
 
 	/**
+	 * Tag manager helper
+	 */
+	private ?TagManager $tag_manager = null;
+
+	/**
 	 * Singleton instance
 	 *
 	 * @var self|null
@@ -64,6 +70,7 @@ class UserProfileFields {
 		// Initialize ContactResource with Client
 		$client                 = Client::get_instance();
 		$this->contact_resource = new ContactResource( $client );
+		$this->tag_manager      = TagManager::get_instance();
 
 		$this->register_hooks();
 	}
@@ -100,6 +107,130 @@ class UserProfileFields {
 		add_action( 'wp_ajax_ghl_crm_sync_user_now', [ $this, 'ajax_sync_user_now' ] );
 		add_action( 'wp_ajax_ghl_crm_generate_login_link', [ $this, 'ajax_generate_login_link' ] );
 		add_action( 'wp_ajax_ghl_crm_refresh_from_ghl', [ $this, 'ajax_refresh_from_ghl' ] );
+	}
+
+	/**
+	 * Resolve the tag manager instance, reinstantiating if needed.
+	 */
+	private function get_tag_manager(): TagManager {
+		if ( null === $this->tag_manager ) {
+			$this->tag_manager = TagManager::get_instance();
+		}
+
+		return $this->tag_manager;
+	}
+
+	/**
+	 * Build normalized tag pairs for client consumption.
+	 */
+	private function build_tag_pairs( array $raw_tags, array $tag_ids, array $normalized_pairs ): array {
+		$tag_manager   = $this->get_tag_manager();
+		$pairs_lookup  = [];
+		$raw_lookup    = [];
+		$unique_pairs  = [];
+		$seen_ids      = [];
+
+		foreach ( $normalized_pairs as $pair ) {
+			$pair_id   = isset( $pair['id'] ) ? (string) $pair['id'] : '';
+			$pair_name = isset( $pair['name'] ) ? (string) $pair['name'] : '';
+
+			if ( '' === $pair_id && '' !== $pair_name ) {
+				$pair_id = $pair_name;
+			}
+
+			if ( '' === $pair_id ) {
+				continue;
+			}
+
+			if ( ! isset( $pairs_lookup[ $pair_id ] ) || '' === $pairs_lookup[ $pair_id ] ) {
+				$pairs_lookup[ $pair_id ] = $pair_name;
+			}
+		}
+
+		foreach ( $raw_tags as $raw_tag ) {
+			if ( is_array( $raw_tag ) ) {
+				$rid   = isset( $raw_tag['id'] ) ? (string) $raw_tag['id'] : '';
+				$rname = isset( $raw_tag['name'] ) ? (string) $raw_tag['name'] : '';
+				if ( '' !== $rid && '' !== $rname ) {
+					$raw_lookup[ $rid ] = $rname;
+				}
+			}
+		}
+
+		if ( ! empty( $tag_ids ) ) {
+			$tag_map = $tag_manager->map_ids_to_names( $tag_ids );
+
+			foreach ( $tag_ids as $tag_id ) {
+				$id   = (string) $tag_id;
+				if ( '' === $id || isset( $seen_ids[ $id ] ) ) {
+					continue;
+				}
+
+				$name = $pairs_lookup[ $id ] ?? '';
+				if ( '' === $name || $name === $id ) {
+					$name = $tag_map[ $id ] ?? $name;
+				}
+				if ( '' === $name || $name === $id ) {
+					$name = $raw_lookup[ $id ] ?? $name;
+				}
+				if ( '' === $name ) {
+					$name = $id;
+				}
+
+				$unique_pairs[] = [
+					'id'   => $id,
+					'name' => $name,
+				];
+				$seen_ids[ $id ] = true;
+			}
+		}
+
+		if ( empty( $unique_pairs ) && ! empty( $pairs_lookup ) ) {
+			foreach ( $pairs_lookup as $id => $name ) {
+				$id = (string) $id;
+				if ( '' === $id || isset( $seen_ids[ $id ] ) ) {
+					continue;
+				}
+				$unique_pairs[] = [
+					'id'   => $id,
+					'name' => '' !== $name ? $name : $id,
+				];
+				$seen_ids[ $id ] = true;
+			}
+		}
+
+		if ( empty( $unique_pairs ) && ! empty( $raw_tags ) ) {
+			foreach ( $raw_tags as $raw_tag ) {
+				if ( is_array( $raw_tag ) ) {
+					$rid   = isset( $raw_tag['id'] ) ? (string) $raw_tag['id'] : '';
+					$rname = isset( $raw_tag['name'] ) ? (string) $raw_tag['name'] : '';
+
+					$id = '' !== $rid ? $rid : $rname;
+					if ( '' === $id || isset( $seen_ids[ $id ] ) ) {
+						continue;
+					}
+
+					$unique_pairs[] = [
+						'id'   => $id,
+						'name' => '' !== $rname ? $rname : $id,
+					];
+					$seen_ids[ $id ] = true;
+				} else {
+					$value = trim( (string) $raw_tag );
+					if ( '' === $value || isset( $seen_ids[ $value ] ) ) {
+						continue;
+					}
+
+					$unique_pairs[] = [
+						'id'   => $value,
+						'name' => $value,
+					];
+					$seen_ids[ $value ] = true;
+				}
+			}
+		}
+
+		return $unique_pairs;
 	}
 
 	/**
@@ -181,10 +312,9 @@ class UserProfileFields {
 		$contact_id    = get_user_meta( $user->ID, '_ghl_contact_id', true );
 		$last_sync     = get_user_meta( $user->ID, '_ghl_last_sync', true );
 		$synced_on_reg = get_user_meta( $user->ID, '_ghl_synced_on_register', true );
-		$current_tags  = get_user_meta( $user->ID, '_ghl_contact_tags', true );
-		if ( ! is_array( $current_tags ) ) {
-			$current_tags = [];
-		}
+		$tag_manager      = $this->get_tag_manager();
+		$current_tag_ids  = $tag_manager->get_user_tag_ids( $user->ID );
+		$current_tag_map  = $tag_manager->map_ids_to_names( $current_tag_ids );
 
 		// Get settings
 		$settings           = $this->settings_manager->get_settings_array();
@@ -290,9 +420,9 @@ class UserProfileFields {
 					multiple="multiple" 
 					data-user-id="<?php echo esc_attr( $user->ID ); ?>"
 					data-contact-id="<?php echo esc_attr( $contact_id ); ?>">
-					<?php foreach ( $current_tags as $tag ) : ?>
-						<option value="<?php echo esc_attr( $tag ); ?>" selected="selected">
-							<?php echo esc_html( $tag ); ?>
+					<?php foreach ( $current_tag_map as $tag_id => $tag_name ) : ?>
+						<option value="<?php echo esc_attr( $tag_id ); ?>" selected="selected">
+							<?php echo esc_html( $tag_name ); ?>
 						</option>
 					<?php endforeach; ?>
 				</select>
@@ -399,23 +529,18 @@ class UserProfileFields {
 			? array_map( 'sanitize_text_field', wp_unslash( $_POST['ghl_contact_tags'] ) )
 			: [];
 
-		// Get current tags
-		$current_tags = get_user_meta( $user_id, '_ghl_contact_tags', true );
-		if ( ! is_array( $current_tags ) ) {
-			$current_tags = [];
-		}
+		$tag_manager   = $this->get_tag_manager();
+		$current_ids  = $tag_manager->get_user_tag_ids( $user_id );
+		$normalized    = $tag_manager->normalize_tag_input( $submitted_tags );
+		$new_ids       = $normalized['ids'];
 
-		// Only sync if tags changed
-		if ( $submitted_tags !== $current_tags ) {
-			// Update tags in meta
-			update_user_meta( $user_id, '_ghl_contact_tags', $submitted_tags );
-
-			// Get contact ID
+		if ( $new_ids !== $current_ids ) {
+			$stored_ids = $tag_manager->store_user_tags( $user_id, $submitted_tags );
 			$contact_id = get_user_meta( $user_id, '_ghl_contact_id', true );
 
 			if ( ! empty( $contact_id ) ) {
-				// Sync tags to GHL
-				$this->sync_tags_to_ghl( $contact_id, $submitted_tags );
+				$payload_tags = $tag_manager->prepare_tags_for_payload( $stored_ids, $normalized['pairs'] ?? [] );
+				$this->sync_tags_to_ghl( $contact_id, $payload_tags );
 			}
 		}
 	}
@@ -465,14 +590,33 @@ class UserProfileFields {
 		}
 
 		try {
-			$client  = Client::get_instance();
-			$contact = $client->get( "contacts/{$contact_id}" );
+			$tag_manager = $this->get_tag_manager();
+			$client      = Client::get_instance();
+			$contact     = $client->get( "contacts/{$contact_id}" );
 
 			if ( ! empty( $contact ) ) {
-				// Update cached tags
+				$raw_tags = [];
 				if ( ! empty( $contact['tags'] ) && is_array( $contact['tags'] ) ) {
-					update_user_meta( $user_id, '_ghl_contact_tags', $contact['tags'] );
+					$raw_tags = $contact['tags'];
 				}
+
+				$normalized = $tag_manager->normalize_tag_input( $raw_tags );
+				$tag_ids    = $tag_manager->store_user_tags( $user_id, $raw_tags );
+				$tag_pairs  = $this->build_tag_pairs( $raw_tags, $tag_ids, $normalized['pairs'] );
+
+				$contact['tags']      = array_map(
+					static function ( array $pair ): string {
+						return isset( $pair['name'] ) ? (string) $pair['name'] : '';
+					},
+					$tag_pairs
+				);
+				$contact['tag_ids']   = array_map(
+					static function ( array $pair ): string {
+						return isset( $pair['id'] ) ? (string) $pair['id'] : '';
+					},
+					$tag_pairs
+				);
+				$contact['tag_pairs'] = $tag_pairs;
 
 				wp_send_json_success( $contact );
 			} else {
@@ -595,7 +739,8 @@ class UserProfileFields {
 		}
 
 		try {
-			$client = Client::get_instance();
+			$tag_manager = $this->get_tag_manager();
+			$client      = Client::get_instance();
 
 			// Fetch fresh contact data from GHL
 			$response = $client->get( "contacts/{$contact_id}" );
@@ -610,10 +755,11 @@ class UserProfileFields {
 			update_user_meta( $user_id, '_ghl_contact_id', $contact_id );
 			update_user_meta( $user_id, '_ghl_last_sync', time() );
 
-			// Update tags if available
+			$raw_tags = [];
 			if ( ! empty( $contact['tags'] ) && is_array( $contact['tags'] ) ) {
-				update_user_meta( $user_id, '_ghl_contact_tags', $contact['tags'] );
+				$raw_tags = $contact['tags'];
 			}
+			$tag_manager->store_user_tags( $user_id, $raw_tags );
 
 			// Update contact type if available
 			if ( ! empty( $contact['type'] ) ) {
@@ -650,7 +796,8 @@ class UserProfileFields {
 		}
 
 		try {
-			$client = Client::get_instance();
+			$tag_manager = $this->get_tag_manager();
+			$client      = Client::get_instance();
 
 			// Fetch fresh contact data from GHL
 			$response = $client->get( "contacts/{$contact_id}" );
@@ -665,10 +812,28 @@ class UserProfileFields {
 			update_user_meta( $user_id, '_ghl_contact_id', $contact_id );
 			update_user_meta( $user_id, '_ghl_last_sync', time() );
 
-			// Update tags if available
+			$raw_tags = [];
 			if ( ! empty( $contact['tags'] ) && is_array( $contact['tags'] ) ) {
-				update_user_meta( $user_id, '_ghl_contact_tags', $contact['tags'] );
+				$raw_tags = $contact['tags'];
 			}
+			$normalized = $tag_manager->normalize_tag_input( $raw_tags );
+			$tag_ids    = $tag_manager->store_user_tags( $user_id, $raw_tags );
+			$tag_pairs  = $this->build_tag_pairs( $raw_tags, $tag_ids, $normalized['pairs'] );
+			$tag_names  = array_map(
+				static function ( array $pair ): string {
+					return isset( $pair['name'] ) ? (string) $pair['name'] : '';
+				},
+				$tag_pairs
+			);
+			$tag_id_list = array_map(
+				static function ( array $pair ): string {
+					return isset( $pair['id'] ) ? (string) $pair['id'] : '';
+				},
+				$tag_pairs
+			);
+			$contact['tags']      = $tag_names;
+			$contact['tag_ids']   = $tag_id_list;
+			$contact['tag_pairs'] = $tag_pairs;
 
 			// Update contact type if available
 			if ( ! empty( $contact['type'] ) ) {
@@ -679,7 +844,9 @@ class UserProfileFields {
 				[
 					'message' => __( 'Successfully synced from GoHighLevel!', 'ghl-crm-integration' ),
 					'contact' => $contact,
-					'tags'    => $contact['tags'] ?? [],
+					'tags'    => $tag_names,
+					'tag_ids' => $tag_id_list,
+					'tag_pairs' => $tag_pairs,
 					'type'    => $contact['type'] ?? 'lead',
 				]
 			);

@@ -49,6 +49,7 @@ class ShortcodeManager {
 	 */
 	public function init(): void {
 		add_shortcode( 'ghl_form', array( $this, 'render_form_shortcode' ) );
+		add_shortcode( 'ghl_family_manager', array( $this, 'render_family_manager_shortcode' ) );
 	}
 
 	/**
@@ -204,5 +205,113 @@ class ShortcodeManager {
 			esc_html__( 'GoHighLevel Form Error', 'ghl-crm-integration' ),
 			esc_html( $message )
 		);
+	}
+
+	/**
+	 * Render family manager shortcode
+	 *
+	 * @param array|string $atts Shortcode attributes.
+	 * @return string HTML output
+	 */
+	public function render_family_manager_shortcode( $atts ): string {
+		// Check if user is logged in
+		if ( ! is_user_logged_in() ) {
+			return '<p>' . esc_html__( 'Please log in to manage family accounts.', 'ghl-crm-integration' ) . '</p>';
+		}
+
+		// Check if feature is enabled
+		$settings_manager = SettingsManager::get_instance();
+		if ( empty( $settings_manager->get_setting( 'enable_family_accounts' ) ) ) {
+			return '<p>' . esc_html__( 'Family accounts feature is not enabled.', 'ghl-crm-integration' ) . '</p>';
+		}
+
+		$user_id = get_current_user_id();
+		$family_repo = \GHL_CRM\Database\FamilyRelationshipsRepository::get_instance();
+		
+		// Check if user is parent or admin
+		$is_admin = current_user_can( 'manage_options' );
+		$is_parent = $family_repo->is_parent( $user_id );
+		
+		$has_parent_tag = false;
+		$parent_tag_id  = $settings_manager->get_setting( 'family_parent_tag' );
+		if ( ! empty( $parent_tag_id ) ) {
+			$tag_manager      = \GHL_CRM\Core\TagManager::get_instance();
+			$parent_map       = $tag_manager->map_ids_to_names( [ (string) $parent_tag_id ] );
+			$parent_tag_name  = $parent_map[ (string) $parent_tag_id ] ?? '';
+			$user_tag_names   = $tag_manager->get_user_tag_names( $user_id );
+
+			if ( '' !== $parent_tag_name && in_array( $parent_tag_name, $user_tag_names, true ) ) {
+				$has_parent_tag = true;
+			}
+		}
+
+		// if ( ! $is_admin && ! $is_parent && ! $has_parent_tag ) {
+		// 	return '<p>' . esc_html__( 'You do not have permission to manage family accounts.', 'ghl-crm-integration' ) . '</p>';
+		// }
+
+		// Enqueue SweetAlert2 for better UX
+		wp_enqueue_style( 'sweetalert2' );
+		wp_enqueue_script( 'sweetalert2' );
+
+		// Enqueue styles and scripts
+		wp_enqueue_style( 'ghl-family-manager-css' );
+		wp_enqueue_script( 'ghl-family-manager' );
+
+		// Localize script data for AJAX, configuration, and i18n
+		wp_localize_script(
+			'ghl-family-manager',
+			'ghlFamilyManagerConfig',
+			array(
+				'ajaxUrl'         => admin_url( 'admin-ajax.php' ),
+				'nonce'           => wp_create_nonce( 'ghl_crm_nonce' ),
+				'currentParentId' => $user_id,
+				'isAdmin'         => $is_admin,
+				'i18n'            => array(
+					// General
+					'error'     => __( 'Error', 'ghl-crm-integration' ),
+					'success'   => __( 'Success!', 'ghl-crm-integration' ),
+					'ok'        => __( 'OK', 'ghl-crm-integration' ),
+					'cancel'    => __( 'Cancel', 'ghl-crm-integration' ),
+					'ajaxError' => __( 'An error occurred. Please try again.', 'ghl-crm-integration' ),
+
+					// Children list
+					'noChildren' => __( 'No children linked yet.', 'ghl-crm-integration' ),
+					'unlink'     => __( 'Unlink', 'ghl-crm-integration' ),
+
+					// Search & Invite
+					'searching'          => __( 'Searching...', 'ghl-crm-integration' ),
+					'searchingText'      => __( 'Looking up user information', 'ghl-crm-integration' ),
+					'emptyIdentifier'    => __( 'Please enter an email address.', 'ghl-crm-integration' ),
+					'userNotFound'       => __( 'User Not Found', 'ghl-crm-integration' ),
+					'userNotFoundText'   => __( 'This user does not exist. Would you like to create an account and send them an invitation?', 'ghl-crm-integration' ),
+					'createAndInvite'    => __( 'Create & Send Invite', 'ghl-crm-integration' ),
+					'userAvailable'      => __( 'User Found', 'ghl-crm-integration' ),
+					'userAvailableText'  => __( 'This user exists. Would you like to link them to your account and send an invitation?', 'ghl-crm-integration' ),
+					'sendInvite'         => __( 'Send Invite', 'ghl-crm-integration' ),
+					'alreadyLinked'      => __( 'Already Linked', 'ghl-crm-integration' ),
+					'alreadyLinkedText'  => __( 'This user is already linked as your child.', 'ghl-crm-integration' ),
+					'hasParent'          => __( 'Cannot Link', 'ghl-crm-integration' ),
+					'hasParentText'      => __( 'This user is already linked to another parent account.', 'ghl-crm-integration' ),
+					'invalidEmail'       => __( 'Invalid Email', 'ghl-crm-integration' ),
+					'invalidEmailText'   => __( 'Please enter a valid email address.', 'ghl-crm-integration' ),
+					'sendingInvite'      => __( 'Sending Invite...', 'ghl-crm-integration' ),
+					'sendingInviteText'  => __( 'Creating account and sending invitation email', 'ghl-crm-integration' ),
+					'inviteSent'         => __( 'Invite Sent!', 'ghl-crm-integration' ),
+					'inviteSentMessage'  => __( 'The invitation has been sent via email with login credentials.', 'ghl-crm-integration' ),
+
+					// Unlink
+					'confirmUnlinkTitle' => __( 'Unlink Child?', 'ghl-crm-integration' ),
+					'confirmUnlink'      => __( 'Are you sure you want to unlink this child? They will lose access to inherited permissions.', 'ghl-crm-integration' ),
+					'yesUnlink'          => __( 'Yes, Unlink', 'ghl-crm-integration' ),
+					'unlinking'          => __( 'Unlinking...', 'ghl-crm-integration' ),
+					'childUnlinked'      => __( 'Child unlinked successfully', 'ghl-crm-integration' ),
+				),
+			)
+		);
+
+		// Load template
+		ob_start();
+		include GHL_CRM_PATH . 'templates/shortcodes/family-manager.php';
+		return ob_get_clean();
 	}
 }

@@ -158,7 +158,7 @@ class SettingsManager {
 				// Sanitize based on value type
 				if ( is_array( $value ) ) {
 					// Special handling for role_tags nested structure
-					if ( $key === 'role_tags' ) {
+					if ( 'role_tags' === $key ) {
 						$new_settings[ $key ] = $this->sanitize_role_tags( $value );
 					} else {
 						// Handle other arrays (checkboxes, multi-selects, etc.)
@@ -171,11 +171,11 @@ class SettingsManager {
 					}
 
 					// Check if this is an empty array marker from JavaScript
-					if ( $value === '__EMPTY_ARRAY__' ) {
+					if ( '__EMPTY_ARRAY__' === $value ) {
 						$new_settings[ $key ] = [];
 					} else {
 						// Handle URL fields with proper sanitization
-						if ( $key === 'ghl_white_label_domain' ) {
+						if ( 'ghl_white_label_domain' === $key ) {
 							$new_settings[ $key ] = ! empty( $value ) ? esc_url_raw( wp_unslash( $value ) ) : '';
 						} else {
 							// Handle scalar values
@@ -218,7 +218,7 @@ class SettingsManager {
 				}
 			}
 
-			// Save settings (multisite faware) - use repository
+			// Save settings (multisite aware) - use repository
 			$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
 			$saved      = $repository->save_site_settings( $settings );
 
@@ -761,63 +761,33 @@ class SettingsManager {
 		}
 
 		try {
-			$settings    = $this->get_settings_array();
-			$location_id = $settings['location_id'] ?? '';
+			$tag_manager = TagManager::get_instance();
+			$force       = ! empty( $request_data['force_refresh'] );
+			$tags        = $tag_manager->get_tags( $force );
 
-			if ( empty( $location_id ) ) {
-				wp_send_json_error(
-					[
-						'message' => __( 'No location ID configured. Please connect to GoHighLevel first.', 'ghl-crm-integration' ),
-					],
-					400
-				);
-				return;
+			$search_term = isset( $request_data['search'] ) ? sanitize_text_field( wp_unslash( $request_data['search'] ) ) : '';
+			if ( '' !== $search_term ) {
+				$tags = $tag_manager->search_tags( $search_term );
 			}
 
-			// Create site-specific transient key (not network-wide)
-			$site_id       = get_current_blog_id();
-			$transient_key = 'ghl_tags_' . $location_id . '_site_' . $site_id;
+			$normalized_tags = array_map(
+				static function ( array $tag ): array {
+					return [
+						'id'   => isset( $tag['id'] ) ? (string) $tag['id'] : '',
+						'name' => isset( $tag['name'] ) ? (string) $tag['name'] : '',
+					];
+				},
+				$tags
+			);
 
-			// Check for cached tags (site-specific transient)
-			$cached_tags = get_transient( $transient_key );
-
-			if ( false !== $cached_tags && is_array( $cached_tags ) ) {
-				wp_send_json_success(
-					[
-						'tags'    => $cached_tags,
-						'message' => __( 'Tags loaded successfully (cached).', 'ghl-crm-integration' ),
-						'cached'  => true,
-					]
-				);
-				return;
-			}
-
-			// Fetch fresh tags from GoHighLevel
-			$client   = \GHL_CRM\API\Client\Client::get_instance();
-			$response = $client->get( 'locations/' . $location_id . '/tags' );
-
-			if ( isset( $response['tags'] ) && is_array( $response['tags'] ) ) {
-				// Cache tags using configured duration
-				$cache_duration = absint( $this->get_setting( 'cache_duration', HOUR_IN_SECONDS ) );
-				set_transient( $transient_key, $response['tags'], $cache_duration );
-
-				wp_send_json_success(
-					[
-						'tags'    => $response['tags'],
-						'message' => __( 'Tags loaded successfully.', 'ghl-crm-integration' ),
-						'cached'  => false,
-					]
-				);
-			} else {
-				wp_send_json_success(
-					[
-						'tags'    => [],
-						'message' => __( 'No tags found in this location.', 'ghl-crm-integration' ),
-						'cached'  => false,
-					]
-				);
-			}
-		} catch ( \Exception $e ) {
+			wp_send_json_success(
+				[
+					'tags'    => $normalized_tags,
+					'message' => __( 'Tags loaded successfully.', 'ghl-crm-integration' ),
+					'cached'  => $tag_manager->last_fetch_was_cached(),
+				]
+			);
+		} catch ( \Throwable $e ) {
 			wp_send_json_error(
 				[
 					'message' => sprintf(
@@ -825,14 +795,6 @@ class SettingsManager {
 						__( 'Failed to fetch tags: %s', 'ghl-crm-integration' ),
 						$e->getMessage()
 					),
-				],
-				500
-			);
-		} catch ( \Error $t ) {
-			wp_send_json_error(
-				[
-					/* translators: %s: Error message when fetching tags fails */
-					'message' => sprintf( __( 'Failed to fetch tags: %s', 'ghl-crm-integration' ), $t->getMessage() ),
 				],
 				500
 			);
