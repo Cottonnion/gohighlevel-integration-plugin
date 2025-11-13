@@ -50,18 +50,47 @@
                         }
 
                         var items = response.data.tags.map(function(tag) {
-                            if (typeof tag === 'object' && tag !== null) {
-                                var label = String(tag.name || tag.id || '');
+                            if (tag && typeof tag === 'object') {
+                                var id = '';
+                                var text = '';
+
+                                if (tag.id !== undefined && tag.id !== null && String(tag.id).length) {
+                                    id = String(tag.id);
+                                }
+
+                                if (tag.name !== undefined && tag.name !== null && String(tag.name).length) {
+                                    text = String(tag.name);
+                                }
+
+                                if (!id && text) {
+                                    id = text;
+                                }
+
+                                if (!text && id) {
+                                    text = id;
+                                }
+
+                                if (!id) {
+                                    return null;
+                                }
+
                                 return {
-                                    id: label,
-                                    text: label
+                                    id: id,
+                                    text: text
                                 };
                             }
+
                             var value = String(tag || '');
+                            if (!value) {
+                                return null;
+                            }
+
                             return {
                                 id: value,
                                 text: value
                             };
+                        }).filter(function(item) {
+                            return item !== null;
                         });
 
                         if (params && params.term) {
@@ -215,15 +244,59 @@
                             self.showNotice('success', response.data.message);
                             
                             // Update tags in Select2 if returned
-                            if (response.data.tags && response.data.tags.length > 0) {
+                            if (response.data && response.data.tag_pairs && response.data.tag_pairs.length > 0) {
                                 const $tagsSelect = $('#ghl-contact-tags');
                                 $tagsSelect.empty();
-                                
-                                response.data.tags.forEach(function(tag) {
-                                    const option = new Option(tag, tag, true, true);
+                                const pairs = response.data.tag_pairs;
+
+                                pairs.forEach(function(pair) {
+                                    if (!pair || (pair.id === undefined && pair.name === undefined)) {
+                                        return;
+                                    }
+
+                                    var id = '';
+                                    var name = '';
+
+                                    if (pair.id !== undefined && pair.id !== null) {
+                                        id = String(pair.id);
+                                    }
+
+                                    if (pair.name !== undefined && pair.name !== null) {
+                                        name = String(pair.name);
+                                    }
+
+                                    if (!id && name) {
+                                        id = name;
+                                    }
+
+                                    if (!name && id) {
+                                        name = id;
+                                    }
+
+                                    if (!id) {
+                                        return;
+                                    }
+
+                                    const option = new Option(name, id, true, true);
+                                    option.dataset.tagName = name;
                                     $tagsSelect.append(option);
                                 });
-                                
+
+                                $tagsSelect.trigger('change');
+                            } else if (response.data && response.data.tags && response.data.tags.length > 0) {
+                                const $tagsSelect = $('#ghl-contact-tags');
+                                $tagsSelect.empty();
+
+                                response.data.tags.forEach(function(tag) {
+                                    var label = String(tag || '');
+                                    if (!label) {
+                                        return;
+                                    }
+                                    const option = new Option(label, label, true, true);
+                                    option.dataset.tagName = label;
+                                    $tagsSelect.append(option);
+                                });
+
                                 $tagsSelect.trigger('change');
                             }
                             

@@ -80,6 +80,7 @@ class Loader {
 			'core.autologin'                           => \GHL_CRM\Core\AutoLoginManager::class,
 			'core.shortcodes'                          => \GHL_CRM\Core\ShortcodeManager::class,
 			'core.conditional_menus'                   => \GHL_CRM\Core\ConditionalMenus::class,
+			'core.family_manager'                      => \GHL_CRM\Core\FamilyManager::class,
 
 			// Admin UI components
 			'admin.ui'                                 => \GHL_CRM\Admin\AdminUI::class,
@@ -106,6 +107,9 @@ class Loader {
 			// Membership components
 			'membership.metaboxes'                     => \GHL_CRM\Membership\Admin\MetaBoxes::class,
 			'membership.restrictions'                  => \GHL_CRM\Membership\Restrictions::class,
+
+			// Database repositories
+			'database.family_relationships'            => \GHL_CRM\Database\FamilyRelationshipsRepository::class,
 		);
 
 		if ( function_exists( 'apply_filters' ) ) {
