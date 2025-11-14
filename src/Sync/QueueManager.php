@@ -556,6 +556,30 @@ class QueueManager {
 					update_user_meta( (int) $item->item_id, '_ghl_contact_id', $contact_id );
 					update_user_meta( (int) $item->item_id, '_ghl_last_sync', time() );
 
+					// Check for pending family tags and queue them
+					$pending_family_tags = get_user_meta( (int) $item->item_id, '_ghl_pending_family_tags', true );
+					if ( is_array( $pending_family_tags ) && ! empty( $pending_family_tags ) ) {
+						// Queue tag addition for family inheritance
+						if ( class_exists( 'GHL_CRM\Core\TagManager' ) ) {
+							$tag_manager  = TagManager::get_instance();
+							$payload_tags = $tag_manager->prepare_tags_for_payload( $pending_family_tags );
+							
+							$this->add_to_queue(
+								'user',
+								(int) $item->item_id,
+								'add_tags',
+								[
+									'contact_id' => $contact_id,
+									'tags'       => array_values( array_unique( $payload_tags ) ),
+									'reason'     => 'Family inheritance - pending tags applied after registration',
+								]
+							);
+						}
+						
+						// Clear pending tags
+						delete_user_meta( (int) $item->item_id, '_ghl_pending_family_tags' );
+					}
+
 					// Store tags from payload (what we sent) OR from response
 					$tags_to_cache = null;
 
