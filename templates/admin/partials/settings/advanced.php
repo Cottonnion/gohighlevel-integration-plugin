@@ -202,9 +202,6 @@ $settings = $settings_manager->get_settings_array();
 								<?php esc_html_e( 'Enable parent-child relationships', 'ghl-crm-integration' ); ?>
 							</span>
 						</label>
-						<p class="description" style="margin-top: 8px;">
-							<?php esc_html_e( 'When enabled, you can link child accounts to parent accounts. Children will inherit membership permissions and tags from their parent.', 'ghl-crm-integration' ); ?>
-						</p>
 					</td>
 				</tr>
 				
@@ -224,7 +221,6 @@ $settings = $settings_manager->get_settings_array();
 							<option value=""><?php esc_html_e( 'Loading tags...', 'ghl-crm-integration' ); ?></option>
 						</select>
 						<p class="description" style="margin-top: 8px;">
-							<?php esc_html_e( 'Choose an existing GHL tag to mark parent accounts. We recommend creating a dedicated tag like "Parent Account" or "Family Lead" in GoHighLevel first.', 'ghl-crm-integration' ); ?>
 							<br>
 							<button type="button" id="refresh-family-tags" class="ghl-button ghl-button-secondary" style="margin-top: 8px;">
 								<span class="dashicons dashicons-update"></span>
@@ -234,52 +230,106 @@ $settings = $settings_manager->get_settings_array();
 					</td>
 				</tr>
 
+				<?php
+				// Check if BuddyBoss is active
+				if ( ! function_exists( 'is_plugin_active' ) ) {
+					require_once ABSPATH . 'wp-admin/includes/plugin.php';
+				}
+				$buddyboss_active = is_plugin_active( 'buddyboss-platform/bp-loader.php' );
+				?>
+
+				<?php if ( $buddyboss_active ) : ?>
 				<tr>
 					<th scope="row">
-						<label for="family_child_tag_pattern">
-							<?php esc_html_e( 'Child Tag Pattern', 'ghl-crm-integration' ); ?>
-							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'The tag pattern applied to child accounts in GHL. Use {parent_id} as a placeholder for the parent\'s WordPress user ID.', 'ghl-crm-integration' ); ?>">?</span>
+						<label for="family_buddyboss_groups">
+							<?php esc_html_e( 'BuddyBoss Group Integration', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Automatically create private BuddyBoss groups for each family. Children are added/removed from the group when linked/unlinked.', 'ghl-crm-integration' ); ?>">?</span>
 						</label>
 					</th>
 					<td>
-						<input type="text" 
-							   id="family_child_tag_pattern" 
-							   name="family_child_tag_pattern" 
-							   value="<?php echo esc_attr( $settings['family_child_tag_pattern'] ?? 'family-{parent_id}' ); ?>" 
-							   class="regular-text"
-							   placeholder="family-{parent_id}">
-						<p class="description" style="margin-top: 8px;">
-							<?php esc_html_e( 'Tag pattern for child accounts. Use {parent_id} to include the parent\'s WordPress user ID. Example: "family-{parent_id}" becomes "family-123" for parent user ID 123.', 'ghl-crm-integration' ); ?>
-						</p>
+						<label class="ghl-checkbox <?php echo ! empty( $settings['family_buddyboss_groups'] ) ? 'is-checked' : ''; ?>" style="display: flex; align-items: center; gap: 6px;">
+							<input 
+								type="checkbox" 
+								class="ghl-checkbox-original"
+								id="family_buddyboss_groups" 
+								name="family_buddyboss_groups" 
+								value="1"
+								<?php checked( ! empty( $settings['family_buddyboss_groups'] ), true ); ?>
+							>
+							<span class="ghl-checkbox-input <?php echo ! empty( $settings['family_buddyboss_groups'] ) ? 'is-checked' : ''; ?>">
+								<span class="ghl-checkbox-inner"></span>
+							</span>
+							<span class="ghl-checkbox-label">
+								<?php esc_html_e( 'Create BuddyBoss groups for families', 'ghl-crm-integration' ); ?>
+							</span>
+						</label>
 					</td>
 				</tr>
 
 				<tr>
 					<th scope="row">
-						<label for="family_sync_mode">
-							<?php esc_html_e( 'Tag Sync Mode', 'ghl-crm-integration' ); ?>
-							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'How the plugin handles conflicts when relationship tags are manually changed in GoHighLevel.', 'ghl-crm-integration' ); ?>">?</span>
+						<label for="family_buddyboss_group_name">
+							<?php esc_html_e( 'Group Naming Pattern', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Customize the BuddyBoss group name using variables. Available: {parent_name}, {parent_id}, {parent_tag}', 'ghl-crm-integration' ); ?>">?</span>
 						</label>
 					</th>
 					<td>
-						<select id="family_sync_mode" name="family_sync_mode" style="min-width: 300px;">
-							<option value="wp_authority" <?php selected( $settings['family_sync_mode'] ?? 'wp_authority', 'wp_authority' ); ?>>
-								<?php esc_html_e( 'WordPress Authority (Auto-resync tags)', 'ghl-crm-integration' ); ?>
-							</option>
-							<option value="alert_only" <?php selected( $settings['family_sync_mode'] ?? 'wp_authority', 'alert_only' ); ?>>
-								<?php esc_html_e( 'Alert Only (Log conflicts, don\'t auto-fix)', 'ghl-crm-integration' ); ?>
-							</option>
-							<option value="manual" <?php selected( $settings['family_sync_mode'] ?? 'wp_authority', 'manual' ); ?>>
-								<?php esc_html_e( 'Manual Resolution (Admin reviews all conflicts)', 'ghl-crm-integration' ); ?>
-							</option>
-						</select>
+						<input type="text" 
+							   id="family_buddyboss_group_name" 
+							   name="family_buddyboss_group_name" 
+							   value="<?php echo esc_attr( $settings['family_buddyboss_group_name'] ?? "{parent_name}'s Family" ); ?>" 
+							   class="regular-text"
+							   placeholder="{parent_name}'s Family">
 						<p class="description" style="margin-top: 8px;">
-							<strong><?php esc_html_e( 'WordPress Authority:', 'ghl-crm-integration' ); ?></strong> <?php esc_html_e( 'WordPress overwrites GHL tags automatically.', 'ghl-crm-integration' ); ?><br>
-							<strong><?php esc_html_e( 'Alert Only:', 'ghl-crm-integration' ); ?></strong> <?php esc_html_e( 'Log discrepancies but don\'t modify GHL tags.', 'ghl-crm-integration' ); ?><br>
-							<strong><?php esc_html_e( 'Manual Resolution:', 'ghl-crm-integration' ); ?></strong> <?php esc_html_e( 'Admin must manually approve each conflict resolution.', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'Available variables:', 'ghl-crm-integration' ); ?><br>
+							<code>{parent_name}</code> - <?php esc_html_e( 'Parent\'s display name', 'ghl-crm-integration' ); ?><br>
+							<code>{parent_id}</code> - <?php esc_html_e( 'Parent\'s WordPress user ID', 'ghl-crm-integration' ); ?><br>
+							<code>{parent_tag}</code> - <?php esc_html_e( 'Parent account tag from GHL', 'ghl-crm-integration' ); ?>
+							<br><br>
+							<strong><?php esc_html_e( 'Examples:', 'ghl-crm-integration' ); ?></strong><br>
+							<code>{parent_name}'s Family</code> → "John Smith's Family"<br>
+							<code>Family - {parent_name} (ID: {parent_id})</code> → "Family - John Smith (ID: 123)"<br>
+							<code>{parent_tag} Family Group</code> → "Parent Account Family Group"
 						</p>
 					</td>
 				</tr>
+
+				<?php if ( ! empty( $settings['family_buddyboss_groups'] ) ) : ?>
+				<tr>
+					<th scope="row">
+						<?php esc_html_e( 'Sync Existing Families', 'ghl-crm-integration' ); ?>
+					</th>
+					<td>
+						<button type="button" id="sync-families-to-buddyboss" class="ghl-button ghl-button-primary">
+							<span class="dashicons dashicons-groups"></span>
+							<?php esc_html_e( 'Sync All Families to BuddyBoss', 'ghl-crm-integration' ); ?>
+						</button>
+						<p class="description" style="margin-top: 8px;">
+							<?php esc_html_e( 'Create BuddyBoss groups for existing parent accounts and add their children as members. This is useful when enabling BuddyBoss integration for the first time.', 'ghl-crm-integration' ); ?>
+						</p>
+						<div id="sync-families-progress" style="display: none; margin-top: 12px; padding: 12px; background: #f0f9ff; border-left: 4px solid #3b82f6; border-radius: 4px;">
+							<div id="sync-families-status"></div>
+							<div id="sync-families-details" style="margin-top: 8px; font-size: 13px; color: #1e3a8a;"></div>
+						</div>
+					</td>
+				</tr>
+				<?php endif; ?>
+
+				<?php else : ?>
+				<tr>
+					<th scope="row">
+						<?php esc_html_e( 'BuddyBoss Integration', 'ghl-crm-integration' ); ?>
+					</th>
+					<td>
+						<div class="notice notice-info inline" style="margin: 0; padding: 12px;">
+							<p>
+								<strong><?php esc_html_e( 'BuddyBoss Platform Required', 'ghl-crm-integration' ); ?></strong><br>
+								<?php esc_html_e( 'Install and activate the BuddyBoss Platform plugin to enable automatic family group creation.', 'ghl-crm-integration' ); ?>
+							</p>
+						</div>
+					</td>
+				</tr>
+				<?php endif; ?>
 
 				<?php
 				// Get family account statistics

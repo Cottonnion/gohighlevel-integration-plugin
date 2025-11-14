@@ -1188,6 +1188,85 @@
 	}
 
 	/**
+	 * Handle sync families to BuddyBoss button
+	 */
+	function initSyncFamiliesToBuddyBoss() {
+		$(document).off('click.ghlSyncFamilies', '#sync-families-to-buddyboss')
+			.on('click.ghlSyncFamilies', '#sync-families-to-buddyboss', function(e) {
+				e.preventDefault();
+				
+				const $button = $(this);
+				const $progress = $('#sync-families-progress');
+				const $status = $('#sync-families-status');
+				const $details = $('#sync-families-details');
+
+				// Confirm action
+				if (typeof Swal !== 'undefined') {
+					Swal.fire({
+						title: 'Sync Families to BuddyBoss?',
+						text: 'This will create BuddyBoss groups for all parent accounts and add their children as members.',
+						icon: 'question',
+						showCancelButton: true,
+						confirmButtonText: 'Yes, Sync Now',
+						cancelButtonText: 'Cancel'
+					}).then((result) => {
+						if (result.isConfirmed) {
+							performFamilySync($button, $progress, $status, $details);
+						}
+					});
+				} else {
+					if (confirm('Sync all families to BuddyBoss groups?')) {
+						performFamilySync($button, $progress, $status, $details);
+					}
+				}
+			});
+	}
+
+	/**
+	 * Perform the actual family sync
+	 */
+	function performFamilySync($button, $progress, $status, $details) {
+		$button.prop('disabled', true).html('<span class="dashicons dashicons-update spin"></span> Syncing...');
+		$progress.show();
+		$status.html('<strong>Syncing families to BuddyBoss...</strong>');
+		$details.html('');
+
+		$.ajax({
+			url: ajaxurl,
+			type: 'POST',
+			data: {
+				action: 'ghl_crm_sync_families_buddyboss',
+				nonce: $('#ghl_crm_nonce').val()
+			},
+			success: function(response) {
+				if (response.success) {
+					const data = response.data;
+					$status.html('<strong style="color: #10b981;">✓ Sync Complete</strong>');
+					$details.html(
+						'<strong>Results:</strong><br>' +
+						'Groups created/updated: ' + data.groups_created + '<br>' +
+						'Members added: ' + data.members_added + '<br>' +
+						'Total parents: ' + data.total_parents + '<br>' +
+						(data.errors.length > 0 ? '<br><strong style="color: #ef4444;">Errors:</strong><br>' + data.errors.join('<br>') : '')
+					);
+					showNotice(data.message, 'success');
+				} else {
+					$status.html('<strong style="color: #ef4444;">✗ Sync Failed</strong>');
+					$details.html(response.data.message || 'Unknown error occurred');
+					showNotice(response.data.message || 'Sync failed', 'error');
+				}
+				$button.prop('disabled', false).html('<span class="dashicons dashicons-groups"></span> Sync All Families to BuddyBoss');
+			},
+			error: function(xhr, status, error) {
+				$status.html('<strong style="color: #ef4444;">✗ Sync Failed</strong>');
+				$details.html('AJAX error: ' + error);
+				showNotice('Failed to sync families', 'error');
+				$button.prop('disabled', false).html('<span class="dashicons dashicons-groups"></span> Sync All Families to BuddyBoss');
+			}
+		});
+	}
+
+	/**
 	 * Initialize family accounts functionality
 	 */
 	function initFamilyAccounts() {
@@ -1212,11 +1291,14 @@
 			initFamilyAccountsRefresh();
 		}
 
+		// Initialize sync families to BuddyBoss button
+		if ($('#sync-families-to-buddyboss').length > 0) {
+			initSyncFamiliesToBuddyBoss();
+		}
+
 		// Initialize collapsible family docs toggle
 		const $familyToggle = $('#ghl-toggle-family-docs');
-		const $familyWrapper = $('#ghl-family-docs-wrapper');
-
-		if ($familyToggle.length && $familyWrapper.length) {
+		const $familyWrapper = $('#ghl-family-docs-wrapper');		if ($familyToggle.length && $familyWrapper.length) {
 			const showLabel = $familyToggle.data('label-show');
 			const hideLabel = $familyToggle.data('label-hide');
 			const $labelSpan = $familyToggle.find('.ghl-toggle-button__label');
