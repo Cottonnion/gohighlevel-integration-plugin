@@ -1,0 +1,221 @@
+/**
+ * Advanced Settings CSS
+ * Styles for templates/admin/partials/settings/advanced.php
+ *
+ * @package    GHL_CRM_Integration
+ * @subpackage Assets/Admin/CSS
+ */
+
+/* Checkbox Labels */
+.ghl-advanced-checkbox-label {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+/* Description Spacing */
+.ghl-description-spacing {
+	margin-top: 8px;
+}
+
+/* Logging Status - Active */
+.ghl-logging-status-active {
+	margin-top: 12px;
+	padding: 12px;
+	background: #ecfdf5;
+	border-left: 4px solid #10b981;
+	border-radius: 4px;
+}
+
+.ghl-logging-status-active p {
+	margin: 0;
+	font-size: 13px;
+	color: #065f46;
+}
+
+/* Logging Status - Disabled */
+.ghl-logging-status-disabled {
+	margin-top: 12px;
+	padding: 12px;
+	background: #fef3c7;
+	border-left: 4px solid #f59e0b;
+	border-radius: 4px;
+}
+
+.ghl-logging-status-disabled p {
+	margin: 0;
+	font-size: 13px;
+	color: #92400e;
+}
+
+/* Family Accounts Section Spacing */
+.ghl-family-section {
+	margin-top: 24px;
+}
+
+/* Family Tag Select */
+.ghl-family-tag-select {
+	min-width: 300px;
+}
+
+/* Refresh Tags Button */
+.ghl-refresh-tags-btn {
+	margin-top: 8px;
+}
+
+/* Sync Families Progress */
+.ghl-sync-families-progress {
+	display: none;
+	margin-top: 12px;
+	padding: 12px;
+	background: #f0f9ff;
+	border-left: 4px solid #3b82f6;
+	border-radius: 4px;
+}
+
+.ghl-sync-families-details {
+	margin-top: 8px;
+	font-size: 13px;
+	color: #1e3a8a;
+}
+
+/* BuddyBoss Integration Notice */
+.ghl-buddyboss-notice {
+	margin: 0;
+	padding: 12px;
+}
+
+.ghl-buddyboss-notice p {
+	margin: 0;
+}
+
+/* Family Statistics Grid */
+.ghl-family-stats-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 16px;
+	margin-top: 8px;
+}
+
+/* Family Stats Card - Total Families */
+.ghl-family-stat-total {
+	padding: 16px;
+	background: #f0f9ff;
+	border-left: 4px solid #3b82f6;
+	border-radius: 4px;
+}
+
+.ghl-family-stat-total .ghl-stat-value {
+	font-size: 24px;
+	font-weight: 700;
+	color: #1e40af;
+}
+
+.ghl-family-stat-total .ghl-stat-label {
+	font-size: 13px;
+	color: #1e3a8a;
+	margin-top: 4px;
+}
+
+/* Family Stats Card - Parents */
+.ghl-family-stat-parents {
+	padding: 16px;
+	background: #ecfdf5;
+	border-left: 4px solid #10b981;
+	border-radius: 4px;
+}
+
+.ghl-family-stat-parents .ghl-stat-value {
+	font-size: 24px;
+	font-weight: 700;
+	color: #065f46;
+}
+
+.ghl-family-stat-parents .ghl-stat-label {
+	font-size: 13px;
+	color: #064e3b;
+	margin-top: 4px;
+}
+
+/* Family Stats Card - Children */
+.ghl-family-stat-children {
+	padding: 16px;
+	background: #fef3c7;
+	border-left: 4px solid #f59e0b;
+	border-radius: 4px;
+}
+
+.ghl-family-stat-children .ghl-stat-value {
+	font-size: 24px;
+	font-weight: 700;
+	color: #92400e;
+}
+
+.ghl-family-stat-children .ghl-stat-label {
+	font-size: 13px;
+	color: #78350f;
+	margin-top: 4px;
+}
+
+/* Usage Example Card */
+.ghl-family-usage-card {
+	margin-top: 24px;
+}
+
+/* Documentation Styles */
+.ghl-family-docs-card {
+	margin-top: 12px;
+}
+
+.ghl-shortcode-example {
+	background: #f8f9fa;
+	padding: 16px;
+	border-radius: 4px;
+	border: 1px solid #dee2e6;
+	margin: 12px 0;
+}
+
+.ghl-shortcode-example code {
+	font-size: 14px;
+	color: #d63384;
+}
+
+.ghl-docs-heading {
+	margin-top: 24px;
+}
+
+.ghl-docs-list {
+	margin-left: 20px;
+	list-style: disc;
+}
+
+.ghl-docs-description {
+	margin-top: 12px;
+}
+
+.ghl-invite-url-example {
+	background: #f8f9fa;
+	padding: 4px 8px;
+	border-radius: 3px;
+	font-size: 12px;
+}
+
+.ghl-code-example {
+	background: #282c34;
+	color: #abb2bf;
+	padding: 16px;
+	border-radius: 4px;
+	font-family: monospace;
+	font-size: 13px;
+	line-height: 1.6;
+	margin: 12px 0;
+	overflow-x: auto;
+}
+
+.ghl-code-comment {
+	color: #7f848e;
+}
+
+.ghl-code-number {
+	color: #98c379;
+}

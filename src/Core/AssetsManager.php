@@ -309,6 +309,15 @@ class AssetsManager {
 		);
 
 		$this->add_admin_asset(
+			'ghl-crm-advanced-settings-css',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'advanced-settings.css',
+			[ 'ghl-crm-settings-css' ],
+			[],
+			'1.0.0'
+		);
+
+		$this->add_admin_asset(
 			'ghl-crm-settings-menu-css',
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'settings-menu.css',

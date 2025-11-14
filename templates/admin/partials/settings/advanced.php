@@ -111,7 +111,7 @@ $settings = $settings_manager->get_settings_array();
 						</label>
 					</th>
 					<td>
-						<label class="ghl-checkbox <?php echo ! empty( $settings['enable_sync_logging'] ) ? 'is-checked' : ''; ?>" style="display: flex; align-items: center; gap: 6px;">
+						<label class="ghl-checkbox ghl-advanced-checkbox-label <?php echo ! empty( $settings['enable_sync_logging'] ) ? 'is-checked' : ''; ?>">
 							<input 
 								type="checkbox" 
 								class="ghl-checkbox-original"
@@ -127,19 +127,19 @@ $settings = $settings_manager->get_settings_array();
 								<?php esc_html_e( 'Enable logging to database tables', 'ghl-crm-integration' ); ?>
 							</span>
 						</label>
-						<p class="description" style="margin-top: 8px;">
+						<p class="description ghl-description-spacing">
 							<?php esc_html_e( 'When enabled, sync events and queue operations will be logged to wp_ghl_sync_log and wp_ghl_sync_queue tables. This provides detailed tracking but may impact performance on high-traffic sites. Disable to reduce database writes.', 'ghl-crm-integration' ); ?>
 						</p>
 						<?php if ( ! empty( $settings['enable_sync_logging'] ) ) : ?>
-							<div style="margin-top: 12px; padding: 12px; background: #ecfdf5; border-left: 4px solid #10b981; border-radius: 4px;">
-								<p style="margin: 0; font-size: 13px; color: #065f46;">
+							<div class="ghl-logging-status-active">
+								<p>
 									<strong>✓ <?php esc_html_e( 'Active:', 'ghl-crm-integration' ); ?></strong>
 									<?php esc_html_e( 'Logging is enabled. You can view logs in the Sync Logs section.', 'ghl-crm-integration' ); ?>
 								</p>
 							</div>
 						<?php else : ?>
-							<div style="margin-top: 12px; padding: 12px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
-								<p style="margin: 0; font-size: 13px; color: #92400e;">
+							<div class="ghl-logging-status-disabled">
+								<p>
 									<strong>⚠️ <?php esc_html_e( 'Disabled:', 'ghl-crm-integration' ); ?></strong>
 									<?php esc_html_e( 'Logging is currently disabled. No sync events or queue operations will be recorded to the database.', 'ghl-crm-integration' ); ?>
 								</p>
@@ -161,7 +161,7 @@ $settings = $settings_manager->get_settings_array();
 	</div>
 
 	<!-- Family Accounts Section -->
-	<div class="ghl-settings-section ghl-settings-card" style="margin-top: 24px;">
+	<div class="ghl-settings-section ghl-settings-card ghl-family-section">
 		<div class="ghl-settings-header">
 			<h2>
 				<span class="dashicons dashicons-groups"></span>
@@ -186,7 +186,7 @@ $settings = $settings_manager->get_settings_array();
 						</label>
 					</th>
 					<td>
-						<label class="ghl-checkbox <?php echo ! empty( $settings['enable_family_accounts'] ) ? 'is-checked' : ''; ?>" style="display: flex; align-items: center; gap: 6px;">
+						<label class="ghl-checkbox ghl-advanced-checkbox-label <?php echo ! empty( $settings['enable_family_accounts'] ) ? 'is-checked' : ''; ?>">
 							<input 
 								type="checkbox" 
 								class="ghl-checkbox-original"
@@ -215,58 +215,53 @@ $settings = $settings_manager->get_settings_array();
 					<td>
 						<select id="family_parent_tag" 
 								name="family_parent_tag" 
-								class="ghl-select2-tags" 
-								style="min-width: 300px;"
+								class="ghl-select2-tags ghl-family-tag-select" 
 								data-saved-tag="<?php echo esc_attr( $settings['family_parent_tag'] ?? '' ); ?>">
 							<option value=""><?php esc_html_e( 'Loading tags...', 'ghl-crm-integration' ); ?></option>
 						</select>
-						<p class="description" style="margin-top: 8px;">
+						<p class="description ghl-description-spacing">
 							<br>
-							<button type="button" id="refresh-family-tags" class="ghl-button ghl-button-secondary" style="margin-top: 8px;">
+							<button type="button" id="refresh-family-tags" class="ghl-button ghl-button-secondary ghl-refresh-tags-btn">
 								<span class="dashicons dashicons-update"></span>
 								<?php esc_html_e( 'Refresh Tags', 'ghl-crm-integration' ); ?>
 							</button>
 						</p>
-					</td>
-				</tr>
+			</td>
+		</tr>
 
-				<?php
-				// Check if BuddyBoss is active
-				if ( ! function_exists( 'is_plugin_active' ) ) {
-					require_once ABSPATH . 'wp-admin/includes/plugin.php';
-				}
-				$buddyboss_active = is_plugin_active( 'buddyboss-platform/bp-loader.php' );
-				?>
+		<?php
+		// Check if BuddyBoss is active and integration is enabled
+		$is_buddyboss_active  = function_exists( 'bp_is_active' ) && bp_is_active( 'groups' );
+		$buddyboss_enabled    = ! empty( $settings['buddyboss_groups_enabled'] );
+		?>
 
-				<?php if ( $buddyboss_active ) : ?>
-				<tr>
-					<th scope="row">
-						<label for="family_buddyboss_groups">
-							<?php esc_html_e( 'BuddyBoss Group Integration', 'ghl-crm-integration' ); ?>
-							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Automatically create private BuddyBoss groups for each family. Children are added/removed from the group when linked/unlinked.', 'ghl-crm-integration' ); ?>">?</span>
-						</label>
-					</th>
-					<td>
-						<label class="ghl-checkbox <?php echo ! empty( $settings['family_buddyboss_groups'] ) ? 'is-checked' : ''; ?>" style="display: flex; align-items: center; gap: 6px;">
-							<input 
-								type="checkbox" 
-								class="ghl-checkbox-original"
-								id="family_buddyboss_groups" 
-								name="family_buddyboss_groups" 
-								value="1"
-								<?php checked( ! empty( $settings['family_buddyboss_groups'] ), true ); ?>
-							>
-							<span class="ghl-checkbox-input <?php echo ! empty( $settings['family_buddyboss_groups'] ) ? 'is-checked' : ''; ?>">
-								<span class="ghl-checkbox-inner"></span>
-							</span>
-							<span class="ghl-checkbox-label">
-								<?php esc_html_e( 'Create BuddyBoss groups for families', 'ghl-crm-integration' ); ?>
-							</span>
-						</label>
-					</td>
-				</tr>
-
-				<tr>
+		<?php if ( $is_buddyboss_active && $buddyboss_enabled ) : ?>
+		<tr>
+			<th scope="row">
+				<label for="family_buddyboss_groups">
+					<?php esc_html_e( 'BuddyBoss Group Integration', 'ghl-crm-integration' ); ?>
+					<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Automatically create private BuddyBoss groups for each family. Children are added/removed from the group when linked/unlinked.', 'ghl-crm-integration' ); ?>">?</span>
+				</label>
+			</th>
+			<td>
+				<label class="ghl-checkbox ghl-advanced-checkbox-label <?php echo ! empty( $settings['family_buddyboss_groups'] ) ? 'is-checked' : ''; ?>">
+					<input 
+						type="checkbox" 
+						class="ghl-checkbox-original"
+						id="family_buddyboss_groups" 
+						name="family_buddyboss_groups" 
+						value="1"
+						<?php checked( ! empty( $settings['family_buddyboss_groups'] ), true ); ?>
+					>
+					<span class="ghl-checkbox-input <?php echo ! empty( $settings['family_buddyboss_groups'] ) ? 'is-checked' : ''; ?>">
+						<span class="ghl-checkbox-inner"></span>
+					</span>
+					<span class="ghl-checkbox-label">
+						<?php esc_html_e( 'Create BuddyBoss groups for families', 'ghl-crm-integration' ); ?>
+					</span>
+				</label>
+			</td>
+		</tr>				<tr>
 					<th scope="row">
 						<label for="family_buddyboss_group_name">
 							<?php esc_html_e( 'Group Naming Pattern', 'ghl-crm-integration' ); ?>
@@ -278,18 +273,45 @@ $settings = $settings_manager->get_settings_array();
 							   id="family_buddyboss_group_name" 
 							   name="family_buddyboss_group_name" 
 							   value="<?php echo esc_attr( $settings['family_buddyboss_group_name'] ?? "{parent_name}'s Family" ); ?>" 
-							   class="regular-text"
-							   placeholder="{parent_name}'s Family">
-						<p class="description" style="margin-top: 8px;">
+					   class="regular-text"
+					   placeholder="{parent_name}'s Family">
+						<p class="description ghl-description-spacing">
 							<?php esc_html_e( 'Available variables:', 'ghl-crm-integration' ); ?><br>
 							<code>{parent_name}</code> - <?php esc_html_e( 'Parent\'s display name', 'ghl-crm-integration' ); ?><br>
 							<code>{parent_id}</code> - <?php esc_html_e( 'Parent\'s WordPress user ID', 'ghl-crm-integration' ); ?><br>
 							<code>{parent_tag}</code> - <?php esc_html_e( 'Parent account tag from GHL', 'ghl-crm-integration' ); ?>
 							<br><br>
-							<strong><?php esc_html_e( 'Examples:', 'ghl-crm-integration' ); ?></strong><br>
-							<code>{parent_name}'s Family</code> → "John Smith's Family"<br>
-							<code>Family - {parent_name} (ID: {parent_id})</code> → "Family - John Smith (ID: 123)"<br>
-							<code>{parent_tag} Family Group</code> → "Parent Account Family Group"
+						</p>
+					</td>
+				</tr>
+
+				<tr>
+					<th scope="row">
+						<label for="family_buddyboss_group_description">
+							<?php esc_html_e( 'Group Description Pattern', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Customize the group description with dynamic variables and include useful information about the family.', 'ghl-crm-integration' ); ?>">?</span>
+						</label>
+					</th>
+					<td>
+						<textarea 
+							id="family_buddyboss_group_description" 
+							name="family_buddyboss_group_description" 
+							rows="4" 
+							class="large-text"
+							placeholder="Private family group for {parent_name} and their family members. Managed by {plugin_name}."
+						><?php echo esc_textarea( $settings['family_buddyboss_group_description'] ?? "Private family group for {parent_name} and their family members.\n\nThis group is automatically managed by {plugin_name}.\nParent Account: {parent_name} (ID: {parent_id})\nCreated: {date_created}" ); ?></textarea>
+						<p class="description ghl-description-spacing">
+							<?php esc_html_e( 'Available variables:', 'ghl-crm-integration' ); ?><br>
+							<code>{parent_name}</code> - <?php esc_html_e( 'Parent\'s display name', 'ghl-crm-integration' ); ?><br>
+							<code>{parent_email}</code> - <?php esc_html_e( 'Parent\'s email address', 'ghl-crm-integration' ); ?><br>
+							<code>{parent_id}</code> - <?php esc_html_e( 'Parent\'s WordPress user ID', 'ghl-crm-integration' ); ?><br>
+							<code>{parent_tag}</code> - <?php esc_html_e( 'Parent account tag from GHL', 'ghl-crm-integration' ); ?><br>
+							<code>{child_count}</code> - <?php esc_html_e( 'Number of children in the family', 'ghl-crm-integration' ); ?><br>
+							<code>{plugin_name}</code> - <?php esc_html_e( 'Plugin name (GoHighLevel CRM Integration)', 'ghl-crm-integration' ); ?><br>
+							<code>{site_name}</code> - <?php esc_html_e( 'WordPress site name', 'ghl-crm-integration' ); ?><br>
+							<code>{site_url}</code> - <?php esc_html_e( 'WordPress site URL', 'ghl-crm-integration' ); ?><br>
+							<code>{date_created}</code> - <?php esc_html_e( 'Current date when group is created', 'ghl-crm-integration' ); ?>
+							<br><br>
 						</p>
 					</td>
 				</tr>
@@ -304,12 +326,12 @@ $settings = $settings_manager->get_settings_array();
 							<span class="dashicons dashicons-groups"></span>
 							<?php esc_html_e( 'Sync All Families to BuddyBoss', 'ghl-crm-integration' ); ?>
 						</button>
-						<p class="description" style="margin-top: 8px;">
+						<p class="description ghl-description-spacing">
 							<?php esc_html_e( 'Create BuddyBoss groups for existing parent accounts and add their children as members. This is useful when enabling BuddyBoss integration for the first time.', 'ghl-crm-integration' ); ?>
 						</p>
-						<div id="sync-families-progress" style="display: none; margin-top: 12px; padding: 12px; background: #f0f9ff; border-left: 4px solid #3b82f6; border-radius: 4px;">
+						<div id="sync-families-progress" class="ghl-sync-families-progress">
 							<div id="sync-families-status"></div>
-							<div id="sync-families-details" style="margin-top: 8px; font-size: 13px; color: #1e3a8a;"></div>
+							<div id="sync-families-details" class="ghl-sync-families-details"></div>
 						</div>
 					</td>
 				</tr>
@@ -321,10 +343,25 @@ $settings = $settings_manager->get_settings_array();
 						<?php esc_html_e( 'BuddyBoss Integration', 'ghl-crm-integration' ); ?>
 					</th>
 					<td>
-						<div class="notice notice-info inline" style="margin: 0; padding: 12px;">
+						<div class="notice notice-warning inline ghl-buddyboss-notice">
 							<p>
-								<strong><?php esc_html_e( 'BuddyBoss Platform Required', 'ghl-crm-integration' ); ?></strong><br>
-								<?php esc_html_e( 'Install and activate the BuddyBoss Platform plugin to enable automatic family group creation.', 'ghl-crm-integration' ); ?>
+								<?php if ( ! $is_buddyboss_active ) : ?>
+									<strong><?php esc_html_e( 'BuddyBoss Platform Required', 'ghl-crm-integration' ); ?></strong><br>
+									<?php esc_html_e( 'Install and activate the BuddyBoss Platform plugin with Groups component enabled.', 'ghl-crm-integration' ); ?>
+								<?php else : ?>
+									<strong><?php esc_html_e( 'BuddyBoss Integration Disabled', 'ghl-crm-integration' ); ?></strong><br>
+									<?php
+									printf(
+										/* translators: %s: Link to integrations page */
+										esc_html__( 'Please enable BuddyBoss integration in the %s page first.', 'ghl-crm-integration' ),
+										sprintf(
+											'<a href="%s">%s</a>',
+											esc_url( admin_url( 'admin.php?page=ghl-crm-integrations&tab=buddyboss' ) ),
+											esc_html__( 'Integrations', 'ghl-crm-integration' )
+										)
+									);
+									?>
+								<?php endif; ?>
 							</p>
 						</div>
 					</td>
@@ -343,18 +380,18 @@ $settings = $settings_manager->get_settings_array();
 						<?php esc_html_e( 'Current Statistics', 'ghl-crm-integration' ); ?>
 					</th>
 					<td>
-						<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 8px;">
-							<div style="padding: 16px; background: #f0f9ff; border-left: 4px solid #3b82f6; border-radius: 4px;">
-								<div style="font-size: 24px; font-weight: 700; color: #1e40af;"><?php echo esc_html( $stats['total_families'] ); ?></div>
-								<div style="font-size: 13px; color: #1e3a8a; margin-top: 4px;"><?php esc_html_e( 'Total Families', 'ghl-crm-integration' ); ?></div>
+						<div class="ghl-family-stats-grid">
+							<div class="ghl-family-stat-total">
+								<div class="ghl-stat-value"><?php echo esc_html( $stats['total_families'] ); ?></div>
+								<div class="ghl-stat-label"><?php esc_html_e( 'Total Families', 'ghl-crm-integration' ); ?></div>
 							</div>
-							<div style="padding: 16px; background: #ecfdf5; border-left: 4px solid #10b981; border-radius: 4px;">
-								<div style="font-size: 24px; font-weight: 700; color: #065f46;"><?php echo esc_html( $stats['total_parents'] ); ?></div>
-								<div style="font-size: 13px; color: #064e3b; margin-top: 4px;"><?php esc_html_e( 'Parent Accounts', 'ghl-crm-integration' ); ?></div>
+							<div class="ghl-family-stat-parents">
+								<div class="ghl-stat-value"><?php echo esc_html( $stats['total_parents'] ); ?></div>
+								<div class="ghl-stat-label"><?php esc_html_e( 'Parent Accounts', 'ghl-crm-integration' ); ?></div>
 							</div>
-							<div style="padding: 16px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
-								<div style="font-size: 24px; font-weight: 700; color: #92400e;"><?php echo esc_html( $stats['total_children'] ); ?></div>
-								<div style="font-size: 13px; color: #78350f; margin-top: 4px;"><?php esc_html_e( 'Child Accounts', 'ghl-crm-integration' ); ?></div>
+							<div class="ghl-family-stat-children">
+								<div class="ghl-stat-value"><?php echo esc_html( $stats['total_children'] ); ?></div>
+								<div class="ghl-stat-label"><?php esc_html_e( 'Child Accounts', 'ghl-crm-integration' ); ?></div>
 							</div>
 						</div>
 					</td>
@@ -367,7 +404,7 @@ $settings = $settings_manager->get_settings_array();
 
 		<?php if ( ! empty( $settings['enable_family_accounts'] ) ) : ?>
 		<!-- Usage Example -->
-		<div class="ghl-card" style="margin-top: 24px;">
+		<div class="ghl-card ghl-family-usage-card">
 			<div class="ghl-card-header">
 				<h3>
 					<span class="dashicons dashicons-info"></span>
@@ -384,19 +421,19 @@ $settings = $settings_manager->get_settings_array();
 		</div>
 
 		<div id="ghl-family-docs-wrapper" class="ghl-collapsible ghl-is-collapsed" data-collapsible>
-			<div class="ghl-card" style="margin-top: 12px;">
+			<div class="ghl-card ghl-family-docs-card">
 				<div class="ghl-card-body">
 				<h4><?php esc_html_e( '1. Add Shortcode to Your Site', 'ghl-crm-integration' ); ?></h4>
 				<p><?php esc_html_e( 'Use this shortcode to let parents manage their children:', 'ghl-crm-integration' ); ?></p>
-				<div style="background: #f8f9fa; padding: 16px; border-radius: 4px; border: 1px solid #dee2e6; margin: 12px 0;">
-					<code style="font-size: 14px; color: #d63384;">[ghl_family_manager]</code>
+				<div class="ghl-shortcode-example">
+					<code>[ghl_family_manager]</code>
 				</div>
 				<p class="description">
 					<?php esc_html_e( 'Place this shortcode on any page, BuddyBoss profile tab, or dashboard widget. Only parents and admins will see the management interface.', 'ghl-crm-integration' ); ?>
 				</p>
 
-				<h4 style="margin-top: 24px;"><?php esc_html_e( '2. Parent Features', 'ghl-crm-integration' ); ?></h4>
-				<ul style="margin-left: 20px; list-style: disc;">
+				<h4 class="ghl-docs-heading"><?php esc_html_e( '2. Parent Features', 'ghl-crm-integration' ); ?></h4>
+				<ul class="ghl-docs-list">
 					<li><?php esc_html_e( 'View all linked children', 'ghl-crm-integration' ); ?></li>
 					<li><?php esc_html_e( 'Generate invite links for children to self-register', 'ghl-crm-integration' ); ?></li>
 					<li><?php esc_html_e( 'Manually link existing users as children', 'ghl-crm-integration' ); ?></li>
@@ -404,40 +441,40 @@ $settings = $settings_manager->get_settings_array();
 					<li><?php esc_html_e( 'View inherited memberships and permissions', 'ghl-crm-integration' ); ?></li>
 				</ul>
 
-				<h4 style="margin-top: 24px;"><?php esc_html_e( '3. Invite Link System', 'ghl-crm-integration' ); ?></h4>
+				<h4 class="ghl-docs-heading"><?php esc_html_e( '3. Invite Link System', 'ghl-crm-integration' ); ?></h4>
 				<p>
 					<?php esc_html_e( 'Parents can generate unique invite links that:', 'ghl-crm-integration' ); ?>
 				</p>
-				<ul style="margin-left: 20px; list-style: disc;">
+				<ul class="ghl-docs-list">
 					<li><?php esc_html_e( 'Automatically link new registrations to the parent', 'ghl-crm-integration' ); ?></li>
 					<li><?php esc_html_e( 'Apply parent\'s tag in GoHighLevel', 'ghl-crm-integration' ); ?></li>
 					<li><?php esc_html_e( 'Inherit parent\'s membership permissions', 'ghl-crm-integration' ); ?></li>
 					<li><?php esc_html_e( 'Expire after configurable time period or usage limit', 'ghl-crm-integration' ); ?></li>
 				</ul>
-				<p class="description" style="margin-top: 12px;">
+				<p class="description ghl-docs-description">
 					<strong><?php esc_html_e( 'Example invite URL:', 'ghl-crm-integration' ); ?></strong><br>
-					<code style="background: #f8f9fa; padding: 4px 8px; border-radius: 3px; font-size: 12px;">
+					<code class="ghl-invite-url-example">
 						<?php echo esc_url( home_url( '/register/?family_invite=abc123def456' ) ); ?>
 					</code>
 				</p>
 
-				<h4 style="margin-top: 24px;"><?php esc_html_e( '4. Programmatic Usage', 'ghl-crm-integration' ); ?></h4>
+				<h4 class="ghl-docs-heading"><?php esc_html_e( '4. Programmatic Usage', 'ghl-crm-integration' ); ?></h4>
 				<p><?php esc_html_e( 'Developers can manage relationships via PHP:', 'ghl-crm-integration' ); ?></p>
-				<div style="background: #282c34; color: #abb2bf; padding: 16px; border-radius: 4px; font-family: monospace; font-size: 13px; line-height: 1.6; margin: 12px 0; overflow-x: auto;">
-					<div style="color: #7f848e;">// Get repository instance</div>
+				<div class="ghl-code-example">
+					<div class="ghl-code-comment">// Get repository instance</div>
 					<div>$repo = \GHL_CRM\Database\FamilyRelationshipsRepository::get_instance();</div>
 					<br>
-					<div style="color: #7f848e;">// Link child to parent</div>
-					<div>$relationship_id = $repo-&gt;create_relationship(<span style="color: #98c379;">123</span>, <span style="color: #98c379;">456</span>); <span style="color: #7f848e;">// parent_id, child_id</span></div>
+					<div class="ghl-code-comment">// Link child to parent</div>
+					<div>$relationship_id = $repo-&gt;create_relationship(<span class="ghl-code-number">123</span>, <span class="ghl-code-number">456</span>); <span class="ghl-code-comment">// parent_id, child_id</span></div>
 					<br>
-					<div style="color: #7f848e;">// Get parent of a child</div>
-					<div>$parent_id = $repo-&gt;get_parent(<span style="color: #98c379;">456</span>);</div>
+					<div class="ghl-code-comment">// Get parent of a child</div>
+					<div>$parent_id = $repo-&gt;get_parent(<span class="ghl-code-number">456</span>);</div>
 					<br>
-					<div style="color: #7f848e;">// Get all children of a parent</div>
-					<div>$children = $repo-&gt;get_children(<span style="color: #98c379;">123</span>);</div>
+					<div class="ghl-code-comment">// Get all children of a parent</div>
+					<div>$children = $repo-&gt;get_children(<span class="ghl-code-number">123</span>);</div>
 					<br>
-					<div style="color: #7f848e;">// Check if user is a parent</div>
-					<div>$is_parent = $repo-&gt;is_parent(<span style="color: #98c379;">123</span>);</div>
+					<div class="ghl-code-comment">// Check if user is a parent</div>
+					<div>$is_parent = $repo-&gt;is_parent(<span class="ghl-code-number">123</span>);</div>
 				</div>
 				</div>
 			</div>
