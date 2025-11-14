@@ -412,7 +412,7 @@ $settings = $settings_manager->get_settings_array();
 				</h3>
 			</div>
 			<div class="ghl-card-body">
-				<p><?php esc_html_e( 'Family Accounts allow you to link users together in a parent-child hierarchy. When a parent user updates their tags in GoHighLevel, those tags are automatically applied to all their linked children.', 'ghl-crm-integration' ); ?></p>
+				<p><?php esc_html_e( 'Family Accounts allow you to link users together in a parent-child hierarchy. Children must accept an invitation before being linked. Once linked, children automatically inherit their parent\'s GoHighLevel tags.', 'ghl-crm-integration' ); ?></p>
 				<button type="button" id="ghl-toggle-family-docs" class="ghl-toggle-button" data-target="ghl-family-docs-wrapper" data-label-show="<?php esc_attr_e( 'Show usage examples', 'ghl-crm-integration' ); ?>" data-label-hide="<?php esc_attr_e( 'Hide usage examples', 'ghl-crm-integration' ); ?>" aria-expanded="false">
 					<span class="dashicons dashicons-arrow-right"></span>
 					<span class="ghl-toggle-button__label"><?php esc_html_e( 'Show usage examples', 'ghl-crm-integration' ); ?></span>
@@ -434,47 +434,69 @@ $settings = $settings_manager->get_settings_array();
 
 				<h4 class="ghl-docs-heading"><?php esc_html_e( '2. Parent Features', 'ghl-crm-integration' ); ?></h4>
 				<ul class="ghl-docs-list">
-					<li><?php esc_html_e( 'View all linked children', 'ghl-crm-integration' ); ?></li>
-					<li><?php esc_html_e( 'Generate invite links for children to self-register', 'ghl-crm-integration' ); ?></li>
-					<li><?php esc_html_e( 'Manually link existing users as children', 'ghl-crm-integration' ); ?></li>
-					<li><?php esc_html_e( 'Unlink children from their account', 'ghl-crm-integration' ); ?></li>
-					<li><?php esc_html_e( 'View inherited memberships and permissions', 'ghl-crm-integration' ); ?></li>
+					<li><?php esc_html_e( 'Search for users by email or username', 'ghl-crm-integration' ); ?></li>
+					<li><?php esc_html_e( 'Create new user accounts and send email invitations', 'ghl-crm-integration' ); ?></li>
+					<li><?php esc_html_e( 'Invite existing users to become children', 'ghl-crm-integration' ); ?></li>
+					<li><?php esc_html_e( 'View all linked children with their acceptance status', 'ghl-crm-integration' ); ?></li>
+					<li><?php esc_html_e( 'Unlink children from the family', 'ghl-crm-integration' ); ?></li>
 				</ul>
 
-				<h4 class="ghl-docs-heading"><?php esc_html_e( '3. Invite Link System', 'ghl-crm-integration' ); ?></h4>
-				<p>
-					<?php esc_html_e( 'Parents can generate unique invite links that:', 'ghl-crm-integration' ); ?>
+				<h4 class="ghl-docs-heading"><?php esc_html_e( '3. Invitation Flow', 'ghl-crm-integration' ); ?></h4>
+				<p><?php esc_html_e( 'The invitation system requires acceptance to protect user privacy:', 'ghl-crm-integration' ); ?></p>
+				<ol class="ghl-docs-list">
+					<li><?php esc_html_e( 'Parent enters child\'s email address', 'ghl-crm-integration' ); ?></li>
+					<li><?php esc_html_e( 'System creates account (if new) or sends invite (if existing)', 'ghl-crm-integration' ); ?></li>
+					<li><?php esc_html_e( 'Child receives email with secure acceptance link', 'ghl-crm-integration' ); ?></li>
+					<li><?php esc_html_e( 'Child clicks link to accept (auto-login included)', 'ghl-crm-integration' ); ?></li>
+					<li><?php esc_html_e( 'Upon acceptance: relationship created, parent tags synced, BuddyBoss group membership granted', 'ghl-crm-integration' ); ?></li>
+				</ol>
+				<p class="description ghl-docs-description">
+					<strong><?php esc_html_e( 'Important:', 'ghl-crm-integration' ); ?></strong>
+					<?php esc_html_e( 'Children remain in "pending" status until they accept. No relationship is created and no tags are synced until acceptance.', 'ghl-crm-integration' ); ?>
 				</p>
+
+				<h4 class="ghl-docs-heading"><?php esc_html_e( '4. Invitation Email Details', 'ghl-crm-integration' ); ?></h4>
 				<ul class="ghl-docs-list">
-					<li><?php esc_html_e( 'Automatically link new registrations to the parent', 'ghl-crm-integration' ); ?></li>
-					<li><?php esc_html_e( 'Apply parent\'s tag in GoHighLevel', 'ghl-crm-integration' ); ?></li>
-					<li><?php esc_html_e( 'Inherit parent\'s membership permissions', 'ghl-crm-integration' ); ?></li>
-					<li><?php esc_html_e( 'Expire after configurable time period or usage limit', 'ghl-crm-integration' ); ?></li>
+					<li><?php esc_html_e( 'Secure token-based acceptance links (64 characters)', 'ghl-crm-integration' ); ?></li>
+					<li><?php esc_html_e( 'Auto-login on acceptance (no password needed)', 'ghl-crm-integration' ); ?></li>
+					<li><?php esc_html_e( '7-day expiration for security', 'ghl-crm-integration' ); ?></li>
+					<li><?php esc_html_e( 'One-time use tokens (deleted after acceptance)', 'ghl-crm-integration' ); ?></li>
 				</ul>
 				<p class="description ghl-docs-description">
-					<strong><?php esc_html_e( 'Example invite URL:', 'ghl-crm-integration' ); ?></strong><br>
+					<strong><?php esc_html_e( 'Example acceptance URL:', 'ghl-crm-integration' ); ?></strong><br>
 					<code class="ghl-invite-url-example">
-						<?php echo esc_url( home_url( '/register/?family_invite=abc123def456' ) ); ?>
+						<?php echo esc_url( home_url( '/?action=ghl_accept_invite&token=abc123...&uid=456' ) ); ?>
 					</code>
 				</p>
 
-				<h4 class="ghl-docs-heading"><?php esc_html_e( '4. Programmatic Usage', 'ghl-crm-integration' ); ?></h4>
-				<p><?php esc_html_e( 'Developers can manage relationships via PHP:', 'ghl-crm-integration' ); ?></p>
+				<h4 class="ghl-docs-heading"><?php esc_html_e( '5. What Happens After Acceptance', 'ghl-crm-integration' ); ?></h4>
+				<ul class="ghl-docs-list">
+					<li><?php esc_html_e( 'Family relationship is created in database', 'ghl-crm-integration' ); ?></li>
+					<li><?php esc_html_e( 'Parent\'s GoHighLevel tags are synced to child', 'ghl-crm-integration' ); ?></li>
+					<li><?php esc_html_e( 'Child is added to parent\'s BuddyBoss group (if enabled)', 'ghl-crm-integration' ); ?></li>
+					<li><?php esc_html_e( 'Child inherits parent\'s membership access', 'ghl-crm-integration' ); ?></li>
+					<li><?php esc_html_e( 'User status changes from "pending" to "active"', 'ghl-crm-integration' ); ?></li>
+				</ul>
+
+				<h4 class="ghl-docs-heading"><?php esc_html_e( '6. Programmatic Usage', 'ghl-crm-integration' ); ?></h4>
+				<p><?php esc_html_e( 'Developers can use the FamilyManager class:', 'ghl-crm-integration' ); ?></p>
 				<div class="ghl-code-example">
-					<div class="ghl-code-comment">// Get repository instance</div>
+					<div class="ghl-code-comment">// Get FamilyManager instance</div>
+					<div>$manager = \GHL_CRM\Core\FamilyManager::get_instance();</div>
+					<br>
+					<div class="ghl-code-comment">// Create new user and send invite</div>
+					<div>$result = $manager-&gt;create_and_invite(<span class="ghl-code-number">'child@example.com'</span>, <span class="ghl-code-number">123</span>); <span class="ghl-code-comment">// email, parent_id</span></div>
+					<br>
+					<div class="ghl-code-comment">// Invite existing user</div>
+					<div>$result = $manager-&gt;invite_existing_user(<span class="ghl-code-number">456</span>, <span class="ghl-code-number">123</span>); <span class="ghl-code-comment">// user_id, parent_id</span></div>
+					<br>
+					<div class="ghl-code-comment">// Unlink a child</div>
+					<div>$result = $manager-&gt;unlink_child(<span class="ghl-code-number">123</span>, <span class="ghl-code-number">456</span>); <span class="ghl-code-comment">// parent_id, child_id</span></div>
+					<br>
+					<div class="ghl-code-comment">// Access repository for queries</div>
 					<div>$repo = \GHL_CRM\Database\FamilyRelationshipsRepository::get_instance();</div>
-					<br>
-					<div class="ghl-code-comment">// Link child to parent</div>
-					<div>$relationship_id = $repo-&gt;create_relationship(<span class="ghl-code-number">123</span>, <span class="ghl-code-number">456</span>); <span class="ghl-code-comment">// parent_id, child_id</span></div>
-					<br>
-					<div class="ghl-code-comment">// Get parent of a child</div>
-					<div>$parent_id = $repo-&gt;get_parent(<span class="ghl-code-number">456</span>);</div>
-					<br>
-					<div class="ghl-code-comment">// Get all children of a parent</div>
-					<div>$children = $repo-&gt;get_children(<span class="ghl-code-number">123</span>);</div>
-					<br>
-					<div class="ghl-code-comment">// Check if user is a parent</div>
-					<div>$is_parent = $repo-&gt;is_parent(<span class="ghl-code-number">123</span>);</div>
+					<div>$children = $repo-&gt;get_children(<span class="ghl-code-number">123</span>); <span class="ghl-code-comment">// Returns array of child IDs</span></div>
+					<div>$parent_id = $repo-&gt;get_parent(<span class="ghl-code-number">456</span>); <span class="ghl-code-comment">// Returns parent ID or null</span></div>
 				</div>
 				</div>
 			</div>
