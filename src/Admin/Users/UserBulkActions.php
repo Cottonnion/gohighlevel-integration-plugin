@@ -202,6 +202,7 @@ class UserBulkActions {
 			);
 		} elseif ( $queued ) {
 			$message = sprintf(
+				/* translators: %d: number of users queued */
 				_n( '%d user queued for GoHighLevel sync.', '%d users queued for GoHighLevel sync.', $queued, 'ghl-crm-integration' ),
 				$queued
 			);
