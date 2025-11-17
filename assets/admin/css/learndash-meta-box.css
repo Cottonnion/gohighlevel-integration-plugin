@@ -1,0 +1,70 @@
+/*
+ * LearnDash Course Meta Box Styles
+ * Builds on globals.css design tokens
+ */
+
+.ghl-ld-meta-box {
+	display: flex;
+	flex-direction: column;
+	gap: var(--ghl-spacing-lg);
+	margin-top: var(--ghl-spacing-sm);
+	font-family: var(--ghl-font-family);
+	color: var(--ghl-text-primary);
+}
+
+.ghl-ld-meta-card {
+	background: var(--ghl-bg-primary);
+	border: 1px solid var(--ghl-border-primary);
+	border-radius: var(--ghl-radius-lg);
+	padding: var(--ghl-spacing-md);
+	box-shadow: var(--ghl-shadow-xs);
+}
+
+.ghl-ld-meta-card__header {
+	margin-bottom: var(--ghl-spacing-sm);
+}
+
+.ghl-ld-meta-card__header h4 {
+	margin: 0;
+	font-size: var(--ghl-font-size-lg);
+	font-weight: var(--ghl-font-weight-semibold);
+	color: var(--ghl-text-primary);
+}
+
+.ghl-ld-meta-card__header p {
+	margin: var(--ghl-spacing-xs) 0 0;
+	color: var(--ghl-text-secondary);
+	font-size: var(--ghl-font-size-sm);
+	line-height: var(--ghl-line-height-base);
+}
+
+.ghl-ld-meta-card .description {
+	margin-top: var(--ghl-spacing-sm);
+	font-size: var(--ghl-font-size-sm);
+	color: var(--ghl-text-secondary);
+	line-height: var(--ghl-line-height-base);
+}
+
+.ghl-ld-meta-note {
+	display: flex;
+	gap: var(--ghl-spacing-sm);
+	align-items: flex-start;
+	padding: var(--ghl-spacing-sm);
+	border-radius: var(--ghl-radius-base);
+	background: var(--ghl-bg-secondary);
+	border: 1px dashed var(--ghl-border-secondary);
+	color: var(--ghl-text-secondary);
+	font-size: var(--ghl-font-size-sm);
+	line-height: var(--ghl-line-height-base);
+}
+
+.ghl-ld-meta-note .dashicons {
+	color: var(--ghl-primary);
+	margin-top: 2px;
+}
+
+@media (min-width: 782px) {
+	.ghl-ld-meta-box {
+		flex-direction: column;
+	}
+}

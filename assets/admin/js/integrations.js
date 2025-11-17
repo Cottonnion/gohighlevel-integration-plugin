@@ -38,6 +38,9 @@
 			$('#wc_enabled').on('change', this.handleWooCommerceToggle.bind(this));
 			$('#wc_convert_lead_enabled').on('change', this.handleConvertLeadToggle.bind(this));
 			$('#wc_abandoned_cart_enabled').on('change', this.handleAbandonedCartToggle.bind(this));
+
+			// LearnDash toggle
+			$('#learndash_enabled').on('change', this.handleLearnDashToggle.bind(this));
 			
 			// Opportunities toggles
 			$('#wc_opportunities_enabled').on('change', this.handleOpportunitiesToggle.bind(this));
@@ -277,7 +280,22 @@
 				data.buddyboss_default_group_type = $('#buddyboss_default_group_type').val() || '';
 			}
 
-			// Future: Add LearnDash settings here
+			// LearnDash Settings
+			if ($('#learndash_enabled').length) {
+				data.learndash_enabled = $('#learndash_enabled').is(':checked') ? '1' : '0';
+				
+				// Get enrolled tags (Select2 returns array)
+				const enrolledTags = $('#learndash_enrolled_tags').val();
+				data.learndash_enrolled_tags = Array.isArray(enrolledTags) ? enrolledTags : (enrolledTags ? [enrolledTags] : []);
+				
+				// Get completed tags (Select2 returns array)
+				const completedTags = $('#learndash_completed_tags').val();
+				data.learndash_completed_tags = Array.isArray(completedTags) ? completedTags : (completedTags ? [completedTags] : []);
+				
+				// Get revoked tags (Select2 returns array)
+				const revokedTags = $('#learndash_revoked_tags').val();
+				data.learndash_revoked_tags = Array.isArray(revokedTags) ? revokedTags : (revokedTags ? [revokedTags] : []);
+			}
 
 			return data;
 		},
@@ -443,6 +461,22 @@
 				
 				// Show info feedback
 				this.showInlineFeedback($checkbox, 'WooCommerce integration disabled', 'info');
+			}
+		},
+
+		/**
+		 * Handle LearnDash toggle
+		 */
+		handleLearnDashToggle(e) {
+			const $checkbox = $(e.target);
+			const $settingsBody = $('[data-integration-section="learndash"]');
+			
+			if ($checkbox.is(':checked')) {
+				$settingsBody.slideDown(300);
+				this.showInlineFeedback($checkbox, 'LearnDash integration enabled', 'success');
+			} else {
+				$settingsBody.slideUp(300);
+				this.showInlineFeedback($checkbox, 'LearnDash integration disabled', 'info');
 			}
 		},
 

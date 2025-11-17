@@ -93,10 +93,9 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 			<span class="dashicons dashicons-groups"></span>
 			<?php esc_html_e( 'BuddyBoss', 'ghl-crm-integration' ); ?>
 		</button>
-		<button class="ghl-tab-button" data-tab="learndash" disabled>
+		<button class="ghl-tab-button" data-tab="learndash">
 			<span class="dashicons dashicons-welcome-learn-more"></span>
 			<?php esc_html_e( 'LearnDash', 'ghl-crm-integration' ); ?>
-			<span class="ghl-badge ghl-badge-secondary"><?php esc_html_e( 'Soon', 'ghl-crm-integration' ); ?></span>
 		</button>
 	</div>
 
@@ -120,18 +119,9 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 			?>
 		</div>
 
-		<!-- Tab: LearnDash (Coming Soon) -->
+		<!-- Tab: LearnDash -->
 		<div class="ghl-tab-panel" data-tab="learndash">
-			<div class="ghl-card ghl-coming-soon-card">
-				<div class="ghl-coming-soon-content">
-					<div class="ghl-coming-soon-icon">
-						<span class="dashicons dashicons-welcome-learn-more"></span>
-					</div>
-					<h2><?php esc_html_e( 'LearnDash Integration', 'ghl-crm-integration' ); ?></h2>
-					<p><?php esc_html_e( 'Sync course enrollments, progress, and completions with GoHighLevel.', 'ghl-crm-integration' ); ?></p>
-					<span class="ghl-badge ghl-badge-large ghl-badge-secondary"><?php esc_html_e( 'Coming Soon', 'ghl-crm-integration' ); ?></span>
-				</div>
-			</div>
+			<?php require GHL_CRM_PATH . 'templates/admin/partials/integrations/learndash.php'; ?>
 		</div>
 	</div>
 
