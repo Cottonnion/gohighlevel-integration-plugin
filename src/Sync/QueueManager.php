@@ -267,6 +267,9 @@ class QueueManager {
 		set_transient( $lock_key, time(), 2 * MINUTE_IN_SECONDS );
 
 		try {
+			// Check for queue backlog and send notification if needed
+			$this->check_queue_backlog();
+
 			if ( is_multisite() ) {
 
 				// Process each site's queue
@@ -723,6 +726,24 @@ class QueueManager {
 				[ '%d' ]
 			);
 
+			// Send notification if max attempts reached (final failure)
+			if ( 'failed' === $status ) {
+				$notification_manager = \GHL_CRM\Core\NotificationManager::get_instance();
+				$sync_type_label      = $this->get_friendly_sync_type_label( $item->item_type, $item->action );
+				
+				$notification_manager->send_sync_error(
+					$sync_type_label,
+					$e->getMessage(),
+					[
+						'queue_id'  => $item->id,
+						'item_id'   => $item->item_id,
+						'item_type' => $item->item_type,
+						'action'    => $item->action,
+						'attempts'  => $item->attempts,
+					]
+				);
+			}
+
 			// Log error with request/response details
 			$this->logger->log_event(
 				(int) $item->item_id,
@@ -1086,4 +1107,56 @@ class QueueManager {
 			);
 		}
 	}
+
+	/**
+	 * Get friendly sync type label for notifications
+	 *
+	 * @param string $item_type Item type from queue
+	 * @param string $action    Action being performed
+	 * @return string Friendly label
+	 */
+	private function get_friendly_sync_type_label( string $item_type, string $action ): string {
+		$labels = [
+			'user'                         => 'WordPress User',
+			'wc_customer'                  => 'WooCommerce Order',
+			'woocommerce_order'            => 'WooCommerce Order',
+			'learndash_course'             => 'LearnDash Course',
+			'learndash_course_enrollment'  => 'LearnDash Course Enrollment',
+			'learndash_content_event'      => 'LearnDash Content Completion',
+			'buddyboss_group'              => 'BuddyBoss Group',
+			'buddyboss_member_association' => 'BuddyBoss Member Association',
+			'custom_object'                => 'Custom Object',
+		];
+
+		$base_label = $labels[ $item_type ] ?? ucwords( str_replace( '_', ' ', $item_type ) );
+
+		// Add action context if relevant
+		if ( 'add_tags' === $action ) {
+			return $base_label . ' (Add Tags)';
+		} elseif ( 'remove_tags' === $action ) {
+			return $base_label . ' (Remove Tags)';
+		}
+
+		return $base_label;
+	}
+
+	/**
+	 * Check queue backlog and send notification if threshold exceeded
+	 *
+	 * Called periodically by process_queue to monitor queue health
+	 *
+	 * @return void
+	 */
+	public function check_queue_backlog(): void {
+		$pending_count = $this->get_pending_count();
+
+		// Threshold for backlog warning (configurable via filter)
+		$threshold = apply_filters( 'ghl_crm_queue_backlog_threshold', 1000 );
+
+		if ( $pending_count > $threshold ) {
+			$notification_manager = \GHL_CRM\Core\NotificationManager::get_instance();
+			$notification_manager->send_queue_backlog( $pending_count );
+		}
+	}
 }
+

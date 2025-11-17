@@ -81,6 +81,7 @@ class Loader {
 			'core.shortcodes'                          => \GHL_CRM\Core\ShortcodeManager::class,
 			'core.conditional_menus'                   => \GHL_CRM\Core\ConditionalMenus::class,
 			'core.family_manager'                      => \GHL_CRM\Core\FamilyManager::class,
+			'core.notifications'                       => \GHL_CRM\Core\NotificationManager::class,
 
 			// Admin UI components
 			'admin.ui'                                 => \GHL_CRM\Admin\AdminUI::class,

@@ -1324,6 +1324,49 @@
 				setToggleState(!currentlyOpen);
 			});
 		}
+
+		/**
+		 * Test Notification Handler
+		 */
+		$(document).off('click.ghlTestNotification', '#send-test-notification')
+			.on('click.ghlTestNotification', '#send-test-notification', function(e) {
+			e.preventDefault();
+			
+			const $button = $(this);
+			const originalHtml = $button.html();
+			
+			// Disable button and show loading state
+			$button.prop('disabled', true).html('<span class="dashicons dashicons-update-alt" style="animation: rotation 1s infinite linear;"></span> Sending...');
+			
+			// Make AJAX request
+			$.ajax({
+				url: ajaxurl,
+				type: 'POST',
+				data: {
+					action: 'ghl_send_test_notification',
+					nonce: $('#ghl_crm_nonce').val()
+				},
+				success: function(response) {
+					if (response.success) {
+						showNotice(response.data.message || 'Test notification sent!', 'success');
+						$button.html('<span class="dashicons dashicons-yes"></span> Test Email Sent!');
+						
+						// Reset button after 3 seconds
+						setTimeout(function() {
+							$button.html(originalHtml).prop('disabled', false);
+						}, 3000);
+					} else {
+						showNotice(response.data.message || 'Failed to send test notification.', 'error');
+						$button.html(originalHtml).prop('disabled', false);
+					}
+				},
+				error: function(xhr) {
+					const errorMsg = xhr.responseJSON?.data?.message || 'An error occurred while sending test notification.';
+					showNotice(errorMsg, 'error');
+					$button.html(originalHtml).prop('disabled', false);
+				}
+			});
+		});
 	}
 
 	// Export to global scope for SPA to call
