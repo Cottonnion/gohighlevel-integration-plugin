@@ -88,6 +88,9 @@ class GroupsSync {
 		// Group membership hooks
 		add_action( 'groups_join_group', [ $this, 'handle_user_join_group' ], 10, 2 );
 		add_action( 'groups_leave_group', [ $this, 'handle_user_leave_group' ], 10, 2 );
+		add_action( 'groups_remove_member', [ $this, 'handle_user_leave_group' ], 10, 2 );
+		add_action( 'groups_ban_member', [ $this, 'handle_user_leave_group' ], 10, 2 );
+		add_action( 'groups_unban_member', [ $this, 'handle_user_join_group' ], 10, 2 );
 
 		// Group type assignment hooks
 		add_action( 'bp_groups_set_group_type', [ $this, 'handle_group_type_assignment' ], 10, 3 );
@@ -988,11 +991,7 @@ class GroupsSync {
 
 				return $result;
 			case 'delete_association':
-				// TODO: Implement association deletion
-				return [
-					'success' => true,
-					'message' => 'Association deletion not yet implemented',
-				];
+				return $this->delete_member_association( $user_id, $group_id, $record_id, $association_id );
 			default:
 				return [
 					'success' => false,
@@ -1225,6 +1224,181 @@ class GroupsSync {
 			return [
 				'success' => false,
 				'error'   => $e->getMessage(),
+			];
+		}
+	}
+
+	/**
+	 * Delete association between a member and a custom object record
+	 *
+	 * @param int    $user_id        The user ID
+	 * @param int    $group_id       The group ID
+	 * @param string $record_id      The custom object record ID
+	 * @param string $association_id The association definition ID
+	 * @return array Result of association deletion
+	 */
+	private function delete_member_association( int $user_id, int $group_id, string $record_id, string $association_id ): array {
+		error_log(
+			sprintf(
+				'GHL BuddyBoss: delete_member_association called - User: %d, Group: %d, Record: %s, Association: %s',
+				$user_id,
+				$group_id,
+				$record_id,
+				$association_id
+			)
+		);
+
+		// Validate inputs
+		if ( empty( $record_id ) ) {
+			$error_msg = sprintf( 'Empty record_id provided for user %d, group %d', $user_id, $group_id );
+			error_log( 'GHL BuddyBoss: ' . $error_msg );
+			return [
+				'success' => false,
+				'error'   => $error_msg,
+			];
+		}
+
+		if ( empty( $association_id ) ) {
+			$error_msg = sprintf( 'Empty association_id provided for user %d, group %d', $user_id, $group_id );
+			error_log( 'GHL BuddyBoss: ' . $error_msg );
+			return [
+				'success' => false,
+				'error'   => $error_msg,
+			];
+		}
+
+		// Get user's GHL contact ID
+		$contact_id = get_user_meta( $user_id, '_ghl_contact_id', true );
+
+		if ( ! $contact_id ) {
+			$error_msg = sprintf( 'User %d has no GHL contact ID (_ghl_contact_id meta is empty)', $user_id );
+			error_log( 'GHL BuddyBoss: Cannot delete association - ' . $error_msg );
+			return [
+				'success' => false,
+				'error'   => 'User not synced to GoHighLevel - ' . $error_msg,
+			];
+		}
+
+		error_log(
+			sprintf(
+				'GHL BuddyBoss: Found contact ID %s for user %d',
+				$contact_id,
+				$user_id
+			)
+		);
+
+		// Get group type to determine schema key
+		$group_types = bp_groups_get_group_type( $group_id, false );
+		$group_type  = ! empty( $group_types ) ? $group_types[0] : 'community';
+
+		$custom_object_name = $this->group_type_mappings[ $group_type ] ?? 'Communities';
+		$schema_key         = 'custom_objects.' . strtolower( str_replace( ' ', '_', $custom_object_name ) );
+
+		error_log(
+			sprintf(
+				'GHL BuddyBoss: Determined schema_key: %s (group_type: %s, object_name: %s)',
+				$schema_key,
+				$group_type,
+				$custom_object_name
+			)
+		);
+
+		// Fetch association definition to determine direction
+		$direction = 'first';
+		try {
+			error_log( 'GHL BuddyBoss: Fetching association definitions to determine direction...' );
+			$associations = $this->custom_object_resource->get_associations();
+			
+			error_log(
+				sprintf(
+					'GHL BuddyBoss: Retrieved %d association definitions',
+					is_array( $associations ) ? count( $associations ) : 0
+				)
+			);
+
+			foreach ( $associations as $a ) {
+				if ( isset( $a['id'] ) && $a['id'] === $association_id ) {
+					$first_key = $a['firstObjectKey'] ?? '';
+					if ( $first_key === 'contact' ) {
+						$direction = 'second';
+					}
+					error_log(
+						sprintf(
+							'GHL BuddyBoss: Found matching association - firstObjectKey: %s, direction: %s',
+							$first_key,
+							$direction
+						)
+					);
+					break;
+				}
+			}
+		} catch ( \Throwable $e ) {
+			error_log(
+				sprintf(
+					'GHL BuddyBoss: Failed to fetch association definition for deletion - Error: %s, Trace: %s',
+					$e->getMessage(),
+					$e->getTraceAsString()
+				)
+			);
+			// Continue with default direction
+		}
+
+		try {
+			error_log(
+				sprintf(
+					'GHL BuddyBoss: Attempting to disassociate - record_id: %s, contact_id: %s, schema_key: %s, association_id: %s, direction: %s',
+					$record_id,
+					$contact_id,
+					$schema_key,
+					$association_id,
+					$direction
+				)
+			);
+
+			// Delete the association
+			$result = $this->custom_object_resource->disassociate_from_contact(
+				$record_id,
+				$contact_id,
+				$schema_key,
+				$association_id,
+				$direction
+			);
+
+			error_log(
+				sprintf(
+					'GHL BuddyBoss: Successfully removed association for user %d (contact %s) from record %s (assoc %s, direction %s) - Result: %s',
+					$user_id,
+					$contact_id,
+					$record_id,
+					$association_id,
+					$direction,
+					wp_json_encode( $result )
+				)
+			);
+
+			return [
+				'success' => true,
+				'result'  => $result,
+			];
+		} catch ( \Throwable $e ) {
+			$error_msg = sprintf(
+				'Failed to delete association for user %d (contact %s) from record %s - Error: %s, Code: %s, File: %s:%d',
+				$user_id,
+				$contact_id,
+				$record_id,
+				$e->getMessage(),
+				$e->getCode(),
+				$e->getFile(),
+				$e->getLine()
+			);
+
+			error_log( 'GHL BuddyBoss: ' . $error_msg );
+			error_log( 'GHL BuddyBoss: Stack trace: ' . $e->getTraceAsString() );
+
+			return [
+				'success' => false,
+				'error'   => $e->getMessage(),
+				'details' => $error_msg,
 			];
 		}
 	}

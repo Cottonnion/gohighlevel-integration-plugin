@@ -405,6 +405,169 @@ class CustomObjectResource extends AbstractResource {
 	}
 
 	/**
+	 * Delete association between a custom object record and a contact
+	 *
+	 * @param string      $record_id   Custom object record ID
+	 * @param string      $contact_id  Contact ID
+	 * @param string      $schema_key  Schema key (e.g., 'custom_objects.my_custom_objects')
+	 * @param string      $association_id Association definition ID
+	 * @param string|null $direction Which position custom object is in: 'first' or 'second' (null = assume first)
+	 * @return array Response data
+	 * @throws \Exception If disassociation fails
+	 */
+	public function disassociate_from_contact( string $record_id, string $contact_id, string $schema_key, string $association_id, ?string $direction = null ): array {
+		try {
+			// GHL API endpoint: DELETE /associations/relations/{relationId}
+			// We need to find the relation ID first, then delete it
+			
+			// Determine correct order based on association direction
+			if ( $direction === 'second' ) {
+				// Association is: contact (first) → custom_object (second)
+				$first_id  = $contact_id;
+				$second_id = $record_id;
+			} else {
+				// Association is: custom_object (first) → contact (second) [default]
+				$first_id  = $record_id;
+				$second_id = $contact_id;
+			}
+
+			// First, we need to get the relation ID
+			// GET /associations/relations?associationId={associationId}&firstRecordId={firstRecordId}
+			$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+			$location_id      = $settings_manager->get_setting( 'location_id', '' );
+
+			error_log(
+				sprintf(
+					'GHL Association: Looking for relation to delete - Association: %s, First: %s, Second: %s, Direction: %s',
+					$association_id,
+					$first_id,
+					$second_id,
+					$direction ?? 'first (default)'
+				)
+			);
+
+			// Get existing relations for the first record
+			// Endpoint: GET /associations/relations/:recordId
+			$get_endpoint = 'associations/relations/' . $first_id;
+			
+			try {
+				$relations = $this->client->get( $get_endpoint );
+			} catch ( \Exception $e ) {
+				// If we get an error fetching relations, it might mean none exist
+				error_log(
+					sprintf(
+						'GHL Association: Error fetching relations (might mean none exist): %s',
+						$e->getMessage()
+					)
+				);
+				
+				// Return success - relation doesn't exist, which is the desired end state
+				return [
+					'success' => true,
+					'message' => 'No relations found to delete - already removed or never existed',
+				];
+			}
+
+			error_log(
+				sprintf(
+					'GHL Association: API response for relations query: %s',
+					wp_json_encode( $relations )
+				)
+			);
+
+			// Find the relation matching our associationId AND secondRecordId
+			$relation_id = null;
+			if ( ! empty( $relations['relations'] ) && is_array( $relations['relations'] ) ) {
+				error_log(
+					sprintf(
+						'GHL Association: Found %d relations for record %s, searching for associationId: %s AND secondRecordId: %s',
+						count( $relations['relations'] ),
+						$first_id,
+						$association_id,
+						$second_id
+					)
+				);
+
+				foreach ( $relations['relations'] as $relation ) {
+					error_log(
+						sprintf(
+							'GHL Association: Checking relation - ID: %s, associationId: %s, firstRecordId: %s, secondRecordId: %s',
+							$relation['id'] ?? 'N/A',
+							$relation['associationId'] ?? 'N/A',
+							$relation['firstRecordId'] ?? 'N/A',
+							$relation['secondRecordId'] ?? 'N/A'
+						)
+					);
+
+					// Match both associationId AND secondRecordId
+					if ( isset( $relation['associationId'] ) && $relation['associationId'] === $association_id &&
+					     isset( $relation['secondRecordId'] ) && $relation['secondRecordId'] === $second_id ) {
+						$relation_id = $relation['id'] ?? null;
+						error_log(
+							sprintf(
+								'GHL Association: Found matching relation ID: %s',
+								$relation_id
+							)
+						);
+						break;
+					}
+				}
+			} else {
+				error_log(
+					sprintf(
+						'GHL Association: No relations array in response. Response keys: %s',
+						implode( ', ', array_keys( $relations ) )
+					)
+				);
+			}
+
+			if ( ! $relation_id ) {
+				error_log(
+					sprintf(
+						'GHL Association: No relation found to delete - might already be deleted (First: %s, Second: %s)',
+						$first_id,
+						$second_id
+					)
+				);
+				// Return success if relation doesn't exist (idempotent)
+				return [
+					'success' => true,
+					'message' => 'Relation not found - already deleted or never existed',
+				];
+			}
+
+			// Delete the relation
+			$delete_endpoint = 'associations/relations/' . $relation_id;
+			error_log(
+				sprintf(
+					'GHL Association: Deleting relation %s',
+					$relation_id
+				)
+			);
+
+			$response = $this->client->delete( $delete_endpoint );
+
+			error_log(
+				sprintf(
+					'GHL Association: Successfully deleted relation %s',
+					$relation_id
+				)
+			);
+
+			return $response;
+		} catch ( \Exception $e ) {
+			$reason = $this->sanitize_exception_message( $e->getMessage() );
+			throw new \Exception(
+				sprintf(
+					/* translators: %s: error reason */
+					esc_html__( 'Failed to disassociate record from contact: %s', 'ghl-crm-integration' ),
+					esc_html( $reason )
+				)
+			);
+		}
+	}
+
+	/**
 	 * Sanitize exception message content before rethrowing.
 	 *
 	 * @param string $message Raw exception message.
