@@ -505,3 +505,59 @@ textarea.ghl-input {
 	border-radius: var(--ghl-radius-sm);
 }
 
+/* ========================================
+   Select2 Overrides
+   ======================================== */
+.select2-container {
+	width: 100% !important;
+	max-width: 100% !important;
+}
+.select2-container--default .select2-selection--multiple {
+	border: 2px solid #ccc !important;
+	border-radius: 6px !important;
+	min-height: 40px !important;
+	max-width: 100% !important;
+	padding: 4px 8px !important;
+	box-sizing: border-box !important;
+}
+.select2-container--default.select2-container--focus .select2-selection--multiple {
+	border-color: #7e3bd0 !important;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__rendered {
+	display: flex !important;
+	flex-wrap: wrap !important;
+	gap: 4px !important;
+	padding: 0 !important;
+	max-width: 100% !important;
+	box-sizing: border-box !important;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+	background-color: var(--ghl-primary) !important;
+	border: 1px solid var(--ghl-primary) !important;
+	color: #fff !important;
+	border-radius: 4px !important;
+	padding: 4px 8px !important;
+	margin: 0 !important;
+	font-size: 13px !important;
+	line-height: 1.4 !important;
+	max-width: calc(100% - 10px) !important;
+	word-break: break-word !important;
+	white-space: normal !important;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+	color: #fff !important;
+	margin-right: 5px !important;
+	font-weight: bold !important;
+	float: none !important;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+	color: #f8d7da !important;
+}
+.select2-search--inline {
+	flex-shrink: 0 !important;
+}
+.select2-search--inline .select2-search__field {
+	min-width: 120px !important;
+	margin: 0 !important;
+	padding: 4px 0 !important;
+}
