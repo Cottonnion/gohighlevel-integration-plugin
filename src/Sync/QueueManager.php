@@ -889,6 +889,28 @@ class QueueManager {
 	}
 
 	/**
+	 * Get pending count for current site
+	 *
+	 * @return int Number of pending items
+	 */
+	public function get_pending_count(): int {
+		global $wpdb;
+
+		$table_name      = $this->get_queue_table_name();
+		$current_site_id = get_current_blog_id();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Getting pending count for queue monitoring.
+		$pending = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table_name} WHERE status = 'pending' AND site_id = %d",
+				$current_site_id
+			)
+		);
+
+		return (int) $pending;
+	}
+
+	/**
 	 * Get rate limit status (using RateLimiter helper)
 	 *
 	 * @return array Rate limit statistics
