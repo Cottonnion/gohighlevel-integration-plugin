@@ -542,6 +542,9 @@ class UserProfileFields {
 				$payload_tags = $tag_manager->prepare_tags_for_payload( $stored_ids, $normalized['pairs'] ?? [] );
 				$this->sync_tags_to_ghl( $contact_id, $payload_tags );
 			}
+
+			// Fire action so other integrations (like LearnDash) can react
+			do_action( 'ghl_crm_user_tags_updated', $user_id, $stored_ids );
 		}
 	}
 
