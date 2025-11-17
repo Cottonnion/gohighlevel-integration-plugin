@@ -102,7 +102,9 @@ class Loader {
 			'integrations.woocommerce'                 => \GHL_CRM\Integrations\WooCommerce\WooCommerceSync::class,
 			'integrations.woocommerce.product_metabox' => \GHL_CRM\Integrations\WooCommerce\ProductMetaBox::class,
 			'integrations.buddyboss'                   => \GHL_CRM\Integrations\BuddyBoss\GroupsSync::class,
-			'integrations.buddyboss.metabox'           => \GHL_CRM\Integrations\BuddyBoss\GroupMetaBox::class,
+			'integrations.buddyboss.group_metabox'     => \GHL_CRM\Integrations\BuddyBoss\GroupMetaBox::class,
+			'integrations.learndash'                   => \GHL_CRM\Integrations\LearnDash\LearnDashSync::class,
+			'integrations.learndash.metabox'           => \GHL_CRM\Integrations\LearnDash\CourseMetaBox::class,
 
 			// Membership components
 			'membership.metaboxes'                     => \GHL_CRM\Membership\Admin\MetaBoxes::class,
