@@ -75,7 +75,7 @@ endif;
 						<?php esc_html_e( 'LearnDash Integration', 'ghl-crm-integration' ); ?>
 					</h2>
 					<p class="description" style="margin: 0; font-size: 14px; color: #64748b; line-height: 1.5;">
-						<?php esc_html_e( 'Sync course enrollments and completions with GoHighLevel', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Sync course, lesson, topic, and quiz completions with GoHighLevel', 'ghl-crm-integration' ); ?>
 					</p>
 				</div>
 			</div>
@@ -111,11 +111,11 @@ endif;
 			</p>
 			<hr>
 
-			<!-- Per-Course Configuration Info -->
+			<!-- Per-Content Configuration Info -->
 			<div class="ghl-info-banner" style="background: #eff6ff; border-left: 3px solid #3b82f6; padding: 16px; margin-bottom: 24px; border-radius: 4px;">
 				<p style="margin: 0; color: #1e40af; font-size: 14px; line-height: 1.6;">
-					<strong><?php esc_html_e( 'Per-Course Configuration:', 'ghl-crm-integration' ); ?></strong>
-					<?php esc_html_e( 'All tag assignments and auto-enrollment rules are configured individually for each LearnDash course. Edit any course to access the GoHighLevel integration settings in the course editor.', 'ghl-crm-integration' ); ?>
+					<strong><?php esc_html_e( 'Per-Content Configuration:', 'ghl-crm-integration' ); ?></strong>
+					<?php esc_html_e( 'Tag assignments are configured individually for each piece of LearnDash content. Edit any course, lesson, topic, or quiz to access the GoHighLevel completion tags settings in the content editor.', 'ghl-crm-integration' ); ?>
 				</p>
 			</div>
 		</div>
