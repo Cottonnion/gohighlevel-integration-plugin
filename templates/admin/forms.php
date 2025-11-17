@@ -22,18 +22,15 @@ $white_label_domain = $settings['ghl_white_label_domain'] ?? '';
 	
 	if ( ! $is_connected ) :
 		?>
-		<div class="ghl-settings-card" style="border-left: 4px solid #d63638;">
-			<h2>
-				<span class="dashicons dashicons-warning"></span>
-				<?php esc_html_e( 'Not Connected', 'ghl-crm-integration' ); ?>
-			</h2>
+		<div class="notice notice-warning">
 			<p>
+				<strong><?php esc_html_e( 'Not Connected', 'ghl-crm-integration' ); ?></strong><br>
 				<?php
 				printf(
 					/* translators: %s: Link to dashboard page */
-					esc_html__( 'Please connect to GoHighLevel in the %s to access your forms.', 'ghl-crm-integration' ),
+					esc_html__( 'Please connect to GoHighLevel in %s first.', 'ghl-crm-integration' ),
 					sprintf(
-						'<a href="%s"><strong>%s</strong></a>',
+						'<a href="%s">%s</a>',
 						esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ),
 						esc_html__( 'Dashboard', 'ghl-crm-integration' )
 					)
