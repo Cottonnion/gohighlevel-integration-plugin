@@ -393,7 +393,23 @@ class CustomObjectResource extends AbstractResource {
 
 			return $response;
 		} catch ( \Exception $e ) {
-			$reason = $this->sanitize_exception_message( $e->getMessage() );
+			$error_message = $e->getMessage();
+			
+			// Check if this is a duplicate relation error (idempotent - already exists)
+			if ( strpos( $error_message, 'duplicate relation' ) !== false ) {
+				
+				// Return success response - the desired end state is achieved
+				return [
+					'success' => true,
+					'message' => 'Relation already exists',
+					'firstRecordId' => $first_id,
+					'secondRecordId' => $second_id,
+					'associationId' => $association_id,
+				];
+			}
+			
+			// For other errors, throw as usual
+			$reason = $this->sanitize_exception_message( $error_message );
 			throw new \Exception(
 				sprintf(
 					/* translators: %s: error reason */
