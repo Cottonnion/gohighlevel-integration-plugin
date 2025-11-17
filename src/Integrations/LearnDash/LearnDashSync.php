@@ -118,6 +118,11 @@ class LearnDashSync {
 		add_action( 'ld_removed_course_access', [ $this, 'handle_course_revoked' ], 10, 2 );
 		add_action( 'learndash_course_completed', [ $this, 'handle_course_completed' ], 10, 1 );
 
+		// Lesson, Topic, and Quiz completion hooks
+		add_action( 'learndash_lesson_completed', [ $this, 'handle_lesson_completed' ], 10, 1 );
+		add_action( 'learndash_topic_completed', [ $this, 'handle_topic_completed' ], 10, 1 );
+		add_action( 'learndash_quiz_completed', [ $this, 'handle_quiz_completed' ], 10, 2 );
+
 		// Auto-enrollment system hooks
 		add_action( 'init', [ $this, 'maybe_check_existing_users' ], 999 );
 		add_action( 'ghl_crm_user_tags_updated', [ $this, 'handle_user_tags_updated' ], 10, 2 );
@@ -125,6 +130,7 @@ class LearnDashSync {
 
 		// Queue processing hooks
 		add_filter( 'ghl_crm_execute_course_sync', [ $this, 'execute_learndash_sync' ], 10, 4 );
+		add_filter( 'ghl_crm_execute_sync', [ $this, 'execute_learndash_content_sync' ], 10, 5 );
 		add_action( 'ghl_crm_after_sync_success', [ $this, 'handle_after_queue_sync' ], 20, 4 );
 	}
 
@@ -210,6 +216,111 @@ class LearnDashSync {
 	}
 
 	/**
+	 * Handle lesson completion events.
+	 *
+	 * Extracts user and lesson IDs from LearnDash's completion data structure.
+	 *
+	 * @since 1.0.0
+	 * @param array<string,mixed> $data LearnDash lesson completion payload.
+	 * @return void
+	 */
+	public function handle_lesson_completed( array $data ): void {
+		$user_id   = 0;
+		$lesson_id = 0;
+
+		// Extract user ID from WP_User object or direct ID
+		if ( isset( $data['user'] ) && $data['user'] instanceof WP_User ) {
+			$user_id = (int) $data['user']->ID;
+		} elseif ( isset( $data['user_id'] ) ) {
+			$user_id = (int) $data['user_id'];
+		}
+
+		// Extract lesson ID from post object or direct ID
+		if ( isset( $data['lesson'] ) && is_object( $data['lesson'] ) && isset( $data['lesson']->ID ) ) {
+			$lesson_id = (int) $data['lesson']->ID;
+		} elseif ( isset( $data['lesson_id'] ) ) {
+			$lesson_id = (int) $data['lesson_id'];
+		}
+
+		if ( $user_id <= 0 || $lesson_id <= 0 ) {
+			return;
+		}
+
+		$this->queue_content_event( $user_id, $lesson_id, 'lesson' );
+	}
+
+	/**
+	 * Handle topic completion events.
+	 *
+	 * Extracts user and topic IDs from LearnDash's completion data structure.
+	 *
+	 * @since 1.0.0
+	 * @param array<string,mixed> $data LearnDash topic completion payload.
+	 * @return void
+	 */
+	public function handle_topic_completed( array $data ): void {
+		$user_id  = 0;
+		$topic_id = 0;
+
+		// Extract user ID from WP_User object or direct ID
+		if ( isset( $data['user'] ) && $data['user'] instanceof WP_User ) {
+			$user_id = (int) $data['user']->ID;
+		} elseif ( isset( $data['user_id'] ) ) {
+			$user_id = (int) $data['user_id'];
+		}
+
+		// Extract topic ID from post object or direct ID
+		if ( isset( $data['topic'] ) && is_object( $data['topic'] ) && isset( $data['topic']->ID ) ) {
+			$topic_id = (int) $data['topic']->ID;
+		} elseif ( isset( $data['topic_id'] ) ) {
+			$topic_id = (int) $data['topic_id'];
+		}
+
+		if ( $user_id <= 0 || $topic_id <= 0 ) {
+			return;
+		}
+
+		$this->queue_content_event( $user_id, $topic_id, 'topic' );
+	}
+
+	/**
+	 * Handle quiz completion events.
+	 *
+	 * Extracts user and quiz IDs from LearnDash's quiz completion data structure.
+	 *
+	 * @since 1.0.0
+	 * @param array<string,mixed> $data    LearnDash quiz completion payload.
+	 * @param WP_User|null        $user    WordPress user object.
+	 * @return void
+	 */
+	public function handle_quiz_completed( array $data, $user = null ): void {
+		$user_id = 0;
+		$quiz_id = 0;
+
+		// Extract user ID - quiz hook passes user as second parameter
+		if ( $user instanceof WP_User ) {
+			$user_id = (int) $user->ID;
+		} elseif ( isset( $data['user'] ) && $data['user'] instanceof WP_User ) {
+			$user_id = (int) $data['user']->ID;
+		} elseif ( isset( $data['user_id'] ) ) {
+			$user_id = (int) $data['user_id'];
+		}
+
+		// Extract quiz ID from post object or direct ID
+		if ( isset( $data['quiz'] ) && is_object( $data['quiz'] ) && isset( $data['quiz']->ID ) ) {
+			$quiz_id = (int) $data['quiz']->ID;
+		} elseif ( isset( $data['quiz_id'] ) ) {
+			$quiz_id = (int) $data['quiz_id'];
+		}
+
+		if ( $user_id <= 0 || $quiz_id <= 0 ) {
+			return;
+		}
+
+		$this->queue_content_event( $user_id, $quiz_id, 'quiz' );
+	}
+
+	/**
 	 * Register queue entry for downstream sync.
 	 *
 	 * @since 1.0.0
@@ -240,6 +351,42 @@ class LearnDashSync {
 	}
 
 	/**
+	 * Register queue entry for lesson, topic, or quiz completion sync.
+	 *
+	 * @since 1.0.0
+	 * @param int    $user_id    WordPress user ID.
+	 * @param int    $content_id LearnDash lesson/topic/quiz ID.
+	 * @param string $type       Content type (lesson|topic|quiz).
+	 * @return void
+	 */
+	private function queue_content_event( int $user_id, int $content_id, string $type ): void {
+		if ( $user_id <= 0 || $content_id <= 0 ) {
+			return;
+		}
+
+		$valid_types = [ 'lesson', 'topic', 'quiz' ];
+		if ( ! in_array( $type, $valid_types, true ) ) {
+			return;
+		}
+
+		$tags = $this->resolve_content_tags( $content_id, $type );
+
+		if ( empty( $tags ) ) {
+			return;
+		}
+
+		$payload = [
+			'user_id'    => $user_id,
+			'content_id' => $content_id,
+			'type'       => $type,
+			'tags'       => $tags,
+			'queued_at'  => current_time( 'mysql' ),
+		];
+
+		$this->queue_manager->add_to_queue( $type, $content_id, 'sync_content_event', $payload );
+	}
+
+	/**
 	 * Execute queued LearnDash course sync operation.
 	 *
 	 * Filter callback for queue processor to handle 'sync_course_event' actions.
@@ -265,6 +412,40 @@ class LearnDashSync {
 	}
 
 	/**
+	 * Execute queued LearnDash content sync operation (lessons, topics, quizzes).
+	 *
+	 * Filter callback for generic queue processor to handle lesson/topic/quiz completion.
+	 *
+	 * @since 1.0.0
+	 * @param bool|mixed   $handled   Whether another handler already processed the job.
+	 * @param string       $item_type Queue item type (lesson|topic|quiz).
+	 * @param string       $action    Queue action name.
+	 * @param int          $item_id   Queue item identifier.
+	 * @param array<mixed> $payload   Stored payload.
+	 * @return bool|array False on failure, API response array on success.
+	 */
+	public function execute_learndash_content_sync( $handled, string $item_type, string $action, int $item_id, array $payload ) {
+		// Only handle our content types
+		if ( ! in_array( $item_type, [ 'lesson', 'topic', 'quiz' ], true ) ) {
+			return $handled;
+		}
+        error_log( 'Executing LearnDash content sync for item_type: ' . $item_type . ', action: ' . $action . ', item_id: ' . $item_id );
+		// Only handle content completion events
+		if ( 'sync_content_event' !== $action ) {
+			return $handled;
+		}
+
+		try {
+            error_log( 'Processing payload: ' . print_r( $payload, true ) );
+			return $this->process_content_payload( $payload );
+		} catch ( \Throwable $error ) {
+			do_action( 'ghl_crm_sync_error', 'learndash_content_queue_handler', $payload, $error );
+            error_log( 'Error in execute_learndash_content_sync: ' . $error->getMessage() );
+			return false;
+		}
+	}
+
+	/**
 	 * Refresh WordPress user data after successful GHL contact sync.
 	 *
 	 * Pulls latest contact data from GoHighLevel and updates WordPress user meta.
@@ -277,8 +458,9 @@ class LearnDashSync {
 	 * @return void
 	 */
 	public function handle_after_queue_sync( object $item, ?string $contact_id, $result, array $payload ): void {
-		// Only process course sync items
-		if ( ! isset( $item->item_type ) || 'course' !== $item->item_type ) {
+		// Process both course and content (lesson/topic/quiz) sync items
+		$valid_types = [ 'course', 'lesson', 'topic', 'quiz' ];
+		if ( ! isset( $item->item_type ) || ! in_array( $item->item_type, $valid_types, true ) ) {
 			return;
 		}
 
@@ -409,13 +591,106 @@ class LearnDashSync {
 			return $response;
 
 		} catch ( \Throwable $error ) {
-			do_action( 'ghl_crm_sync_error', 'learndash', $payload, $error );
+			do_action( 'ghl_crm_sync_error', 'learndash_course_sync', $payload, $error );
 			return false;
 		}
 	}
 
 	/**
-	 * Retrieve tags configured for a specific course and event type.
+	 * Process lesson/topic/quiz event and sync to GoHighLevel contact.
+	 *
+	 * Creates or updates GHL contact with content-specific tags while preserving existing tags.
+	 *
+	 * @since 1.0.0
+	 * @param array<mixed> $payload Queue payload containing user_id, content_id, type, and tags.
+	 * @return array|false API response array on success, false on failure.
+	 */
+	private function process_content_payload( array $payload ) {
+		$user_id    = (int) ( $payload['user_id'] ?? 0 );
+		$content_id = (int) ( $payload['content_id'] ?? 0 );
+		$type       = sanitize_key( (string) ( $payload['type'] ?? '' ) );
+		$new_tags   = $this->normalize_tags( $payload['tags'] ?? [] );
+
+		if ( $user_id <= 0 || $content_id <= 0 || empty( $new_tags ) ) {
+			return false;
+		}
+
+		$user = get_userdata( $user_id );
+		if ( ! $user || empty( $user->user_email ) ) {
+			return false;
+		}
+
+		try {
+			// Find or create contact
+			$existing   = $this->contact_resource->find_by_email( $user->user_email );
+			$contact_id = ! empty( $existing['id'] ) ? (string) $existing['id'] : null;
+
+			// Merge content tags with existing tags
+			$existing_tags = [];
+			if ( $existing && ! empty( $existing['tags'] ) && is_array( $existing['tags'] ) ) {
+				$existing_tags = $existing['tags'];
+			}
+
+			$all_tags = array_values( array_unique( array_merge( $existing_tags, $new_tags ) ) );
+
+			$contact_payload = [
+				'email'     => $user->user_email,
+				'firstName' => $user->first_name ?? '',
+				'lastName'  => $user->last_name ?? '',
+				'tags'      => $all_tags,
+				'source'    => 'learndash_' . $type . '_completed',
+			];
+
+			// Update or create contact
+			if ( $contact_id ) {
+				$api_result = $this->contact_resource->update( $contact_id, $contact_payload );
+			} else {
+				$api_result = $this->contact_resource->create( $contact_payload );
+				$contact_id = (string) ( $api_result['contact']['id'] ?? $api_result['id'] ?? '' );
+			}
+
+			// Ensure we have a contact ID
+			if ( empty( $contact_id ) ) {
+				$refetched = $this->contact_resource->find_by_email( $user->user_email );
+				if ( $refetched && ! empty( $refetched['id'] ) ) {
+					$contact_id = (string) $refetched['id'];
+					if ( empty( $api_result ) ) {
+						$api_result = [ 'contact' => $refetched ];
+					}
+				}
+			}
+
+			// Normalize response structure
+			$response = is_array( $api_result ) ? $api_result : [];
+
+			if ( empty( $response['contact'] ) ) {
+				$response['contact'] = [];
+			}
+
+			if ( ! empty( $contact_id ) ) {
+				$response['contact']['id'] = $contact_id;
+			}
+
+			if ( empty( $response['contact']['tags'] ) ) {
+				$response['contact']['tags'] = $all_tags;
+			}
+
+			if ( empty( $response['tags'] ) ) {
+				$response['tags'] = $all_tags;
+			}
+
+			do_action( 'ghl_crm_learndash_content_synced', $payload, $contact_payload, $type );
+
+			return $response;
+
+		} catch ( \Throwable $error ) {
+			do_action( 'ghl_crm_sync_error', 'learndash_content_sync', $payload, $error );
+			return false;
+		}
+	}
+
+	/**
+	 * Retrieve tags configured for a specific course and status.
 	 *
 	 * Reads from course post meta (_ghl_ld_{status}_tags).
 	 *
@@ -438,6 +713,32 @@ class LearnDashSync {
 		$course_tags = get_post_meta( $course_id, $meta_key, true );
 
 		return $this->normalize_tags( $course_tags );
+	}
+
+	/**
+	 * Retrieve tags configured for a specific lesson, topic, or quiz.
+	 *
+	 * Reads from post meta (_ghl_ld_{type}_completed_tags).
+	 *
+	 * @since 1.0.0
+	 * @param int    $content_id LearnDash content ID (lesson/topic/quiz).
+	 * @param string $type       Content type: lesson|topic|quiz.
+	 * @return array<int,string> Sanitized tag array.
+	 */
+	private function resolve_content_tags( int $content_id, string $type ): array {
+		if ( $content_id <= 0 ) {
+			return [];
+		}
+
+		$valid_types = [ 'lesson', 'topic', 'quiz' ];
+		if ( ! in_array( $type, $valid_types, true ) ) {
+			return [];
+		}
+
+		$meta_key     = sprintf( '_ghl_ld_%s_completed_tags', $type );
+		$content_tags = get_post_meta( $content_id, $meta_key, true );
+
+		return $this->normalize_tags( $content_tags );
 	}
 
 	/**
