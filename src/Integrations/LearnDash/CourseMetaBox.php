@@ -107,9 +107,9 @@ class CourseMetaBox {
 			</div>
 
 			<div class="ghl-ld-meta-note">
-				<span class="dashicons dashicons-editor-help" aria-hidden="true"></span>
+				<span class="dashicons dashicons-info" aria-hidden="true"></span>
 				<p>
-					<?php esc_html_e( 'Need inspiration? Open Settings → General → User Signup Settings to see the same tagging UI in action.', 'ghl-crm-integration' ); ?>
+					<?php esc_html_e( 'Tags are synced to GoHighLevel when students enroll or complete this course. You can use these tags to trigger automations, workflows, or segment your contacts.', 'ghl-crm-integration' ); ?>
 				</p>
 			</div>
 		</div>
