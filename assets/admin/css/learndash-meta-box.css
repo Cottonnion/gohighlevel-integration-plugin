@@ -63,6 +63,72 @@
 	margin-top: 2px;
 }
 
+/* ========================================
+   Select2 Overrides for Meta Box
+   ======================================== */
+
+.ghl-ld-meta-box .select2-container {
+	width: 100% !important;
+	max-width: 100%;
+}
+
+.ghl-ld-meta-box .select2-container--default .select2-selection--multiple {
+	border: 2px solid #ccc;
+	border-radius: 6px;
+	min-height: 40px;
+	max-width: 100%;
+	padding: 4px 8px;
+	box-sizing: border-box;
+}
+
+.ghl-ld-meta-box .select2-container--default.select2-container--focus .select2-selection--multiple {
+	border-color: #7e3bd0;
+}
+
+.ghl-ld-meta-box .select2-container--default .select2-selection--multiple .select2-selection__rendered {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	padding: 0;
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+.ghl-ld-meta-box .select2-container--default .select2-selection--multiple .select2-selection__choice {
+	background-color: var(--ghl-primary);
+	border: 1px solid var(--ghl-primary);
+	color: #fff;
+	border-radius: 4px;
+	padding: 4px 8px;
+	margin: 0;
+	font-size: 13px;
+	line-height: 1.4;
+	max-width: calc(100% - 10px);
+	word-break: break-word;
+	white-space: normal;
+}
+
+.ghl-ld-meta-box .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+	color: #fff;
+	margin-right: 5px;
+	font-weight: bold;
+	float: none;
+}
+
+.ghl-ld-meta-box .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+	color: #f8d7da;
+}
+
+.ghl-ld-meta-box .select2-search--inline {
+	flex-shrink: 0;
+}
+
+.ghl-ld-meta-box .select2-search--inline .select2-search__field {
+	min-width: 120px;
+	margin: 0;
+	padding: 4px 0;
+}
+
 @media (min-width: 782px) {
 	.ghl-ld-meta-box {
 		flex-direction: column;
