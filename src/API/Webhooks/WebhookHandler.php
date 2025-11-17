@@ -608,7 +608,7 @@ class WebhookHandler {
 
 		// Check if we've received any webhooks recently
 		global $wpdb;
-		$table_name   = $wpdb->prefix . 'ghl_sync_logs';
+		$table_name   = $wpdb->prefix . 'ghl_sync_log';
 		$like_pattern = $wpdb->esc_like( 'webhook_' ) . '%';
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Inspecting webhook activity in plugin log table.
