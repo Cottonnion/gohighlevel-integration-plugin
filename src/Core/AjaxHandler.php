@@ -187,7 +187,10 @@ class AjaxHandler {
 				}
 			}
 
-			// LearnDash settings (future)
+			// LearnDash settings
+			if ( isset( $_POST['learndash_enabled'] ) ) {
+				$integration_settings['learndash_enabled'] = sanitize_text_field( wp_unslash( $_POST['learndash_enabled'] ) ) === '1';
+			}
 
 			// Merge with current settings
 			$settings = array_merge(
