@@ -151,6 +151,7 @@ class QueueProcessor {
 	 * @throws \Exception
 	 */
 	public function execute_sync( string $item_type, string $action, int $item_id, array $payload ) {
+
 		$context = array(
 			'item_type' => $item_type,
 			'action'    => $action,
@@ -290,7 +291,12 @@ class QueueProcessor {
 				return apply_filters( 'ghl_crm_execute_group_sync', false, $action, $item_id, $payload );
 
 			case 'course':
-				return apply_filters( 'ghl_crm_execute_course_sync', false, $action, $item_id, $payload );
+				try {
+					return apply_filters( 'ghl_crm_execute_course_sync', false, $action, $item_id, $payload );
+				} catch ( \Throwable $course_error ) {
+					do_action( 'ghl_crm_sync_error', 'queue_course_filter', $payload, $course_error );
+					throw $course_error;
+				}
 
 			default:
 				return apply_filters( 'ghl_crm_execute_sync', false, $item_type, $action, $item_id, $payload );
@@ -513,12 +519,8 @@ class QueueProcessor {
 					$this->contact_cache->set( $email, $contact );
 				}
 			} catch ( \Exception $e ) {
-				// Log the error but don't fail - contact might not exist in GHL yet
-				error_log( sprintf(
-					'[GHL CRM] User login sync failed for %s: %s',
-					$email,
-					$e->getMessage()
-				) );
+				// Contact might not exist in GHL yet - emit error hook but don't fail hard
+				do_action( 'ghl_crm_sync_error', 'user_login_sync_lookup', [ 'email' => $email ], $e );
 				return false;
 			}
 		}
@@ -535,12 +537,11 @@ class QueueProcessor {
 				);
 				return ! empty( $result ) ? $result : false;
 			} catch ( \Exception $e ) {
-				// Log but don't fail - this is non-critical
-				error_log( sprintf(
-					'[GHL CRM] User login update failed for contact %s: %s',
-					$contact['id'],
-					$e->getMessage()
-				) );
+				// Non-critical failure - emit error hook for visibility
+				do_action( 'ghl_crm_sync_error', 'user_login_sync_update', [
+					'contact_id' => $contact['id'] ?? null,
+					'email'      => $email,
+				], $e );
 				return false;
 			}
 		}

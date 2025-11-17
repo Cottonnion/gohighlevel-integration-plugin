@@ -106,6 +106,9 @@ class QueueManager {
 
 		// Schedule recurring action AFTER Action Scheduler is ready
 		add_action( 'init', [ $this, 'schedule_queue_processor' ], 999 );
+
+		// Listen for successful sync completions (provides enterprise-grade extensibility)
+		add_action( 'ghl_crm_after_sync_success', [ $this, 'handle_after_sync_success' ], 10, 4 );
 	}
 
 	/**
@@ -641,8 +644,8 @@ class QueueManager {
 					[ '%d' ]
 				);
 
-				// Automatically sync contact tags from GHL after successful completion
-				$this->sync_contact_tags_from_ghl( $item, $contact_id );
+				// Automatically fire enterprise-grade hook so integrations can handle sync-back logic
+				do_action( 'ghl_crm_after_sync_success', $item, $contact_id, $result, $payload );
 
 				// Log success with full request/response data (using QueueLogger helper)
 				$this->logger->log_event(
@@ -981,6 +984,18 @@ class QueueManager {
 				wp_unschedule_event( $timestamp, 'ghl_crm_process_queue' );
 			}
 		}
+	}
+
+	/**
+	 * Sync contact tags from GHL after successful queue completion
+	 * Delegates to UserProfileFields refresh logic for consistency
+	 *
+	 * @param object      $item Queue item
+	 * @param string|null $contact_id GHL Contact ID
+	 * @return void
+	 */
+	public function handle_after_sync_success( object $item, ?string $contact_id, $result = null, array $payload = [] ): void {
+		$this->sync_contact_tags_from_ghl( $item, $contact_id );
 	}
 
 	/**
