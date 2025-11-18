@@ -16,7 +16,7 @@ $settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 $settings = $settings_manager->get_settings_array();
 
 // Get notification settings with defaults
-$notification_email = $settings['notification_email'] ?? get_option( 'admin_email' );
+$notification_email = $settings['notification_email'] ?? $settings_manager->get_option( 'admin_email' );
 $notify_connection_lost = $settings['notify_connection_lost'] ?? true;
 $notify_sync_errors = $settings['notify_sync_errors'] ?? true;
 $notify_queue_backlog = $settings['notify_queue_backlog'] ?? true;

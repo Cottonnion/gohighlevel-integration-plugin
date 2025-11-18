@@ -23,9 +23,6 @@ $total_users = $user_count['total_users'];
 // Get OAuth connection status properly
 use GHL_CRM\Sync\RateLimiter;
 
-// Get all settings.
-$settings = get_option( 'ghl_crm_settings', array() );
-
 // Get OAuth connection status.
 $oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
 $oauth_status  = $oauth_handler->get_connection_status();

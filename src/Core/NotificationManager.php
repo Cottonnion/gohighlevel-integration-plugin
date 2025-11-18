@@ -359,7 +359,7 @@ class NotificationManager {
 		$subject = sprintf(
 			/* translators: %s: Date */
 			__( 'GoHighLevel Daily Summary - %s', 'ghl-crm-integration' ),
-			wp_date( get_option( 'date_format' ) )
+			wp_date( $this->settings_manager->get_option( 'date_format' ) )
 		);
 
 		$message = sprintf(
@@ -732,7 +732,7 @@ class NotificationManager {
 	 * @return string
 	 */
 	private function get_notification_email(): string {
-		return $this->settings_manager->get_setting( 'notification_email', get_option( 'admin_email' ) );
+		return $this->settings_manager->get_setting( 'notification_email', $this->settings_manager->get_option( 'admin_email' ) );
 	}
 
 	/**
@@ -829,7 +829,7 @@ class NotificationManager {
 			esc_html__( 'Sent To', 'ghl-crm-integration' ),
 			esc_html( $this->get_notification_email() ),
 			esc_html__( 'Sent At', 'ghl-crm-integration' ),
-			esc_html( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ) ) ),
+			esc_html( wp_date( $this->settings_manager->get_option( 'date_format' ) . ' ' . $this->settings_manager->get_option( 'time_format' ) ) ),
 			esc_html__( 'From Site', 'ghl-crm-integration' ),
 			esc_html( get_bloginfo( 'name' ) ),
 			esc_html__( 'Note', 'ghl-crm-integration' ),

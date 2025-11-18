@@ -819,7 +819,7 @@ class LearnDashSync {
 			return;
 		}
 
-		delete_option( 'ghl_ld_batch_offset' );
+		$this->settings->delete_setting( 'ghl_ld_batch_offset' );
 		$this->schedule_batch_enrollment_check();
 		set_transient( $transient_key, 1, DAY_IN_SECONDS );
 	}
@@ -861,7 +861,7 @@ class LearnDashSync {
 		set_transient( $lock_key, time(), 5 * MINUTE_IN_SECONDS );
 
 		try {
-			$offset     = (int) get_option( 'ghl_ld_batch_offset', 0 );
+			$offset     = (int) $this->settings->get_setting( 'ghl_ld_batch_offset', 0 );
 			$batch_size = apply_filters( 'ghl_crm_ld_batch_enrollment_size', 500 ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 			$batch_size = max( 1, min( 1000, $batch_size ) );
 
@@ -895,10 +895,10 @@ class LearnDashSync {
 			}
 
 			if ( $processed_count < $batch_size ) {
-				delete_option( 'ghl_ld_batch_offset' );
+				$this->settings->delete_setting( 'ghl_ld_batch_offset' );
 			} else {
 				$new_offset = $offset + $batch_size;
-				update_option( 'ghl_ld_batch_offset', $new_offset );
+				$this->settings->update_setting( 'ghl_ld_batch_offset', $new_offset );
 
 				if ( function_exists( 'as_schedule_single_action' ) ) {
 					as_schedule_single_action( time() + 10, 'ghl_ld_process_batch_enrollment', [], 'ghl-crm' );
