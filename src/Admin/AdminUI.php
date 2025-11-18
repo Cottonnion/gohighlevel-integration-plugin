@@ -5,6 +5,7 @@ namespace GHL_CRM\Admin;
 
 use GHL_CRM\Admin\Columns\UserColumns;
 use GHL_CRM\Admin\Profile\UserProfileFields;
+use GHL_CRM\Admin\Users\UserBulkActions;
 use GHL_CRM\Core\SettingsManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -77,6 +78,9 @@ class AdminUI {
 		// Initialize user profile fields (adds GHL section to user edit pages)
 		UserProfileFields::init();
 
+
+		// Initialize user bulk actions (adds GHL tag assignment bulk actions)
+		UserBulkActions::init();
 		// Future: Initialize other admin components
 		// PostColumns::init();
 		// OrderColumns::init();
