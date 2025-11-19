@@ -70,26 +70,31 @@ class ShortcodeManager {
 			'ghl_form'
 		);
 
-		// Validate form ID
-		if ( empty( $atts['id'] ) ) {
-			return $this->render_error( __( 'Form ID is required. Use: [ghl_form id="your-form-id"]', 'ghl-crm-integration' ) );
-		}
+	// Validate form ID
+	if ( empty( $atts['id'] ) ) {
+		return $this->render_error( __( 'Form ID is required. Use: [ghl_form id="your-form-id"]', 'ghl-crm-integration' ) );
+	}
 
-		// Get form embed URL
-		$embed_url = $this->get_form_embed_url( $atts['id'] );
+	$form_id = $atts['id'];
 
-		if ( ! $embed_url ) {
+	// Check if form is logged-in only
+	$form_settings = \GHL_CRM\Core\FormSettings::get_instance();
+	if ( $form_settings->is_logged_only( $form_id ) && ! is_user_logged_in() ) {
+		// Return empty string - don't show form to non-logged-in users
+		return '';
+	}
+
+	// Get form embed URL
+	$embed_url = $this->get_form_embed_url( $form_id );		if ( ! $embed_url ) {
 			return $this->render_error( __( 'Unable to load form. Please check your GoHighLevel connection.', 'ghl-crm-integration' ) );
 		}
 
-		// Sanitize dimensions
-		$width  = $this->sanitize_dimension( $atts['width'] );
-		$height = $atts['height'] === 'auto' ? 'auto' : $this->sanitize_dimension( $atts['height'] );
+	// Sanitize dimensions
+	$width  = $this->sanitize_dimension( $atts['width'] );
+	$height = $atts['height'] === 'auto' ? 'auto' : $this->sanitize_dimension( $atts['height'] );
 
-		// Generate unique ID for this form instance
-		$wrapper_id = 'ghl-form-' . sanitize_key( $atts['id'] ) . '-' . wp_rand( 1000, 9999 );
-
-		// Build iframe HTML with loading state
+	// Generate unique ID for this form instance
+	$wrapper_id = 'ghl-form-' . sanitize_key( $form_id ) . '-' . wp_rand( 1000, 9999 );		// Build iframe HTML with loading state
 		ob_start();
 		?>
 		<div id="<?php echo esc_attr( $wrapper_id ); ?>" class="ghl-form-wrapper" style="width: <?php echo esc_attr( $width ); ?>; max-width: 100%;" data-loading="true">

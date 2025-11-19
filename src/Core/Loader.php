@@ -82,6 +82,10 @@ class Loader {
 			'core.conditional_menus'                   => \GHL_CRM\Core\ConditionalMenus::class,
 			'core.family_manager'                      => \GHL_CRM\Core\FamilyManager::class,
 			'core.notifications'                       => \GHL_CRM\Core\NotificationManager::class,
+			'core.form_settings'                       => \GHL_CRM\Core\FormSettings::class,
+
+			// need more testing, deactivated fo now
+			// 'core.onboarding'                          => \GHL_CRM\Core\OnboardingTour::class,
 
 			// Admin UI components
 			'admin.ui'                                 => \GHL_CRM\Admin\AdminUI::class,

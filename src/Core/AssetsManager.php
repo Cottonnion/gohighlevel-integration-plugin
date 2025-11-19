@@ -195,6 +195,71 @@ class AssetsManager {
 			true
 		);
 
+		// Onboarding Tour assets (Intro.js library + custom tour)
+		$this->add_admin_asset(
+			'ghl-crm-intro-css',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'intro.min.css',
+			[],
+			[],
+			'7.2.0'
+		);
+
+		$this->add_admin_asset(
+			'ghl-crm-onboarding-css',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'onboarding-tour.css',
+			[ 'ghl-crm-intro-css' ],
+			[],
+			'1.0.0'
+		);
+
+		$this->add_admin_asset(
+			'ghl-crm-intro-js',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'intro.min.js',
+			[],
+			[],
+			'7.2.0',
+			true
+		);
+
+		$onboarding_tour = OnboardingTour::get_instance();
+		$this->add_admin_asset(
+			'ghl-crm-onboarding-js',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'onboarding-tour.js',
+			[ 'jquery', 'ghl-crm-intro-js' ],
+			[
+				'ajaxUrl'           => admin_url( 'admin-ajax.php' ),
+				'nonce'             => wp_create_nonce( 'ghl_crm_nonce' ),
+				'shouldShow'        => (bool) $onboarding_tour->should_show_tour(),
+				'whiteLabelDomain'  => $white_label_domain,
+				'strings'           => [
+					'welcome_title'        => __( 'Welcome to GoHighLevel CRM Integration!', 'ghl-crm-integration' ),
+					'welcome_content'      => __( 'Let\'s take a quick tour to help you get started. This will only take a minute!', 'ghl-crm-integration' ),
+					'connection_title'     => __( 'Connect to GoHighLevel', 'ghl-crm-integration' ),
+					'connection_content'   => __( 'First, connect your GoHighLevel account using OAuth or API credentials. You can also configure your white label domain here if you have one.', 'ghl-crm-integration' ),
+					'white_label_label'    => __( 'White Label Domain (Optional)', 'ghl-crm-integration' ),
+					'white_label_help'     => __( 'If you have a GoHighLevel white label domain, enter it here (e.g., https://app.yourdomain.com)', 'ghl-crm-integration' ),
+					'integrations_title'   => __( 'Enable Integrations', 'ghl-crm-integration' ),
+					'integrations_content' => __( 'Choose which WordPress features to sync with GoHighLevel: WooCommerce orders, BuddyBoss groups, LearnDash courses, and more.', 'ghl-crm-integration' ),
+					'field_mapping_title'  => __( 'Map Your Fields', 'ghl-crm-integration' ),
+					'field_mapping_content' => __( 'Map WordPress user fields to GoHighLevel contact fields. The plugin provides smart suggestions to make this easy.', 'ghl-crm-integration' ),
+					'sync_title'           => __( 'Monitor Sync Activity', 'ghl-crm-integration' ),
+					'sync_content'         => __( 'View real-time sync logs, track errors, and monitor the health of your integration.', 'ghl-crm-integration' ),
+					'settings_title'       => __( 'Advanced Settings', 'ghl-crm-integration' ),
+					'settings_content'     => __( 'Configure advanced options like rate limiting, caching, debug mode, and custom object mappings.', 'ghl-crm-integration' ),
+					'complete_title'       => __( 'You\'re All Set!', 'ghl-crm-integration' ),
+					'complete_content'     => __( 'You can always restart this tour from the Help menu. Ready to connect your GoHighLevel account?', 'ghl-crm-integration' ),
+					'tour_completed'       => __( 'Onboarding completed! Welcome aboard.', 'ghl-crm-integration' ),
+					'tour_skipped'         => __( 'Onboarding skipped. You can restart it anytime from the Help menu.', 'ghl-crm-integration' ),
+				],
+			],
+			'1.0.0',
+			true
+		);
+
 		// Dashboard assets (loads on SPA page)
 		$this->add_admin_asset(
 			'ghl-crm-dashboard-css',
@@ -631,6 +696,7 @@ class AssetsManager {
 				'ajaxUrl'          => admin_url( 'admin-ajax.php' ),
 				'nonce'            => wp_create_nonce( 'ghl_crm_forms_nonce' ),
 				'whiteLabelDomain' => $white_label_domain,
+				'formSettings'     => $this->get_all_form_settings(),
 				'strings'          => [
 					'errorLoad'        => __( 'Failed to load forms', 'ghl-crm-integration' ),
 					'ajaxError'        => __( 'AJAX error: ', 'ghl-crm-integration' ),
@@ -844,9 +910,36 @@ class AssetsManager {
 			GHL_CRM_VERSION,
 			true
 		);
-	}
 
-	/**
+	// GHL Form Auto-fill (experimental - tests URL parameter pre-filling)
+	$user_data = $this->get_current_user_data_for_autofill();
+	$form_settings_manager = \GHL_CRM\Core\FormSettings::get_instance();
+	$all_form_settings = $form_settings_manager->get_all_settings();
+	
+	// Resolve custom parameters for each form
+	foreach ( $all_form_settings as $form_id => $form_config ) {
+		if ( isset( $form_config['custom_params'] ) && is_array( $form_config['custom_params'] ) ) {
+			$all_form_settings[ $form_id ]['resolved_params'] = $form_settings_manager->resolve_custom_params( $form_config['custom_params'] );
+		}
+	}
+	
+	// Get white label domain
+	$settings = SettingsManager::get_instance()->get_settings_array();
+	$white_label_domain = $settings['ghl_white_label_domain'] ?? '';
+	
+	$this->add_public_asset(
+		'ghl-form-autofill',
+		'form-autofill.js',
+		[],
+		[
+			'userData'         => $user_data,
+			'formSettings'     => $all_form_settings,
+			'whiteLabelDomain' => $white_label_domain,
+		],
+		GHL_CRM_VERSION,
+		true
+	);
+}	/**
 	 * Enqueue public/frontend assets
 	 *
 	 * @return void
@@ -866,6 +959,77 @@ class AssetsManager {
 	public function remove_tinymce_branding( array $options ): array {
 		$options['branding'] = false;
 		return $options;
+	}
+
+	/**
+	 * Get current logged-in user data for form auto-fill
+	 *
+	 * @return array User data array with common fields
+	 */
+	private function get_current_user_data_for_autofill(): array {
+		if ( ! is_user_logged_in() ) {
+			return [];
+		}
+
+		$user = wp_get_current_user();
+		
+		// Build user data array with common form fields
+		$user_data = [
+			'email'        => $user->user_email,
+			'first_name'   => $user->first_name,
+			'last_name'    => $user->last_name,
+			'name'         => trim( $user->first_name . ' ' . $user->last_name ),
+			'user_login'   => $user->user_login,
+			'display_name' => $user->display_name,
+		];
+
+		// Get phone from user meta (common meta keys)
+		$phone = get_user_meta( $user->ID, 'billing_phone', true );
+		if ( empty( $phone ) ) {
+			$phone = get_user_meta( $user->ID, 'phone', true );
+		}
+		if ( ! empty( $phone ) ) {
+			$user_data['phone'] = $phone;
+			// Also add common variations
+			$user_data['Phone'] = $phone;
+			$user_data['phone_number'] = $phone;
+		}
+
+		// Get additional common fields from user meta
+		$meta_mappings = [
+			'billing_first_name' => 'billing_first_name',
+			'billing_last_name'  => 'billing_last_name',
+			'billing_company'    => 'company',
+			'billing_address_1'  => 'address',
+			'billing_city'       => 'city',
+			'billing_state'      => 'state',
+			'billing_postcode'   => 'zip',
+			'billing_country'    => 'country',
+		];
+
+		foreach ( $meta_mappings as $meta_key => $field_name ) {
+			$value = get_user_meta( $user->ID, $meta_key, true );
+			if ( ! empty( $value ) ) {
+				$user_data[ $field_name ] = $value;
+			}
+		}
+
+		// Filter empty values
+		$user_data = array_filter( $user_data, function( $value ) {
+			return ! empty( $value );
+		} );
+
+		return $user_data;
+	}
+
+	/**
+	 * Get all form settings from FormSettings class
+	 *
+	 * @return array All form settings
+	 */
+	private function get_all_form_settings(): array {
+		$form_settings = \GHL_CRM\Core\FormSettings::get_instance();
+		return $form_settings->get_all_settings();
 	}
 
 	/**

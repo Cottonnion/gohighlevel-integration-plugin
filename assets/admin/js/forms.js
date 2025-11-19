@@ -11,6 +11,12 @@
 	const formsData = window.ghl_crm_forms_js_data || {};
 	const strings = formsData.strings || {};
 	const whiteLabelDomain = formsData.whiteLabelDomain || '';
+	const ajaxUrl = formsData.ajaxUrl || '';
+	const nonce = formsData.nonce || '';
+	const formSettings = formsData.formSettings || {};
+
+	// Debug: Log form settings
+	console.log('Form Settings loaded:', formSettings);
 
 	const FormsManager = {
 		initialized: false,
@@ -124,16 +130,17 @@
 						</td>
 						<td class="ghl-table-col-actions">
 							<div class="ghl-table-actions">
-								<button type="button" class="ghl-button ghl-button-secondary ghl-button-small ghl-copy-shortcode" data-shortcode="[ghl_form id=&quot;${form.id}&quot;]">
+								<button type="button" class="ghl-form-icon-btn ghl-copy-shortcode" data-shortcode="[ghl_form id=&quot;${form.id}&quot;]" title="${strings.copy || 'Copy shortcode'}">
 									<span class="dashicons dashicons-clipboard"></span>
-									${strings.copy || 'Copy'}
 								</button>
 								${form.widgetUrl ? `
-									<a href="${this.escapeHtml(form.widgetUrl)}" target="_blank" rel="noopener noreferrer" class="ghl-button ghl-button-secondary ghl-button-small">
+									<a href="${this.escapeHtml(form.widgetUrl)}" target="_blank" rel="noopener noreferrer" class="ghl-form-icon-btn" title="${strings.preview || 'Preview form'}">
 										<span class="dashicons dashicons-visibility"></span>
-										${strings.preview || 'Preview'}
 									</a>
 								` : ''}
+								<button type="button" class="ghl-form-icon-btn ghl-form-settings-btn" data-form-id="${form.id}" title="${strings.settings || 'Form settings'}">
+									<span class="dashicons dashicons-admin-generic"></span>
+								</button>
 							</div>
 						</td>
 					</tr>
@@ -157,6 +164,12 @@
 			$('.ghl-shortcode-box').on('click', function() {
 				const text = $(this).text().trim();
 				FormsManager.copyToClipboard(text, $(this));
+			});
+
+			// Bind form settings button events
+			$('.ghl-form-settings-btn').on('click', function() {
+				const formId = $(this).data('form-id');
+				FormsManager.showFormSettings(formId);
 			});
 		},
 
@@ -210,6 +223,305 @@
 				"'": '&#039;'
 			};
 			return text.replace(/[&<>"']/g, m => map[m]);
+	},
+
+	showFormSettings: function(formId) {
+		// Get existing settings from localized data
+		const existingSettings = formSettings[formId] || {};
+		
+		const autofillEnabled = existingSettings.autofill_enabled !== false; // Default to true
+		const loggedOnly = existingSettings.logged_only === true; // Default to false
+		const customParams = existingSettings.custom_params || [];
+		
+		// Build custom params HTML
+		let customParamsHtml = '';
+		if (customParams.length > 0) {
+			customParams.forEach((param, index) => {
+				customParamsHtml += this.buildCustomParamRow(index, param.key, param.value);
+			});
+		} else {
+			customParamsHtml = this.buildCustomParamRow(0, '', '');
+		}
+		
+		// Create settings panel HTML
+		const panelHtml = `
+			<div class="ghl-form-settings-panel" data-form-id="${formId}">
+				<div class="ghl-form-settings-overlay"></div>
+				<div class="ghl-form-settings-sidebar">
+					<div class="ghl-settings-header">
+						<h2>
+							<span class="dashicons dashicons-admin-generic"></span>
+								Form Settings
+							</h2>
+							<button type="button" class="ghl-settings-close">
+								<span class="dashicons dashicons-no-alt"></span>
+							</button>
+						</div>
+						
+						<div class="ghl-settings-body">
+							<div class="ghl-settings-section ghl-settings-card">
+								<div class="ghl-form-builder">
+									<!-- Auto-fill Settings -->
+									<div class="ghl-settings-group">
+										<h3>
+											<span class="dashicons dashicons-admin-users"></span>
+											Auto-fill Settings
+										</h3>
+										<p class="description">Control how this form behaves for logged-in users</p>
+										
+										<div class="ghl-form-item">
+											<div class="ghl-form-item-content">
+												<label class="ghl-checkbox ${autofillEnabled ? 'is-checked' : ''}">
+													<input type="checkbox" 
+														   class="ghl-checkbox-original"
+														   id="ghl-form-autofill-${formId}" 
+														   name="autofill_enabled" 
+														   value="1" 
+														   ${autofillEnabled ? 'checked' : ''}>
+													<span class="ghl-checkbox-input ${autofillEnabled ? 'is-checked' : ''}">
+														<span class="ghl-checkbox-inner"></span>
+													</span>
+													<span class="ghl-checkbox-label">
+														Enable Auto-fill for Logged-in Users
+														<span class="ghl-tooltip-icon" data-ghl-tooltip="Automatically pre-fill form fields with user data (name, email, phone, address, etc.) when a logged-in user views this form.">?</span>
+													</span>
+												</label>
+											</div>
+										</div>
+										
+										<div class="ghl-form-item">
+											<div class="ghl-form-item-content">
+												<label class="ghl-checkbox ${loggedOnly ? 'is-checked' : ''}">
+													<input type="checkbox" 
+														   class="ghl-checkbox-original"
+														   id="ghl-form-logged-only-${formId}" 
+														   name="logged_only" 
+														   value="1"
+														   ${loggedOnly ? 'checked' : ''}>
+													<span class="ghl-checkbox-input ${loggedOnly ? 'is-checked' : ''}">
+														<span class="ghl-checkbox-inner"></span>
+													</span>
+													<span class="ghl-checkbox-label">
+														Show Form to Logged-in Users Only
+														<span class="ghl-tooltip-icon" data-ghl-tooltip="Hide this form from visitors who are not logged in.">?</span>
+													</span>
+												</label>
+											</div>
+										</div>
+									</div>
+									
+									<!-- Custom URL Parameters -->
+									<div class="ghl-settings-group">
+										<h3>
+											<span class="dashicons dashicons-admin-settings"></span>
+											Custom URL Parameters
+										</h3>
+										<p class="description">Add custom parameters to the form URL using dynamic variables</p>
+										
+										<div class="ghl-custom-params-container" id="ghl-custom-params-${formId}">
+											${customParamsHtml}
+										</div>
+										<div class="ghl-form-item">
+											<button type="button" class="ghl-button ghl-button-secondary ghl-add-custom-param">
+												<span class="dashicons dashicons-plus-alt"></span>
+												Add Parameter
+											</button>
+										</div>
+										<div class="ghl-form-item">
+											<div class="ghl-available-variables">
+												<h4>Available Variables:</h4>
+												<ul>
+													<li><code>{user_email}</code> - User's email address</li>
+													<li><code>{user_first_name}</code> - User's first name</li>
+													<li><code>{user_last_name}</code> - User's last name</li>
+													<li><code>{user_display_name}</code> - User's display name</li>
+													<li><code>{user_login}</code> - User's login username</li>
+													<li><code>{user_id}</code> - User's ID</li>
+													<li><code>{user_role}</code> - User's role</li>
+													<li><code>{site_url}</code> - Site URL</li>
+													<li><code>{site_name}</code> - Site name</li>
+													<li><code>{current_url}</code> - Current page URL</li>
+													<li><code>{current_title}</code> - Current page title</li>
+													<li><code>{meta:field_name}</code> - User meta field value</li>
+												</ul>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						
+						<div class="ghl-settings-footer">
+							<button type="button" class="ghl-button ghl-button-primary ghl-save-form-settings">
+								<span class="dashicons dashicons-yes"></span>
+								Save Settings
+							</button>
+							<button type="button" class="ghl-button ghl-button-secondary ghl-settings-close">
+								Cancel
+							</button>
+						</div>
+					</div>
+				</div>
+			`;
+			
+			// Remove any existing panel
+			$('.ghl-form-settings-panel').remove();
+			
+			// Add panel to body
+			$('body').append(panelHtml);
+			
+			// Initialize tooltips
+			if (window.initializeTooltips) {
+				window.initializeTooltips();
+			}
+			
+			// Show panel with animation
+			setTimeout(() => {
+				$('.ghl-form-settings-panel').addClass('is-open');
+			}, 10);
+			
+			// Bind close events
+			$('.ghl-settings-close, .ghl-form-settings-overlay').on('click', function() {
+				FormsManager.closeFormSettings();
+			});
+			
+			// Bind checkbox toggle
+			$('.ghl-checkbox').on('click', function() {
+				const $checkbox = $(this).find('.ghl-checkbox-original');
+				const $input = $(this).find('.ghl-checkbox-input');
+				
+				$checkbox.prop('checked', !$checkbox.prop('checked'));
+				
+				if ($checkbox.prop('checked')) {
+					$(this).addClass('is-checked');
+					$input.addClass('is-checked');
+				} else {
+					$(this).removeClass('is-checked');
+					$input.removeClass('is-checked');
+				}
+		});
+		
+		// Bind add parameter button
+		$('.ghl-add-custom-param').on('click', function() {
+			const $container = $(`#ghl-custom-params-${formId}`);
+			const index = $container.find('.ghl-custom-param-row').length;
+			const rowHtml = FormsManager.buildCustomParamRow(index, '', '');
+			$container.append(rowHtml);
+			FormsManager.bindCustomParamEvents();
+		});
+		
+		// Bind remove parameter events
+		this.bindCustomParamEvents();
+		
+		// Bind save button
+		$('.ghl-save-form-settings').on('click', function() {
+			const $btn = $(this);
+			
+			// Collect custom parameters
+			const custom_params = [];
+			$(`#ghl-custom-params-${formId} .ghl-custom-param-row`).each(function() {
+				const key = $(this).find('.ghl-param-key').val().trim();
+				const value = $(this).find('.ghl-param-value').val().trim();
+				if (key && value) {
+					custom_params.push({ key, value });
+				}
+			});
+			
+			const settings = {
+				autofill_enabled: $(`#ghl-form-autofill-${formId}`).prop('checked'),
+				logged_only: $(`#ghl-form-logged-only-${formId}`).prop('checked'),
+				custom_params: custom_params
+			};
+			
+		
+		// Disable button during save
+		$btn.prop('disabled', true).text('Saving...');
+		
+		// Save via AJAX
+		$.ajax({
+			url: ajaxUrl,
+			type: 'POST',
+			data: {
+				action: 'ghl_save_form_settings',
+				nonce: nonce,
+				form_id: formId,
+				settings: settings
+			},
+			success: function(response) {
+				if (response.success) {
+					// Update local reference
+					formSettings[formId] = settings;
+					
+					// Show success message
+					FormsManager.showSuccessToast('Form settings saved successfully');						// Close panel
+						FormsManager.closeFormSettings();
+					} else {
+						alert('Error: ' + (response.data || 'Unknown error'));
+						$btn.prop('disabled', false).html('<span class="dashicons dashicons-yes"></span> Save Settings');
+					}
+				},
+				error: function(xhr, status, error) {
+					alert('AJAX Error: ' + error);
+					$btn.prop('disabled', false).html('<span class="dashicons dashicons-yes"></span> Save Settings');
+				}
+			});
+		});
+	},
+	
+	buildCustomParamRow: function(index, key, value) {
+		key = key || '';
+		value = value || '';
+		
+		return `
+			<div class="ghl-custom-param-row ghl-form-item">
+				<div class="ghl-param-inputs">
+					<input type="text" 
+						   class="ghl-param-key" 
+						   placeholder="Parameter name (e.g., source)" 
+						   value="${this.escapeHtml(key)}">
+					<input type="text" 
+						   class="ghl-param-value" 
+						   placeholder="Value (e.g., {user_email})" 
+						   value="${this.escapeHtml(value)}">
+					<button type="button" class="ghl-button ghl-button-danger ghl-remove-custom-param" title="Remove parameter">
+						<span class="dashicons dashicons-trash"></span>
+					</button>
+				</div>
+			</div>
+		`;
+	},
+	
+	bindCustomParamEvents: function() {
+		$('.ghl-remove-custom-param').off('click').on('click', function() {
+			$(this).closest('.ghl-custom-param-row').remove();
+		});
+	},
+	
+	closeFormSettings: function() {
+			$('.ghl-form-settings-panel').removeClass('is-open');
+			setTimeout(() => {
+				$('.ghl-form-settings-panel').remove();
+			}, 300);
+		},
+
+		showSuccessToast: function(message) {
+			const toast = $('<div class="ghl-toast ghl-toast-success">' +
+				'<span class="dashicons dashicons-yes-alt"></span> ' +
+				message +
+				'</div>');
+			
+			$('body').append(toast);
+			
+			setTimeout(() => {
+				toast.addClass('is-visible');
+			}, 10);
+			
+			setTimeout(() => {
+				toast.removeClass('is-visible');
+				setTimeout(() => {
+					toast.remove();
+				}, 300);
+			}, 2000);
 		}
 	};
 
