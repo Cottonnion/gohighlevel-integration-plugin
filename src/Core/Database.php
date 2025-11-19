@@ -21,7 +21,7 @@ class Database {
 	 *
 	 * @var string
 	 */
-	private const DB_VERSION = '1.6.1';
+	private const DB_VERSION = '1.9.1';
 
 	/**
 	 * Singleton instance
@@ -229,6 +229,11 @@ class Database {
 			$this->add_performance_indexes();
 		}
 
+		// Remove enhanced logging columns if they exist (cleanup from reverted feature)
+		if ( version_compare( $from_version, '1.7.0', '>=' ) ) {
+			$this->remove_enhanced_logging_columns();
+		}
+
 		// Create/update tables with new schema
 		$this->create_tables();
 	}
@@ -294,6 +299,44 @@ class Database {
 		// Optimize: "WHERE sync_type = X AND item_id = Y AND site_id = Z"
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Adding performance indexes.
 		$wpdb->query( "ALTER TABLE {$log_table} ADD KEY IF NOT EXISTS sync_item_site (sync_type, item_id, site_id)" );
+	}
+
+	/**
+	 * Remove enhanced logging columns (cleanup from reverted feature)
+	 *
+	 * @return void
+	 */
+	private function remove_enhanced_logging_columns(): void {
+		global $wpdb;
+
+		$log_table = $wpdb->prefix . 'ghl_sync_log';
+
+		// Check if columns exist before trying to drop them
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Schema inspection required.
+		$columns = $wpdb->get_results( "SHOW COLUMNS FROM {$log_table}" );
+		$column_names = wp_list_pluck( $columns, 'Field' );
+
+		// Drop log_level column if it exists
+		if ( in_array( 'log_level', $column_names, true ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Removing reverted feature columns.
+			$wpdb->query( "ALTER TABLE {$log_table} DROP COLUMN log_level" );
+		}
+
+		// Drop request_data column if it exists
+		if ( in_array( 'request_data', $column_names, true ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Removing reverted feature columns.
+			$wpdb->query( "ALTER TABLE {$log_table} DROP COLUMN request_data" );
+		}
+
+		// Drop duration_ms column if it exists
+		if ( in_array( 'duration_ms', $column_names, true ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Removing reverted feature columns.
+			$wpdb->query( "ALTER TABLE {$log_table} DROP COLUMN duration_ms" );
+		}
+
+		// Drop the log_level index if it exists
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Removing reverted feature index.
+		$wpdb->query( "ALTER TABLE {$log_table} DROP INDEX IF EXISTS log_level_created" );
 	}
 
 	/**
