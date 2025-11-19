@@ -299,87 +299,34 @@ class LearnDashSync {
 		$quiz_id = 0;
 		$score   = null;
 
-		// Log the complete data array for debugging
-		error_log( '[GHL LearnDash] Quiz completion hook triggered' );
-		error_log( '[GHL LearnDash] Raw data keys: ' . implode( ', ', array_keys( $data ) ) );
-		error_log( '[GHL LearnDash] Complete data dump: ' . print_r( $data, true ) );
-
 		// Extract user ID - quiz hook passes user as second parameter
 		if ( $user instanceof WP_User ) {
 			$user_id = (int) $user->ID;
-			error_log( '[GHL LearnDash] User ID from WP_User parameter: ' . $user_id );
 		} elseif ( isset( $data['user'] ) && $data['user'] instanceof WP_User ) {
 			$user_id = (int) $data['user']->ID;
-			error_log( '[GHL LearnDash] User ID from data[user]: ' . $user_id );
 		} elseif ( isset( $data['user_id'] ) ) {
 			$user_id = (int) $data['user_id'];
-			error_log( '[GHL LearnDash] User ID from data[user_id]: ' . $user_id );
-		}
-
-		// Log what we have for quiz identification
-		error_log( '[GHL LearnDash] Checking quiz field - isset: ' . ( isset( $data['quiz'] ) ? 'YES' : 'NO' ) );
-		if ( isset( $data['quiz'] ) ) {
-			error_log( '[GHL LearnDash] data[quiz] type: ' . gettype( $data['quiz'] ) );
-			error_log( '[GHL LearnDash] data[quiz] value: ' . print_r( $data['quiz'], true ) );
-		}
-
-		// Check for pro_quizid
-		if ( isset( $data['pro_quizid'] ) ) {
-			error_log( '[GHL LearnDash] data[pro_quizid]: ' . $data['pro_quizid'] );
 		}
 
 		// Extract quiz ID from post object or direct ID
 		if ( isset( $data['quiz'] ) && is_object( $data['quiz'] ) && isset( $data['quiz']->ID ) ) {
 			$quiz_id = (int) $data['quiz']->ID;
-			error_log( '[GHL LearnDash] Quiz ID from data[quiz]->ID: ' . $quiz_id );
 		} elseif ( isset( $data['quiz'] ) && is_numeric( $data['quiz'] ) ) {
 			$quiz_id = (int) $data['quiz'];
-			error_log( '[GHL LearnDash] Quiz ID from data[quiz] (numeric): ' . $quiz_id );
 		} elseif ( isset( $data['quiz_id'] ) ) {
 			$quiz_id = (int) $data['quiz_id'];
-			error_log( '[GHL LearnDash] Quiz ID from data[quiz_id]: ' . $quiz_id );
 		}
 
 		// Extract quiz score percentage (0-100)
 		if ( isset( $data['percentage'] ) ) {
 			$score = (float) $data['percentage'];
-			error_log( '[GHL LearnDash] Score from data[percentage]: ' . $score . '%' );
 		} elseif ( isset( $data['score'] ) ) {
 			$score = (float) $data['score'];
-			error_log( '[GHL LearnDash] Score from data[score]: ' . $score );
-		} elseif ( isset( $data['pass'] ) ) {
-			error_log( '[GHL LearnDash] Pass status found: ' . ( $data['pass'] ? 'PASSED' : 'FAILED' ) );
-		}
-
-		// Log additional useful quiz data
-		if ( isset( $data['points'] ) ) {
-			error_log( '[GHL LearnDash] Points earned: ' . $data['points'] );
-		}
-		if ( isset( $data['total_points'] ) ) {
-			error_log( '[GHL LearnDash] Total points: ' . $data['total_points'] );
-		}
-		if ( isset( $data['percentage'] ) && isset( $data['pass'] ) ) {
-			error_log( '[GHL LearnDash] Score: ' . $data['percentage'] . '% - ' . ( $data['pass'] ? 'PASSED' : 'FAILED' ) );
 		}
 
 		if ( $user_id <= 0 || $quiz_id <= 0 ) {
-			error_log( '[GHL LearnDash] ERROR: Invalid user_id (' . $user_id . ') or quiz_id (' . $quiz_id . ')' );
 			return;
 		}
-
-		// Get quiz title for logging
-		$quiz_title = get_the_title( $quiz_id );
-		$user_info  = get_userdata( $user_id );
-		$user_name  = $user_info ? $user_info->display_name : 'Unknown User';
-
-		error_log( sprintf(
-			'[GHL LearnDash] Quiz Completion - User: %s (ID: %d) | Quiz: %s (ID: %d) | Score: %s',
-			$user_name,
-			$user_id,
-			$quiz_title,
-			$quiz_id,
-			null !== $score ? $score . '%' : 'N/A'
-		) );
 
 		$this->queue_content_event( $user_id, $quiz_id, 'quiz', $score );
 	}
@@ -434,21 +381,11 @@ class LearnDashSync {
 			return;
 		}
 
-		error_log( sprintf(
-			'[GHL LearnDash] Resolving tags for %s (ID: %d) | Score: %s',
-			$type,
-			$content_id,
-			null !== $score ? $score . '%' : 'N/A'
-		) );
-
 		$tags = $this->resolve_content_tags( $content_id, $type, $score );
 
 		if ( empty( $tags ) ) {
-			error_log( '[GHL LearnDash] No tags to apply - skipping queue' );
 			return;
 		}
-
-		error_log( '[GHL LearnDash] Tags to apply: ' . implode( ', ', $tags ) );
 
 		$payload = [
 			'user_id'    => $user_id,
@@ -461,10 +398,8 @@ class LearnDashSync {
 		// Include score in payload for logging/analytics
 		if ( 'quiz' === $type && null !== $score ) {
 			$payload['quiz_score'] = $score;
-			error_log( '[GHL LearnDash] Quiz score included in payload: ' . $score . '%' );
 		}
 
-		error_log( '[GHL LearnDash] Adding to queue: ' . $type . ' (ID: ' . $content_id . ')' );
 		$this->queue_manager->add_to_queue( $type, $content_id, 'sync_content_event', $payload );
 	}
 
@@ -511,18 +446,16 @@ class LearnDashSync {
 		if ( ! in_array( $item_type, [ 'lesson', 'topic', 'quiz' ], true ) ) {
 			return $handled;
 		}
-        error_log( 'Executing LearnDash content sync for item_type: ' . $item_type . ', action: ' . $action . ', item_id: ' . $item_id );
+
 		// Only handle content completion events
 		if ( 'sync_content_event' !== $action ) {
 			return $handled;
 		}
 
 		try {
-            error_log( 'Processing payload: ' . print_r( $payload, true ) );
 			return $this->process_content_payload( $payload );
 		} catch ( \Throwable $error ) {
 			do_action( 'ghl_crm_sync_error', 'learndash_content_queue_handler', $payload, $error );
-            error_log( 'Error in execute_learndash_content_sync: ' . $error->getMessage() );
 			return false;
 		}
 	}
@@ -844,27 +777,14 @@ class LearnDashSync {
 	private function resolve_score_threshold_tags( int $quiz_id, float $score ): array {
 		$thresholds = get_post_meta( $quiz_id, '_ghl_ld_quiz_score_thresholds', true );
 
-		error_log( sprintf(
-			'[GHL LearnDash] Checking score thresholds for quiz ID %d with score %.2f%%',
-			$quiz_id,
-			$score
-		) );
-
 		if ( empty( $thresholds ) || ! is_array( $thresholds ) ) {
-			error_log( '[GHL LearnDash] No score thresholds configured for this quiz' );
 			return [];
 		}
 
-		error_log( '[GHL LearnDash] Found ' . count( $thresholds ) . ' threshold(s) configured' );
-
 		$matched_tags = [];
-		$threshold_num = 0;
 
 		foreach ( $thresholds as $threshold ) {
-			$threshold_num++;
-
 			if ( ! is_array( $threshold ) ) {
-				error_log( '[GHL LearnDash] Threshold #' . $threshold_num . ' is invalid (not an array)' );
 				continue;
 			}
 
@@ -872,25 +792,12 @@ class LearnDashSync {
 			$max_score = isset( $threshold['max_score'] ) ? (float) $threshold['max_score'] : 100;
 			$tags      = isset( $threshold['tags'] ) ? $threshold['tags'] : [];
 
-			error_log( sprintf(
-				'[GHL LearnDash] Threshold #%d: Range %.0f%%-%.0f%%, Tags: %s',
-				$threshold_num,
-				$min_score,
-				$max_score,
-				is_array( $tags ) ? implode( ', ', $tags ) : 'none'
-			) );
-
 			// Check if score falls within this threshold range
 			if ( $score >= $min_score && $score <= $max_score ) {
-				error_log( '[GHL LearnDash] ✓ Score matches threshold #' . $threshold_num );
 				$normalized_tags = $this->normalize_tags( $tags );
 				$matched_tags    = array_merge( $matched_tags, $normalized_tags );
-			} else {
-				error_log( '[GHL LearnDash] ✗ Score does not match threshold #' . $threshold_num );
 			}
 		}
-
-		error_log( '[GHL LearnDash] Total matched tags from score thresholds: ' . count( $matched_tags ) );
 
 		return array_values( array_unique( $matched_tags ) );
 	}
