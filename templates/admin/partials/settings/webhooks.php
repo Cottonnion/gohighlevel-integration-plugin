@@ -63,7 +63,7 @@ $settings        = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_a
 			<?php endif; ?>
 
 			<p>
-				<button type="button" class="button button-secondary" id="ghl-test-webhook">
+				<button type="button" class="ghl-button ghl-button-secondary" id="ghl-test-webhook">
 					<span class="dashicons dashicons-admin-tools"></span>
 					<?php esc_html_e( 'Test Webhook Endpoint', 'ghl-crm-integration' ); ?>
 				</button>
@@ -93,7 +93,7 @@ $settings        = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_a
 					readonly
 					style="flex: 1;"
 				/>
-				<button type="button" class="button button-secondary" id="copy-webhook-url">
+				<button type="button" class="ghl-button ghl-button-secondary" id="copy-webhook-url">
 					<span class="dashicons dashicons-clipboard"></span>
 					<?php esc_html_e( 'Copy', 'ghl-crm-integration' ); ?>
 				</button>
@@ -135,7 +135,7 @@ $settings        = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_a
 			<div style="margin: 15px 0;">
 				<h5 style="margin-bottom: 5px;">
 					<?php esc_html_e( 'For Contact Created/Updated:', 'ghl-crm-integration' ); ?>
-					<button type="button" class="button button-small" onclick="copyJsonTemplate('contact-create')">
+					<button type="button" class="ghl-button button-small" onclick="copyJsonTemplate('contact-create')">
 						<span class="dashicons dashicons-clipboard"></span> <?php esc_html_e( 'Copy', 'ghl-crm-integration' ); ?>
 					</button>
 				</h5>
