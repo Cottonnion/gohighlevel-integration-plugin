@@ -897,21 +897,286 @@
 		width: 95%;
 		max-height: 95vh;
 	}
+/* Responsive Styles */
+@media (max-width: 1024px) {
+	.ghl-forms-container {
+		max-width: 100%;
+		padding: 0 10px;
+	}
+	
+	.ghl-shortcode-box {
+		max-width: 250px;
+	}
+}
 
-	.ghl-modal-header,
+@media (max-width: 768px) {
+	/* Container */
+	.ghl-forms-container {
+		margin: 10px 0;
+		padding: 0;
+	}
+
+	/* Info Banner */
+	.ghl-info-banner {
+		flex-direction: row;
+		align-items: flex-start;
+		padding: 12px;
+		font-size: 13px;
+	}
+
+	.ghl-info-banner .dashicons {
+		flex-shrink: 0;
+	}
+
+	.ghl-info-banner-content strong {
+		font-size: 13px;
+	}
+
+	.ghl-info-banner-content p {
+		font-size: 12px;
+		line-height: 1.5;
+	}
+
+	/* Error Banner */
+	.ghl-error-banner {
+		padding: 12px;
+		font-size: 13px;
+	}
+
+	/* Toolbar */
+	.ghl-forms-toolbar {
+		justify-content: stretch;
+		margin-bottom: 16px;
+	}
+
+	.ghl-forms-toolbar .ghl-button {
+		width: 100%;
+		justify-content: center;
+		padding: 12px 16px;
+	}
+
+	/* Forms Table Wrapper */
+	.ghl-forms-table-wrapper {
+		border: none;
+		box-shadow: none;
+		background: transparent;
+		overflow: visible;
+	}
+
+	/* Hide table structure on mobile */
+	.ghl-forms-table,
+	.ghl-forms-table thead,
+	.ghl-forms-table tbody {
+		display: block;
+		width: 100%;
+	}
+
+	.ghl-forms-table thead {
+		display: none;
+	}
+
+	/* Convert each row into a card */
+	.ghl-forms-table tbody tr {
+		display: block;
+		margin-bottom: 16px;
+		border: 1px solid var(--ghl-border-primary);
+		border-radius: 8px;
+		padding: 0;
+		background: var(--ghl-bg-primary);
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+		overflow: hidden;
+	}
+
+	.ghl-forms-table tbody tr:hover {
+		background: var(--ghl-bg-primary);
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+	}
+
+	.ghl-forms-table tbody tr:last-child {
+		margin-bottom: 0;
+	}
+
+	/* Table cells as card sections */
+	.ghl-forms-table td {
+		display: block;
+		width: 100%;
+		padding: 14px 16px;
+		border: none;
+		border-bottom: 1px solid var(--ghl-border-primary);
+	}
+
+	.ghl-forms-table td:last-child {
+		border-bottom: none;
+		background: var(--ghl-bg-secondary);
+	}
+
+	/* Mobile labels */
+	.ghl-forms-table td::before {
+		content: attr(data-label);
+		display: block;
+		font-weight: 600;
+		font-size: 11px;
+		color: var(--ghl-text-secondary);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		margin-bottom: 6px;
+	}
+
+	/* Form Name - Larger and prominent */
+	.ghl-table-col-name {
+		background: var(--ghl-bg-secondary);
+		padding: 16px !important;
+	}
+
+	.ghl-table-col-name::before {
+		display: none;
+	}
+
+	.ghl-table-col-name strong {
+		font-size: 16px;
+		font-weight: 600;
+		color: var(--ghl-text-primary);
+		line-height: 1.4;
+	}
+
+	/* Form ID */
+	.ghl-table-col-id code {
+		display: inline-block;
+		word-break: break-all;
+		white-space: normal;
+		font-size: 11px;
+		line-height: 1.5;
+	}
+
+	/* Submissions */
+	.ghl-table-col-submissions {
+		font-size: 14px;
+		font-weight: 500;
+	}
+
+	/* Shortcode */
+	.ghl-table-col-shortcode {
+		max-width: 100%;
+	}
+
+	.ghl-shortcode-box {
+		max-width: 100%;
+		width: 100%;
+		padding: 10px 12px;
+		font-size: 11px;
+		white-space: normal;
+		word-break: break-all;
+		line-height: 1.4;
+		text-align: left;
+	}
+
+	/* Actions */
+	.ghl-table-col-actions {
+		text-align: center;
+		padding: 12px 16px !important;
+	}
+
+	.ghl-table-col-actions::before {
+		display: none;
+	}
+
+	.ghl-table-actions {
+		display: flex;
+		flex-direction: row;
+		gap: 8px;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.ghl-table-actions .ghl-form-icon-btn {
+		flex: 1;
+		min-width: 44px;
+		height: 44px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.ghl-form-icon-btn .dashicons {
+		font-size: 18px;
+		width: 18px;
+		height: 18px;
+	}
+
+	/* Empty state */
+	.ghl-forms-empty {
+		padding: 60px 20px;
+	}
+
+	.ghl-forms-empty .dashicons {
+		font-size: 60px;
+		width: 60px;
+		height: 60px;
+	}
+
+	.ghl-forms-empty h3 {
+		font-size: 16px;
+	}
+
+	.ghl-forms-empty p {
+		font-size: 13px;
+		max-width: 100%;
+	}
+
+	/* Loading state */
+	.ghl-loading-state {
+		padding: 40px 20px;
+	}
+
+	/* Modal adjustments */
+	.ghl-modal {
+		padding: 10px;
+	}
+
+	.ghl-modal-content {
+		max-width: 100%;
+		margin: 20px auto;
+		border-radius: 8px;
+	}
+
+	.ghl-modal-header {
+		flex-wrap: wrap;
+		padding: 16px;
+	}
+
+	.ghl-modal-close {
+		position: absolute;
+		top: 12px;
+		right: 12px;
+	}
+
+	.ghl-modal-title {
+		font-size: 18px;
+		padding-right: 40px;
+	}
+
 	.ghl-modal-body,
 	.ghl-modal-footer {
 		padding: 16px;
 	}
 
 	.ghl-form-settings-section {
-		margin-bottom: 24px;
-		padding-bottom: 24px;
+		margin-bottom: 20px;
+		padding-bottom: 20px;
 	}
 	
 	.ghl-form-settings-sidebar {
-		max-width: 100%;
+		position: fixed;
+		top: 0;
 		right: -100%;
+		max-width: 100%;
+		width: 100%;
+		height: 100%;
+		z-index: 999999;
+	}
+
+	.ghl-form-settings-sidebar.open {
+		right: 0;
 	}
 	
 	.ghl-settings-body {
@@ -929,6 +1194,7 @@
 	.ghl-param-inputs {
 		flex-direction: column;
 		align-items: stretch;
+		gap: 8px;
 	}
 	
 	.ghl-param-inputs input[type="text"] {
@@ -937,15 +1203,84 @@
 	
 	.ghl-param-inputs .ghl-param-key {
 		max-width: 100%;
+		width: 100%;
 	}
 	
 	.ghl-remove-custom-param {
 		width: 100%;
+		margin-top: 4px;
+	}
+}
+
+@media (max-width: 480px) {
+	/* Extra small screens */
+	.ghl-forms-container {
+		padding: 0;
 	}
 
-	.ghl-form-icon-btn {
-		width: 28px;
-		height: 28px;
+	.ghl-info-banner,
+	.ghl-error-banner {
+		padding: 10px;
+		font-size: 12px;
+	}
+
+	.ghl-info-banner .dashicons,
+	.ghl-error-banner .dashicons {
+		font-size: 20px;
+		width: 20px;
+		height: 20px;
+	}
+
+	.ghl-info-banner-content strong {
+		font-size: 12px;
+	}
+
+	.ghl-info-banner-content p {
+		font-size: 11px;
+	}
+
+	.ghl-forms-toolbar .ghl-button {
+		padding: 10px 14px;
+		font-size: 13px;
+	}
+
+	.ghl-forms-table tbody tr {
+		margin-bottom: 12px;
+	}
+
+	.ghl-forms-table td {
+		padding: 12px 14px;
+	}
+
+	.ghl-table-col-name {
+		padding: 14px !important;
+	}
+
+	.ghl-table-col-name strong {
+		font-size: 15px;
+	}
+
+	.ghl-forms-table td::before {
+		font-size: 10px;
+		margin-bottom: 5px;
+	}
+
+	.ghl-table-col-id code {
+		font-size: 10px;
+	}
+
+	.ghl-shortcode-box {
+		font-size: 10px;
+		padding: 8px 10px;
+	}
+
+	.ghl-table-actions {
+		gap: 6px;
+	}
+
+	.ghl-table-actions .ghl-form-icon-btn {
+		min-width: 40px;
+		height: 40px;
 	}
 
 	.ghl-form-icon-btn .dashicons {
@@ -953,4 +1288,38 @@
 		width: 16px;
 		height: 16px;
 	}
+
+	.ghl-forms-empty {
+		padding: 40px 16px;
+	}
+
+	.ghl-forms-empty .dashicons {
+		font-size: 50px;
+		width: 50px;
+		height: 50px;
+	}
+
+	.ghl-forms-empty h3 {
+		font-size: 15px;
+	}
+
+	.ghl-forms-empty p {
+		font-size: 12px;
+	}
+
+	.ghl-modal-content {
+		margin: 10px auto;
+	}
+
+	.ghl-modal-header,
+	.ghl-modal-body,
+	.ghl-modal-footer {
+		padding: 12px;
+	}
+
+	.ghl-modal-title {
+		font-size: 16px;
+	}
+}
+
 }

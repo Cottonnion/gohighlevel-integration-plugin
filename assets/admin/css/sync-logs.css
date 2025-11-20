@@ -402,6 +402,12 @@
 }
 
 /* Responsive */
+@media (max-width: 1024px) {
+    .ghl-logs-status-bar {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 768px) {
     .ghl-logs-status-bar {
         grid-template-columns: 1fr;
@@ -413,23 +419,188 @@
 
     .ghl-filter-group {
         width: 100%;
+        min-width: unset;
     }
 
     .ghl-actions-group {
         width: 100%;
+        flex-direction: column;
     }
 
-    .ghl-logs-table {
-        font-size: 13px;
+    .ghl-actions-group .ghl-button {
+        width: 100%;
+        justify-content: center;
     }
 
-    .ghl-logs-table th,
+    /* Hide table headers on mobile */
+    .ghl-logs-table thead {
+        display: none;
+    }
+
+    /* Convert table rows to cards on mobile */
+    .ghl-logs-table tbody tr {
+        display: block;
+        margin-bottom: 16px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 16px;
+        background: #fff;
+    }
+
+    .ghl-logs-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
     .ghl-logs-table td {
-        padding: 10px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 8px 0;
+        border: none;
+        font-size: 14px;
     }
 
+    .ghl-logs-table td:not(:last-child) {
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    /* Add labels before each cell on mobile */
+    .ghl-logs-table td:nth-child(1)::before {
+        content: 'Date:';
+        font-weight: 600;
+        color: #475569;
+        margin-right: 8px;
+    }
+
+    .ghl-logs-table td:nth-child(2)::before {
+        content: 'Type:';
+        font-weight: 600;
+        color: #475569;
+        margin-right: 8px;
+    }
+
+    .ghl-logs-table td:nth-child(3)::before {
+        content: 'Item ID:';
+        font-weight: 600;
+        color: #475569;
+        margin-right: 8px;
+    }
+
+    .ghl-logs-table td:nth-child(4)::before {
+        content: 'Action:';
+        font-weight: 600;
+        color: #475569;
+        margin-right: 8px;
+    }
+
+    .ghl-logs-table td:nth-child(5)::before {
+        content: 'Status:';
+        font-weight: 600;
+        color: #475569;
+        margin-right: 8px;
+    }
+
+    .ghl-logs-table td:nth-child(6) {
+        justify-content: center;
+        padding-top: 12px;
+    }
+
+    .ghl-logs-table td:nth-child(6)::before {
+        display: none;
+    }
+
+    .ghl-logs-table td:nth-child(6) .ghl-button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Empty state on mobile */
+    .ghl-logs-empty {
+        display: block !important;
+        padding: 40px 20px;
+    }
+
+    /* Pagination on mobile */
     .ghl-logs-pagination {
         flex-direction: column;
         gap: 16px;
+        padding: 16px;
+    }
+
+    .ghl-pagination-info {
+        text-align: center;
+        font-size: 13px;
+    }
+
+    .ghl-pagination-links {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .ghl-pagination-link {
+        min-width: 40px;
+        height: 40px;
+    }
+
+    /* Modal on mobile */
+    #ghl-details-modal {
+        padding: 10px;
+    }
+
+    .ghl-modal-content {
+        margin: 20px auto;
+        max-width: 100%;
+    }
+
+    .ghl-modal-header {
+        padding: 16px;
+    }
+
+    .ghl-modal-title {
+        font-size: 18px;
+    }
+
+    .ghl-modal-body {
+        padding: 16px;
+    }
+
+    .ghl-modal-details {
+        font-size: 12px;
+        padding: 16px;
+        max-height: 400px;
+    }
+
+    /* Status indicator at top */
+    .wrap.ghl-crm-sync-logs > div[style*="border-left"] {
+        padding: 12px !important;
+        font-size: 12px !important;
+    }
+
+    .wrap.ghl-crm-sync-logs > div[style*="border-left"] span {
+        display: block;
+        margin: 8px 0 0 0 !important;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Extra small screens */
+    .ghl-status-card-value {
+        font-size: 24px;
+    }
+
+    .ghl-pagination-link {
+        min-width: 36px;
+        height: 36px;
+        font-size: 13px;
+    }
+
+    .ghl-log-date {
+        font-size: 12px;
+        word-break: break-all;
+    }
+
+    .ghl-modal-details {
+        font-size: 11px;
+        line-height: 1.4;
     }
 }

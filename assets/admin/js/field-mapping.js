@@ -451,7 +451,7 @@
 	 */
 	window.GHL_FieldMapping.loadFields = function(isInitialLoad) {
 		const $button = $('#ghl-load-custom-fields');
-		const $status = $('#ghl-custom-fields-status');
+		// const $status = $('#ghl-custom-fields-status');
 		const $icon = $button.find('.dashicons');
 		
 		// Check if elements exist (may not be on this tab)
@@ -467,7 +467,25 @@
 		$icon.removeClass('dashicons-update').addClass('dashicons-update-alt').css('animation', 'rotation 2s infinite linear');
 		
 		if (!isInitialLoad) {
-			$status.html('<span style="color: #999;"><span class="dashicons dashicons-update-alt" style="animation: rotation 2s infinite linear; margin-top: 3px;"></span> Loading fields...</span>');
+			// Get admin bar height for proper positioning
+			const adminBarHeight = $('#wpadminbar').outerHeight() || 0;
+			
+			// Show SweetAlert toast
+			Swal.fire({
+				toast: true,
+				position: 'top-end',
+				icon: 'info',
+				title: 'Loading fields...',
+				showConfirmButton: false,
+				timer: 3000,
+				timerProgressBar: true,
+				customClass: {
+					container: 'ghl-swal-with-adminbar'
+				},
+				didOpen: (toast) => {
+					toast.style.marginTop = adminBarHeight + 'px';
+				}
+			});
 		}
 		
 		$.ajax({
@@ -525,13 +543,36 @@
 						}
 					});
 					
+					// Show success message via SweetAlert toast
+					if (!isInitialLoad) {
+						const adminBarHeight = $('#wpadminbar').outerHeight() || 0;
+						const customCount = response.data.count || 0;
+						let message = 'Loaded ' + fieldCount + ' fields';
+						
+						Swal.fire({
+							toast: true,
+							position: 'top-end',
+							icon: 'success',
+							title: message,
+							showConfirmButton: false,
+							timer: 3000,
+							timerProgressBar: true,
+							customClass: {
+								container: 'ghl-swal-with-adminbar'
+							},
+							didOpen: (toast) => {
+								toast.style.marginTop = adminBarHeight + 'px';
+							}
+						});
+					}
+					
 					// Show success message
 					const customCount = response.data.count || 0;
 					let message = '✅ Loaded ' + fieldCount + ' fields';
-					if (customCount > 0) {
-						message += ' (including ' + customCount + ' custom fields)';
-					}
-					$status.html('<span style="color: #46b450;">' + message + '</span>');
+					// if (customCount > 0) {
+					// 	message += ' (including ' + customCount + ' custom fields)';
+					// }
+					// $status.html('<span style="color: #46b450;">' + message + '</span>');
 					
 					// Show notice at top only on manual reload
 					// if (!isInitialLoad) {
@@ -540,15 +581,15 @@
 					// 	);
 					// }
 					
-					setTimeout(function() {
-						$status.fadeOut();
-					}, 5000);
+					// setTimeout(function() {
+					// 	$status.fadeOut();
+					// }, 5000);
 					
 					// Update row highlighting for mapped fields
 					window.GHL_FieldMapping.updateMappedRows();
 					
 				} else {
-					$status.html('<span style="color: #dc3232;">⚠ Failed to load fields</span>');
+					// $status.html('<span style="color: #dc3232;">⚠ Failed to load fields</span>');
 					if (response.data && response.data.error) {
 						console.error('GHL Field Load Error:', response.data.error);
 					}
@@ -557,7 +598,7 @@
 			error: function(xhr, status, error) {
 				$button.prop('disabled', false);
 				$icon.removeClass('dashicons-update-alt').addClass('dashicons-update').css('animation', '');
-				$status.html('<span style="color: #dc3232;">⚠ Error: ' + error + '</span>');
+				// $status.html('<span style="color: #dc3232;">⚠ Error: ' + error + '</span>');
 			}
 		});
 	};
@@ -566,6 +607,17 @@
 	 * Initialize on document ready
 	 */
 	$(document).ready(function() {
+		// Add data-label attributes for mobile responsiveness
+		$('.ghl-crm-field-mapping .form-table tbody tr').each(function() {
+			const $row = $(this);
+			const $cells = $row.find('td');
+			
+			// Add labels based on column index
+			$cells.eq(0).attr('data-label', 'WordPress Field');
+			$cells.eq(1).attr('data-label', 'GoHighLevel Field');
+			$cells.eq(2).attr('data-label', 'Sync Direction');
+		});
+		
 		// Auto-load fields on initial page load
 		window.GHL_FieldMapping.loadFields(true);
 		

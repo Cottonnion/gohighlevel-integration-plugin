@@ -274,12 +274,6 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 			<span class="dashicons dashicons-lightbulb" style="margin-top: 3px;"></span>
 			<?php esc_html_e( 'Auto-Suggest Mappings', 'ghl-crm-integration' ); ?>
 		</button>
-		<span id="ghl-custom-fields-status" style="margin-left: 10px;">
-			<span style="color: #666;">
-				<span class="dashicons dashicons-update-alt" style="animation: rotation 2s infinite linear; margin-top: 3px;"></span>
-				<?php esc_html_e( 'Loading fields...', 'ghl-crm-integration' ); ?>
-			</span>
-		</span>
 	</div>
 
 	<form id="ghl-field-mapping-form" method="post" action="">

@@ -90,3 +90,126 @@
 .ghl-collapsible.ghl-is-collapsed {
 	display: none;
 }
+
+/* ========================================
+   MOBILE RESPONSIVE STYLES
+   ======================================== */
+
+/* Tablet and below */
+@media screen and (max-width: 1024px) {
+	.ghl-crm-field-mapping .ghl-crm-mapping-container {
+		padding: 15px;
+	}
+	
+	.ghl-crm-field-mapping .form-table tbody td {
+		padding: 12px 8px;
+	}
+}
+
+/* Mobile devices */
+@media screen and (max-width: 768px) {
+	.ghl-crm-field-mapping .ghl-crm-mapping-container {
+		padding: 10px;
+		margin-top: 15px;
+	}
+	
+	/* Hide table headers on mobile */
+	.ghl-crm-field-mapping .form-table thead {
+		display: none;
+	}
+	
+	/* Convert table to card-based layout */
+	.ghl-crm-field-mapping .form-table,
+	.ghl-crm-field-mapping .form-table tbody,
+	.ghl-crm-field-mapping .form-table tbody tr {
+		display: block;
+		width: 100%;
+	}
+	
+	/* Each row becomes a card */
+	.ghl-crm-field-mapping .form-table tbody tr {
+		margin-bottom: 15px;
+		border: 1px solid #ddd;
+		border-radius: 6px;
+		background: #fff;
+		padding: 12px;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+	}
+	
+	/* Table cells as block elements */
+	.ghl-crm-field-mapping .form-table tbody td {
+		display: block;
+		width: 100%;
+		padding: 8px 0;
+		border-bottom: none;
+		text-align: left !important;
+	}
+	
+	/* Add labels using data attributes */
+	.ghl-crm-field-mapping .form-table tbody td::before {
+		content: attr(data-label);
+		display: block;
+		font-weight: 600;
+		color: #1d2327;
+		margin-bottom: 6px;
+		font-size: 13px;
+	}
+	
+	/* Adjust spacing for first and last cells */
+	.ghl-crm-field-mapping .form-table tbody td:first-child {
+		padding-top: 0;
+	}
+	
+	.ghl-crm-field-mapping .form-table tbody td:last-child {
+		padding-bottom: 0;
+	}
+	
+	/* Dropdowns full width on mobile */
+	.ghl-crm-field-mapping select[name^="ghl_field_"] {
+		width: 100%;
+		max-width: 100%;
+		padding: 10px;
+		font-size: 14px;
+	}
+	
+	/* Toggle buttons full width on mobile */
+	.ghl-toggle-button {
+		width: 100%;
+		justify-content: center;
+		padding: 10px 12px;
+		font-size: 13px;
+		margin-top: 10px;
+	}
+	
+	/* Code blocks more readable */
+	.ghl-crm-field-mapping code {
+		font-size: 13px;
+		padding: 3px 7px;
+		word-break: break-word;
+	}
+	
+	/* Collapsible sections better spacing */
+	.ghl-collapsible {
+		margin-top: 15px;
+	}
+}
+
+/* Small mobile devices */
+@media screen and (max-width: 480px) {
+	.ghl-crm-field-mapping .ghl-crm-mapping-container {
+		padding: 8px;
+	}
+	
+	.ghl-crm-field-mapping .form-table tbody tr {
+		padding: 10px;
+		margin-bottom: 12px;
+	}
+	
+	.ghl-crm-field-mapping select[name^="ghl_field_"] {
+		font-size: 15px; /* Prevent iOS zoom on focus */
+	}
+	
+	.ghl-crm-field-mapping code {
+		font-size: 12px;
+	}
+}

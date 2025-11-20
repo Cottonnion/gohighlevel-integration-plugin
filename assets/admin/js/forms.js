@@ -114,21 +114,21 @@
 				const submissionsText = form.submissions ? form.submissions : '0';
 				tableHtml += `
 					<tr data-form-id="${form.id}">
-						<td class="ghl-table-col-name">
+						<td class="ghl-table-col-name" data-label="${strings.formName || 'Form Name'}">
 							<strong>${this.escapeHtml(form.name || strings.untitledForm || 'Untitled Form')}</strong>
 						</td>
-						<td class="ghl-table-col-id">
+						<td class="ghl-table-col-id" data-label="${strings.formId || 'Form ID'}">
 							<code>${this.escapeHtml(form.id)}</code>
 						</td>
-						<td class="ghl-table-col-submissions">
+						<td class="ghl-table-col-submissions" data-label="${strings.submissions || 'Submissions'}">
 							${submissionsText}
 						</td>
-						<td class="ghl-table-col-shortcode">
+						<td class="ghl-table-col-shortcode" data-label="${strings.shortcode || 'Shortcode'}">
 							<div class="ghl-shortcode-box" title="${strings.clickToCopy || 'Click to copy'}">
 								[ghl_form id="${form.id}"]
 							</div>
 						</td>
-						<td class="ghl-table-col-actions">
+						<td class="ghl-table-col-actions" data-label="${strings.actions || 'Actions'}">
 							<div class="ghl-table-actions">
 								<button type="button" class="ghl-form-icon-btn ghl-copy-shortcode" data-shortcode="[ghl_form id=&quot;${form.id}&quot;]" title="${strings.copy || 'Copy shortcode'}">
 									<span class="dashicons dashicons-clipboard"></span>
