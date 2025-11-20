@@ -514,7 +514,7 @@ class AssetsManager {
 			'field-mapping.css',
 			[ 'ghl-crm-globals-css' ],
 			[],
-			GHL_CRM_VERSION
+			'1.0.2'
 		);
 
 		// Field Mapping JS (loads on main-settings page for field-mapping tab)
@@ -526,7 +526,7 @@ class AssetsManager {
 			[
 				'nonce' => wp_create_nonce( 'ghl_crm_field_mapping_nonce' ),
 			],
-			'1.0.2',
+			'1.0.6',
 			true
 		);
 
@@ -874,7 +874,7 @@ class AssetsManager {
 			'forms.css',
 			[],
 			[],
-			GHL_CRM_VERSION,
+			'1.0.1',
 			false
 		);
 
