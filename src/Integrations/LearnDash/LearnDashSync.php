@@ -6,6 +6,8 @@
  * with GoHighLevel contacts via queued background jobs. Supports per-course tag configuration and
  * tag-based auto-enrollment with batch processing for existing users.
  *
+ * This class acts as a central coordinator, delegating to specialized modules for better organization.
+ *
  * @package    GHL_CRM_Integration
  * @subpackage Integrations/LearnDash
  * @since      1.0.0
@@ -18,6 +20,9 @@ namespace GHL_CRM\Integrations\LearnDash;
 use GHL_CRM\Admin\Profile\UserProfileFields;
 use GHL_CRM\API\Resources\ContactResource;
 use GHL_CRM\Core\SettingsManager;
+use GHL_CRM\Integrations\LearnDash\Modules\CourseSync;
+use GHL_CRM\Integrations\LearnDash\Modules\ContentSync;
+use GHL_CRM\Integrations\LearnDash\Modules\GroupSync;
 use GHL_CRM\Sync\QueueManager;
 use WP_User;
 
@@ -28,7 +33,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * Responsibilities:
  * - Hook into LearnDash enrollment/completion/revocation events
- * - Queue contact sync jobs with course-specific tags
+ * - Delegate sync operations to specialized modules
  * - Handle tag-based auto-enrollment with batch processing
  * - Refresh WordPress user data after successful GHL sync
  *
@@ -57,18 +62,32 @@ class LearnDashSync {
 	private ContactResource $contact_resource;
 
 	/**
+	 * Course sync module.
+	 *
+	 * @var CourseSync
+	 */
+	private CourseSync $course_sync;
+
+	/**
+	 * Content sync module (lessons, topics, quizzes).
+	 *
+	 * @var ContentSync
+	 */
+	private ContentSync $content_sync;
+
+	/**
+	 * Group sync module.
+	 *
+	 * @var GroupSync
+	 */
+	private GroupSync $group_sync;
+
+	/**
 	 * Track whether hooks already registered.
 	 *
 	 * @var bool
 	 */
 	private bool $bootstrapped = false;
-
-	/**
-	 * Cache of auto-enroll course IDs keyed by tag slug.
-	 *
-	 * @var array<string,array<int>>
-	 */
-	private array $auto_enroll_cache = [];
 
 	/**
 	 * Build the service with optional dependency overrides for easier testing.
@@ -85,6 +104,11 @@ class LearnDashSync {
 		$this->settings         = $settings ?? SettingsManager::get_instance();
 		$this->queue_manager    = $queue_manager ?? QueueManager::get_instance();
 		$this->contact_resource = $contact_resource ?? new ContactResource();
+
+		// Initialize specialized sync modules
+		$this->course_sync  = new CourseSync( $this->queue_manager, $this->contact_resource, $this->settings );
+		$this->content_sync = new ContentSync( $this->queue_manager, $this->contact_resource );
+		$this->group_sync   = new GroupSync( $this->queue_manager, $this->contact_resource, $this->settings );
 	}
 
 	/**
@@ -123,14 +147,20 @@ class LearnDashSync {
 		add_action( 'learndash_topic_completed', [ $this, 'handle_topic_completed' ], 10, 1 );
 		add_action( 'learndash_quiz_completed', [ $this, 'handle_quiz_completed' ], 10, 2 );
 
+		// Group access hooks
+		add_action( 'ld_added_group_access', [ $this, 'handle_group_access_granted' ], 10, 2 );
+		add_action( 'ld_removed_group_access', [ $this, 'handle_group_access_removed' ], 10, 2 );
+
 		// Auto-enrollment system hooks
 		add_action( 'init', [ $this, 'maybe_check_existing_users' ], 999 );
 		add_action( 'ghl_crm_user_tags_updated', [ $this, 'handle_user_tags_updated' ], 10, 2 );
 		add_action( 'ghl_ld_process_batch_enrollment', [ $this, 'process_batch_enrollment' ] );
+		add_action( 'ghl_ld_process_batch_group_enrollment', [ $this, 'process_batch_group_enrollment' ] );
 
 		// Queue processing hooks
 		add_filter( 'ghl_crm_execute_course_sync', [ $this, 'execute_learndash_sync' ], 10, 4 );
 		add_filter( 'ghl_crm_execute_sync', [ $this, 'execute_learndash_content_sync' ], 10, 5 );
+		add_filter( 'ghl_crm_execute_sync', [ $this, 'execute_learndash_group_sync' ], 10, 5 );
 		add_action( 'ghl_crm_after_sync_success', [ $this, 'handle_after_queue_sync' ], 20, 4 );
 	}
 
@@ -158,11 +188,7 @@ class LearnDashSync {
 	 * @return void
 	 */
 	public function handle_course_enrollment( int $user_id, int $course_id ): void {
-		if ( $user_id <= 0 || $course_id <= 0 ) {
-			return;
-		}
-
-		$this->queue_course_event( $user_id, $course_id, 'enrolled' );
+		$this->course_sync->handle_course_enrollment( $user_id, $course_id );
 	}
 
 	/**
@@ -174,11 +200,7 @@ class LearnDashSync {
 	 * @return void
 	 */
 	public function handle_course_revoked( int $user_id, int $course_id ): void {
-		if ( $user_id <= 0 || $course_id <= 0 ) {
-			return;
-		}
-
-		$this->queue_course_event( $user_id, $course_id, 'revoked' );
+		$this->course_sync->handle_course_revoked( $user_id, $course_id );
 	}
 
 	/**
@@ -191,28 +213,7 @@ class LearnDashSync {
 	 * @return void
 	 */
 	public function handle_course_completed( array $data ): void {
-		$user_id   = 0;
-		$course_id = 0;
-
-		// Extract user ID from WP_User object or direct ID
-		if ( isset( $data['user'] ) && $data['user'] instanceof WP_User ) {
-			$user_id = (int) $data['user']->ID;
-		} elseif ( isset( $data['user_id'] ) ) {
-			$user_id = (int) $data['user_id'];
-		}
-
-		// Extract course ID from post object or direct ID
-		if ( isset( $data['course'] ) && is_object( $data['course'] ) && isset( $data['course']->ID ) ) {
-			$course_id = (int) $data['course']->ID;
-		} elseif ( isset( $data['course_id'] ) ) {
-			$course_id = (int) $data['course_id'];
-		}
-
-		if ( $user_id <= 0 || $course_id <= 0 ) {
-			return;
-		}
-
-		$this->queue_course_event( $user_id, $course_id, 'completed' );
+		$this->course_sync->handle_course_completed( $data );
 	}
 
 	/**
@@ -225,28 +226,7 @@ class LearnDashSync {
 	 * @return void
 	 */
 	public function handle_lesson_completed( array $data ): void {
-		$user_id   = 0;
-		$lesson_id = 0;
-
-		// Extract user ID from WP_User object or direct ID
-		if ( isset( $data['user'] ) && $data['user'] instanceof WP_User ) {
-			$user_id = (int) $data['user']->ID;
-		} elseif ( isset( $data['user_id'] ) ) {
-			$user_id = (int) $data['user_id'];
-		}
-
-		// Extract lesson ID from post object or direct ID
-		if ( isset( $data['lesson'] ) && is_object( $data['lesson'] ) && isset( $data['lesson']->ID ) ) {
-			$lesson_id = (int) $data['lesson']->ID;
-		} elseif ( isset( $data['lesson_id'] ) ) {
-			$lesson_id = (int) $data['lesson_id'];
-		}
-
-		if ( $user_id <= 0 || $lesson_id <= 0 ) {
-			return;
-		}
-
-		$this->queue_content_event( $user_id, $lesson_id, 'lesson' );
+		$this->content_sync->handle_lesson_completed( $data );
 	}
 
 	/**
@@ -259,28 +239,7 @@ class LearnDashSync {
 	 * @return void
 	 */
 	public function handle_topic_completed( array $data ): void {
-		$user_id  = 0;
-		$topic_id = 0;
-
-		// Extract user ID from WP_User object or direct ID
-		if ( isset( $data['user'] ) && $data['user'] instanceof WP_User ) {
-			$user_id = (int) $data['user']->ID;
-		} elseif ( isset( $data['user_id'] ) ) {
-			$user_id = (int) $data['user_id'];
-		}
-
-		// Extract topic ID from post object or direct ID
-		if ( isset( $data['topic'] ) && is_object( $data['topic'] ) && isset( $data['topic']->ID ) ) {
-			$topic_id = (int) $data['topic']->ID;
-		} elseif ( isset( $data['topic_id'] ) ) {
-			$topic_id = (int) $data['topic_id'];
-		}
-
-		if ( $user_id <= 0 || $topic_id <= 0 ) {
-			return;
-		}
-
-		$this->queue_content_event( $user_id, $topic_id, 'topic' );
+		$this->content_sync->handle_topic_completed( $data );
 	}
 
 	/**
@@ -295,112 +254,37 @@ class LearnDashSync {
 	 * @return void
 	 */
 	public function handle_quiz_completed( array $data, $user = null ): void {
-		$user_id = 0;
-		$quiz_id = 0;
-		$score   = null;
-
-		// Extract user ID - quiz hook passes user as second parameter
-		if ( $user instanceof WP_User ) {
-			$user_id = (int) $user->ID;
-		} elseif ( isset( $data['user'] ) && $data['user'] instanceof WP_User ) {
-			$user_id = (int) $data['user']->ID;
-		} elseif ( isset( $data['user_id'] ) ) {
-			$user_id = (int) $data['user_id'];
-		}
-
-		// Extract quiz ID from post object or direct ID
-		if ( isset( $data['quiz'] ) && is_object( $data['quiz'] ) && isset( $data['quiz']->ID ) ) {
-			$quiz_id = (int) $data['quiz']->ID;
-		} elseif ( isset( $data['quiz'] ) && is_numeric( $data['quiz'] ) ) {
-			$quiz_id = (int) $data['quiz'];
-		} elseif ( isset( $data['quiz_id'] ) ) {
-			$quiz_id = (int) $data['quiz_id'];
-		}
-
-		// Extract quiz score percentage (0-100)
-		if ( isset( $data['percentage'] ) ) {
-			$score = (float) $data['percentage'];
-		} elseif ( isset( $data['score'] ) ) {
-			$score = (float) $data['score'];
-		}
-
-		if ( $user_id <= 0 || $quiz_id <= 0 ) {
-			return;
-		}
-
-		$this->queue_content_event( $user_id, $quiz_id, 'quiz', $score );
+		$this->content_sync->handle_quiz_completed( $data, $user );
 	}
 
 	/**
-	 * Register queue entry for downstream sync.
+	 * Handle user added to LearnDash group.
+	 *
+	 * Checks existing user tags and only applies tags the user doesn't already have.
+	 * Stores which tags were actually applied in user meta for safe removal later.
 	 *
 	 * @since 1.0.0
-	 * @param int    $user_id   WordPress user ID.
-	 * @param int    $course_id LearnDash course ID.
-	 * @param string $status    Course state (enrolled|revoked|completed).
+	 * @param int $user_id  WordPress user ID.
+	 * @param int $group_id LearnDash group ID.
 	 * @return void
 	 */
-	private function queue_course_event( int $user_id, int $course_id, string $status ): void {
-		if ( $user_id <= 0 || $course_id <= 0 ) {
-			return;
-		}
-
-		$valid_statuses = [ 'enrolled', 'revoked', 'completed' ];
-		if ( ! in_array( $status, $valid_statuses, true ) ) {
-			return;
-		}
-
-		$payload = [
-			'user_id'   => $user_id,
-			'course_id' => $course_id,
-			'status'    => $status,
-			'tags'      => $this->resolve_course_tags( $course_id, $status ),
-			'queued_at' => current_time( 'mysql' ),
-		];
-
-		$this->queue_manager->add_to_queue( 'course', $course_id, 'sync_course_event', $payload );
+	public function handle_group_access_granted( int $user_id, int $group_id ): void {
+		$this->group_sync->handle_group_access_granted( $user_id, $group_id );
 	}
 
 	/**
-	 * Register queue entry for lesson, topic, or quiz completion sync.
+	 * Handle user removed from LearnDash group.
+	 *
+	 * Only queues tag removal if the group has "remove on leave" enabled.
+	 * Only removes tags that were actually applied BY THIS GROUP.
 	 *
 	 * @since 1.0.0
-	 * @param int        $user_id    WordPress user ID.
-	 * @param int        $content_id LearnDash lesson/topic/quiz ID.
-	 * @param string     $type       Content type (lesson|topic|quiz).
-	 * @param float|null $score      Quiz score percentage (0-100), null for non-quiz content.
+	 * @param int $user_id  WordPress user ID.
+	 * @param int $group_id LearnDash group ID.
 	 * @return void
 	 */
-	private function queue_content_event( int $user_id, int $content_id, string $type, ?float $score = null ): void {
-		if ( $user_id <= 0 || $content_id <= 0 ) {
-			return;
-		}
-
-		$valid_types = [ 'lesson', 'topic', 'quiz' ];
-		if ( ! in_array( $type, $valid_types, true ) ) {
-			return;
-		}
-
-		$tags = $this->resolve_content_tags( $content_id, $type, $score );
-
-		if ( empty( $tags ) ) {
-			return;
-		}
-
-		$payload = [
-			'user_id'    => $user_id,
-			'content_id' => $content_id,
-			'type'       => $type,
-			'tags'       => $tags,
-			'queued_at'  => current_time( 'mysql' ),
-		];
-
-		// Include score in payload for logging/analytics
-		if ( 'quiz' === $type && null !== $score ) {
-			$payload['quiz_score'] = $score;
-		}
-
-		$this->queue_manager->add_to_queue( $type, $content_id, 'sync_content_event', $payload );
+	public function handle_group_access_removed( int $user_id, int $group_id ): void {
+		$this->group_sync->handle_group_access_removed( $user_id, $group_id );
 	}
 
 	/**
@@ -421,7 +305,7 @@ class LearnDashSync {
 		}
 
 		try {
-			return $this->process_course_payload( $payload );
+			return $this->course_sync->process_course_payload( $payload );
 		} catch ( \Throwable $error ) {
 			do_action( 'ghl_crm_sync_error', 'learndash_queue_handler', $payload, $error );
 			return false;
@@ -453,9 +337,41 @@ class LearnDashSync {
 		}
 
 		try {
-			return $this->process_content_payload( $payload );
+			return $this->content_sync->process_content_payload( $payload );
 		} catch ( \Throwable $error ) {
 			do_action( 'ghl_crm_sync_error', 'learndash_content_queue_handler', $payload, $error );
+			return false;
+		}
+	}
+
+	/**
+	 * Execute queued LearnDash group sync operation.
+	 *
+	 * Filter callback for generic queue processor to handle group join/leave events.
+	 *
+	 * @since 1.0.0
+	 * @param bool|mixed   $handled   Whether another handler already processed the job.
+	 * @param string       $item_type Queue item type (group).
+	 * @param string       $action    Queue action name.
+	 * @param int          $item_id   Queue item identifier.
+	 * @param array<mixed> $payload   Stored payload.
+	 * @return bool|array False on failure, API response array on success.
+	 */
+	public function execute_learndash_group_sync( $handled, string $item_type, string $action, int $item_id, array $payload ) {
+		// Only handle group type
+		if ( 'group' !== $item_type ) {
+			return $handled;
+		}
+
+		// Only handle group events
+		if ( 'sync_group_event' !== $action ) {
+			return $handled;
+		}
+
+		try {
+			return $this->group_sync->process_group_payload( $payload );
+		} catch ( \Throwable $error ) {
+			do_action( 'ghl_crm_sync_error', 'learndash_group_queue_handler', $payload, $error );
 			return false;
 		}
 	}
@@ -705,6 +621,110 @@ class LearnDashSync {
 	}
 
 	/**
+	 * Process group join/leave event and sync to GoHighLevel contact.
+	 *
+	 * Adds or removes GHL contact tags based on group membership.
+	 *
+	 * @since 1.0.0
+	 * @param array<mixed> $payload Queue payload containing user_id, group_id, action, and tags.
+	 * @return array|false API response array on success, false on failure.
+	 */
+	private function process_group_payload( array $payload ) {
+		$user_id  = (int) ( $payload['user_id'] ?? 0 );
+		$group_id = (int) ( $payload['group_id'] ?? 0 );
+		$action   = sanitize_key( (string) ( $payload['action'] ?? '' ) );
+		$new_tags = $this->normalize_tags( $payload['tags'] ?? [] );
+
+		if ( $user_id <= 0 || $group_id <= 0 || empty( $new_tags ) ) {
+			return false;
+		}
+
+		$user = get_userdata( $user_id );
+		if ( ! $user || empty( $user->user_email ) ) {
+			return false;
+		}
+
+		try {
+			// Find or create contact
+			$existing   = $this->contact_resource->find_by_email( $user->user_email );
+			$contact_id = ! empty( $existing['id'] ) ? (string) $existing['id'] : null;
+
+			// Get existing tags
+			$existing_tags = [];
+			if ( $existing && ! empty( $existing['tags'] ) && is_array( $existing['tags'] ) ) {
+				$existing_tags = $existing['tags'];
+			}
+
+			// Merge or remove tags based on action
+			if ( 'joined' === $action ) {
+				// Add group tags (only tags user didn't already have)
+				$all_tags = array_values( array_unique( array_merge( $existing_tags, $new_tags ) ) );
+			} else {
+				// Remove ONLY the tags in payload (which are tags THIS GROUP applied)
+				// This preserves tags from other sources
+				$all_tags = array_values( array_diff( $existing_tags, $new_tags ) );
+				
+				// Clean up user meta - this group no longer has applied tags
+				$this->delete_group_applied_tags( $user_id, $group_id );
+			}
+
+			$contact_payload = [
+				'email'     => $user->user_email,
+				'firstName' => $user->first_name ?? '',
+				'lastName'  => $user->last_name ?? '',
+				'tags'      => $all_tags,
+				'source'    => 'learndash_group_' . $action,
+			];
+
+			// Update or create contact
+			if ( $contact_id ) {
+				$api_result = $this->contact_resource->update( $contact_id, $contact_payload );
+			} else {
+				$api_result = $this->contact_resource->create( $contact_payload );
+				$contact_id = (string) ( $api_result['contact']['id'] ?? $api_result['id'] ?? '' );
+			}
+
+			// Ensure we have a contact ID for downstream hooks
+			if ( empty( $contact_id ) ) {
+				$refetched = $this->contact_resource->find_by_email( $user->user_email );
+				if ( $refetched && ! empty( $refetched['id'] ) ) {
+					$contact_id = (string) $refetched['id'];
+					if ( empty( $api_result ) ) {
+						$api_result = [ 'contact' => $refetched ];
+					}
+				}
+			}
+
+			// Normalize response structure
+			$response = is_array( $api_result ) ? $api_result : [];
+
+			if ( empty( $response['contact'] ) ) {
+				$response['contact'] = [];
+			}
+
+			if ( ! empty( $contact_id ) ) {
+				$response['contact']['id'] = $contact_id;
+			}
+
+			if ( empty( $response['contact']['tags'] ) ) {
+				$response['contact']['tags'] = $all_tags;
+			}
+
+			if ( empty( $response['tags'] ) ) {
+				$response['tags'] = $all_tags;
+			}
+
+			do_action( 'ghl_crm_learndash_group_synced', $payload, $contact_payload, $action );
+
+			return $response;
+
+		} catch ( \Throwable $error ) {
+			do_action( 'ghl_crm_sync_error', 'learndash_group_sync', $payload, $error );
+			return false;
+		}
+	}
+
+	/**
 	 * Retrieve tags configured for a specific course and status.
 	 *
 	 * Reads from course post meta (_ghl_ld_{status}_tags).
@@ -728,6 +748,34 @@ class LearnDashSync {
 		$course_tags = get_post_meta( $course_id, $meta_key, true );
 
 		return $this->normalize_tags( $course_tags );
+	}
+
+	/**
+	 * Retrieve tags configured for a specific group and action.
+	 *
+	 * Uses the same tag set for both join and leave actions - tags are applied on join
+	 * and removed on leave to maintain group membership state in GHL.
+	 *
+	 * @since 1.0.0
+	 * @param int    $group_id LearnDash group ID.
+	 * @param string $action   Event type: joined|left.
+	 * @return array<int,string> Sanitized tag array.
+	 */
+	private function resolve_group_tags( int $group_id, string $action ): array {
+		if ( $group_id <= 0 ) {
+			return [];
+		}
+
+		$valid_actions = [ 'joined', 'left' ];
+		if ( ! in_array( $action, $valid_actions, true ) ) {
+			return [];
+		}
+
+		// Use same meta key for both actions - tags are applied on join, removed on leave
+		$meta_key   = '_ghl_ld_group_tags';
+		$group_tags = get_post_meta( $group_id, $meta_key, true );
+
+		return $this->normalize_tags( $group_tags );
 	}
 
 	/**
@@ -839,7 +887,7 @@ class LearnDashSync {
 	/**
 	 * Handle tag updates for auto-enrollment triggers.
 	 *
-	 * When a user's GHL tags are updated, check if any courses should auto-enroll them.
+	 * When a user's GHL tags are updated, check if any courses or groups should auto-enroll them.
 	 *
 	 * @since 1.0.0
 	 * @param int               $user_id WordPress user ID.
@@ -851,18 +899,31 @@ class LearnDashSync {
 			return;
 		}
 
+		error_log( sprintf(
+			'[GHL LearnDash Auto-Enroll] User %d tags updated with %d tag IDs',
+			$user_id,
+			count( $tag_ids )
+		) );
+
 		$tag_manager = \GHL_CRM\Core\TagManager::get_instance();
 		$tag_names   = $tag_manager->convert_ids_to_names( $tag_ids );
 
+		error_log( sprintf(
+			'[GHL LearnDash Auto-Enroll] Converted to %d tag names: %s',
+			count( $tag_names ),
+			implode( ', ', $tag_names )
+		) );
+
 		if ( empty( $tag_names ) ) {
+			error_log( '[GHL LearnDash Auto-Enroll] No tag names found, skipping auto-enrollment' );
 			return;
 		}
 
-		$course_ids = $this->get_courses_for_tags( $tag_names );
+		// Check for course auto-enrollment
+		$this->course_sync->handle_auto_enrollment( $user_id, $tag_names );
 
-		foreach ( $course_ids as $course_id ) {
-			$this->auto_enroll_user_in_course( $user_id, $course_id );
-		}
+		// Check for group auto-enrollment
+		$this->group_sync->handle_auto_enrollment( $user_id, $tag_names );
 	}
 
 	/**
@@ -904,7 +965,7 @@ class LearnDashSync {
 	}
 
 	/**
-	 * Process batch of users for auto-enrollment.
+	 * Process batch of users for course auto-enrollment.
 	 *
 	 * Processes users with GHL tags in batches (up to 500), tracks offset, reschedules until complete.
 	 * Uses transient lock to prevent concurrent batch processing.
@@ -913,151 +974,16 @@ class LearnDashSync {
 	 * @return void
 	 */
 	public function process_batch_enrollment(): void {
-		$lock_key = 'ghl_ld_batch_processing';
-
-		if ( get_transient( $lock_key ) ) {
-			return;
-		}
-
-		set_transient( $lock_key, time(), 5 * MINUTE_IN_SECONDS );
-
-		try {
-			$offset     = (int) $this->settings->get_setting( 'ghl_ld_batch_offset', 0 );
-			$batch_size = apply_filters( 'ghl_crm_ld_batch_enrollment_size', 500 ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
-			$batch_size = max( 1, min( 1000, $batch_size ) );
-
-			$users = get_users(
-				[
-					'meta_key' => '_ghl_contact_tags', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-					'number'   => $batch_size,
-					'offset'   => $offset,
-					'fields'   => 'ID',
-					'orderby'  => 'ID',
-					'order'    => 'ASC',
-				]
-			);
-
-			$processed_count = count( $users );
-			$tag_manager     = \GHL_CRM\Core\TagManager::get_instance();
-
-			foreach ( $users as $user_id ) {
-				$tag_ids   = $tag_manager->get_user_tag_ids( $user_id );
-				$tag_names = $tag_manager->convert_ids_to_names( $tag_ids );
-
-				if ( empty( $tag_names ) ) {
-					continue;
-				}
-
-				$course_ids = $this->get_courses_for_tags( $tag_names );
-
-				foreach ( $course_ids as $course_id ) {
-					$this->auto_enroll_user_in_course( $user_id, $course_id );
-				}
-			}
-
-			if ( $processed_count < $batch_size ) {
-				$this->settings->delete_setting( 'ghl_ld_batch_offset' );
-			} else {
-				$new_offset = $offset + $batch_size;
-				$this->settings->update_setting( 'ghl_ld_batch_offset', $new_offset );
-
-				if ( function_exists( 'as_schedule_single_action' ) ) {
-					as_schedule_single_action( time() + 10, 'ghl_ld_process_batch_enrollment', [], 'ghl-crm' );
-				} else {
-					wp_schedule_single_event( time() + 10, 'ghl_ld_process_batch_enrollment' );
-				}
-			}
-		} finally {
-			delete_transient( $lock_key );
-		}
+		$this->course_sync->process_batch_enrollment();
 	}
 
 	/**
-	 * Retrieve all course IDs configured to auto-enroll for any provided tag.
+	 * Process batch group enrollment for existing users with matching tags.
 	 *
 	 * @since 1.0.0
-	 * @param array<int,string> $tags Normalized tag strings.
-	 * @return array<int> Unique course IDs.
-	 */
-	private function get_courses_for_tags( array $tags ): array {
-		$course_ids = [];
-
-		foreach ( $tags as $tag ) {
-			foreach ( $this->get_courses_for_auto_enroll_tag( $tag ) as $course_id ) {
-				$course_ids[ $course_id ] = true;
-			}
-		}
-
-		return array_keys( $course_ids );
-	}
-
-	/**
-	 * Retrieve courses where the auto-enroll tag matches the provided tag.
-	 *
-	 * @since 1.0.0
-	 * @param string $tag Tag identifier (sanitized).
-	 * @return array<int> Course IDs matching the auto-enroll tag.
-	 */
-	private function get_courses_for_auto_enroll_tag( string $tag ): array {
-		$tag = sanitize_text_field( $tag );
-
-		if ( '' === $tag ) {
-			return [];
-		}
-
-		if ( isset( $this->auto_enroll_cache[ $tag ] ) ) {
-			return $this->auto_enroll_cache[ $tag ];
-		}
-
-		$args = [
-			'post_type'      => 'sfwd-courses',
-			'post_status'    => 'any',
-			'fields'         => 'ids',
-			'posts_per_page' => -1,
-			'no_found_rows'  => true,
-			'meta_query'     => [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-				[
-					'key'     => '_ghl_ld_auto_enroll_tag',
-					'value'   => '"' . $tag . '"',
-					'compare' => 'LIKE',
-				],
-			],
-		];
-
-		$course_ids                      = array_map( 'intval', get_posts( $args ) );
-		$this->auto_enroll_cache[ $tag ] = $course_ids;
-
-		return $course_ids;
-	}
-
-	/**
-	 * Enroll user in course if not already enrolled.
-	 *
-	 * Checks existing access and uses LearnDash's enrollment function.
-	 *
-	 * @since 1.0.0
-	 * @param int $user_id   WordPress user ID.
-	 * @param int $course_id LearnDash course ID.
 	 * @return void
 	 */
-	private function auto_enroll_user_in_course( int $user_id, int $course_id ): void {
-		if ( $user_id <= 0 || $course_id <= 0 || ! function_exists( 'ld_update_course_access' ) ) {
-			return;
-		}
-
-		if ( function_exists( 'sfwd_lms_has_access' ) && sfwd_lms_has_access( $course_id, $user_id ) ) {
-			return;
-		}
-
-		ld_update_course_access( $user_id, $course_id );
-
-		/**
-		 * Fires after a user is auto-enrolled in a LearnDash course via GHL tag.
-		 *
-		 * @since 1.0.0
-		 * @param int $user_id   WordPress user ID.
-		 * @param int $course_id LearnDash course ID.
-		 */
-		do_action( 'ghl_crm_learndash_auto_enrolled', $user_id, $course_id );
+	public function process_batch_group_enrollment(): void {
+		$this->group_sync->process_batch_group_enrollment();
 	}
 }
