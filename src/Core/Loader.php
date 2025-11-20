@@ -84,9 +84,6 @@ class Loader {
 			'core.notifications'                       => \GHL_CRM\Core\NotificationManager::class,
 			'core.form_settings'                       => \GHL_CRM\Core\FormSettings::class,
 
-			// need more testing, deactivated fo now
-			// 'core.onboarding'                          => \GHL_CRM\Core\OnboardingTour::class,
-
 			// Admin UI components
 			'admin.ui'                                 => \GHL_CRM\Admin\AdminUI::class,
 
@@ -108,6 +105,7 @@ class Loader {
 			'integrations.buddyboss'                   => \GHL_CRM\Integrations\BuddyBoss\GroupsSync::class,
 			'integrations.buddyboss.group_metabox'     => \GHL_CRM\Integrations\BuddyBoss\GroupMetaBox::class,
 			'integrations.learndash'                   => \GHL_CRM\Integrations\LearnDash\LearnDashSync::class,
+			'integrations.learndash.group_metabox'     => \GHL_CRM\Integrations\LearnDash\GroupMetaBox::class,
 			'integrations.learndash.metabox'           => \GHL_CRM\Integrations\LearnDash\CourseMetaBox::class,
 			'integrations.learndash.content_metabox'   => \GHL_CRM\Integrations\LearnDash\ContentMetaBox::class,
 
