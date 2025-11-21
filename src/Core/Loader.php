@@ -100,8 +100,8 @@ class Loader {
 			// Integration components
 			'integrations.users'                       => \GHL_CRM\Integrations\Users\UserHooks::class,
 			'integrations.role_tags'                   => \GHL_CRM\Integrations\Users\RoleTagsManager::class,
-			'integrations.woocommerce'                 => \GHL_CRM\Integrations\WooCommerce\WooCommerceSync::class,
-			'integrations.woocommerce.product_metabox' => \GHL_CRM\Integrations\WooCommerce\ProductMetaBox::class,
+			// 'integrations.woocommerce'                 => \GHL_CRM\Integrations\WooCommerce\WooCommerceSync::class,
+			// 'integrations.woocommerce.product_metabox' => \GHL_CRM\Integrations\WooCommerce\ProductMetaBox::class,
 			'integrations.buddyboss'                   => \GHL_CRM\Integrations\BuddyBoss\GroupsSync::class,
 			'integrations.buddyboss.group_metabox'     => \GHL_CRM\Integrations\BuddyBoss\GroupMetaBox::class,
 			'integrations.learndash'                   => \GHL_CRM\Integrations\LearnDash\LearnDashSync::class,

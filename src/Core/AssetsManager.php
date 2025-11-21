@@ -652,67 +652,79 @@ class AssetsManager {
 			GHL_CRM_VERSION,
 			true
 		);
-	}   /**
-		 * Adds an admin script or style to the array of admin assets.
-		 *
-		 * @param string $handle           Unique handle for the asset.
-		 * @param array  $pages            Array of admin page IDs where this asset should load.
-		 * @param string $file             File name (e.g., 'settings.css' or 'settings.js').
-		 * @param array  $dependencies     Array of dependency handles.
-		 * @param array  $localization     Array of data to localize for scripts.
-		 * @param string $version          Version string for cache busting.
-		 * @param bool   $enqueue_in_footer Whether to enqueue script in footer (scripts only).
-		 * @return void
-		 */
-	public function add_admin_asset(
-		string $handle,
-		array $pages,
-		string $file,
-		array $dependencies = [],
-		array $localization = [],
-		string $version = GHL_CRM_VERSION,
-		bool $enqueue_in_footer = true
-	): void {
-		foreach ( $pages as $page ) {
-			$this->admin_assets[ $page ][ $handle ] = [
-				'file'              => $file,
-				'dependencies'      => $dependencies,
-				'version'           => $version,
-				'enqueue_in_footer' => $enqueue_in_footer,
-				'localization'      => $localization,
-			];
-		}
-	}
+	} 
+	   /**
+		* Adds an admin script or style to the array of admin assets.
+		* Supports page slugs or custom post type keys (e.g., 'cpt:product').
+		* Optionally supports a custom base URL for loading from other plugins.
+		*
+		* @param string $handle           Unique handle for the asset.
+		* @param array  $pages            Array of admin page IDs or 'cpt:posttype' keys.
+		* @param string $file             File name (e.g., 'settings.css' or 'settings.js').
+		* @param array  $dependencies     Array of dependency handles.
+		* @param array  $localization     Array of data to localize for scripts.
+		* @param string $version          Version string for cache busting.
+		* @param bool   $enqueue_in_footer Whether to enqueue script in footer (scripts only).
+		* @param string|null $base_url    Optional custom base URL for the asset (must end with slash).
+		* @return void
+		*/
+	   public function add_admin_asset(
+		   string $handle,
+		   array $pages,
+		   string $file,
+		   array $dependencies = [],
+		   array $localization = [],
+		   string $version = GHL_CRM_VERSION,
+		   bool $enqueue_in_footer = true,
+		   ?string $base_url = null
+	   ): void {
+		   foreach ( $pages as $page ) {
+			   $this->admin_assets[ $page ][ $handle ] = [
+				   'file'              => $file,
+				   'dependencies'      => $dependencies,
+				   'version'           => $version,
+				   'enqueue_in_footer' => $enqueue_in_footer,
+				   'localization'      => $localization,
+				   'base_url'          => $base_url,
+			   ];
+		   }
+	   }
 
 	/**
 	 * Enqueue admin assets based on current screen
 	 *
 	 * @return void
 	 */
-	public function enqueue_admin_assets(): void {
-		$current_screen = get_current_screen();
+	   public function enqueue_admin_assets(): void {
+		   $current_screen = get_current_screen();
+		   if ( ! $current_screen ) {
+			   return;
+		   }
+		   $screen_id = $current_screen->id;
+		   $post_type = isset( $current_screen->post_type ) ? $current_screen->post_type : null;
 
-		if ( ! $current_screen ) {
-			return;
-		}
+		   // Enqueue WordPress editor assets on admin pages that might need them
+		   if ( in_array( $screen_id, [ 'toplevel_page_ghl-crm-admin', 'toplevel_page_ghl-crm-settings' ], true ) ) {
+			   wp_enqueue_editor();
+		   }
 
-		$screen_id = $current_screen->id;
-		
-		// Enqueue WordPress editor assets on admin pages that might need them
-		if ( in_array( $screen_id, [ 'toplevel_page_ghl-crm-admin', 'toplevel_page_ghl-crm-settings' ], true ) ) {
-			wp_enqueue_editor();
-		}
+		   // Enqueue assets registered for this screen ID
+		   if ( isset( $this->admin_assets[ $screen_id ] ) ) {
+			   foreach ( $this->admin_assets[ $screen_id ] as $handle => $asset ) {
+				   $this->enqueue_asset( $handle, $asset, 'admin' );
+			   }
+		   }
 
-		// Check if we have assets for this page
-		if ( ! isset( $this->admin_assets[ $screen_id ] ) ) {
-			return;
-		}
-
-		// Enqueue all assets for this page
-		foreach ( $this->admin_assets[ $screen_id ] as $handle => $asset ) {
-			$this->enqueue_asset( $handle, $asset, 'admin' );
-		}
-	}
+		   // Enqueue assets registered for this post type (e.g., 'cpt:product')
+		   if ( $post_type ) {
+			   $cpt_key = 'cpt:' . $post_type;
+			   if ( isset( $this->admin_assets[ $cpt_key ] ) ) {
+				   foreach ( $this->admin_assets[ $cpt_key ] as $handle => $asset ) {
+					   $this->enqueue_asset( $handle, $asset, 'admin' );
+				   }
+			   }
+		   }
+	   }
 
 	/**
 	 * Enqueue a single asset (style or script)
@@ -722,51 +734,54 @@ class AssetsManager {
 	 * @param string $context Context: 'admin' or 'public'.
 	 * @return void
 	 */
-	private function enqueue_asset( string $handle, array $asset, string $context = 'admin' ): void {
-		$file      = $asset['file'];
-		$deps      = $asset['dependencies'] ?? [];
-		$version   = $asset['version'] ?? GHL_CRM_VERSION;
-		$in_footer = $asset['enqueue_in_footer'] ?? true;
-		$localize  = $asset['localization'] ?? [];
+	   private function enqueue_asset( string $handle, array $asset, string $context = 'admin' ): void {
+		   $file      = $asset['file'];
+		   $deps      = $asset['dependencies'] ?? [];
+		   $version   = $asset['version'] ?? GHL_CRM_VERSION;
+		   $in_footer = $asset['enqueue_in_footer'] ?? true;
+		   $localize  = $asset['localization'] ?? [];
+		   $base_url  = $asset['base_url'] ?? null;
 
-		// Determine if it's a CSS or JS file
-		$file_extension = pathinfo( $file, PATHINFO_EXTENSION );
-		$is_style       = ( 'css' === $file_extension );
+		   // Determine if it's a CSS or JS file
+		   $file_extension = pathinfo( $file, PATHINFO_EXTENSION );
+		   $is_style       = ( 'css' === $file_extension );
 
-		// Build file URL
-		if ( 'admin' === $context ) {
-			$file_url = GHL_CRM_URL . 'assets/admin/' . ( $is_style ? 'css/' : 'js/' ) . $file;
-		} else {
-			$file_url = GHL_CRM_URL . 'assets/public/' . ( $is_style ? 'css/' : 'js/' ) . $file;
-		}
+		   // Build file URL
+		   if ( $base_url ) {
+			   $file_url = rtrim( $base_url, '/' ) . '/' . $file;
+		   } elseif ( 'admin' === $context ) {
+			   $file_url = GHL_CRM_URL . 'assets/admin/' . ( $is_style ? 'css/' : 'js/' ) . $file;
+		   } else {
+			   $file_url = GHL_CRM_URL . 'assets/public/' . ( $is_style ? 'css/' : 'js/' ) . $file;
+		   }
 
-		// Enqueue the asset
-		if ( $is_style ) {
-			wp_enqueue_style(
-				$handle,
-				$file_url,
-				$deps,
-				$version
-			);
-		} else {
-			wp_enqueue_script(
-				$handle,
-				$file_url,
-				$deps,
-				$version,
-				$in_footer
-			);
+		   // Enqueue the asset
+		   if ( $is_style ) {
+			   wp_enqueue_style(
+				   $handle,
+				   $file_url,
+				   $deps,
+				   $version
+			   );
+		   } else {
+			   wp_enqueue_script(
+				   $handle,
+				   $file_url,
+				   $deps,
+				   $version,
+				   $in_footer
+			   );
 
-			// Add localization if provided
-			if ( ! empty( $localize ) ) {
-				wp_localize_script(
-					$handle,
-					str_replace( '-', '_', $handle . '_data' ),
-					$localize
-				);
-			}
-		}
-	}
+			   // Add localization if provided
+			   if ( ! empty( $localize ) ) {
+				   wp_localize_script(
+					   $handle,
+					   str_replace( '-', '_', $handle . '_data' ),
+					   $localize
+				   );
+			   }
+		   }
+	   }
 
 	/**
 	 * Add a public/frontend asset
