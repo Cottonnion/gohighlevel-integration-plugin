@@ -1,5 +1,8 @@
 /**
  * GHL Product Meta Box
+ * 
+ * THIS FILE IS NOT USED NOW, IT HAS BEEN COPIED TO THE PRO VERSION OF THE PLUGIN.
+ * WILL BE REMOVED FROM THE FREE VERSION IN FUTURE UPDATES.
  *
  * Handles tag selection for WooCommerce products in Product Data tabs
  */
@@ -41,7 +44,7 @@
             scrollAfterSelect: false,
             width: '100%',
             ajax: {
-                url: ghlProductMetaBox.ajaxUrl + '?action=' + encodeURIComponent(ghlProductMetaBox.action),
+                url: ghl_crm_pro_woocommerce_data.ajaxUrl + '?action=' + encodeURIComponent(ghl_crm_pro_woocommerce_data.action),
                 type: 'POST',
                 dataType: 'json',
                 contentType: 'application/json; charset=UTF-8',
@@ -49,7 +52,7 @@
                 delay: 250,
                 data: function(params) {
                     return JSON.stringify({
-                        nonce: ghlProductMetaBox.nonce,
+                        nonce: ghl_crm_pro_woocommerce_data.nonce,
                         search: params.term || ''
                     });
                 },
