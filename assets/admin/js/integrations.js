@@ -219,86 +219,34 @@
 		/**
 		 * Gather form data
 		 */
-		gatherFormData() {
-			const data = {
-				action: 'ghl_crm_save_integrations',
-				nonce: ghl_crm_integrations_js_data.nonce,
-			};
+		   gatherFormData() {
+			   const data = {
+				   action: 'ghl_crm_save_integrations',
+				   nonce: ghl_crm_integrations_js_data.nonce,
+			   };
 
-			// WooCommerce Settings
-			if ($('#wc_enabled').length) {
-				data.wc_enabled = $('#wc_enabled').is(':checked') ? '1' : '0';
-				data.wc_convert_lead_enabled = $('#wc_convert_lead_enabled').is(':checked') ? '1' : '0';
-				
-				// Get customer tags (Select2 returns array)
-				const customerTags = $('#wc_customer_tag').val();
-				data.wc_customer_tag = Array.isArray(customerTags) ? customerTags : (customerTags ? [customerTags] : []);
-				
-				// Get order statuses for conversion (Select2 returns array)
-				const orderStatuses = $('#wc_convert_order_statuses').val();
-				data.wc_convert_order_statuses = Array.isArray(orderStatuses) ? orderStatuses : (orderStatuses ? [orderStatuses] : []);
-				
-				data.wc_abandoned_cart_enabled = $('#wc_abandoned_cart_enabled').is(':checked') ? '1' : '0';
-				data.wc_abandoned_cart_time = $('#wc_abandoned_cart_time').val();
-				
-				// Get abandoned cart tags (Select2 returns array)
-				const abandonedTags = $('#wc_abandoned_cart_tag').val();
-				data.wc_abandoned_cart_tag = Array.isArray(abandonedTags) ? abandonedTags : (abandonedTags ? [abandonedTags] : []);
+			   // Serialize all inputs in the active tab panel
+			   const $activePanel = $('.ghl-tab-panel.active');
+			   $activePanel.find('input, select, textarea').each(function() {
+				   const $el = $(this);
+				   const name = $el.attr('name') || $el.attr('id');
+				   if (!name) return;
 
-				// Opportunities Settings
-				data.wc_opportunities_enabled = $('#wc_opportunities_enabled').is(':checked') ? '1' : '0';
-				data.wc_opportunities_pipeline = $('#wc_opportunities_pipeline').val() || '';
-				data.wc_opportunities_stage_abandoned = $('#wc_opportunities_stage_abandoned').val() || '';
-				data.wc_opportunities_stage_pending = $('#wc_opportunities_stage_pending').val() || '';
-				data.wc_opportunities_stage_processing = $('#wc_opportunities_stage_processing').val() || '';
-				data.wc_opportunities_stage_completed = $('#wc_opportunities_stage_completed').val() || '';
-				data.wc_opportunities_stage_cancelled = $('#wc_opportunities_stage_cancelled').val() || '';
-				data.wc_opportunities_filter_type = $('#wc_opportunities_filter_type').val() || 'all';
-				data.wc_opportunities_min_value = $('#wc_opportunities_min_value').val() || 0;
+				   if ($el.is(':checkbox')) {
+					   data[name] = $el.is(':checked') ? '1' : '0';
+				   } else if ($el.is(':radio')) {
+					   if ($el.is(':checked')) {
+						   data[name] = $el.val();
+					   }
+				   } else if ($el.is('select[multiple]')) {
+					   data[name] = $el.val() || [];
+				   } else {
+					   data[name] = $el.val();
+				   }
+			   });
 
-				// Get opportunities products (Select2 returns array)
-				const opportunityProducts = $('#wc_opportunities_products').val();
-				data.wc_opportunities_products = Array.isArray(opportunityProducts) ? opportunityProducts : (opportunityProducts ? [opportunityProducts] : []);
-
-				// Get opportunities categories (Select2 returns array)
-				const opportunityCategories = $('#wc_opportunities_categories').val();
-				data.wc_opportunities_categories = Array.isArray(opportunityCategories) ? opportunityCategories : (opportunityCategories ? [opportunityCategories] : []);
-			}
-
-			// BuddyBoss Settings
-			if ($('#buddyboss_groups_enabled').length) {
-				data.buddyboss_groups_enabled = $('#buddyboss_groups_enabled').is(':checked') ? '1' : '0';
-				data.buddyboss_auto_delete_custom_objects = $('#buddyboss_auto_delete_custom_objects').is(':checked') ? '1' : '0';
-				data.buddyboss_field_length_limit = $('#buddyboss_field_length_limit').val() || 250;
-				data.buddyboss_sync_private_groups = $('#buddyboss_sync_private_groups').is(':checked') ? '1' : '0';
-				data.buddyboss_sync_hidden_groups = $('#buddyboss_sync_hidden_groups').is(':checked') ? '1' : '0';
-				data.buddyboss_real_time_sync = $('#buddyboss_real_time_sync').is(':checked') ? '1' : '0';
-				data.buddyboss_log_sync_operations = $('#buddyboss_log_sync_operations').is(':checked') ? '1' : '0';
-				
-				// Association behavior settings
-				data.buddyboss_missing_contact_strategy = $('input[name="buddyboss_missing_contact_strategy"]:checked').val() || 'skip';
-				data.buddyboss_default_group_type = $('#buddyboss_default_group_type').val() || '';
-			}
-
-			// LearnDash Settings
-			if ($('#learndash_enabled').length) {
-				data.learndash_enabled = $('#learndash_enabled').is(':checked') ? '1' : '0';
-				
-				// Get enrolled tags (Select2 returns array)
-				const enrolledTags = $('#learndash_enrolled_tags').val();
-				data.learndash_enrolled_tags = Array.isArray(enrolledTags) ? enrolledTags : (enrolledTags ? [enrolledTags] : []);
-				
-				// Get completed tags (Select2 returns array)
-				const completedTags = $('#learndash_completed_tags').val();
-				data.learndash_completed_tags = Array.isArray(completedTags) ? completedTags : (completedTags ? [completedTags] : []);
-				
-				// Get revoked tags (Select2 returns array)
-				const revokedTags = $('#learndash_revoked_tags').val();
-				data.learndash_revoked_tags = Array.isArray(revokedTags) ? revokedTags : (revokedTags ? [revokedTags] : []);
-			}
-
-			return data;
-		},
+			   return data;
+		   },
 
 		/**
 		 * Save settings via AJAX
