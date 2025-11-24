@@ -157,14 +157,14 @@ class MenuManager {
 			'__return_false'
 		);
 
-				add_submenu_page(
-					'ghl-crm-admin',
-					__( 'Forms', 'ghl-crm-integration' ),
-					__( 'Forms', 'ghl-crm-integration' ),
-					'manage_options',
-					'ghl-crm-admin#/forms',
-					'__return_false'
-				);
+		add_submenu_page(
+			'ghl-crm-admin',
+			__( 'Forms', 'ghl-crm-integration' ),
+			__( 'Forms', 'ghl-crm-integration' ),
+			'manage_options',
+			'ghl-crm-admin#/forms',
+			'__return_false'
+		);
 
 		add_submenu_page(
 			'ghl-crm-admin',
