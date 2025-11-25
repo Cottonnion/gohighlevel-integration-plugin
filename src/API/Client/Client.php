@@ -12,9 +12,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * API Client
+ * Class Client
  *
- * Handles all HTTP communication with GoHighLevel API including OAuth2 authentication
+ * Handles all HTTP communication with GoHighLevel API including OAuth2 authentication.
  *
  * @package    GHL_CRM_Integration
  * @subpackage API/Client
@@ -146,21 +146,21 @@ class Client implements ClientInterface {
 	 * Handle HTTP response globally
 	 * Automatically refreshes tokens on 401/403 errors and retries the request
 	 *
-	 * @param array|WP_Error $response HTTP response
-	 * @param array          $args     HTTP request arguments
-	 * @param string         $url      Request URL
-	 * @return array|WP_Error Modified response
+	 * @param array|WP_Error $response HTTP response.
+	 * @param array          $args     HTTP request arguments.
+	 * @param string         $url      Request URL.
+	 * @return array|WP_Error Modified response.
 	 */
 	public function handle_http_response( $response, $args, $url ) {
 		// Only handle GoHighLevel API requests
-		if ( strpos( $url, 'services.leadconnectorhq.com' ) === false &&
-			strpos( $url, 'rest.gohighlevel.com' ) === false ) {
+		if ( false === strpos( $url, 'services.leadconnectorhq.com' ) &&
+				false === strpos( $url, 'rest.gohighlevel.com' ) ) {
 			return $response;
 		}
 
 		// Skip if it's a token request (avoid infinite loop)
-		if ( strpos( $url, '/oauth/token' ) !== false ||
-			strpos( $url, '/oauth/reconnect' ) !== false ) {
+		if ( false !== strpos( $url, '/oauth/token' ) ||
+				false !== strpos( $url, '/oauth/reconnect' ) ) {
 			return $response;
 		}
 
@@ -180,10 +180,10 @@ class Client implements ClientInterface {
 
 		// Handle duplicate contact - auto-update instead of create
 		if ( 400 === $response_code &&
-			isset( $body_json['message'] ) &&
-			'This location does not allow duplicated contacts.' === $body_json['message'] &&
-			isset( $body_json['meta']['matchingField'] ) &&
-			'email' === $body_json['meta']['matchingField'] ) {
+				isset( $body_json['message'] ) &&
+				$body_json['message'] === 'This location does not allow duplicated contacts.' &&
+				isset( $body_json['meta']['matchingField'] ) &&
+				$body_json['meta']['matchingField'] === 'email' ) {
 
 			// Extract contact ID and update instead
 			$contact_id = sanitize_text_field( $body_json['meta']['contactId'] ?? '' );
@@ -211,7 +211,7 @@ class Client implements ClientInterface {
 
 		// Handle 401/403 authentication errors
 		if ( ( 401 === $response_code || 403 === $response_code ) &&
-			isset( $body_json['message'] ) ) {
+				isset( $body_json['message'] ) ) {
 
 			$error_message = $body_json['message'];
 
@@ -232,7 +232,7 @@ class Client implements ClientInterface {
 
 			$is_token_error = false;
 			foreach ( $token_errors as $error_str ) {
-				if ( stripos( $error_message, $error_str ) !== false ) {
+				if ( false !== stripos( $error_message, $error_str ) ) {
 					$is_token_error = true;
 					break;
 				}
@@ -327,7 +327,7 @@ class Client implements ClientInterface {
 	/**
 	 * Set API token
 	 *
-	 * @param string $token API token
+	 * @param string $token API token.
 	 * @return void
 	 */
 	public function set_token( string $token ): void {
@@ -337,7 +337,7 @@ class Client implements ClientInterface {
 	/**
 	 * Set location ID
 	 *
-	 * @param string $location_id Location ID
+	 * @param string $location_id Location ID.
 	 * @return void
 	 */
 	public function set_location_id( string $location_id ): void {
@@ -347,7 +347,7 @@ class Client implements ClientInterface {
 	/**
 	 * Set API version
 	 *
-	 * @param string $version API version
+	 * @param string $version API version.
 	 * @return void
 	 */
 	public function set_api_version( string $version ): void {
@@ -357,7 +357,7 @@ class Client implements ClientInterface {
 	/**
 	 * Skip OAuth token refresh for manual API key testing
 	 *
-	 * @param bool $skip Whether to skip OAuth refresh
+	 * @param bool $skip Whether to skip OAuth refresh.
 	 * @return void
 	 */
 	public function set_skip_oauth_refresh( bool $skip ): void {
@@ -367,9 +367,9 @@ class Client implements ClientInterface {
 	/**
 	 * Generate OAuth2 authorization URL
 	 *
-	 * @param string $redirect_uri Redirect URI after authorization
-	 * @param string $state        Random state parameter for security
-	 * @return string Authorization URL
+	 * @param string $redirect_uri Redirect URI after authorization.
+	 * @param string $state        Random state parameter for security.
+	 * @return string Authorization URL.
 	 */
 	public function get_oauth_authorization_url( string $redirect_uri, string $state ): string {
 		$params = [
@@ -776,7 +776,7 @@ class Client implements ClientInterface {
 				esc_html__( 'Invalid JSON response from API', 'ghl-crm-integration' ),
 				(int) $status_code,
 				[ 'raw_body' => $this->sanitize_response_scalar( (string) $body ) ] // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- sanitized via sanitize_response_scalar()
-			); 
+			);
 		}
 
 		// Handle error responses
@@ -915,6 +915,8 @@ class Client implements ClientInterface {
 	 * @param array $response    Decoded response body
 	 * @return void
 	 * @throws ApiException
+	 * @throws AuthenticationException
+	 * @throws RateLimitException
 	 */
 	private function handle_error_response( int $status_code, array $response ): void {
 		if ( $status_code >= 200 && $status_code < 300 ) {
@@ -924,7 +926,7 @@ class Client implements ClientInterface {
 		$sanitized_response = $this->sanitize_response_payload( $response );
 
 		// Extract error message - handle both string and array formats
-		$error_raw = $response['message'] ?? $response['error'] ?? esc_html__( 'Unknown API error', 'ghl-crm-integration' );
+		$error_raw = isset( $response['message'] ) ? $response['message'] : ( isset( $response['error'] ) ? $response['error'] : esc_html__( 'Unknown API error', 'ghl-crm-integration' ) );
 
 		if ( is_array( $error_raw ) ) {
 			// Convert array to readable string
@@ -943,8 +945,8 @@ class Client implements ClientInterface {
 
 		// Rate limit exceeded
 		if ( 429 === $status_code ) {
-			$headers      = isset( $sanitized_response['headers'] ) && is_array( $sanitized_response['headers'] ) ? $sanitized_response['headers'] : [];
-			$retry_after  = $headers['retry-after'] ?? $headers['Retry-After'] ?? 60;
+			$headers       = isset( $sanitized_response['headers'] ) && is_array( $sanitized_response['headers'] ) ? $sanitized_response['headers'] : [];
+			$retry_after   = $headers['retry-after'] ?? $headers['Retry-After'] ?? 60;
 			$response_body = $sanitized_response;
 			throw new RateLimitException(
 				sprintf(
@@ -954,7 +956,7 @@ class Client implements ClientInterface {
 				),
 				(int) $retry_after,
 				$response_body // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- sanitized via sanitize_response_payload()
-			); 
+			);
 		}
 
 		// Authentication error
