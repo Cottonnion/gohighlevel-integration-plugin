@@ -441,6 +441,7 @@ class WebhookHandler {
 			);
 		}
 	}
+
 	/**
 	 * Check if sync direction is enabled
 	 *
@@ -449,12 +450,12 @@ class WebhookHandler {
 	 */
 	private function is_sync_direction_enabled( string $direction ): bool {
 		$settings       = $this->settings_manager->get_settings_array();
-		$sync_direction = $settings['sync_direction'] ?? 'wp_to_ghl';
-
-		if ( 'bidirectional' === $sync_direction ) {
+		$sync_direction = $settings['sync_direction'] ?? 'both'; // Changed default to 'both'
+		
+		if ( 'both' === $sync_direction ) {
 			return true;
 		}
-
+		
 		return $sync_direction === $direction;
 	}
 
