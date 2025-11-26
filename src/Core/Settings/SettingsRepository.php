@@ -106,14 +106,17 @@ class SettingsRepository {
 	 * @return bool
 	 */
 	public function save_site_settings( array $settings, ?int $site_id = null ): bool {
-		if ( is_multisite() && null !== $site_id && $site_id !== get_current_blog_id() ) {
-			switch_to_blog( $site_id );
-			$saved = update_option( self::OPTION_NAME, $settings, true );
-			restore_current_blog();
-			return $saved;
-		}
+	       if ( is_multisite() && null !== $site_id && $site_id !== get_current_blog_id() ) {
+		       switch_to_blog( $site_id );
+		       $old = get_option( self::OPTION_NAME );
+		       $saved = update_option( self::OPTION_NAME, $settings, true );
+		       restore_current_blog();
+		       return $saved || $old === $settings;
+	       }
 
-		return update_option( self::OPTION_NAME, $settings, true );
+	       $old = get_option( self::OPTION_NAME );
+	       $saved = update_option( self::OPTION_NAME, $settings, true );
+	       return $saved || $old === $settings;
 	}
 
 	/**
