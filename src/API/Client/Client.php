@@ -200,8 +200,9 @@ class Client implements ClientInterface {
 
 				$args['body'] = wp_json_encode( $contact_data );
 
-				// Update the URL to include contact ID
-				$base_url = preg_replace( '/contacts\/?$/', '', $url );
+				// Remove query string first, then strip contacts endpoint
+				$base_url = preg_replace( '/\?.*$/', '', $url ); // Remove ?locationId=...
+				$base_url = preg_replace( '/contacts\/?$/', '', $base_url );
 				$new_url  = $base_url . 'contacts/' . $contact_id;
 
 				// Retry as update request
