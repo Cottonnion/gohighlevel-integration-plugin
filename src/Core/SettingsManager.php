@@ -227,26 +227,21 @@ class SettingsManager {
 				$this->mark_connection_unverified();
 			}
 
-			if ( $saved ) {
-				$response_data = [
-					'message'  => __( 'Settings saved successfully!', 'ghl-crm-integration' ),
-					'settings' => $this->get_settings_array(),
-				];
+		       if ( ! $saved ) {
+			       throw new \Exception( __( 'Failed to save settings. Please try again.', 'ghl-crm-integration' ) );
+		       }
 
-				// Add warning if credentials changed
-				if ( $credentials_changed ) {
-					$response_data['warning'] = __( 'API credentials changed. Please test your connection to verify.', 'ghl-crm-integration' );
-				}
+		       $response_data = [
+			       'message'  => __( 'Settings saved successfully!', 'ghl-crm-integration' ),
+			       'settings' => $this->get_settings_array(),
+		       ];
 
-				wp_send_json_success( $response_data );
-			} else {
-				wp_send_json_error(
-					[
-						'message' => __( 'Failed to save settings. Please try again.', 'ghl-crm-integration' ),
-					],
-					500
-				);
-			}
+		       // Add warning if credentials changed
+		       if ( $credentials_changed ) {
+			       $response_data['warning'] = __( 'API credentials changed. Please test your connection to verify.', 'ghl-crm-integration' );
+		       }
+
+		       wp_send_json_success( $response_data );
 		} catch ( \Exception $e ) {
 			wp_send_json_error(
 				[
@@ -258,6 +253,7 @@ class SettingsManager {
 					'error_details' => [
 						'file' => $e->getFile(),
 						'line' => $e->getLine(),
+						'err' => $e->getCode(),
 					],
 				],
 				500
