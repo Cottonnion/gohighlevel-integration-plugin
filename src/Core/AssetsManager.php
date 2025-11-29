@@ -652,6 +652,36 @@ class AssetsManager {
 			GHL_CRM_VERSION,
 			true
 		);
+
+		// Setup Wizard assets (loads only on setup wizard page)
+		$this->add_admin_asset(
+			'ghl-crm-setup-wizard-css',
+			[ 'admin_page_ghl-crm-setup-wizard' ],
+			'setup-wizard.css',
+			[],
+			[],
+			GHL_CRM_VERSION
+		);
+
+		// Correctly fetch connection tokens from the settings array
+		$settings = SettingsManager::get_instance()->get_settings_array();
+		$oauth_token = $settings['oauth_access_token'] ?? '';
+		$api_token = $settings['api_token'] ?? '';
+
+		$this->add_admin_asset(
+			'ghl-crm-setup-wizard-js',
+			[ 'admin_page_ghl-crm-setup-wizard' ],
+			'setup-wizard.js',
+			[ 'jquery', 'sweetalert2' ],
+			[
+				'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
+				'nonce'       => wp_create_nonce( 'ghl_crm_spa_nonce' ),
+				'oauthUrl'    => admin_url( 'admin.php?page=ghl-crm-oauth-connect' ),
+				'isConnected' => ( ! empty( $oauth_token ) || ! empty( $api_token ) ) ? '1' : '0',
+			],
+			GHL_CRM_VERSION,
+			true
+		);
 	} 
 	   /**
 		* Adds an admin script or style to the array of admin assets.
