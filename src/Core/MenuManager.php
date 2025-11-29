@@ -174,6 +174,15 @@ class MenuManager {
 			'ghl-crm-admin#/custom-objects',
 			'__return_false'
 		);
+
+		add_submenu_page(
+			null, // Hidden from menu
+			__( 'Setup Wizard', 'ghl-crm-integration' ),
+			__( 'Setup Wizard', 'ghl-crm-integration' ),
+			'manage_options',
+			'ghl-crm-setup-wizard',
+			[ $this, 'render_setup_wizard' ]
+		);
 	}
 
 	/**
@@ -306,6 +315,18 @@ class MenuManager {
 		}
 
 		$this->load_template( 'admin/spa-app' );
+	}
+
+	/*
+	* Render Setup Wizard
+	*
+	* @return void
+	*/
+	public function render_setup_wizard(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'ghl-crm-integration' ) );
+		}
+		$this->load_template( 'admin/setup-wizard' );
 	}
 
 	/**
