@@ -729,4 +729,112 @@ class AjaxHandler {
 			);
 		}
 	}
+
+	/**
+	 * Handle bulk sync all users
+	 * Processes users in batches to avoid timeouts
+	 *
+	 * @return void
+	 */
+	public static function bulk_sync_users(): void {
+		self::verify_admin_nonce();
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to perform this action.', 'ghl-crm-integration' ),
+				],
+				403
+			);
+		}
+
+		try {
+			$batch     = isset( $_POST['batch'] ) ? absint( $_POST['batch'] ) : 0;
+			$per_batch = 50; // Process 50 users per batch
+			$offset    = $batch * $per_batch;
+
+			// Get total user count on first batch
+			if ( 0 === $batch ) {
+				$total_users = count_users();
+				$total       = $total_users['total_users'];
+
+				// Store total in transient for progress tracking
+				set_transient( 'ghl_bulk_sync_total', $total, HOUR_IN_SECONDS );
+			} else {
+				$total = get_transient( 'ghl_bulk_sync_total' );
+				if ( false === $total ) {
+					// Transient expired, recalculate
+					$total_users = count_users();
+					$total       = $total_users['total_users'];
+				}
+			}
+
+			// Get users for this batch
+			$users = get_users(
+				[
+					'number'  => $per_batch,
+					'offset'  => $offset,
+					'orderby' => 'ID',
+					'order'   => 'ASC',
+					'fields'  => [ 'ID', 'user_email' ],
+				]
+			);
+
+			$queued = 0;
+			$failed = 0;
+
+			$user_hooks = \GHL_CRM\Integrations\Users\UserHooks::get_instance();
+
+			foreach ( $users as $user ) {
+				$wp_user = get_userdata( $user->ID );
+				if ( ! $wp_user ) {
+					$failed++;
+					continue;
+				}
+
+				$old_user_data = clone $wp_user;
+
+				if ( $user_hooks->queue_user_profile_sync( $user->ID, $old_user_data ) ) {
+					$queued++;
+				} else {
+					$failed++;
+				}
+			}
+
+			$processed = $offset + count( $users );
+			$remaining = max( 0, $total - $processed );
+			$has_more  = $remaining > 0;
+
+			// Clean up transient if done
+			if ( ! $has_more ) {
+				delete_transient( 'ghl_bulk_sync_total' );
+			}
+
+			wp_send_json_success(
+				[
+					'queued'    => $queued,
+					'failed'    => $failed,
+					'processed' => $processed,
+					'total'     => $total,
+					'remaining' => $remaining,
+					'has_more'  => $has_more,
+					'next_batch' => $batch + 1,
+					'message'   => sprintf(
+						/* translators: 1: processed count, 2: total count */
+						__( 'Processed %1$d of %2$d users...', 'ghl-crm-integration' ),
+						$processed,
+						$total
+					),
+				]
+			);
+
+		} catch ( \Exception $e ) {
+			wp_send_json_error(
+				[
+					'message' => $e->getMessage(),
+				],
+				500
+			);
+		}
+	}
 }

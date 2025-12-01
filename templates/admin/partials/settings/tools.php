@@ -153,16 +153,24 @@ $settings = $settings_manager->get_settings_array();
 				<tbody>
 					<tr>
 						<th scope="row">
-							<label><?php esc_html_e( 'Sync All Users', 'ghl-crm-integration' ); ?></label>
+							<label><?php esc_html_e( 'Sync All Users', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Queues all WordPress users for synchronization to GoHighLevel. Processing happens in batches of 50 users to prevent timeouts. You can track progress in real-time.', 'ghl-crm-integration' ); ?>">?</span>
+							</label>
 						</th>
 						<td>
-							<button type="button" class="ghl-button ghl-button-secondary" id="bulk-sync-users-btn" disabled>
+							<button type="button" class="ghl-button ghl-button-primary" id="bulk-sync-users-btn">
 								<span class="dashicons dashicons-groups"></span>
 								<?php esc_html_e( 'Sync All Users to GHL', 'ghl-crm-integration' ); ?>
 							</button>
 							<p class="description">
-								<?php esc_html_e( 'Queue all WordPress users for synchronization to GoHighLevel. Coming soon.', 'ghl-crm-integration' ); ?>
+								<?php esc_html_e( 'Queue all WordPress users for synchronization to GoHighLevel. Processing happens in batches to prevent timeouts.', 'ghl-crm-integration' ); ?>
 							</p>
+							<div id="bulk-sync-progress" style="display: none; margin-top: 15px;">
+								<div class="ghl-progress-bar-container">
+									<div class="ghl-progress-bar" id="bulk-sync-progress-bar"></div>
+								</div>
+								<p class="ghl-progress-text" id="bulk-sync-progress-text"></p>
+							</div>
 						</td>
 					</tr>
 				</tbody>

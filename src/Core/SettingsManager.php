@@ -91,6 +91,7 @@ class SettingsManager {
 		add_action( 'wp_ajax_ghl_crm_clear_cache', [ $this, 'clear_cache' ] );
 		add_action( 'wp_ajax_ghl_crm_reset_settings', [ $this, 'reset_settings' ] );
 		add_action( 'wp_ajax_ghl_crm_system_health_check', [ $this, 'system_health_check' ] );
+		add_action( 'wp_ajax_ghl_crm_bulk_sync_users', [ $this, 'handle_bulk_sync_users' ] );
 		add_action( 'wp_ajax_ghl_crm_get_custom_objects', [ $this, 'get_custom_objects' ] );
 		add_action( 'wp_ajax_ghl_crm_get_schema_details', [ $this, 'get_schema_details' ] );
 		add_action( 'wp_ajax_ghl_crm_get_forms', [ $this, 'handle_get_forms' ] );
@@ -2109,6 +2110,16 @@ class SettingsManager {
 	public function handle_clear_all_logs(): void {
 		// Delegate to AjaxHandler (nonce and permissions checked there)
 		AjaxHandler::clear_all_logs();
+	}
+
+	/**
+	 * Handle bulk sync users AJAX request
+	 *
+	 * @return void
+	 */
+	public function handle_bulk_sync_users(): void {
+		// Delegate to AjaxHandler (nonce and permissions checked there)
+		AjaxHandler::bulk_sync_users();
 	}
 
 	/**
