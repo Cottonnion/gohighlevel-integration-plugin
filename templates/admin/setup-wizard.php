@@ -23,8 +23,8 @@ $is_pro_version = defined( 'GHL_CRM_PRO_VERSION' );
 $show_woocommerce = $is_pro_version && $is_woocommerce_active;
 // BuddyBoss: Available in free version if plugin is installed
 $show_buddyboss = $is_buddyboss_active;
-// LearnDash: Available in free version if plugin is installed
-$show_learndash = $is_learndash_active;
+// LearnDash: PRO only
+$show_learndash = $is_pro_version && $is_learndash_active;
 
 // Count available integrations
 $available_integrations = 0;
@@ -373,7 +373,12 @@ $enable_role_tags = ! empty( $settings['role_tags'] ) && is_array( $settings['ro
                                         <span class="dashicons dashicons-welcome-learn-more"></span>
                                     </div>
                                     <div class="ghl-integration-info">
-                                        <strong><?php esc_html_e( 'LearnDash', 'ghl-crm-integration' ); ?></strong>
+                                        <strong>
+                                            <?php esc_html_e( 'LearnDash', 'ghl-crm-integration' ); ?>
+                                            <?php if ( $is_pro_version ) : ?>
+                                                <span class="ghl-integration-badge ghl-integration-badge--pro"><?php esc_html_e( 'PRO', 'ghl-crm-integration' ); ?></span>
+                                            <?php endif; ?>
+                                        </strong>
                                         <span>
                                             <?php 
                                             if ( ! $is_learndash_active ) {
@@ -386,6 +391,25 @@ $enable_role_tags = ! empty( $settings['role_tags'] ) && is_array( $settings['ro
                                     </div>
                                 </div>
                             </label>
+                        <?php else : ?>
+                            <!-- LearnDash PRO Feature -->
+                            <div class="ghl-integration-item ghl-integration-item--pro">
+                                <div class="ghl-integration-content">
+                                    <div class="ghl-integration-icon">
+                                        <span class="dashicons dashicons-welcome-learn-more"></span>
+                                    </div>
+                                    <div class="ghl-integration-info">
+                                        <strong>
+                                            <?php esc_html_e( 'LearnDash', 'ghl-crm-integration' ); ?>
+                                            <span class="ghl-pro-badge"><?php esc_html_e( 'PRO', 'ghl-crm-integration' ); ?></span>
+                                        </strong>
+                                        <span><?php esc_html_e( 'Sync course enrollments and progress', 'ghl-crm-integration' ); ?></span>
+                                    </div>
+                                    <div class="ghl-integration-lock">
+                                        <span class="dashicons dashicons-lock"></span>
+                                    </div>
+                                </div>
+                            </div>
                         <?php endif; ?>
                     </div>
                 <?php else : ?>
@@ -394,7 +418,7 @@ $enable_role_tags = ! empty( $settings['role_tags'] ) && is_array( $settings['ro
                         <div class="ghl-empty-state">
                             <span class="dashicons dashicons-admin-plugins"></span>
                             <h3><?php esc_html_e( 'No Integration Plugins Found', 'ghl-crm-integration' ); ?></h3>
-                            <p><?php esc_html_e( 'Install WooCommerce, BuddyBoss, or LearnDash to enable integrations.', 'ghl-crm-integration' ); ?></p>
+                            <p><?php esc_html_e( 'Install BuddyBoss to enable integrations, or upgrade to PRO for WooCommerce and LearnDash support.', 'ghl-crm-integration' ); ?></p>
                         </div>
                     </div>
                 <?php endif; ?>
