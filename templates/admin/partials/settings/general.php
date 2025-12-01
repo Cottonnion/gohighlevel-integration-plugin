@@ -184,6 +184,26 @@ $user_register_tags            = $settings['user_register_tags'] ?? [];
 		</div>
 	</div>
 
+		<!-- Setup Wizard Section -->
+	<div class="ghl-settings-section ghl-settings-card" style="margin-bottom:32px;">
+		<div class="ghl-settings-header">
+			<h2>
+				<span class="dashicons dashicons-welcome-learn-more"></span>
+				<?php esc_html_e( 'Setup Wizard', 'ghl-crm-integration' ); ?>
+			</h2>
+			<p class="description">
+				<?php esc_html_e( 'Quickly configure the most important plugin settings with the guided setup wizard.', 'ghl-crm-integration' ); ?>
+			</p>
+		</div>
+		<hr>
+		<div style="padding: 12px 0;">
+			<button type="button" class="ghl-button ghl-button-secondary" onclick="window.location.href='admin.php?page=ghl-crm-setup-wizard'">
+				<span class="dashicons dashicons-welcome-learn-more"></span>
+				<?php esc_html_e( 'Launch Setup Wizard', 'ghl-crm-integration' ); ?>
+			</button>
+		</div>
+	</div>
+	
 	<!-- Save Button -->
 	<button type="button" id="save-general-settings" class="ghl-button ghl-button-primary ghl-save-settings-btn">
 		<span class="ghl-button-text"><?php esc_html_e( 'Save General Settings', 'ghl-crm-integration' ); ?></span>
