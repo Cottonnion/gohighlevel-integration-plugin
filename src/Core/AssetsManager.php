@@ -915,6 +915,8 @@ class AssetsManager {
 			'userData'         => $user_data,
 			'formSettings'     => $all_form_settings,
 			'whiteLabelDomain' => $white_label_domain,
+			'ajaxUrl'          => admin_url( 'admin-ajax.php' ),
+			'nonce'            => wp_create_nonce( 'ghl_form_submission' ),
 		],
 		GHL_CRM_VERSION,
 		true

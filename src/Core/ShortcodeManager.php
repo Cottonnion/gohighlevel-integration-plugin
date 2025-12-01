@@ -84,6 +84,21 @@ class ShortcodeManager {
 		return '';
 	}
 
+	// Check if form should be hidden due to submission limit
+	if ( $form_settings->should_hide_form( $form_id ) ) {
+		$settings = $form_settings->get_form_settings( $form_id );
+		$message = ! empty( $settings['submitted_message'] ) ? $settings['submitted_message'] : '';
+		
+		if ( ! empty( $message ) ) {
+			return '<div class="ghl-form-submitted-message" style="padding: 20px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; color: #155724; text-align: center;">' . 
+				wp_kses_post( wpautop( $message ) ) . 
+				'</div>';
+		}
+		
+		// Empty message = hide completely
+		return '';
+	}
+
 	// Get form embed URL
 	$embed_url = $this->get_form_embed_url( $form_id );		if ( ! $embed_url ) {
 			return $this->render_error( __( 'Unable to load form. Please check your GoHighLevel connection.', 'ghl-crm-integration' ) );
@@ -94,10 +109,16 @@ class ShortcodeManager {
 	$height = $atts['height'] === 'auto' ? 'auto' : $this->sanitize_dimension( $atts['height'] );
 
 	// Generate unique ID for this form instance
-	$wrapper_id = 'ghl-form-' . sanitize_key( $form_id ) . '-' . wp_rand( 1000, 9999 );		// Build iframe HTML with loading state
+	$wrapper_id = 'ghl-form-' . sanitize_key( $form_id ) . '-' . wp_rand( 1000, 9999 );
+
+	// Check if tracking is needed
+	$settings = $form_settings->get_form_settings( $form_id );
+	$track_submission = ( 'once' === $settings['submission_limit'] && is_user_logged_in() );
+
+	// Build iframe HTML
 		ob_start();
 		?>
-		<div id="<?php echo esc_attr( $wrapper_id ); ?>" class="ghl-form-wrapper" style="width: <?php echo esc_attr( $width ); ?>; max-width: 100%;" data-loading="true">
+		<div id="<?php echo esc_attr( $wrapper_id ); ?>" class="ghl-form-wrapper" style="width: <?php echo esc_attr( $width ); ?>; max-width: 100%;" data-loading="true" data-form-id="<?php echo esc_attr( $form_id ); ?>" data-track-submission="<?php echo $track_submission ? '1' : '0'; ?>">
 			<div class="ghl-form-loading">
 				<div class="ghl-form-spinner"></div>
 				<p><?php esc_html_e( 'Loading form...', 'ghl-crm-integration' ); ?></p>
@@ -107,10 +128,8 @@ class ShortcodeManager {
 				style="width: 100%; <?php echo $height === 'auto' ? 'height: 800px;' : 'height: ' . esc_attr( $height ) . ';'; ?> border: none; display: none;"
 				scrolling="yes"
 				id="<?php echo esc_attr( $wrapper_id ); ?>-iframe"
-				title="<?php
-				/* translators: %s: GoHighLevel form ID */
-				echo esc_attr( sprintf( __( 'GoHighLevel Form %s', 'ghl-crm-integration' ), $atts['id'] ) );
-				?>"
+				data-form-id="<?php echo esc_attr( $form_id ); ?>"
+				title="<?php echo esc_attr( sprintf( __( 'GoHighLevel Form %s', 'ghl-crm-integration' ), $atts['id'] ) ); ?>"
 				onload="this.style.display='block'; this.parentElement.setAttribute('data-loading', 'false');"
 			></iframe>
 		</div>

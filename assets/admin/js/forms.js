@@ -232,6 +232,8 @@
 		const autofillEnabled = existingSettings.autofill_enabled !== false; // Default to true
 		const loggedOnly = existingSettings.logged_only === true; // Default to false
 		const customParams = existingSettings.custom_params || [];
+		const submissionLimit = existingSettings.submission_limit || 'unlimited';
+		const submittedMessage = existingSettings.submitted_message || '';
 		
 		// Build custom params HTML
 		let customParamsHtml = '';
@@ -307,6 +309,41 @@
 													</span>
 												</label>
 											</div>
+										</div>
+									</div>
+									
+									<!-- Submission Limit Settings -->
+									<div class="ghl-settings-group">
+										<h3>
+											<span class="dashicons dashicons-forms"></span>
+											Submission Controls
+										</h3>
+										<p class="description">Control how many times users can submit this form</p>
+										
+										<div class="ghl-form-item">
+											<label for="ghl-form-submission-limit-${formId}">
+												Submission Limit
+												<span class="ghl-tooltip-icon" data-ghl-tooltip="Choose whether users can submit this form multiple times or only once.">?</span>
+											</label>
+											<select id="ghl-form-submission-limit-${formId}" name="submission_limit" class="ghl-select">
+												<option value="unlimited" ${submissionLimit === 'unlimited' ? 'selected' : ''}>Unlimited - Allow multiple submissions</option>
+												<option value="once" ${submissionLimit === 'once' ? 'selected' : ''}>Once - One submission per user</option>
+											</select>
+										</div>
+										
+										<div class="ghl-form-item" id="ghl-submitted-message-wrapper-${formId}" style="${submissionLimit === 'once' ? '' : 'display:none;'}">
+											<label for="ghl-form-submitted-message-${formId}">
+												Submitted Message
+												<span class="ghl-tooltip-icon" data-ghl-tooltip="Message to show after user submits. Leave empty to hide the form completely without showing any message.">?</span>
+											</label>
+											<textarea 
+												id="ghl-form-submitted-message-${formId}" 
+												name="submitted_message" 
+												class="ghl-textarea" 
+												rows="3" 
+												placeholder="Thank you! You have already submitted this form."
+											>${this.escapeHtml(submittedMessage)}</textarea>
+											<p class="description" style="margin-top: 5px; color: #666;">Leave empty to hide form completely without showing any message.</p>
 										</div>
 									</div>
 									
@@ -401,6 +438,17 @@
 				}
 		});
 		
+		// Bind submission limit dropdown
+		$(`#ghl-form-submission-limit-${formId}`).on('change', function() {
+			const value = $(this).val();
+			const $msgWrapper = $(`#ghl-submitted-message-wrapper-${formId}`);
+			if (value === 'once') {
+				$msgWrapper.slideDown(200);
+			} else {
+				$msgWrapper.slideUp(200);
+			}
+		});
+		
 		// Bind add parameter button
 		$('.ghl-add-custom-param').on('click', function() {
 			const $container = $(`#ghl-custom-params-${formId}`);
@@ -430,7 +478,9 @@
 			const settings = {
 				autofill_enabled: $(`#ghl-form-autofill-${formId}`).prop('checked'),
 				logged_only: $(`#ghl-form-logged-only-${formId}`).prop('checked'),
-				custom_params: custom_params
+				custom_params: custom_params,
+				submission_limit: $(`#ghl-form-submission-limit-${formId}`).val(),
+				submitted_message: $(`#ghl-form-submitted-message-${formId}`).val()
 			};
 			
 		

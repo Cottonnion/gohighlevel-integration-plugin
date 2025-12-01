@@ -55,6 +55,8 @@ class FormSettings {
 	public function init(): void {
 		add_action( 'wp_ajax_ghl_save_form_settings', [ $this, 'ajax_save_form_settings' ] );
 		add_action( 'wp_ajax_ghl_get_form_settings', [ $this, 'ajax_get_form_settings' ] );
+		add_action( 'wp_ajax_ghl_mark_form_submitted', [ $this, 'ajax_mark_form_submitted' ] );
+		add_action( 'wp_ajax_nopriv_ghl_mark_form_submitted', [ $this, 'ajax_mark_form_submitted' ] );
 	}
 
 	/**
@@ -82,9 +84,11 @@ class FormSettings {
 	$all_settings = $this->get_all_settings();
 	
 	$defaults = [
-		'autofill_enabled' => true,  // Auto-fill enabled by default
-		'logged_only'      => false, // Show to everyone by default
-		'custom_params'    => [],    // Custom URL parameters
+		'autofill_enabled'    => true,  // Auto-fill enabled by default
+		'logged_only'         => false, // Show to everyone by default
+		'custom_params'       => [],    // Custom URL parameters
+		'submission_limit'    => 'unlimited', // 'unlimited' or 'once'
+		'submitted_message'   => '', // Message to show after submission (empty = hide completely)
 	];
 
 	if ( isset( $all_settings[ $form_id ] ) && is_array( $all_settings[ $form_id ] ) ) {
@@ -104,11 +108,15 @@ class FormSettings {
 	
 	// Sanitize settings
 	$sanitized_settings = [
-		'autofill_enabled' => isset( $settings['autofill_enabled'] ) && $settings['autofill_enabled'],
-		'logged_only'      => isset( $settings['logged_only'] ) && $settings['logged_only'],
-		'custom_params'    => isset( $settings['custom_params'] ) && is_array( $settings['custom_params'] ) 
+		'autofill_enabled'    => isset( $settings['autofill_enabled'] ) && $settings['autofill_enabled'],
+		'logged_only'         => isset( $settings['logged_only'] ) && $settings['logged_only'],
+		'custom_params'       => isset( $settings['custom_params'] ) && is_array( $settings['custom_params'] ) 
 			? $this->sanitize_custom_params( $settings['custom_params'] ) 
 			: [],
+		'submission_limit'    => isset( $settings['submission_limit'] ) && in_array( $settings['submission_limit'], [ 'unlimited', 'once' ], true ) 
+			? $settings['submission_limit'] 
+			: 'unlimited',
+		'submitted_message'   => isset( $settings['submitted_message'] ) ? sanitize_textarea_field( $settings['submitted_message'] ) : '',
 	];		$all_settings[ $form_id ] = $sanitized_settings;
 
 		if ( is_multisite() ) {
@@ -165,10 +173,24 @@ class FormSettings {
 			$custom_params = $this->sanitize_custom_params( $raw_settings['custom_params'] );
 		}
 
+		// Parse submission limit
+		$submission_limit = 'unlimited';
+		if ( isset( $raw_settings['submission_limit'] ) && in_array( $raw_settings['submission_limit'], [ 'unlimited', 'once' ], true ) ) {
+			$submission_limit = $raw_settings['submission_limit'];
+		}
+
+		// Parse submitted message
+		$submitted_message = '';
+		if ( isset( $raw_settings['submitted_message'] ) ) {
+			$submitted_message = sanitize_textarea_field( $raw_settings['submitted_message'] );
+		}
+
 		$settings = [
-			'autofill_enabled' => $autofill_enabled,
-			'logged_only'      => $logged_only,
-			'custom_params'    => $custom_params,
+			'autofill_enabled'    => $autofill_enabled,
+			'logged_only'         => $logged_only,
+			'custom_params'       => $custom_params,
+			'submission_limit'    => $submission_limit,
+			'submitted_message'   => $submitted_message,
 		];
 
 		// Save settings (will throw exception if it fails)
@@ -211,6 +233,36 @@ class FormSettings {
 
 		wp_send_json_success( [
 			'settings' => $settings,
+		] );
+	}
+
+	/**
+	 * AJAX handler to mark form as submitted
+	 *
+	 * @return void
+	 */
+	public function ajax_mark_form_submitted(): void {
+		// Verify nonce
+		if ( ! check_ajax_referer( 'ghl_form_submission', 'nonce', false ) ) {
+			wp_send_json_error( [ 'message' => __( 'Invalid security token.', 'ghl-crm-integration' ) ] );
+		}
+
+		// Check if user is logged in
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( [ 'message' => __( 'User not logged in.', 'ghl-crm-integration' ) ] );
+		}
+
+		// Get form ID
+		$form_id = isset( $_POST['form_id'] ) ? sanitize_text_field( wp_unslash( $_POST['form_id'] ) ) : '';
+		if ( empty( $form_id ) ) {
+			wp_send_json_error( [ 'message' => __( 'Form ID is required.', 'ghl-crm-integration' ) ] );
+		}
+
+		// Mark as submitted
+		$this->mark_form_submitted( $form_id );
+
+		wp_send_json_success( [
+			'message' => __( 'Form marked as submitted.', 'ghl-crm-integration' ),
 		] );
 	}
 
@@ -349,5 +401,80 @@ class FormSettings {
 		}
 		
 		return $text;
+	}
+
+	/**
+	 * Check if user has already submitted a form
+	 *
+	 * @param string $form_id Form ID.
+	 * @param int    $user_id User ID (0 for current user).
+	 * @return bool
+	 */
+	public function has_user_submitted( string $form_id, int $user_id = 0 ): bool {
+		if ( 0 === $user_id ) {
+			$user_id = get_current_user_id();
+		}
+
+		if ( 0 === $user_id ) {
+			return false; // Not logged in
+		}
+
+		$submitted_forms = get_user_meta( $user_id, '_ghl_submitted_forms', true );
+		if ( ! is_array( $submitted_forms ) ) {
+			$submitted_forms = [];
+		}
+
+		return in_array( $form_id, $submitted_forms, true );
+	}
+
+	/**
+	 * Mark form as submitted by user
+	 *
+	 * @param string $form_id Form ID.
+	 * @param int    $user_id User ID (0 for current user).
+	 * @return bool
+	 */
+	public function mark_form_submitted( string $form_id, int $user_id = 0 ): bool {
+		if ( 0 === $user_id ) {
+			$user_id = get_current_user_id();
+		}
+
+		if ( 0 === $user_id ) {
+			return false;
+		}
+
+		$submitted_forms = get_user_meta( $user_id, '_ghl_submitted_forms', true );
+		if ( ! is_array( $submitted_forms ) ) {
+			$submitted_forms = [];
+		}
+
+		if ( ! in_array( $form_id, $submitted_forms, true ) ) {
+			$submitted_forms[] = $form_id;
+			update_user_meta( $user_id, '_ghl_submitted_forms', $submitted_forms );
+		}
+
+		return true;
+	}
+
+	/**
+	 * Check if form should be hidden for user
+	 *
+	 * @param string $form_id Form ID.
+	 * @return bool
+	 */
+	public function should_hide_form( string $form_id ): bool {
+		$settings = $this->get_form_settings( $form_id );
+
+		// If submission limit is unlimited, never hide
+		if ( 'unlimited' === $settings['submission_limit'] ) {
+			return false;
+		}
+
+		// If limit is 'once', check if user has submitted
+		if ( 'once' === $settings['submission_limit'] ) {
+			return $this->has_user_submitted( $form_id );
+		}
+
+		return false;
 	}
 }

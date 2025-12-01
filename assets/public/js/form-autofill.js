@@ -320,4 +320,104 @@
 		autoFill.processIframes();
 	};
 
+	// Initialize submission tracking
+	function initSubmissionTracking() {
+		// Only track forms that need it
+		const trackedForms = new Set();
+		
+		document.querySelectorAll('.ghl-form-wrapper[data-track-submission="1"]').forEach(wrapper => {
+			const formId = wrapper.dataset.formId;
+			if (formId) {
+				trackedForms.add(formId);
+			}
+		});
+
+		// Listen for GHL postMessage events
+		window.addEventListener('message', function(event) {
+			// Check if from GHL domain
+			const ghlDomains = autoFill.ghlDomains;
+			let isGHLDomain = false;
+			
+			try {
+				const origin = new URL(event.origin).hostname;
+				isGHLDomain = ghlDomains.some(domain => origin.includes(domain));
+			} catch (e) {
+				return;
+			}
+
+			if (!isGHLDomain) return;
+
+			// GHL sends: ['set-sticky-contacts', 'key', '{"customer_id": ...}', ...]
+			if (Array.isArray(event.data) && event.data[0] === 'set-sticky-contacts') {
+				const dataString = event.data[2];
+				
+				if (dataString && typeof dataString === 'string') {
+					try {
+						const parsedData = JSON.parse(dataString);
+						// Successful submission detected
+						if (parsedData.customer_id || parsedData.email) {
+							// Find which form iframe sent this
+							const iframes = document.querySelectorAll('iframe[data-form-id]');
+							iframes.forEach(iframe => {
+								if (iframe.contentWindow === event.source) {
+									const formId = iframe.dataset.formId;
+									const wrapper = iframe.closest('.ghl-form-wrapper');
+									
+									if (formId && trackedForms.has(formId) && wrapper) {
+										markFormAsSubmitted(formId, wrapper);
+									}
+								}
+							});
+						}
+					} catch (e) {
+						// Not JSON, ignore
+					}
+				}
+			}
+		});
+	}
+
+	// Mark form as submitted via AJAX
+	function markFormAsSubmitted(formId, wrapper) {
+		const data = typeof ghl_form_autofill_data !== 'undefined' ? ghl_form_autofill_data : {};
+		
+		fetch(data.ajaxUrl || '/wp-admin/admin-ajax.php', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: new URLSearchParams({
+				action: 'ghl_mark_form_submitted',
+				nonce: data.nonce || '',
+				form_id: formId
+			})
+		})
+		.then(response => response.json())
+		.then(result => {
+			if (result.success) {
+				// Check if should hide form or show custom message
+				const settings = autoFill.formSettings[formId];
+				if (settings && settings.submission_limit === 'once') {
+					const message = settings.submitted_message || '';
+					
+					if (message) {
+						// Show custom message
+						wrapper.innerHTML = '<div style="padding: 20px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; color: #155724; text-align: center;">' + 
+							message.replace(/\n/g, '<br>') + 
+							'</div>';
+					} else {
+						// Hide completely
+						wrapper.innerHTML = '';
+					}
+				}
+			}
+		})
+		.catch(err => console.error('[GHL Form] Error:', err));
+	}
+
+	// Initialize on DOM ready
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initSubmissionTracking);
+	} else {
+		initSubmissionTracking();
+	}
+
 })();
