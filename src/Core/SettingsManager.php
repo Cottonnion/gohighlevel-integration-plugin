@@ -96,6 +96,7 @@ class SettingsManager {
 		add_action( 'wp_ajax_ghl_crm_get_forms', [ $this, 'handle_get_forms' ] );
 		add_action( 'wp_ajax_ghl_crm_refresh_metadata', [ $this, 'refresh_metadata' ] );
 		add_action( 'wp_ajax_ghl_crm_preview_user_sync', [ $this, 'preview_user_sync' ] );
+		add_action( 'wp_ajax_ghl_crm_save_wizard_settings', [ $this, 'handle_save_wizard_settings' ] );
 
 		// Custom Object Mapping AJAX handlers
 		add_action( 'wp_ajax_ghl_crm_get_post_types', [ $this, 'get_post_types' ] );
@@ -741,7 +742,8 @@ class SettingsManager {
 		if (
 			! wp_verify_nonce( $nonce, 'ghl_crm_settings_nonce' ) &&
 			! wp_verify_nonce( $nonce, 'ghl_crm_admin' ) &&
-			! wp_verify_nonce( $nonce, 'ghl_user_profile' )
+			! wp_verify_nonce( $nonce, 'ghl_user_profile' ) &&
+			! wp_verify_nonce( $nonce, 'ghl_crm_spa_nonce' )
 		) {
 			wp_send_json_error( [ 'message' => 'Invalid nonce.' ], 403 );
 		}
@@ -2013,6 +2015,16 @@ class SettingsManager {
 
 		// Delegate to AjaxHandler
 		AjaxHandler::save_integrations();
+	}
+
+	/**
+	 * Handle save wizard settings AJAX request
+	 * Wrapper method for AjaxHandler::save_wizard_settings()
+	 *
+	 * @return void
+	 */
+	public function handle_save_wizard_settings(): void {
+		AjaxHandler::save_wizard_settings();
 	}
 
 	/**
