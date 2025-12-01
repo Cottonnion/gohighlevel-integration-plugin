@@ -321,7 +321,12 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 						$saved_ghl_field = '';
 					}
 					
-					$saved_direction = isset( $saved_mappings[ $key ]['direction'] ) ? $saved_mappings[ $key ]['direction'] : 'both';
+					// Email field direction should always be 'both' (locked)
+					if ( $key === 'user_email' ) {
+						$saved_direction = 'both';
+					} else {
+						$saved_direction = isset( $saved_mappings[ $key ]['direction'] ) ? $saved_mappings[ $key ]['direction'] : 'both';
+					}
 					
 					// Email field should be disabled (required by GHL)
 					$is_email_field = ( $key === 'user_email' );
@@ -349,11 +354,15 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 							<?php endif; ?>
 						</td>
 						<td>
-							<select name="sync_direction_<?php echo esc_attr( $key ); ?>" class="ghl-select">
+							<select name="sync_direction_<?php echo esc_attr( $key ); ?>" class="ghl-select" <?php echo $is_email_field ? 'disabled' : ''; ?>>
 								<option value="both" <?php selected( $saved_direction, 'both' ); ?>><?php esc_html_e( '↔ Both Ways', 'ghl-crm-integration' ); ?></option>
 								<option value="to_ghl" <?php selected( $saved_direction, 'to_ghl' ); ?>><?php esc_html_e( '→ To GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
 								<option value="from_ghl" <?php selected( $saved_direction, 'from_ghl' ); ?>><?php esc_html_e( '← From GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
 							</select>
+							<?php if ( $is_email_field ) : ?>
+								<!-- Hidden input to ensure email sync direction is submitted as 'both' -->
+								<input type="hidden" name="sync_direction_<?php echo esc_attr( $key ); ?>" value="both">
+							<?php endif; ?>
 						</td>
 					</tr>
 				<?php endforeach; ?>
