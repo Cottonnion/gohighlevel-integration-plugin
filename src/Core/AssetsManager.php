@@ -699,7 +699,6 @@ class AssetsManager {
 		$user_register_tags = $settings['user_register_tags'] ?? [];
 		$wc_enabled = $settings['wc_enabled'] ?? false;
 		$buddyboss_enabled = $settings['buddyboss_enabled'] ?? false;
-		$learndash_enabled = $settings['learndash_enabled'] ?? false;
 		$delete_contact_on_user_delete = $settings['delete_contact_on_user_delete'] ?? false;
 		$enable_sync_logging = $settings['enable_sync_logging'] ?? false;
 		$enable_role_tags = ! empty( $settings['role_tags'] ) && is_array( $settings['role_tags'] );
@@ -722,7 +721,6 @@ class AssetsManager {
 					'user_register_tags'            => $user_register_tags,
 					'woocommerce'                   => $wc_enabled,
 					'buddyboss'                     => $buddyboss_enabled,
-					'learndash'                     => $learndash_enabled,
 					'delete_contact_on_user_delete' => $delete_contact_on_user_delete,
 					'enable_sync_logging'           => $enable_sync_logging,
 					'enable_role_tags'              => $enable_role_tags,
