@@ -206,6 +206,11 @@
 					if (typeof window.ghlSyncPreview.init === 'function') {
 						window.ghlSyncPreview.init();
 					}
+					
+					// Re-initialize tools handlers (for tools tab)
+					if (typeof window.initToolsHandlers === 'function') {
+						window.initToolsHandlers();
+					}
 				} else {
 					$content.html('<div class="notice notice-error"><p>' + (response.data.message || 'Failed to load settings tab.') + '</p></div>');
 				}

@@ -442,6 +442,20 @@ class AssetsManager {
 			true
 		);
 
+		// Tools page JS (loads on main-settings page for tools tab)
+		$this->add_admin_asset(
+			'ghl-crm-tools-js',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'tools.js',
+			[ 'jquery', 'sweetalert2' ],
+			[
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
+			],
+			'1.0.0',
+			true
+		);
+
 		// Field Mapping CSS (loads on main-settings page for field-mapping tab)
 		$this->add_admin_asset(
 			'ghl-crm-field-mapping-css',
