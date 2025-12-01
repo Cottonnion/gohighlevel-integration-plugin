@@ -88,7 +88,7 @@
     }
 
     /**
-     * Position tooltip relative to cursor or element
+     * Position tooltip relative to element
      */
     function positionTooltip(tooltip, element) {
         const rect = element.getBoundingClientRect();
@@ -96,8 +96,9 @@
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
         
-        let x = mouseX;
-        let y = mouseY - tooltipRect.height - TOOLTIP_CONFIG.offset;
+        // Position tooltip centered above the element, slightly to the left and higher up
+        let x = rect.left + (rect.width / 2) - (tooltipRect.width / 2) - 24;
+        let y = rect.top - tooltipRect.height - TOOLTIP_CONFIG.offset - 23;
         
         // Smart positioning - adjust if tooltip goes off screen
         if (TOOLTIP_CONFIG.smartPositioning) {
@@ -111,7 +112,7 @@
             
             // Vertical adjustments - show below if not enough space above
             if (y < 10) {
-                y = mouseY + TOOLTIP_CONFIG.offset;
+                y = rect.bottom + TOOLTIP_CONFIG.offset;
                 // Flip arrow
                 const arrow = tooltip.querySelector('.ghl-tooltip-arrow');
                 if (arrow) {
@@ -128,10 +129,9 @@
                 }
             }
             
-            // If still off screen, position relative to element center
+            // If still off screen at bottom, force above
             if (y + tooltipRect.height > viewportHeight - 10) {
                 y = rect.top - tooltipRect.height - TOOLTIP_CONFIG.offset;
-                x = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
             }
         }
         
