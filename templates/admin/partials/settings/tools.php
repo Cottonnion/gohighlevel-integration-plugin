@@ -165,21 +165,6 @@ $settings = $settings_manager->get_settings_array();
 							</p>
 						</td>
 					</tr>
-					
-					<tr>
-						<th scope="row">
-							<label><?php esc_html_e( 'Clear Sync Queue', 'ghl-crm-integration' ); ?></label>
-						</th>
-						<td>
-							<button type="button" class="ghl-button ghl-button-secondary" id="clear-queue-btn" disabled>
-								<span class="dashicons dashicons-list-view"></span>
-								<?php esc_html_e( 'Clear Pending Queue', 'ghl-crm-integration' ); ?>
-							</button>
-							<p class="description">
-								<?php esc_html_e( 'Remove all pending items from the sync queue. Coming soon.', 'ghl-crm-integration' ); ?>
-							</p>
-						</td>
-					</tr>
 				</tbody>
 			</table>
 		</div>
@@ -215,20 +200,7 @@ $settings = $settings_manager->get_settings_array();
 							<?php esc_html_e( 'Check API connectivity, database tables, and system requirements.', 'ghl-crm-integration' ); ?>
 						</p>
 					</td>
-				</tr>					<tr>
-						<th scope="row">
-							<label><?php esc_html_e( 'Debug Log', 'ghl-crm-integration' ); ?></label>
-						</th>
-						<td>
-							<button type="button" class="ghl-button ghl-button-secondary" id="view-debug-log-btn" disabled>
-								<span class="dashicons dashicons-media-text"></span>
-								<?php esc_html_e( 'View Debug Log', 'ghl-crm-integration' ); ?>
-							</button>
-							<p class="description">
-								<?php esc_html_e( 'View recent error logs and debug information. Coming soon.', 'ghl-crm-integration' ); ?>
-							</p>
-						</td>
-					</tr>
+				</tr>
 				</tbody>
 			</table>
 		</div>

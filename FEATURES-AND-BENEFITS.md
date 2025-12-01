@@ -430,7 +430,7 @@ Full setup guide included in plugin documentation.
 - REST API endpoints
 - WordPress Multisite support
 - White label domain support
-- Setup wizard (coming soon)
+- Setup wizard for easy onboarding
 
 ---
 
@@ -455,7 +455,6 @@ Full setup guide included in plugin documentation.
 ## 🚀 Roadmap
 
 ### Coming Soon
-- Setup wizard for easier onboarding
 - Gravity Forms integration
 - Elementor Forms integration
 - Contact Form 7 integration
