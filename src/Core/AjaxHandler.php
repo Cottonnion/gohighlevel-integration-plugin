@@ -582,4 +582,151 @@ class AjaxHandler {
 			wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
 		}
 	}
+
+	/**
+	 * Save setup wizard settings
+	 * Handles saving settings collected during the setup wizard flow
+	 *
+	 * @return void
+	 */
+	public static function save_wizard_settings(): void {
+		// Verify nonce
+		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
+		$nonce_check = wp_verify_nonce( $nonce, 'ghl_crm_spa_nonce' );
+		
+		if ( ! $nonce_check ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'Security check failed. Please reload the page and try again.', 'ghl-crm-integration' ),
+				],
+				403
+			);
+		}
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to save settings.', 'ghl-crm-integration' ),
+				],
+				403
+			);
+		}
+
+		try {
+			$settings_manager = SettingsManager::get_instance();
+			$current_settings = $settings_manager->get_settings_array();
+
+			// Get wizard settings from POST - they come as settings[key] format from jQuery
+			$wizard_settings = isset( $_POST['settings'] ) && is_array( $_POST['settings'] ) 
+				? wp_unslash( $_POST['settings'] ) 
+				: [];
+
+			// Convert string booleans to actual booleans
+			foreach ( $wizard_settings as $key => $value ) {
+				if ( 'true' === $value || '1' === $value || 1 === $value || true === $value ) {
+					$wizard_settings[ $key ] = true;
+				} elseif ( 'false' === $value || '0' === $value || 0 === $value || false === $value ) {
+					$wizard_settings[ $key ] = false;
+				}
+			}
+
+			// Update user sync settings
+			if ( isset( $wizard_settings['enable_user_sync'] ) ) {
+				$current_settings['enable_user_sync'] = (bool) $wizard_settings['enable_user_sync'];
+			}
+
+			// Update user registration sync
+			if ( isset( $wizard_settings['user_register'] ) ) {
+				$user_sync_actions = $current_settings['user_sync_actions'] ?? [];
+				if ( (bool) $wizard_settings['user_register'] ) {
+					// Add 'user_register' to sync actions if not already present
+					if ( ! in_array( 'user_register', $user_sync_actions, true ) ) {
+						$user_sync_actions[] = 'user_register';
+					}
+				} else {
+					// Remove 'user_register' from sync actions
+					$user_sync_actions = array_diff( $user_sync_actions, [ 'user_register' ] );
+				}
+				$current_settings['user_sync_actions'] = array_values( $user_sync_actions );
+			}
+
+			// Update user registration tags
+			if ( isset( $wizard_settings['user_register_tags'] ) ) {
+				$tags = $wizard_settings['user_register_tags'];
+				// Ensure it's an array and sanitize
+				if ( is_array( $tags ) ) {
+					$current_settings['user_register_tags'] = array_map( 'sanitize_text_field', $tags );
+				} elseif ( is_string( $tags ) ) {
+					// If it's a comma-separated string, convert to array
+					$current_settings['user_register_tags'] = array_map( 'trim', explode( ',', sanitize_text_field( $tags ) ) );
+				} else {
+					$current_settings['user_register_tags'] = [];
+				}
+			}
+
+			// Update integration settings
+			if ( isset( $wizard_settings['woocommerce'] ) ) {
+				$current_settings['wc_enabled'] = (bool) $wizard_settings['woocommerce'];
+			}
+			if ( isset( $wizard_settings['buddyboss'] ) ) {
+				$current_settings['buddyboss_enabled'] = (bool) $wizard_settings['buddyboss'];
+			}
+			if ( isset( $wizard_settings['learndash'] ) ) {
+				$current_settings['learndash_enabled'] = (bool) $wizard_settings['learndash'];
+			}
+
+			// Update advanced settings
+			if ( isset( $wizard_settings['delete_contact_on_user_delete'] ) ) {
+				$current_settings['delete_contact_on_user_delete'] = (bool) $wizard_settings['delete_contact_on_user_delete'];
+			}
+			if ( isset( $wizard_settings['enable_sync_logging'] ) ) {
+				$current_settings['enable_sync_logging'] = (bool) $wizard_settings['enable_sync_logging'];
+			}
+			if ( isset( $wizard_settings['enable_role_tags'] ) ) {
+				// If enabling role tags and none exist, initialize with empty array
+				// Otherwise, preserve existing role_tags
+				if ( (bool) $wizard_settings['enable_role_tags'] ) {
+					if ( empty( $current_settings['role_tags'] ) || ! is_array( $current_settings['role_tags'] ) ) {
+						$current_settings['role_tags'] = [];
+					}
+				}
+				// Note: We don't disable role_tags here as user may want to keep their configuration
+			}
+
+			// Mark wizard as completed
+			$current_settings['setup_wizard_completed'] = true;
+
+			// Save all settings directly using repository (not the AJAX handler which sends its own response)
+			$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
+			$saved = $repository->save_site_settings( $current_settings );
+			
+			if ( ! $saved ) {
+				throw new \Exception( __( 'Failed to save settings. Please try again.', 'ghl-crm-integration' ) );
+			}
+
+			// Set option to prevent wizard redirect on future activations
+			update_option( 'ghl_crm_setup_wizard_completed', true );
+
+			wp_send_json_success(
+				[
+					'message' => __( 'Setup wizard completed successfully!', 'ghl-crm-integration' ),
+				]
+			);
+
+		} catch ( \Exception $e ) {
+			wp_send_json_error(
+				[
+					'message' => $e->getMessage(),
+				],
+				500
+			);
+		} catch ( \Error $e ) {
+			wp_send_json_error(
+				[
+					'message' => $e->getMessage(),
+				],
+				500
+			);
+		}
+	}
 }
