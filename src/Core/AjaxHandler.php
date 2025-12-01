@@ -187,11 +187,6 @@ class AjaxHandler {
 				}
 			}
 
-			// LearnDash settings
-			if ( isset( $_POST['learndash_enabled'] ) ) {
-				$integration_settings['learndash_enabled'] = sanitize_text_field( wp_unslash( $_POST['learndash_enabled'] ) ) === '1';
-			}
-
 			// Merge with current settings
 			$settings = array_merge(
 				$current_settings,
@@ -670,9 +665,6 @@ class AjaxHandler {
 			}
 			if ( isset( $wizard_settings['buddyboss'] ) ) {
 				$current_settings['buddyboss_enabled'] = (bool) $wizard_settings['buddyboss'];
-			}
-			if ( isset( $wizard_settings['learndash'] ) ) {
-				$current_settings['learndash_enabled'] = (bool) $wizard_settings['learndash'];
 			}
 
 			// Update advanced settings
