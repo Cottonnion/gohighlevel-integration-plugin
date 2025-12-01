@@ -56,6 +56,7 @@ class StatsProvider {
 			'system_health' => $this->get_system_health_metrics(),
 			'recent_activity' => $this->get_recent_activity(),
 			'links'          => $this->get_dashboard_links(),
+			'debug_raw_ghl_response' => get_transient( 'ghl_raw_contacts_response' ),
 		];
 	}
 
@@ -65,9 +66,9 @@ class StatsProvider {
 	private function get_contact_metrics(): array {
 		$stats         = $this->get_sync_stats();
 		$total_users   = $this->get_total_users();
+		$total_synced  = $this->get_synced_users_count(); // FIXED: Count unique users with contact IDs
 		$total_success = (int) ( $stats['success_total'] ?? 0 );
 		$total_failed  = (int) ( $stats['failed_total'] ?? 0 );
-		$total_synced  = $total_success;
 		$total_events  = max( 0, $total_success + $total_failed );
 
 		$sync_rate = $total_events > 0
@@ -75,7 +76,7 @@ class StatsProvider {
 			: 0;
 
 		return [
-			'total_ghl' => $this->get_total_contacts_placeholder(),
+			'total_ghl' => $this->get_total_ghl_contacts(),
 			'total_wp'  => $total_users,
 			'synced'    => $total_synced,
 			'pending'   => $this->get_pending_queue_count(),
@@ -214,9 +215,84 @@ class StatsProvider {
 		return (int) count_users()['total_users'];
 	}
 
+	/**
+	 * Get count of WordPress users who have been synced to GHL
+	 * (have _ghl_contact_id meta)
+	 *
+	 * @return int Number of synced users
+	 */
+	private function get_synced_users_count(): int {
+		$users = get_users(
+			[
+				'meta_key'   => '_ghl_contact_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value' => '', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+				'meta_compare' => '!=',
+				'fields'     => 'ID',
+				'number'     => -1,
+			]
+		);
+
+		return count( $users );
+	}
+
+	/**
+	 * Get total contacts from GoHighLevel API
+	 * Falls back to synced user count if API call fails
+	 *
+	 * @return int Total contacts in GHL
+	 */
+	private function get_total_ghl_contacts(): int {
+		// Try to get from cache first (5 minute cache)
+		$cache_key = 'ghl_total_contacts_count';
+		$cached    = get_transient( $cache_key );
+
+		if ( false !== $cached ) {
+			return (int) $cached;
+		}
+
+		try {
+			// Attempt to get real count from GHL API
+			$client = \GHL_CRM\API\Client\Client::get_instance();
+			
+			// Query contacts with limit 1 to get total from pagination
+			$response = $client->get(
+				'contacts/',
+				[
+					'limit' => 1,
+				]
+			);
+
+			// Store raw response for debugging
+			set_transient( 'ghl_raw_contacts_response', $response, 5 * MINUTE_IN_SECONDS );
+
+			// GHL API returns total count in response
+			if ( isset( $response['meta']['total'] ) ) {
+				$total = (int) $response['meta']['total'];
+				set_transient( $cache_key, $total, 5 * MINUTE_IN_SECONDS );
+				return $total;
+			}
+
+			// Fallback: If meta not available but contacts array exists
+			if ( isset( $response['contacts'] ) && is_array( $response['contacts'] ) ) {
+				// This is not accurate for total, but better than nothing
+				// Cache for shorter time since it's not accurate
+				$count = $this->get_synced_users_count();
+				set_transient( $cache_key, $count, MINUTE_IN_SECONDS );
+				return $count;
+			}
+		} catch ( \Exception $e ) {
+			// API call failed - use fallback
+			error_log( 'GHL CRM: Failed to get total contacts from API: ' . $e->getMessage() );
+			set_transient( 'ghl_raw_contacts_response', [ 'error' => $e->getMessage() ], 5 * MINUTE_IN_SECONDS );
+		}
+
+		// Ultimate fallback: count of synced users
+		return $this->get_synced_users_count();
+	}
+
 	private function get_total_contacts_placeholder(): int {
-		// TODO: Replace with real GoHighLevel contact totals once API client supports it.
-		return (int) ( $this->get_sync_stats()['success_total'] ?? 0 );
+		// Deprecated - use get_total_ghl_contacts() instead
+		return $this->get_total_ghl_contacts();
 	}
 
 	private function get_pending_queue_count(): int {

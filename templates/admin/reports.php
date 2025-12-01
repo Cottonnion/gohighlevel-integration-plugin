@@ -78,17 +78,7 @@ $report_data = \GHL_CRM\Core\Dashboard\StatsProvider::get_instance()->get_report
 		$contacts_href  = $contacts_link['available'] ? esc_url( $contacts_link['url'] ) : '#';
 		$contacts_attrs = $contacts_link['available'] ? ' target="_blank" rel="noopener"' : '';
 		?>
-		<div class="ghl-stat-card" style="background: white; border: 1px solid #e2e8f0; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);">
-			<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-				<span class="dashicons dashicons-admin-users" style="font-size: 32px; color: #6366f1;"></span>
-				<span style="font-size: 11px; color: #64748b; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-weight: 500;">GoHighLevel</span>
-			</div>
-			<div style="font-size: 32px; font-weight: 700; margin-bottom: 4px; color: #1e293b;"><?php echo number_format( $report_data['contacts']['total_ghl'] ); ?></div>
-			<div style="font-size: 14px; color: #64748b; margin-bottom: 8px;">Total Contacts</div>
-			<a href="<?php echo $contacts_href; ?>" class="ghl-view-in-ghl" style="font-size: 12px; color: #6366f1; text-decoration: none; font-weight: 500;"<?php echo $contacts_attrs; ?>>
-				<?php echo esc_html__( 'View in GoHighLevel →', 'ghl-crm-integration' ); ?>
-			</a>
-		</div>
+
 
 		<!-- Total WP Users -->
 		<div class="ghl-stat-card" style="background: white; border: 1px solid #e2e8f0; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);">
