@@ -663,10 +663,32 @@ class AssetsManager {
 			GHL_CRM_VERSION
 		);
 
+		// Also load dashboard.css on setup wizard for consistent styling (connection tabs, etc.)
+		$this->add_admin_asset(
+			'ghl-crm-setup-wizard-dashboard-css',
+			[ 'admin_page_ghl-crm-setup-wizard' ],
+			'dashboard.css',
+			[ 'ghl-crm-setup-wizard-css' ],
+			[],
+			GHL_CRM_VERSION
+		);
+
 		// Correctly fetch connection tokens from the settings array
 		$settings = SettingsManager::get_instance()->get_settings_array();
 		$oauth_token = $settings['oauth_access_token'] ?? '';
 		$api_token = $settings['api_token'] ?? '';
+
+		// Get current setting values for pre-population
+		$enable_user_sync = $settings['enable_user_sync'] ?? false;
+		$user_sync_actions = $settings['user_sync_actions'] ?? [];
+		$user_register_enabled = in_array( 'user_register', $user_sync_actions, true );
+		$user_register_tags = $settings['user_register_tags'] ?? [];
+		$wc_enabled = $settings['wc_enabled'] ?? false;
+		$buddyboss_enabled = $settings['buddyboss_enabled'] ?? false;
+		$learndash_enabled = $settings['learndash_enabled'] ?? false;
+		$delete_contact_on_user_delete = $settings['delete_contact_on_user_delete'] ?? false;
+		$enable_sync_logging = $settings['enable_sync_logging'] ?? false;
+		$enable_role_tags = ! empty( $settings['role_tags'] ) && is_array( $settings['role_tags'] );
 
 		$this->add_admin_asset(
 			'ghl-crm-setup-wizard-js',
@@ -674,12 +696,25 @@ class AssetsManager {
 			'setup-wizard.js',
 			[ 'jquery', 'sweetalert2' ],
 			[
-				'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
-				'nonce'       => wp_create_nonce( 'ghl_crm_spa_nonce' ),
-				'oauthUrl'    => admin_url( 'admin.php?page=ghl-crm-oauth-connect' ),
-				'isConnected' => ( ! empty( $oauth_token ) || ! empty( $api_token ) ) ? '1' : '0',
+				'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
+				'nonce'        => wp_create_nonce( 'ghl_crm_spa_nonce' ),
+				'oauthUrl'     => admin_url( 'admin.php?page=ghl-crm-oauth-connect' ),
+				'settingsUrl'  => admin_url( 'admin.php?page=ghl-crm-admin#/settings' ),
+				'dashboardUrl' => admin_url( 'admin.php?page=ghl-crm-admin' ),
+				'isConnected'  => ( ! empty( $oauth_token ) || ! empty( $api_token ) ) ? '1' : '0',
+				'settings'     => [
+					'enable_user_sync'              => $enable_user_sync,
+					'user_register'                 => $user_register_enabled,
+					'user_register_tags'            => $user_register_tags,
+					'woocommerce'                   => $wc_enabled,
+					'buddyboss'                     => $buddyboss_enabled,
+					'learndash'                     => $learndash_enabled,
+					'delete_contact_on_user_delete' => $delete_contact_on_user_delete,
+					'enable_sync_logging'           => $enable_sync_logging,
+					'enable_role_tags'              => $enable_role_tags,
+				],
 			],
-			GHL_CRM_VERSION,
+			'1.0.1',
 			true
 		);
 	} 
