@@ -368,18 +368,18 @@
 											<div class="ghl-available-variables">
 												<h4>Available Variables:</h4>
 												<ul>
-													<li><code>{user_email}</code> - User's email address</li>
-													<li><code>{user_first_name}</code> - User's first name</li>
-													<li><code>{user_last_name}</code> - User's last name</li>
-													<li><code>{user_display_name}</code> - User's display name</li>
-													<li><code>{user_login}</code> - User's login username</li>
-													<li><code>{user_id}</code> - User's ID</li>
-													<li><code>{user_role}</code> - User's role</li>
-													<li><code>{site_url}</code> - Site URL</li>
-													<li><code>{site_name}</code> - Site name</li>
-													<li><code>{current_url}</code> - Current page URL</li>
-													<li><code>{current_title}</code> - Current page title</li>
-													<li><code>{meta:field_name}</code> - User meta field value</li>
+													<li><code class="ghl-copy-variable" data-variable="{user_email}">{user_email}</code> - User's email address</li>
+													<li><code class="ghl-copy-variable" data-variable="{user_first_name}">{user_first_name}</code> - User's first name</li>
+													<li><code class="ghl-copy-variable" data-variable="{user_last_name}">{user_last_name}</code> - User's last name</li>
+													<li><code class="ghl-copy-variable" data-variable="{user_display_name}">{user_display_name}</code> - User's display name</li>
+													<li><code class="ghl-copy-variable" data-variable="{user_login}">{user_login}</code> - User's login username</li>
+													<li><code class="ghl-copy-variable" data-variable="{user_id}">{user_id}</code> - User's ID</li>
+													<li><code class="ghl-copy-variable" data-variable="{user_role}">{user_role}</code> - User's role</li>
+													<li><code class="ghl-copy-variable" data-variable="{site_url}">{site_url}</code> - Site URL</li>
+													<li><code class="ghl-copy-variable" data-variable="{site_name}">{site_name}</code> - Site name</li>
+													<li><code class="ghl-copy-variable" data-variable="{current_url}">{current_url}</code> - Current page URL</li>
+													<li><code class="ghl-copy-variable" data-variable="{current_title}">{current_title}</code> - Current page title</li>
+													<li><code class="ghl-copy-variable" data-variable="{meta:field_name}">{meta:field_name}</code> - User meta field value</li>
 												</ul>
 											</div>
 										</div>
@@ -456,6 +456,13 @@
 			const rowHtml = FormsManager.buildCustomParamRow(index, '', '');
 			$container.append(rowHtml);
 			FormsManager.bindCustomParamEvents();
+		});
+		
+		// Bind copy variable events
+		$('.ghl-copy-variable').on('click', function(e) {
+			e.preventDefault();
+			const variable = $(this).data('variable');
+			FormsManager.copyToClipboard(variable, $(this));
 		});
 		
 		// Bind remove parameter events

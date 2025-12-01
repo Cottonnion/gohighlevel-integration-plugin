@@ -847,6 +847,22 @@
 	font-family: Consolas, Monaco, monospace;
 }
 
+.ghl-available-variables code.ghl-copy-variable {
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.ghl-available-variables code.ghl-copy-variable:hover {
+	background: #4f46e5;
+	color: #fff;
+	border-color: #4f46e5;
+	transform: translateY(-1px);
+}
+
+.ghl-available-variables code.ghl-copy-variable:active {
+	transform: translateY(0);
+}
+
 /* Toast Notification */
 .ghl-toast {
 	position: fixed;
