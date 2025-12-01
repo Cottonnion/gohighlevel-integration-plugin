@@ -145,37 +145,35 @@
 
 /* Forms Table */
 .ghl-forms-table-wrapper {
-	background: var(--ghl-bg-primary);
-	border: 1px solid var(--ghl-border-primary);
-	border-radius: var(--ghl-radius-base);
-	box-shadow: var(--ghl-shadow-sm);
+	background: #fff;
+	border-radius: 8px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 	overflow: hidden;
 }
 
 .ghl-forms-table {
 	width: 100%;
 	border-collapse: collapse;
-	font-size: var(--ghl-font-size-sm);
 }
 
 .ghl-forms-table thead {
-	background: var(--ghl-bg-secondary);
-	border-bottom: 2px solid var(--ghl-border-primary);
+	background: #f8fafc;
+	border-bottom: 2px solid #e2e8f0;
 }
 
 .ghl-forms-table th {
-	padding: 16px 20px;
+	padding: 14px 16px;
 	text-align: left;
-	font-weight: var(--ghl-font-weight-semibold);
-	color: var(--ghl-text-primary);
-	font-size: var(--ghl-font-size-sm);
+	font-size: 12px;
+	font-weight: 700;
+	color: #475569;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
 }
 
 .ghl-forms-table tbody tr {
-	border-bottom: 1px solid var(--ghl-border-primary);
-	transition: background-color var(--ghl-transition-fast);
+	border-bottom: 1px solid #f1f5f9;
+	transition: background-color 0.2s;
 }
 
 .ghl-forms-table tbody tr:last-child {
@@ -183,19 +181,20 @@
 }
 
 .ghl-forms-table tbody tr:hover {
-	background: var(--ghl-bg-hover);
+	background-color: #f8fafc;
 }
 
 .ghl-forms-table td {
-	padding: 16px 20px;
-	color: var(--ghl-text-secondary);
+	padding: 14px 16px;
+	font-size: 14px;
+	color: #1e293b;
 	vertical-align: middle;
 }
 
 .ghl-table-col-name strong {
-	color: var(--ghl-text-primary);
-	font-weight: var(--ghl-font-weight-medium);
-	font-size: var(--ghl-font-size-base);
+	color: #1e293b;
+	font-weight: 600;
+	font-size: 14px;
 }
 
 .ghl-table-col-id code {
