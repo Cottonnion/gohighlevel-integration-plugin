@@ -125,7 +125,7 @@ class Loader {
 	}
 
 	/**
-	 * Initialize WordPress hooks
+	 * Initialize hooks for the plugin
 	 *
 	 * @return void
 	 */
@@ -143,6 +143,9 @@ class Loader {
 
 		// Register cleanup action (Action Scheduler hook)
 		add_action( 'ghl_crm_cleanup_database', array( \GHL_CRM\Core\Database::class, 'cleanup' ) );
+		
+		// Setup wizard redirect on activation
+		add_action( 'admin_init', array( self::class, 'maybe_redirect_to_wizard' ) );
 	}
 
 	/**
@@ -213,6 +216,17 @@ class Loader {
 
 		// Flush rewrite rules
 		flush_rewrite_rules();
+
+		// Set transient to trigger setup wizard redirect
+		// TESTING MODE: Always set transient on activation for testing
+		// PRODUCTION MODE: Only set if wizard not completed
+		// TODO: Replace the line below with commented code when done testing:
+		// set_transient( 'ghl_crm_activation_redirect', true, 60 );
+		
+		// Production code :
+		if ( ! get_option( 'ghl_crm_setup_wizard_completed', false ) ) {
+			set_transient( 'ghl_crm_activation_redirect', true, 60 );
+		}
 
 		// Fire activation hook
 		do_action( 'ghl_crm_activated' );
@@ -300,5 +314,57 @@ class Loader {
 	public function run(): void {
 		// Components are initialized via init_components hook
 		// This method is kept for compatibility/future use
+	}
+
+	/**
+	 * Redirect to setup wizard on plugin activation
+	 *
+	 * Checks for activation transient and redirects to setup wizard if present.
+	 * Includes safety checks to prevent redirects during bulk activation, AJAX, etc.
+	 *
+	 * TESTING MODE: Currently redirects on every activation
+	 * PRODUCTION MODE: Will only redirect if wizard not completed (see activate() method)
+	 *
+	 * @return void
+	 */
+	public static function maybe_redirect_to_wizard(): void {
+		// Check if we should redirect
+		if ( ! get_transient( 'ghl_crm_activation_redirect' ) ) {
+			return;
+		}
+
+		// Delete the transient so we don't redirect again
+		delete_transient( 'ghl_crm_activation_redirect' );
+
+		// Don't redirect if activating multiple plugins
+		if ( isset( $_GET['activate-multi'] ) ) {
+			return;
+		}
+
+		// Don't redirect on AJAX requests
+		if ( wp_doing_ajax() ) {
+			return;
+		}
+
+		// Don't redirect if not in admin
+		if ( ! is_admin() ) {
+			return;
+		}
+
+		// Don't redirect if user can't manage options
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		// TESTING MODE: Comment out this check to test wizard on every activation
+		// PRODUCTION MODE: Uncomment below to prevent redirect if wizard already completed
+		// $wizard_completed = get_option( 'ghl_crm_setup_wizard_completed', false );
+		if ( $wizard_completed ) {
+			return;
+		}
+
+		// Redirect to setup wizard
+		wp_safe_redirect( admin_url( 'admin.php?page=ghl-crm-setup-wizard' ) );
+		exit;
 	}
 }
