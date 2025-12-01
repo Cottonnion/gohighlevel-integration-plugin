@@ -94,13 +94,6 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 				   'active' => true,
 				   'order'  => 10,
 			   ],
-			   [
-				   'id'    => 'learndash',
-				   'icon'  => 'welcome-learn-more',
-				   'label' => __( 'LearnDash', 'ghl-crm-integration' ),
-				   'active' => false,
-				   'order'  => 20,
-			   ],
 		   ];
 		   $integration_tabs = apply_filters( 'ghl_crm_integration_tabs', $default_tabs );
 		   // Sort by 'order' if present
@@ -132,14 +125,6 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 					   } else {
 						   echo '<div class="notice notice-error"><p>' . esc_html__( 'BuddyBoss settings template not found.', 'ghl-crm-integration' ) . '</p></div>';
 					   }
-				   },
-			   ],
-			   [
-				   'id'      => 'learndash',
-				   'active'  => false,
-				   'order'   => 20,
-				   'content' => function() {
-					   require GHL_CRM_PATH . 'templates/admin/partials/integrations/learndash.php';
 				   },
 			   ],
 		   ];
