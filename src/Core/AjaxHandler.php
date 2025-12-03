@@ -800,18 +800,21 @@ class AjaxHandler {
 			// Clean up transient if done
 			if ( ! $has_more ) {
 				delete_transient( 'ghl_bulk_sync_total' );
+				// Save last bulk sync time
+				update_option( 'ghl_crm_last_bulk_sync', current_time( 'mysql' ), false );
 			}
 
 			wp_send_json_success(
 				[
-					'queued'    => $queued,
-					'failed'    => $failed,
-					'processed' => $processed,
-					'total'     => $total,
-					'remaining' => $remaining,
-					'has_more'  => $has_more,
+					'queued'     => $queued,
+					'failed'     => $failed,
+					'processed'  => $processed,
+					'total'      => $total,
+					'remaining'  => $remaining,
+					'has_more'   => $has_more,
 					'next_batch' => $batch + 1,
-					'message'   => sprintf(
+					'last_sync'  => ! $has_more ? current_time( 'mysql' ) : null,
+					'message'    => sprintf(
 						/* translators: 1: processed count, 2: total count */
 						__( 'Processed %1$d of %2$d users...', 'ghl-crm-integration' ),
 						$processed,
