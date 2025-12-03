@@ -269,40 +269,6 @@ $is_buddyboss_active = function_exists( 'bp_is_active' ) && bp_is_active( 'group
 						<?php esc_html_e( 'Sync hidden groups', 'ghl-crm-integration' ); ?>
 					</span>
 				</label>
-				
-				<label class="ghl-checkbox <?php echo ! empty( $settings['buddyboss_real_time_sync'] ) ? 'is-checked' : ''; ?>" style="display: flex; align-items: center; gap: 8px; margin: 0;">
-					<input 
-						type="checkbox" 
-						class="ghl-checkbox-original"
-						id="buddyboss_real_time_sync"
-						name="buddyboss_real_time_sync" 
-						value="1" 
-						<?php checked( ! empty( $settings['buddyboss_real_time_sync'] ) ); ?>
-					>
-					<span class="ghl-checkbox-input <?php echo ! empty( $settings['buddyboss_real_time_sync'] ) ? 'is-checked' : ''; ?>">
-						<span class="ghl-checkbox-inner"></span>
-					</span>
-					<span class="ghl-checkbox-label">
-						<?php esc_html_e( 'Enable real-time sync (recommended)', 'ghl-crm-integration' ); ?>
-					</span>
-				</label>
-				
-				<label class="ghl-checkbox <?php echo ! empty( $settings['buddyboss_log_sync_operations'] ) ? 'is-checked' : ''; ?>" style="display: flex; align-items: center; gap: 8px; margin: 0;">
-					<input 
-						type="checkbox" 
-						class="ghl-checkbox-original"
-						id="buddyboss_log_sync_operations"
-						name="buddyboss_log_sync_operations" 
-						value="1" 
-						<?php checked( ! empty( $settings['buddyboss_log_sync_operations'] ) ); ?>
-					>
-					<span class="ghl-checkbox-input <?php echo ! empty( $settings['buddyboss_log_sync_operations'] ) ? 'is-checked' : ''; ?>">
-						<span class="ghl-checkbox-inner"></span>
-					</span>
-					<span class="ghl-checkbox-label">
-						<?php esc_html_e( 'Log all sync operations', 'ghl-crm-integration' ); ?>
-					</span>
-				</label>
 			</div>
 		</div>
 

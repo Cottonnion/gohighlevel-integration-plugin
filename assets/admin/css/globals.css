@@ -524,7 +524,7 @@ textarea.ghl-input {
 	border-color: #7e3bd0 !important;
 }
 .select2-container--default .select2-selection--multiple .select2-selection__rendered {
-	display: flex !important;
+	/* display: flex !important; */
 	flex-wrap: wrap !important;
 	gap: 4px !important;
 	padding: 0 !important;

@@ -322,7 +322,7 @@ $settings = $settings_manager->get_settings_array();
 						<?php esc_html_e( 'Sync Existing Families', 'ghl-crm-integration' ); ?>
 					</th>
 					<td>
-						<button type="button" id="sync-families-to-buddyboss" class="ghl-button ghl-button-primary">
+						<button type="button" id="sync-families-to-buddyboss" class="ghl-button ghl-button-secondary">
 							<span class="dashicons dashicons-groups"></span>
 							<?php esc_html_e( 'Sync All Families to BuddyBoss', 'ghl-crm-integration' ); ?>
 						</button>
