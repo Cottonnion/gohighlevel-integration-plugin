@@ -94,8 +94,9 @@ class AccessControl {
 		$tag_manager = \GHL_CRM\Core\TagManager::get_instance();
 		$tags        = $tag_manager->get_user_tag_names( $user_id );
 
-		if ( get_option( 'ghl_crm_family_accounts_enabled', false ) && class_exists( '\\GHL_CRM\\Core\\FamilyManager' ) ) {
-			$family_manager = \GHL_CRM\Core\FamilyManager::get_instance();
+		// Check if PRO plugin is active and Family Accounts is enabled
+		if ( get_option( 'ghl_crm_family_accounts_enabled', false ) && class_exists( '\\GHL_CRM_Pro\\FamilyManager' ) ) {
+			$family_manager = \GHL_CRM_Pro\FamilyManager::get_instance();
 			$tags           = $family_manager->get_inherited_tags( $user_id, $tags );
 		}
 

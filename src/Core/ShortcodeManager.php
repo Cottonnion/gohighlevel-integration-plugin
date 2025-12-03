@@ -238,6 +238,28 @@ class ShortcodeManager {
 	 * @return string HTML output
 	 */
 	public function render_family_manager_shortcode( $atts ): string {
+		// Check if PRO plugin is active and has FamilyManager
+		if ( class_exists( '\\GHL_CRM_Pro\\FamilyManager' ) ) {
+			// Delegate to PRO plugin's implementation
+			return $this->render_family_manager_pro( $atts );
+		}
+
+		if( ! current_user_can('manage_options')) {
+			return '';
+		}
+
+
+		// PRO plugin not active - show upgrade notice
+		return $this->render_family_manager_upgrade_notice();
+	}
+
+	/**
+	 * Render family manager from PRO plugin
+	 *
+	 * @param array|string $atts Shortcode attributes.
+	 * @return string HTML output
+	 */
+	private function render_family_manager_pro( $atts ): string {
 		// Check if user is logged in
 		if ( ! is_user_logged_in() ) {
 			return '<p>' . esc_html__( 'Please log in to manage family accounts.', 'ghl-crm-integration' ) . '</p>';
@@ -250,7 +272,9 @@ class ShortcodeManager {
 		}
 
 		$user_id = get_current_user_id();
-		$family_repo = \GHL_CRM\Database\FamilyRelationshipsRepository::get_instance();
+		
+		// Use PRO plugin's repository
+		$family_repo = \GHL_CRM_Pro\Database\FamilyRelationshipsRepository::get_instance();
 		
 		// Check if user is parent or admin
 		$is_admin = current_user_can( 'manage_options' );
@@ -268,10 +292,6 @@ class ShortcodeManager {
 				$has_parent_tag = true;
 			}
 		}
-
-		// if ( ! $is_admin && ! $is_parent && ! $has_parent_tag ) {
-		// 	return '<p>' . esc_html__( 'You do not have permission to manage family accounts.', 'ghl-crm-integration' ) . '</p>';
-		// }
 
 		// Enqueue SweetAlert2 for better UX
 		wp_enqueue_style( 'sweetalert2' );
@@ -333,9 +353,35 @@ class ShortcodeManager {
 			)
 		);
 
-		// Load template
+		// Load template from PRO plugin
+		$pro_template = defined( 'GHL_CRM_PRO_PATH' ) ? GHL_CRM_PRO_PATH . 'pro/templates/shortcodes/family-manager.php' : '';
+		
+		if ( file_exists( $pro_template ) ) {
+			ob_start();
+			include $pro_template;
+			return ob_get_clean();
+		}
+
+		return '<p>' . esc_html__( 'Family manager template not found.', 'ghl-crm-integration' ) . '</p>';
+	}
+
+	/**
+	 * Render upgrade notice for family manager shortcode
+	 *
+	 * @return string HTML output
+	 */
+	private function render_family_manager_upgrade_notice(): string {
 		ob_start();
-		include GHL_CRM_PATH . 'templates/shortcodes/family-manager.php';
+		?>
+		<div class="ghl-family-upgrade-notice" style="padding: 20px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; text-align: center;">
+			<h3 style="margin-top: 0;">
+				<span class="dashicons dashicons-groups" style="font-size: 32px; width: 32px; height: 32px;"></span>
+				<?php esc_html_e( 'Family Accounts - PRO Feature', 'ghl-crm-integration' ); ?>
+			</h3>
+			<p><?php esc_html_e( 'The Family Accounts feature allows you to create parent-child relationships where children inherit membership access and tags from their parents.', 'ghl-crm-integration' ); ?></p>
+			<p><strong><?php esc_html_e( 'This feature requires the PRO version of the plugin - this notice is only shown to you as the admin.', 'ghl-crm-integration' ); ?></strong></p>
+		</div>
+		<?php
 		return ob_get_clean();
 	}
 }

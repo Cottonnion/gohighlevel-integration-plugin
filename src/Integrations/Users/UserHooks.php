@@ -353,13 +353,13 @@ class UserHooks {
 		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
 		$queue_id      = $queue_manager->add_to_queue( 'user', $user_id, 'profile_update', $contact_data );
 
-		// If this user is a parent, sync new tags to all children
-		if ( class_exists( 'GHL_CRM\Database\FamilyRelationshipsRepository' ) ) {
-			$family_repo = \GHL_CRM\Database\FamilyRelationshipsRepository::get_instance();
+		// If this user is a parent, sync new tags to all children (PRO feature)
+		if ( class_exists( 'GHL_CRM_Pro\Database\FamilyRelationshipsRepository' ) ) {
+			$family_repo = \GHL_CRM_Pro\Database\FamilyRelationshipsRepository::get_instance();
 			$children    = $family_repo->get_children( $user_id );
 			
-			if ( ! empty( $children ) && class_exists( 'GHL_CRM\Core\FamilyManager' ) ) {
-				$family_manager = \GHL_CRM\Core\FamilyManager::get_instance();
+			if ( ! empty( $children ) && class_exists( 'GHL_CRM_Pro\FamilyManager' ) ) {
+				$family_manager = \GHL_CRM_Pro\FamilyManager::get_instance();
 				foreach ( $children as $child_id ) {
 					$family_manager->sync_parent_tags_to_child( $user_id, $child_id );
 				}

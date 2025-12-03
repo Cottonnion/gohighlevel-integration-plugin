@@ -743,7 +743,8 @@ class MenuManager {
 	 * @return array<string> List of valid settings tab names
 	 */
 	public static function get_valid_settings_tabs(): array {
-		return [
+		// Get base tabs
+		$base_tabs = [
 			'general',
 			'restrictions-manager',
 			'rest-api',
@@ -756,6 +757,40 @@ class MenuManager {
 			'tools',
 			'stats',
 		];
+
+		// Get settings manager to check connection status
+		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings = $settings_manager->get_settings_array();
+		$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
+		$oauth_status  = $oauth_handler->get_connection_status();
+		$is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
+
+		// Build settings tabs array (same structure as in settings.php)
+		$settings_tabs = [
+			'general'              => [ 'label' => __( 'General', 'ghl-crm-integration' ) ],
+			'restrictions-manager' => [ 'label' => __( 'Restrictions Manager', 'ghl-crm-integration' ) ],
+			'rest-api'             => [ 'label' => __( 'REST API', 'ghl-crm-integration' ) ],
+			'webhooks'             => [ 'label' => __( 'Webhooks', 'ghl-crm-integration' ) ],
+			'notifications'        => [ 'label' => __( 'Email Notifications', 'ghl-crm-integration' ) ],
+			'role-tags'            => [ 'label' => __( 'Role-Based Tags', 'ghl-crm-integration' ) ],
+			'sync-preview'         => [ 'label' => __( 'Sync Preview', 'ghl-crm-integration' ) ],
+			'advanced'             => [ 'label' => __( 'Advanced', 'ghl-crm-integration' ) ],
+			'tools'                => [ 'label' => __( 'Tools', 'ghl-crm-integration' ) ],
+			'stats'                => [ 'label' => __( 'System Status', 'ghl-crm-integration' ) ],
+		];
+
+		/**
+		 * Allow developers to add custom settings tabs
+		 * This filter is used in both settings.php template and AJAX handler
+		 *
+		 * @param array $settings_tabs Array of settings tabs
+		 * @param bool  $is_connected  Whether the plugin is connected to GoHighLevel
+		 * @param array $settings      Current plugin settings
+		 */
+		$settings_tabs = apply_filters( 'ghl_crm_settings_tabs', $settings_tabs, $is_connected, $settings );
+
+		// Return just the tab keys
+		return array_keys( $settings_tabs );
 	}
 
 	/**
@@ -777,7 +812,7 @@ class MenuManager {
 
 		$tab = isset( $_POST['tab'] ) ? sanitize_text_field( wp_unslash( $_POST['tab'] ) ) : 'general';
 
-		// Define valid tabs using centralized method
+		// Define valid tabs using centralized method (includes filtered tabs)
 		$valid_tabs = self::get_valid_settings_tabs();
 
 		if ( ! in_array( $tab, $valid_tabs, true ) ) {
@@ -789,21 +824,64 @@ class MenuManager {
 			);
 		}
 
-		// Load the partial template
-		$partial_file = GHL_CRM_PATH . 'templates/admin/partials/settings/' . $tab . '.php';
+		// Get settings to check connection and build tabs array
+		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings = $settings_manager->get_settings_array();
+		$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
+		$oauth_status  = $oauth_handler->get_connection_status();
+		$is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 
+		// Build full settings tabs array to get file path
+		$settings_tabs = [
+			'general'              => [ 'label' => __( 'General', 'ghl-crm-integration' ) ],
+			'restrictions-manager' => [ 'label' => __( 'Restrictions Manager', 'ghl-crm-integration' ) ],
+			'rest-api'             => [ 'label' => __( 'REST API', 'ghl-crm-integration' ) ],
+			'webhooks'             => [ 'label' => __( 'Webhooks', 'ghl-crm-integration' ) ],
+			'notifications'        => [ 'label' => __( 'Email Notifications', 'ghl-crm-integration' ) ],
+			'role-tags'            => [ 'label' => __( 'Role-Based Tags', 'ghl-crm-integration' ) ],
+			'sync-preview'         => [ 'label' => __( 'Sync Preview', 'ghl-crm-integration' ) ],
+			'advanced'             => [ 'label' => __( 'Advanced', 'ghl-crm-integration' ) ],
+			'tools'                => [ 'label' => __( 'Tools', 'ghl-crm-integration' ) ],
+			'stats'                => [ 'label' => __( 'System Status', 'ghl-crm-integration' ) ],
+		];
+
+		// Apply the same filter as settings.php
+		$settings_tabs = apply_filters( 'ghl_crm_settings_tabs', $settings_tabs, $is_connected, $settings );
+
+		// Check if tab has custom file path or callback
+		$tab_config = $settings_tabs[ $tab ] ?? [];
+
+		// Determine template file path
+		if ( isset( $tab_config['file'] ) && file_exists( $tab_config['file'] ) ) {
+			// Custom file path from filter (e.g., PRO plugin)
+			$partial_file = $tab_config['file'];
+		} else {
+			// Default path in FREE plugin
+			$partial_file = GHL_CRM_PATH . 'templates/admin/partials/settings/' . $tab . '.php';
+		}
+
+		// Check if file exists
 		if ( ! file_exists( $partial_file ) ) {
 			wp_send_json_error(
 				[
 					'message' => __( 'Settings tab template not found.', 'ghl-crm-integration' ),
+					'debug'   => WP_DEBUG ? $partial_file : null,
 				],
 				404
 			);
 		}
 
-		ob_start();
-		include $partial_file;
-		$html = ob_get_clean();
+		// Check if tab has a custom callback
+		if ( isset( $tab_config['callback'] ) && is_callable( $tab_config['callback'] ) ) {
+			ob_start();
+			call_user_func( $tab_config['callback'], $tab, $tab_config, $settings );
+			$html = ob_get_clean();
+		} else {
+			// Load the partial template
+			ob_start();
+			include $partial_file;
+			$html = ob_get_clean();
+		}
 
 		wp_send_json_success(
 			[
