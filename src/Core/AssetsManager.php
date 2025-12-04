@@ -918,57 +918,39 @@ class AssetsManager {
 			true
 		);
 
-		// Family Manager frontend CSS
+		// GHL Form Auto-fill (experimental - tests URL parameter pre-filling)
+		$user_data = $this->get_current_user_data_for_autofill();
+		$form_settings_manager = \GHL_CRM\Core\FormSettings::get_instance();
+		$all_form_settings = $form_settings_manager->get_all_settings();
+		
+		// Resolve custom parameters for each form
+		foreach ( $all_form_settings as $form_id => $form_config ) {
+			if ( isset( $form_config['custom_params'] ) && is_array( $form_config['custom_params'] ) ) {
+				$all_form_settings[ $form_id ]['resolved_params'] = $form_settings_manager->resolve_custom_params( $form_config['custom_params'] );
+			}
+		}
+		
+		// Get white label domain
+		$settings = SettingsManager::get_instance()->get_settings_array();
+		$white_label_domain = $settings['ghl_white_label_domain'] ?? '';
+		
 		$this->add_public_asset(
-			'ghl-family-manager-css',
-			'family-manager.css',
+			'ghl-form-autofill',
+			'form-autofill.js',
 			[],
-			[],
-			GHL_CRM_VERSION,
-			false
-		);
-
-		// Family Manager frontend JS
-		$this->add_public_asset(
-			'ghl-family-manager',
-			'family-manager.js',
-			[ 'jquery', 'sweetalert2' ],
-			[], // Localization will be done in ShortcodeManager when shortcode is rendered
+			[
+				'userData'         => $user_data,
+				'formSettings'     => $all_form_settings,
+				'whiteLabelDomain' => $white_label_domain,
+				'ajaxUrl'          => admin_url( 'admin-ajax.php' ),
+				'nonce'            => wp_create_nonce( 'ghl_form_submission' ),
+			],
 			GHL_CRM_VERSION,
 			true
 		);
+	}	
 
-	// GHL Form Auto-fill (experimental - tests URL parameter pre-filling)
-	$user_data = $this->get_current_user_data_for_autofill();
-	$form_settings_manager = \GHL_CRM\Core\FormSettings::get_instance();
-	$all_form_settings = $form_settings_manager->get_all_settings();
-	
-	// Resolve custom parameters for each form
-	foreach ( $all_form_settings as $form_id => $form_config ) {
-		if ( isset( $form_config['custom_params'] ) && is_array( $form_config['custom_params'] ) ) {
-			$all_form_settings[ $form_id ]['resolved_params'] = $form_settings_manager->resolve_custom_params( $form_config['custom_params'] );
-		}
-	}
-	
-	// Get white label domain
-	$settings = SettingsManager::get_instance()->get_settings_array();
-	$white_label_domain = $settings['ghl_white_label_domain'] ?? '';
-	
-	$this->add_public_asset(
-		'ghl-form-autofill',
-		'form-autofill.js',
-		[],
-		[
-			'userData'         => $user_data,
-			'formSettings'     => $all_form_settings,
-			'whiteLabelDomain' => $white_label_domain,
-			'ajaxUrl'          => admin_url( 'admin-ajax.php' ),
-			'nonce'            => wp_create_nonce( 'ghl_form_submission' ),
-		],
-		GHL_CRM_VERSION,
-		true
-	);
-}	/**
+	/**
 	 * Enqueue public/frontend assets
 	 *
 	 * @return void
