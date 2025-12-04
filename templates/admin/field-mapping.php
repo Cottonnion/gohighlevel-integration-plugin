@@ -88,104 +88,35 @@ if ( false === $all_meta_keys ) {
 	wp_cache_set( $meta_keys_cache_key, $all_meta_keys, $meta_keys_cache_group, 5 * MINUTE_IN_SECONDS );
 }
 
+// Initialize empty arrays for custom fields (PRO features)
 $custom_user_fields = array();
 $woocommerce_fields = array();
+$buddyboss_fields   = array();
 
-// Filter meta keys to find custom fields
-foreach ( $all_meta_keys as $meta_key ) {
-	// Skip if it's a default WordPress meta field
-	if ( isset( $default_user_meta[ $meta_key ] ) ) {
-		continue;
-	}
-	
-	// Skip if in excluded list
-	if ( in_array( $meta_key, $excluded_meta_keys, true ) ) {
-		continue;
-	}
-	
-	// Skip WordPress internal fields (starting with wp_ or _)
-	if ( strpos( $meta_key, 'wp_' ) === 0 || strpos( $meta_key, '_' ) === 0 ) {
-		continue;
-	}
-	
-	// Skip BuddyPress internal fields (starting with bp_)
-	if ( strpos( $meta_key, 'bp_' ) === 0 ) {
-		continue;
-	}
+/**
+ * Filter: Allow PRO plugin to add custom user meta fields
+ * 
+ * @param array $custom_user_fields Custom user meta fields (key => label)
+ * @param array $all_meta_keys All meta keys from database
+ * @param array $default_user_meta Default WordPress user meta fields
+ * @param array $excluded_meta_keys Excluded meta keys
+ */
+$custom_user_fields = apply_filters( 'ghl_crm_field_mapping_custom_fields', $custom_user_fields, $all_meta_keys, $default_user_meta, $excluded_meta_keys );
 
-	// Skip dynamic BuddyBoss profile slug hashes that flood the selector.
-	if ( strpos( $meta_key, 'bb_profile_slug_' ) === 0 ) {
-		continue;
-	}
-	
-	// Skip our own plugin fields (starting with ghl_ or _ghl_)
-	if ( strpos( $meta_key, 'ghl_' ) === 0 || strpos( $meta_key, '_ghl_' ) === 0 ) {
-		continue;
-	}
-	
-	// Categorize WooCommerce fields
-	if ( class_exists( 'WooCommerce' ) && ( 
-		strpos( $meta_key, 'billing_' ) === 0 || 
-		strpos( $meta_key, 'shipping_' ) === 0 ||
-		strpos( $meta_key, 'wc_' ) === 0
-	) ) {
-		$woocommerce_fields[ $meta_key ] = ucwords( str_replace( array( '_', '-' ), ' ', $meta_key ) );
-		continue;
-	}
-	
-	// Add to custom fields list with a formatted label
-	$custom_user_fields[ $meta_key ] = ucwords( str_replace( array( '_', '-' ), ' ', $meta_key ) );
-}
+/**
+ * Filter: Allow PRO plugin to add WooCommerce fields
+ * 
+ * @param array $woocommerce_fields WooCommerce billing/shipping fields (key => label)
+ * @param array $all_meta_keys All meta keys from database
+ */
+$woocommerce_fields = apply_filters( 'ghl_crm_field_mapping_woocommerce_fields', $woocommerce_fields, $all_meta_keys );
 
-// Get BuddyBoss/BuddyPress XProfile fields if active
-$buddyboss_fields = array();
-if ( function_exists( 'bp_is_active' ) && bp_is_active( 'xprofile' ) ) {
-	// Get all profile field groups with their fields
-	$profile_groups = BP_XProfile_Group::get( array(
-		'fetch_fields' => true,
-	) );
-	
-	if ( ! empty( $profile_groups ) ) {
-		foreach ( $profile_groups as $group ) {
-			if ( ! empty( $group->fields ) ) {
-				foreach ( $group->fields as $field ) {
-					// Create a unique key for the field
-					$field_key = 'xprofile_' . $field->id;
-					
-					// Skip the "Name" field (ID 1) as it's usually handled by first_name/last_name
-					if ( $field->id == 1 ) {
-						continue;
-					}
-					
-					// Add field with group context and field type
-					$field_type_label = '';
-					if ( ! empty( $field->type ) ) {
-						$type_labels = array(
-							'textbox'        => 'Text',
-							'textarea'       => 'Textarea',
-							'number'         => 'Number',
-							'datebox'        => 'Date',
-							'selectbox'      => 'Dropdown',
-							'multiselectbox' => 'Multi-Select',
-							'radio'          => 'Radio',
-							'checkbox'       => 'Checkbox',
-							'url'            => 'URL',
-							'telephone'      => 'Phone',
-						);
-						$field_type_label = isset( $type_labels[ $field->type ] ) ? ' [' . $type_labels[ $field->type ] . ']' : '';
-					}
-					
-					$buddyboss_fields[ $field_key ] = sprintf(
-						'%s%s (%s)',
-						$field->name,
-						$field_type_label,
-						$group->name
-					);
-				}
-			}
-		}
-	}
-}
+/**
+ * Filter: Allow PRO plugin to add BuddyBoss/BuddyPress XProfile fields
+ * 
+ * @param array $buddyboss_fields BuddyBoss XProfile fields (key => label)
+ */
+$buddyboss_fields = apply_filters( 'ghl_crm_field_mapping_buddyboss_fields', $buddyboss_fields );
 
 // Sort custom fields alphabetically
 asort( $custom_user_fields );
@@ -545,13 +476,28 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 			</div>
 		<?php endif; ?>
 
-		<?php if ( empty( $buddyboss_fields ) && empty( $custom_user_fields ) && empty( $woocommerce_fields ) ) : ?>
-			<div class="notice notice-warning inline" style="margin-top: 30px;">
-				<p><?php esc_html_e( 'No custom fields found. Custom fields will appear here once they are added to user profiles by plugins or themes.', 'ghl-crm-integration' ); ?></p>
-			</div>
-		<?php endif; ?>
+		<!-- PRO Feature Upgrade Notice -->
+		<?php if ( empty( $buddyboss_fields ) && empty( $custom_user_fields ) && empty( $woocommerce_fields ) ) : 
+			// Set up upgrade notice variables
+			$title       = __( 'Advanced Field Mapping', 'ghl-crm-integration' );
+			$description = __( 'The FREE version only supports standard WordPress fields. Upgrade to PRO to unlock advanced field mapping capabilities.', 'ghl-crm-integration' );
+			$features    = array(
+				__( 'Custom User Meta Fields - Map any custom field from plugins or themes', 'ghl-crm-integration' ),
+				__( 'WooCommerce Fields - Billing, shipping, and customer data synchronization', 'ghl-crm-integration' ),
+				__( 'BuddyBoss/BuddyPress XProfile Fields - Complete social profile integration', 'ghl-crm-integration' ),
+				__( 'LearnDash Fields - Course progress, quiz scores, and certificate tracking', 'ghl-crm-integration' ),
+			);
+			$cta_text    = __( 'Upgrade to PRO', 'ghl-crm-integration' );
+			$style       = 'box';
+			
+			include GHL_CRM_PATH . 'templates/admin/partials/pro-upgrade-notice.php';
+		endif; ?>
 
-			<?php submit_button( __( 'Save Field Mapping', 'ghl-crm-integration' ) ); ?>
+			<p class="submit">
+				<button type="submit" name="submit" id="submit" class="ghl-button ghl-button-primary">
+					<?php esc_html_e( 'Save Field Mapping', 'ghl-crm-integration' ); ?>
+				</button>
+			</p>
 	</form>
 </div>
 
