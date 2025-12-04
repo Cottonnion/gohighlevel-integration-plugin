@@ -195,43 +195,52 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 						<!-- Sync Triggers -->
 						<div class="ghl-form-section">
 							<h3><?php esc_html_e( 'Sync Triggers', 'ghl-crm-integration' ); ?></h3>
-							<div class="ghl-checkbox-group">
+							<p class="description" style="margin-bottom: 15px;">
+								<?php esc_html_e( 'Select when to sync this post type to GoHighLevel. Available triggers vary based on the selected post type.', 'ghl-crm-integration' ); ?>
+							</p>
+							<div class="ghl-checkbox-group" id="sync-triggers-group">
+								<!-- Triggers will be populated dynamically based on selected post type -->
 								<label>
 									<input type="checkbox" name="triggers[]" value="publish" checked>
-									<?php esc_html_e( 'On Post Publish', 'ghl-crm-integration' ); ?>
+									<?php esc_html_e( 'Post Published', 'ghl-crm-integration' ); ?>
 								</label>
 								<label>
 									<input type="checkbox" name="triggers[]" value="update" checked>
-									<?php esc_html_e( 'On Post Update', 'ghl-crm-integration' ); ?>
+									<?php esc_html_e( 'Post Updated', 'ghl-crm-integration' ); ?>
 								</label>
 								<label>
-									<input type="checkbox" name="triggers[]" value="trash">
-									<?php esc_html_e( 'On Post Delete (delete from GHL)', 'ghl-crm-integration' ); ?>
+									<input type="checkbox" name="triggers[]" value="delete">
+									<?php esc_html_e( 'Post Deleted', 'ghl-crm-integration' ); ?>
 								</label>
 							</div>
 						</div>
 
 						<!-- Contact Association -->
 						<div class="ghl-form-section">
-							<h3><?php esc_html_e( 'Contact Association', 'ghl-crm-integration' ); ?></h3>
+							<h3><?php esc_html_e( 'Contact Linking Strategy', 'ghl-crm-integration' ); ?></h3>
+							<p class="description" style="margin-bottom: 15px;">
+								<?php esc_html_e( 'Configure how WordPress posts should link to GoHighLevel contacts. Options vary based on the selected post type.', 'ghl-crm-integration' ); ?>
+							</p>
 							
+							<!-- Primary Contact -->
 							<div class="ghl-form-row">
 								<label for="contact-source">
-									<?php esc_html_e( 'Link to GHL Contact using', 'ghl-crm-integration' ); ?>
+									<?php esc_html_e( 'Primary Contact', 'ghl-crm-integration' ); ?>
 									<span class="required">*</span>
 								</label>
 								<select id="contact-source" name="contact_source" required>
-									<option value="post_author"><?php esc_html_e( 'Post Author (linked contact)', 'ghl-crm-integration' ); ?></option>
-									<option value="post_meta"><?php esc_html_e( 'Post Meta Field', 'ghl-crm-integration' ); ?></option>
-									<option value="acf"><?php esc_html_e( 'ACF Field', 'ghl-crm-integration' ); ?></option>
+									<option value="post_author"><?php esc_html_e( 'Post Author', 'ghl-crm-integration' ); ?></option>
+									<option value="meta_field"><?php esc_html_e( 'Custom Meta Field (email)', 'ghl-crm-integration' ); ?></option>
 								</select>
+								<p class="description"><?php esc_html_e( 'The main contact this custom object will be associated with in GHL.', 'ghl-crm-integration' ); ?></p>
 							</div>
 
 							<div class="ghl-form-row" id="contact-field-row" style="display: none;">
 								<label for="contact-field">
-									<?php esc_html_e( 'Field Name', 'ghl-crm-integration' ); ?>
+									<?php esc_html_e( 'Meta Field Name (containing email)', 'ghl-crm-integration' ); ?>
 								</label>
-								<input type="text" id="contact-field" name="contact_field" class="regular-text" placeholder="e.g., _customer_user or contact_email">
+								<input type="text" id="contact-field" name="contact_field" class="regular-text" placeholder="e.g., _customer_user_email or contact_email">
+								<p class="description"><?php esc_html_e( 'Enter the meta key that contains the contact email address.', 'ghl-crm-integration' ); ?></p>
 							</div>
 
 							<div class="ghl-form-row">
@@ -239,10 +248,25 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 									<?php esc_html_e( 'If contact not found', 'ghl-crm-integration' ); ?>
 								</label>
 								<select id="contact-not-found" name="contact_not_found">
-									<option value="skip"><?php esc_html_e( 'Skip sync', 'ghl-crm-integration' ); ?></option>
-									<option value="create"><?php esc_html_e( 'Create new contact', 'ghl-crm-integration' ); ?></option>
-									<option value="log"><?php esc_html_e( 'Log error only', 'ghl-crm-integration' ); ?></option>
+									<option value="skip"><?php esc_html_e( 'Skip sync for this item', 'ghl-crm-integration' ); ?></option>
+									<option value="create"><?php esc_html_e( 'Create new contact from available data', 'ghl-crm-integration' ); ?></option>
+									<option value="log"><?php esc_html_e( 'Log error and continue', 'ghl-crm-integration' ); ?></option>
 								</select>
+							</div>
+
+							<!-- Secondary Contacts (Optional) -->
+							<div class="ghl-form-row" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
+								<label>
+									<?php esc_html_e( 'Secondary Contacts (Optional)', 'ghl-crm-integration' ); ?>
+								</label>
+								<div class="ghl-checkbox-group" id="secondary-contacts-group">
+									<label>
+										<input type="checkbox" name="secondary_contacts[]" value="post_author">
+										<?php esc_html_e( 'Post Author', 'ghl-crm-integration' ); ?>
+									</label>
+									<!-- More options will be added dynamically based on post type -->
+								</div>
+								<p class="description"><?php esc_html_e( 'Optional: Associate additional contacts with this custom object. Available options depend on the selected post type.', 'ghl-crm-integration' ); ?></p>
 							</div>
 						</div>
 
@@ -270,22 +294,6 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 								<?php esc_html_e( 'Add Field Mapping', 'ghl-crm-integration' ); ?>
 							</button>
 						</div>
-
-						<!-- Advanced Options -->
-						<div class="ghl-form-section">
-							<h3><?php esc_html_e( 'Advanced Options', 'ghl-crm-integration' ); ?></h3>
-							<div class="ghl-checkbox-group">
-								<label>
-									<input type="checkbox" name="enable_batch_sync" value="1">
-									<?php esc_html_e( 'Enable batch sync for existing posts', 'ghl-crm-integration' ); ?>
-								</label>
-								<label>
-									<input type="checkbox" name="log_sync_operations" value="1" checked>
-									<?php esc_html_e( 'Log all sync operations', 'ghl-crm-integration' ); ?>
-								</label>
-							</div>
-						</div>
-
 						<div class="ghl-form-actions">
 							<button type="submit" class="ghl-button ghl-button-primary">
 								<span class="dashicons dashicons-yes"></span>

@@ -101,6 +101,7 @@ class SettingsManager {
 
 		// Custom Object Mapping AJAX handlers
 		add_action( 'wp_ajax_ghl_crm_get_post_types', [ $this, 'get_post_types' ] );
+		add_action( 'wp_ajax_ghl_crm_get_cpt_fields', [ $this, 'get_cpt_fields' ] );
 		add_action( 'wp_ajax_ghl_crm_save_mapping', [ $this, 'save_mapping' ] );
 		add_action( 'wp_ajax_ghl_crm_get_mappings', [ $this, 'get_mappings' ] );
 		add_action( 'wp_ajax_ghl_crm_delete_mapping', [ $this, 'delete_mapping' ] );
@@ -1849,6 +1850,30 @@ class SettingsManager {
 		}
 
 		wp_send_json_success( [ 'post_types' => $filtered ] );
+	}
+
+	/**
+	 * Get available fields for a custom post type
+	 *
+	 * @return void
+	 */
+	public function get_cpt_fields(): void {
+		check_ajax_referer( 'ghl_crm_mappings', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ], 403 );
+		}
+
+		$post_type = sanitize_text_field( $_POST['post_type'] ?? '' );
+
+		if ( empty( $post_type ) ) {
+			wp_send_json_error( [ 'message' => __( 'Post type is required', 'ghl-crm-integration' ) ], 400 );
+		}
+
+		// Get fields using the field discovery class
+		$fields = \GHL_CRM\Sync\CustomObjectFieldDiscovery::get_fields_for_post_type( $post_type );
+
+		wp_send_json_success( [ 'fields' => $fields ] );
 	}
 
 	/**

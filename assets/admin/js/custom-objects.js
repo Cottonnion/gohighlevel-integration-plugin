@@ -35,6 +35,13 @@
 		$(document).on('click', '.edit-mapping', editMapping);
 		$(document).on('click', '.delete-mapping', deleteMapping);
 
+		$('#wp-post-type').on('change', function() {
+			const postType = $(this).val();
+			if (postType) {
+				loadCPTFields(postType);
+			}
+		});
+
 		$('#ghl-object').on('change', function() {
 			const schemaId = $(this).val();
 			if (schemaId) {
@@ -44,7 +51,8 @@
 
 		$('#contact-source').on('change', function() {
 			const $fieldRow = $('#contact-field-row');
-			if ($(this).val() === 'post_meta' || $(this).val() === 'acf') {
+			const value = $(this).val();
+			if (value === 'post_meta' || value === 'acf' || value === 'meta_field') {
 				$fieldRow.show();
 			} else {
 				$fieldRow.hide();
@@ -396,15 +404,19 @@
 		
 		$modal.fadeIn(200);
 		
-		loadPostTypes();
-		loadGHLObjects();
-		
 		if (mappingId) {
 			const mapping = currentMappings.find(m => m.id === mappingId);
 			if (mapping) {
-				populateMappingForm(mapping);
+				// Load post types with the mapping's selected value
+				loadPostTypes(mapping.wp_post_type, function() {
+					// After post types are loaded, populate the rest of the form
+					populateMappingForm(mapping);
+				});
+				loadGHLObjects();
 			}
 		} else {
+			loadPostTypes();
+			loadGHLObjects();
 			addFieldMappingRow();
 			
 			// Auto-select if only one custom object
@@ -422,7 +434,7 @@
 	/**
 	 * Load WordPress post types
 	 */
-	function loadPostTypes() {
+	function loadPostTypes(selectedValue = null, callback = null) {
 		$.ajax({
 			url: ghl_crm_custom_objects_js_data.ajaxUrl,
 			type: 'POST',
@@ -438,7 +450,226 @@
 					$.each(response.data.post_types, function(key, label) {
 						$select.append(`<option value="${key}">${escapeHtml(label)}</option>`);
 					});
+					
+					// Pre-select value if provided
+					if (selectedValue) {
+						$select.val(selectedValue);
+					}
+					
+					// Call callback if provided
+					if (typeof callback === 'function') {
+						callback();
+					}
 				}
+			}
+		});
+	}
+
+	/**
+	 * Load available fields for selected CPT
+	 */
+	function loadCPTFields(postType, callback, selectedContactSource) {
+		console.log('Loading fields for post type:', postType);
+		
+		// Store globally for field mapping
+		window.cptFields = {
+			core_fields: [],
+			meta_fields: [],
+			taxonomies: [],
+			acf_fields: [],
+			contact_options: {primary: [], secondary: []}
+		};
+
+		$.ajax({
+			url: ghl_crm_custom_objects_js_data.ajaxUrl,
+			type: 'POST',
+			data: {
+				action: 'ghl_crm_get_cpt_fields',
+				nonce: ghl_crm_custom_objects_js_data.nonces.mappings,
+				post_type: postType
+			},
+			success: function(response) {
+				if (response.success && response.data.fields) {
+					window.cptFields = response.data.fields;
+					console.log('Loaded CPT fields:', window.cptFields);
+					
+					// Update contact source options with selected value if provided
+					updateContactSourceOptions(response.data.fields.contact_options, selectedContactSource);
+					
+					// Update sync triggers
+					updateSyncTriggers(response.data.fields.sync_triggers);
+					
+					// Refresh field mapping rows with new options
+					refreshFieldMappingOptions();
+					
+					// Call callback if provided
+					if (typeof callback === 'function') {
+						callback();
+					}
+				} else {
+					console.error('Failed to load CPT fields');
+				}
+			},
+			error: function(xhr, status, error) {
+				console.error('Error loading CPT fields:', error);
+			}
+		});
+	}
+
+	/**
+	 * Update contact source dropdown with context-aware options
+	 */
+	function updateContactSourceOptions(contactOptions, selectedValue) {
+		// Update primary contact dropdown
+		const $primarySelect = $('#contact-source');
+		if ($primarySelect.length && contactOptions && contactOptions.primary) {
+			const currentValue = selectedValue || $primarySelect.val();
+			$primarySelect.empty();
+			
+			contactOptions.primary.forEach(function(option) {
+				$primarySelect.append(`<option value="${option.key}">${escapeHtml(option.label)}</option>`);
+			});
+
+			// Restore previous value or set selected value if available
+			if (currentValue && $primarySelect.find(`option[value="${currentValue}"]`).length) {
+				$primarySelect.val(currentValue);
+			}
+			
+			// Show/hide meta field input based on selection
+			$primarySelect.trigger('change');
+		}
+
+		// Update secondary contacts checkboxes
+		const $secondaryGroup = $('#secondary-contacts-group');
+		if ($secondaryGroup.length && contactOptions && contactOptions.secondary) {
+			// Clear existing checkboxes except the first one (post_author)
+			$secondaryGroup.find('label:not(:first)').remove();
+			
+			// Add context-aware secondary contact options
+			contactOptions.secondary.forEach(function(option) {
+				// Skip post_author as it's already in the HTML
+				if (option.key === 'post_author') return;
+				
+				const checkbox = `
+					<label>
+						<input type="checkbox" name="secondary_contacts[]" value="${escapeHtml(option.key)}">
+						${escapeHtml(option.label)}
+					</label>
+				`;
+				$secondaryGroup.append(checkbox);
+			});
+		}
+	}
+
+	/**
+	 * Update sync triggers based on post type
+	 */
+	function updateSyncTriggers(triggers) {
+		const $triggersGroup = $('#sync-triggers-group');
+		if (!$triggersGroup.length || !triggers || !triggers.length) return;
+
+		// Store currently selected triggers
+		const selectedTriggers = [];
+		$triggersGroup.find('input[name="triggers[]"]:checked').each(function() {
+			selectedTriggers.push($(this).val());
+		});
+
+		// Clear all triggers
+		$triggersGroup.empty();
+
+		// Add new triggers with descriptions
+		triggers.forEach(function(trigger) {
+			const isChecked = selectedTriggers.includes(trigger.key) || trigger.key === 'publish' || trigger.key === 'update';
+			const checkbox = `
+				<label title="${escapeHtml(trigger.description || '')}">
+					<input type="checkbox" name="triggers[]" value="${escapeHtml(trigger.key)}" ${isChecked ? 'checked' : ''}>
+					${escapeHtml(trigger.label)}
+					${trigger.description ? '<span class="description" style="display: block; margin-left: 24px; margin-top: 2px; font-size: 12px; color: #646970;">' + escapeHtml(trigger.description) + '</span>' : ''}
+				</label>
+			`;
+			$triggersGroup.append(checkbox);
+		});
+
+		console.log('Updated sync triggers:', triggers.length);
+	}
+
+	/**
+	 * Refresh field mapping dropdowns with newly loaded CPT fields
+	 */
+	function refreshFieldMappingOptions() {
+		// Clear current WP field options
+		wpFieldOptions = [];
+		
+		if (!window.cptFields) return;
+
+		// Build WP field options from all sources
+		const fields = window.cptFields;
+		
+		// Add grouped options
+		if (fields.core_fields && fields.core_fields.length > 0) {
+			wpFieldOptions.push({
+				label: 'Core Fields',
+				options: fields.core_fields.map(f => ({
+					value: f.key,
+					label: f.label,
+					type: f.type
+				}))
+			});
+		}
+
+		if (fields.meta_fields && fields.meta_fields.length > 0) {
+			wpFieldOptions.push({
+				label: 'Custom Fields',
+				options: fields.meta_fields.map(f => ({
+					value: f.key,
+					label: f.label,
+					type: f.type
+				}))
+			});
+		}
+
+		if (fields.taxonomies && fields.taxonomies.length > 0) {
+			wpFieldOptions.push({
+				label: 'Taxonomies',
+				options: fields.taxonomies.map(f => ({
+					value: f.key,
+					label: f.label,
+					type: f.type
+				}))
+			});
+		}
+
+		if (fields.acf_fields && fields.acf_fields.length > 0) {
+			wpFieldOptions.push({
+				label: 'ACF Fields',
+				options: fields.acf_fields.map(f => ({
+					value: f.key,
+					label: f.label,
+					type: f.acf_type || f.type
+				}))
+			});
+		}
+
+		console.log('Built WP field options:', wpFieldOptions);
+		
+		// Update existing field mapping rows
+		$('.wp-field-select').each(function() {
+			const $select = $(this);
+			const currentValue = $select.val();
+			
+			$select.empty().append('<option value="">Select WordPress Field...</option>');
+			
+			wpFieldOptions.forEach(function(group) {
+				const $optgroup = $('<optgroup>').attr('label', group.label);
+				group.options.forEach(function(option) {
+					$optgroup.append(`<option value="${option.value}">${escapeHtml(option.label)}</option>`);
+				});
+				$select.append($optgroup);
+			});
+			
+			// Restore previous value if available
+			if (currentValue) {
+				$select.val(currentValue);
 			}
 		});
 	}
@@ -577,26 +808,35 @@
 	 */
 	function addFieldMappingRow(wpField = '', ghlField = '', transform = 'none') {
 		const rowId = 'mapping-row-' + Date.now();
+		
+		// Build WP field options HTML
+		let wpFieldOptionsHtml = '<option value="">Select WordPress Field...</option>';
+		
+		if (wpFieldOptions && wpFieldOptions.length > 0) {
+			wpFieldOptions.forEach(function(group) {
+				wpFieldOptionsHtml += `<optgroup label="${escapeHtml(group.label)}">`;
+				group.options.forEach(function(option) {
+					const selected = wpField === option.value ? 'selected' : '';
+					wpFieldOptionsHtml += `<option value="${escapeHtml(option.value)}" ${selected}>${escapeHtml(option.label)}</option>`;
+				});
+				wpFieldOptionsHtml += '</optgroup>';
+			});
+		} else {
+			// Fallback to basic options if no fields loaded yet
+			wpFieldOptionsHtml += `
+				<optgroup label="Core Fields">
+					<option value="post_title">Title</option>
+					<option value="post_content">Content</option>
+					<option value="post_excerpt">Excerpt</option>
+				</optgroup>
+			`;
+		}
+		
 		const row = `
 			<tr class="ghl-mapping-row" data-row-id="${rowId}">
 				<td>
 					<select name="field_mappings[${rowId}][wp_field]" class="wp-field-select" required>
-						<option value="">${ghl_crm_custom_objects_js_data.i18n.selectWPField}</option>
-						<optgroup label="${ghl_crm_custom_objects_js_data.i18n.postFields}">
-							<option value="post_title">${ghl_crm_custom_objects_js_data.i18n.postTitle}</option>
-							<option value="post_content">${ghl_crm_custom_objects_js_data.i18n.postContent}</option>
-							<option value="post_excerpt">${ghl_crm_custom_objects_js_data.i18n.postExcerpt}</option>
-							<option value="post_date">${ghl_crm_custom_objects_js_data.i18n.postDate}</option>
-							<option value="post_modified">${ghl_crm_custom_objects_js_data.i18n.postModified}</option>
-						</optgroup>
-						<optgroup label="${ghl_crm_custom_objects_js_data.i18n.postMeta}">
-							<option value="post_meta">${ghl_crm_custom_objects_js_data.i18n.postMetaCustom}</option>
-						</optgroup>
-						<optgroup label="${ghl_crm_custom_objects_js_data.i18n.other}">
-							<option value="acf_field">${ghl_crm_custom_objects_js_data.i18n.acfField}</option>
-							<option value="taxonomy">${ghl_crm_custom_objects_js_data.i18n.taxonomyTerm}</option>
-							<option value="static">${ghl_crm_custom_objects_js_data.i18n.staticValue}</option>
-						</optgroup>
+						${wpFieldOptionsHtml}
 					</select>
 					<input type="text" name="field_mappings[${rowId}][wp_field_name]" class="wp-field-name" placeholder="${ghl_crm_custom_objects_js_data.i18n.fieldNamePlaceholder}" style="display:none; margin-top: 5px; width: 100%;">
 				</td>
@@ -628,11 +868,24 @@
 		
 		$('#field-mappings-body').append(row);
 		
+		// Set GHL field if provided
+		if (ghlField) {
+			$(`tr[data-row-id="${rowId}"] .ghl-field-select`).val(ghlField);
+		}
+		
+		// Set transform if provided
+		if (transform) {
+			$(`tr[data-row-id="${rowId}"] select[name*="[transform]"]`).val(transform);
+		}
+		
 		// Show field name input for custom WP fields
 		$(`tr[data-row-id="${rowId}"] .wp-field-select`).on('change', function() {
 			const $row = $(this).closest('tr');
 			const $nameInput = $row.find('.wp-field-name');
-			if (['post_meta', 'acf_field', 'taxonomy', 'static'].includes($(this).val())) {
+			const value = $(this).val();
+			
+			// Check if it's a meta, acf, or taxonomy field that needs extra input
+			if (value && (value.indexOf(':') === -1 && ['post_meta', 'acf_field', 'taxonomy', 'static'].includes(value))) {
 				$nameInput.show().prop('required', true);
 			} else {
 				$nameInput.hide().prop('required', false);
@@ -698,10 +951,39 @@
 			contact_source: $('#contact-source').val(),
 			contact_field: $('#contact-field').val(),
 			contact_not_found: $('#contact-not-found').val(),
+			associations: [],
 			field_mappings: [],
 			enable_batch_sync: $('input[name="enable_batch_sync"]').is(':checked'),
 			log_sync_operations: $('input[name="log_sync_operations"]').is(':checked')
 		};
+		
+		// Build associations array (new format)
+		// Primary contact association
+		const primarySource = $('#contact-source').val();
+		const primaryField = $('#contact-field').val();
+		const primaryNotFound = $('#contact-not-found').val();
+		
+		if (primarySource) {
+			mappingData.associations.push({
+				target_type: 'contact',
+				source: primarySource,
+				source_field: primaryField,
+				not_found_action: primaryNotFound,
+				association_key: '' // Will be determined from schema
+			});
+		}
+		
+		// Secondary contact associations
+		$('input[name="secondary_contacts[]"]:checked').each(function() {
+			const secondarySource = $(this).val();
+			mappingData.associations.push({
+				target_type: 'contact',
+				source: secondarySource,
+				source_field: '',
+				not_found_action: primaryNotFound, // Use same action as primary
+				association_key: '' // Will be determined from schema
+			});
+		});
 		
 		// Collect field mappings
 		$('#field-mappings-body tr').each(function() {
@@ -915,9 +1197,26 @@
 			});
 		}
 		
-		$('#contact-source').val(mapping.contact_source).trigger('change');
-		$('#contact-field').val(mapping.contact_field);
-		$('#contact-not-found').val(mapping.contact_not_found);
+		// Extract primary contact source and other association data
+		let primarySource = '';
+		let primaryField = '';
+		let primaryNotFound = 'skip';
+		let secondaryAssociations = [];
+		
+		// Handle associations (new format) or legacy contact_source
+		if (mapping.associations && mapping.associations.length > 0) {
+			// New format: use associations array
+			const primaryAssoc = mapping.associations[0];
+			primarySource = primaryAssoc.source || '';
+			primaryField = primaryAssoc.source_field || '';
+			primaryNotFound = primaryAssoc.not_found_action || 'skip';
+			secondaryAssociations = mapping.associations.slice(1);
+		} else {
+			// Legacy format: use contact_source
+			primarySource = mapping.contact_source || '';
+			primaryField = mapping.contact_field || '';
+			primaryNotFound = mapping.contact_not_found || 'skip';
+		}
 		
 		$('input[name="enable_batch_sync"]').prop('checked', mapping.enable_batch_sync);
 		$('input[name="log_sync_operations"]').prop('checked', mapping.log_sync_operations);
@@ -925,32 +1224,37 @@
 		$('#ghl-object').val(mapping.ghl_object);
 		loadGHLObjectFields(mapping.ghl_object);
 		
-		let postTypesLoaded = false;
-		let ghlFieldsLoaded = false;
-		
-		const checkPostTypesLoaded = setInterval(function() {
-			const $wpPostType = $('#wp-post-type');
-			if ($wpPostType.find('option').length > 1) {
-				clearInterval(checkPostTypesLoaded);
-				$wpPostType.val(mapping.wp_post_type);
-				postTypesLoaded = true;
+		// Load CPT fields for the selected post type (already set by loadPostTypes callback)
+		// Pass the primary contact source so it gets selected when dropdown is rebuilt
+		if (mapping.wp_post_type) {
+			loadCPTFields(mapping.wp_post_type, function() {
+				// After CPT fields are loaded and contact dropdown is rebuilt with correct value,
+				// set the other contact fields
+				$('#contact-field').val(primaryField);
+				$('#contact-not-found').val(primaryNotFound);
 				
-				if (postTypesLoaded && ghlFieldsLoaded) {
-					populateFieldMappings(mapping);
-				}
-			}
-		}, 100);
-		
-		const checkGHLFieldsLoaded = setInterval(function() {
-			if (ghlFieldOptions.length > 0) {
-				clearInterval(checkGHLFieldsLoaded);
-				ghlFieldsLoaded = true;
+				// Check secondary contact checkboxes
+				$('input[name="secondary_contacts[]"]').prop('checked', false);
+				secondaryAssociations.forEach(function(assoc) {
+					$(`input[name="secondary_contacts[]"][value="${assoc.source}"]`).prop('checked', true);
+				});
 				
-				if (postTypesLoaded && ghlFieldsLoaded) {
-					populateFieldMappings(mapping);
+				// Re-apply triggers after CPT fields are loaded
+				if (mapping.triggers) {
+					mapping.triggers.forEach(function(trigger) {
+						$(`input[name="triggers[]"][value="${trigger}"]`).prop('checked', true);
+					});
 				}
-			}
-		}, 100);
+				
+				// Wait for GHL fields to load, then populate field mappings
+				const checkGHLFieldsLoaded = setInterval(function() {
+					if (ghlFieldOptions.length > 0) {
+						clearInterval(checkGHLFieldsLoaded);
+						populateFieldMappings(mapping);
+					}
+				}, 100);
+			}, primarySource); // Pass the primary source to loadCPTFields
+		}
 	}
 	
 	/**
