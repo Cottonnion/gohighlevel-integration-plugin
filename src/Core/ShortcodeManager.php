@@ -312,16 +312,22 @@ class ShortcodeManager {
 	 */
 	private function render_family_manager_upgrade_notice(): string {
 		ob_start();
-		?>
-		<div class="ghl-family-upgrade-notice" style="padding: 20px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; text-align: center;">
-			<h3 style="margin-top: 0;">
-				<span class="dashicons dashicons-groups" style="font-size: 32px; width: 32px; height: 32px;"></span>
-				<?php esc_html_e( 'Family Accounts - PRO Feature', 'ghl-crm-integration' ); ?>
-			</h3>
-			<p><?php esc_html_e( 'The Family Accounts feature allows you to create parent-child relationships where children inherit membership access and tags from their parents.', 'ghl-crm-integration' ); ?></p>
-			<p><strong><?php esc_html_e( 'This feature requires the PRO version of the plugin - this notice is only shown to you as the admin.', 'ghl-crm-integration' ); ?></strong></p>
-		</div>
-		<?php
+		
+		// Set up upgrade notice variables
+		$title       = __( 'Family Accounts', 'ghl-crm-integration' );
+		$description = __( 'Create parent-child relationships where children inherit membership access and tags from their parents. Manage invitations, family groups, and automatic BuddyBoss group creation.', 'ghl-crm-integration' );
+		$features    = array(
+			__( 'Parent-child account relationships with tag inheritance', 'ghl-crm-integration' ),
+			__( 'Email invitation system with custom templates', 'ghl-crm-integration' ),
+			__( 'Automatic BuddyBoss group creation for families', 'ghl-crm-integration' ),
+			__( 'Frontend family manager dashboard via shortcode', 'ghl-crm-integration' ),
+			__( 'Admin controls and family statistics', 'ghl-crm-integration' ),
+		);
+		$cta_text    = __( 'Upgrade to PRO', 'ghl-crm-integration' );
+		$style       = 'box';
+		
+		include GHL_CRM_PATH . 'templates/admin/partials/pro-upgrade-notice.php';
+		
 		return ob_get_clean();
 	}
 }
