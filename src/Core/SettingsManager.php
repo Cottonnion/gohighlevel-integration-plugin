@@ -1871,7 +1871,7 @@ class SettingsManager {
 		}
 
 		// Get fields using the field discovery class
-		$fields = \GHL_CRM\Sync\CustomObjectFieldDiscovery::get_fields_for_post_type( $post_type );
+		$fields = \GHL_CRM_Pro\Sync\CustomObjectFieldDiscovery::get_fields_for_post_type( $post_type );
 
 		wp_send_json_success( [ 'fields' => $fields ] );
 	}
