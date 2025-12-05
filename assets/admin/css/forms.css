@@ -1338,3 +1338,29 @@
 }
 
 }
+
+/* Pro Feature Lock Icon - Minimal & Clean */
+.ghl-pro-lock-icon {
+	color: #f59e0b;
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	margin-left: 8px;
+	cursor: help;
+	vertical-align: middle;
+	opacity: 0.8;
+	transition: opacity 0.2s ease;
+}
+
+.ghl-pro-lock-icon:hover {
+	opacity: 1;
+}
+
+/* Disabled state for Pro features - subtle */
+.ghl-settings-group select:disabled,
+.ghl-settings-group textarea:disabled,
+.ghl-settings-group input:disabled,
+.ghl-settings-group button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed !important;
+}

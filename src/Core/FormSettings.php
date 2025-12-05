@@ -60,6 +60,20 @@ class FormSettings {
 	}
 
 	/**
+	 * Check if Pro plugin is active
+	 *
+	 * @return bool
+	 */
+	public static function is_pro_active(): bool {
+		/**
+		 * Filter to check if Pro plugin features are available
+		 *
+		 * @param bool $is_pro Whether Pro features are active
+		 */
+		return apply_filters( 'ghl_crm_is_pro_active', false );
+	}
+
+	/**
 	 * Get all form settings
 	 *
 	 * @return array
@@ -83,12 +97,10 @@ class FormSettings {
 	public function get_form_settings( string $form_id ): array {
 	$all_settings = $this->get_all_settings();
 	
+	// FREE plugin defaults (Pro plugin can extend via filter if needed)
 	$defaults = [
-		'autofill_enabled'    => true,  // Auto-fill enabled by default
-		'logged_only'         => false, // Show to everyone by default
-		'custom_params'       => [],    // Custom URL parameters
-		'submission_limit'    => 'unlimited', // 'unlimited' or 'once'
-		'submitted_message'   => '', // Message to show after submission (empty = hide completely)
+		'autofill_enabled' => true,  // Auto-fill enabled by default
+		'logged_only'      => false, // Show to everyone by default
 	];
 
 	if ( isset( $all_settings[ $form_id ] ) && is_array( $all_settings[ $form_id ] ) ) {
@@ -99,25 +111,31 @@ class FormSettings {
 }	/**
 	 * Save settings for a specific form
 	 *
-	 * @param string $form_id  Form ID.
-	 * @param array  $settings Settings to save.
+	 * @param string $form_id      Form ID.
+	 * @param array  $settings     Sanitized free settings to save.
+	 * @param array  $raw_settings Raw POST data for Pro plugin filter.
 	 * @return bool Success status.
 	 */
-	public function save_form_settings( string $form_id, array $settings ): bool {
-	$all_settings = $this->get_all_settings();
-	
-	// Sanitize settings
-	$sanitized_settings = [
-		'autofill_enabled'    => isset( $settings['autofill_enabled'] ) && $settings['autofill_enabled'],
-		'logged_only'         => isset( $settings['logged_only'] ) && $settings['logged_only'],
-		'custom_params'       => isset( $settings['custom_params'] ) && is_array( $settings['custom_params'] ) 
-			? $this->sanitize_custom_params( $settings['custom_params'] ) 
-			: [],
-		'submission_limit'    => isset( $settings['submission_limit'] ) && in_array( $settings['submission_limit'], [ 'unlimited', 'once' ], true ) 
-			? $settings['submission_limit'] 
-			: 'unlimited',
-		'submitted_message'   => isset( $settings['submitted_message'] ) ? sanitize_textarea_field( $settings['submitted_message'] ) : '',
-	];		$all_settings[ $form_id ] = $sanitized_settings;
+	public function save_form_settings( string $form_id, array $settings, array $raw_settings = [] ): bool {
+		$all_settings = $this->get_all_settings();
+		
+		// Sanitize FREE settings only (autofill_enabled, logged_only)
+		$sanitized_settings = [
+			'autofill_enabled' => isset( $settings['autofill_enabled'] ) && $settings['autofill_enabled'],
+			'logged_only'      => isset( $settings['logged_only'] ) && $settings['logged_only'],
+		];
+
+		/**
+		 * Filter settings before save
+		 * Allows Pro plugin to add custom_params and submission_limit
+		 *
+		 * @param array  $sanitized_settings Sanitized FREE settings
+		 * @param string $form_id            Form ID
+		 * @param array  $raw_settings       Raw POST data from AJAX request
+		 */
+		$sanitized_settings = apply_filters( 'ghl_crm_form_settings_before_save', $sanitized_settings, $form_id, $raw_settings );
+
+		$all_settings[ $form_id ] = $sanitized_settings;
 
 		if ( is_multisite() ) {
 			return update_site_option( self::OPTION_KEY, $all_settings );
@@ -167,34 +185,15 @@ class FormSettings {
 			$logged_only = ( $value === true || $value === 'true' || $value === '1' || $value === 1 );
 		}
 
-		// Get and sanitize custom params
-		$custom_params = [];
-		if ( isset( $raw_settings['custom_params'] ) && is_array( $raw_settings['custom_params'] ) ) {
-			$custom_params = $this->sanitize_custom_params( $raw_settings['custom_params'] );
-		}
-
-		// Parse submission limit
-		$submission_limit = 'unlimited';
-		if ( isset( $raw_settings['submission_limit'] ) && in_array( $raw_settings['submission_limit'], [ 'unlimited', 'once' ], true ) ) {
-			$submission_limit = $raw_settings['submission_limit'];
-		}
-
-		// Parse submitted message
-		$submitted_message = '';
-		if ( isset( $raw_settings['submitted_message'] ) ) {
-			$submitted_message = sanitize_textarea_field( $raw_settings['submitted_message'] );
-		}
-
+		// FREE plugin only handles free settings
+		// Pro plugin will add custom_params, submission_limit, submitted_message via filter
 		$settings = [
-			'autofill_enabled'    => $autofill_enabled,
-			'logged_only'         => $logged_only,
-			'custom_params'       => $custom_params,
-			'submission_limit'    => $submission_limit,
-			'submitted_message'   => $submitted_message,
+			'autofill_enabled' => $autofill_enabled,
+			'logged_only'      => $logged_only,
 		];
 
-		// Save settings (will throw exception if it fails)
-		$this->save_form_settings( $form_id, $settings );
+		// Save settings (pass raw POST data to filter for Pro plugin to access)
+		$this->save_form_settings( $form_id, $settings, $raw_settings );
 
 		wp_send_json_success( [
 			'message'  => __( 'Form settings saved successfully.', 'ghl-crm-integration' ),
@@ -287,28 +286,6 @@ class FormSettings {
 		$settings = $this->get_form_settings( $form_id );
 		return $settings['logged_only'];
 	}
-
-	/**
-	 * Sanitize custom parameters array
-	 *
-	 * @param array $params Custom parameters.
-	 * @return array Sanitized parameters.
-	 */
-	private function sanitize_custom_params( array $params ): array {
-		$sanitized = [];
-		
-		foreach ( $params as $param ) {
-			if ( isset( $param['key'], $param['value'] ) ) {
-				$sanitized[] = [
-					'key'   => sanitize_text_field( $param['key'] ),
-					'value' => sanitize_textarea_field( $param['value'] ),
-				];
-			}
-		}
-		
-		return $sanitized;
-	}
-
 	/**
 	 * Get available variable placeholders
 	 *

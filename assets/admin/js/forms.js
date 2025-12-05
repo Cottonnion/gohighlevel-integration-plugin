@@ -317,6 +317,7 @@
 										<h3>
 											<span class="dashicons dashicons-forms"></span>
 											Submission Controls
+											${!ghl_crm_forms_js_data.isPro ? `<span class="dashicons dashicons-lock ghl-pro-lock-icon" data-ghl-tooltip="Upgrade to Pro to unlock submission controls"></span>` : ''}
 										</h3>
 										<p class="description">Control how many times users can submit this form</p>
 										
@@ -325,7 +326,7 @@
 												Submission Limit
 												<span class="ghl-tooltip-icon" data-ghl-tooltip="Choose whether users can submit this form multiple times or only once.">?</span>
 											</label>
-											<select id="ghl-form-submission-limit-${formId}" name="submission_limit" class="ghl-select">
+											<select id="ghl-form-submission-limit-${formId}" name="submission_limit" class="ghl-select" ${!ghl_crm_forms_js_data.isPro ? 'disabled' : ''}>
 												<option value="unlimited" ${submissionLimit === 'unlimited' ? 'selected' : ''}>Unlimited - Allow multiple submissions</option>
 												<option value="once" ${submissionLimit === 'once' ? 'selected' : ''}>Once - One submission per user</option>
 											</select>
@@ -342,6 +343,7 @@
 												class="ghl-textarea" 
 												rows="3" 
 												placeholder="Thank you! You have already submitted this form."
+												${!ghl_crm_forms_js_data.isPro ? 'disabled' : ''}
 											>${this.escapeHtml(submittedMessage)}</textarea>
 											<p class="description" style="margin-top: 5px; color: #666;">Leave empty to hide form completely without showing any message.</p>
 										</div>
@@ -352,6 +354,7 @@
 										<h3>
 											<span class="dashicons dashicons-admin-settings"></span>
 											Custom URL Parameters
+											${!ghl_crm_forms_js_data.isPro ? `<span class="dashicons dashicons-lock ghl-pro-lock-icon" data-ghl-tooltip="Upgrade to Pro to unlock custom URL parameters"></span>` : ''}
 										</h3>
 										<p class="description">Add custom parameters to the form URL using dynamic variables</p>
 										
@@ -359,7 +362,7 @@
 											${customParamsHtml}
 										</div>
 										<div class="ghl-form-item">
-											<button type="button" class="ghl-button ghl-button-secondary ghl-add-custom-param">
+											<button type="button" class="ghl-button ghl-button-secondary ghl-add-custom-param" ${!ghl_crm_forms_js_data.isPro ? 'disabled' : ''}>
 												<span class="dashicons dashicons-plus-alt"></span>
 												Add Parameter
 											</button>
