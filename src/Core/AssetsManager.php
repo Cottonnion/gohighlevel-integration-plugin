@@ -182,7 +182,7 @@ class AssetsManager {
 			'spa-app.css',
 			[],
 			[],
-			'1.0.0'
+			'1.0.2'
 		);
 
 		$this->add_admin_asset(
@@ -192,6 +192,17 @@ class AssetsManager {
 			[ 'jquery', 'sweetalert2' ],
 			[],
 			'1.0.34',
+			true
+		);
+
+		// Upgrade notice (dismissible banner)
+		$this->add_admin_asset(
+			'ghl-crm-upgrade-notice-js',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'upgrade-notice.js',
+			[ 'jquery' ],
+			[],
+			'1.0.0',
 			true
 		);
 
@@ -547,7 +558,7 @@ class AssetsManager {
 				'whiteLabelDomain' => $white_label_domain,
 				'formSettings'     => $this->get_all_form_settings(),
 				'isPro'            => \GHL_CRM\Core\FormSettings::is_pro_active(),
-				'upgradeUrl'       => apply_filters( 'ghl_crm_upgrade_url', 'https://example.com/upgrade' ),
+				'upgradeUrl'       => apply_filters( 'ghl_crm_upgrade_url', 'https://highlevelsync.com/upgrade-to-pro' ),
 				'strings'          => [
 					'errorLoad'        => __( 'Failed to load forms', 'ghl-crm-integration' ),
 					'ajaxError'        => __( 'AJAX error: ', 'ghl-crm-integration' ),

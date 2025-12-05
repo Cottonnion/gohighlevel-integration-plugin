@@ -76,6 +76,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</nav>
 	</div>
 
+	<!-- Upgrade Notice (dismissible banner) -->
+	<?php
+	$admin_notices = \GHL_CRM\Core\AdminNotices::get_instance();
+	$admin_notices->render_upgrade_notice();
+	?>
+
 	<!-- SPA Application Container -->
 	<div id="ghl-crm-app" class="ghl-spa-container">
 		<div class="ghl-spa-loading">

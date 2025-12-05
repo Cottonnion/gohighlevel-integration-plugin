@@ -32,6 +32,11 @@ class AdminNotices {
 	private const TRANSIENT_PREFIX = 'ghl_crm_notice_';
 
 	/**
+	 * User meta key for storing dismissed upgrade notice state
+	 */
+	private const UPGRADE_NOTICE_DISMISSED_KEY = 'ghl_crm_upgrade_notice_dismissed';
+
+	/**
 	 * Singleton instance
 	 *
 	 * @var self|null
@@ -68,6 +73,9 @@ class AdminNotices {
 
 		// Display notices on all admin pages (for global notices)
 		add_action( 'admin_notices', [ $this, 'display_global_notices' ] );
+
+		// AJAX handler for dismissing upgrade notice
+		add_action( 'wp_ajax_ghl_crm_dismiss_upgrade_notice', [ $this, 'ajax_dismiss_upgrade_notice' ] );
 	}
 
 	/**
@@ -249,5 +257,112 @@ class AdminNotices {
 	 */
 	public function from_exception( \Exception $exception, bool $global = false ): void {
 		$this->error( $exception->getMessage(), $global );
+	}
+
+	/**
+	 * Check if Pro is active
+	 *
+	 * @return bool
+	 */
+	private function is_pro_active(): bool {
+		return apply_filters( 'ghl_crm_is_pro_active', false );
+	}
+
+	/**
+	 * Check if upgrade notice is dismissed
+	 *
+	 * @return bool
+	 */
+	public function is_upgrade_notice_dismissed(): bool {
+		$user_id = get_current_user_id();
+		return (bool) get_user_meta( $user_id, self::UPGRADE_NOTICE_DISMISSED_KEY, true );
+	}
+
+	/**
+	 * Check if upgrade notice should be displayed
+	 *
+	 * @return bool
+	 */
+	public function should_display_upgrade_notice(): bool {
+		// Don't show if Pro is active
+		if ( $this->is_pro_active() ) {
+			return false;
+		}
+
+		// Don't show if user dismissed it
+		if ( $this->is_upgrade_notice_dismissed() ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Render the upgrade notice banner
+	 * Similar to BuddyBoss upgrade notice
+	 *
+	 * @return void
+	 */
+	public function render_upgrade_notice(): void {
+		if ( ! $this->should_display_upgrade_notice() ) {
+			return;
+		}
+
+		$upgrade_url = apply_filters( 'ghl_crm_upgrade_url', 'https://highlevelsync.com/upgrade-to-pro' );
+		$nonce       = wp_create_nonce( 'ghl_crm_dismiss_upgrade_notice' );
+		?>
+		<div class="ghl-upgrade-notice ghl-is-dismissible" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+			<span class="ghl-upgrade-point">
+				<i class="dashicons dashicons-star-filled ghl-upgrade-icon"></i>
+				<?php
+				printf(
+					/* translators: %s: upgrade link */
+					wp_kses_post( __( 'Unlock powerful Pro features like custom objects, advanced field mapping, and more! %s', 'ghl-crm-integration' ) ),
+					'<a href="' . esc_url( $upgrade_url ) . '" class="ghl-upgrade-notice__link" target="_blank">' . esc_html__( 'Upgrade to Pro', 'ghl-crm-integration' ) . '</a>'
+				);
+				?>
+			</span>
+			<button type="button" class="ghl-dismiss-upgrade-notice" aria-label="<?php esc_attr_e( 'Dismiss this notice', 'ghl-crm-integration' ); ?>">
+				<span class="dashicons dashicons-dismiss"></span>
+				<span class="screen-reader-text">
+					<?php esc_html_e( 'Dismiss this notice.', 'ghl-crm-integration' ); ?>
+				</span>
+			</button>
+		</div>
+		<?php
+	}
+
+	/**
+	 * AJAX handler to dismiss upgrade notice
+	 *
+	 * @return void
+	 */
+	public function ajax_dismiss_upgrade_notice(): void {
+		// Verify nonce
+		if ( ! check_ajax_referer( 'ghl_crm_dismiss_upgrade_notice', 'nonce', false ) ) {
+			wp_send_json_error( [ 'message' => __( 'Invalid security token.', 'ghl-crm-integration' ) ] );
+		}
+
+		// Check permissions
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'ghl-crm-integration' ) ] );
+		}
+
+		// Save dismissed state
+		$user_id = get_current_user_id();
+		update_user_meta( $user_id, self::UPGRADE_NOTICE_DISMISSED_KEY, true );
+
+		wp_send_json_success( [ 'message' => __( 'Notice dismissed.', 'ghl-crm-integration' ) ] );
+	}
+
+	/**
+	 * Reset upgrade notice dismissed state (for testing)
+	 *
+	 * @param int|null $user_id Optional user ID. Uses current user if not provided.
+	 * @return bool
+	 */
+	public function reset_upgrade_notice( ?int $user_id = null ): bool {
+		$user_id = $user_id ?? get_current_user_id();
+		return delete_user_meta( $user_id, self::UPGRADE_NOTICE_DISMISSED_KEY );
 	}
 }
