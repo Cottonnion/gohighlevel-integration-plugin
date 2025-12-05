@@ -19,21 +19,25 @@ $is_buddyboss_active = function_exists( 'bp_is_active' ) && bp_is_active( 'group
 
 <?php if ( ! $is_buddyboss_active ) : ?>
 	<!-- BuddyBoss Not Active -->
-	<div class="ghl-empty-state-card">
-		<div class="ghl-empty-state">
-			<div class="ghl-empty-state-icon">
-				<span class="dashicons dashicons-groups" style="color: #9ca3af;"></span>
+	<div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 48px 32px; margin: 24px 0;">
+		<div style="text-align: center; max-width: 600px; margin: 0 auto;">
+			<div style="margin-bottom: 24px;">
+				<span class="dashicons dashicons-groups" style="font-size: 64px; color: #cbd5e1; width: 64px; height: 64px;"></span>
 			</div>
-			<h3><?php esc_html_e( 'BuddyBoss Not Detected', 'ghl-crm-integration' ); ?></h3>
-			<p><?php esc_html_e( 'BuddyBoss Platform must be installed and activated with Groups component enabled to use this integration.', 'ghl-crm-integration' ); ?></p>
+			<h3 style="margin: 0 0 12px; font-size: 24px; font-weight: 600; color: #1e293b;">
+				<?php esc_html_e( 'BuddyBoss Platform Not Detected', 'ghl-crm-integration' ); ?>
+			</h3>
+			<p style="margin: 0 0 32px; font-size: 16px; color: #64748b; line-height: 1.6;">
+				<?php esc_html_e( 'BuddyBoss Platform must be installed and activated with Groups component enabled to use this integration.', 'ghl-crm-integration' ); ?>
+			</p>
 			
-			<div class="ghl-empty-state-actions">
+			<div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
 				<?php if ( current_user_can( 'install_plugins' ) ) : ?>
-					<button type="button" onclick="window.open('https://www.buddyboss.com/pricing', '_blank')" class="ghl-button ghl-button-primary">
+					<button type="button" onclick="window.open('https://www.buddyboss.com/pricing', '_blank')" class="ghl-button ghl-button-primary" style="padding: 12px 24px; font-size: 15px;">
 						<?php esc_html_e( 'Install BuddyBoss', 'ghl-crm-integration' ); ?>
 					</button>
 				<?php endif; ?>
-				<button type="button" onclick="window.open('https://www.buddyboss.com/', '_blank')" class="ghl-button ghl-button-secondary">
+				<button type="button" onclick="window.open('https://www.buddyboss.com/', '_blank')" class="ghl-button ghl-button-secondary" style="padding: 12px 24px; font-size: 15px;">
 					<?php esc_html_e( 'Learn More', 'ghl-crm-integration' ); ?>
 				</button>
 			</div>
