@@ -60,6 +60,7 @@ class MenuManager {
 		add_action( 'wp_ajax_ghl_crm_disconnect_api', [ $this, 'handle_disconnect_api' ] );
 		add_filter( 'admin_footer_text', [ $this, 'custom_admin_footer_text' ] );
 		add_action( 'admin_head', [ $this, 'adjust_admin_viewport' ] );
+		add_action( 'admin_head', [ $this, 'remove_notices_on_setup_wizard' ] );
 	}
 
 	/**
@@ -86,6 +87,25 @@ class MenuManager {
 		})();
 		</script>
 		<?php
+	}
+
+	/**
+	 * Remove all admin notices on GHL CRM admin pages
+	 *
+	 * @return void
+	 */
+	public function remove_notices_on_setup_wizard(): void {
+		$current_screen = get_current_screen();
+		
+		if ( ! $current_screen || strpos( $current_screen->id, 'ghl-crm' ) === false ) {
+			return;
+		}
+
+		// Remove all admin notices on all GHL CRM pages
+		remove_all_actions( 'admin_notices' );
+		remove_all_actions( 'all_admin_notices' );
+		remove_all_actions( 'network_admin_notices' );
+		remove_all_actions( 'user_admin_notices' );
 	}
 
 	/**
