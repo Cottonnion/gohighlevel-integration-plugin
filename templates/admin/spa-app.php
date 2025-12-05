@@ -21,34 +21,58 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<!-- Horizontal Header Navigation -->
 	<div class="ghl-header-nav">
 		<nav class="ghl-nav-tabs">
-			<a href="#/" class="ghl-nav-tab" data-route="dashboard">
-				<span class="dashicons dashicons-dashboard"></span>
-				<span class="ghl-nav-label"><?php esc_html_e( 'Dashboard', 'ghl-crm-integration' ); ?></span>
-			</a>
-			<a href="#/settings" class="ghl-nav-tab" data-route="settings">
-				<span class="dashicons dashicons-admin-settings"></span>
-				<span class="ghl-nav-label"><?php esc_html_e( 'Settings', 'ghl-crm-integration' ); ?></span>
-			</a>
-			<a href="#/integrations" class="ghl-nav-tab" data-route="integrations">
-				<span class="dashicons dashicons-admin-plugins"></span>
-				<span class="ghl-nav-label"><?php esc_html_e( 'Integrations', 'ghl-crm-integration' ); ?></span>
-			</a>
-			<a href="#/field-mapping" class="ghl-nav-tab" data-route="field-mapping">
-				<span class="dashicons dashicons-admin-generic"></span>
-				<span class="ghl-nav-label"><?php esc_html_e( 'Field Mapping', 'ghl-crm-integration' ); ?></span>
-			</a>
-			<a href="#/sync-logs" class="ghl-nav-tab" data-route="sync-logs">
-				<span class="dashicons dashicons-list-view"></span>
-				<span class="ghl-nav-label"><?php esc_html_e( 'Sync Logs', 'ghl-crm-integration' ); ?></span>
-			</a>
-			<a href="#/forms" class="ghl-nav-tab" data-route="forms">
-				<span class="dashicons dashicons-feedback"></span>
-				<span class="ghl-nav-label"><?php esc_html_e( 'Forms', 'ghl-crm-integration' ); ?></span>
-			</a>
-			<a href="#/custom-objects" class="ghl-nav-tab" data-route="custom-objects">
-				<span class="dashicons dashicons-block-default"></span>
-				<span class="ghl-nav-label"><?php esc_html_e( 'Custom Objects', 'ghl-crm-integration' ); ?></span>
-			</a>
+			<?php
+			// Define default navigation tabs
+			$nav_tabs = array(
+				'dashboard'     => array(
+					'label' => __( 'Dashboard', 'ghl-crm-integration' ),
+					'icon'  => 'dashicons-dashboard',
+				),
+				'settings'      => array(
+					'label' => __( 'Settings', 'ghl-crm-integration' ),
+					'icon'  => 'dashicons-admin-settings',
+				),
+				'integrations'  => array(
+					'label' => __( 'Integrations', 'ghl-crm-integration' ),
+					'icon'  => 'dashicons-admin-plugins',
+				),
+				'field-mapping' => array(
+					'label' => __( 'Field Mapping', 'ghl-crm-integration' ),
+					'icon'  => 'dashicons-admin-generic',
+				),
+				'sync-logs'     => array(
+					'label' => __( 'Sync Logs', 'ghl-crm-integration' ),
+					'icon'  => 'dashicons-list-view',
+				),
+				'forms'         => array(
+					'label' => __( 'Forms', 'ghl-crm-integration' ),
+					'icon'  => 'dashicons-feedback',
+				),
+			);
+
+			/**
+			 * Filter the admin navigation tabs.
+			 * Allows extensions (like Pro plugin) to add custom tabs.
+			 *
+			 * @param array $nav_tabs Array of navigation tabs with keys: route => array(label, icon)
+			 */
+			$nav_tabs = apply_filters( 'ghl_crm_admin_nav_tabs', $nav_tabs );
+
+			// Render navigation tabs
+			foreach ( $nav_tabs as $route => $tab ) {
+				$href = ( $route === 'dashboard' ) ? '#/' : '#/' . esc_attr( $route );
+				printf(
+					'<a href="%s" class="ghl-nav-tab" data-route="%s">
+						<span class="dashicons %s"></span>
+						<span class="ghl-nav-label">%s</span>
+					</a>',
+					esc_url( $href ),
+					esc_attr( $route ),
+					esc_attr( $tab['icon'] ),
+					esc_html( $tab['label'] )
+				);
+			}
+			?>
 		</nav>
 	</div>
 

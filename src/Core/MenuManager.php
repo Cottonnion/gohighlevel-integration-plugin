@@ -682,8 +682,20 @@ class MenuManager {
 	 * @return void Outputs JSON response and exits.
 	 */
 	private function get_custom_objects_data( array $params ): void {
+		/**
+		 * Filter the custom objects template path.
+		 * Allows Pro plugin to provide its own template.
+		 *
+		 * @param string|null $template_path Custom template path or null to use default
+		 */
+		$custom_template_path = apply_filters( 'ghl_crm_custom_objects_template_path', null );
+
 		ob_start();
-		$this->load_template( 'admin/custom-objects' );
+		if ( $custom_template_path && file_exists( $custom_template_path ) ) {
+			include $custom_template_path;
+		} else {
+			$this->load_template( 'admin/custom-objects' );
+		}
 		$html = ob_get_clean();
 
 		wp_send_json_success(
