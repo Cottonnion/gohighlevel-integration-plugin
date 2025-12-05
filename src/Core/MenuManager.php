@@ -166,14 +166,6 @@ class MenuManager {
 			'__return_false'
 		);
 
-		add_submenu_page(
-			'ghl-crm-admin',
-			__( 'Custom Objects', 'ghl-crm-integration' ),
-			__( 'Custom Objects', 'ghl-crm-integration' ),
-			'manage_options',
-			'ghl-crm-admin#/custom-objects',
-			'__return_false'
-		);
 
 		add_submenu_page(
 			null, // Hidden from menu
