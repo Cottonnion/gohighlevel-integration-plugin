@@ -101,6 +101,8 @@ class Loader {
 			'integrations.buddyboss'                   => \GHL_CRM\Integrations\BuddyBoss\GroupsSync::class,
 			'integrations.buddyboss.group_metabox'     => \GHL_CRM\Integrations\BuddyBoss\GroupMetaBox::class,
 
+			'integrations.elementor'                   => \GHL_CRM\Integrations\Elementor\ElementorIntegration::class,
+
 			// Membership components
 			'membership.metaboxes'                     => \GHL_CRM\Membership\Admin\MetaBoxes::class,
 			'membership.restrictions'                  => \GHL_CRM\Membership\Restrictions::class,
