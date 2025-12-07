@@ -597,3 +597,9 @@ textarea.ghl-input {
 	color: var(--ghl-text-primary);
 	font-weight: var(--ghl-font-weight-semibold);
 }
+
+span.select2-search.select2-search--inline {
+    width: 100%;
+    line-height: 20px;
+    /* padding-block: 20px; */
+}
