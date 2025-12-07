@@ -267,8 +267,8 @@ class ShortcodeManager {
 
 		// Check if feature is enabled
 		$settings_manager = SettingsManager::get_instance();
-		if ( empty( $settings_manager->get_setting( 'enable_family_accounts' ) ) ) {
-			return '<p>' . esc_html__( 'Family accounts feature is not enabled.', 'ghl-crm-integration' ) . '</p>';
+		if ( empty( $settings_manager->get_setting( 'enable_family_accounts' ) ) && current_user_can('manage_options')) {
+			return '<p>' . esc_html__( 'Family accounts feature is not enabled - This is only shown to you as an administrator.', 'ghl-crm-integration' ) . '</p>';
 		}
 
 		$user_id = get_current_user_id();
