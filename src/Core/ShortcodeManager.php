@@ -161,10 +161,19 @@ class ShortcodeManager {
 				$parsed = wp_parse_url( $white_label_domain );
 				if ( ! empty( $parsed['host'] ) ) {
 					$host_parts = explode( '.', $parsed['host'] );
-					if ( count( $host_parts ) >= 2 ) {
-						// Replace first subdomain with "link"
+					
+					// Check if already using link subdomain
+					if ( isset( $host_parts[0] ) && 'link' === strtolower( $host_parts[0] ) ) {
+						// Already correct
+						$base_url = 'https://' . implode( '.', $host_parts );
+					} elseif ( count( $host_parts ) >= 3 ) {
+						// Has subdomain (e.g., crm.jorgediaz.online) - replace it
 						$host_parts[0] = 'link';
 						$base_url      = 'https://' . implode( '.', $host_parts );
+					} elseif ( count( $host_parts ) === 2 ) {
+						// No subdomain (e.g., jorgediaz.online) - prepend link
+						array_unshift( $host_parts, 'link' );
+						$base_url = 'https://' . implode( '.', $host_parts );
 					} else {
 						$base_url = 'https://link.leadconnectorhq.com';
 					}
