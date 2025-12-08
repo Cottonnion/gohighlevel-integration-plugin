@@ -123,7 +123,7 @@ $report_data = \GHL_CRM\Core\Dashboard\StatsProvider::get_instance()->get_report
 				<span style="font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight: 600; <?php echo esc_attr( $badge_style ); ?>"><?php echo $badge_text; ?></span>
 			</div>
 			<div style="font-size: 32px; font-weight: 700; margin-bottom: 4px; color: #1e293b;"><?php echo number_format( $pending_total ); ?></div>
-			<div style="font-size: 14px; color: #64748b; margin-bottom: 8px;"><?php echo esc_html__( 'Failed', 'ghl-crm-integration' ); ?></div>
+			<div style="font-size: 14px; color: #64748b; margin-bottom: 8px;"><?php echo esc_html__( 'Failed + Pending', 'ghl-crm-integration' ); ?></div>
 			<a href="<?php echo esc_url( $link_url ); ?>" style="font-size: 12px; color: <?php echo esc_attr( $link_color ); ?>; text-decoration: none; font-weight: 500;">
 				<?php echo $link_text; ?>
 			</a>
