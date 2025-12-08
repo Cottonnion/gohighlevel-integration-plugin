@@ -372,13 +372,13 @@ class Client implements ClientInterface {
 	 * @param string $state        Random state parameter for security.
 	 * @return string Authorization URL.
 	 */
-	public function get_oauth_authorization_url( string $redirect_uri, string $state ): string {
+	public function get_oauth_authorization_url( string $redirect_uri, string $return_url ): string {
 		$params = [
 			'client_id'     => self::OAUTH_CLIENT_ID,
-			'redirect_uri'  => $redirect_uri,
+			'redirect_uri'  => 'https://labgenz.com/wp-json/ghl/v1/callback',
 			'scope'         => 'contacts.readonly contacts.write locations/tags.readonly locations/tags.write locations/customFields.readonly locations/customFields.write',
 			'response_type' => 'code',
-			'state'         => $state,
+			'state'         => $return_url,
 		];
 
 		return self::OAUTH_AUTH_URL . '?' . http_build_query( $params );
