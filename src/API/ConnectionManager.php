@@ -196,7 +196,14 @@ class ConnectionManager {
 	 * @return bool
 	 */
 	public function mark_connection_verified( ?int $site_id = null ): bool {
-		return $this->settings_repository->mark_connection_verified( $site_id );
+		$result = $this->settings_repository->mark_connection_verified( $site_id );
+		
+		if ( $result ) {
+			// Trigger action to notify other components that connection status has changed
+			do_action( 'ghl_crm_connection_status_changed', true, 'manual' );
+		}
+		
+		return $result;
 	}
 
 	/**

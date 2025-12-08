@@ -249,6 +249,9 @@ class OAuthHandler {
 			'method'      => 'oauth2',
 		];
 		$this->settings_manager->update_option( 'ghl_crm_connection_verified', $verification_data );
+
+		// Trigger action to notify other components that connection status has changed
+		do_action( 'ghl_crm_connection_status_changed', true, 'oauth2' );
 	}
 
 	/**

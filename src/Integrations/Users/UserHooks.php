@@ -56,13 +56,16 @@ class UserHooks {
 		$this->contact_resource = new ContactResource( $client );
 		// Register hooks if sync is enabled
 		$this->register_hooks();
+
+		// Re-register hooks when connection status changes (OAuth completion, manual connection, etc.)
+		add_action( 'ghl_crm_connection_status_changed', [ $this, 'register_hooks' ] );
 	}
 	/**
 	 * Register WordPress hooks based on settings
 	 *
 	 * @return void
 	 */
-	private function register_hooks(): void {
+	public function register_hooks(): void {
 		$settings = $this->settings_manager->get_settings_array();
 
 		// Check if connection is verified first
@@ -82,6 +85,7 @@ class UserHooks {
 		}
 		// Get sync actions array
 		$sync_actions = $settings['user_sync_actions'] ?? [];
+
 		// 1. User registration hook - Create new contacts in GoHighLevel when users register
 		if ( in_array( 'user_register', $sync_actions, true ) ) {
 
@@ -106,10 +110,13 @@ class UserHooks {
 		}
 		// 2. User sync enabled - Sync profile updates and logins
 		if ( ! empty( $settings['enable_user_sync'] ) ) {
+			error_log( '[UserHooks] Registering profile_update and wp_login hooks' );
 			// Sync user profile updates to GoHighLevel
 			add_action( 'profile_update', [ $this, 'on_user_update' ], 10, 2 );
 			// Track user logins in GoHighLevel
 			add_action( 'wp_login', [ $this, 'on_user_login' ], 10, 2 );
+		} else {
+			error_log( '[UserHooks] enable_user_sync is FALSE - NOT registering profile_update hook' );
 		}
 		// 3. User deletion hook - Handle contact deletion/tagging when user is deleted
 		if ( ! empty( $settings['delete_contact_on_user_delete'] ) ) {
@@ -236,6 +243,7 @@ class UserHooks {
 	 * @return void
 	 */
 	public function on_user_update( int $user_id, \WP_User $old_user_data ): void {
+		error_log( "[UserHooks] on_user_update called for user_id: {$user_id}" );
 		$this->queue_user_profile_sync( $user_id, $old_user_data );
 	}
 

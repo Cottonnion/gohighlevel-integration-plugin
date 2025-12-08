@@ -371,14 +371,14 @@ class Database {
 			processed_at datetime DEFAULT NULL,
 			site_id bigint(20) unsigned NOT NULL DEFAULT 1,
 			PRIMARY KEY (id),
-			UNIQUE KEY unique_item_action (item_type, item_id, action, site_id),
 			KEY status_created (status, created_at),
 			KEY item_lookup (item_type, item_id),
 			KEY status_attempts (status, attempts),
 			KEY site_id (site_id),
 			KEY site_status (site_id, status),
 			KEY status_site_created (status, site_id, created_at),
-			KEY status_site_processed (status, site_id, processed_at)
+			KEY status_site_processed (status, site_id, processed_at),
+			KEY item_action_status (item_type, item_id, action, site_id, status)
 		) {$charset_collate};";
 
 		// SQL for sync log table
