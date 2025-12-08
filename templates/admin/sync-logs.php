@@ -18,10 +18,17 @@ $is_connected     = $oauth_status['connected'] || ! empty( $settings['api_token'
 
 // Check if logging is enabled
 $is_logging_enabled = \GHL_CRM\Core\SettingsManager::is_sync_logging_enabled();
+
+// Get per-page preference from user meta (default 20)
+$current_user_id = get_current_user_id();
+$per_page = (int) get_user_meta( $current_user_id, 'ghl_sync_logs_per_page', true );
+if ( ! $per_page || $per_page < 1 ) {
+	$per_page = 20;
+}
+
 // Get current page from request (pagination only affects view state)
 $raw_page     = filter_input( INPUT_GET, 'paged', FILTER_SANITIZE_NUMBER_INT );
 $current_page = $raw_page ? max( 1, (int) $raw_page ) : 1;
-$per_page = 20;
 $offset = ( $current_page - 1 ) * $per_page;
 
 // Get logs for site ID 1
@@ -112,6 +119,17 @@ $total_pages = ceil( $log_count / $per_page );
 					<option value="success"><?php esc_html_e( 'Success', 'ghl-crm-integration' ); ?></option>
 					<option value="failed"><?php esc_html_e( 'Error', 'ghl-crm-integration' ); ?></option>
 					<option value="pending"><?php esc_html_e( 'Pending', 'ghl-crm-integration' ); ?></option>
+				</select>
+			</div>
+
+			<div class="ghl-filter-group">
+				<label for="ghl-per-page"><?php esc_html_e( 'Per Page', 'ghl-crm-integration' ); ?></label>
+				<select id="ghl-per-page">
+					<option value="10" <?php selected( $per_page, 10 ); ?>>10</option>
+					<option value="20" <?php selected( $per_page, 20 ); ?>>20</option>
+					<option value="50" <?php selected( $per_page, 50 ); ?>>50</option>
+					<option value="100" <?php selected( $per_page, 100 ); ?>>100</option>
+					<option value="200" <?php selected( $per_page, 200 ); ?>>200</option>
 				</select>
 			</div>
 

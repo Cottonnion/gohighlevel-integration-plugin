@@ -116,6 +116,7 @@ class SettingsManager {
 		add_action( 'wp_ajax_ghl_get_logs', [ $this, 'handle_get_logs' ] );
 		add_action( 'wp_ajax_ghl_delete_old_logs', [ $this, 'handle_delete_old_logs' ] );
 		add_action( 'wp_ajax_ghl_clear_all_logs', [ $this, 'handle_clear_all_logs' ] );
+		add_action( 'wp_ajax_ghl_save_logs_per_page', [ $this, 'handle_save_logs_per_page' ] );
 
 		// Field Mapping Suggestions (delegated to AjaxHandler)
 		add_action( 'wp_ajax_ghl_crm_get_field_suggestions', [ $this, 'handle_get_field_suggestions' ] );
@@ -2135,6 +2136,16 @@ class SettingsManager {
 	public function handle_clear_all_logs(): void {
 		// Delegate to AjaxHandler (nonce and permissions checked there)
 		AjaxHandler::clear_all_logs();
+	}
+
+	/**
+	 * Handle save logs per-page AJAX request
+	 *
+	 * @return void
+	 */
+	public function handle_save_logs_per_page(): void {
+		// Delegate to AjaxHandler (nonce and permissions checked there)
+		AjaxHandler::save_logs_per_page();
 	}
 
 	/**

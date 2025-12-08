@@ -104,6 +104,26 @@
                 self.loadPage(1);
             });
 
+            // Per-page selector - save to user meta and reload
+            $('#ghl-per-page').off('change.ghlPerPage').on('change.ghlPerPage', function() {
+                const perPage = $(this).val();
+                
+                // Save to user meta via AJAX
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'ghl_save_logs_per_page',
+                        per_page: perPage,
+                        nonce: ghl_crm_sync_logs_js_data.nonce
+                    },
+                    success: function() {
+                        // Reload page to apply new per-page setting
+                        window.location.reload();
+                    }
+                });
+            });
+
             // Search/filter
             $('#ghl-search-logs').off('keyup.ghlSyncLogs').on('keyup.ghlSyncLogs', function() {
                 clearTimeout(self.searchTimeout);

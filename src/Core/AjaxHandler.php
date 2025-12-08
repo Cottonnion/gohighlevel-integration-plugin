@@ -832,4 +832,52 @@ class AjaxHandler {
 			);
 		}
 	}
+
+	/**
+	 * Save sync logs per-page preference
+	 *
+	 * @return void
+	 */
+	public static function save_logs_per_page(): void {
+		// Verify nonce
+		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
+		if ( ! wp_verify_nonce( $nonce, 'ghl_sync_logs_nonce' ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'Security check failed.', 'ghl-crm-integration' ),
+				],
+				403
+			);
+		}
+
+		// Check permissions
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to update settings.', 'ghl-crm-integration' ),
+				],
+				403
+			);
+		}
+
+		// Get and validate per-page value
+		$per_page = isset( $_POST['per_page'] ) ? absint( $_POST['per_page'] ) : 20;
+
+		// Only allow specific values
+		$allowed_values = [ 10, 20, 50, 100, 200 ];
+		if ( ! in_array( $per_page, $allowed_values, true ) ) {
+			$per_page = 20; // Default fallback
+		}
+
+		// Save to user meta
+		$user_id = get_current_user_id();
+		update_user_meta( $user_id, 'ghl_sync_logs_per_page', $per_page );
+
+		wp_send_json_success(
+			[
+				'message'  => __( 'Per-page preference saved.', 'ghl-crm-integration' ),
+				'per_page' => $per_page,
+			]
+		);
+	}
 }
