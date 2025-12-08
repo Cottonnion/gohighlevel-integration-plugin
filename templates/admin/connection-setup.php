@@ -75,7 +75,6 @@ $oauth_handler = $oauth_handler ?? new \GHL_CRM\API\OAuth\OAuthHandler();
 						'contacts/tags.readonly' => __( 'View Tags', 'ghl-crm-integration' ),
 						'contacts/tags.write'  => __( 'Edit Tags', 'ghl-crm-integration' ),
 						'locations.readonly'   => __( 'View Locations', 'ghl-crm-integration' ),
-						'locations/tasks.write' => __( 'Edit Location Tasks', 'ghl-crm-integration' ),
 						'locations/customFields.readonly' => __( 'View Custom Fields', 'ghl-crm-integration' ),
 						'locations/customFields.write' => __( 'Edit Custom Fields', 'ghl-crm-integration' ),
 						'objects/schema.readonly' => __( 'View Objects Schema', 'ghl-crm-integration' ),
