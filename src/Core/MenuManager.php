@@ -122,7 +122,7 @@ class MenuManager {
 
 		$page_hook = add_menu_page(
 			__( 'GoHighLevel CRM', 'ghl-crm-integration' ),
-			__( 'LeadConnector', 'ghl-crm-integration' ),
+			__( 'GHL CRM', 'ghl-crm-integration' ),
 			'manage_options',
 			'ghl-crm-admin',
 			[ $this, 'render_spa_app' ],
