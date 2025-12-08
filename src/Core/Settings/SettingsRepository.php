@@ -258,6 +258,7 @@ class SettingsRepository {
 
 	/**
 	 * Check if API connection is verified
+	 * Supports both API Key (api_token) and OAuth (oauth_access_token) connections
 	 *
 	 * @param int|null $site_id Optional. Site ID for multisite.
 	 * @return bool
@@ -266,8 +267,11 @@ class SettingsRepository {
 		// Get current settings
 		$settings = $this->get_settings_array( $site_id );
 
-		// Check if basic credentials exist
-		if ( empty( $settings['api_token'] ) || empty( $settings['location_id'] ) ) {
+		// Check if credentials exist - either API Key OR OAuth
+		$has_api_key = ! empty( $settings['api_token'] ) && ! empty( $settings['location_id'] );
+		$has_oauth   = ! empty( $settings['oauth_access_token'] ) && ! empty( $settings['location_id'] );
+
+		if ( ! $has_api_key && ! $has_oauth ) {
 			return false;
 		}
 
