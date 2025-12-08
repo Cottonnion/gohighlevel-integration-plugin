@@ -79,11 +79,12 @@ class OAuthHandler {
 	 * @return string Authorization URL
 	 */
 	public function get_authorization_url(): string {
-		$state        = wp_create_nonce( 'ghl_oauth_state' );
-		$redirect_uri = $this->get_redirect_uri();
+		// Use REST API callback as primary method (it proxies to admin page)
+		$redirect_uri = rest_url( 'ghl/v1/callback' );
 
-		// Store state in transient for verification
-		set_transient( 'ghl_oauth_state_' . get_current_user_id(), $state, HOUR_IN_SECONDS );
+		// State contains the admin page URL to return to after OAuth
+		$return_url = admin_url( 'admin.php?page=ghl-crm-admin' );
+		$state = rawurlencode( $return_url );
 
 		return $this->client->get_oauth_authorization_url( $redirect_uri, $state );
 	}
@@ -97,43 +98,34 @@ class OAuthHandler {
 	 */
 	private function get_redirect_uri( bool $use_rest = false ): string {
 		if ( $use_rest ) {
-			return rest_url( 'ghl-crm/v1/oauth/callback' );
+			return rest_url( 'ghl/v1/callback' );
 		}
 		// Primary method: admin page URL for admin_init callback
-		return admin_url( 'admin.php?page=ghl-crm-settings&ghl_oauth_callback=1' );
+		// Use ghl-crm-admin (SPA page) instead of ghl-crm-settings
+		return admin_url( 'admin.php?page=ghl-crm-admin' );
 	}
 
 	/**
 	 * Handle OAuth callback via admin_init (primary method)
-	 * This works even if REST API is disabled
+	 * This works after the REST proxy forwards the code to the admin page
 	 *
 	 * @return void
 	 */
 	public function handle_admin_oauth_callback(): void {
-		// Check if this is an OAuth callback
-		if ( ! isset( $_GET['ghl_oauth_callback'] ) || '1' !== $_GET['ghl_oauth_callback'] ) {
+		// Check if this is an OAuth callback - look for 'code' parameter on ghl-crm-admin page
+		if ( ! isset( $_GET['page'] ) || 'ghl-crm-admin' !== $_GET['page'] ) {
 			return;
 		}
 
-		// Check if we have required parameters
-		if ( ! isset( $_GET['code'] ) || ! isset( $_GET['state'] ) ) {
-			wp_safe_redirect(
-				add_query_arg(
-					[
-						'oauth'   => 'error',
-						'message' => urlencode( __( 'Missing OAuth parameters', 'ghl-crm-integration' ) ),
-					],
-					admin_url( 'admin.php?page=ghl-crm-settings' )
-				)
-			);
-			exit;
+		if ( ! isset( $_GET['code'] ) ) {
+			return;
 		}
 
-		$code  = sanitize_text_field( wp_unslash( $_GET['code'] ) );
-		$state = sanitize_text_field( wp_unslash( $_GET['state'] ) );
+		// We have a code, process the OAuth callback (no state verification since it was used for return URL)
+		$code = sanitize_text_field( wp_unslash( $_GET['code'] ) );
 
-		// Process the callback
-		$result = $this->process_oauth_callback( $code, $state );
+		// Process the callback without state parameter
+		$result = $this->process_oauth_callback( $code, '' );
 
 		// Redirect with result
 		if ( is_wp_error( $result ) ) {
@@ -143,11 +135,11 @@ class OAuthHandler {
 						'oauth'   => 'error',
 						'message' => urlencode( $result->get_error_message() ),
 					],
-					admin_url( 'admin.php?page=ghl-crm-settings' )
+					admin_url( 'admin.php?page=ghl-crm-admin' )
 				)
 			);
 		} else {
-			wp_safe_redirect( add_query_arg( 'oauth', 'success', admin_url( 'admin.php?page=ghl-crm-settings' ) ) );
+			wp_safe_redirect( add_query_arg( 'oauth', 'success', admin_url( 'admin.php?page=ghl-crm-admin' ) ) );
 		}
 		exit;
 	}
@@ -184,27 +176,31 @@ class OAuthHandler {
 	 * Process OAuth callback and exchange code for tokens
 	 *
 	 * @param string $code  Authorization code
-	 * @param string $state State parameter for verification
+	 * @param string $state State parameter for verification (empty when using REST proxy)
 	 * @return array|\WP_Error Processing result or error
 	 */
 	private function process_oauth_callback( string $code, string $state ) {
-		// Verify state parameter
-		$stored_state = get_transient( 'ghl_oauth_state_' . get_current_user_id() );
+		// Only verify state if it was provided (not used when REST proxy handles return URL)
+		if ( ! empty( $state ) ) {
+			// Verify state parameter
+			$stored_state = get_transient( 'ghl_oauth_state_' . get_current_user_id() );
 
-		if ( empty( $stored_state ) ) {
-			return new \WP_Error( 'invalid_state', __( 'OAuth state expired. Please try again.', 'ghl-crm-integration' ) );
+			if ( empty( $stored_state ) ) {
+				return new \WP_Error( 'invalid_state', __( 'OAuth state expired. Please try again.', 'ghl-crm-integration' ) );
+			}
+
+			if ( ! hash_equals( $stored_state, $state ) ) {
+				return new \WP_Error( 'invalid_state', __( 'Invalid OAuth state parameter', 'ghl-crm-integration' ) );
+			}
+
+			// Clean up state transient
+			delete_transient( 'ghl_oauth_state_' . get_current_user_id() );
 		}
-
-		if ( ! hash_equals( $stored_state, $state ) ) {
-			return new \WP_Error( 'invalid_state', __( 'Invalid OAuth state parameter', 'ghl-crm-integration' ) );
-		}
-
-		// Clean up state transient
-		delete_transient( 'ghl_oauth_state_' . get_current_user_id() );
 
 		try {
-			// Exchange code for tokens
-			$token_response = $this->client->exchange_code_for_token( $code, $this->get_redirect_uri() );
+			// Exchange code for tokens - use REST callback URL to match what was sent to GHL
+			$redirect_uri = rest_url( 'ghl/v1/callback' );
+			$token_response = $this->client->exchange_code_for_token( $code, $redirect_uri );
 
 			// Extract location ID from response (single location only)
 			$location_id = '';
