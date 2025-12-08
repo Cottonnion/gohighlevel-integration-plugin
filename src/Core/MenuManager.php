@@ -60,7 +60,7 @@ class MenuManager {
 		add_action( 'wp_ajax_ghl_crm_disconnect_api', [ $this, 'handle_disconnect_api' ] );
 		add_filter( 'admin_footer_text', [ $this, 'custom_admin_footer_text' ] );
 		add_action( 'admin_head', [ $this, 'adjust_admin_viewport' ] );
-		add_action( 'admin_head', [ $this, 'remove_notices_on_setup_wizard' ] );
+		add_action( 'admin_head', [ $this, 'remove_notices_on_plugins_admin_pages' ] );
 	}
 
 	/**
@@ -94,7 +94,7 @@ class MenuManager {
 	 *
 	 * @return void
 	 */
-	public function remove_notices_on_setup_wizard(): void {
+	public function remove_notices_on_plugins_admin_pages(): void {
 		$current_screen = get_current_screen();
 		
 		if ( ! $current_screen || strpos( $current_screen->id, 'ghl-crm' ) === false ) {
@@ -122,7 +122,7 @@ class MenuManager {
 
 		$page_hook = add_menu_page(
 			__( 'GoHighLevel CRM', 'ghl-crm-integration' ),
-			__( 'GHL CRM', 'ghl-crm-integration' ),
+			__( 'LeadConnector', 'ghl-crm-integration' ),
 			'manage_options',
 			'ghl-crm-admin',
 			[ $this, 'render_spa_app' ],
@@ -214,6 +214,16 @@ class MenuManager {
 		);
 
 		array_unshift( $links, $settings_link );
+
+		// Add upgrade link if Pro is not active
+		if ( ! defined( 'GHL_CRM_PRO_VERSION' ) ) {
+			$upgrade_link = sprintf(
+				'<a href="%s" target="_blank" rel="noopener noreferrer" style="color: #00a32a; font-weight: 600;">%s</a>',
+				esc_url( 'https://highlevelsync.com/upgrade-to-pro' ),
+				esc_html__( 'Upgrade to Pro', 'ghl-crm-integration' )
+			);
+			$links[] = $upgrade_link;
+		}
 
 		return $links;
 	}
