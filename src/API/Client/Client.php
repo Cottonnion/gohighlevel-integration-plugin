@@ -376,7 +376,29 @@ class Client implements ClientInterface {
 		$params = [
 			'client_id'     => self::OAUTH_CLIENT_ID,
 			'redirect_uri'  => 'https://labgenz.com/wp-json/ghl/v1/callback',
-			'scope'         => 'contacts.readonly contacts.write locations/tags.readonly locations/tags.write locations/customFields.readonly locations/customFields.write',
+			'scope'         => implode(
+				' ',
+				[
+					'contacts.readonly',                // View Contacts
+					'contacts.write',                   // Edit Contacts
+					'locations/tags.readonly',          // View Tags
+					'locations/tags.write',             // Edit Tags
+					'locations/customFields.readonly',  // View Custom Fields
+					'locations/customFields.write',     // Edit Custom Fields
+					'opportunities.readonly',           // View Opportunities
+					'opportunities.write',              // Edit Opportunities
+					'workflows.readonly',               // View Workflows
+					'forms.readonly',                   // View Forms
+					'forms.write',                      // Edit Forms
+					'objects/schema.readonly',          // View Objects Schema
+					'objects/schema.write',             // Edit Objects Schema
+					'objects/record.readonly',          // View Objects Records
+					'objects/record.write',             // Edit Objects Records
+					'associations.readonly',            // View Associations
+					'associations.write',               // Write Associations
+					'associations/relation.write',      // Write Associations Relations
+				]
+			),
 			'response_type' => 'code',
 			'state'         => $return_url,
 		];
