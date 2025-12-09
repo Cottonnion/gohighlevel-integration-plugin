@@ -50,12 +50,12 @@ class StatsProvider {
 	 */
 	public function get_report_data(): array {
 		return [
-			'contacts'      => $this->get_contact_metrics(),
-			'sync_activity' => $this->get_sync_activity_metrics(),
-			'integrations'  => $this->get_integration_metrics(),
-			'system_health' => $this->get_system_health_metrics(),
-			'recent_activity' => $this->get_recent_activity(),
-			'links'          => $this->get_dashboard_links(),
+			'contacts'               => $this->get_contact_metrics(),
+			'sync_activity'          => $this->get_sync_activity_metrics(),
+			'integrations'           => $this->get_integration_metrics(),
+			'system_health'          => $this->get_system_health_metrics(),
+			'recent_activity'        => $this->get_recent_activity(),
+			'links'                  => $this->get_dashboard_links(),
 			'debug_raw_ghl_response' => get_transient( 'ghl_raw_contacts_response' ),
 		];
 	}
@@ -90,9 +90,9 @@ class StatsProvider {
 	 */
 	private function get_sync_activity_metrics(): array {
 		return [
-			'last_24h'  => $this->count_logs_since( '-24 hours' ),
-			'last_7d'   => $this->count_logs_since( '-7 days' ),
-			'last_30d'  => $this->count_logs_since( '-30 days' ),
+			'last_24h' => $this->count_logs_since( '-24 hours' ),
+			'last_7d'  => $this->count_logs_since( '-7 days' ),
+			'last_30d' => $this->count_logs_since( '-30 days' ),
 		];
 	}
 
@@ -224,11 +224,11 @@ class StatsProvider {
 	private function get_synced_users_count(): int {
 		$users = get_users(
 			[
-				'meta_key'   => '_ghl_contact_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-				'meta_value' => '', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+				'meta_key'     => '_ghl_contact_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value'   => '', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				'meta_compare' => '!=',
-				'fields'     => 'ID',
-				'number'     => -1,
+				'fields'       => 'ID',
+				'number'       => -1,
 			]
 		);
 
@@ -253,7 +253,7 @@ class StatsProvider {
 		try {
 			// Attempt to get real count from GHL API
 			$client = \GHL_CRM\API\Client\Client::get_instance();
-			
+
 			// Query contacts with limit 1 to get total from pagination
 			$response = $client->get(
 				'contacts/',
@@ -445,9 +445,9 @@ class StatsProvider {
 	 */
 	public function get_analytics_data(): array {
 		return [
-			'daily_activity'   => $this->get_daily_activity( 30 ),
-			'sync_type_breakdown' => $this->get_sync_type_breakdown(),
-			'hourly_activity'  => $this->get_hourly_activity(),
+			'daily_activity'        => $this->get_daily_activity( 30 ),
+			'sync_type_breakdown'   => $this->get_sync_type_breakdown(),
+			'hourly_activity'       => $this->get_hourly_activity(),
 			'success_failure_rates' => $this->get_success_failure_rates( 7 ),
 		];
 	}
@@ -481,7 +481,7 @@ class StatsProvider {
 
 		// Format data for Chart.js
 		$activity_data = [];
-		$dates = [];
+		$dates         = [];
 		for ( $i = $days - 1; $i >= 0; $i-- ) {
 			$dates[] = gmdate( 'Y-m-d', strtotime( "-{$i} days" ) );
 		}
@@ -530,7 +530,7 @@ class StatsProvider {
 
 		$breakdown = [];
 		foreach ( $results as $row ) {
-			$type = $row['sync_type'] ?? 'unknown';
+			$type               = $row['sync_type'] ?? 'unknown';
 			$breakdown[ $type ] = (int) $row['count'];
 		}
 
@@ -567,8 +567,8 @@ class StatsProvider {
 		$hourly_data = array_fill( 0, 24, 0 );
 
 		foreach ( $results as $row ) {
-			$hour  = (int) $row['hour'];
-			$count = (int) $row['count'];
+			$hour                 = (int) $row['hour'];
+			$count                = (int) $row['count'];
 			$hourly_data[ $hour ] = $count;
 		}
 
@@ -619,7 +619,10 @@ class StatsProvider {
 		foreach ( $results as $row ) {
 			$date = $row['date'];
 			if ( ! isset( $daily_totals[ $date ] ) ) {
-				$daily_totals[ $date ] = [ 'success' => 0, 'failed' => 0 ];
+				$daily_totals[ $date ] = [
+					'success' => 0,
+					'failed'  => 0,
+				];
 			}
 			$daily_totals[ $date ][ $row['status'] ] = (int) $row['count'];
 		}
@@ -665,7 +668,7 @@ class StatsProvider {
 				$stats['success_total']   = $total;
 				$stats['last_success_at'] = $last;
 			} elseif ( 'failed' === $status ) {
-				$stats['failed_total']   = $total;
+				$stats['failed_total']    = $total;
 				$stats['last_failure_at'] = $last;
 			}
 		}

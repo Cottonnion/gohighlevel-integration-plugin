@@ -313,7 +313,7 @@ class Database {
 
 		// Check if columns exist before trying to drop them
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Schema inspection required.
-		$columns = $wpdb->get_results( "SHOW COLUMNS FROM {$log_table}" );
+		$columns      = $wpdb->get_results( "SHOW COLUMNS FROM {$log_table}" );
 		$column_names = wp_list_pluck( $columns, 'Field' );
 
 		// Drop log_level column if it exists
@@ -351,8 +351,8 @@ class Database {
 		$charset_collate = $wpdb->get_charset_collate();
 
 		// Table names (with current site prefix)
-		$sync_queue_table         = $wpdb->prefix . 'ghl_sync_queue';
-		$sync_log_table           = $wpdb->prefix . 'ghl_sync_log';
+		$sync_queue_table           = $wpdb->prefix . 'ghl_sync_queue';
+		$sync_log_table             = $wpdb->prefix . 'ghl_sync_log';
 		$family_relationships_table = $wpdb->prefix . 'ghl_family_relationships';
 
 		// SQL for sync queue table

@@ -229,22 +229,22 @@ class AssetsManager {
 				'manualQueueNonce'   => wp_create_nonce( 'ghl_crm_manual_queue' ),
 				'settingsNonce'      => wp_create_nonce( 'ghl_crm_settings_nonce' ),
 				'i18n'               => [
-					'connecting'        => __( 'Connecting...', 'ghl-crm-integration' ),
-					'connectionFailed'  => __( 'Connection failed', 'ghl-crm-integration' ),
-					'connectionError'   => __( 'An error occurred while connecting', 'ghl-crm-integration' ),
-					'disconnectConfirm' => __( 'Are you sure you want to disconnect your GoHighLevel account?', 'ghl-crm-integration' ),
-					'disconnecting'     => __( 'Disconnecting...', 'ghl-crm-integration' ),
-					'disconnectFailed'  => __( 'Failed to disconnect', 'ghl-crm-integration' ),
-					'disconnectError'   => __( 'An error occurred while disconnecting', 'ghl-crm-integration' ),
-					'manualSyncProcessing'     => __( 'Running manual sync...', 'ghl-crm-integration' ),
-					'manualSyncSuccess'        => __( 'Manual sync completed successfully.', 'ghl-crm-integration' ),
-					'manualSyncFailed'         => __( 'Manual sync failed.', 'ghl-crm-integration' ),
-					'clearCacheProcessing'     => __( 'Clearing cache...', 'ghl-crm-integration' ),
-					'clearCacheSuccess'        => __( 'Cache cleared successfully!', 'ghl-crm-integration' ),
-					'clearCacheFailed'         => __( 'Failed to clear cache.', 'ghl-crm-integration' ),
-					'testConnectionProcessing' => __( 'Testing connection...', 'ghl-crm-integration' ),
-					'testConnectionSuccess'    => __( 'Connection test completed successfully.', 'ghl-crm-integration' ),
-					'testConnectionFailed'     => __( 'Connection test failed.', 'ghl-crm-integration' ),
+					'connecting'                => __( 'Connecting...', 'ghl-crm-integration' ),
+					'connectionFailed'          => __( 'Connection failed', 'ghl-crm-integration' ),
+					'connectionError'           => __( 'An error occurred while connecting', 'ghl-crm-integration' ),
+					'disconnectConfirm'         => __( 'Are you sure you want to disconnect your GoHighLevel account?', 'ghl-crm-integration' ),
+					'disconnecting'             => __( 'Disconnecting...', 'ghl-crm-integration' ),
+					'disconnectFailed'          => __( 'Failed to disconnect', 'ghl-crm-integration' ),
+					'disconnectError'           => __( 'An error occurred while disconnecting', 'ghl-crm-integration' ),
+					'manualSyncProcessing'      => __( 'Running manual sync...', 'ghl-crm-integration' ),
+					'manualSyncSuccess'         => __( 'Manual sync completed successfully.', 'ghl-crm-integration' ),
+					'manualSyncFailed'          => __( 'Manual sync failed.', 'ghl-crm-integration' ),
+					'clearCacheProcessing'      => __( 'Clearing cache...', 'ghl-crm-integration' ),
+					'clearCacheSuccess'         => __( 'Cache cleared successfully!', 'ghl-crm-integration' ),
+					'clearCacheFailed'          => __( 'Failed to clear cache.', 'ghl-crm-integration' ),
+					'testConnectionProcessing'  => __( 'Testing connection...', 'ghl-crm-integration' ),
+					'testConnectionSuccess'     => __( 'Connection test completed successfully.', 'ghl-crm-integration' ),
+					'testConnectionFailed'      => __( 'Connection test failed.', 'ghl-crm-integration' ),
 					'refreshMetadataProcessing' => __( 'Refreshing tags and fields...', 'ghl-crm-integration' ),
 					'refreshMetadataSuccess'    => __( 'Tags and fields refreshed successfully.', 'ghl-crm-integration' ),
 					'refreshMetadataFailed'     => __( 'Failed to refresh tags and fields.', 'ghl-crm-integration' ),
@@ -605,20 +605,20 @@ class AssetsManager {
 		);
 
 		// Correctly fetch connection tokens from the settings array
-		$settings = SettingsManager::get_instance()->get_settings_array();
+		$settings    = SettingsManager::get_instance()->get_settings_array();
 		$oauth_token = $settings['oauth_access_token'] ?? '';
-		$api_token = $settings['api_token'] ?? '';
+		$api_token   = $settings['api_token'] ?? '';
 
 		// Get current setting values for pre-population
-		$enable_user_sync = $settings['enable_user_sync'] ?? false;
-		$user_sync_actions = $settings['user_sync_actions'] ?? [];
-		$user_register_enabled = in_array( 'user_register', $user_sync_actions, true );
-		$user_register_tags = $settings['user_register_tags'] ?? [];
-		$wc_enabled = $settings['wc_enabled'] ?? false;
-		$buddyboss_enabled = $settings['buddyboss_enabled'] ?? false;
+		$enable_user_sync              = $settings['enable_user_sync'] ?? false;
+		$user_sync_actions             = $settings['user_sync_actions'] ?? [];
+		$user_register_enabled         = in_array( 'user_register', $user_sync_actions, true );
+		$user_register_tags            = $settings['user_register_tags'] ?? [];
+		$wc_enabled                    = $settings['wc_enabled'] ?? false;
+		$buddyboss_enabled             = $settings['buddyboss_enabled'] ?? false;
 		$delete_contact_on_user_delete = $settings['delete_contact_on_user_delete'] ?? false;
-		$enable_sync_logging = $settings['enable_sync_logging'] ?? false;
-		$enable_role_tags = ! empty( $settings['role_tags'] ) && is_array( $settings['role_tags'] );
+		$enable_sync_logging           = $settings['enable_sync_logging'] ?? false;
+		$enable_role_tags              = ! empty( $settings['role_tags'] ) && is_array( $settings['role_tags'] );
 
 		$this->add_admin_asset(
 			'ghl-crm-setup-wizard-js',
@@ -646,79 +646,79 @@ class AssetsManager {
 			'1.0.1',
 			true
 		);
-	} 
-	   /**
-		* Adds an admin script or style to the array of admin assets.
-		* Supports page slugs or custom post type keys (e.g., 'cpt:product').
-		* Optionally supports a custom base URL for loading from other plugins.
-		*
-		* @param string $handle           Unique handle for the asset.
-		* @param array  $pages            Array of admin page IDs or 'cpt:posttype' keys.
-		* @param string $file             File name (e.g., 'settings.css' or 'settings.js').
-		* @param array  $dependencies     Array of dependency handles.
-		* @param array  $localization     Array of data to localize for scripts.
-		* @param string $version          Version string for cache busting.
-		* @param bool   $enqueue_in_footer Whether to enqueue script in footer (scripts only).
-		* @param string|null $base_url    Optional custom base URL for the asset (must end with slash).
-		* @return void
-		*/
-	   public function add_admin_asset(
-		   string $handle,
-		   array $pages,
-		   string $file,
-		   array $dependencies = [],
-		   array $localization = [],
-		   string $version = GHL_CRM_VERSION,
-		   bool $enqueue_in_footer = true,
-		   ?string $base_url = null
-	   ): void {
-		   foreach ( $pages as $page ) {
-			   $this->admin_assets[ $page ][ $handle ] = [
-				   'file'              => $file,
-				   'dependencies'      => $dependencies,
-				   'version'           => $version,
-				   'enqueue_in_footer' => $enqueue_in_footer,
-				   'localization'      => $localization,
-				   'base_url'          => $base_url,
-			   ];
-		   }
-	   }
+	}
+		/**
+		 * Adds an admin script or style to the array of admin assets.
+		 * Supports page slugs or custom post type keys (e.g., 'cpt:product').
+		 * Optionally supports a custom base URL for loading from other plugins.
+		 *
+		 * @param string      $handle           Unique handle for the asset.
+		 * @param array       $pages            Array of admin page IDs or 'cpt:posttype' keys.
+		 * @param string      $file             File name (e.g., 'settings.css' or 'settings.js').
+		 * @param array       $dependencies     Array of dependency handles.
+		 * @param array       $localization     Array of data to localize for scripts.
+		 * @param string      $version          Version string for cache busting.
+		 * @param bool        $enqueue_in_footer Whether to enqueue script in footer (scripts only).
+		 * @param string|null $base_url    Optional custom base URL for the asset (must end with slash).
+		 * @return void
+		 */
+	public function add_admin_asset(
+		string $handle,
+		array $pages,
+		string $file,
+		array $dependencies = [],
+		array $localization = [],
+		string $version = GHL_CRM_VERSION,
+		bool $enqueue_in_footer = true,
+		?string $base_url = null
+	): void {
+		foreach ( $pages as $page ) {
+			$this->admin_assets[ $page ][ $handle ] = [
+				'file'              => $file,
+				'dependencies'      => $dependencies,
+				'version'           => $version,
+				'enqueue_in_footer' => $enqueue_in_footer,
+				'localization'      => $localization,
+				'base_url'          => $base_url,
+			];
+		}
+	}
 
 	/**
 	 * Enqueue admin assets based on current screen
 	 *
 	 * @return void
 	 */
-	   public function enqueue_admin_assets(): void {
-		   $current_screen = get_current_screen();
-		   if ( ! $current_screen ) {
-			   return;
-		   }
-		   $screen_id = $current_screen->id;
-		   $post_type = isset( $current_screen->post_type ) ? $current_screen->post_type : null;
+	public function enqueue_admin_assets(): void {
+		$current_screen = get_current_screen();
+		if ( ! $current_screen ) {
+			return;
+		}
+		$screen_id = $current_screen->id;
+		$post_type = isset( $current_screen->post_type ) ? $current_screen->post_type : null;
 
-		   // Enqueue WordPress editor assets on admin pages that might need them
-		   if ( in_array( $screen_id, [ 'toplevel_page_ghl-crm-admin', 'toplevel_page_ghl-crm-settings' ], true ) ) {
-			   wp_enqueue_editor();
-		   }
+		// Enqueue WordPress editor assets on admin pages that might need them
+		if ( in_array( $screen_id, [ 'toplevel_page_ghl-crm-admin', 'toplevel_page_ghl-crm-settings' ], true ) ) {
+			wp_enqueue_editor();
+		}
 
-		   // Enqueue assets registered for this screen ID
-		   if ( isset( $this->admin_assets[ $screen_id ] ) ) {
-			   foreach ( $this->admin_assets[ $screen_id ] as $handle => $asset ) {
-				   $this->enqueue_asset( $handle, $asset, 'admin' );
-			   }
-		   }
+		// Enqueue assets registered for this screen ID
+		if ( isset( $this->admin_assets[ $screen_id ] ) ) {
+			foreach ( $this->admin_assets[ $screen_id ] as $handle => $asset ) {
+				$this->enqueue_asset( $handle, $asset, 'admin' );
+			}
+		}
 
-		   // Enqueue assets registered for this post type (e.g., 'cpt:product')
-		   if ( $post_type ) {
-			   $cpt_key = 'cpt:' . $post_type;
-			   if ( isset( $this->admin_assets[ $cpt_key ] ) ) {
-				   foreach ( $this->admin_assets[ $cpt_key ] as $handle => $asset ) {
-					   $this->enqueue_asset( $handle, $asset, 'admin' );
-				   }
-			   }
-		   }
-	   }
+		// Enqueue assets registered for this post type (e.g., 'cpt:product')
+		if ( $post_type ) {
+			$cpt_key = 'cpt:' . $post_type;
+			if ( isset( $this->admin_assets[ $cpt_key ] ) ) {
+				foreach ( $this->admin_assets[ $cpt_key ] as $handle => $asset ) {
+					$this->enqueue_asset( $handle, $asset, 'admin' );
+				}
+			}
+		}
+	}
 
 	/**
 	 * Enqueue a single asset (style or script)
@@ -728,54 +728,54 @@ class AssetsManager {
 	 * @param string $context Context: 'admin' or 'public'.
 	 * @return void
 	 */
-	   private function enqueue_asset( string $handle, array $asset, string $context = 'admin' ): void {
-		   $file      = $asset['file'];
-		   $deps      = $asset['dependencies'] ?? [];
-		   $version   = $asset['version'] ?? GHL_CRM_VERSION;
-		   $in_footer = $asset['enqueue_in_footer'] ?? true;
-		   $localize  = $asset['localization'] ?? [];
-		   $base_url  = $asset['base_url'] ?? null;
+	private function enqueue_asset( string $handle, array $asset, string $context = 'admin' ): void {
+		$file      = $asset['file'];
+		$deps      = $asset['dependencies'] ?? [];
+		$version   = $asset['version'] ?? GHL_CRM_VERSION;
+		$in_footer = $asset['enqueue_in_footer'] ?? true;
+		$localize  = $asset['localization'] ?? [];
+		$base_url  = $asset['base_url'] ?? null;
 
-		   // Determine if it's a CSS or JS file
-		   $file_extension = pathinfo( $file, PATHINFO_EXTENSION );
-		   $is_style       = ( 'css' === $file_extension );
+		// Determine if it's a CSS or JS file
+		$file_extension = pathinfo( $file, PATHINFO_EXTENSION );
+		$is_style       = ( 'css' === $file_extension );
 
-		   // Build file URL
-		   if ( $base_url ) {
-			   $file_url = rtrim( $base_url, '/' ) . '/' . $file;
-		   } elseif ( 'admin' === $context ) {
-			   $file_url = GHL_CRM_URL . 'assets/admin/' . ( $is_style ? 'css/' : 'js/' ) . $file;
-		   } else {
-			   $file_url = GHL_CRM_URL . 'assets/public/' . ( $is_style ? 'css/' : 'js/' ) . $file;
-		   }
+		// Build file URL
+		if ( $base_url ) {
+			$file_url = rtrim( $base_url, '/' ) . '/' . $file;
+		} elseif ( 'admin' === $context ) {
+			$file_url = GHL_CRM_URL . 'assets/admin/' . ( $is_style ? 'css/' : 'js/' ) . $file;
+		} else {
+			$file_url = GHL_CRM_URL . 'assets/public/' . ( $is_style ? 'css/' : 'js/' ) . $file;
+		}
 
-		   // Enqueue the asset
-		   if ( $is_style ) {
-			   wp_enqueue_style(
-				   $handle,
-				   $file_url,
-				   $deps,
-				   $version
-			   );
-		   } else {
-			   wp_enqueue_script(
-				   $handle,
-				   $file_url,
-				   $deps,
-				   $version,
-				   $in_footer
-			   );
+		// Enqueue the asset
+		if ( $is_style ) {
+			wp_enqueue_style(
+				$handle,
+				$file_url,
+				$deps,
+				$version
+			);
+		} else {
+			wp_enqueue_script(
+				$handle,
+				$file_url,
+				$deps,
+				$version,
+				$in_footer
+			);
 
-			   // Add localization if provided
-			   if ( ! empty( $localize ) ) {
-				   wp_localize_script(
-					   $handle,
-					   str_replace( '-', '_', $handle . '_data' ),
-					   $localize
-				   );
-			   }
-		   }
-	   }
+			// Add localization if provided
+			if ( ! empty( $localize ) ) {
+				wp_localize_script(
+					$handle,
+					str_replace( '-', '_', $handle . '_data' ),
+					$localize
+				);
+			}
+		}
+	}
 
 	/**
 	 * Add a public/frontend asset
@@ -836,21 +836,21 @@ class AssetsManager {
 		);
 
 		// GHL Form Auto-fill (experimental - tests URL parameter pre-filling)
-		$user_data = $this->get_current_user_data_for_autofill();
+		$user_data             = $this->get_current_user_data_for_autofill();
 		$form_settings_manager = \GHL_CRM\Core\FormSettings::get_instance();
-		$all_form_settings = $form_settings_manager->get_all_settings();
-		
+		$all_form_settings     = $form_settings_manager->get_all_settings();
+
 		// Resolve custom parameters for each form
 		foreach ( $all_form_settings as $form_id => $form_config ) {
 			if ( isset( $form_config['custom_params'] ) && is_array( $form_config['custom_params'] ) ) {
 				$all_form_settings[ $form_id ]['resolved_params'] = $form_settings_manager->resolve_custom_params( $form_config['custom_params'] );
 			}
 		}
-		
+
 		// Get white label domain
-		$settings = SettingsManager::get_instance()->get_settings_array();
+		$settings           = SettingsManager::get_instance()->get_settings_array();
 		$white_label_domain = $settings['ghl_white_label_domain'] ?? '';
-		
+
 		$this->add_public_asset(
 			'ghl-form-autofill',
 			'form-autofill.js',
@@ -865,7 +865,7 @@ class AssetsManager {
 			GHL_CRM_VERSION,
 			true
 		);
-	}	
+	}
 
 	/**
 	 * Enqueue public/frontend assets
@@ -900,7 +900,7 @@ class AssetsManager {
 		}
 
 		$user = wp_get_current_user();
-		
+
 		// Build user data array with common form fields
 		$user_data = [
 			'email'        => $user->user_email,
@@ -919,7 +919,7 @@ class AssetsManager {
 		if ( ! empty( $phone ) ) {
 			$user_data['phone'] = $phone;
 			// Also add common variations
-			$user_data['Phone'] = $phone;
+			$user_data['Phone']        = $phone;
 			$user_data['phone_number'] = $phone;
 		}
 
@@ -943,9 +943,12 @@ class AssetsManager {
 		}
 
 		// Filter empty values
-		$user_data = array_filter( $user_data, function( $value ) {
-			return ! empty( $value );
-		} );
+		$user_data = array_filter(
+			$user_data,
+			function ( $value ) {
+				return ! empty( $value );
+			}
+		);
 
 		return $user_data;
 	}

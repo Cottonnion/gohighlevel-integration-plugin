@@ -218,9 +218,9 @@ class AutoLoginManager {
 		global $wpdb;
 
 		// Get all user IDs with autologin tokens.
-		$cache_group        = 'ghl_crm_autologin';
-		$cache_key          = 'autologin_token_user_ids_' . get_current_blog_id();
-		$user_ids = wp_cache_get( $cache_key, $cache_group );
+		$cache_group = 'ghl_crm_autologin';
+		$cache_key   = 'autologin_token_user_ids_' . get_current_blog_id();
+		$user_ids    = wp_cache_get( $cache_key, $cache_group );
 
 		if ( false === $user_ids ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Querying core user meta table by specific key is necessary and cached immediately afterwards.

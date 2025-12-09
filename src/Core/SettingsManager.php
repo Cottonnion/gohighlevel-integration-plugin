@@ -231,21 +231,21 @@ class SettingsManager {
 				$this->mark_connection_unverified();
 			}
 
-		       if ( ! $saved ) {
-			       throw new \Exception( __( 'Failed to save settings. Please try again.', 'ghl-crm-integration' ) );
-		       }
+			if ( ! $saved ) {
+				throw new \Exception( __( 'Failed to save settings. Please try again.', 'ghl-crm-integration' ) );
+			}
 
-		       $response_data = [
-			       'message'  => __( 'Settings saved successfully!', 'ghl-crm-integration' ),
-			       'settings' => $this->get_settings_array(),
-		       ];
+				$response_data = [
+					'message'  => __( 'Settings saved successfully!', 'ghl-crm-integration' ),
+					'settings' => $this->get_settings_array(),
+				];
 
-		       // Add warning if credentials changed
-		       if ( $credentials_changed ) {
-			       $response_data['warning'] = __( 'API credentials changed. Please test your connection to verify.', 'ghl-crm-integration' );
-		       }
+				// Add warning if credentials changed
+				if ( $credentials_changed ) {
+					$response_data['warning'] = __( 'API credentials changed. Please test your connection to verify.', 'ghl-crm-integration' );
+				}
 
-		       wp_send_json_success( $response_data );
+				wp_send_json_success( $response_data );
 		} catch ( \Exception $e ) {
 			wp_send_json_error(
 				[
@@ -257,7 +257,7 @@ class SettingsManager {
 					'error_details' => [
 						'file' => $e->getFile(),
 						'line' => $e->getLine(),
-						'err' => $e->getCode(),
+						'err'  => $e->getCode(),
 					],
 				],
 				500
@@ -962,10 +962,10 @@ class SettingsManager {
 
 			wp_send_json_success(
 				[
-					'message'               => __( 'Tags and fields refreshed successfully.', 'ghl-crm-integration' ),
-					'tags_count'            => count( $tags ),
-					'custom_fields_count'   => count( $custom_fields_raw ),
-					'has_custom_fields'     => ! empty( $custom_fields_raw ),
+					'message'             => __( 'Tags and fields refreshed successfully.', 'ghl-crm-integration' ),
+					'tags_count'          => count( $tags ),
+					'custom_fields_count' => count( $custom_fields_raw ),
+					'has_custom_fields'   => ! empty( $custom_fields_raw ),
 				]
 			);
 
@@ -1365,7 +1365,7 @@ class SettingsManager {
 		$tables_all_exist = true;
 
 		foreach ( $required_tables as $table ) {
-			$table_name   = $table_prefix . $table;
+			$table_name = $table_prefix . $table;
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Inspecting table existence during diagnostics.
 			$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) === $table_name;
 

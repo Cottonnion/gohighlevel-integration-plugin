@@ -96,7 +96,7 @@ class MenuManager {
 	 */
 	public function remove_notices_on_plugins_admin_pages(): void {
 		$current_screen = get_current_screen();
-		
+
 		if ( ! $current_screen || strpos( $current_screen->id, 'ghl-crm' ) === false ) {
 			return;
 		}
@@ -186,7 +186,6 @@ class MenuManager {
 			'__return_false'
 		);
 
-
 		add_submenu_page(
 			null, // Hidden from menu
 			__( 'Setup Wizard', 'ghl-crm-integration' ),
@@ -222,7 +221,7 @@ class MenuManager {
 				esc_url( 'https://highlevelsync.com/upgrade-to-pro' ),
 				esc_html__( 'Upgrade to Pro', 'ghl-crm-integration' )
 			);
-			$links[] = $upgrade_link;
+			$links[]      = $upgrade_link;
 		}
 
 		return $links;
@@ -375,7 +374,7 @@ class MenuManager {
 		}
 		try {
 
-			$view   = isset( $_POST['view'] ) ? sanitize_text_field( wp_unslash( $_POST['view'] ) ) : 'dashboard';
+			$view       = isset( $_POST['view'] ) ? sanitize_text_field( wp_unslash( $_POST['view'] ) ) : 'dashboard';
 			$raw_params = isset( $_POST['params'] ) ? wp_unslash( $_POST['params'] ) : [];
 			$params     = is_array( $raw_params ) ? array_map( 'sanitize_text_field', $raw_params ) : [];
 
@@ -794,10 +793,10 @@ class MenuManager {
 
 		// Get settings manager to check connection status
 		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
-		$settings = $settings_manager->get_settings_array();
-		$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
-		$oauth_status  = $oauth_handler->get_connection_status();
-		$is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
+		$settings         = $settings_manager->get_settings_array();
+		$oauth_handler    = new \GHL_CRM\API\OAuth\OAuthHandler();
+		$oauth_status     = $oauth_handler->get_connection_status();
+		$is_connected     = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 
 		// Build settings tabs array (same structure as in settings.php)
 		$settings_tabs = [
@@ -860,10 +859,10 @@ class MenuManager {
 
 		// Get settings to check connection and build tabs array
 		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
-		$settings = $settings_manager->get_settings_array();
-		$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
-		$oauth_status  = $oauth_handler->get_connection_status();
-		$is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
+		$settings         = $settings_manager->get_settings_array();
+		$oauth_handler    = new \GHL_CRM\API\OAuth\OAuthHandler();
+		$oauth_status     = $oauth_handler->get_connection_status();
+		$is_connected     = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 
 		// Build full settings tabs array to get file path
 		$settings_tabs = [

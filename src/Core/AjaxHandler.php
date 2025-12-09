@@ -558,7 +558,7 @@ class AjaxHandler {
 			// Get detailed match info for each suggestion.
 			$detailed_suggestions = array();
 			foreach ( $suggestions as $wp_field => $ghl_field ) {
-				$details                            = $matcher->get_match_details( $wp_field, $ghl_field );
+				$details                           = $matcher->get_match_details( $wp_field, $ghl_field );
 				$detailed_suggestions[ $wp_field ] = $details;
 			}
 
@@ -586,9 +586,9 @@ class AjaxHandler {
 	 */
 	public static function save_wizard_settings(): void {
 		// Verify nonce
-		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
+		$nonce       = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
 		$nonce_check = wp_verify_nonce( $nonce, 'ghl_crm_spa_nonce' );
-		
+
 		if ( ! $nonce_check ) {
 			wp_send_json_error(
 				[
@@ -612,8 +612,8 @@ class AjaxHandler {
 			$current_settings = $settings_manager->get_settings_array();
 
 			// Get wizard settings from POST - they come as settings[key] format from jQuery
-			$wizard_settings = isset( $_POST['settings'] ) && is_array( $_POST['settings'] ) 
-				? wp_unslash( $_POST['settings'] ) 
+			$wizard_settings = isset( $_POST['settings'] ) && is_array( $_POST['settings'] )
+				? wp_unslash( $_POST['settings'] )
 				: [];
 
 			// Convert string booleans to actual booleans
@@ -690,8 +690,8 @@ class AjaxHandler {
 
 			// Save all settings directly using repository (not the AJAX handler which sends its own response)
 			$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
-			$saved = $repository->save_site_settings( $current_settings );
-			
+			$saved      = $repository->save_site_settings( $current_settings );
+
 			if ( ! $saved ) {
 				throw new \Exception( __( 'Failed to save settings. Please try again.', 'ghl-crm-integration' ) );
 			}
@@ -780,16 +780,16 @@ class AjaxHandler {
 			foreach ( $users as $user ) {
 				$wp_user = get_userdata( $user->ID );
 				if ( ! $wp_user ) {
-					$failed++;
+					++$failed;
 					continue;
 				}
 
 				$old_user_data = clone $wp_user;
 
 				if ( $user_hooks->queue_user_profile_sync( $user->ID, $old_user_data ) ) {
-					$queued++;
+					++$queued;
 				} else {
-					$failed++;
+					++$failed;
 				}
 			}
 

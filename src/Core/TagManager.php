@@ -134,8 +134,8 @@ class TagManager {
 
 		foreach ( $tags as $tag ) {
 			if ( isset( $tag['id'] ) ) {
-				$id                                     = (string) $tag['id'];
-				$this->tag_cache[ $id ]                 = $tag;
+				$id                     = (string) $tag['id'];
+				$this->tag_cache[ $id ] = $tag;
 				$this->tag_cache_lower[ strtolower( $id ) ] = $tag;
 			}
 		}
@@ -254,8 +254,8 @@ class TagManager {
 
 		$this->ensure_tag_cache();
 
-		$fallback_map        = [];
-		$fallback_map_lower  = [];
+		$fallback_map       = [];
+		$fallback_map_lower = [];
 		foreach ( $fallback_pairs as $pair ) {
 			if ( ! is_array( $pair ) ) {
 				continue;
@@ -276,13 +276,13 @@ class TagManager {
 				continue;
 			}
 
-			$fallback_map[ $id ] = $name;
+			$fallback_map[ $id ]                     = $name;
 			$fallback_map_lower[ strtolower( $id ) ] = $name;
 		}
 
-		$names               = $this->map_ids_to_names( $tag_ids );
-		$resolved_names      = [];
-		$refreshed_cache     = false;
+		$names           = $this->map_ids_to_names( $tag_ids );
+		$resolved_names  = [];
+		$refreshed_cache = false;
 
 		foreach ( $tag_ids as $tag_id ) {
 			$name = $names[ $tag_id ] ?? '';
@@ -340,13 +340,15 @@ class TagManager {
 			)
 		);
 
-		error_log( '[GHL][TagManager] prepare_tags_for_payload: ' . wp_json_encode(
-			[
-				'ids'           => $tag_ids,
-				'fallbackPairs' => $fallback_pairs,
-				'names'         => $resolved_names,
-			]
-		) );
+		error_log(
+			'[GHL][TagManager] prepare_tags_for_payload: ' . wp_json_encode(
+				[
+					'ids'           => $tag_ids,
+					'fallbackPairs' => $fallback_pairs,
+					'names'         => $resolved_names,
+				]
+			)
+		);
 
 		return $resolved_names;
 	}
@@ -467,7 +469,7 @@ class TagManager {
 				return;
 			}
 
-			$ids[]          = $id;
+			$ids[]         = $id;
 			$id_set[ $id ] = true;
 		};
 

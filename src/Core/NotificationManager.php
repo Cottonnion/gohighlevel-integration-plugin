@@ -46,12 +46,12 @@ class NotificationManager {
 	 * @var array<string, string>
 	 */
 	private const NOTIFICATION_TYPES = [
-		'connection_lost'    => 'notify_connection_lost',
-		'sync_errors'        => 'notify_sync_errors',
-		'queue_backlog'      => 'notify_queue_backlog',
-		'rate_limit'         => 'notify_rate_limit',
-		'webhook_failures'   => 'notify_webhook_failures',
-		'daily_summary'      => 'notify_daily_summary',
+		'connection_lost'  => 'notify_connection_lost',
+		'sync_errors'      => 'notify_sync_errors',
+		'queue_backlog'    => 'notify_queue_backlog',
+		'rate_limit'       => 'notify_rate_limit',
+		'webhook_failures' => 'notify_webhook_failures',
+		'daily_summary'    => 'notify_daily_summary',
 	];
 
 	/**
@@ -130,8 +130,8 @@ class NotificationManager {
 		$email_content = $this->build_email_template( $subject, $message, $type, $context );
 
 		// Send email
-		$headers   = [ 'Content-Type: text/html; charset=UTF-8' ];
-		$sent      = wp_mail( $to, $subject, $email_content, $headers );
+		$headers = [ 'Content-Type: text/html; charset=UTF-8' ];
+		$sent    = wp_mail( $to, $subject, $email_content, $headers );
 
 		if ( $sent ) {
 			// Set throttle
@@ -167,7 +167,7 @@ class NotificationManager {
 	 */
 	public function send_connection_lost( string $reason ): bool {
 		$subject = __( '[CRITICAL] GoHighLevel Connection Lost', 'ghl-crm-integration' );
-		
+
 		$message = sprintf(
 			'<h2 style="color: #dc3545;">%s</h2>
 			<p>%s</p>
@@ -235,7 +235,15 @@ class NotificationManager {
 			esc_html__( 'View Logs', 'ghl-crm-integration' )
 		);
 
-		return $this->send( 'sync_errors', $subject, $message, [ 'sync_type' => $sync_type, 'error' => $error ] );
+		return $this->send(
+			'sync_errors',
+			$subject,
+			$message,
+			[
+				'sync_type' => $sync_type,
+				'error'     => $error,
+			]
+		);
 	}
 
 	/**
@@ -343,7 +351,15 @@ class NotificationManager {
 			esc_html__( 'View Webhook Logs', 'ghl-crm-integration' )
 		);
 
-		return $this->send( 'webhook_failures', $subject, $message, [ 'webhook_type' => $webhook_type, 'error' => $error ] );
+		return $this->send(
+			'webhook_failures',
+			$subject,
+			$message,
+			[
+				'webhook_type' => $webhook_type,
+				'error'        => $error,
+			]
+		);
 	}
 
 	/**
@@ -529,7 +545,7 @@ class NotificationManager {
 		);
 
 		// Webhooks (if webhook log table exists)
-		$webhook_table = $wpdb->prefix . 'ghl_webhook_log';
+		$webhook_table     = $wpdb->prefix . 'ghl_webhook_log';
 		$webhooks_received = 0;
 		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $webhook_table ) ) === $webhook_table ) { // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 			$webhooks_received = (int) $wpdb->get_var(
@@ -749,13 +765,13 @@ class NotificationManager {
 		}
 
 		// Get configured time
-		$summary_time = $this->settings_manager->get_setting( 'daily_summary_time', '09:00' );
+		$summary_time          = $this->settings_manager->get_setting( 'daily_summary_time', '09:00' );
 		list( $hour, $minute ) = explode( ':', $summary_time );
 
 		// Calculate next run time
-		$now       = current_time( 'timestamp' );
-		$next_run  = strtotime( "today {$hour}:{$minute}" );
-		
+		$now      = current_time( 'timestamp' );
+		$next_run = strtotime( "today {$hour}:{$minute}" );
+
 		// If time has passed today, schedule for tomorrow
 		if ( $next_run < $now ) {
 			$next_run = strtotime( "tomorrow {$hour}:{$minute}" );
@@ -810,7 +826,7 @@ class NotificationManager {
 		}
 
 		$subject = __( 'Test Notification - GoHighLevel CRM Integration', 'ghl-crm-integration' );
-		
+
 		$message = sprintf(
 			'<h2 style="color: #46b450;">%s</h2>
 			<p>%s</p>
@@ -843,17 +859,21 @@ class NotificationManager {
 		$sent          = wp_mail( $to, $subject, $email_content, $headers );
 
 		if ( $sent ) {
-			wp_send_json_success( [
-				'message' => sprintf(
-					/* translators: %s: Email address */
-					__( 'Test notification sent to %s. Check your inbox (and spam folder).', 'ghl-crm-integration' ),
-					$to
-				),
-			] );
+			wp_send_json_success(
+				[
+					'message' => sprintf(
+						/* translators: %s: Email address */
+						__( 'Test notification sent to %s. Check your inbox (and spam folder).', 'ghl-crm-integration' ),
+						$to
+					),
+				]
+			);
 		} else {
-			wp_send_json_error( [
-				'message' => __( 'Failed to send test notification. Check your WordPress email configuration.', 'ghl-crm-integration' ),
-			] );
+			wp_send_json_error(
+				[
+					'message' => __( 'Failed to send test notification. Check your WordPress email configuration.', 'ghl-crm-integration' ),
+				]
+			);
 		}
 	}
 }
