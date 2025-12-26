@@ -15,9 +15,9 @@ $settings = $settings_manager->get_settings_array();
 // Get all WordPress roles
 $wp_roles = wp_roles()->get_names();
 
-// Load saved role tag mappings
-$role_tags = $settings['role_tags'] ?? [];
-$global_tags_raw = $settings['global_tags'] ?? [];
+// Load saved role tag mappings (location-specific)
+$role_tags = $settings_manager->get_location_role_tags();
+$global_tags_raw = $settings_manager->get_location_global_tags();
 // Convert array to comma-separated string for display, or keep as is if string
 $global_tags = is_array( $global_tags_raw ) ? implode( ',', $global_tags_raw ) : $global_tags_raw;
 ?>

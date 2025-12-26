@@ -22,7 +22,8 @@ $ghl_white_label_domain = $settings['ghl_white_label_domain'] ?? '';
 $enable_user_sync              = $settings['enable_user_sync'] ?? false;
 $user_sync_actions             = $settings['user_sync_actions'] ?? [];
 $delete_contact_on_user_delete = $settings['delete_contact_on_user_delete'] ?? false;
-$user_register_tags            = $settings['user_register_tags'] ?? [];
+$user_register_tags            = $settings_manager->get_location_register_tags();
+print_r($user_register_tags);
 ?>
 
 <div class="ghl-settings-wrapper">
@@ -170,7 +171,7 @@ $user_register_tags            = $settings['user_register_tags'] ?? [];
 							name="user_register_tags[]" 
 							multiple 
 							class="ghl-tags-select"
-							data-saved-tags='<?php echo wp_json_encode( $user_register_tags ); ?>'
+							data-saved-tags='<?php echo esc_attr( wp_json_encode( $user_register_tags ) ); ?>'
 							data-placeholder="<?php esc_attr_e( 'Select tags to apply when user registers...', 'ghl-crm-integration' ); ?>">
 							<option value=""><?php esc_html_e( 'Loading tags...', 'ghl-crm-integration' ); ?></option>
 						</select>

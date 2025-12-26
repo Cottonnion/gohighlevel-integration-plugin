@@ -10,7 +10,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Hardcoded data for now - will be replaced with real data later
-$report_data = \GHL_CRM\Core\Dashboard\StatsProvider::get_instance()->get_report_data();
+$report_data          = \GHL_CRM\Core\Dashboard\StatsProvider::get_instance()->get_report_data();
+$oauth_handler        = new \GHL_CRM\API\OAuth\OAuthHandler();
+$oauth_status         = $oauth_handler->get_connection_status();
+$is_oauth_connected   = ! empty( $oauth_status['connected'] );
+$oauth_reconnect_url  = admin_url( 'admin.php?page=ghl-crm-oauth-connect' );
 ?>
 
 <div class="ghl-reports-dashboard">
@@ -29,6 +33,12 @@ $report_data = \GHL_CRM\Core\Dashboard\StatsProvider::get_instance()->get_report
 				<span class="dashicons dashicons-admin-site" style="font-size: 16px;"></span>
 				Test Connection
 			</button>
+			<?php if ( $is_oauth_connected ) : ?>
+			<button type="button" class="ghl-button ghl-button-secondary" id="ghl-oauth-reconnect" style="display: flex; align-items: center; gap: 6px;">
+				<span class="dashicons dashicons-controls-repeat" style="font-size: 16px;"></span>
+				Reconnect Account
+			</button>
+			<?php endif; ?>
 			<button type="button" class="ghl-button ghl-button-secondary" id="ghl-clear-cache" style="display: flex; align-items: center; gap: 6px;">
 				<span class="dashicons dashicons-trash" style="font-size: 16px;"></span>
 				Clear Cache
