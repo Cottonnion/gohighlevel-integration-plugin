@@ -245,9 +245,9 @@ class RoleTagsManager {
 	 * @return array Array of tags for this role
 	 */
 	public function get_tags_for_role( string $role ): array {
-		$settings    = $this->settings_manager->get_settings_array();
-		$role_tags   = $settings['role_tags'] ?? [];
-		$global_tags = $settings['global_tags'] ?? '';
+		// Get location-specific role tags and global tags
+		$role_tags   = $this->settings_manager->get_location_role_tags();
+		$global_tags = $this->settings_manager->get_location_global_tags();
 
 		$all_tags = [];
 
