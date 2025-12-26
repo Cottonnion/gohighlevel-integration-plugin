@@ -645,18 +645,18 @@ class AjaxHandler {
 				$current_settings['user_sync_actions'] = array_values( $user_sync_actions );
 			}
 
-			// Update user registration tags
+			// Update user registration tags (location-specific)
 			if ( isset( $wizard_settings['user_register_tags'] ) ) {
-				$tags = $wizard_settings['user_register_tags'];
-				// Ensure it's an array and sanitize
+				$location_id = $current_settings['location_id'] ?? ( $current_settings['oauth_location_id'] ?? '' );
+				$tags        = $wizard_settings['user_register_tags'];
+				$sanitized   = [];
 				if ( is_array( $tags ) ) {
-					$current_settings['user_register_tags'] = array_map( 'sanitize_text_field', $tags );
+					$sanitized = array_map( 'sanitize_text_field', $tags );
 				} elseif ( is_string( $tags ) ) {
-					// If it's a comma-separated string, convert to array
-					$current_settings['user_register_tags'] = array_map( 'trim', explode( ',', sanitize_text_field( $tags ) ) );
-				} else {
-					$current_settings['user_register_tags'] = [];
+					$sanitized = array_map( 'trim', explode( ',', sanitize_text_field( $tags ) ) );
 				}
+				$register_key = $location_id ? 'user_register_tags_' . $location_id : 'user_register_tags';
+				$current_settings[ $register_key ] = $sanitized;
 			}
 
 			// Update integration settings

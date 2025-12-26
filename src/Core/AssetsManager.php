@@ -250,7 +250,7 @@ class AssetsManager {
 					'refreshMetadataFailed'     => __( 'Failed to refresh tags and fields.', 'ghl-crm-integration' ),
 				],
 			],
-			'1.0.9',
+			'1.1.1',
 			true
 		);
 
@@ -605,7 +605,9 @@ class AssetsManager {
 		);
 
 		// Correctly fetch connection tokens from the settings array
-		$settings    = SettingsManager::get_instance()->get_settings_array();
+		$settings_manager = SettingsManager::get_instance();
+		$settings         = $settings_manager->get_settings_array();
+		$location_id      = $settings['location_id'] ?? $settings['oauth_location_id'] ?? '';
 		$oauth_token = $settings['oauth_access_token'] ?? '';
 		$api_token   = $settings['api_token'] ?? '';
 
@@ -613,7 +615,7 @@ class AssetsManager {
 		$enable_user_sync              = $settings['enable_user_sync'] ?? false;
 		$user_sync_actions             = $settings['user_sync_actions'] ?? [];
 		$user_register_enabled         = in_array( 'user_register', $user_sync_actions, true );
-		$user_register_tags            = $settings['user_register_tags'] ?? [];
+		$user_register_tags            = $settings_manager->get_location_register_tags( $location_id );
 		$wc_enabled                    = $settings['wc_enabled'] ?? false;
 		$buddyboss_enabled             = $settings['buddyboss_enabled'] ?? false;
 		$delete_contact_on_user_delete = $settings['delete_contact_on_user_delete'] ?? false;

@@ -92,7 +92,9 @@ class AccessControl {
 	 */
 	public function get_user_tags( int $user_id ): array {
 		$tag_manager = \GHL_CRM\Core\TagManager::get_instance();
-		$tags        = $tag_manager->get_user_tag_names( $user_id );
+		$settings    = \GHL_CRM\Core\SettingsManager::get_instance();
+		$location_id = $settings->get_setting( 'location_id' ) ?: $settings->get_setting( 'oauth_location_id' );
+		$tags        = $tag_manager->get_user_tag_names( $user_id, $location_id );
 
 		// Check if PRO plugin is active and Family Accounts is enabled
 		if ( get_option( 'ghl_crm_family_accounts_enabled', false ) && class_exists( '\\GHL_CRM_Pro\\FamilyManager' ) ) {

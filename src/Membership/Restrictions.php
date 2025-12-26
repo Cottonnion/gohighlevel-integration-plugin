@@ -150,13 +150,16 @@ class Restrictions {
 		// Check additional allowed tags
 		$allowed_tags = $this->settings_manager->get_setting( 'restrictions_allowed_tags', [] );
 		if ( ! empty( $allowed_tags ) && is_array( $allowed_tags ) ) {
-			$user_id   = get_current_user_id();
-			$user_tags = get_user_meta( $user_id, 'ghl_contact_tags', true );
+			$user_id     = get_current_user_id();
+			$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
+			$user_tags   = \GHL_CRM\Core\TagManager::get_instance()->get_user_tag_names( $user_id, $location_id );
 
-			if ( ! empty( $user_tags ) && is_array( $user_tags ) ) {
-				// Check if user has any of the allowed tags
-				foreach ( $allowed_tags as $allowed_tag ) {
-					if ( in_array( $allowed_tag, $user_tags, true ) ) {
+			if ( ! empty( $user_tags ) ) {
+				$allowed_lower = array_map( 'strtolower', $allowed_tags );
+				$user_lower    = array_map( 'strtolower', $user_tags );
+				// Check if user has any of the allowed tags (case-insensitive)
+				foreach ( $allowed_lower as $allowed_tag ) {
+					if ( in_array( $allowed_tag, $user_lower, true ) ) {
 						return true;
 					}
 				}
