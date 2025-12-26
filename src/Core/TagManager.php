@@ -47,9 +47,68 @@ class TagManager {
 	private bool $last_cache_hit = false;
 
 	/**
-	 * User meta key for stored tag IDs
+	 * Get location-specific meta key for user tags
+	 *
+	 * @param string|null $location_id Optional location ID, uses current if not provided
+	 * @return string
 	 */
-	private const META_USER_TAGS = '_ghl_contact_tags';
+	private function get_user_tags_meta_key( ?string $location_id = null ): string {
+		if ( null === $location_id ) {
+			$location_id = $this->settings_manager->get_setting( 'location_id' );
+		}
+		return '_ghl_contact_tags_' . $location_id;
+	}
+
+	/**
+	 * Get location-specific meta key for user contact ID
+	 *
+	 * @param string|null $location_id Optional location ID, uses current if not provided
+	 * @return string
+	 */
+	private function get_user_contact_id_meta_key( ?string $location_id = null ): string {
+		if ( null === $location_id ) {
+			$location_id = $this->settings_manager->get_setting( 'location_id' );
+		}
+		return '_ghl_contact_id_' . $location_id;
+	}
+
+	/**
+	 * Get user's contact ID for current location
+	 *
+	 * @param int $user_id User ID
+	 * @param string|null $location_id Optional location ID, uses current if not provided
+	 * @return string|null Contact ID or null if not found
+	 */
+	public function get_user_contact_id( int $user_id, ?string $location_id = null ): ?string {
+		$meta_key = $this->get_user_contact_id_meta_key( $location_id );
+		$contact_id = get_user_meta( $user_id, $meta_key, true );
+		return $contact_id ?: null;
+	}
+
+	/**
+	 * Store user's contact ID for current location
+	 *
+	 * @param int $user_id User ID
+	 * @param string $contact_id Contact ID
+	 * @param string|null $location_id Optional location ID, uses current if not provided
+	 * @return void
+	 */
+	public function store_user_contact_id( int $user_id, string $contact_id, ?string $location_id = null ): void {
+		$meta_key = $this->get_user_contact_id_meta_key( $location_id );
+		update_user_meta( $user_id, $meta_key, $contact_id );
+	}
+
+	/**
+	 * Delete user's contact ID for current location
+	 *
+	 * @param int $user_id User ID
+	 * @param string|null $location_id Optional location ID, uses current if not provided
+	 * @return void
+	 */
+	public function delete_user_contact_id( int $user_id, ?string $location_id = null ): void {
+		$meta_key = $this->get_user_contact_id_meta_key( $location_id );
+		delete_user_meta( $user_id, $meta_key );
+	}
 
 	/**
 	 * Private constructor
@@ -188,8 +247,9 @@ class TagManager {
 	/**
 	 * Retrieve stored tag IDs for a user, converting legacy name storage when needed.
 	 */
-	public function get_user_tag_ids( int $user_id ): array {
-		$stored = get_user_meta( $user_id, self::META_USER_TAGS, true );
+	public function get_user_tag_ids( int $user_id, ?string $location_id = null ): array {
+		$meta_key = $this->get_user_tags_meta_key( $location_id );
+		$stored = get_user_meta( $user_id, $meta_key, true );
 
 		if ( ! is_array( $stored ) ) {
 			$stored = [];
@@ -199,7 +259,7 @@ class TagManager {
 		$ids        = $normalized['ids'];
 
 		if ( $ids !== $stored ) {
-			update_user_meta( $user_id, self::META_USER_TAGS, $ids );
+			update_user_meta( $user_id, $meta_key, $ids );
 		}
 
 		return $ids;
@@ -208,11 +268,12 @@ class TagManager {
 	/**
 	 * Convenience wrapper to persist tag IDs for a user.
 	 */
-	public function store_user_tags( int $user_id, array $tags ): array {
+	public function store_user_tags( int $user_id, array $tags, ?string $location_id = null ): array {
+		$meta_key = $this->get_user_tags_meta_key( $location_id );
 		$normalized = $this->normalize_tag_input( $tags );
 		$ids        = $normalized['ids'];
 
-		update_user_meta( $user_id, self::META_USER_TAGS, $ids );
+		update_user_meta( $user_id, $meta_key, $ids );
 
 		return $ids;
 	}
@@ -220,8 +281,8 @@ class TagManager {
 	/**
 	 * Retrieve tag names for a user (used for display/UI logic).
 	 */
-	public function get_user_tag_names( int $user_id ): array {
-		$ids = $this->get_user_tag_ids( $user_id );
+	public function get_user_tag_names( int $user_id, ?string $location_id = null ): array {
+		$ids = $this->get_user_tag_ids( $user_id, $location_id );
 
 		return $this->convert_ids_to_names( $ids );
 	}
