@@ -110,7 +110,6 @@ class UserHooks {
 		}
 		// 2. User sync enabled - Sync profile updates and logins
 		if ( ! empty( $settings['enable_user_sync'] ) ) {
-			error_log( '[UserHooks] Registering profile_update and wp_login hooks' );
 			// Sync user profile updates to GoHighLevel
 			add_action( 'profile_update', [ $this, 'on_user_update' ], 10, 2 );
 			// Track user logins in GoHighLevel
@@ -150,8 +149,7 @@ class UserHooks {
 		$contact_data = $this->prepare_contact_data( $user );
 
 		// Add registration tags if configured
-		$settings      = $this->settings_manager->get_settings_array();
-		$register_tags = $settings['user_register_tags'] ?? [];
+		$register_tags = $this->settings_manager->get_location_register_tags();
 
 		// Get role-based tags
 		// During user creation, WordPress hasn't assigned the role to the database yet
@@ -278,7 +276,9 @@ class UserHooks {
 		$contact_data = $this->prepare_contact_data( $user );
 
 		$existing_tags = [];
-		$contact_id    = get_user_meta( $user_id, '_ghl_contact_id', true );
+		// Get contact ID for current location
+		$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
+		$contact_id = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 
 		if ( $contact_id ) {
 			try {
@@ -293,7 +293,7 @@ class UserHooks {
 			}
 		}
 
-		$profile_tags = get_user_meta( $user_id, '_ghl_contact_tags', true );
+		$profile_tags = \GHL_CRM\Core\TagManager::get_instance()->get_user_tag_ids( $user_id );
 		if ( is_array( $profile_tags ) ) {
 			// Profile tags are now stored as IDs - convert to names for payload
 			$tag_manager            = \GHL_CRM\Core\TagManager::get_instance();
@@ -308,8 +308,7 @@ class UserHooks {
 		}
 
 		$role_tags_manager = RoleTagsManager::get_instance();
-		$settings          = $this->settings_manager->get_settings_array();
-		$role_tags_config  = $settings['role_tags'] ?? [];
+		$role_tags_config  = $this->settings_manager->get_location_role_tags();
 
 		$tags_to_remove = [];
 		if ( $role_changed ) {

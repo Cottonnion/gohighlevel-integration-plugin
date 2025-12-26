@@ -309,7 +309,8 @@ class UserProfileFields {
 		}
 
 		// Get GHL data
-		$contact_id    = get_user_meta( $user->ID, '_ghl_contact_id', true );
+		$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
+		$contact_id = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user->ID, $location_id );
 		$last_sync     = get_user_meta( $user->ID, '_ghl_last_sync', true );
 		$synced_on_reg = get_user_meta( $user->ID, '_ghl_synced_on_register', true );
 		$tag_manager      = $this->get_tag_manager();
@@ -536,7 +537,8 @@ class UserProfileFields {
 
 		if ( $new_ids !== $current_ids ) {
 			$stored_ids = $tag_manager->store_user_tags( $user_id, $submitted_tags );
-			$contact_id = get_user_meta( $user_id, '_ghl_contact_id', true );
+			$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
+			$contact_id = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 
 			if ( ! empty( $contact_id ) ) {
 				$payload_tags = $tag_manager->prepare_tags_for_payload( $stored_ids, $normalized['pairs'] ?? [] );
@@ -586,7 +588,8 @@ class UserProfileFields {
 			wp_send_json_error( [ 'message' => __( 'Invalid user ID', 'ghl-crm-integration' ) ] );
 		}
 
-		$contact_id = get_user_meta( $user_id, '_ghl_contact_id', true );
+		$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
+		$contact_id = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 
 		if ( empty( $contact_id ) ) {
 			wp_send_json_error( [ 'message' => __( 'User not synced to GHL', 'ghl-crm-integration' ) ] );
@@ -748,17 +751,16 @@ class UserProfileFields {
 			// Fetch fresh contact data from GHL
 			$response = $client->get( "contacts/{$contact_id}" );
 
-			if ( empty( $response['contact'] ) ) {
-				return false;
-			}
+		if ( empty( $response['contact'] ) ) {
+			return false;
+		}
 
-			$contact = $response['contact'];
+		$contact = $response['contact'];
 
-			// Update user meta with fresh data
-			update_user_meta( $user_id, '_ghl_contact_id', $contact_id );
-			update_user_meta( $user_id, '_ghl_last_sync', time() );
-
-			$raw_tags = [];
+		// Update user meta with fresh data
+		$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
+		$tag_manager->store_user_contact_id( $user_id, $contact_id, $location_id );
+		update_user_meta( $user_id, '_ghl_last_sync', time() );			$raw_tags = [];
 			if ( ! empty( $contact['tags'] ) && is_array( $contact['tags'] ) ) {
 				$raw_tags = $contact['tags'];
 			}
@@ -805,17 +807,16 @@ class UserProfileFields {
 			// Fetch fresh contact data from GHL
 			$response = $client->get( "contacts/{$contact_id}" );
 
-			if ( empty( $response['contact'] ) ) {
-				wp_send_json_error( [ 'message' => __( 'Contact not found in GoHighLevel', 'ghl-crm-integration' ) ] );
-			}
+		if ( empty( $response['contact'] ) ) {
+			wp_send_json_error( [ 'message' => __( 'Contact not found in GoHighLevel', 'ghl-crm-integration' ) ] );
+		}
 
-			$contact = $response['contact'];
+		$contact = $response['contact'];
 
-			// Update user meta with fresh data
-			update_user_meta( $user_id, '_ghl_contact_id', $contact_id );
-			update_user_meta( $user_id, '_ghl_last_sync', time() );
-
-			$raw_tags = [];
+		// Update user meta with fresh data
+		$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
+		$tag_manager->store_user_contact_id( $user_id, $contact_id, $location_id );
+		update_user_meta( $user_id, '_ghl_last_sync', time() );			$raw_tags = [];
 			if ( ! empty( $contact['tags'] ) && is_array( $contact['tags'] ) ) {
 				$raw_tags = $contact['tags'];
 			}
