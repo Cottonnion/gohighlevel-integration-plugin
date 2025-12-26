@@ -97,6 +97,7 @@ class SettingsManager {
 		add_action( 'wp_ajax_ghl_crm_get_forms', [ $this, 'handle_get_forms' ] );
 		add_action( 'wp_ajax_ghl_crm_refresh_metadata', [ $this, 'refresh_metadata' ] );
 		add_action( 'wp_ajax_ghl_crm_preview_user_sync', [ $this, 'preview_user_sync' ] );
+		add_action( 'wp_ajax_ghl_crm_oauth_reconnect', [ $this, 'oauth_reconnect' ] );
 		add_action( 'wp_ajax_ghl_crm_save_wizard_settings', [ $this, 'handle_save_wizard_settings' ] );
 
 		// Custom Object Mapping AJAX handlers
@@ -161,9 +162,13 @@ class SettingsManager {
 
 				// Sanitize based on value type
 				if ( is_array( $value ) ) {
-					// Special handling for role_tags nested structure
-					if ( 'role_tags' === $key ) {
-						$new_settings[ $key ] = $this->sanitize_role_tags( $value );
+					// Special handling for location-specific tag configurations
+					if ( in_array( $key, [ 'role_tags', 'global_tags', 'user_register_tags' ], true ) ) {
+						$location_specific = $this->save_location_specific_tags( $key, $value );
+						if ( null !== $location_specific ) {
+							$new_settings[ $location_specific['key'] ] = $location_specific['value'];
+						}
+						continue; // Don't save as regular settings
 					} else {
 						// Handle other arrays (checkboxes, multi-selects, etc.)
 						$new_settings[ $key ] = $this->sanitize_array_recursive( $value );
@@ -235,9 +240,19 @@ class SettingsManager {
 				throw new \Exception( __( 'Failed to save settings. Please try again.', 'ghl-crm-integration' ) );
 			}
 
+				// Build response settings and include location-specific tag configurations
+				$response_settings = $this->get_settings_array();
+				$location_id       = $response_settings['location_id'] ?? $response_settings['oauth_location_id'] ?? '';
+
+				if ( ! empty( $location_id ) ) {
+					$response_settings['user_register_tags'] = $this->get_location_register_tags( $location_id );
+					$response_settings['role_tags']          = $this->get_location_role_tags( $location_id );
+					$response_settings['global_tags']        = $this->get_location_global_tags( $location_id );
+				}
+
 				$response_data = [
 					'message'  => __( 'Settings saved successfully!', 'ghl-crm-integration' ),
-					'settings' => $this->get_settings_array(),
+					'settings' => $response_settings,
 				];
 
 				// Add warning if credentials changed
@@ -367,6 +382,50 @@ class SettingsManager {
 					'status_code' => $result['status_code'] ?? 500,
 				],
 				$result['code'] ?? 500
+			);
+		}
+	}
+
+	/**
+	 * Handle OAuth reconnect request
+	 *
+	 * @return void
+	 */
+	public function oauth_reconnect(): void {
+		// Verify nonce
+		check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce' );
+
+		// Check permissions
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to reconnect OAuth.', 'ghl-crm-integration' ),
+				],
+				403
+			);
+		}
+
+		try {
+			// Get OAuth authorization URL
+			$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
+			$auth_url = $oauth_handler->get_authorization_url();
+			
+			wp_send_json_success(
+				[
+					'message' => __( 'Redirecting to GoHighLevel for reconnection...', 'ghl-crm-integration' ),
+					'redirect_url' => $auth_url,
+				]
+			);
+		} catch ( \Exception $e ) {
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: Error message */
+						__( 'Reconnection failed: %s', 'ghl-crm-integration' ),
+						$e->getMessage()
+					),
+				],
+				500
 			);
 		}
 	}
@@ -2231,6 +2290,94 @@ class SettingsManager {
 	 * Prevent cloning
 	 */
 	private function __clone() {}
+
+	/**
+	 * Get location-specific role tags configuration
+	 *
+	 * @param string|null $location_id Optional location ID. Uses current location if not provided.
+	 * @return array Role tags configuration for the location
+	 */
+	public function get_location_role_tags( ?string $location_id = null ): array {
+		if ( null === $location_id ) {
+			$location_id = $this->get_setting( 'location_id' ) ?: $this->get_setting( 'oauth_location_id' );
+		}
+		
+		if ( empty( $location_id ) ) {
+			return [];
+		}
+		
+		$key = "role_tags_{$location_id}";
+		return $this->get_setting( $key, [] );
+	}
+	
+	/**
+	 * Get location-specific global tags configuration
+	 *
+	 * @param string|null $location_id Optional location ID. Uses current location if not provided.
+	 * @return array Global tags for the location
+	 */
+	public function get_location_global_tags( ?string $location_id = null ): array {
+		if ( null === $location_id ) {
+			$location_id = $this->get_setting( 'location_id' ) ?: $this->get_setting( 'oauth_location_id' );
+		}
+		
+		if ( empty( $location_id ) ) {
+			return [];
+		}
+		
+		$key = "global_tags_{$location_id}";
+		return $this->get_setting( $key, [] );
+	}
+	
+	/**
+	 * Get location-specific registration tags configuration
+	 *
+	 * @param string|null $location_id Optional location ID. Uses current location if not provided.
+	 * @return array Registration tags for the location
+	 */
+	public function get_location_register_tags( ?string $location_id = null ): array {
+		if ( null === $location_id ) {
+			$location_id = $this->get_setting( 'location_id' ) ?: $this->get_setting( 'oauth_location_id' );
+		}
+		
+		if ( empty( $location_id ) ) {
+			return [];
+		}
+		
+		$key = "user_register_tags_{$location_id}";
+		return $this->get_setting( $key, [] );
+	}
+
+	/**
+	 * Save location-specific tag configuration
+	 *
+	 * @param string $tag_type Tag type (role_tags, global_tags, user_register_tags)
+	 * @param mixed  $value    Tag configuration value
+	 * @return array|null      Array with ['key' => string, 'value' => mixed] or null when no location
+	 */
+	private function save_location_specific_tags( string $tag_type, $value ): ?array {
+		$location_id = $this->get_setting( 'location_id' ) ?: $this->get_setting( 'oauth_location_id' );
+		
+		if ( empty( $location_id ) ) {
+			return null;
+		}
+		
+		$key = "{$tag_type}_{$location_id}";
+		
+		// Sanitize based on tag type
+		if ( 'role_tags' === $tag_type && is_array( $value ) ) {
+			$sanitized_value = $this->sanitize_role_tags( $value );
+		} elseif ( is_array( $value ) ) {
+			$sanitized_value = $this->sanitize_array_recursive( $value );
+		} else {
+			$sanitized_value = sanitize_text_field( (string) $value );
+		}
+		
+		return [
+			'key'   => $key,
+			'value' => $sanitized_value,
+		];
+	}
 
 	/**
 	 * Prevent unserializing

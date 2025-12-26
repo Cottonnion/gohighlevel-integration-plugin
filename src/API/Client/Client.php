@@ -64,6 +64,34 @@ class Client implements ClientInterface {
 	private string $access_token = '';
 
 	/**
+	 * OAuth2 Access Token Expiry (unix timestamp)
+	 *
+	 * @var int
+	 */
+	private int $access_token_expires_at = 0;
+
+	/**
+	 * Lightweight logger prefix for OAuth events.
+	 *
+	 * @var string
+	 */
+	private string $oauth_log_prefix = '[GHL][OAuth] ';
+
+	/**
+	 * Throttle repeated refresh attempts within a short window to avoid loops.
+	 *
+	 * @var int
+	 */
+	private static int $last_refresh_attempt_ts = 0;
+
+	/**
+	 * Store last refresh error message for reuse in throttling responses.
+	 *
+	 * @var string|null
+	 */
+	private static ?string $last_refresh_error = null;
+
+	/**
 	 * OAuth2 Refresh Token
 	 *
 	 * @var string
@@ -267,6 +295,17 @@ class Client implements ClientInterface {
 						true // Show on all admin pages
 					);
 
+					// Log failure context for debugging
+					$this->log_oauth_event(
+						'Auto-refresh failed after 401/403',
+						[
+							'url'     => $url,
+							'error'   => $e->getMessage(),
+							'status'  => $response_code,
+							'body'    => $body_json,
+						]
+					);
+
 					// Return error
 					return new \WP_Error(
 						'token_refresh_failed',
@@ -296,6 +335,10 @@ class Client implements ClientInterface {
 		// OAuth2 tokens from settings
 		if ( ! empty( $settings['oauth_access_token'] ) ) {
 			$this->access_token = $settings['oauth_access_token'];
+		}
+
+		if ( ! empty( $settings['oauth_expires_at'] ) ) {
+			$this->access_token_expires_at = (int) $settings['oauth_expires_at'];
 		}
 
 		if ( ! empty( $settings['oauth_refresh_token'] ) ) {
@@ -433,12 +476,15 @@ class Client implements ClientInterface {
 		];
 
 		$response = wp_remote_request( self::OAUTH_TOKEN_URL, $args );
+		$this->log_oauth_event( 'Refresh token endpoint response', [ 'status' => is_wp_error( $response ) ? 'error' : wp_remote_retrieve_response_code( $response ) ] );
 
 		if ( is_wp_error( $response ) ) {
+			self::$last_refresh_error = $response->get_error_message();
+			$this->log_oauth_event( 'Refresh token WP_Error', [ 'error' => $response->get_error_message() ] );
 			throw new ApiException(
 				sprintf(
 					/* translators: %s: Error message */
-					esc_html__( 'OAuth token exchange failed: %s', 'ghl-crm-integration' ),
+					esc_html__( 'Token refresh failed: %s', 'ghl-crm-integration' ),
 					esc_html( $response->get_error_message() )
 				)
 			);
@@ -447,6 +493,7 @@ class Client implements ClientInterface {
 		$status_code = wp_remote_retrieve_response_code( $response );
 		$body        = wp_remote_retrieve_body( $response );
 		$decoded     = json_decode( $body, true );
+		$this->log_oauth_event( 'Refresh token endpoint body', [ 'status' => $status_code, 'body' => is_array( $decoded ) ? $decoded : $body ] );
 
 		if ( $status_code !== 200 || empty( $decoded['access_token'] ) ) {
 			$decoded_array = $this->sanitize_response_payload( $decoded );
@@ -465,6 +512,43 @@ class Client implements ClientInterface {
 	}
 
 	/**
+	 * Ensure access token is still valid; refresh if close to expiry.
+	 *
+	 * @return void
+	 * @throws ApiException When refresh fails
+	 */
+	private function ensure_fresh_access_token(): void {
+		// If we do not know expiry, skip pre-emptive refresh (will rely on 401 handler)
+		if ( $this->access_token_expires_at <= 0 ) {
+			return;
+		}
+
+		// Refresh one minute before expiry to avoid mid-request failures
+		$refresh_threshold = $this->access_token_expires_at - 60;
+		if ( time() >= $refresh_threshold ) {
+			$this->log_oauth_event( 'Proactive refresh before expiry', [ 'expires_at' => $this->access_token_expires_at ] );
+			$this->refresh_access_token();
+		}
+	}
+
+	/**
+	 * Write a concise OAuth log line to the PHP error log.
+	 *
+	 * @param string $message Log message
+	 * @param array  $context Optional context data
+	 * @return void
+	 */
+	private function log_oauth_event( string $message, array $context = [] ): void {
+		$log = $this->oauth_log_prefix . $message;
+
+		if ( ! empty( $context ) ) {
+			$log .= ' | ' . wp_json_encode( $context );
+		}
+
+		error_log( $log );
+	}
+
+	/**
 	 * Refresh OAuth2 access token
 	 *
 	 * @return array Token response
@@ -472,8 +556,23 @@ class Client implements ClientInterface {
 	 */
 	public function refresh_access_token(): array {
 		if ( empty( $this->refresh_token ) ) {
+			$this->log_oauth_event( 'Refresh aborted: no refresh token stored' );
 			throw new ApiException( esc_html__( 'No refresh token available', 'ghl-crm-integration' ) );
 		}
+
+		// Throttle repeated attempts within 30 seconds to avoid hammering
+		$now = time();
+		if ( self::$last_refresh_attempt_ts && ( $now - self::$last_refresh_attempt_ts ) < 30 ) {
+			$this->log_oauth_event( 'Refresh skipped: throttled', [ 'seconds_since_last' => $now - self::$last_refresh_attempt_ts, 'last_error' => self::$last_refresh_error ] );
+			throw new ApiException(
+				self::$last_refresh_error
+					? sprintf( esc_html__( 'Recent refresh attempt failed: %s', 'ghl-crm-integration' ), self::$last_refresh_error )
+					: esc_html__( 'Recent refresh attempt in progress or just failed. Please retry shortly.', 'ghl-crm-integration' )
+			);
+		}
+
+		self::$last_refresh_attempt_ts = $now;
+		self::$last_refresh_error      = null;
 
 		// Handle edge case where refresh token might be corrupted (not a string)
 		if ( ! is_string( $this->refresh_token ) ) {
@@ -484,11 +583,14 @@ class Client implements ClientInterface {
 				$redirect_uri = admin_url( 'admin.php?page=ghl-crm-settings' );
 				return $this->exchange_code_for_token( $auth_code, $redirect_uri );
 			} catch ( ApiException $e ) {
+				$this->log_oauth_event( 'Refresh token corrupted and reconnect failed', [ 'error' => $e->getMessage() ] );
 				throw new ApiException(
 					esc_html__( 'Refresh token is invalid and reconnect failed', 'ghl-crm-integration' )
 				);
 			}
 		}
+
+		$this->log_oauth_event( 'Attempting token refresh', [ 'expires_in' => $this->access_token_expires_at - time() ] );
 
 		$data = [
 			'client_id'     => self::OAUTH_CLIENT_ID,
@@ -507,8 +609,11 @@ class Client implements ClientInterface {
 		];
 
 		$response = wp_remote_request( self::OAUTH_TOKEN_URL, $args );
+		$this->log_oauth_event( 'Refresh token endpoint response', [ 'status' => is_wp_error( $response ) ? 'error' : wp_remote_retrieve_response_code( $response ) ] );
 
 		if ( is_wp_error( $response ) ) {
+			self::$last_refresh_error = $response->get_error_message();
+			$this->log_oauth_event( 'Refresh token WP_Error', [ 'error' => $response->get_error_message() ] );
 			throw new ApiException(
 				sprintf(
 					/* translators: %s: Error message */
@@ -521,11 +626,63 @@ class Client implements ClientInterface {
 		$status_code = wp_remote_retrieve_response_code( $response );
 		$body        = wp_remote_retrieve_body( $response );
 		$decoded     = json_decode( $body, true );
+		$this->log_oauth_event( 'Refresh token endpoint body', [ 'status' => $status_code, 'body' => is_array( $decoded ) ? $decoded : $body ] );
 
 		if ( $status_code !== 200 || empty( $decoded['access_token'] ) ) {
-			$decoded_array = is_array( $decoded ) ? $decoded : [];
+			$decoded_array  = is_array( $decoded ) ? $decoded : [];
+			$error_message = $decoded_array['message'] ?? ( is_string( $body ) ? $body : 'unknown' );
+			self::$last_refresh_error = sprintf( 'Refresh HTTP %d: %s', $status_code, sanitize_text_field( (string) $error_message ) );
+
+			// If refresh token is invalid, clear tokens and force reconnect to avoid loops
+			if ( isset( $decoded_array['error'] ) && 'invalid_grant' === $decoded_array['error'] ) {
+				$this->log_oauth_event( 'Refresh token marked invalid by provider; clearing stored tokens', $decoded_array );
+				$this->clear_oauth_tokens();
+				throw new ApiException(
+					esc_html__( 'Refresh token is invalid. Please reconnect your GoHighLevel account.', 'ghl-crm-integration' ),
+					(int) $status_code,
+					$decoded_array
+				);
+			}
+
+			// Fallback: attempt reconnect API once to recover tokens
+			if ( ! empty( $this->location_id ) ) {
+				try {
+					$this->log_oauth_event( 'Primary refresh failed, attempting reconnect', [ 'location_id' => $this->location_id ] );
+					$auth_code     = $this->reconnect_api();
+					$redirect_uri  = admin_url( 'admin.php?page=ghl-crm-settings' );
+					$token_payload = $this->exchange_code_for_token( $auth_code, $redirect_uri );
+					$expires_at    = time() + ( $token_payload['expires_in'] ?? 3600 );
+					$this->access_token_expires_at = $expires_at;
+					$this->save_oauth_tokens( $expires_at );
+					$this->log_oauth_event( 'Reconnect succeeded after refresh failure', [ 'expires_at' => $expires_at ] );
+
+					return $token_payload;
+				} catch ( ApiException $reconnect_error ) {
+					self::$last_refresh_error = $reconnect_error->getMessage();
+					$this->log_oauth_event(
+						'Reconnect attempt failed',
+						[
+							'refresh_error'   => $decoded_array['message'] ?? 'unknown',
+							'reconnect_error' => $reconnect_error->getMessage(),
+						]
+					);
+					// If reconnect also fails, bubble original refresh error with context
+					throw new ApiException(
+						sprintf(
+							/* translators: 1: refresh error, 2: reconnect error */
+							esc_html__( 'Failed to refresh access token (%1$s) and reconnect failed (%2$s)', 'ghl-crm-integration' ),
+							esc_html( $decoded_array['message'] ?? 'unknown' ),
+							esc_html( $reconnect_error->getMessage() )
+						),
+						(int) $status_code,
+						$decoded_array
+					);
+				}
+			}
+
+			self::$last_refresh_error = $decoded_array['message'] ?? 'Failed to refresh access token';
 			throw new ApiException(
-				esc_html__( 'Failed to refresh access token', 'ghl-crm-integration' ),
+				sanitize_text_field( self::$last_refresh_error ),
 				(int) $status_code,
 				$decoded_array // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- sanitized via sanitize_response_payload()
 			);
@@ -536,6 +693,13 @@ class Client implements ClientInterface {
 		if ( ! empty( $decoded['refresh_token'] ) ) {
 			$this->refresh_token = $decoded['refresh_token'];
 		}
+
+		// Persist refreshed tokens and expiry so new requests use the latest values
+		$expires_at                    = time() + ( $decoded['expires_in'] ?? 3600 );
+		$this->access_token_expires_at = $expires_at;
+		self::$last_refresh_error      = null;
+		$this->save_oauth_tokens( $expires_at );
+		$this->log_oauth_event( 'Token refresh succeeded', [ 'expires_at' => $expires_at ] );
 
 		return $decoded;
 	}
@@ -720,6 +884,11 @@ class Client implements ClientInterface {
 	 * @throws ApiException
 	 */
 	private function request( string $method, string $url, array $data = [] ): array {
+		// Proactively refresh if token is near expiry
+		if ( $this->is_oauth_configured() && ! empty( $this->refresh_token ) ) {
+			$this->ensure_fresh_access_token();
+		}
+
 		// Determine which token to use (OAuth2 preferred)
 		$auth_token = '';
 		if ( $this->is_oauth_configured() ) {
@@ -748,6 +917,7 @@ class Client implements ClientInterface {
 
 		// Execute request
 		$response = wp_remote_request( $url, $args );
+		$this->log_oauth_event( 'Request sent', [ 'method' => $method, 'url' => $url, 'status' => is_wp_error( $response ) ? 'error' : wp_remote_retrieve_response_code( $response ) ] );
 
 		// Check for WP errors
 		if ( is_wp_error( $response ) ) {
@@ -774,6 +944,7 @@ class Client implements ClientInterface {
 
 				// Save refreshed tokens
 				$this->save_oauth_tokens();
+				$this->log_oauth_event( 'Retrying request after 401 with refreshed token', [ 'url' => $url ] );
 
 				// Retry the request with new token
 				$args['headers']['Authorization'] = 'Bearer ' . $this->access_token;
@@ -813,12 +984,17 @@ class Client implements ClientInterface {
 	 *
 	 * @return void
 	 */
-	private function save_oauth_tokens(): void {
+	private function save_oauth_tokens( ?int $expires_at = null ): void {
 		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 
 		// Update individual settings using SettingsManager (multisite-aware)
 		$settings_manager->update_setting( 'oauth_access_token', $this->access_token );
 		$settings_manager->update_setting( 'oauth_refresh_token', $this->refresh_token );
+
+		if ( null !== $expires_at ) {
+			$this->access_token_expires_at = $expires_at;
+			$settings_manager->update_setting( 'oauth_expires_at', $expires_at );
+		}
 	}
 
 	/**
