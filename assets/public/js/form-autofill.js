@@ -17,7 +17,7 @@
 			this.initialized = false;
 			this.ghlDomains = [
 				'link.leadconnectorhq.com',
-                'link.jorgediaz.online',
+				'link.gohighlevel.com',
 				'link.msgsndr.com',
 				'form.leadconnectorhq.com'
 			];
