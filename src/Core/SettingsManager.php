@@ -1685,7 +1685,7 @@ class SettingsManager {
 			// Prepare debug data
 			$debug_data = [
 				'endpoint'       => $endpoint_value,
-				'full_url'       => 'https://services.leadconnectorhq.com/' . $endpoint_value,
+				'full_url'       => 'https://services.gohighlevel.com/' . $endpoint_value,
 				'has_oauth'      => $oauth_status['connected'],
 				'has_manual_api' => ! empty( $settings['api_token'] ),
 				'location_id'    => $settings['location_id'] ?? 'not set',

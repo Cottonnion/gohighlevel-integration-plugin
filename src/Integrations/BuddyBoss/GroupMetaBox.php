@@ -134,7 +134,7 @@ class GroupMetaBox {
 		$white_label_domain = $settings['ghl_white_label_domain'] ?? '';
 
 		// Determine base domain (white label or default)
-		$base_domain = ! empty( $white_label_domain ) ? rtrim( $white_label_domain, '/' ) : 'https://app.leadconnectorhq.com';
+		$base_domain = ! empty( $white_label_domain ) ? rtrim( $white_label_domain, '/' ) : 'https://app.gohighlevel.com';
 
 		// Build GHL URLs (v2 format)
 		$record_url = '';

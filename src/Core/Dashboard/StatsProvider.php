@@ -397,7 +397,7 @@ class StatsProvider {
 			return untrailingslashit( $white_label );
 		}
 
-		return 'https://app.leadconnectorhq.com';
+		return 'https://app.gohighlevel.com';
 	}
 
 	private function is_queue_healthy(): bool {

@@ -18,7 +18,7 @@ defined( 'ABSPATH' ) || exit;
  * - NO field definitions, NO settings, NO embed codes
  * - NO custom domain information from location or company endpoints
  *
- * We manually generate embed URLs using the configured white-label domain (defaults to link.leadconnectorhq.com).
+ * We manually generate embed URLs using the configured white-label domain (defaults to link.gohighlevel.com).
  * Until GHL provides more comprehensive form data via their API, customization is limited.
  *
  * @package    GHL_CRM_Integration
@@ -281,7 +281,7 @@ class FormsResource {
 		}
 
 		if ( empty( $host ) ) {
-			$this->form_embed_base_url = 'https://link.leadconnectorhq.com';
+			$this->form_embed_base_url = 'https://link.gohighlevel.com';
 			return $this->form_embed_base_url;
 		}
 

@@ -175,13 +175,13 @@ class ShortcodeManager {
 						array_unshift( $host_parts, 'link' );
 						$base_url = 'https://' . implode( '.', $host_parts );
 					} else {
-						$base_url = 'https://link.leadconnectorhq.com';
+						$base_url = 'https://link.gohighlevel.com';
 					}
 				} else {
-					$base_url = 'https://link.leadconnectorhq.com';
+					$base_url = 'https://link.gohighlevel.com';
 				}
 			} else {
-				$base_url = 'https://link.leadconnectorhq.com';
+				$base_url = 'https://link.gohighlevel.com';
 			}
 
 			// Build form URL
