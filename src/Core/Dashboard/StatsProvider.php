@@ -14,6 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Dashboard stats provider.
  *
  * Collects data required for the admin dashboard cards.
+ * Stats are filtered by current location ID.
  *
  * @package GHL_CRM_Integration
  */
@@ -158,18 +159,31 @@ class StatsProvider {
 	}
 
 	/**
-	 * Collect recent activity from sync logs.
+	 * Collect recent activity from sync logs for current location.
 	 */
 	private function get_recent_activity(): array {
 		global $wpdb;
 
-		$table = $wpdb->prefix . 'ghl_sync_log';
-		$site  = get_current_blog_id();
+		$table       = $wpdb->prefix . 'ghl_sync_log';
+		$site        = get_current_blog_id();
+		$location_id = SettingsManager::get_instance()->get_setting( 'location_id' );
 
+		if ( empty( $location_id ) ) {
+			return [];
+		}
+		
+		$meta_key = '_ghl_contact_id_' . $location_id;
+
+		// Get recent activity for users in this location
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Fetching latest sync log entries for dashboard.
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT sync_type, message, status, created_at FROM {$table} WHERE site_id = %d ORDER BY created_at DESC LIMIT 5",
+				"SELECT l.sync_type, l.message, l.status, l.created_at 
+				FROM {$table} l
+				INNER JOIN {$wpdb->usermeta} um ON l.item_id = um.user_id AND um.meta_key = %s
+				WHERE l.site_id = %d AND l.sync_type = 'user' AND um.meta_value != ''
+				ORDER BY l.created_at DESC LIMIT 5",
+				$meta_key,
 				$site
 			),
 			ARRAY_A
@@ -217,14 +231,22 @@ class StatsProvider {
 
 	/**
 	 * Get count of WordPress users who have been synced to GHL
-	 * (have _ghl_contact_id meta)
+	 * for the current location (have location-specific _ghl_contact_id_{location_id} meta)
 	 *
 	 * @return int Number of synced users
 	 */
 	private function get_synced_users_count(): int {
+		$location_id = SettingsManager::get_instance()->get_setting( 'location_id' );
+		
+		if ( empty( $location_id ) ) {
+			return 0;
+		}
+		
+		$meta_key = '_ghl_contact_id_' . $location_id;
+		
 		$users = get_users(
 			[
-				'meta_key'     => '_ghl_contact_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_key'     => $meta_key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 				'meta_value'   => '', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				'meta_compare' => '!=',
 				'fields'       => 'ID',
@@ -297,32 +319,56 @@ class StatsProvider {
 
 	private function get_pending_queue_count(): int {
 		global $wpdb;
-		$table = $wpdb->prefix . 'ghl_sync_queue';
-		$site  = get_current_blog_id();
+		$table       = $wpdb->prefix . 'ghl_sync_queue';
+		$site        = get_current_blog_id();
+		$location_id = SettingsManager::get_instance()->get_setting( 'location_id' );
+		
+		if ( empty( $location_id ) ) {
+			return 0;
+		}
+		
+		$meta_key = '_ghl_contact_id_' . $location_id;
 
+		// Count pending items for users who belong to this location
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Counting pending queue rows for dashboard.
 		return (int) $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM {$table} WHERE site_id = %d AND status = 'pending'",
+				"SELECT COUNT(DISTINCT q.id) 
+				FROM {$table} q
+				INNER JOIN {$wpdb->usermeta} um ON q.item_id = um.user_id AND um.meta_key = %s
+				WHERE q.site_id = %d AND q.status = 'pending' AND q.item_type = 'user' AND um.meta_value != ''",
+				$meta_key,
 				$site
 			)
 		);
 	}
 
 	/**
-	 * Get count of failed items in queue.
+	 * Get count of failed items in queue for current location.
 	 *
 	 * @return int
 	 */
 	private function get_failed_queue_count(): int {
 		global $wpdb;
-		$table = $wpdb->prefix . 'ghl_sync_queue';
-		$site  = get_current_blog_id();
+		$table       = $wpdb->prefix . 'ghl_sync_queue';
+		$site        = get_current_blog_id();
+		$location_id = SettingsManager::get_instance()->get_setting( 'location_id' );
+		
+		if ( empty( $location_id ) ) {
+			return 0;
+		}
+		
+		$meta_key = '_ghl_contact_id_' . $location_id;
 
+		// Count failed items for users who belong to this location
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Counting failed queue rows for dashboard.
 		return (int) $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM {$table} WHERE site_id = %d AND status = 'failed'",
+				"SELECT COUNT(DISTINCT q.id) 
+				FROM {$table} q
+				INNER JOIN {$wpdb->usermeta} um ON q.item_id = um.user_id AND um.meta_key = %s
+				WHERE q.site_id = %d AND q.status = 'failed' AND q.item_type = 'user' AND um.meta_value != ''",
+				$meta_key,
 				$site
 			)
 		);
@@ -330,8 +376,15 @@ class StatsProvider {
 
 	private function count_logs_since( string $relative_time ): int {
 		global $wpdb;
-		$table = $wpdb->prefix . 'ghl_sync_log';
-		$site  = get_current_blog_id();
+		$table       = $wpdb->prefix . 'ghl_sync_log';
+		$site        = get_current_blog_id();
+		$location_id = SettingsManager::get_instance()->get_setting( 'location_id' );
+
+		if ( empty( $location_id ) ) {
+			return 0;
+		}
+		
+		$meta_key = '_ghl_contact_id_' . $location_id;
 
 		$base_timestamp = current_time( 'timestamp' );
 		$target_time    = strtotime( $relative_time, $base_timestamp );
@@ -344,10 +397,15 @@ class StatsProvider {
 			? wp_date( 'Y-m-d H:i:s', $target_time )
 			: date_i18n( 'Y-m-d H:i:s', $target_time );
 
+		// Count logs for users who belong to this location
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Aggregating log counts within rolling windows for dashboard metrics.
 		return (int) $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM {$table} WHERE site_id = %d AND created_at >= %s",
+				"SELECT COUNT(DISTINCT l.id) 
+				FROM {$table} l
+				INNER JOIN {$wpdb->usermeta} um ON l.item_id = um.user_id AND um.meta_key = %s
+				WHERE l.site_id = %d AND l.created_at >= %s AND l.sync_type = 'user' AND um.meta_value != ''",
+				$meta_key,
 				$site,
 				$datetime
 			)
