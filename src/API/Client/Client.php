@@ -539,6 +539,7 @@ class Client implements ClientInterface {
 	 * @return void
 	 */
 	private function log_oauth_event( string $message, array $context = [] ): void {
+		return;
 		$log = $this->oauth_log_prefix . $message;
 
 		if ( ! empty( $context ) ) {
