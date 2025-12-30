@@ -620,7 +620,11 @@ class AssetsManager {
 		$buddyboss_enabled             = $settings['buddyboss_enabled'] ?? false;
 		$delete_contact_on_user_delete = $settings['delete_contact_on_user_delete'] ?? false;
 		$enable_sync_logging           = $settings['enable_sync_logging'] ?? false;
-		$enable_role_tags              = ! empty( $settings['role_tags'] ) && is_array( $settings['role_tags'] );
+		$role_tags_config              = $settings_manager->get_location_role_tags( $location_id );
+		if ( empty( $role_tags_config ) && ! empty( $settings['role_tags'] ) && is_array( $settings[] ) ) {
+			$role_tags_config = $settings['role_tags'];
+		}
+		$enable_role_tags = ! empty( $role_tags_config );
 
 		$this->add_admin_asset(
 			'ghl-crm-setup-wizard-js',

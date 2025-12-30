@@ -698,13 +698,22 @@ class AjaxHandler {
 
 			// Set option to prevent wizard redirect on future activations
 			update_option( 'ghl_crm_setup_wizard_completed', true );
+					$location_id = $current_settings['location_id'] ?? ( $current_settings['oauth_location_id'] ?? '' );
+					$role_key    = $location_id ? 'role_tags_' . $location_id : 'role_tags';
 
-			wp_send_json_success(
-				[
-					'message' => __( 'Setup wizard completed successfully!', 'ghl-crm-integration' ),
-				]
-			);
+					// If enabling role tags and none exist for this location, initialize with empty array
+					if ( (bool) $wizard_settings['enable_role_tags'] ) {
+						if ( empty( $current_settings[ $role_key ] ) || ! is_array( $current_settings[ $role_key ] ) ) {
+							$current_settings[ $role_key ] = [];
+						}
+					}
 
+					// When a location is present, drop legacy key to avoid duplicates
+					if ( ! empty( $location_id ) ) {
+						unset( $current_settings['role_tags'] );
+					}
+
+					// Note: We don't disable role_tags here as user may want to keep their configuration
 		} catch ( \Exception $e ) {
 			wp_send_json_error(
 				[
