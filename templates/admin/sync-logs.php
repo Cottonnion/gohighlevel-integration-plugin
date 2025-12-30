@@ -308,13 +308,54 @@ $total_pages = ceil( $log_count / $per_page );
 			<h2 class="ghl-modal-title">
 				<span class="dashicons dashicons-info"></span>
 				<?php esc_html_e( 'Sync Log Details', 'ghl-crm-integration' ); ?>
+				<?php if ( ! defined( 'GHL_CRM_PRO_VERSION' ) ) : ?>
+					<span class="ghl-pro-badge">PRO</span>
+				<?php endif; ?>
 			</h2>
 			<button type="button" id="ghl-close-modal" class="ghl-modal-close" aria-label="<?php esc_attr_e( 'Close', 'ghl-crm-integration' ); ?>">
 				&times;
 			</button>
 		</div>
 		<div class="ghl-modal-body">
-			<pre id="ghl-details-content" class="ghl-modal-details"></pre>
+			<?php if ( ! defined( 'GHL_CRM_PRO_VERSION' ) ) : ?>
+				<!-- Free version with blurred content and upsell -->
+				<div class="ghl-modal-details-blur">
+					<pre id="ghl-details-content" class="ghl-modal-details ghl-blurred"></pre>
+					<div class="ghl-modal-upsell">
+						<div class="ghl-upsell-icon">
+							<span class="dashicons dashicons-lock"></span>
+						</div>
+						<h3><?php esc_html_e( 'Unlock Detailed Log View', 'ghl-crm-integration' ); ?></h3>
+						<p><?php esc_html_e( 'Get access to complete sync log details, metadata, and advanced troubleshooting information with GHL CRM Pro.', 'ghl-crm-integration' ); ?></p>
+						<ul class="ghl-upsell-features">
+							<li><span class="dashicons dashicons-yes"></span> <?php esc_html_e( 'Complete log metadata', 'ghl-crm-integration' ); ?></li>
+							<li><span class="dashicons dashicons-yes"></span> <?php esc_html_e( 'Advanced error details', 'ghl-crm-integration' ); ?></li>
+							<li><span class="dashicons dashicons-yes"></span> <?php esc_html_e( 'Field mapping insights', 'ghl-crm-integration' ); ?></li>
+							<li><span class="dashicons dashicons-yes"></span> <?php esc_html_e( 'API request/response data', 'ghl-crm-integration' ); ?></li>
+						</ul>
+						<div class="ghl-upsell-actions">
+							<a href="https://highlevelsync.com/upgrade-to-pro" target="_blank" class="ghl-button ghl-button-primary">
+								<?php esc_html_e( 'Upgrade to Pro', 'ghl-crm-integration' ); ?>
+								<span class="dashicons dashicons-external"></span>
+							</a>
+							<button type="button" class="ghl-button ghl-button-secondary" onclick="document.getElementById('ghl-details-modal').style.display='none'">
+								<?php esc_html_e( 'Maybe Later', 'ghl-crm-integration' ); ?>
+							</button>
+						</div>
+					</div>
+				</div>
+			<?php else : ?>
+				<!-- PRO version with clear content -->
+				<pre id="ghl-details-content" class="ghl-modal-details"></pre>
+			<?php endif; ?>
 		</div>
 	</div>
 </div>
+
+<?php
+/**
+ * Allow PRO plugin to render additional modal content or override
+ * Hook: ghl_crm_sync_logs_after_content
+ */
+do_action( 'ghl_crm_sync_logs_after_content' );
+?>

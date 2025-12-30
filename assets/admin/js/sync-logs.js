@@ -30,6 +30,13 @@
             this.modal = $('#ghl-details-modal');
             this.closeBtn = $('#ghl-close-modal');
             this.content = $('#ghl-details-content');
+            
+            /**
+             * Allow PRO plugin to cache additional elements
+             */
+            if (typeof window.ghlCrmSyncLogsPro !== 'undefined') {
+                window.ghlCrmSyncLogsPro.cacheElements(this);
+            }
         },
 
         /**
@@ -38,14 +45,22 @@
         bindEvents: function() {
             const self = this;
 
-            // View details button
+            // View details button - works for both free and PRO
             $(document)
                 .off('click.ghlSyncLogs', '.ghl-view-details')
                 .on('click.ghlSyncLogs', '.ghl-view-details', function(e) {
                     e.preventDefault();
                     const details = $(this).attr('data-details');
-                    self.showDetailsModal(details);
+                    const isPreviewMode = $(this).hasClass('ghl-preview-mode');
+                    self.showDetailsModal(details, isPreviewMode);
                 });
+            
+            /**
+             * Allow PRO plugin to bind additional events
+             */
+            if (typeof window.ghlCrmSyncLogsPro !== 'undefined') {
+                window.ghlCrmSyncLogsPro.bindEvents(self);
+            }
 
             // Close modal button
             if (this.closeBtn && this.closeBtn.length) {
@@ -213,23 +228,82 @@
         },
 
         /**
-         * Show details modal
+         * Show details modal - handles both free (blurred) and PRO modes
+         * @param {string} details - JSON string with log details
+         * @param {boolean} isPreviewMode - Whether this is free version preview
          */
-        showDetailsModal: function(details) {
-            try {
-                const parsed = JSON.parse(details);
-                this.content.text(JSON.stringify(parsed, null, 2));
-            } catch (err) {
-                this.content.text(details);
+        showDetailsModal: function(details, isPreviewMode = false) {
+            // Allow PRO plugin to override this method when active
+            if (typeof window.ghlCrmSyncLogsPro !== 'undefined' && !isPreviewMode) {
+                // Ensure any blur class is removed when PRO handles display
+                this.modal.find('.ghl-modal-body').removeClass('ghl-blur-locked');
+                window.ghlCrmSyncLogsPro.showDetailsModal(details);
+                return;
             }
+
+            // Free version: never expose real data; show dummy placeholder and blur via CSS
+            const dummyContent = '{\n' +
+                '  "sync_type": "contact",\n' +
+                '  "item_id": "12345",\n' +
+                '  "action": "update",\n' +
+                '  "status": "success",\n' +
+                '  "message": "Detailed payload available in PRO.",\n' +
+                '  "ghl_id": "ghl_xxxxxxxxx",\n' +
+                '  "metadata": {\n' +
+                '    "fields": ["first_name", "last_name", "email"],\n' +
+                '    "response": "(hidden)",\n' +
+                '    "note": "Upgrade to PRO to view full data"\n' +
+                '  },\n' +
+                '  "created_at": "2024-12-01T12:00:00Z"\n' +
+                '}';
+
+            this.content.text(dummyContent);
+            this.modal.find('.ghl-modal-body').addClass('ghl-blur-locked');
             this.modal.fadeIn(200);
         },
 
         /**
-         * Hide modal
+         * Hide modal (free and PRO)
          */
         hideModal: function() {
-            this.modal.fadeOut(200);
+            if (this.modal && this.modal.length) {
+                this.modal.fadeOut(200);
+            }
+        },
+
+        /**
+         * Create blurred version of text
+         * @param {string} text - Original text
+         * @returns {string} - Blurred text
+         */
+        blurText: function(text) {
+            // Replace characters with similar looking blurred characters
+            return text.replace(/[a-zA-Z0-9]/g, function(char) {
+                const blurChars = ['█', '▓', '▒', '░'];
+                return blurChars[Math.floor(Math.random() * blurChars.length)];
+            });
+        },
+        
+        /**
+         * Show PRO upgrade notice for detailed view
+         */
+        showProUpgradeNotice: function() {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: '🔒 PRO Feature',
+                    html: 'Detailed sync log viewing is available in the PRO version.<br><br>Upgrade to access:<ul style="text-align: left; margin: 15px 0;"><li>Detailed log metadata</li><li>Full sync information</li><li>Advanced troubleshooting data</li></ul>',
+                    icon: 'info',
+                    confirmButtonText: 'Upgrade to PRO',
+                    showCancelButton: true,
+                    cancelButtonText: 'Maybe Later'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.open('https://highlevelsync.com/upgrade-to-pro', '_blank');
+                    }
+                });
+            } else {
+                alert('Detailed sync log viewing is available in the PRO version. Upgrade to access detailed log metadata and troubleshooting information.');
+            }
         },
 
         /**

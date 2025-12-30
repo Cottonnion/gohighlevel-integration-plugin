@@ -399,6 +399,29 @@
     line-height: 1.6;
     color: #1e293b;
     border: 1px solid #e2e8f0;
+    /* Blur lock for free version modal content */
+    .ghl-blur-locked {
+        position: relative;
+    }
+
+    .ghl-blur-locked .ghl-modal-details {
+        filter: blur(6px);
+        opacity: 0.5;
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .ghl-blur-locked::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(2px);
+        border-radius: 8px;
+    }
 }
 
 /* Responsive */

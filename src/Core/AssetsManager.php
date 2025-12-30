@@ -521,7 +521,7 @@ class AssetsManager {
 			'sync-logs.css',
 			[ 'ghl-crm-globals-css' ],
 			[],
-			'1.0.3'
+			'1.0.4'
 		);
 
 		$this->add_admin_asset(
@@ -533,7 +533,7 @@ class AssetsManager {
 				'nonce'   => wp_create_nonce( 'ghl_sync_logs_nonce' ),
 				'ajaxurl' => admin_url( 'admin-ajax.php' ),
 			],
-			GHL_CRM_VERSION,
+			'1.0.5',
 			true
 		);
 

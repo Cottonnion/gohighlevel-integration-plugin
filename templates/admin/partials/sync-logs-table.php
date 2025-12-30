@@ -72,10 +72,37 @@ if ( ! defined( 'ABSPATH' ) ) {
 							</span>
 						</td>
 						<td>
-							<button type="button" class="ghl-button ghl-button-small ghl-button-secondary ghl-view-details" data-details="<?php echo esc_attr( $details_json ); ?>">
-								<span class="dashicons dashicons-visibility"></span>
-								<?php esc_html_e( 'View', 'ghl-crm-integration' ); ?>
-							</button>
+							<?php if ( defined( 'GHL_CRM_PRO_VERSION' ) ) : ?>
+								<?php
+								/**
+								 * Filter to allow PRO plugin to render detailed view button
+								 * 
+								 * @param string $button_html Default button HTML
+								 * @param array  $log         Log entry data
+								 * @param string $details_json JSON encoded details
+								 */
+								$details_button = apply_filters( 'ghl_crm_sync_log_details_button', '', $log, $details_json );
+								
+								if ( ! empty( $details_button ) ) {
+									echo $details_button; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Filtered content
+								} else {
+									// Fallback PRO button
+									?>
+									<button type="button" class="ghl-button ghl-button-small ghl-button-secondary ghl-view-details" data-details="<?php echo esc_attr( $details_json ); ?>">
+										<span class="dashicons dashicons-visibility"></span>
+										<?php esc_html_e( 'View Details', 'ghl-crm-integration' ); ?>
+									</button>
+									<?php
+								}
+								?>
+							<?php else : ?>
+								<!-- Free version - show blurred preview button -->
+								<button type="button" class="ghl-button ghl-button-small ghl-button-secondary ghl-view-details ghl-preview-mode" data-details="<?php echo esc_attr( $details_json ); ?>">
+									<span class="dashicons dashicons-visibility"></span>
+									<?php esc_html_e( 'Preview', 'ghl-crm-integration' ); ?>
+									<span class="ghl-pro-badge-small">PRO</span>
+								</button>
+							<?php endif; ?>
 						</td>
 					</tr>
 				<?php endforeach; ?>
