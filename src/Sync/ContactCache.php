@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace GHL_CRM\Sync;
 
+use GHL_CRM\Core\SettingsManager;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -141,6 +143,25 @@ class ContactCache {
 	 * @return string Cache key
 	 */
 	private function get_cache_key( string $email ): string {
-		return 'ghl_contact_' . md5( strtolower( $email ) );
+		$location_id = $this->get_location_id();
+		$key_source  = strtolower( $email );
+
+		// Include location in cache key so contacts are scoped per sub-account.
+		if ( ! empty( $location_id ) ) {
+			$key_source .= '|' . strtolower( $location_id );
+		}
+
+		return 'ghl_contact_' . md5( $key_source );
+	}
+
+	/**
+	 * Get current location ID for cache scoping.
+	 *
+	 * @return string
+	 */
+	private function get_location_id(): string {
+		$settings_manager = SettingsManager::get_instance();
+
+		return (string) $settings_manager->get_setting( 'location_id', '' );
 	}
 }
