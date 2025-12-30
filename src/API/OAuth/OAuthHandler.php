@@ -20,6 +20,27 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class OAuthHandler {
 	/**
+	 * Cached access token and refresh guard state.
+	 *
+	 * @var array|null
+	 */
+	private static ?array $access_token_cache = null;
+
+	/**
+	 * Timestamp of last token refresh attempt.
+	 *
+	 * @var int
+	 */
+	private static int $last_refresh_time = 0;
+
+	/**
+	 * Message from last refresh error (if any).
+	 *
+	 * @var string|null
+	 */
+	private static ?string $last_refresh_error = null;
+
+	/**
 	 * Settings Manager
 	 *
 	 * @var SettingsManager
@@ -266,6 +287,8 @@ class OAuthHandler {
 			'oauth_refresh_token',
 			'oauth_expires_at',
 			'oauth_connected_at',
+			'location_id',
+			'location_name',
 		];
 
 		$success = true;
@@ -278,6 +301,11 @@ class OAuthHandler {
 
 		// Remove verification using SettingsManager (multisite-aware)
 		$this->settings_manager->update_option( 'ghl_crm_connection_verified', false );
+
+		// Clear cached token state so refresh guard does not trip after disconnect
+		self::$access_token_cache = null;
+		self::$last_refresh_time  = 0;
+		self::$last_refresh_error = null;
 
 		return $success;
 	}
