@@ -253,6 +253,8 @@ class UserHooks {
 	 * @return bool Whether a queue item was created or updated.
 	 */
 	public function queue_user_profile_sync( int $user_id, ?\WP_User $old_user_data = null ): bool {
+		$settings = $this->settings_manager->get_settings_array();
+
 		$lock_key = "ghl_sync_lock_{$user_id}";
 		if ( get_transient( $lock_key ) ) {
 			return false;
@@ -308,7 +310,7 @@ class UserHooks {
 		}
 
 		$role_tags_manager = RoleTagsManager::get_instance();
-		$role_tags_config  = $this->settings_manager->get_location_role_tags();
+		$role_tags_config  = $this->get_location_role_tags_config();
 
 		$tags_to_remove = [];
 		if ( $role_changed ) {
@@ -374,6 +376,21 @@ class UserHooks {
 		}
 
 		return false !== $queue_id;
+	}
+
+	/**
+	 * Get role tags for the current location with legacy fallback
+	 *
+	 * @return array
+	 */
+	private function get_location_role_tags_config(): array {
+		$role_tags = $this->settings_manager->get_location_role_tags();
+
+		if ( empty( $role_tags ) ) {
+			$role_tags = $this->settings_manager->get_setting( 'role_tags', [] );
+		}
+
+		return is_array( $role_tags ) ? $role_tags : [];
 	}
 	/**
 	 * Handle user deletion

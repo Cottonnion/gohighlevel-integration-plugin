@@ -94,8 +94,7 @@ class RoleTagsManager {
 	 * @return void
 	 */
 	public function handle_role_change( int $user_id, string $new_role, array $old_roles ): void {
-		$settings  = $this->settings_manager->get_settings_array();
-		$role_tags = $settings['role_tags'] ?? [];
+		$role_tags = $this->get_location_role_tags_config();
 
 		// Get contact ID
 		$contact_id = get_user_meta( $user_id, '_ghl_contact_id', true );
@@ -144,8 +143,7 @@ class RoleTagsManager {
 	 * @return void
 	 */
 	public function handle_role_added( int $user_id, string $role ): void {
-		$settings  = $this->settings_manager->get_settings_array();
-		$role_tags = $settings['role_tags'] ?? [];
+		$role_tags = $this->get_location_role_tags_config();
 
 		// Get contact ID
 		$contact_id = get_user_meta( $user_id, '_ghl_contact_id', true );
@@ -172,8 +170,7 @@ class RoleTagsManager {
 	 * @return void
 	 */
 	public function handle_role_removed( int $user_id, string $role ): void {
-		$settings  = $this->settings_manager->get_settings_array();
-		$role_tags = $settings['role_tags'] ?? [];
+		$role_tags = $this->get_location_role_tags_config();
 
 		// Get contact ID
 		$contact_id = get_user_meta( $user_id, '_ghl_contact_id', true );
@@ -205,9 +202,8 @@ class RoleTagsManager {
 			return [];
 		}
 
-		$settings    = $this->settings_manager->get_settings_array();
-		$role_tags   = $settings['role_tags'] ?? [];
-		$global_tags = $settings['global_tags'] ?? '';
+		$role_tags   = $this->get_location_role_tags_config();
+		$global_tags = $this->get_location_global_tags_config();
 
 		$all_tags = [];
 
@@ -226,9 +222,7 @@ class RoleTagsManager {
 
 		// Add global tags
 		if ( ! empty( $global_tags ) ) {
-			$global_tags_array = $this->parse_tags( $global_tags );
-
-			$all_tags = array_merge( $all_tags, $global_tags_array );
+			$all_tags = array_merge( $all_tags, $global_tags );
 		}
 
 		// Ensure array has sequential keys for proper JSON encoding
@@ -246,8 +240,8 @@ class RoleTagsManager {
 	 */
 	public function get_tags_for_role( string $role ): array {
 		// Get location-specific role tags and global tags
-		$role_tags   = $this->settings_manager->get_location_role_tags();
-		$global_tags = $this->settings_manager->get_location_global_tags();
+		$role_tags   = $this->get_location_role_tags_config();
+		$global_tags = $this->get_location_global_tags_config();
 
 		$all_tags = [];
 
@@ -264,13 +258,41 @@ class RoleTagsManager {
 
 		// Add global tags
 		if ( ! empty( $global_tags ) ) {
-			$global_tags_array = $this->parse_tags( $global_tags );
-
-			$all_tags = array_merge( $all_tags, $global_tags_array );
+			$all_tags = array_merge( $all_tags, $global_tags );
 		}
 
 		// Ensure array has sequential keys for proper JSON encoding
 		return array_values( array_unique( $all_tags ) );
+	}
+
+	/**
+	 * Get role tags for current location with legacy fallback
+	 *
+	 * @return array
+	 */
+	private function get_location_role_tags_config(): array {
+		$role_tags = $this->settings_manager->get_location_role_tags();
+
+		if ( empty( $role_tags ) ) {
+			$role_tags = $this->settings_manager->get_setting( 'role_tags', [] );
+		}
+
+		return is_array( $role_tags ) ? $role_tags : [];
+	}
+
+	/**
+	 * Get global tags for current location with legacy fallback
+	 *
+	 * @return array
+	 */
+	private function get_location_global_tags_config(): array {
+		$global_tags = $this->settings_manager->get_location_global_tags();
+
+		if ( empty( $global_tags ) ) {
+			$global_tags = $this->settings_manager->get_setting( 'global_tags', [] );
+		}
+
+		return $this->parse_tags( $global_tags );
 	}
 
 	/**

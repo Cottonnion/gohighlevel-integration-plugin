@@ -348,7 +348,14 @@ class SyncPreview {
 		$tags = [];
 
 		// Get role-based tags
-		$role_tags_config = $this->settings_manager->get_setting( 'role_tags', [] );
+		$role_tags_config = $this->settings_manager->get_location_role_tags();
+		if ( empty( $role_tags_config ) ) {
+			$role_tags_config = $this->settings_manager->get_setting( 'role_tags', [] );
+		}
+
+		if ( ! is_array( $role_tags_config ) ) {
+			$role_tags_config = [];
+		}
 		
 		foreach ( $user->roles as $role ) {
 			if ( isset( $role_tags_config[ $role ]['tags'] ) ) {
@@ -362,9 +369,15 @@ class SyncPreview {
 		}
 
 		// Get global tags
-		$global_tags = $this->settings_manager->get_setting( 'global_tags', [] );
-		if ( ! empty( $global_tags ) ) {
+		$global_tags = $this->settings_manager->get_location_global_tags();
+		if ( empty( $global_tags ) ) {
+			$global_tags = $this->settings_manager->get_setting( 'global_tags', [] );
+		}
+
+		if ( is_array( $global_tags ) ) {
 			$tags = array_merge( $tags, $global_tags );
+		} elseif ( is_string( $global_tags ) ) {
+			$tags = array_merge( $tags, array_map( 'trim', explode( ',', $global_tags ) ) );
 		}
 
 		return array_unique( array_filter( $tags ) );

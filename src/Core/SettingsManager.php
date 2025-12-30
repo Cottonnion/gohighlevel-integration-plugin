@@ -211,6 +211,12 @@ class SettingsManager {
 				]
 			);
 
+			// Remove legacy non-location tag keys when location-specific keys are present
+			$active_location_id = $settings['location_id'] ?? $settings['oauth_location_id'] ?? '';
+			if ( ! empty( $active_location_id ) ) {
+				unset( $settings['role_tags'], $settings['global_tags'], $settings['user_register_tags'] );
+			}
+
 			// Validate critical fields only if user is actively trying to set up manual API connection
 			// Don't validate on imports or when only location_id is present
 			$is_setting_manual_api = isset( $new_settings['api_token'] ) && ! empty( $new_settings['api_token'] );
@@ -245,9 +251,12 @@ class SettingsManager {
 				$location_id       = $response_settings['location_id'] ?? $response_settings['oauth_location_id'] ?? '';
 
 				if ( ! empty( $location_id ) ) {
-					$response_settings['user_register_tags'] = $this->get_location_register_tags( $location_id );
-					$response_settings['role_tags']          = $this->get_location_role_tags( $location_id );
-					$response_settings['global_tags']        = $this->get_location_global_tags( $location_id );
+					// Preserve only location-scoped tag keys in the response
+					$response_settings[ "role_tags_{$location_id}" ]          = $this->get_location_role_tags( $location_id );
+					$response_settings[ "global_tags_{$location_id}" ]        = $this->get_location_global_tags( $location_id );
+					$response_settings[ "user_register_tags_{$location_id}" ] = $this->get_location_register_tags( $location_id );
+
+					unset( $response_settings['role_tags'], $response_settings['global_tags'], $response_settings['user_register_tags'] );
 				}
 
 				$response_data = [
@@ -1339,7 +1348,6 @@ class SettingsManager {
 			'user_sync_actions'             => [],
 			'delete_contact_on_user_delete' => false,
 			'user_field_mapping'            => [],
-			'role_tags'                     => [],
 			'restrictions_enabled'          => true,
 			'updated_at'                    => current_time( 'mysql' ),
 			'site_id'                       => get_current_blog_id(),
@@ -1347,6 +1355,17 @@ class SettingsManager {
 
 		// Merge: defaults first, then preserved credentials (credentials take priority)
 		$settings = array_merge( $default_settings, $preserved_credentials );
+
+		// Clear all tag keys (legacy and location-specific) on reset
+		$location_id = $settings['location_id'] ?? $settings['oauth_location_id'] ?? '';
+
+		unset( $settings['role_tags'], $settings['global_tags'], $settings['user_register_tags'] );
+
+		if ( ! empty( $location_id ) ) {
+			$settings[ "role_tags_{$location_id}" ]          = [];
+			$settings[ "global_tags_{$location_id}" ]        = [];
+			$settings[ "user_register_tags_{$location_id}" ] = [];
+		}
 
 		// Use multisite-aware save method instead of direct update_option
 		$saved = $this->save_site_settings( $settings );
