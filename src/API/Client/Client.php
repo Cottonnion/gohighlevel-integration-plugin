@@ -568,7 +568,7 @@ class Client implements ClientInterface {
 			throw new ApiException(
 				self::$last_refresh_error
 					? sprintf( esc_html__( 'Recent refresh attempt failed: %s', 'ghl-crm-integration' ), self::$last_refresh_error )
-					: esc_html__( 'Recent refresh attempt in progress or just failed. Please retry shortly.', 'ghl-crm-integration' )
+					: esc_html__( 'Recent refresh attempt in progress or just failed. Reconnect required.', 'ghl-crm-integration' )
 			);
 		}
 
