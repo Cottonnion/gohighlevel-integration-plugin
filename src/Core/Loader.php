@@ -208,12 +208,6 @@ class Loader {
 		// Flush rewrite rules
 		flush_rewrite_rules();
 
-		// Set transient to trigger setup wizard redirect
-		// TESTING MODE: Always set transient on activation for testing
-		// PRODUCTION MODE: Only set if wizard not completed
-		// TODO: Replace the line below with commented code when done testing:
-		// set_transient( 'ghl_crm_activation_redirect', true, 60 );
-
 		// Production code :
 		if ( ! get_option( 'ghl_crm_setup_wizard_completed', false ) ) {
 			set_transient( 'ghl_crm_activation_redirect', true, 60 );
@@ -313,9 +307,6 @@ class Loader {
 	 * Checks for activation transient and redirects to setup wizard if present.
 	 * Includes safety checks to prevent redirects during bulk activation, AJAX, etc.
 	 *
-	 * TESTING MODE: Currently redirects on every activation
-	 * PRODUCTION MODE: Will only redirect if wizard not completed (see activate() method)
-	 *
 	 * @return void
 	 */
 	public static function maybe_redirect_to_wizard(): void {
@@ -347,9 +338,7 @@ class Loader {
 			return;
 		}
 
-		// TESTING MODE: Comment out this check to test wizard on every activation
-		// PRODUCTION MODE: Uncomment below to prevent redirect if wizard already completed
-		// $wizard_completed = get_option( 'ghl_crm_setup_wizard_completed', false );
+		$wizard_completed = get_option( 'ghl_crm_setup_wizard_completed', false );
 		if ( $wizard_completed ) {
 			return;
 		}
