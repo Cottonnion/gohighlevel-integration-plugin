@@ -401,16 +401,6 @@ class TagManager {
 			)
 		);
 
-		error_log(
-			'[GHL][TagManager] prepare_tags_for_payload: ' . wp_json_encode(
-				[
-					'ids'           => $tag_ids,
-					'fallbackPairs' => $fallback_pairs,
-					'names'         => $resolved_names,
-				]
-			)
-		);
-
 		return $resolved_names;
 	}
 
