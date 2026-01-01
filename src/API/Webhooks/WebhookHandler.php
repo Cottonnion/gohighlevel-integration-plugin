@@ -355,8 +355,8 @@ class WebhookHandler {
 			return true;
 		}
 
-		// Process synchronously instead of queueing for immediate feedback
-		$result = $this->ghl_sync->sync_contact_to_wordpress( $contact_data['id'] );
+		// Process synchronously instead of queueing for immediate feedback; pass webhook payload to avoid refetch
+		$result = $this->ghl_sync->sync_contact_to_wordpress( $contact_data['id'], $contact_data );
 
 		if ( is_wp_error( $result ) ) {
 			return false;
@@ -392,8 +392,8 @@ class WebhookHandler {
 			return true;
 		}
 
-		// Process synchronously instead of queueing for immediate feedback
-		$result = $this->ghl_sync->sync_contact_to_wordpress( $contact_data['id'] );
+		// Process synchronously instead of queueing for immediate feedback; pass webhook payload to avoid refetch
+		$result = $this->ghl_sync->sync_contact_to_wordpress( $contact_data['id'], $contact_data );
 
 		if ( is_wp_error( $result ) ) {
 			return false;
