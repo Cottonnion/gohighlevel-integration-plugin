@@ -195,6 +195,25 @@ class WebhookHandler {
 			return;
 		}
 
+		// Enforce location scoping: ignore webhooks from a different sub-account
+		$active_location_id   = $this->settings_manager->get_setting( 'location_id', '' );
+		$webhook_location_id  = $normalized['locationId'] ?? '';
+		if ( ! empty( $active_location_id ) && ! empty( $webhook_location_id ) && $webhook_location_id !== $active_location_id ) {
+			$this->logger->log(
+				'webhook',
+				0,
+				'location_mismatch',
+				'info',
+				'Webhook ignored due to location mismatch',
+				[
+					'active_location'  => $active_location_id,
+					'webhook_location' => $webhook_location_id,
+					'type'             => $normalized['type'] ?? 'unknown',
+				]
+			);
+			return;
+		}
+
 		// Route to appropriate handler
 		$result = $this->route_webhook_event( $normalized );
 
@@ -228,38 +247,47 @@ class WebhookHandler {
 			return $payload;
 		}
 
-		// Detect event type from GHL payload
-		// If contact_id exists, it's a contact event
-		if ( isset( $payload['contact_id'] ) ) {
-			// Determine if it's create, update, or delete based on available fields
-			$type = 'ContactUpdate'; // Default to update for existing contacts
+		// Handle native GHL webhook shape (flat contact fields + location/opportunity/etc.)
+		$contact_id = $payload['contact_id']
+			?? $payload['contactId']
+			?? ( is_array( $payload['contact'] ?? null ) ? ( $payload['contact']['id'] ?? null ) : null )
+			?? ( isset( $payload['id'] ) && isset( $payload['email'] ) ? $payload['id'] : null );
 
-			// If minimal fields, might be a delete
+		if ( $contact_id ) {
+			$type = 'ContactUpdate';
+
+			// If only a couple of fields are present, assume delete notification
 			$field_count = count( array_filter( $payload ) );
-			
 			if ( $field_count <= 3 ) {
 				$type = 'ContactDelete';
 			}
 
-			// Normalize to our format
+			$tags_raw = $payload['tags'] ?? null;
+			$tags     = [];
+			if ( is_array( $tags_raw ) ) {
+				$tags = $tags_raw;
+			} elseif ( is_string( $tags_raw ) && '' !== $tags_raw ) {
+				$tags = array_map( 'trim', explode( ',', $tags_raw ) );
+			}
+
 			$normalized = [
 				'type'       => $type,
 				'locationId' => $payload['location']['id'] ?? '',
 				'data'       => [
-					'id'           => $payload['contact_id'],
+					'id'           => $contact_id,
 					'email'        => $payload['email'] ?? '',
 					'name'         => $payload['full_name'] ?? ( ( $payload['first_name'] ?? '' ) . ' ' . ( $payload['last_name'] ?? '' ) ),
 					'firstName'    => $payload['first_name'] ?? '',
 					'lastName'     => $payload['last_name'] ?? '',
 					'phone'        => $payload['phone'] ?? '',
-					'tags'         => isset( $payload['tags'] ) ? ( is_array( $payload['tags'] ) ? $payload['tags'] : explode( ',', $payload['tags'] ) ) : [],
+					'tags'         => $tags,
 					'source'       => $payload['contact_source'] ?? '',
 					'country'      => $payload['country'] ?? '',
 					'address'      => $payload['full_address'] ?? '',
-					'customFields' => $payload['customData'] ?? [],
+					'customFields' => $payload['customFields'] ?? $payload['customData'] ?? [],
 				],
 			];
-			
+
 			return $normalized;
 		}
 
