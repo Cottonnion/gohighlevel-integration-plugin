@@ -13,22 +13,32 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
-$settings = $settings_manager->get_settings_array();
+$settings         = $settings_manager->get_settings_array();
 
 // Get plugin stats
 global $wpdb;
-$user_count = count_users();
+$user_count  = count_users();
 $total_users = $user_count['total_users'];
-
-// Get OAuth connection status properly
-use GHL_CRM\Sync\RateLimiter;
 
 // Get OAuth connection status.
 $oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
 $oauth_status  = $oauth_handler->get_connection_status();
 
+$is_oauth_connected = ! empty( $oauth_status['connected'] );
+$connected_at_raw   = $oauth_status['connected_at'] ?? '';
+$expires_at_raw     = $oauth_status['expires_at'] ?? '';
+
+// Normalize expires_at to timestamp only when present to avoid epoch defaults that show as decades ago.
+$expires_timestamp = null;
+if ( $is_oauth_connected && ! empty( $expires_at_raw ) ) {
+	$expires_timestamp = is_numeric( $expires_at_raw ) ? (int) $expires_at_raw : strtotime( $expires_at_raw );
+	if ( $expires_timestamp <= 0 ) {
+		$expires_timestamp = null;
+	}
+}
+
 // Check if API is connected (via OAuth OR manual API token).
-$api_connected = $oauth_status['connected'] || ! empty( $settings['api_token'] );
+$api_connected = $is_oauth_connected || ! empty( $settings['api_token'] );
 $location_id   = $oauth_status['location_id'] ?? '';
 
 // Fallback: Check if location_id exists (means was connected before, even if tokens expired)
@@ -293,15 +303,15 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 						<?php endif; ?>
 					</td>
 				</tr>				<?php if ( $api_connected ) : ?>
+				<?php if ( $is_oauth_connected ) : ?>
 				<tr>
 					<th scope="row">
 						<?php esc_html_e( 'Connected Since', 'ghl-crm-integration' ); ?>
 					</th>
 					<td>
 						<?php
-						$connected_at = $oauth_status['connected_at'] ?? '';
-						if ( $connected_at ) {
-							echo esc_html( human_time_diff( strtotime( $connected_at ), current_time( 'timestamp' ) ) );
+						if ( ! empty( $connected_at_raw ) ) {
+							echo esc_html( human_time_diff( strtotime( $connected_at_raw ), current_time( 'timestamp' ) ) );
 							echo ' ' . esc_html__( 'ago', 'ghl-crm-integration' );
 						} else {
 							echo '—';
@@ -309,18 +319,16 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 						?>
 					</td>
 				</tr>
-				
+
 				<tr>
 					<th scope="row">
 						<?php esc_html_e( 'Token Expires', 'ghl-crm-integration' ); ?>
 					</th>
 					<td>
 						<?php
-						$expires_at = $oauth_status['expires_at'] ?? '';
-						if ( $expires_at ) {
-							$expires_timestamp = strtotime( $expires_at );
+						if ( $expires_timestamp ) {
 							$time_until_expiry = $expires_timestamp - current_time( 'timestamp' );
-							
+
 							if ( $time_until_expiry > 0 ) {
 								echo '<span style="color: #00a32a;">';
 								echo esc_html__( 'In ', 'ghl-crm-integration' );
@@ -334,7 +342,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 								echo '</span>';
 							}
 						} else {
-							echo '—';
+							echo esc_html__( 'Not available (manual token or missing expiry)', 'ghl-crm-integration' );
 						}
 						?>
 					</td>
@@ -363,7 +371,10 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 						<strong><?php echo esc_html( $oauth_status['location_name'] ); ?></strong>
 					</td>
 				</tr>
-				<?php endif; ?>					<tr>
+				<?php endif; ?>
+			<?php endif; ?>
+
+				<tr>
 						<th scope="row">
 							<?php esc_html_e( 'Rate Limiting', 'ghl-crm-integration' ); ?>
 						</th>
