@@ -398,7 +398,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 					</tr>
 					
 					<tr>
-						<th scope="row">
+						<!-- <th scope="row">
 							<?php esc_html_e( 'Webhook Status', 'ghl-crm-integration' ); ?>
 						</th>
 						<td>
@@ -416,7 +416,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 								echo '</span>';
 							}
 							?>
-						</td>
+						</td> -->
 					</tr>
 				</tbody>
 			</table>
