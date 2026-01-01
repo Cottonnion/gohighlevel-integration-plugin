@@ -23,7 +23,7 @@ $settings        = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_a
 	</p>
 
 	<!-- Webhook Status Card -->
-	<!-- <div class="ghl-card" style="margin: 20px 0; padding: 20px; background: #f9f9f9; border-left: 4px solid <?php echo $webhook_status['status'] === 'active' ? '#46b450' : '#dba617'; ?>;">
+	<div class="ghl-card" style="margin: 20px 0; padding: 20px; background: #f9f9f9; border-left: 4px solid <?php echo $webhook_status['status'] === 'active' ? '#46b450' : '#dba617'; ?>;">
 		<h3><?php esc_html_e( 'Current Status', 'ghl-crm-integration' ); ?></h3>
 		
 		<div id="webhook-status-display">
@@ -70,7 +70,7 @@ $settings        = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_a
 				<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Sends a test request to verify your webhook endpoint is working correctly. This checks that your WordPress site can receive webhook data from GoHighLevel.', 'ghl-crm-integration' ); ?>">?</span>
 			</p>
 		</div>
-	</div> -->
+	</div>
 
 	<!-- Setup Instructions -->
 	<div class="ghl-webhook-setup" style="margin: 20px 0;">
@@ -115,8 +115,7 @@ $settings        = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_a
 				<li><?php esc_html_e( 'Set trigger: Contact Created, Contact Updated, or Contact Deleted', 'ghl-crm-integration' ); ?></li>
 				<li><?php esc_html_e( 'Add action: Outbound Webhook', 'ghl-crm-integration' ); ?></li>
 				<li><?php esc_html_e( 'Paste the webhook URL from step 1', 'ghl-crm-integration' ); ?></li>
-				<li><?php esc_html_e( 'Set method to POST', 'ghl-crm-integration' ); ?></li>
-				<li><?php esc_html_e( 'Add header: Content-Type: application/json', 'ghl-crm-integration' ); ?></li>
+				<li><?php esc_html_e( 'Keep method as POST (GoHighLevel sends JSON by default; no extra header needed)', 'ghl-crm-integration' ); ?></li>
 				<li><?php esc_html_e( 'Use the JSON templates below for the body', 'ghl-crm-integration' ); ?></li>
 				<li><?php esc_html_e( 'Save and activate the workflow', 'ghl-crm-integration' ); ?></li>
 			</ol>
@@ -130,6 +129,9 @@ $settings        = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_a
 			</h4>
 			
 			<p><?php esc_html_e( 'Use these templates for the webhook body in your GoHighLevel automation:', 'ghl-crm-integration' ); ?></p>
+			<p class="description" style="font-size: 12px; color: #666;">
+				<?php esc_html_e( 'We accept GoHighLevel’s native flat payloads and the templated JSON below. If a sub-account uses a different payload shape, match it to these templates so the plugin can normalize it.', 'ghl-crm-integration' ); ?>
+			</p>
 			
 			<!-- Contact Created/Updated Template -->
 			<div style="margin: 15px 0;">
@@ -163,6 +165,18 @@ $settings        = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_a
 					style="width: 100%; height: 120px; font-family: monospace; font-size: 12px; background: #f9f9f9; border: 1px solid #ddd; padding: 10px;"
 				><?php echo esc_textarea( json_encode( $setup_instructions['payload_examples']['contact_deleted'], JSON_PRETTY_PRINT ) ); ?></textarea>
 			</div>
+		</div>
+
+		<!-- Step 4: Test & Verify -->
+		<div class="ghl-setup-step" style="margin: 15px 0; padding: 15px; background: #fff; border: 1px solid #ddd;">
+			<h4 style="margin-top: 0;">
+				<span class="ghl-step-number" style="background: #7e3bd0; color: white; padding: 5px 10px; border-radius: 50%; margin-right: 10px;">4</span>
+				<?php esc_html_e( 'Test and Verify', 'ghl-crm-integration' ); ?>
+			</h4>
+			<p><?php esc_html_e( 'Open your GoHighLevel workflow, click “Test Workflow” (top right), send a test, then confirm it appears in Sync Logs.', 'ghl-crm-integration' ); ?></p>
+			<p class="description" style="font-size: 12px; color: #666;">
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-settings&tab=sync-logs' ) ); ?>" class="button button-secondary"><?php esc_html_e( 'Open Sync Logs', 'ghl-crm-integration' ); ?></a>
+			</p>
 		</div>
 	</div>
 
@@ -236,30 +250,6 @@ $settings        = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_a
 		</p>
 	</form>
 
-	<!-- Webhook Statistics -->
-	<?php if ( $webhook_status['status'] === 'active' ) : ?>
-		<div class="ghl-webhook-stats" style="margin-top: 30px; padding: 15px; background: #f9f9f9; border-left: 4px solid #7e3bd0;">
-			<h3><?php esc_html_e( 'Recent Activity', 'ghl-crm-integration' ); ?></h3>
-			<p>
-				<strong><?php esc_html_e( 'Last 24 hours:', 'ghl-crm-integration' ); ?></strong> 
-				<?php echo esc_html( $webhook_status['recent_webhooks_24h'] ); ?> 
-				<?php esc_html_e( 'webhooks processed', 'ghl-crm-integration' ); ?>
-			</p>
-			
-			<?php if ( $webhook_status['last_webhook_received'] ) : ?>
-				<p>
-					<strong><?php esc_html_e( 'Last webhook:', 'ghl-crm-integration' ); ?></strong> 
-					<?php echo esc_html( $webhook_status['last_webhook_received'] ); ?>
-				</p>
-			<?php endif; ?>
-			
-			<p>
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-settings&tab=sync-logs' ) ); ?>" class="button button-secondary">
-					<?php esc_html_e( 'View Detailed Logs', 'ghl-crm-integration' ); ?>
-				</a>
-			</p>
-		</div>
-	<?php endif; ?>
 </div>
 
 <script>
