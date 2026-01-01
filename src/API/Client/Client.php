@@ -539,14 +539,14 @@ class Client implements ClientInterface {
 	 * @return void
 	 */
 	private function log_oauth_event( string $message, array $context = [] ): void {
-		return;
+		return; // Disabled Logging for now
 		$log = $this->oauth_log_prefix . $message;
 
 		if ( ! empty( $context ) ) {
 			$log .= ' | ' . wp_json_encode( $context );
 		}
 
-		error_log( $log );
+		// error_log( $log );
 	}
 
 	/**
