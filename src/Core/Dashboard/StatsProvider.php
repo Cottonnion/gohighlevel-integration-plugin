@@ -304,7 +304,6 @@ class StatsProvider {
 			}
 		} catch ( \Exception $e ) {
 			// API call failed - use fallback
-			error_log( 'GHL CRM: Failed to get total contacts from API: ' . $e->getMessage() );
 			set_transient( 'ghl_raw_contacts_response', [ 'error' => $e->getMessage() ], 5 * MINUTE_IN_SECONDS );
 		}
 
