@@ -775,30 +775,12 @@ class GroupsSync {
 		$settings   = $this->settings_manager->get_settings_array();
 		$strategy   = $settings['buddyboss_missing_contact_strategy'] ?? 'skip';
 
-		// Debug: Check all possible meta keys
-		$all_meta = get_user_meta( $user_id );
-		error_log(
-			sprintf(
-				'GHL BuddyBoss: User %d meta check - _ghl_contact_id: %s, All meta keys: %s',
-				$user_id,
-				$contact_id ? $contact_id : 'EMPTY',
-				implode( ', ', array_keys( $all_meta ) )
-			)
-		);
-
 		if ( ! $contact_id ) {
 			if ( 'create' === $strategy ) {
 				// Attempt to create contact automatically
 				$pending_flag = get_user_meta( $user_id, self::CONTACT_SYNC_PENDING_META_KEY, true );
 
 				if ( ! empty( $pending_flag ) && ( time() - (int) $pending_flag < 300 ) ) {
-					error_log(
-						sprintf(
-							'GHL BuddyBoss: User %d contact creation already queued recently (flag: %s), will retry later',
-							$user_id,
-							$pending_flag
-						)
-					);
 					return [
 						'success' => false,
 						'error'   => 'Contact creation already pending - will retry',
@@ -824,14 +806,6 @@ class GroupsSync {
 				$queue_manager    = \GHL_CRM\Sync\QueueManager::get_instance();
 				$contact_queue_id = $queue_manager->add_to_queue( 'user', $user_id, 'profile_update', $contact_data );
 
-				error_log(
-					sprintf(
-						'GHL BuddyBoss: User %d missing contact - queued creation with queue ID %d',
-						$user_id,
-						$contact_queue_id
-					)
-				);
-
 				// Build the updated payload with dependency, preserving all original data
 				$updated_payload = [
 					'user_id'              => $user_id,
@@ -840,14 +814,6 @@ class GroupsSync {
 					'association_id'       => $association_id,
 					'_depends_on_queue_id' => $contact_queue_id,
 				];
-
-				error_log(
-					sprintf(
-						'GHL BuddyBoss: Updated current association task payload with dependency on contact queue ID %d, merged payload: %s',
-						$contact_queue_id,
-						wp_json_encode( $updated_payload )
-					)
-				);
 
 				return [
 					'success'        => false,
@@ -858,12 +824,6 @@ class GroupsSync {
 			}
 
 			// Skip strategy
-			error_log(
-				sprintf(
-					'GHL BuddyBoss: User %d has no GHL contact ID - skipping association (strategy: skip)',
-					$user_id
-				)
-			);
 			return [
 				'success' => false,
 				'error'   => 'User not synced to GoHighLevel - please sync user first',
@@ -875,15 +835,6 @@ class GroupsSync {
 
 			// --- New: log and validate group/schema/record/association details ---
 			$stored_schema_id = groups_get_groupmeta( $group_id, 'ghl_custom_object_id', true );
-			error_log(
-				sprintf(
-					'GHL BuddyBoss: Group %d meta - ghl_custom_object_id: %s, ghl_custom_object_record_id: %s, association_id (from queue): %s',
-					$group_id,
-					$stored_schema_id ?: 'EMPTY',
-					$record_id,
-					$association_id
-				)
-			);
 
 			// Try to fetch schema info (if we have an ID) to log the schema key/name
 			$schema_info = null;
@@ -916,11 +867,6 @@ class GroupsSync {
 					break;
 				}
 			}
-			if ( $assoc_def ) {
-
-			} else {
-
-			}
 		} catch ( \Exception $e ) {
 
 		}
@@ -933,7 +879,6 @@ class GroupsSync {
 			if ( $first_key === 'contact' ) {
 				$direction = 'second';
 			}
-			// Log decision
 
 		}
 			// --- End new validation/logging ---
@@ -956,31 +901,11 @@ class GroupsSync {
 				$direction
 			);
 
-			error_log(
-				sprintf(
-					'GHL BuddyBoss: Successfully associated user %d (contact %s) with record %s (assoc %s, direction %s)',
-					$user_id,
-					$contact_id,
-					$record_id,
-					$association_id,
-					$direction
-				)
-			);
-
 			return [
 				'success' => true,
 				'result'  => $result,
 			];
 		} catch ( \Exception $e ) {
-			error_log(
-				sprintf(
-					'GHL BuddyBoss: Failed to associate user %d with record %s - Error: %s',
-					$user_id,
-					$record_id,
-					$e->getMessage()
-				)
-			);
-
 			return [
 				'success' => false,
 				'error'   => $e->getMessage(),
@@ -989,29 +914,15 @@ class GroupsSync {
 	}
 
 	/**
-	 * Delete association between a member and a custom object record
-	 *
-	 * @param int    $user_id        The user ID
 	 * @param int    $group_id       The group ID
 	 * @param string $record_id      The custom object record ID
 	 * @param string $association_id The association definition ID
 	 * @return array Result of association deletion
 	 */
 	private function delete_member_association( int $user_id, int $group_id, string $record_id, string $association_id ): array {
-		error_log(
-			sprintf(
-				'GHL BuddyBoss: delete_member_association called - User: %d, Group: %d, Record: %s, Association: %s',
-				$user_id,
-				$group_id,
-				$record_id,
-				$association_id
-			)
-		);
-
 		// Validate inputs
 		if ( empty( $record_id ) ) {
 			$error_msg = sprintf( 'Empty record_id provided for user %d, group %d', $user_id, $group_id );
-			error_log( 'GHL BuddyBoss: ' . $error_msg );
 			return [
 				'success' => false,
 				'error'   => $error_msg,
@@ -1020,7 +931,6 @@ class GroupsSync {
 
 		if ( empty( $association_id ) ) {
 			$error_msg = sprintf( 'Empty association_id provided for user %d, group %d', $user_id, $group_id );
-			error_log( 'GHL BuddyBoss: ' . $error_msg );
 			return [
 				'success' => false,
 				'error'   => $error_msg,
@@ -1032,20 +942,11 @@ class GroupsSync {
 
 		if ( ! $contact_id ) {
 			$error_msg = sprintf( 'User %d has no GHL contact ID (_ghl_contact_id meta is empty)', $user_id );
-			error_log( 'GHL BuddyBoss: Cannot delete association - ' . $error_msg );
 			return [
 				'success' => false,
 				'error'   => 'User not synced to GoHighLevel - ' . $error_msg,
 			];
 		}
-
-		error_log(
-			sprintf(
-				'GHL BuddyBoss: Found contact ID %s for user %d',
-				$contact_id,
-				$user_id
-			)
-		);
 
 		// Get group type to determine schema key
 		$group_types = bp_groups_get_group_type( $group_id, false );
@@ -1054,27 +955,10 @@ class GroupsSync {
 		$custom_object_name = $this->group_type_mappings[ $group_type ] ?? 'Communities';
 		$schema_key         = 'custom_objects.' . strtolower( str_replace( ' ', '_', $custom_object_name ) );
 
-		error_log(
-			sprintf(
-				'GHL BuddyBoss: Determined schema_key: %s (group_type: %s, object_name: %s)',
-				$schema_key,
-				$group_type,
-				$custom_object_name
-			)
-		);
-
 		// Fetch association definition to determine direction
 		$direction = 'first';
 		try {
-			error_log( 'GHL BuddyBoss: Fetching association definitions to determine direction...' );
 			$associations = $this->custom_object_resource->get_associations();
-			
-			error_log(
-				sprintf(
-					'GHL BuddyBoss: Retrieved %d association definitions',
-					is_array( $associations ) ? count( $associations ) : 0
-				)
-			);
 
 			foreach ( $associations as $a ) {
 				if ( isset( $a['id'] ) && $a['id'] === $association_id ) {
@@ -1082,39 +966,14 @@ class GroupsSync {
 					if ( $first_key === 'contact' ) {
 						$direction = 'second';
 					}
-					error_log(
-						sprintf(
-							'GHL BuddyBoss: Found matching association - firstObjectKey: %s, direction: %s',
-							$first_key,
-							$direction
-						)
-					);
 					break;
 				}
 			}
 		} catch ( \Throwable $e ) {
-			error_log(
-				sprintf(
-					'GHL BuddyBoss: Failed to fetch association definition for deletion - Error: %s, Trace: %s',
-					$e->getMessage(),
-					$e->getTraceAsString()
-				)
-			);
 			// Continue with default direction
 		}
 
 		try {
-			error_log(
-				sprintf(
-					'GHL BuddyBoss: Attempting to disassociate - record_id: %s, contact_id: %s, schema_key: %s, association_id: %s, direction: %s',
-					$record_id,
-					$contact_id,
-					$schema_key,
-					$association_id,
-					$direction
-				)
-			);
-
 			// Delete the association
 			$result = $this->custom_object_resource->disassociate_from_contact(
 				$record_id,
@@ -1122,18 +981,6 @@ class GroupsSync {
 				$schema_key,
 				$association_id,
 				$direction
-			);
-
-			error_log(
-				sprintf(
-					'GHL BuddyBoss: Successfully removed association for user %d (contact %s) from record %s (assoc %s, direction %s) - Result: %s',
-					$user_id,
-					$contact_id,
-					$record_id,
-					$association_id,
-					$direction,
-					wp_json_encode( $result )
-				)
 			);
 
 			return [
@@ -1151,9 +998,6 @@ class GroupsSync {
 				$e->getFile(),
 				$e->getLine()
 			);
-
-			error_log( 'GHL BuddyBoss: ' . $error_msg );
-			error_log( 'GHL BuddyBoss: Stack trace: ' . $e->getTraceAsString() );
 
 			return [
 				'success' => false,
