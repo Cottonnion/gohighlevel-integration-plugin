@@ -108,7 +108,6 @@ class NotificationManager {
 	public function send( string $type, string $subject, string $message, array $context = [] ): bool {
 		// Validate notification type
 		if ( ! isset( self::NOTIFICATION_TYPES[ $type ] ) ) {
-			error_log( sprintf( 'GHL Notification: Invalid notification type: %s', $type ) );
 			return false;
 		}
 
@@ -136,24 +135,6 @@ class NotificationManager {
 		if ( $sent ) {
 			// Set throttle
 			$this->set_throttle( $type, $context );
-
-			// Log successful send
-			error_log(
-				sprintf(
-					'GHL Notification: Sent "%s" to %s',
-					$subject,
-					$to
-				)
-			);
-		} else {
-			// Log failure
-			error_log(
-				sprintf(
-					'GHL Notification: Failed to send "%s" to %s',
-					$subject,
-					$to
-				)
-			);
 		}
 
 		return $sent;
@@ -782,13 +763,11 @@ class NotificationManager {
 			// Check if already scheduled with Action Scheduler
 			if ( ! as_next_scheduled_action( 'ghl_crm_daily_summary' ) ) {
 				as_schedule_recurring_action( $next_run, DAY_IN_SECONDS, 'ghl_crm_daily_summary', [], 'ghl-crm' );
-				error_log( 'GHL Notifications: Daily summary scheduled with Action Scheduler at ' . wp_date( 'Y-m-d H:i:s', $next_run ) );
 			}
 		} else {
 			// Fallback to WP-Cron
 			if ( ! wp_next_scheduled( 'ghl_crm_daily_summary' ) ) {
 				wp_schedule_event( $next_run, 'daily', 'ghl_crm_daily_summary' );
-				error_log( 'GHL Notifications: Daily summary scheduled with WP-Cron at ' . wp_date( 'Y-m-d H:i:s', $next_run ) );
 			}
 		}
 	}
