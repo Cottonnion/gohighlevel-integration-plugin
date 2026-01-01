@@ -378,17 +378,6 @@ class CustomObjectResource extends AbstractResource {
 				'secondRecordId' => $second_id,
 			];
 
-			error_log(
-				sprintf(
-					'GHL Association: Creating relation - Location: %s, Association: %s, First: %s, Second: %s, Direction: %s',
-					$location_id,
-					$association_id,
-					$first_id,
-					$second_id,
-					$direction ?? 'first (default)'
-				)
-			);
-
 			$response = $this->client->post( $endpoint, $data, false );
 
 			return $response;
@@ -452,16 +441,6 @@ class CustomObjectResource extends AbstractResource {
 			$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 			$location_id      = $settings_manager->get_setting( 'location_id', '' );
 
-			error_log(
-				sprintf(
-					'GHL Association: Looking for relation to delete - Association: %s, First: %s, Second: %s, Direction: %s',
-					$association_id,
-					$first_id,
-					$second_id,
-					$direction ?? 'first (default)'
-				)
-			);
-
 			// Get existing relations for the first record
 			// Endpoint: GET /associations/relations/:recordId
 			$get_endpoint = 'associations/relations/' . $first_id;
@@ -470,13 +449,6 @@ class CustomObjectResource extends AbstractResource {
 				$relations = $this->client->get( $get_endpoint );
 			} catch ( \Exception $e ) {
 				// If we get an error fetching relations, it might mean none exist
-				error_log(
-					sprintf(
-						'GHL Association: Error fetching relations (might mean none exist): %s',
-						$e->getMessage()
-					)
-				);
-				
 				// Return success - relation doesn't exist, which is the desired end state
 				return [
 					'success' => true,
@@ -484,67 +456,20 @@ class CustomObjectResource extends AbstractResource {
 				];
 			}
 
-			error_log(
-				sprintf(
-					'GHL Association: API response for relations query: %s',
-					wp_json_encode( $relations )
-				)
-			);
-
 			// Find the relation matching our associationId AND secondRecordId
 			$relation_id = null;
 			if ( ! empty( $relations['relations'] ) && is_array( $relations['relations'] ) ) {
-				error_log(
-					sprintf(
-						'GHL Association: Found %d relations for record %s, searching for associationId: %s AND secondRecordId: %s',
-						count( $relations['relations'] ),
-						$first_id,
-						$association_id,
-						$second_id
-					)
-				);
-
 				foreach ( $relations['relations'] as $relation ) {
-					error_log(
-						sprintf(
-							'GHL Association: Checking relation - ID: %s, associationId: %s, firstRecordId: %s, secondRecordId: %s',
-							$relation['id'] ?? 'N/A',
-							$relation['associationId'] ?? 'N/A',
-							$relation['firstRecordId'] ?? 'N/A',
-							$relation['secondRecordId'] ?? 'N/A'
-						)
-					);
-
 					// Match both associationId AND secondRecordId
 					if ( isset( $relation['associationId'] ) && $relation['associationId'] === $association_id &&
 					     isset( $relation['secondRecordId'] ) && $relation['secondRecordId'] === $second_id ) {
 						$relation_id = $relation['id'] ?? null;
-						error_log(
-							sprintf(
-								'GHL Association: Found matching relation ID: %s',
-								$relation_id
-							)
-						);
 						break;
 					}
 				}
-			} else {
-				error_log(
-					sprintf(
-						'GHL Association: No relations array in response. Response keys: %s',
-						implode( ', ', array_keys( $relations ) )
-					)
-				);
 			}
 
 			if ( ! $relation_id ) {
-				error_log(
-					sprintf(
-						'GHL Association: No relation found to delete - might already be deleted (First: %s, Second: %s)',
-						$first_id,
-						$second_id
-					)
-				);
 				// Return success if relation doesn't exist (idempotent)
 				return [
 					'success' => true,
@@ -554,21 +479,8 @@ class CustomObjectResource extends AbstractResource {
 
 			// Delete the relation
 			$delete_endpoint = 'associations/relations/' . $relation_id;
-			error_log(
-				sprintf(
-					'GHL Association: Deleting relation %s',
-					$relation_id
-				)
-			);
 
 			$response = $this->client->delete( $delete_endpoint );
-
-			error_log(
-				sprintf(
-					'GHL Association: Successfully deleted relation %s',
-					$relation_id
-				)
-			);
 
 			return $response;
 		} catch ( \Exception $e ) {
