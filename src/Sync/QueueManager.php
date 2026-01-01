@@ -201,15 +201,6 @@ class QueueManager {
 		// Store dependency in payload if provided
 		if ( null !== $depends_on_queue_id ) {
 			$payload['_depends_on_queue_id'] = $depends_on_queue_id;
-			error_log(
-				sprintf(
-					'GHL Queue: Adding queue item with dependency - Type: %s, Item ID: %d, Action: %s, Depends on Queue ID: %d',
-					$item_type,
-					$item_id,
-					$action,
-					$depends_on_queue_id
-				)
-			);
 		}
 
 		// Insert new queue item
@@ -509,23 +500,7 @@ class QueueManager {
 						[ '%s', '%s' ],
 						[ '%d' ]
 					);
-
-					error_log(
-						sprintf(
-							'GHL Queue: Updated payload with dependency for Queue ID: %d',
-							$item->id
-						)
-					);
 				}
-
-				error_log(
-					sprintf(
-						'GHL Queue: Skipping task due to dependency wait - Type: %s, Item ID: %d, Queue ID: %d stays pending',
-						$item->item_type,
-						$item->item_id,
-						$item->id
-					)
-				);
 				return; // Leave item pending, will retry later when dependency completes
 			}
 
@@ -1108,25 +1083,8 @@ class QueueManager {
 					}
 				}
 			}
-
-			error_log(
-				sprintf(
-					'GHL Queue: Auto-synced from GHL | user #%d | contact %s',
-					$user_id,
-					$contact_id
-				)
-			);
-
 		} catch ( \Throwable $e ) {
-			// Log error but don't fail the queue item
-			error_log(
-				sprintf(
-					'GHL Queue: Failed to auto-sync | user #%d | contact %s | error %s',
-					$user_id,
-					$contact_id,
-					$e->getMessage()
-				)
-			);
+			// Keep queue item intact if tag sync fails
 		}
 	}
 
