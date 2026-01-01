@@ -114,9 +114,8 @@ class UserHooks {
 			add_action( 'profile_update', [ $this, 'on_user_update' ], 10, 2 );
 			// Track user logins in GoHighLevel
 			add_action( 'wp_login', [ $this, 'on_user_login' ], 10, 2 );
-		} else {
-			error_log( '[UserHooks] enable_user_sync is FALSE - NOT registering profile_update hook' );
 		}
+
 		// 3. User deletion hook - Handle contact deletion/tagging when user is deleted
 		if ( ! empty( $settings['delete_contact_on_user_delete'] ) ) {
 			add_action( 'delete_user', [ $this, 'on_user_delete' ], 10, 1 );
@@ -241,7 +240,6 @@ class UserHooks {
 	 * @return void
 	 */
 	public function on_user_update( int $user_id, \WP_User $old_user_data ): void {
-		error_log( "[UserHooks] on_user_update called for user_id: {$user_id}" );
 		$this->queue_user_profile_sync( $user_id, $old_user_data );
 	}
 
