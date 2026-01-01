@@ -144,16 +144,9 @@ class WebhookHandler {
 	public function handle_webhook( \WP_REST_Request $request ) {
 		$body = $request->get_json_params();
 
-		error_log( '[GHL Webhook] ===== WEBHOOK RECEIVED =====' );
-		error_log( '[GHL Webhook] Raw payload: ' . wp_json_encode( $body ) );
-		error_log( '[GHL Webhook] Headers: ' . wp_json_encode( $request->get_headers() ) );
-		error_log( '[GHL Webhook] Remote IP: ' . ( $_SERVER['REMOTE_ADDR'] ?? 'unknown' ) );
-
 		// Process the webhook synchronously (WP-Cron might be disabled on live sites)
 		// The actual sync happens via queue processor, so this is just validation + queueing
 		$this->process_webhook_async( $body, $request->get_headers() );
-
-		error_log( '[GHL Webhook] Webhook processed successfully' );
 
 		return new \WP_REST_Response(
 			[
@@ -172,14 +165,8 @@ class WebhookHandler {
 	 * @return void
 	 */
 	public function process_webhook_async( array $body, array $headers ): void {
-		error_log( '[GHL Webhook] ===== ASYNC PROCESSING STARTED =====' );
-		error_log( '[GHL Webhook] Processing at: ' . current_time( 'mysql' ) );
-		
 		// Detect webhook format and normalize
 		$normalized = $this->normalize_webhook_payload( $body );
-
-		error_log( '[GHL Webhook] Normalized payload: ' . wp_json_encode( $normalized ) );
-		error_log( '[GHL Webhook] Detected type: ' . ( $normalized['type'] ?? 'UNKNOWN' ) );
 
 		// Log webhook receipt
 		$this->logger->log(
@@ -197,8 +184,6 @@ class WebhookHandler {
 
 		// Validate payload
 		if ( empty( $normalized['type'] ) ) {
-			error_log( '[GHL Webhook] ERROR: Missing type field in normalized payload' );
-			
 			$this->logger->log(
 				'webhook_invalid',
 				0,
@@ -211,12 +196,9 @@ class WebhookHandler {
 		}
 
 		// Route to appropriate handler
-		error_log( '[GHL Webhook] Routing to handler for type: ' . $normalized['type'] );
 		$result = $this->route_webhook_event( $normalized );
 
 		if ( is_wp_error( $result ) ) {
-			error_log( '[GHL Webhook] ERROR: ' . $result->get_error_message() );
-			
 			$this->logger->log(
 				'webhook_processing_error',
 				0,
@@ -228,11 +210,7 @@ class WebhookHandler {
 					'error' => $result->get_error_message(),
 				]
 			);
-		} else {
-			error_log( '[GHL Webhook] ✓ Webhook processed successfully' );
 		}
-		
-		error_log( '[GHL Webhook] ===== ASYNC PROCESSING COMPLETE =====' );
 	}
 
 	/**
@@ -245,31 +223,22 @@ class WebhookHandler {
 	 * @return array Normalized payload
 	 */
 	private function normalize_webhook_payload( array $payload ): array {
-		error_log( '[GHL Webhook] Normalizing payload...' );
-		
 		// If already in our format, return as-is
 		if ( isset( $payload['type'] ) && isset( $payload['data'] ) ) {
-			error_log( '[GHL Webhook] Payload already normalized' );
 			return $payload;
 		}
 
 		// Detect event type from GHL payload
 		// If contact_id exists, it's a contact event
 		if ( isset( $payload['contact_id'] ) ) {
-			error_log( '[GHL Webhook] Detected contact_id: ' . $payload['contact_id'] );
-			
 			// Determine if it's create, update, or delete based on available fields
 			$type = 'ContactUpdate'; // Default to update for existing contacts
 
 			// If minimal fields, might be a delete
 			$field_count = count( array_filter( $payload ) );
-			error_log( '[GHL Webhook] Field count: ' . $field_count );
 			
 			if ( $field_count <= 3 ) {
 				$type = 'ContactDelete';
-				error_log( '[GHL Webhook] Detected as DELETE (minimal fields)' );
-			} else {
-				error_log( '[GHL Webhook] Detected as UPDATE (has data fields)' );
 			}
 
 			// Normalize to our format
@@ -291,14 +260,10 @@ class WebhookHandler {
 				],
 			];
 			
-			error_log( '[GHL Webhook] Normalized contact data - Email: ' . ( $normalized['data']['email'] ?? 'NONE' ) );
-			error_log( '[GHL Webhook] Normalized contact data - Name: ' . ( $normalized['data']['name'] ?? 'NONE' ) );
-			
 			return $normalized;
 		}
 
 		// Unknown format, return as-is and let it fail validation
-		error_log( '[GHL Webhook] WARNING: Unknown payload format, no contact_id found' );
 		return $payload;
 	}
 
@@ -342,22 +307,14 @@ class WebhookHandler {
 	 * @return bool
 	 */
 	private function handle_contact_create( array $payload ): bool {
-		error_log( '[GHL Webhook] Handle Contact CREATE' );
-		
 		$contact_data = $payload['data'] ?? [];
 
 		if ( empty( $contact_data['id'] ) ) {
-			error_log( '[GHL Webhook] ERROR: Missing contact ID in create payload' );
 			return false;
 		}
 
-		error_log( '[GHL Webhook] Contact ID: ' . $contact_data['id'] );
-		error_log( '[GHL Webhook] Contact Email: ' . ( $contact_data['email'] ?? 'NONE' ) );
-
 		// Check if sync from GHL to WP is enabled
 		if ( ! $this->is_sync_direction_enabled( 'ghl_to_wp' ) ) {
-			error_log( '[GHL Webhook] SKIPPED: Sync direction GHL->WP is disabled' );
-			
 			$this->logger->log(
 				'webhook_skipped',
 				0,
@@ -370,19 +327,13 @@ class WebhookHandler {
 			return true;
 		}
 
-		error_log( '[GHL Webhook] Adding to queue: contact_create' );
-
 		// Process synchronously instead of queueing for immediate feedback
-		error_log( '[GHL Webhook] Processing contact create synchronously...' );
-		
 		$result = $this->ghl_sync->sync_contact_to_wordpress( $contact_data['id'] );
 
 		if ( is_wp_error( $result ) ) {
-			error_log( '[GHL Webhook] ✗ Failed to create contact: ' . $result->get_error_message() );
 			return false;
 		}
 
-		error_log( '[GHL Webhook] ✓ Contact created successfully (User ID: ' . $result . ')' );
 		return true;
 	}
 
@@ -393,22 +344,14 @@ class WebhookHandler {
 	 * @return bool
 	 */
 	private function handle_contact_update( array $payload ): bool {
-		error_log( '[GHL Webhook] Handle Contact UPDATE' );
-		
 		$contact_data = $payload['data'] ?? [];
 
 		if ( empty( $contact_data['id'] ) ) {
-			error_log( '[GHL Webhook] ERROR: Missing contact ID in update payload' );
 			return false;
 		}
 
-		error_log( '[GHL Webhook] Contact ID: ' . $contact_data['id'] );
-		error_log( '[GHL Webhook] Contact Email: ' . ( $contact_data['email'] ?? 'NONE' ) );
-
 		// Check if sync from GHL to WP is enabled
 		if ( ! $this->is_sync_direction_enabled( 'ghl_to_wp' ) ) {
-			error_log( '[GHL Webhook] SKIPPED: Sync direction GHL->WP is disabled' );
-			
 			$this->logger->log(
 				'webhook_skipped',
 				0,
@@ -421,19 +364,13 @@ class WebhookHandler {
 			return true;
 		}
 
-		error_log( '[GHL Webhook] Adding to queue: contact_update' );
-
 		// Process synchronously instead of queueing for immediate feedback
-		error_log( '[GHL Webhook] Processing contact update synchronously...' );
-		
 		$result = $this->ghl_sync->sync_contact_to_wordpress( $contact_data['id'] );
 
 		if ( is_wp_error( $result ) ) {
-			error_log( '[GHL Webhook] ✗ Failed to update contact: ' . $result->get_error_message() );
 			return false;
 		}
 
-		error_log( '[GHL Webhook] ✓ Contact updated successfully (User ID: ' . $result . ')' );
 		return true;
 	}
 
@@ -444,40 +381,21 @@ class WebhookHandler {
 	 * @return bool
 	 */
 	private function handle_contact_delete( array $payload ): bool {
-		error_log( '[GHL Webhook] Handle Contact DELETE' );
-		
 		$contact_data = $payload['data'] ?? [];
 
 		if ( empty( $contact_data['id'] ) ) {
-			error_log( '[GHL Webhook] ERROR: Missing contact ID in delete payload' );
 			return false;
 		}
 
-		error_log( '[GHL Webhook] Contact ID to delete: ' . $contact_data['id'] );
-
 		// Check if sync from GHL to WP is enabled
 		if ( ! $this->is_sync_direction_enabled( 'ghl_to_wp' ) ) {
-			error_log( '[GHL Webhook] SKIPPED: Sync direction GHL->WP is disabled' );
 			return true;
 		}
 
-		error_log( '[GHL Webhook] Adding to queue: contact_delete' );
-
 		// Process synchronously instead of queueing for immediate feedback
-		error_log( '[GHL Webhook] Processing contact delete synchronously...' );
-		
 		$result = $this->ghl_sync->delete_wordpress_user( $contact_data['id'] );
 
-		if ( $result ) {
-			error_log( '[GHL Webhook] ✓ Contact deleted/unlinked successfully' );
-		} else {
-			error_log( '[GHL Webhook] ✗ Failed to delete/unlink contact' );
-		}
-
 		return $result;
-
-		error_log( '[GHL Webhook] ✓ Contact delete queued successfully' );
-		return true;
 	}
 
 
