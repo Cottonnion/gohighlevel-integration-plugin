@@ -240,6 +240,13 @@ class UserHooks {
 	 * @return void
 	 */
 	public function on_user_update( int $user_id, \WP_User $old_user_data ): void {
+		// Skip if update was triggered by inbound GHL sync to avoid log spam and ping-pong
+		$skip = get_user_meta( $user_id, '_ghl_skip_profile_update_sync', true );
+		if ( $skip ) {
+			delete_user_meta( $user_id, '_ghl_skip_profile_update_sync' );
+			return;
+		}
+
 		$this->queue_user_profile_sync( $user_id, $old_user_data );
 	}
 
