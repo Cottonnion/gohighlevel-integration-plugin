@@ -426,17 +426,13 @@ class QueueProcessor {
  * @throws \Exception
  */
 private function handle_user_register_update( $client, $contact_resource, array $payload ) {
-	error_log( sprintf( '[GHL] handle_user_register_update - START with payload: %s', wp_json_encode( $payload ) ) );
-	
 	$location_id = $this->get_location_id();
 	if ( empty( $location_id ) ) {
-		error_log( '[GHL] handle_user_register_update - Location ID is empty' );
 		return false;
 	}
 
 	$email = $payload['email'] ?? '';
 	if ( empty( $email ) ) {
-		error_log( '[GHL] handle_user_register_update - Email is empty' );
 		throw new \Exception( 'Email is required' );
 	}
 
@@ -444,8 +440,6 @@ private function handle_user_register_update( $client, $contact_resource, array 
 	$provided_contact_id = $payload['contact_id'] ?? '';
 	
 	if ( ! empty( $provided_contact_id ) ) {
-		error_log( sprintf( '[GHL] handle_user_register_update - Contact ID provided in payload: %s (UPDATE mode)', $provided_contact_id ) );
-		
 		// Remove contact_id from payload to avoid sending it to GHL API
 		unset( $payload['contact_id'] );
 		
@@ -454,8 +448,6 @@ private function handle_user_register_update( $client, $contact_resource, array 
 			$result = $contact_resource->update( $provided_contact_id, $payload );
 			
 			if ( ! empty( $result ) ) {
-				error_log( sprintf( '[GHL] handle_user_register_update - ✓ Updated contact: %s', $provided_contact_id ) );
-				
 				// Update cache
 				if ( isset( $result['contact'] ) ) {
 					$this->contact_cache->set( $email, $result['contact'] );
@@ -463,11 +455,9 @@ private function handle_user_register_update( $client, $contact_resource, array 
 				
 				return $result;
 			} else {
-				error_log( sprintf( '[GHL] handle_user_register_update - Update failed for contact: %s', $provided_contact_id ) );
 				return false;
 			}
 		} catch ( \Exception $e ) {
-			error_log( sprintf( '[GHL] handle_user_register_update - Update exception: %s', $e->getMessage() ) );
 			throw $e;
 		}
 	}
@@ -476,31 +466,21 @@ private function handle_user_register_update( $client, $contact_resource, array 
 	$cached_contact = $this->contact_cache->get( $email );
 
 	if ( $cached_contact ) {
-		error_log( sprintf( '[GHL] handle_user_register_update - Found in cache: %s (UPDATE mode)', $cached_contact['id'] ) );
-		
 		$result = $contact_resource->update( $cached_contact['id'], $payload );
 		
 		if ( ! empty( $result ) ) {
-			error_log( sprintf( '[GHL] handle_user_register_update - ✓ Updated cached contact: %s', $cached_contact['id'] ) );
 			return $result;
 		} else {
-			error_log( sprintf( '[GHL] handle_user_register_update - Update failed for cached contact: %s', $cached_contact['id'] ) );
 			return false;
 		}
 	}
 
 	// Not in cache - search GHL for existing contact
-	error_log( sprintf( '[GHL] handle_user_register_update - Not in cache, searching GHL for email: %s', $email ) );
-	
 	try {
 		$existing = $client->get( 'contacts/', [ 'query' => $email ] );
-		
-		error_log( sprintf( '[GHL] handle_user_register_update - Search response: %s', wp_json_encode( $existing ) ) );
 
 		if ( ! empty( $existing['contacts'][0] ) ) {
 			$contact = $existing['contacts'][0];
-			
-			error_log( sprintf( '[GHL] handle_user_register_update - Found existing contact: %s (UPDATE mode)', $contact['id'] ) );
 
 			// Cache the contact
 			$this->contact_cache->set( $email, $contact );
@@ -509,37 +489,28 @@ private function handle_user_register_update( $client, $contact_resource, array 
 			$result = $contact_resource->update( $contact['id'], $payload );
 			
 			if ( ! empty( $result ) ) {
-				error_log( sprintf( '[GHL] handle_user_register_update - ✓ Updated existing contact: %s', $contact['id'] ) );
 				return $result;
 			} else {
-				error_log( sprintf( '[GHL] handle_user_register_update - Update failed for existing contact: %s', $contact['id'] ) );
 				return false;
 			}
 		}
 	} catch ( \Exception $e ) {
-		error_log( sprintf( '[GHL] handle_user_register_update - Search exception: %s', $e->getMessage() ) );
 		// Continue to CREATE if search fails
 	}
 
 	// Contact doesn't exist - CREATE new contact
-	error_log( '[GHL] handle_user_register_update - No existing contact found, creating new (CREATE mode)' );
-	
 	try {
 		$result = $client->post( 'contacts/', array_merge( $payload, [ 'locationId' => $location_id ] ) );
 		
 		if ( $result && isset( $result['contact']['id'] ) ) {
-			error_log( sprintf( '[GHL] handle_user_register_update - ✓ Created new contact: %s', $result['contact']['id'] ) );
-			
 			// Cache the new contact
 			$this->contact_cache->set( $email, $result['contact'] );
 			
 			return $result;
 		} else {
-			error_log( '[GHL] handle_user_register_update - Create failed, empty response' );
 			return false;
 		}
 	} catch ( \Exception $e ) {
-		error_log( sprintf( '[GHL] handle_user_register_update - Create exception: %s', $e->getMessage() ) );
 		throw $e;
 	}
 }
