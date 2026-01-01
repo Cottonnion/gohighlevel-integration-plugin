@@ -23,7 +23,7 @@ $settings        = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_a
 	</p>
 
 	<!-- Webhook Status Card -->
-	<div class="ghl-card" style="margin: 20px 0; padding: 20px; background: #f9f9f9; border-left: 4px solid <?php echo $webhook_status['status'] === 'active' ? '#46b450' : '#dba617'; ?>;">
+	<!-- <div class="ghl-card" style="margin: 20px 0; padding: 20px; background: #f9f9f9; border-left: 4px solid <?php echo $webhook_status['status'] === 'active' ? '#46b450' : '#dba617'; ?>;">
 		<h3><?php esc_html_e( 'Current Status', 'ghl-crm-integration' ); ?></h3>
 		
 		<div id="webhook-status-display">
@@ -70,7 +70,7 @@ $settings        = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_a
 				<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Sends a test request to verify your webhook endpoint is working correctly. This checks that your WordPress site can receive webhook data from GoHighLevel.', 'ghl-crm-integration' ); ?>">?</span>
 			</p>
 		</div>
-	</div>
+	</div> -->
 
 	<!-- Setup Instructions -->
 	<div class="ghl-webhook-setup" style="margin: 20px 0;">
