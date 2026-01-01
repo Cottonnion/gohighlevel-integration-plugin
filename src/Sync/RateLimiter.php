@@ -87,15 +87,6 @@ class RateLimiter {
 		$burst_count = $burst_data ? (int) $burst_data : 0;
 
 		if ( $burst_count >= self::RATE_LIMIT_BURST ) {
-			error_log(
-				sprintf(
-					'GHL CRM Burst Rate Limit Hit [Location %s, Site %d]: %d/%d requests in 10 seconds',
-					$location_id,
-					get_current_blog_id(),
-					$burst_count,
-					self::RATE_LIMIT_BURST
-				)
-			);
 			return false;
 		}
 
@@ -114,15 +105,6 @@ class RateLimiter {
 		$daily_count = $daily_data ? (int) $daily_data : 0;
 
 		if ( $daily_count >= self::RATE_LIMIT_DAILY ) {
-			error_log(
-				sprintf(
-					'GHL CRM Daily Rate Limit Hit [Location %s, Site %d]: %d/%d requests today',
-					$location_id,
-					get_current_blog_id(),
-					$daily_count,
-					self::RATE_LIMIT_DAILY
-				)
-			);
 			return false;
 		}
 
