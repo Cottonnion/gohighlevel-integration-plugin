@@ -94,6 +94,26 @@ class GHLToWordPressSync {
 			}
 		}
 
+
+		// If tags are missing/empty in webhook payload, hydrate from API to avoid dropping tags
+		if ( empty( $contact_data['tags'] ) || ! is_array( $contact_data['tags'] ) ) {
+			try {
+				$response      = $this->contact_resource->get( $contact_id );
+				$fresh_contact = $response['contact'] ?? [];
+
+				if ( ! empty( $fresh_contact ) ) {
+					$contact_data = array_merge( $fresh_contact, $contact_data );
+				}
+			} catch ( \Exception $e ) {
+				$this->logger->log(
+					'webhook_invalid',
+					$contact_id,
+					'ghl_to_wp',
+					[ 'error' => $e->getMessage() ]
+				);
+			}
+		}
+
 		// Validate contact data
 		if ( empty( $contact_data['email'] ) ) {
 			return new \WP_Error( 'missing_email', __( 'Contact email is required', 'ghl-crm-integration' ) );
@@ -271,7 +291,10 @@ class GHLToWordPressSync {
 
 		// Update user if we have data to update
 		if ( count( $user_data ) > 1 ) {
+			// Prevent ping-pong: skip outbound profile_update hook triggered by this inbound sync
+			update_user_meta( $user_id, '_ghl_skip_profile_update_sync', 1 );
 			$result = wp_update_user( $user_data );
+			delete_user_meta( $user_id, '_ghl_skip_profile_update_sync' );
 
 			if ( is_wp_error( $result ) ) {
 				$this->logger->log(
