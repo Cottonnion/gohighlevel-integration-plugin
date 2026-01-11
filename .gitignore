@@ -35,7 +35,7 @@ debug.log
 /build/
 /dist/
 
-# Refreence files from other plugins
+# Reference files from other plugins
 /refrence-classes/
 
 # tests
