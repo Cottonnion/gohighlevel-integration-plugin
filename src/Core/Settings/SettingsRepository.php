@@ -80,6 +80,7 @@ class SettingsRepository {
 		return wp_parse_args(
 			$settings,
 			[
+				'webhook_secret'               => '',
 				'api_token'                     => '',
 				'location_id'                   => '',
 				'api_version'                   => '2021-07-28',
