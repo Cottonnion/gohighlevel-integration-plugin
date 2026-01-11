@@ -13,6 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 $webhook_handler = \GHL_CRM\API\Webhooks\WebhookHandler::get_instance();
 $webhook_status  = $webhook_handler->get_webhook_status();
 $setup_instructions = $webhook_handler->get_webhook_setup_instructions();
+$webhook_secret      = $setup_instructions['webhook_secret'] ?? '';
+$webhook_header      = strtoupper( $setup_instructions['webhook_header'] ?? 'X-GHL-TOKEN' );
 $settings        = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
 ?>
 
@@ -100,10 +102,47 @@ $settings        = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_a
 			</div>
 		</div>
 
-		<!-- Step 2: GoHighLevel Setup -->
+		<!-- Step 2: Add Security Header -->
 		<div class="ghl-setup-step" style="margin: 15px 0; padding: 15px; background: #fff; border: 1px solid #ddd;">
 			<h4 style="margin-top: 0;">
 				<span class="ghl-step-number" style="background: #7e3bd0; color: white; padding: 5px 10px; border-radius: 50%; margin-right: 10px;">2</span>
+				<?php esc_html_e( 'Add the Security Header', 'ghl-crm-integration' ); ?>
+			</h4>
+			<p><?php esc_html_e( 'Paste this header into your GoHighLevel outbound webhook action. Webhooks without this token will be rejected.', 'ghl-crm-integration' ); ?></p>
+
+			<div style="display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; margin: 10px 0;">
+				<label style="margin: 0;">
+					<strong><?php esc_html_e( 'Header', 'ghl-crm-integration' ); ?>:</strong> <span id="webhook-secret-header-text"><?php echo esc_html( $webhook_header ); ?></span>
+				</label>
+				<input
+					type="text"
+					id="webhook-secret-field"
+					value="<?php echo esc_attr( $webhook_secret ); ?>"
+					class="regular-text code"
+					readonly
+					style="width: 100%;"
+				/>
+				<button type="button" class="ghl-button ghl-button-secondary" id="copy-webhook-secret">
+					<span class="dashicons dashicons-clipboard"></span>
+					<?php esc_html_e( 'Copy Token', 'ghl-crm-integration' ); ?>
+				</button>
+			</div>
+
+			<p class="description" style="margin: 10px 0;">
+				<?php esc_html_e( 'If you suspect unwanted traffic or need to rotate credentials, regenerate the token and update your GoHighLevel automation immediately.', 'ghl-crm-integration' ); ?>
+			</p>
+			<p>
+				<button type="button" class="button" id="regenerate-webhook-secret">
+					<span class="dashicons dashicons-update"></span>
+					<?php esc_html_e( 'Regenerate Token', 'ghl-crm-integration' ); ?>
+				</button>
+			</p>
+		</div>
+
+		<!-- Step 3: GoHighLevel Setup -->
+		<div class="ghl-setup-step" style="margin: 15px 0; padding: 15px; background: #fff; border: 1px solid #ddd;">
+			<h4 style="margin-top: 0;">
+				<span class="ghl-step-number" style="background: #7e3bd0; color: white; padding: 5px 10px; border-radius: 50%; margin-right: 10px;">3</span>
 				<?php esc_html_e( 'Create Automation in GoHighLevel', 'ghl-crm-integration' ); ?>
 			</h4>
 			
@@ -115,7 +154,7 @@ $settings        = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_a
 				<li><?php esc_html_e( 'Set trigger: Contact Created, Contact Updated, or Contact Deleted', 'ghl-crm-integration' ); ?></li>
 				<li><?php esc_html_e( 'Add action: Outbound Webhook', 'ghl-crm-integration' ); ?></li>
 				<li><?php esc_html_e( 'Paste the webhook URL from step 1', 'ghl-crm-integration' ); ?></li>
-				<li><?php esc_html_e( 'Keep method as POST (GoHighLevel sends JSON by default; no extra header needed)', 'ghl-crm-integration' ); ?></li>
+				<li><?php printf( /* translators: %s header name */ esc_html__( 'Keep method as POST and add header %s with the token above.', 'ghl-crm-integration' ), esc_html( $webhook_header ) ); ?></li>
 				<li><?php esc_html_e( 'Use the JSON templates below for the body', 'ghl-crm-integration' ); ?></li>
 				<li><?php esc_html_e( 'Save and activate the workflow', 'ghl-crm-integration' ); ?></li>
 			</ol>
@@ -124,7 +163,7 @@ $settings        = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_a
 		<!-- Step 3: JSON Templates -->
 		<div class="ghl-setup-step" style="margin: 15px 0; padding: 15px; background: #fff; border: 1px solid #ddd;">
 			<h4 style="margin-top: 0;">
-				<span class="ghl-step-number" style="background: #7e3bd0; color: white; padding: 5px 10px; border-radius: 50%; margin-right: 10px;">3</span>
+				<span class="ghl-step-number" style="background: #7e3bd0; color: white; padding: 5px 10px; border-radius: 50%; margin-right: 10px;">4</span>
 				<?php esc_html_e( 'JSON Body Templates', 'ghl-crm-integration' ); ?>
 			</h4>
 			
@@ -170,7 +209,7 @@ $settings        = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_a
 		<!-- Step 4: Test & Verify -->
 		<div class="ghl-setup-step" style="margin: 15px 0; padding: 15px; background: #fff; border: 1px solid #ddd;">
 			<h4 style="margin-top: 0;">
-				<span class="ghl-step-number" style="background: #7e3bd0; color: white; padding: 5px 10px; border-radius: 50%; margin-right: 10px;">4</span>
+				<span class="ghl-step-number" style="background: #7e3bd0; color: white; padding: 5px 10px; border-radius: 50%; margin-right: 10px;">5</span>
 				<?php esc_html_e( 'Test and Verify', 'ghl-crm-integration' ); ?>
 			</h4>
 			<p><?php esc_html_e( 'Open your GoHighLevel workflow, click “Test Workflow” (top right), send a test, then confirm it appears in Sync Logs.', 'ghl-crm-integration' ); ?></p>
@@ -269,6 +308,58 @@ jQuery(document).ready(function($) {
 		} catch (err) {
 			alert('<?php esc_html_e( 'Could not copy URL. Please copy manually.', 'ghl-crm-integration' ); ?>');
 		}
+	});
+
+	// Copy webhook secret
+	$('#copy-webhook-secret').on('click', function() {
+		const secretField = document.getElementById('webhook-secret-field');
+		secretField.select();
+		secretField.setSelectionRange(0, 99999);
+
+		try {
+			document.execCommand('copy');
+			$(this).html('<span class="dashicons dashicons-yes"></span> <?php esc_html_e( 'Copied!', 'ghl-crm-integration' ); ?>');
+			setTimeout(() => {
+				$(this).html('<span class="dashicons dashicons-clipboard"></span> <?php esc_html_e( 'Copy Token', 'ghl-crm-integration' ); ?>');
+			}, 2000);
+		} catch (err) {
+			alert('<?php esc_html_e( 'Could not copy token. Please copy manually.', 'ghl-crm-integration' ); ?>');
+		}
+	});
+
+	// Regenerate webhook secret
+	$('#regenerate-webhook-secret').on('click', function() {
+		if ( !confirm('<?php esc_html_e( 'Regenerate the token? You must update your GoHighLevel automation immediately after rotating it.', 'ghl-crm-integration' ); ?>') ) {
+			return;
+		}
+
+		const $btn = $(this);
+		const originalText = $btn.html();
+		$btn.prop('disabled', true).html('<span class="dashicons dashicons-update ghl-spin"></span> <?php esc_html_e( 'Rotating...', 'ghl-crm-integration' ); ?>');
+
+		$.ajax({
+			url: ajaxurl,
+			type: 'POST',
+			data: {
+				action: 'ghl_crm_regenerate_webhook_secret',
+				nonce: '<?php echo esc_js( wp_create_nonce( 'ghl_crm_admin' ) ); ?>'
+			},
+			success: function(response) {
+				if (response.success && response.data) {
+					$('#webhook-secret-field').val(response.data.webhook_secret);
+					$('#webhook-secret-header-text').text(response.data.header || '<?php echo esc_js( $webhook_header ); ?>');
+					alert('✓ ' + (response.data.message || '<?php esc_html_e( 'Token regenerated. Update your GoHighLevel automation.', 'ghl-crm-integration' ); ?>'));
+				} else {
+					alert('✗ ' + (response.data && response.data.message ? response.data.message : '<?php esc_html_e( 'Could not regenerate token.', 'ghl-crm-integration' ); ?>'));
+				}
+				$btn.prop('disabled', false).html(originalText);
+			},
+			error: function(xhr, status, error) {
+				console.error('❌ Token regeneration error:', {xhr, status, error});
+				alert('✗ <?php esc_html_e( 'Token regeneration failed. Please try again.', 'ghl-crm-integration' ); ?>');
+				$btn.prop('disabled', false).html(originalText);
+			}
+		});
 	});
 
 	// Test webhook endpoint
