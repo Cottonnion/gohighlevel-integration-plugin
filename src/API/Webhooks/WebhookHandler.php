@@ -23,6 +23,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class WebhookHandler {
 	/**
+	 * Header name for shared secret token
+	 */
+	private const WEBHOOK_SECRET_HEADER = 'x-ghl-token';
+
+	/**
+	 * Maximum allowed webhook payload size (256KB)
+	 */
+	private const MAX_WEBHOOK_BODY_BYTES = 262144;
+	/**
 	 * Settings Manager
 	 *
 	 * @var SettingsManager
@@ -89,6 +98,7 @@ class WebhookHandler {
 	private function init_hooks(): void {
 		add_action( 'rest_api_init', [ $this, 'register_webhook_endpoint' ] );
 		add_action( 'wp_ajax_ghl_crm_test_webhook', [ $this, 'handle_test_webhook' ] );
+		add_action( 'wp_ajax_ghl_crm_regenerate_webhook_secret', [ $this, 'handle_regenerate_webhook_secret' ] );
 		add_action( 'ghl_process_webhook_async', [ $this, 'process_webhook_async' ], 10, 2 );
 	}
 
@@ -119,15 +129,132 @@ class WebhookHandler {
 	}
 
 	/**
-	 * Verify webhook signature (simplified for manual setup)
+	 * Verify webhook signature via shared secret header
 	 *
 	 * @param \WP_REST_Request $request Request object
-	 * @return bool
+	 * @return bool|\WP_Error
 	 */
-	public function verify_webhook_signature( \WP_REST_Request $request ): bool {
-		// For manual setup, we allow all requests
-		// Users can implement additional security if needed
+	public function verify_webhook_signature( \WP_REST_Request $request ) {
+		$secret = trim( (string) $this->settings_manager->get_setting( 'webhook_secret', '' ) );
+
+		if ( '' === $secret ) {
+			error_log( '[GHL Webhook] Rejected: secret not configured; ip=' . $this->get_remote_ip( $request ) );
+			return new \WP_Error(
+				'webhook_secret_missing',
+				__( 'Webhook secret not configured. Regenerate it in settings and add it to your GoHighLevel webhook headers.', 'ghl-crm-integration' ),
+				[ 'status' => 401 ]
+			);
+		}
+
+		$content_type = (string) $request->get_header( 'content-type' );
+		if ( '' === $content_type || false === stripos( $content_type, 'application/json' ) ) {
+			error_log( '[GHL Webhook] Rejected: invalid content type; got=' . $content_type . '; ip=' . $this->get_remote_ip( $request ) );
+			return new \WP_Error( 'invalid_content_type', __( 'Content-Type must be application/json', 'ghl-crm-integration' ), [ 'status' => 415 ] );
+		}
+
+		$raw_body   = (string) $request->get_body();
+		$body_bytes = strlen( $raw_body );
+		if ( $body_bytes > self::MAX_WEBHOOK_BODY_BYTES ) {
+			error_log( '[GHL Webhook] Rejected: payload too large; bytes=' . $body_bytes . '; ip=' . $this->get_remote_ip( $request ) );
+			return new \WP_Error( 'payload_too_large', __( 'Webhook payload exceeds the allowed size.', 'ghl-crm-integration' ), [ 'status' => 413 ] );
+		}
+
+		$provided_token = trim( (string) $request->get_header( self::WEBHOOK_SECRET_HEADER ) );
+
+
+		if ( '' === $provided_token || ! hash_equals( $secret, $provided_token ) ) {
+			error_log(
+				'[GHL Webhook] Rejected: invalid or missing token; has_token=' . ( '' !== $provided_token ? 'yes' : 'no' ) .
+				'; header=' . self::WEBHOOK_SECRET_HEADER . '; ip=' . $this->get_remote_ip( $request )
+			);
+			return new \WP_Error( 'invalid_webhook_signature', __( 'Invalid or missing webhook token.', 'ghl-crm-integration' ), [ 'status' => 401 ] );
+		}
+
 		return true;
+	}
+
+	/**
+	 * Get existing webhook secret or generate one if missing
+	 *
+	 * @return string
+	 */
+	public function get_or_create_webhook_secret(): string {
+		$secret = (string) $this->settings_manager->get_setting( 'webhook_secret', '' );
+		if ( '' !== $secret ) {
+			return $secret;
+		}
+
+		return $this->generate_and_store_webhook_secret();
+	}
+
+	/**
+	 * Generate and persist a new webhook secret
+	 *
+	 * @return string
+	 */
+	private function generate_and_store_webhook_secret(): string {
+		$secret = wp_generate_password( 48, false, false );
+		$this->settings_manager->update_setting( 'webhook_secret', $secret );
+		return $secret;
+	}
+
+	/**
+	 * Get best-effort remote IP for logging
+	 *
+	 * @param \WP_REST_Request $request Request object
+	 * @return string
+	 */
+	private function get_remote_ip( \WP_REST_Request $request ): string {
+		$ip = $request->get_header( 'x-forwarded-for' );
+		if ( is_string( $ip ) && '' !== $ip ) {
+			// Use first in list if multiple
+			$parts     = explode( ',', $ip );
+			$candidate = trim( $parts[0] );
+			if ( filter_var( $candidate, FILTER_VALIDATE_IP ) ) {
+				return $candidate;
+			}
+		}
+
+		$remote_addr = $request->get_header( 'remote_addr' );
+		if ( is_string( $remote_addr ) && '' !== $remote_addr ) {
+			$candidate = trim( $remote_addr );
+			if ( filter_var( $candidate, FILTER_VALIDATE_IP ) ) {
+				return $candidate;
+			}
+		}
+
+		$server_remote_addr = $_SERVER['REMOTE_ADDR'] ?? '';
+		if ( is_string( $server_remote_addr ) && '' !== $server_remote_addr ) {
+			$candidate = trim( $server_remote_addr );
+			if ( filter_var( $candidate, FILTER_VALIDATE_IP ) ) {
+				return $candidate;
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Handle AJAX request to regenerate the webhook secret
+	 *
+	 * @return void
+	 */
+	public function handle_regenerate_webhook_secret(): void {
+		check_ajax_referer( 'ghl_crm_admin', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'ghl-crm-integration' ) ], 403 );
+		}
+
+		$secret = $this->generate_and_store_webhook_secret();
+
+		wp_send_json_success(
+			[
+				'webhook_secret' => $secret,
+				'header'         => self::WEBHOOK_SECRET_HEADER,
+				'message'        => __( 'Webhook secret regenerated. Update your GoHighLevel automation headers.', 'ghl-crm-integration' ),
+			]
+		);
 	}
 
 	/**
@@ -487,9 +614,12 @@ class WebhookHandler {
 	 */
 	public function get_webhook_setup_instructions(): array {
 		$webhook_url = $this->get_webhook_url();
+		$webhook_secret = $this->get_or_create_webhook_secret();
 
 		return [
 			'webhook_url'      => $webhook_url,
+			'webhook_secret'   => $webhook_secret,
+			'webhook_header'   => self::WEBHOOK_SECRET_HEADER,
 			'instructions'     => [
 				'title'       => 'Manual Webhook Setup in GoHighLevel',
 				'description' => 'Copy the webhook URL below and create an automation in your GoHighLevel account.',
@@ -502,9 +632,10 @@ class WebhookHandler {
 					'6. Add action: Outbound Webhook',
 					'7. Paste the webhook URL from step 1',
 					'8. Set method to POST',
-					'9. Set Content-Type header to application/json',
-					'10. Configure the JSON body with contact data',
-					'11. Save and activate the workflow',
+					'9. Add header: ' . strtoupper( self::WEBHOOK_SECRET_HEADER ) . ' = ' . $webhook_secret,
+					'10. Set Content-Type header to application/json',
+					'11. Configure the JSON body with contact data',
+					'12. Save and activate the workflow',
 				],
 			],
 			'payload_examples' => [
@@ -557,6 +688,7 @@ class WebhookHandler {
 	 */
 	public function test_webhook_endpoint() {
 		$webhook_url = $this->get_webhook_url();
+		$webhook_secret = $this->get_or_create_webhook_secret();
 
 		// Sample contact create payload
 		$sample_payload = [
@@ -580,6 +712,7 @@ class WebhookHandler {
 					'headers' => [
 						'Content-Type' => 'application/json',
 						'User-Agent'   => 'GHL-Webhook-Test/1.0',
+						'X-GHL-Token'  => $webhook_secret,
 					],
 					'body'    => json_encode( $sample_payload ),
 					'timeout' => 30,
