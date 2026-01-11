@@ -157,7 +157,7 @@ class AutoLoginManager {
 		}
 
 		// Verify token hash matches.
-		if ( ! isset( $token_data['token_hash'] ) || $token_data['token_hash'] !== $token_hash ) {
+		if ( ! isset( $token_data['token_hash'] ) || hash_equals( $token_data['token_hash'], $token_hash ) === false ) {
 
 			return [
 				'success' => false,
