@@ -457,7 +457,11 @@ class UserHooks {
 	 * @param \WP_User $user       User object.
 	 * @return void
 	 */
-	public function on_user_login( string $user_login, \WP_User $user ): void {
+	public function on_user_login( $user_login, $user ): void {
+		if ( empty( $user_login ) || ! $user instanceof \WP_User ) {
+			return; // Ignore malformed login events (e.g., Local auto-login without user object)
+		}
+
 		// Throttle: Only update once per hour to avoid API spam
 		$last_login_key = "ghl_last_login_{$user->ID}";
 		$last_sync      = get_transient( $last_login_key );
