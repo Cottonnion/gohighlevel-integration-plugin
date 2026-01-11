@@ -44,7 +44,6 @@ debug.log
 # Ignore all dotfiles/dotfolders except .github
 .*
 !.github/
-!.github/**
 
 # todo
 TODO.md
