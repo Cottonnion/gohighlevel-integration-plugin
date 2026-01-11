@@ -168,7 +168,7 @@ class RestAPIController {
 		}
 
 		// Validate API key
-		if ( empty( $stored_key ) || $provided_key !== $stored_key ) {
+		if ( empty( $stored_key ) || hash_equals( $stored_key, $provided_key ) === false ) {
 			return new \WP_Error(
 				'rest_forbidden',
 				__( 'Invalid API key', 'ghl-crm-integration' ),
