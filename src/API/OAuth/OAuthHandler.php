@@ -103,9 +103,11 @@ class OAuthHandler {
 		// Use REST API callback as primary method (it proxies to admin page)
 		$redirect_uri = rest_url( 'ghl/v1/callback' );
 
-		// State contains the admin page URL to return to after OAuth
-		$return_url = admin_url( 'admin.php?page=ghl-crm-admin' );
-		$state = rawurlencode( $return_url );
+		// Generate secure random state for CSRF protection
+		$state = bin2hex( random_bytes( 32 ) );
+		
+		// Store state in transient (expires in 10 minutes)
+		set_transient( 'ghl_oauth_state_' . get_current_user_id(), $state, 10 * MINUTE_IN_SECONDS );
 
 		return $this->client->get_oauth_authorization_url( $redirect_uri, $state );
 	}
@@ -197,26 +199,28 @@ class OAuthHandler {
 	 * Process OAuth callback and exchange code for tokens
 	 *
 	 * @param string $code  Authorization code
-	 * @param string $state State parameter for verification (empty when using REST proxy)
+	 * @param string $state State parameter for CSRF verification
 	 * @return array|\WP_Error Processing result or error
 	 */
 	private function process_oauth_callback( string $code, string $state ) {
-		// Only verify state if it was provided (not used when REST proxy handles return URL)
-		if ( ! empty( $state ) ) {
-			// Verify state parameter
-			$stored_state = get_transient( 'ghl_oauth_state_' . get_current_user_id() );
-
-			if ( empty( $stored_state ) ) {
-				return new \WP_Error( 'invalid_state', __( 'OAuth state expired. Please try again.', 'ghl-crm-integration' ) );
-			}
-
-			if ( ! hash_equals( $stored_state, $state ) ) {
-				return new \WP_Error( 'invalid_state', __( 'Invalid OAuth state parameter', 'ghl-crm-integration' ) );
-			}
-
-			// Clean up state transient
-			delete_transient( 'ghl_oauth_state_' . get_current_user_id() );
+		// ALWAYS verify state parameter for CSRF protection
+		if ( empty( $state ) ) {
+			return new \WP_Error( 'missing_state', __( 'OAuth state parameter is required for security.', 'ghl-crm-integration' ) );
 		}
+
+		// Verify state parameter
+		$stored_state = get_transient( 'ghl_oauth_state_' . get_current_user_id() );
+
+		if ( empty( $stored_state ) ) {
+			return new \WP_Error( 'invalid_state', __( 'OAuth state expired. Please try again.', 'ghl-crm-integration' ) );
+		}
+
+		if ( ! hash_equals( $stored_state, $state ) ) {
+			return new \WP_Error( 'invalid_state', __( 'Invalid OAuth state parameter', 'ghl-crm-integration' ) );
+		}
+
+		// Clean up state transient
+		delete_transient( 'ghl_oauth_state_' . get_current_user_id() );
 
 		try {
 			// Exchange code for tokens - use REST callback URL to match what was sent to GHL

@@ -157,8 +157,14 @@ class UserHooks {
 		$role_based_tags   = [];
 
 		// Check if this is an admin-created user (role in POST data)
-		if ( ! empty( $_POST['role'] ) && is_string( $_POST['role'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- WordPress core handles this
+		// Only trust $_POST in admin context with proper capabilities
+		if ( is_admin() && 
+		     current_user_can( 'create_users' ) && 
+		     ! empty( $_POST['role'] ) && 
+		     is_string( $_POST['role'] ) &&
+		     doing_action( 'user_register' ) || doing_action( 'edit_user_created_user' ) ) {
 			// Admin is creating user with specific role - use POST data
+			// This is safe because we're in admin context with proper capabilities
 			$assigned_role   = sanitize_text_field( wp_unslash( $_POST['role'] ) );
 			$role_based_tags = $role_tags_manager->get_tags_for_role( $assigned_role );
 		} else {

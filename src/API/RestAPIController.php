@@ -167,8 +167,8 @@ class RestAPIController {
 			);
 		}
 
-		// Validate API key
-		if ( empty( $stored_key ) || $provided_key !== $stored_key ) {
+		// Validate API key using constant-time comparison
+		if ( empty( $stored_key ) || ! hash_equals( $stored_key, $provided_key ) ) {
 			return new \WP_Error(
 				'rest_forbidden',
 				__( 'Invalid API key', 'ghl-crm-integration' ),
@@ -379,7 +379,11 @@ class RestAPIController {
 		$requests_per_minute = $settings['rest_api_requests_per_minute'] ?? 60;
 		$client_ip           = $this->get_client_ip();
 
-		$transient_key = 'ghl_rest_api_rate_' . md5( $client_ip );
+		// Use secure hash with secret salt to prevent key prediction
+		// Use WordPress auth key as secret if available
+		$secret = defined( 'AUTH_KEY' ) ? AUTH_KEY : 'ghl_crm_rate_limit_secret';
+		$transient_key = 'ghl_rest_api_rate_' . hash_hmac( 'sha256', $client_ip, $secret );
+		
 		$request_count = get_transient( $transient_key );
 
 		if ( false === $request_count ) {
@@ -413,29 +417,45 @@ class RestAPIController {
 
 	/**
 	 * Get client IP address
+	 * 
+	 * By default only trusts REMOTE_ADDR to prevent header spoofing.
+	 * Can be configured to trust proxy headers via filter.
 	 *
 	 * @return string
 	 */
 	private function get_client_ip(): string {
-		$ip_keys = [
-			'HTTP_CF_CONNECTING_IP', // Cloudflare
-			'HTTP_X_FORWARDED_FOR',
-			'HTTP_X_REAL_IP',
-			'REMOTE_ADDR',
-		];
+		// By default, only trust REMOTE_ADDR (cannot be spoofed)
+		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '0.0.0.0';
 
-		foreach ( $ip_keys as $key ) {
-			if ( ! empty( $_SERVER[ $key ] ) ) {
-				$ip = sanitize_text_field( wp_unslash( $_SERVER[ $key ] ) );
-				// Handle comma-separated IPs (take first one)
-				if ( strpos( $ip, ',' ) !== false ) {
-					$ip = trim( explode( ',', $ip )[0] );
+		// Allow trusted proxy headers to be enabled via filter
+		// Only enable this if you're behind a verified reverse proxy like Cloudflare
+		$trust_proxy_headers = apply_filters( 'ghl_crm_trust_proxy_headers', false );
+		
+		if ( $trust_proxy_headers ) {
+			// Check proxy headers in order of preference
+			$proxy_headers = [
+				'HTTP_CF_CONNECTING_IP', // Cloudflare
+				'HTTP_X_FORWARDED_FOR',
+				'HTTP_X_REAL_IP',
+			];
+
+			foreach ( $proxy_headers as $header ) {
+				if ( ! empty( $_SERVER[ $header ] ) ) {
+					$proxy_ip = sanitize_text_field( wp_unslash( $_SERVER[ $header ] ) );
+					// Handle comma-separated IPs (take first one)
+					if ( strpos( $proxy_ip, ',' ) !== false ) {
+						$proxy_ip = trim( explode( ',', $proxy_ip )[0] );
+					}
+					// Validate IP format
+					if ( filter_var( $proxy_ip, FILTER_VALIDATE_IP ) ) {
+						$ip = $proxy_ip;
+						break;
+					}
 				}
-				return $ip;
 			}
 		}
 
-		return '0.0.0.0';
+		return $ip;
 	}
 
 	/**
