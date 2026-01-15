@@ -1139,4 +1139,3 @@ class QueueManager {
 		}
 	}
 }
-
