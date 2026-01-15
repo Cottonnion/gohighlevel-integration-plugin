@@ -160,6 +160,11 @@ class SettingsManager {
 					continue;
 				}
 
+				// Convert empty array marker before type checks so location-scoped tag keys are handled correctly
+				if ( '__EMPTY_ARRAY__' === $value ) {
+					$value = [];
+				}
+
 				// Sanitize based on value type
 				if ( is_array( $value ) ) {
 					// Special handling for location-specific tag configurations
@@ -179,17 +184,12 @@ class SettingsManager {
 						continue;
 					}
 
-					// Check if this is an empty array marker from JavaScript
-					if ( '__EMPTY_ARRAY__' === $value ) {
-						$new_settings[ $key ] = [];
+					// Handle URL fields with proper sanitization
+					if ( 'ghl_white_label_domain' === $key ) {
+						$new_settings[ $key ] = ! empty( $value ) ? esc_url_raw( wp_unslash( $value ) ) : '';
 					} else {
-						// Handle URL fields with proper sanitization
-						if ( 'ghl_white_label_domain' === $key ) {
-							$new_settings[ $key ] = ! empty( $value ) ? esc_url_raw( wp_unslash( $value ) ) : '';
-						} else {
-							// Handle scalar values
-							$new_settings[ $key ] = sanitize_text_field( wp_unslash( $value ) );
-						}
+						// Handle scalar values
+						$new_settings[ $key ] = sanitize_text_field( wp_unslash( $value ) );
 					}
 
 					// Check if API credentials changed
