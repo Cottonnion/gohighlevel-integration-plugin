@@ -19,6 +19,9 @@
             this.currentView = null;
             this.config = window.ghlCrmSpaConfig || {};
             this.viewCache = {};
+            this.prefetchCache = {};
+            this.inflightPrefetch = {};
+            this.prefetchTtl = 60000; // 60s cache window for prefetch payloads
             this.currentParams = {};
             
             this.init();
@@ -33,6 +36,9 @@
             
             // Load initial route
             this.handleRouteChange();
+
+            // Prefetch heavy views on intent (hover) and idle
+            this.bindPrefetchTriggers();
         }
 
         /**
@@ -123,7 +129,37 @@
          * @param {Function} callback - Optional callback after view is loaded
          */
         loadView(view, params = {}, callback = null) {
-            // Show loading state
+            const cacheKey = this.getCacheKey(view, params);
+            const cached = this.viewCache[cacheKey];
+            const prefetched = this.prefetchCache[cacheKey];
+
+            const validCache = (entry) => entry && (Date.now() - entry.fetchedAt) < this.prefetchTtl;
+
+            const useEntry = (entry) => {
+                this.viewCache[cacheKey] = entry; // promote so future reads use main cache
+                this.currentView = view;
+                this.currentParams = params;
+                this.renderView(entry.data, params);
+
+                if (typeof callback === 'function') {
+                    callback();
+                }
+
+                // Refresh in background to keep data fresh without blocking UI
+                this.prefetchView(view, params, true);
+            };
+
+            if (validCache(cached)) {
+                useEntry(cached);
+                return;
+            }
+
+            if (validCache(prefetched)) {
+                useEntry(prefetched);
+                return;
+            }
+
+            // Show loading state when no fresh cache
             this.showLoading();
 
             // Make AJAX request
@@ -141,6 +177,12 @@
                         this.currentView = view;
                         this.currentParams = params;
                         this.renderView(response.data, params);
+
+                        // Store in view cache for quick subsequent renders
+                        this.viewCache[cacheKey] = {
+                            data: response.data,
+                            fetchedAt: Date.now(),
+                        };
                         
                         // Execute callback if provided
                         if (typeof callback === 'function') {
@@ -302,6 +344,104 @@
                     <p><strong>Error:</strong> ${message}</p>
                 </div>
             `);
+        }
+
+        /**
+         * Bind hover/idle prefetch triggers for heavy views.
+         */
+        bindPrefetchTriggers() {
+            const hoverViews = ['integrations', 'field-mapping', 'sync-logs', 'custom-objects', 'settings', 'forms', 'custom-objects'];
+
+            hoverViews.forEach((view) => {
+                const selector = `.ghl-nav-tab[data-route="${view}"], a[href*="#/${view}"]`;
+                console.log('[SPA Prefetch] binding hover for', view, 'on', selector);
+                $(document).on('mouseenter', selector, () => {
+                    console.log('[SPA Prefetch] hover detected for', view);
+                    this.debouncedPrefetch(view);
+                });
+            });
+
+            // Idle prefetch after initial load to warm caches without blocking first paint
+            setTimeout(() => {
+                console.log('[SPA Prefetch] idle prefetch start');
+                hoverViews.forEach((view) => this.prefetchView(view));
+            }, 800);
+        }
+
+        debouncedPrefetch(view) {
+            clearTimeout(this.prefetchTimer);
+            this.prefetchTimer = setTimeout(() => {
+                this.prefetchView(view);
+            }, 200);
+        }
+
+        /**
+         * Prefetch a view without touching the UI.
+         * @param {string} view
+         * @param {Object} params
+         * @param {boolean} silent  If true, suppresses caching into prefetch cache (used for background refresh).
+         */
+        prefetchView(view, params = {}, silent = false) {
+            const cacheKey = this.getCacheKey(view, params);
+            const cached = this.viewCache[cacheKey];
+            const preCached = this.prefetchCache[cacheKey];
+
+            if (cached && (Date.now() - cached.fetchedAt) < this.prefetchTtl) {
+                console.log('[SPA Prefetch] skip (cached fresh)', view, cacheKey);
+                return;
+            }
+
+            if (preCached && (Date.now() - preCached.fetchedAt) < this.prefetchTtl) {
+                console.log('[SPA Prefetch] skip (prefetch fresh)', view, cacheKey);
+                return;
+            }
+
+            if (this.inflightPrefetch[cacheKey]) {
+                console.log('[SPA Prefetch] skip (inflight)', view, cacheKey);
+                return;
+            }
+
+            console.log('[SPA Prefetch] request start', view, cacheKey, 'silent:', silent);
+            this.inflightPrefetch[cacheKey] = true;
+
+            $.ajax({
+                url: this.config.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'ghl_crm_spa_view',
+                    nonce: this.config.nonce,
+                    view: view,
+                    params: params
+                },
+                success: (response) => {
+                    if (response.success && response.data) {
+                        const payload = {
+                            data: response.data,
+                            fetchedAt: Date.now(),
+                        };
+
+                        if (silent) {
+                            this.viewCache[cacheKey] = payload;
+                            console.log('[SPA Prefetch] stored in main cache (silent refresh)', view, cacheKey);
+                        } else {
+                            this.prefetchCache[cacheKey] = payload;
+                            console.log('[SPA Prefetch] stored in prefetch cache', view, cacheKey);
+                        }
+                    }
+                },
+                complete: () => {
+                    delete this.inflightPrefetch[cacheKey];
+                    console.log('[SPA Prefetch] request complete', view, cacheKey);
+                }
+            });
+        }
+
+        getCacheKey(view, params = {}) {
+            try {
+                return `${view}::${JSON.stringify(params || {})}`;
+            } catch (e) {
+                return view;
+            }
         }
 
         /**
