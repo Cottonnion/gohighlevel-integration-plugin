@@ -64,3 +64,5 @@ function ghl_crm_init() {
 
 // Start the plugin
 ghl_crm_init();
+
+include_once GHL_CRM_PATH . 'functions.php';
