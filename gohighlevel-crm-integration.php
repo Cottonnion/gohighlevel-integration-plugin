@@ -28,7 +28,11 @@ define( 'GHL_CRM_VERSION', '1.0.0' );
 define( 'GHL_CRM_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GHL_CRM_URL', plugin_dir_url( __FILE__ ) );
 define( 'GHL_CRM_BASENAME', plugin_basename( __FILE__ ) );
-define( 'GHL_CRM_TEXTDOMAIN', 'crm-integration' );
+define( 'GHL_CRM_TEXTDOMAIN', 'ghl-crm-integration' );
+
+add_action( 'init', function() {
+	load_plugin_textdomain( 'ghl-crm-integration', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+}, 1 );
 
 // Require Composer autoloader
 if ( file_exists( GHL_CRM_PATH . 'vendor/autoload.php' ) ) {
