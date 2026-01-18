@@ -295,6 +295,12 @@ class WebhookHandler {
 		// Detect webhook format and normalize
 		$normalized = $this->normalize_webhook_payload( $body );
 
+		// Mark contact as inbound to prevent immediate outbound ping-pong
+		if ( isset( $normalized['data']['id'] ) && ! empty( $normalized['data']['id'] ) ) {
+			$contact_id = (string) $normalized['data']['id'];
+			set_transient( 'ghl_inbound_webhook_' . $contact_id, time(), 30 ); // short-lived guard
+		}
+
 		// Log webhook receipt
 		$this->logger->log(
 			'webhook_received',
