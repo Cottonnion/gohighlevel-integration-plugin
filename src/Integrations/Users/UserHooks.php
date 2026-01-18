@@ -287,6 +287,15 @@ class UserHooks {
 		$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
 		$contact_id = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 
+		// If this user just came from an inbound webhook, skip outbound profile sync to avoid loops
+		if ( $contact_id ) {
+			$inbound_guard = get_transient( 'ghl_inbound_webhook_' . $contact_id );
+			if ( false !== $inbound_guard ) {
+				delete_transient( 'ghl_inbound_webhook_' . $contact_id );
+				return false;
+			}
+		}
+
 		if ( $contact_id ) {
 			try {
 				$client  = \GHL_CRM\API\Client\Client::get_instance();
