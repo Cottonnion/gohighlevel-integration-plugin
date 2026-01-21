@@ -534,17 +534,16 @@ class QueueManager {
 
 				// Store contact ID, tags, and sync time in user meta (for admin columns and profile page)
 				if ( 'user' === $item->item_type && ! empty( $contact_id ) ) {
-					update_user_meta( (int) $item->item_id, '_ghl_contact_id', $contact_id );
+					$tag_manager = TagManager::get_instance();
+					$tag_manager->store_user_contact_id( (int) $item->item_id, (string) $contact_id );
 					update_user_meta( (int) $item->item_id, '_ghl_last_sync', time() );
 
-					// Check for pending family tags and queue them
-					$pending_family_tags = get_user_meta( (int) $item->item_id, '_ghl_pending_family_tags', true );
-					if ( is_array( $pending_family_tags ) && ! empty( $pending_family_tags ) ) {
-						// Queue tag addition for family inheritance
-						if ( class_exists( 'GHL_CRM\Core\TagManager' ) ) {
-							$tag_manager  = TagManager::get_instance();
-							$payload_tags = $tag_manager->prepare_tags_for_payload( $pending_family_tags );
-							
+					$pending_tags = get_user_meta( (int) $item->item_id, '_ghl_pending_tags', true );
+					if ( is_array( $pending_tags ) && ! empty( $pending_tags ) ) {
+						$normalized_pending = $tag_manager->normalize_tag_input( $pending_tags );
+						$payload_tags      = $tag_manager->prepare_tags_for_payload( $normalized_pending['ids'], $normalized_pending['pairs'] );
+
+						if ( ! empty( $payload_tags ) ) {
 							$this->add_to_queue(
 								'user',
 								(int) $item->item_id,
@@ -552,11 +551,30 @@ class QueueManager {
 								[
 									'contact_id' => $contact_id,
 									'tags'       => array_values( array_unique( $payload_tags ) ),
-									'reason'     => 'Family inheritance - pending tags applied after registration',
+									'reason'     => 'Pending tags applied after contact creation',
 								]
 							);
 						}
-						
+
+						delete_user_meta( (int) $item->item_id, '_ghl_pending_tags' );
+					}
+
+					// Check for pending family tags and queue them
+					$pending_family_tags = get_user_meta( (int) $item->item_id, '_ghl_pending_family_tags', true );
+					if ( is_array( $pending_family_tags ) && ! empty( $pending_family_tags ) ) {
+						$payload_tags = $tag_manager->prepare_tags_for_payload( $pending_family_tags );
+
+						$this->add_to_queue(
+							'user',
+							(int) $item->item_id,
+							'add_tags',
+							[
+								'contact_id' => $contact_id,
+								'tags'       => array_values( array_unique( $payload_tags ) ),
+								'reason'     => 'Family inheritance - pending tags applied after registration',
+							]
+						);
+
 						// Clear pending tags
 						delete_user_meta( (int) $item->item_id, '_ghl_pending_family_tags' );
 					}
@@ -597,13 +615,14 @@ class QueueManager {
 					$order = wc_get_order( $item->item_id );
 					if ( $order && $order->get_customer_id() ) {
 						$user_id = $order->get_customer_id();
-						update_user_meta( $user_id, '_ghl_contact_id', $contact_id );
+						$tag_manager = TagManager::get_instance();
+						$tag_manager->store_user_contact_id( $user_id, (string) $contact_id );
 						update_user_meta( $user_id, '_ghl_last_sync', time() );
 
 						// Store tags from payload
 						$payload_data = json_decode( $item->payload, true );
 						if ( ! empty( $payload_data['tags'] ) && is_array( $payload_data['tags'] ) ) {
-							TagManager::get_instance()->store_user_tags( $user_id, $payload_data['tags'] );
+							$tag_manager->store_user_tags( $user_id, $payload_data['tags'] );
 						}
 					}
 				}

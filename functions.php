@@ -105,15 +105,26 @@ if ( ! function_exists( 'ghl_crm_add_tags_to_user' ) ) {
 		}
 
 		$tag_manager = TagManager::get_instance();
-		$contact_id  = $tag_manager->get_user_contact_id( $user_id, $location_id );
+		$normalized = $tag_manager->normalize_tag_input( $tags );
+		$contact_id = $tag_manager->get_user_contact_id( $user_id, $location_id );
 
 		if ( ! $contact_id ) {
-			return false;
+			$pending_tags = get_user_meta( $user_id, '_ghl_pending_tags', true );
+			$pending_tags = is_array( $pending_tags ) ? $pending_tags : [];
+
+			$merged_tags = array_values( array_unique( array_merge( $pending_tags, $normalized['ids'] ) ) );
+
+			if ( empty( $merged_tags ) ) {
+				return false;
+			}
+
+			update_user_meta( $user_id, '_ghl_pending_tags', $merged_tags );
+
+			return true;
 		}
 
 		// Normalize tags (converts names to IDs when possible)
-		$normalized = $tag_manager->normalize_tag_input( $tags );
-		$tag_names  = $tag_manager->prepare_tags_for_payload( $normalized['ids'], $normalized['pairs'] );
+		$tag_names = $tag_manager->prepare_tags_for_payload( $normalized['ids'], $normalized['pairs'] );
 
 		if ( empty( $tag_names ) ) {
 			return false;
