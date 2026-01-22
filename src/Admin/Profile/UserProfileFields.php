@@ -91,6 +91,11 @@ class UserProfileFields {
 			return;
 		}
 
+		// Limit GHL profile tools to site administrators
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
 		// Add GHL section to user profile pages
 		add_action( 'show_user_profile', [ $this, 'render_ghl_section' ], 10 );
 		add_action( 'edit_user_profile', [ $this, 'render_ghl_section' ], 10 );
@@ -245,6 +250,10 @@ class UserProfileFields {
 			return;
 		}
 
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
 		// Enqueue Select2 (registered by AssetsManager with plugin-specific handles)
 		wp_enqueue_style( 'ghl-crm-select2-css' );
 		wp_enqueue_script( 'ghl-crm-select2' );
@@ -304,7 +313,7 @@ class UserProfileFields {
 	 */
 	public function render_ghl_section( \WP_User $user ): void {
 		// Check permissions
-		if ( ! current_user_can( 'edit_user', $user->ID ) ) {
+		if ( ! current_user_can( 'manage_options' ) || ! current_user_can( 'edit_user', $user->ID ) ) {
 			return;
 		}
 
@@ -516,7 +525,7 @@ class UserProfileFields {
 	 */
 	public function save_ghl_data( int $user_id ): void {
 		// Check permissions
-		if ( ! current_user_can( 'edit_user', $user_id ) ) {
+		if ( ! current_user_can( 'manage_options' ) || ! current_user_can( 'edit_user', $user_id ) ) {
 			return;
 		}
 
@@ -578,7 +587,7 @@ class UserProfileFields {
 		check_ajax_referer( 'ghl_user_profile', 'nonce' );
 
 		// Check permissions
-		if ( ! current_user_can( 'edit_users' ) ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ] );
 		}
 
@@ -643,7 +652,7 @@ class UserProfileFields {
 		check_ajax_referer( 'ghl_user_profile', 'nonce' );
 
 		// Check permissions
-		if ( ! current_user_can( 'edit_users' ) ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ] );
 		}
 
@@ -789,7 +798,7 @@ class UserProfileFields {
 		check_ajax_referer( 'ghl_user_profile', 'nonce' );
 
 		// Check permissions
-		if ( ! current_user_can( 'edit_users' ) ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ] );
 		}
 
