@@ -509,8 +509,8 @@ textarea.ghl-input {
    Select2 Overrides
    ======================================== */
 .select2-container {
-	width: 100% !important;
-	max-width: 100% !important;
+	width: 100%;
+	max-width: 100%;
 }
 .select2-container--default .select2-selection--multiple {
 	border: 2px solid #ccc !important;
