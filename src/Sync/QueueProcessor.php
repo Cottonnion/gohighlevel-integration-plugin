@@ -367,10 +367,10 @@ class QueueProcessor {
 	 *
 	 * @param \GHL_CRM\API\Resources\ContactResource $contact_resource Contact resource
 	 * @param array                                  $payload Payload data
-	 * @return array|bool
+	 * @return array
 	 * @throws \Exception
 	 */
-	private function handle_add_tags( $contact_resource, array $payload ) {
+	private function handle_add_tags( $contact_resource, array $payload ): array {
 		$contact_id = $payload['contact_id'] ?? '';
 		$tags       = $payload['tags'] ?? [];
 
@@ -393,7 +393,22 @@ class QueueProcessor {
 
 		// Update with merged tags
 		$result = $contact_resource->update( $contact_id, [ 'tags' => $merged_tags ] );
-		return ! empty( $result ) ? $result : false;
+		
+		if ( ! empty( $result ) ) {
+			return [
+				'success'    => true,
+				'updated'    => true,
+				'contact_id' => $contact_id,
+				'action'     => 'add_tags',
+				'tags'       => $merged_tags,
+			];
+		} else {
+			return [
+				'success' => true,
+				'skipped' => true,
+				'reason'  => 'Empty result from GHL API',
+			];
+		}
 	}
 
 	/**
@@ -401,10 +416,10 @@ class QueueProcessor {
 	 *
 	 * @param \GHL_CRM\API\Resources\ContactResource $contact_resource Contact resource
 	 * @param array                                  $payload Payload data
-	 * @return array|bool
+	 * @return array
 	 * @throws \Exception
 	 */
-	private function handle_remove_tags( $contact_resource, array $payload ) {
+	private function handle_remove_tags( $contact_resource, array $payload ): array {
 		$contact_id = $payload['contact_id'] ?? '';
 		$tags       = $payload['tags'] ?? [];
 
@@ -413,7 +428,22 @@ class QueueProcessor {
 		}
 
 		$result = $contact_resource->remove_tags( $contact_id, $tags );
-		return ! empty( $result ) ? $result : false;
+		
+		if ( ! empty( $result ) ) {
+			return [
+				'success'    => true,
+				'updated'    => true,
+				'contact_id' => $contact_id,
+				'action'     => 'remove_tags',
+				'tags'       => $tags,
+			];
+		} else {
+			return [
+				'success' => true,
+				'skipped' => true,
+				'reason'  => 'Empty result from GHL API',
+			];
+		}
 	}
 
 /**
@@ -422,13 +452,13 @@ class QueueProcessor {
  * @param \GHL_CRM\API\Client\Client             $client Client instance
  * @param \GHL_CRM\API\Resources\ContactResource $contact_resource Contact resource
  * @param array                                  $payload Payload data
- * @return array|bool
+ * @return array
  * @throws \Exception
  */
-private function handle_user_register_update( $client, $contact_resource, array $payload ) {
+private function handle_user_register_update( $client, $contact_resource, array $payload ): array {
 	$location_id = $this->get_location_id();
 	if ( empty( $location_id ) ) {
-		return false;
+		throw new \Exception( 'Location ID not configured' );
 	}
 
 	$email = $payload['email'] ?? '';
@@ -455,7 +485,11 @@ private function handle_user_register_update( $client, $contact_resource, array 
 				
 				return $result;
 			} else {
-				return false;
+				return [
+					'success' => true,
+					'skipped' => true,
+					'reason'  => 'Empty result from GHL API update',
+				];
 			}
 		} catch ( \Exception $e ) {
 			throw $e;
@@ -471,7 +505,11 @@ private function handle_user_register_update( $client, $contact_resource, array 
 		if ( ! empty( $result ) ) {
 			return $result;
 		} else {
-			return false;
+			return [
+				'success' => true,
+				'skipped' => true,
+				'reason'  => 'Empty result from GHL API update (cached contact)',
+			];
 		}
 	}
 
@@ -491,7 +529,11 @@ private function handle_user_register_update( $client, $contact_resource, array 
 			if ( ! empty( $result ) ) {
 				return $result;
 			} else {
-				return false;
+				return [
+					'success' => true,
+					'skipped' => true,
+					'reason'  => 'Empty result from GHL API update (existing contact)',
+				];
 			}
 		}
 	} catch ( \Exception $e ) {
@@ -508,7 +550,11 @@ private function handle_user_register_update( $client, $contact_resource, array 
 			
 			return $result;
 		} else {
-			return false;
+			return [
+				'success' => true,
+				'skipped' => true,
+				'reason'  => 'Empty result from GHL API create',
+			];
 		}
 	} catch ( \Exception $e ) {
 		throw $e;
@@ -555,13 +601,18 @@ private function handle_user_register_update( $client, $contact_resource, array 
 	 * @param \GHL_CRM\API\Client\Client             $client Client instance
 	 * @param \GHL_CRM\API\Resources\ContactResource $contact_resource Contact resource
 	 * @param array                                  $payload Payload data
-	 * @return array|bool
+	 * @return array
 	 */
-	private function handle_user_login( $client, $contact_resource, array $payload ) {
+	private function handle_user_login( $client, $contact_resource, array $payload ): array {
 		$email = $payload['email'] ?? '';
 		
 		if ( empty( $email ) ) {
-			return false;
+			// Return success but indicate no action was taken
+			return [
+				'success' => true,
+				'skipped' => true,
+				'reason'  => 'Empty email',
+			];
 		}
 		
 		$contact = $this->contact_cache->get( $email );
@@ -575,34 +626,68 @@ private function handle_user_register_update( $client, $contact_resource, array 
 					$this->contact_cache->set( $email, $contact );
 				}
 			} catch ( \Exception $e ) {
-				// Contact might not exist in GHL yet - emit error hook but don't fail hard
-				do_action( 'ghl_crm_sync_error', 'user_login_sync_lookup', [ 'email' => $email ], $e );
-				return false;
+				// Contact might not exist in GHL yet - this is not an error
+				// Return success with skipped flag
+				return [
+					'success' => true,
+					'skipped' => true,
+					'reason'  => 'Contact not found in GHL',
+					'email'   => $email,
+				];
 			}
 		}
 
-		if ( $contact ) {
-			try {
-				// Just update email to trigger GHL automations on login
-				// Don't send customFields to avoid "customFields must be an array" error
-				$result = $contact_resource->update(
-					$contact['id'],
-					[
-						'email' => $payload['email'],
-					]
-				);
-				return ! empty( $result ) ? $result : false;
-			} catch ( \Exception $e ) {
-				// Non-critical failure - emit error hook for visibility
-				do_action( 'ghl_crm_sync_error', 'user_login_sync_update', [
-					'contact_id' => $contact['id'] ?? null,
+		// Contact still not found after lookup
+		if ( ! $contact ) {
+			return [
+				'success' => true,
+				'skipped' => true,
+				'reason'  => 'Contact not found in GHL',
+				'email'   => $email,
+			];
+		}
+
+		try {
+			// Just update email to trigger GHL automations on login
+			// Don't send customFields to avoid "customFields must be an array" error
+			$result = $contact_resource->update(
+				$contact['id'],
+				[
+					'email' => $payload['email'],
+				]
+			);
+			
+			if ( ! empty( $result ) ) {
+				return [
+					'success'    => true,
+					'updated'    => true,
+					'contact_id' => $contact['id'],
+					'action'     => 'user_login',
 					'email'      => $email,
-				], $e );
-				return false;
+				];
+			} else {
+				// Update returned empty result
+				return [
+					'success' => true,
+					'skipped' => true,
+					'reason'  => 'Empty result from GHL API',
+					'email'   => $email,
+				];
 			}
+		} catch ( \Exception $e ) {
+			// Log error but don't fail the sync (login tracking is not critical)
+			do_action( 'ghl_crm_sync_error', 'user_login_sync_update', [
+				'contact_id' => $contact['id'] ?? null,
+				'email'      => $email,
+			], $e );
+			
+			return [
+				'success' => true,
+				'skipped' => true,
+				'reason'  => 'Update failed: ' . $e->getMessage(),
+				'email'   => $email,
+			];
 		}
-
-		return false;
 	}
 
 	/**
