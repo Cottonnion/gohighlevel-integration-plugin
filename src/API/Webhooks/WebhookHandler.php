@@ -138,7 +138,6 @@ class WebhookHandler {
 		$secret = trim( (string) $this->settings_manager->get_setting( 'webhook_secret', '' ) );
 
 		if ( '' === $secret ) {
-			error_log( '[GHL Webhook] Rejected: secret not configured; ip=' . $this->get_remote_ip( $request ) );
 			return new \WP_Error(
 				'webhook_secret_missing',
 				__( 'Webhook secret not configured. Regenerate it in settings and add it to your GoHighLevel webhook headers.', 'ghl-crm-integration' ),
@@ -148,14 +147,12 @@ class WebhookHandler {
 
 		$content_type = (string) $request->get_header( 'content-type' );
 		if ( '' === $content_type || false === stripos( $content_type, 'application/json' ) ) {
-			error_log( '[GHL Webhook] Rejected: invalid content type; got=' . $content_type . '; ip=' . $this->get_remote_ip( $request ) );
 			return new \WP_Error( 'invalid_content_type', __( 'Content-Type must be application/json', 'ghl-crm-integration' ), [ 'status' => 415 ] );
 		}
 
 		$raw_body   = (string) $request->get_body();
 		$body_bytes = strlen( $raw_body );
 		if ( $body_bytes > self::MAX_WEBHOOK_BODY_BYTES ) {
-			error_log( '[GHL Webhook] Rejected: payload too large; bytes=' . $body_bytes . '; ip=' . $this->get_remote_ip( $request ) );
 			return new \WP_Error( 'payload_too_large', __( 'Webhook payload exceeds the allowed size.', 'ghl-crm-integration' ), [ 'status' => 413 ] );
 		}
 
@@ -163,10 +160,6 @@ class WebhookHandler {
 
 
 		if ( '' === $provided_token || ! hash_equals( $secret, $provided_token ) ) {
-			error_log(
-				'[GHL Webhook] Rejected: invalid or missing token; has_token=' . ( '' !== $provided_token ? 'yes' : 'no' ) .
-				'; header=' . self::WEBHOOK_SECRET_HEADER . '; ip=' . $this->get_remote_ip( $request )
-			);
 			return new \WP_Error( 'invalid_webhook_signature', __( 'Invalid or missing webhook token.', 'ghl-crm-integration' ), [ 'status' => 401 ] );
 		}
 
