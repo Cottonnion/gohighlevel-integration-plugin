@@ -112,22 +112,40 @@ class ConnectionManager {
 	public function test_connection(): array {
 		$settings = $this->settings_repository->get_settings_array();
 
-		if ( empty( $settings['api_token'] ) || empty( $settings['location_id'] ) ) {
+		// Check for OAuth token OR manual API token
+		$has_oauth = ! empty( $settings['oauth_access_token'] );
+		$has_manual = ! empty( $settings['api_token'] );
+		
+		if ( ! $has_oauth && ! $has_manual ) {
 			return [
 				'success' => false,
-				'message' => __( 'Please save your API credentials first.', 'ghl-crm-integration' ),
+				'message' => __( 'Please connect your GoHighLevel account first.', 'ghl-crm-integration' ),
 				'code'    => 400,
 			];
 		}
 
-		// Test the connection
-		$api_url = 'https://services.leadconnectorhq.com/locations/' . $settings['location_id'];
+		// Use OAuth token if available, otherwise use manual token
+		$auth_token = $has_oauth ? $settings['oauth_access_token'] : $settings['api_token'];
+		
+		// For OAuth, location_id might be stored differently
+		$location_id = $settings['location_id'] ?? '';
+		
+		if ( empty( $location_id ) ) {
+			return [
+				'success' => false,
+				'message' => __( 'Location ID not found. Please reconnect your account.', 'ghl-crm-integration' ),
+				'code'    => 400,
+			];
+		}
+
+		// Test the connection by fetching contacts (simple scope test)
+		$api_url = 'https://services.leadconnectorhq.com/contacts/?locationId=' . $location_id . '&limit=1';
 
 		$response = wp_remote_get(
 			$api_url,
 			[
 				'headers' => [
-					'Authorization' => 'Bearer ' . $settings['api_token'],
+					'Authorization' => 'Bearer ' . $auth_token,
 					'Version'       => $settings['api_version'] ?? '2021-07-28',
 					'Content-Type'  => 'application/json',
 				],
@@ -155,11 +173,10 @@ class ConnectionManager {
 			$this->mark_connection_verified();
 
 			return [
-				'success'       => true,
-				'message'       => __( 'Connection successful! Your API credentials are working.', 'ghl-crm-integration' ),
-				'location_name' => isset( $body['location']['name'] ) ? $body['location']['name'] : '',
-				'status_code'   => $status_code,
-				'code'          => 200,
+				'success'     => true,
+				'message'     => __( 'Connection successful! Your API credentials are working.', 'ghl-crm-integration' ),
+				'status_code' => $status_code,
+				'code'        => 200,
 			];
 		} else {
 			// Mark connection as not verified
@@ -226,12 +243,24 @@ class ConnectionManager {
 		$settings    = $this->settings_repository->get_settings_array( $site_id );
 		$is_verified = $this->is_connection_verified( $site_id );
 
-		$has_credentials = ! empty( $settings['api_token'] ) && ! empty( $settings['location_id'] );
+		// Check for OAuth OR manual credentials
+		$has_oauth = ! empty( $settings['oauth_access_token'] );
+		$has_manual = ! empty( $settings['api_token'] ) && ! empty( $settings['location_id'] );
+		$has_credentials = $has_oauth || $has_manual;
+
+		// Show token preview (OAuth or manual)
+		$token_preview = '';
+		if ( $has_oauth && ! empty( $settings['oauth_access_token'] ) ) {
+			$token_preview = substr( $settings['oauth_access_token'], 0, 10 ) . '... (OAuth)';
+		} elseif ( ! empty( $settings['api_token'] ) ) {
+			$token_preview = substr( $settings['api_token'], 0, 10 ) . '...';
+		}
 
 		return [
 			'has_credentials' => $has_credentials,
 			'is_verified'     => $is_verified,
-			'api_token'       => ! empty( $settings['api_token'] ) ? substr( $settings['api_token'], 0, 10 ) . '...' : '',
+			'is_oauth'        => $has_oauth,
+			'api_token'       => $token_preview,
 			'location_id'     => $settings['location_id'] ?? '',
 			'api_version'     => $settings['api_version'] ?? '2021-07-28',
 			'updated_at'      => $settings['updated_at'] ?? '',
@@ -249,9 +278,12 @@ class ConnectionManager {
 	public function disconnect( ?int $site_id = null ): bool {
 		$settings = $this->settings_repository->get_settings_array( $site_id );
 
-		// Clear API credentials
+		// Clear BOTH OAuth and manual API credentials
 		$settings['api_token']   = '';
 		$settings['location_id'] = '';
+		$settings['oauth_access_token'] = '';
+		$settings['oauth_refresh_token'] = '';
+		$settings['oauth_expires_at'] = 0;
 		$settings['updated_at']  = current_time( 'mysql' );
 
 		// Save cleared settings
@@ -260,6 +292,10 @@ class ConnectionManager {
 		if ( $saved ) {
 			// Mark as unverified
 			$this->mark_connection_unverified( $site_id );
+			
+			// Trigger disconnection action
+			do_action( 'ghl_crm_connection_status_changed', false, 'disconnected' );
+			
 			return true;
 		}
 
