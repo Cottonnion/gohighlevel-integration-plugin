@@ -546,7 +546,7 @@ class Client implements ClientInterface {
 			$log .= ' | ' . wp_json_encode( $context );
 		}
 
-		// error_log( $log );
+		error_log( $log );
 	}
 
 	/**
