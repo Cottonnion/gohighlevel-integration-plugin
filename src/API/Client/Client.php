@@ -31,30 +31,18 @@ class Client implements ClientInterface {
 	private const OAUTH_AUTH_URL = 'https://marketplace.leadconnectorhq.com/oauth/chooselocation';
 
 	/**
-	 * OAuth2 Token URL
+	 * OAuth Proxy Base URL (labgenz.com server)
+	 * Handles OAuth token exchanges securely without exposing client secret
 	 */
-	private const OAUTH_TOKEN_URL = 'https://services.leadconnectorhq.com/oauth/token';
+	private const OAUTH_PROXY_URL = 'https://labgenz.com/wp-json/ghl-proxy/v1';
 
 	/**
-	 * OAuth2 Reconnect URL
-	 */
-	private const OAUTH_RECONNECT_URL = 'https://services.leadconnectorhq.com/oauth/reconnect';
-
-	/**
-	 * OAuth2 Client ID
+	 * OAuth2 Client ID (Public - safe to expose)
 	 * Production OAuth App Client ID
 	 *
 	 * @var string
 	 */
 	private const OAUTH_CLIENT_ID = '68ff9baa25051d0ca83341e9-mh9cljcg';
-
-	/**
-	 * OAuth2 Client Secret
-	 * Production OAuth App Client Secret
-	 *
-	 * @var string
-	 */
-	private const OAUTH_CLIENT_SECRET = '17bd923c-13df-4198-8f78-0675a4b2e99a';
 
 	/**
 	 * OAuth2 Access Token
@@ -451,6 +439,7 @@ class Client implements ClientInterface {
 
 	/**
 	 * Exchange authorization code for access token
+	 * Uses labgenz.com proxy to keep client secret secure
 	 *
 	 * @param string $code         Authorization code from callback
 	 * @param string $redirect_uri Redirect URI used in authorization
@@ -459,32 +448,30 @@ class Client implements ClientInterface {
 	 */
 	public function exchange_code_for_token( string $code, string $redirect_uri ): array {
 		$data = [
-			'client_id'     => self::OAUTH_CLIENT_ID,
-			'client_secret' => self::OAUTH_CLIENT_SECRET,
-			'grant_type'    => 'authorization_code',
-			'code'          => $code,
-			'redirect_uri'  => $redirect_uri,
+			'code'         => $code,
+			'redirect_uri' => $redirect_uri,
 		];
 
 		$args = [
 			'method'  => 'POST',
 			'headers' => [
-				'Content-Type' => 'application/x-www-form-urlencoded',
+				'Content-Type' => 'application/json',
 			],
-			'body'    => http_build_query( $data ),
+			'body'    => wp_json_encode( $data ),
 			'timeout' => 30,
 		];
 
-		$response = wp_remote_request( self::OAUTH_TOKEN_URL, $args );
-		$this->log_oauth_event( 'Refresh token endpoint response', [ 'status' => is_wp_error( $response ) ? 'error' : wp_remote_retrieve_response_code( $response ) ] );
+		$proxy_url = self::OAUTH_PROXY_URL . '/exchange-token';
+		$response  = wp_remote_request( $proxy_url, $args );
+		$this->log_oauth_event( 'Exchange token proxy response', [ 'status' => is_wp_error( $response ) ? 'error' : wp_remote_retrieve_response_code( $response ) ] );
 
 		if ( is_wp_error( $response ) ) {
 			self::$last_refresh_error = $response->get_error_message();
-			$this->log_oauth_event( 'Refresh token WP_Error', [ 'error' => $response->get_error_message() ] );
+			$this->log_oauth_event( 'Exchange token WP_Error', [ 'error' => $response->get_error_message() ] );
 			throw new ApiException(
 				sprintf(
 					/* translators: %s: Error message */
-					esc_html__( 'Token refresh failed: %s', 'ghl-crm-integration' ),
+					esc_html__( 'Token exchange failed: %s', 'ghl-crm-integration' ),
 					esc_html( $response->get_error_message() )
 				)
 			);
@@ -493,7 +480,7 @@ class Client implements ClientInterface {
 		$status_code = wp_remote_retrieve_response_code( $response );
 		$body        = wp_remote_retrieve_body( $response );
 		$decoded     = json_decode( $body, true );
-		$this->log_oauth_event( 'Refresh token endpoint body', [ 'status' => $status_code, 'body' => is_array( $decoded ) ? $decoded : $body ] );
+		$this->log_oauth_event( 'Exchange token proxy body', [ 'status' => $status_code, 'body' => is_array( $decoded ) ? $decoded : $body ] );
 
 		if ( $status_code !== 200 || empty( $decoded['access_token'] ) ) {
 			$decoded_array = $this->sanitize_response_payload( $decoded );
@@ -594,23 +581,21 @@ class Client implements ClientInterface {
 		$this->log_oauth_event( 'Attempting token refresh', [ 'expires_in' => $this->access_token_expires_at - time() ] );
 
 		$data = [
-			'client_id'     => self::OAUTH_CLIENT_ID,
-			'client_secret' => self::OAUTH_CLIENT_SECRET,
-			'grant_type'    => 'refresh_token',
 			'refresh_token' => $this->refresh_token,
 		];
 
 		$args = [
 			'method'  => 'POST',
 			'headers' => [
-				'Content-Type' => 'application/x-www-form-urlencoded',
+				'Content-Type' => 'application/json',
 			],
-			'body'    => http_build_query( $data ),
+			'body'    => wp_json_encode( $data ),
 			'timeout' => 30,
 		];
 
-		$response = wp_remote_request( self::OAUTH_TOKEN_URL, $args );
-		$this->log_oauth_event( 'Refresh token endpoint response', [ 'status' => is_wp_error( $response ) ? 'error' : wp_remote_retrieve_response_code( $response ) ] );
+		$proxy_url = self::OAUTH_PROXY_URL . '/refresh-token';
+		$response  = wp_remote_request( $proxy_url, $args );
+		$this->log_oauth_event( 'Refresh token proxy response', [ 'status' => is_wp_error( $response ) ? 'error' : wp_remote_retrieve_response_code( $response ) ] );
 
 		if ( is_wp_error( $response ) ) {
 			self::$last_refresh_error = $response->get_error_message();
@@ -727,9 +712,7 @@ class Client implements ClientInterface {
 		}
 
 		$data = [
-			'clientKey'    => self::OAUTH_CLIENT_ID,
-			'clientSecret' => self::OAUTH_CLIENT_SECRET,
-			'locationId'   => $this->location_id,
+			'location_id' => $this->location_id,
 		];
 
 		$args = [
@@ -741,7 +724,8 @@ class Client implements ClientInterface {
 			'timeout' => 15,
 		];
 
-		$response = wp_remote_request( self::OAUTH_RECONNECT_URL, $args );
+		$proxy_url = self::OAUTH_PROXY_URL . '/reconnect';
+		$response  = wp_remote_request( $proxy_url, $args );
 
 		if ( is_wp_error( $response ) ) {
 			throw new ApiException(
