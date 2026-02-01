@@ -230,7 +230,7 @@ defined( 'ABSPATH' ) || exit;
 class OAuth_Proxy {
     
     private const CLIENT_ID     = '68ff9baa25051d0ca83341e9-mh9cljcg';
-    private const CLIENT_SECRET = '17bd923c-13df-4198-8f78-0675a4b2e99a'; // Store securely
+    private const CLIENT_SECRET = '143kjd923c-13df-5398-8fyg8-067gsdgx784b2e99a'; // Store securely
     
     public function __construct() {
         add_action( 'rest_api_init', [ $this, 'register_routes' ] );
@@ -414,7 +414,7 @@ error_log( sprintf(
 Never hardcode in files. Use WordPress options or environment variables:
 ```php
 // In wp-config.php or .env
-define( 'GHL_OAUTH_CLIENT_SECRET', '17bd923c-13df-4198-8f78-0675a4b2e99a' );
+define( 'GHL_OAUTH_CLIENT_SECRET', '7634nbmnbfjk423w8-8f78-0fsdfjbjg74b2e99a' );
 
 // In plugin
 private const CLIENT_SECRET = GHL_OAUTH_CLIENT_SECRET;
