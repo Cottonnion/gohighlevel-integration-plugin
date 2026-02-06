@@ -27,8 +27,6 @@
 			this.userData = this.config.userData || {};
 			this.formSettings = this.config.formSettings || {};
 			this.whiteLabelDomain = this.config.whiteLabelDomain || '';
-
-            console.log('config', this.config);
 			
 			// Add white label domain to recognized domains if provided
 			if (this.whiteLabelDomain) {
@@ -36,19 +34,10 @@
 					const domain = new URL(this.whiteLabelDomain).hostname;
 					if (domain && !this.ghlDomains.includes(domain)) {
 						this.ghlDomains.push(domain);
-						console.log('[GHL Form Auto-fill] Added white label domain:', domain);
-					}
-				} catch (e) {
-					console.warn('[GHL Form Auto-fill] Invalid white label domain:', this.whiteLabelDomain);
+				}
+			} catch (e) {
 				}
 			}
-			
-			console.log('[GHL Form Auto-fill] Configuration loaded:', {
-				hasUserData: Object.keys(this.userData).length > 0,
-				formSettingsCount: Object.keys(this.formSettings).length,
-				whiteLabelDomain: this.whiteLabelDomain,
-				recognizedDomains: this.ghlDomains
-			});
 		}
 
 		/**
@@ -58,8 +47,6 @@
 			if (this.initialized) {
 				return;
 			}
-
-			console.log('[GHL Form Auto-fill] Initializing...');
 			
 			// Wait for DOM to be ready
 			if (document.readyState === 'loading') {
@@ -94,12 +81,10 @@
 	getPreFillData() {
 		// Check if user data was localized by WordPress
 		if (Object.keys(this.userData).length > 0) {
-			console.log('[GHL Form Auto-fill] Using real WordPress user data:', this.userData);
 			return this.userData;
 		}
 
 		// Fallback: No user logged in or no data available
-		console.log('[GHL Form Auto-fill] No user data available (user not logged in)');
 		return {};
 	}
 
@@ -196,7 +181,6 @@
 
 		// Check if already modified (avoid duplicate processing)
 		if (iframe.dataset.ghlAutofilled === 'true') {
-			console.log('[GHL Form Auto-fill] Iframe already processed, skipping:', currentSrc);
 			return;
 		}
 
@@ -206,7 +190,6 @@
 			// Extract form ID and check if auto-fill is enabled
 			const formId = this.extractFormId(currentSrc);
 			if (!this.isAutofillEnabled(formId)) {
-				console.log('[GHL Form Auto-fill] Auto-fill disabled for form:', formId);
 				iframe.dataset.ghlAutofilled = 'skipped';
 				return;
 			}
@@ -222,7 +205,6 @@
 			
 			// Only proceed if we have data to add
 			if (Object.keys(finalParams).length === 0) {
-				console.log('[GHL Form Auto-fill] No data to add to form');
 				return;
 			}
 			
@@ -236,41 +218,23 @@
 
 			const newSrc = url.toString();			// Only update if URL actually changed
 			if (newSrc !== currentSrc) {
-				console.log('[GHL Form Auto-fill] Modifying iframe src:');
-				console.log('  Form ID:', formId);
-				console.log('  Original:', currentSrc);
-				console.log('  Modified:', newSrc);
-				console.log('  Auto-fill data:', preFillData);
-				console.log('  Custom params:', customParams);
-				console.log('  Final merged params:', finalParams);
-				
 				iframe.setAttribute('src', newSrc);
 				iframe.dataset.ghlAutofilled = 'true';
 			}
 		} catch (error) {
-			console.error('[GHL Form Auto-fill] Error modifying iframe src:', error);
+			// Silent fail
 		}
 	}		/**
 		 * Process all existing iframes on the page
 		 */
 		processIframes() {
 			const iframes = document.querySelectorAll('iframe');
-			let ghlFormsFound = 0;
-
-			console.log(`[GHL Form Auto-fill] Scanning ${iframes.length} iframes...`);
 
 			iframes.forEach(iframe => {
 				if (this.isGHLFormIframe(iframe)) {
-					ghlFormsFound++;
 					this.modifyIframeSrc(iframe);
 				}
 			});
-
-			if (ghlFormsFound > 0) {
-				console.log(`[GHL Form Auto-fill] Found and processed ${ghlFormsFound} GHL form(s)`);
-			} else {
-				console.log('[GHL Form Auto-fill] No GHL forms found on this page');
-			}
 		}
 
 		/**
@@ -282,7 +246,7 @@
 					mutation.addedNodes.forEach(node => {
 						// Check if the added node is an iframe
 						if (node.nodeName === 'IFRAME' && this.isGHLFormIframe(node)) {
-							console.log('[GHL Form Auto-fill] New GHL iframe detected');
+
 							this.modifyIframeSrc(node);
 						}
 						
@@ -291,7 +255,7 @@
 							const iframes = node.querySelectorAll('iframe');
 							iframes.forEach(iframe => {
 								if (this.isGHLFormIframe(iframe)) {
-									console.log('[GHL Form Auto-fill] New GHL iframe detected (nested)');
+
 									this.modifyIframeSrc(iframe);
 								}
 							});
@@ -304,8 +268,6 @@
 				childList: true,
 				subtree: true
 			});
-
-			console.log('[GHL Form Auto-fill] MutationObserver active - watching for new iframes');
 		}
 	}
 
@@ -316,7 +278,6 @@
 	// Expose for manual testing
 	window.ghlFormAutoFill = autoFill;
 	window.testGHLAutoFill = function() {
-		console.log('[GHL Form Auto-fill] Manual test triggered');
 		autoFill.processIframes();
 	};
 
@@ -410,7 +371,7 @@
 				}
 			}
 		})
-		.catch(err => console.error('[GHL Form] Error:', err));
+		.catch(err => {});
 	}
 
 	// Initialize on DOM ready
