@@ -355,7 +355,6 @@ jQuery(document).ready(function($) {
 				$btn.prop('disabled', false).html(originalText);
 			},
 			error: function(xhr, status, error) {
-				console.error('token regeneration error:', {xhr, status, error});
 				alert('✗ <?php esc_html_e( 'Token regeneration failed. Please try again.', 'ghl-crm-integration' ); ?>');
 				$btn.prop('disabled', false).html(originalText);
 			}
@@ -387,8 +386,6 @@ jQuery(document).ready(function($) {
 				$btn.prop('disabled', false).html(originalText);
 			},
 			error: function(xhr, status, error) {
-				console.error('AJAX Error:', {xhr, status, error});
-				console.error('response Text:', xhr.responseText);
 				alert('✗ <?php esc_html_e( 'Test failed. Please check your server configuration.', 'ghl-crm-integration' ); ?>\n\nError: ' + error + '\nResponse: ' + xhr.responseText);
 				$btn.prop('disabled', false).html(originalText);
 			}

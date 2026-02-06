@@ -193,7 +193,12 @@
 			navigator.clipboard.writeText(text).then(() => {
 				this.showCopyFeedback($element);
 			}).catch(err => {
-				console.error('Failed to copy:', err);
+				swal.fire({
+					title: strings.copyFailed || 'Copy failed',
+					text: strings.copyFailedDesc || 'Unable to copy to clipboard. Please try copying manually.',
+					icon: 'error',
+					confirmButtonText: strings.ok || 'OK'
+				});
 			});
 		},
 

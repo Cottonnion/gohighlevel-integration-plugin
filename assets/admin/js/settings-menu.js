@@ -216,7 +216,6 @@
 				}
 			},
 			error: function(xhr, status, error) {
-				console.error('Settings tab load error:', error);
 				$content.html('<div class="notice notice-error"><p>Error loading settings tab. Please try again.</p></div>');
 			},
 			complete: function() {

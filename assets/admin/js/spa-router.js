@@ -193,7 +193,6 @@
                     }
                 },
                 error: (xhr, status, error) => {
-                    console.error('AJAX error:', error);
                     this.showError(this.config.strings.error);
                 }
             });

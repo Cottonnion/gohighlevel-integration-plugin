@@ -180,7 +180,6 @@
 					}
 				},
 				error: function (xhr) {
-					console.error('AJAX Error:', xhr);
 					const errorMsg = xhr.responseJSON?.data?.message || 'An error occurred while saving field mapping.';
 					showNotice(errorMsg, 'error');
 				},

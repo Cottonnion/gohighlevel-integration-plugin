@@ -330,9 +330,6 @@
 					}
 				},
 				error: (xhr, status, error) => {
-					console.error('Save error:', error);
-					console.error('XHR response:', xhr.responseText);
-					
 					let errorMessage = ghl_crm_integrations_js_data.i18n.saveError || 'An error occurred while saving settings.';
 					
 					// Try to parse JSON response for error message

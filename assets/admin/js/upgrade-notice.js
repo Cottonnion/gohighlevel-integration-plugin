@@ -36,7 +36,6 @@
                     }, 300);
                 },
                 error: function(xhr, status, error) {
-                    console.error('Failed to dismiss upgrade notice:', error);
                     // Still remove it from UI even if AJAX fails
                     setTimeout(function() {
                         $notice.remove();

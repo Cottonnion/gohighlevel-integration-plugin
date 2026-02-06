@@ -494,7 +494,6 @@
 				}
 			},
 			error: function(xhr, status, error) {
-				console.error('Health check error:', error);
 				showNotice('Failed to run system diagnostics. Please try again.', 'error');
 			},
 			complete: function() {
@@ -775,12 +774,10 @@
 					}
 				} else {
 					$tagsSelect.html('<option value="">Failed to load tags</option>');
-					console.error('Failed to load tags:', response);
 				}
 			},
 			error: function(xhr, status, error) {
 				$tagsSelect.html('<option value="">Error loading tags</option>').prop('disabled', false);
-				console.error('Error loading tags:', error);
 			}
 		});
 	}
@@ -1082,7 +1079,6 @@
 				}
 			},
 			error: function(xhr, status, error) {
-				console.error('AJAX Error:', {xhr, status, error});
 				if (typeof Swal !== 'undefined') {
 					Swal.fire({
 						icon: 'error',
@@ -1166,12 +1162,10 @@
 					}
 				} else {
 					$tagsSelect.html('<option value="">Failed to load tags</option>');
-					console.error('Failed to load tags:', response);
 				}
 			},
 			error: function(xhr, status, error) {
 				$tagsSelect.html('<option value="">Error loading tags</option>').prop('disabled', false);
-				console.error('Error loading tags:', error);
 			}
 		});
 	}

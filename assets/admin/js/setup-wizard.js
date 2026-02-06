@@ -108,12 +108,10 @@
                         }
                     } else {
                         $tagsSelect.html('<option value="">Failed to load tags</option>');
-                        console.error('Failed to load tags:', response);
                     }
                 },
                 error: (xhr, status, error) => {
                     $tagsSelect.html('<option value="">Error loading tags</option>').prop('disabled', false);
-                    console.error('Error loading tags:', error);
                 }
             });
         },

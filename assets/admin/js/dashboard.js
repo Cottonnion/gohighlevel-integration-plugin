@@ -318,13 +318,6 @@
 					}
 				},
 				error: function(jqXHR, textStatus, errorThrown) {
-					console.error('AJAX Error:', {
-						status: jqXHR.status,
-						statusText: textStatus,
-						responseText: jqXHR.responseText,
-						error: errorThrown
-					});
-					
 					var errorMsg = ghl_crm_dashboard_js_data.i18n.connectionError;
 					
 					// If response is -1, it's likely a nonce or action registration issue

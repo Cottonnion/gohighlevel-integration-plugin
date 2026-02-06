@@ -102,7 +102,6 @@
 					}
 				},
 				error: (xhr, status, error) => {
-					console.error('Bulk sync error:', error);
 					this.error('Network error occurred. Please try again.');
 				},
 			});
