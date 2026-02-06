@@ -829,17 +829,17 @@ class AssetsManager {
 		);
 
 		// GHL Forms frontend JS
-		$this->add_public_asset(
-			'ghl-crm-forms-frontend-js',
-			'form-handler.js',
-			[ 'jquery' ],
-			[
-				'ajax_url' => admin_url( 'admin-ajax.php' ),
-				'nonce'    => wp_create_nonce( 'ghl_form_submission' ),
-			],
-			GHL_CRM_VERSION,
-			true
-		);
+		// $this->add_public_asset(
+		// 	'ghl-crm-forms-frontend-js',
+		// 	'form-handler.js',
+		// 	[ 'jquery' ],
+		// 	[
+		// 		'ajax_url' => admin_url( 'admin-ajax.php' ),
+		// 		'nonce'    => wp_create_nonce( 'ghl_form_submission' ),
+		// 	],
+		// 	GHL_CRM_VERSION,
+		// 	true
+		// );
 
 		// GHL Form Auto-fill (experimental - tests URL parameter pre-filling)
 		$user_data             = $this->get_current_user_data_for_autofill();
