@@ -355,7 +355,7 @@ jQuery(document).ready(function($) {
 				$btn.prop('disabled', false).html(originalText);
 			},
 			error: function(xhr, status, error) {
-				console.error('❌ Token regeneration error:', {xhr, status, error});
+				console.error('token regeneration error:', {xhr, status, error});
 				alert('✗ <?php esc_html_e( 'Token regeneration failed. Please try again.', 'ghl-crm-integration' ); ?>');
 				$btn.prop('disabled', false).html(originalText);
 			}
@@ -372,10 +372,6 @@ jQuery(document).ready(function($) {
 			nonce: '<?php echo esc_js( wp_create_nonce( 'ghl_crm_admin' ) ); ?>'
 		};
 		
-		console.log('🔍 DEBUG: Test Webhook Button Clicked');
-		console.log('AJAX URL:', ajaxurl);
-		console.log('Request Data:', requestData);
-		
 		$btn.prop('disabled', true).html('<span class="dashicons dashicons-update ghl-spin"></span> <?php esc_html_e( 'Testing...', 'ghl-crm-integration' ); ?>');
 		
 		$.ajax({
@@ -383,7 +379,6 @@ jQuery(document).ready(function($) {
 			type: 'POST',
 			data: requestData,
 			success: function(response) {
-				console.log('✅ AJAX Success Response:', response);
 				if (response.success) {
 					alert('✓ <?php esc_html_e( 'Test successful! Webhook endpoint is working correctly.', 'ghl-crm-integration' ); ?>');
 				} else {
@@ -392,8 +387,8 @@ jQuery(document).ready(function($) {
 				$btn.prop('disabled', false).html(originalText);
 			},
 			error: function(xhr, status, error) {
-				console.error('❌ AJAX Error:', {xhr, status, error});
-				console.error('Response Text:', xhr.responseText);
+				console.error('AJAX Error:', {xhr, status, error});
+				console.error('response Text:', xhr.responseText);
 				alert('✗ <?php esc_html_e( 'Test failed. Please check your server configuration.', 'ghl-crm-integration' ); ?>\n\nError: ' + error + '\nResponse: ' + xhr.responseText);
 				$btn.prop('disabled', false).html(originalText);
 			}

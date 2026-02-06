@@ -477,7 +477,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 		<?php endif; ?>
 
 		<!-- PRO Feature Upgrade Notice -->
-		<?php if ( empty( $buddyboss_fields ) && empty( $custom_user_fields ) && empty( $woocommerce_fields ) ) : 
+		<?php if ( ! defined( 'GHL_CRM_PRO_VERSION' ) && empty( $buddyboss_fields ) && empty( $custom_user_fields ) && empty( $woocommerce_fields ) ) : 
 			// Set up upgrade notice variables
 			$title       = __( 'Advanced Field Mapping', 'ghl-crm-integration' );
 			$description = __( 'The FREE version only supports standard WordPress fields. Upgrade to PRO to unlock advanced field mapping capabilities.', 'ghl-crm-integration' );
