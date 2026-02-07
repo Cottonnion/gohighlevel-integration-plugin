@@ -267,15 +267,6 @@
 			var locationId = String($('#location_id').val() || '').trim();
 			var nonce = ghl_crm_dashboard_js_data.manualConnectNonce;
 			
-			// Debug: Log what we're sending
-			console.log('Sending connection request:', {
-				action: 'ghl_crm_manual_connect',
-				nonce: nonce ? nonce.substring(0, 10) + '...' : 'MISSING',
-				api_token: apiToken.substring(0, 15) + '...',
-				location_id: locationId,
-				ajaxurl: ajaxurl
-			});
-			
 			// Build FormData to ensure proper encoding
 			var formData = new FormData();
 			formData.append('action', 'ghl_crm_manual_connect');
