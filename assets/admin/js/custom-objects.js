@@ -469,8 +469,6 @@
 	 * Load available fields for selected CPT
 	 */
 	function loadCPTFields(postType, callback, selectedContactSource) {
-		console.log('Loading fields for post type:', postType);
-		
 		// Store globally for field mapping
 		window.cptFields = {
 			core_fields: [],
@@ -491,8 +489,7 @@
 			success: function(response) {
 				if (response.success && response.data.fields) {
 					window.cptFields = response.data.fields;
-					console.log('Loaded CPT fields:', window.cptFields);
-					
+
 					// Update contact source options with selected value if provided
 					updateContactSourceOptions(response.data.fields.contact_options, selectedContactSource);
 					
@@ -589,8 +586,6 @@
 			`;
 			$triggersGroup.append(checkbox);
 		});
-
-		console.log('Updated sync triggers:', triggers.length);
 	}
 
 	/**
@@ -650,8 +645,6 @@
 			});
 		}
 
-		console.log('Built WP field options:', wpFieldOptions);
-		
 		// Update existing field mapping rows
 		$('.wp-field-select').each(function() {
 			const $select = $(this);
@@ -695,7 +688,6 @@
 			}
 		});
 		
-		console.log(`Loaded ${userDefinedCount} USER_DEFINED custom objects out of ${window.ghlSchemas.length} total schemas`);
 	}
 
 	/**
@@ -742,10 +734,6 @@
 		const objectKey = schema.key || '';
 		const schemaId = schema.id || '';
 		
-		console.log('Loading fields for schema:', schemaId);
-		console.log('Object key:', objectKey);
-		console.log('Schema fields:', schema.fields);
-		
 		// Only add fields from schema.fields array - show ALL fields
 		if (schema.fields && Array.isArray(schema.fields) && schema.fields.length > 0) {
 			schema.fields.forEach(function(field) {
@@ -763,12 +751,9 @@
 				});
 			});
 			
-			console.log('Loaded ALL fields from schema.fields array');
 		} else {
 			console.log('No fields array found or fields array is empty');
 		}
-		
-		console.log('Total GHL field options:', ghlFieldOptions.length, ghlFieldOptions);
 		
 		updateGHLFieldDropdowns();
 	}
@@ -1184,8 +1169,6 @@
 	 * Populate form with existing mapping data
 	 */
 	function populateMappingForm(mapping) {
-		console.log('Populating form with mapping:', mapping);
-		
 		$('#mapping-id').val(mapping.id);
 		$('#mapping-name').val(mapping.name);
 		$('#mapping-active').prop('checked', mapping.active);
@@ -1261,8 +1244,6 @@
 	 * Populate field mappings after data is ready
 	 */
 	function populateFieldMappings(mapping) {
-		console.log('Both post types and GHL fields loaded - populating field mappings');
-		
 		$('#field-mappings-body').empty();
 		
 		if (mapping.field_mappings && mapping.field_mappings.length > 0) {
