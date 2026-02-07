@@ -83,7 +83,6 @@
 		loadSettings() {
 			// Settings are already loaded in PHP template
 			// This method is kept for potential AJAX reload in future
-			console.log('Integrations settings loaded');
 		},
 
 		/**
