@@ -106,11 +106,6 @@
                 },
                 minimumInputLength: 0
             });
-
-            // Allow creating new tags by pressing Enter
-            $tagsSelect.on('select2:select', function(e) {
-                console.log('Tag selected:', e.params.data);
-            });
         },
 
         /**
