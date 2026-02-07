@@ -180,7 +180,6 @@
         // Only initialize if we're on the plugin admin page
         if ($('#adminmenu .toplevel_page_ghl-crm-admin').length > 0) {
             new GHLMenuRouter();
-            console.log('GHL Menu Router initialized');
         }
     });
 
