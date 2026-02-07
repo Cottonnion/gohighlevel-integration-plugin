@@ -62,8 +62,6 @@
                         }
                         
                         this.menuItems[route].push($item);
-                        
-                        console.log(`Sidebar menu route mapped: ${route}`);
                     }
                 }
             });
@@ -81,8 +79,6 @@
                     }
                     
                     this.menuItems[route].push($item);
-                    
-                    console.log(`Header nav route mapped: ${route}`);
                 }
             });
         }
@@ -101,7 +97,6 @@
             
             if (settingsTabs.includes(hash)) {
                 hash = 'settings'; // Treat all settings tabs as the settings view for menu highlighting
-                console.log('Settings tab detected, highlighting settings menu item');
             }
             
             // Only update if hash has changed
@@ -110,8 +105,6 @@
             }
             
             this.currentHash = hash;
-            
-            console.log('Hash changed to:', hash);
             
             // Remove 'current' and 'active' classes from all menu items
             Object.values(this.menuItems).forEach($items => {
@@ -140,8 +133,6 @@
                 } else {
                     items.addClass('current');
                 }
-                
-                console.log('Active menu items set for:', hash);
             } else {
                 console.warn('No menu item found for hash:', hash);
             }
