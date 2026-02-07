@@ -15,9 +15,6 @@
 	const nonce = formsData.nonce || '';
 	const formSettings = formsData.formSettings || {};
 
-	// Debug: Log form settings
-	console.log('Form Settings loaded:', formSettings);
-
 	const FormsManager = {
 		initialized: false,
 		loading: false,
