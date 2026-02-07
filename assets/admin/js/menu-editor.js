@@ -70,9 +70,6 @@
                     savedTags = [];
                 }
                 
-                console.log('Initializing Select2 for tag IDs:', savedTags);
-                console.log('Tag names map:', tagNamesMap);
-                
                 // Initialize Select2
                 $tagSelect.select2({
                     tags: true,
@@ -112,7 +109,6 @@
                 
                 // Load saved tags immediately
                 if (savedTags.length > 0) {
-                    console.log('Loading saved tag IDs:', savedTags);
                     savedTags.forEach(function(tagId) {
                         if (tagId && tagId.trim() !== '') {
                             // Use tag name from map if available, otherwise use ID
