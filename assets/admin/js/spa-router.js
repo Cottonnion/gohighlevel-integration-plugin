@@ -54,15 +54,12 @@
                 : ['general', 'api', 'rest-api', 'webhooks', 'notifications', 'sync-options', 'role-tags', 'advanced', 'stats'];
             if (settingsTabs.includes(hash)) {
                 // This is a settings tab, first load settings view if not already loaded
-                console.log('Settings tab hash detected:', hash);
                 if (this.currentView !== 'settings') {
-                    console.log('Loading settings view first...');
                     this.loadView('settings');
                 }
                 return;
             }
             
-            console.log('SPA Route changed:', route);
             this.loadView(route.view, route.params);
             
             // Trigger custom event for menu router to listen to
@@ -257,7 +254,6 @@
                     if (typeof window.initCustomObjects === 'function') {
                         window.initCustomObjects();
                     }
-                    console.log('Custom Objects view loaded');
                     break;
                 case 'integrations':
                     // Re-initialize integrations handlers
@@ -353,16 +349,13 @@
 
             hoverViews.forEach((view) => {
                 const selector = `.ghl-nav-tab[data-route="${view}"], a[href*="#/${view}"]`;
-                console.log('[SPA Prefetch] binding hover for', view, 'on', selector);
                 $(document).on('mouseenter', selector, () => {
-                    console.log('[SPA Prefetch] hover detected for', view);
                     this.debouncedPrefetch(view);
                 });
             });
 
             // Idle prefetch after initial load to warm caches without blocking first paint
             setTimeout(() => {
-                console.log('[SPA Prefetch] idle prefetch start');
                 hoverViews.forEach((view) => this.prefetchView(view));
             }, 800);
         }
@@ -386,21 +379,17 @@
             const preCached = this.prefetchCache[cacheKey];
 
             if (cached && (Date.now() - cached.fetchedAt) < this.prefetchTtl) {
-                console.log('[SPA Prefetch] skip (cached fresh)', view, cacheKey);
                 return;
             }
 
             if (preCached && (Date.now() - preCached.fetchedAt) < this.prefetchTtl) {
-                console.log('[SPA Prefetch] skip (prefetch fresh)', view, cacheKey);
                 return;
             }
 
             if (this.inflightPrefetch[cacheKey]) {
-                console.log('[SPA Prefetch] skip (inflight)', view, cacheKey);
                 return;
             }
 
-            console.log('[SPA Prefetch] request start', view, cacheKey, 'silent:', silent);
             this.inflightPrefetch[cacheKey] = true;
 
             $.ajax({
@@ -421,16 +410,13 @@
 
                         if (silent) {
                             this.viewCache[cacheKey] = payload;
-                            console.log('[SPA Prefetch] stored in main cache (silent refresh)', view, cacheKey);
                         } else {
                             this.prefetchCache[cacheKey] = payload;
-                            console.log('[SPA Prefetch] stored in prefetch cache', view, cacheKey);
                         }
                     }
                 },
                 complete: () => {
                     delete this.inflightPrefetch[cacheKey];
-                    console.log('[SPA Prefetch] request complete', view, cacheKey);
                 }
             });
         }
