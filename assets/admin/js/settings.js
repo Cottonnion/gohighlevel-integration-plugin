@@ -167,8 +167,6 @@
 				}
 			});
 			
-			console.log('Saving settings:', formData);
-			
 			// Disable button and show loading state
 			$button.prop('disabled', true);
 			$buttonText.text('Saving...');
