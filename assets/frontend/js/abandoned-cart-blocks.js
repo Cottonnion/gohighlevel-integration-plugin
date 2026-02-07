@@ -22,16 +22,12 @@
 	function sendCartData(billingData) {
 		const email = billingData.email || '';
 		
-		console.log('GHL: sendCartData called with email:', email);
-		
 		// Only send if email is valid and changed
 		if (!email || email === lastEmail || !email.includes('@')) {
-			console.log('GHL: Skipping - invalid or duplicate email');
 			return;
 		}
 
 		lastEmail = email;
-		console.log('GHL: Preparing to send cart data for', email);
 
 		// Debounce to avoid excessive requests
 		clearTimeout(debounceTimer);
@@ -45,8 +41,6 @@
 				user_id: ghlAbandonedCart.userId || 0
 			};
 			
-			console.log('GHL: Sending payload:', payload);
-			
 			fetch(ghlAbandonedCart.restUrl, {
 				method: 'POST',
 				headers: {
@@ -55,9 +49,7 @@
 				body: JSON.stringify(payload)
 			}).then(response => {
 				if (response.ok) {
-					return response.json().then(data => {
-						console.log('GHL: Cart data tracked for', email, '- Cart Key:', data.cart_key);
-					});
+					return response.json();
 				} else {
 					response.json().then(data => {
 						console.error('GHL: Error response:', data);
@@ -74,7 +66,6 @@
 	 */
 	function monitorCheckoutData() {
 		if (!select(CHECKOUT_STORE_KEY)) {
-			console.log('GHL: Checkout store not available yet, retrying...');
 			setTimeout(monitorCheckoutData, 500);
 			return;
 		}
@@ -82,17 +73,12 @@
 		let previousBillingAddress = {};
 		let initialCaptureDone = false;
 
-		console.log('GHL: Checkout store available, setting up monitoring...');
-
 		// Try to capture initial data from DOM if store doesn't have it yet
 		function captureFromDOM() {
-			console.log('GHL: Attempting to capture from DOM...');
 			const emailInput = document.getElementById('email');
 			const firstNameInput = document.getElementById('billing-first_name') || document.querySelector('input[name="billing-first_name"]');
 			const lastNameInput = document.getElementById('billing-last_name') || document.querySelector('input[name="billing-last_name"]');
 			const phoneInput = document.getElementById('billing-phone') || document.querySelector('input[name="billing-phone"]');
-
-			console.log('GHL: Email input found:', !!emailInput, 'Value:', emailInput?.value);
 
 			if (emailInput && emailInput.value && emailInput.value.includes('@')) {
 				const billingData = {
@@ -102,14 +88,12 @@
 					phone: phoneInput ? phoneInput.value : ''
 				};
 
-				console.log('GHL: Found pre-filled email in DOM:', billingData.email);
 				previousBillingAddress = { ...billingData };
 				sendCartData(billingData);
 				initialCaptureDone = true;
 				return true;
 			}
 
-			console.log('GHL: No email found in DOM');
 			return false;
 		}
 
@@ -128,12 +112,8 @@
 			const phoneInput = document.getElementById('billing-phone') || document.querySelector('input[name="billing-phone"]');
 
 			if (emailInput) {
-				console.log('GHL: Setting up direct input listener on email field');
-				
 				// Listen for input changes on email field
 				emailInput.addEventListener('input', function() {
-					console.log('GHL: Email input detected:', emailInput.value);
-					
 					if (emailInput.value && emailInput.value.includes('@')) {
 						const billingData = {
 							email: emailInput.value,
@@ -148,8 +128,6 @@
 
 				// Also listen on blur (when user leaves the field)
 				emailInput.addEventListener('blur', function() {
-					console.log('GHL: Email blur detected:', emailInput.value);
-					
 					if (emailInput.value && emailInput.value.includes('@')) {
 						const billingData = {
 							email: emailInput.value,
@@ -162,7 +140,6 @@
 					}
 				});
 			} else {
-				console.log('GHL: Email input not found, will retry...');
 				setTimeout(setupInputListeners, 500);
 			}
 		}
@@ -178,7 +155,6 @@
 				
 				// If store has email and we haven't captured yet, use it
 				if (!initialCaptureDone && billingAddress.email) {
-					console.log('GHL: Found email in store:', billingAddress.email);
 					previousBillingAddress = { ...billingAddress };
 					sendCartData(billingAddress);
 					initialCaptureDone = true;
@@ -194,7 +170,6 @@
 						billingAddress.phone !== previousBillingAddress.phone;
 
 					if (addressChanged) {
-						console.log('GHL: Billing address changed in store, updating...');
 						previousBillingAddress = { ...billingAddress };
 						sendCartData(billingAddress);
 					}
@@ -203,8 +178,6 @@
 				// Silent fail if store methods not available yet
 			}
 		});
-
-		console.log('GHL: Abandoned cart tracking initialized for WooCommerce Blocks');
 	}
 
 	// Start monitoring when DOM is ready

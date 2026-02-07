@@ -8,10 +8,6 @@ window.ghlSyncPreview = {
 	init: function() {
 		const $ = jQuery;
 		
-		console.log('ghlSyncPreview.init() called');
-		console.log('Form exists:', $('#ghl-sync-preview-form').length);
-		console.log('User select exists:', $('#user_identifier').length);
-		
 		// Initialize Select2 for user selection
 		if ($('#user_identifier').length) {
 			$('#user_identifier').select2({
@@ -21,7 +17,6 @@ window.ghlSyncPreview = {
 				templateResult: this.formatUserOption,
 				templateSelection: this.formatUserSelection
 			});
-			console.log('Select2 initialized');
 		}
 
 		// Load SweetAlert2 if not already loaded
@@ -35,11 +30,9 @@ window.ghlSyncPreview = {
 		const self = this;
 		if ($('#ghl-sync-preview-form').length) {
 			$('#ghl-sync-preview-form').off('submit').on('submit', function(e) {
-				console.log('Form submit triggered');
 				e.preventDefault();
 
 				const userIdentifier = $('#user_identifier').val();
-				console.log('User identifier:', userIdentifier);
 
 				if (!userIdentifier) {
 					Swal.fire({
@@ -54,7 +47,6 @@ window.ghlSyncPreview = {
 				// Start the preview process with animated steps
 				self.showPreviewProcess(userIdentifier);
 			});
-			console.log('Form handler attached');
 		} else {
 			console.error('Form #ghl-sync-preview-form not found!');
 		}
