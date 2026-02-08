@@ -117,6 +117,35 @@ class AjaxHandler {
 					$integration_settings['wc_abandoned_cart_tag'] = [];
 				}
 
+				// Handle tag removal on purchase
+				$integration_settings['wc_abandoned_cart_remove_on_purchase'] = isset( $_POST['wc_abandoned_cart_remove_on_purchase'] ) && sanitize_text_field( wp_unslash( $_POST['wc_abandoned_cart_remove_on_purchase'] ) ) === '1';
+
+				// Handle recovery tag (can be array or string)
+				if ( isset( $_POST['wc_abandoned_cart_recovery_tag'] ) ) {
+					$recovery_tag = wp_unslash( $_POST['wc_abandoned_cart_recovery_tag'] );
+					if ( is_array( $recovery_tag ) ) {
+						$integration_settings['wc_abandoned_cart_recovery_tag'] = array_map( 'sanitize_text_field', $recovery_tag );
+					} else {
+						$integration_settings['wc_abandoned_cart_recovery_tag'] = sanitize_text_field( $recovery_tag );
+					}
+				} else {
+					$integration_settings['wc_abandoned_cart_recovery_tag'] = [];
+				}
+
+				// Handle cleanup settings
+				$integration_settings['wc_abandoned_cart_cleanup_enabled'] = isset( $_POST['wc_abandoned_cart_cleanup_enabled'] ) && sanitize_text_field( wp_unslash( $_POST['wc_abandoned_cart_cleanup_enabled'] ) ) === '1';
+				$integration_settings['wc_abandoned_cart_cleanup_days']    = isset( $_POST['wc_abandoned_cart_cleanup_days'] ) ? absint( wp_unslash( $_POST['wc_abandoned_cart_cleanup_days'] ) ) : 30;
+
+				// Handle remove recovery tag on re-abandonment
+				$integration_settings['wc_abandoned_cart_remove_recovery_on_reabandonment'] = isset( $_POST['wc_abandoned_cart_remove_recovery_on_reabandonment'] ) && sanitize_text_field( wp_unslash( $_POST['wc_abandoned_cart_remove_recovery_on_reabandonment'] ) ) === '1';
+
+				// Validate cleanup days (1-365 days)
+				if ( $integration_settings['wc_abandoned_cart_cleanup_days'] < 1 ) {
+					$integration_settings['wc_abandoned_cart_cleanup_days'] = 1;
+				} elseif ( $integration_settings['wc_abandoned_cart_cleanup_days'] > 365 ) {
+					$integration_settings['wc_abandoned_cart_cleanup_days'] = 365;
+				}
+
 				// Validate abandoned cart time (15-1440 minutes)
 				if ( $integration_settings['wc_abandoned_cart_time'] < 15 ) {
 					$integration_settings['wc_abandoned_cart_time'] = 15;
