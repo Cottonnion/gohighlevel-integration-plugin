@@ -305,7 +305,7 @@ class AssetsManager {
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
 			],
-			GHL_CRM_VERSION,
+			'1.0.7',
 			true
 		);
 
@@ -510,7 +510,7 @@ class AssetsManager {
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
 			],
-			GHL_CRM_VERSION,
+			'1.0.7',
 			true
 		);
 
@@ -653,21 +653,22 @@ class AssetsManager {
 			true
 		);
 	}
-		/**
-		 * Adds an admin script or style to the array of admin assets.
-		 * Supports page slugs or custom post type keys (e.g., 'cpt:product').
-		 * Optionally supports a custom base URL for loading from other plugins.
-		 *
-		 * @param string      $handle           Unique handle for the asset.
-		 * @param array       $pages            Array of admin page IDs or 'cpt:posttype' keys.
-		 * @param string      $file             File name (e.g., 'settings.css' or 'settings.js').
-		 * @param array       $dependencies     Array of dependency handles.
-		 * @param array       $localization     Array of data to localize for scripts.
-		 * @param string      $version          Version string for cache busting.
-		 * @param bool        $enqueue_in_footer Whether to enqueue script in footer (scripts only).
-		 * @param string|null $base_url    Optional custom base URL for the asset (must end with slash).
-		 * @return void
-		 */
+
+	/**
+	 * Adds an admin script or style to the array of admin assets.
+	 * Supports page slugs or custom post type keys (e.g., 'cpt:product').
+	 * Optionally supports a custom base URL for loading from other plugins.
+	 *
+	 * @param string      $handle           Unique handle for the asset.
+	 * @param array       $pages            Array of admin page IDs or 'cpt:posttype' keys.
+	 * @param string      $file             File name (e.g., 'settings.css' or 'settings.js').
+	 * @param array       $dependencies     Array of dependency handles.
+	 * @param array       $localization     Array of data to localize for scripts.
+	 * @param string      $version          Version string for cache busting.
+	 * @param bool        $enqueue_in_footer Whether to enqueue script in footer (scripts only).
+	 * @param string|null $base_url    Optional custom base URL for the asset (must end with slash).
+	 * @return void
+	 */
 	public function add_admin_asset(
 		string $handle,
 		array $pages,
