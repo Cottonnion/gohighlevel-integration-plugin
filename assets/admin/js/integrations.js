@@ -6,500 +6,824 @@
  */
 
 (function ($) {
-	'use strict';
+  "use strict";
 
-	/**
-	 * Integrations Manager
-	 */
-	const IntegrationsManager = {
-		/**
-		 * Initialize
-		 */
-		init() {
-			this.bindEvents();
-			this.loadSettings();
-			this.initTagsSelect();
-			this.initOrderStatusSelect();
-			this.initOpportunitiesSelects();
-			this.initGroupTypeSelect();
-		},
+  /**
+   * Integrations Manager
+   */
+  const IntegrationsManager = {
+    /**
+     * Initialize
+     */
+    init() {
+      this.bindEvents();
+      this.loadSettings();
+      this.initTagsSelect();
+      this.initOrderStatusSelect();
+      this.initOpportunitiesSelects();
+      this.initGroupTypeSelect();
+    },
 
-		/**
-		 * Bind events
-		 */
-		bindEvents() {
-			// Tab navigation
-			$('.ghl-tab-button').on('click', this.switchTab.bind(this));
+    /**
+     * Bind events
+     */
+    bindEvents() {
+      // Tab navigation
+      $(".ghl-tab-button").on("click", this.switchTab.bind(this));
 
-			// Save settings button
-			$('#save-integrations-settings').on('click', this.saveSettings.bind(this));
+      // Save settings button
+      $("#save-integrations-settings").on(
+        "click",
+        this.saveSettings.bind(this),
+      );
 
-			// WooCommerce toggles
-			$('#wc_enabled').on('change', this.handleWooCommerceToggle.bind(this));
-			$('#wc_convert_lead_enabled').on('change', this.handleConvertLeadToggle.bind(this));
-			$('#wc_abandoned_cart_enabled').on('change', this.handleAbandonedCartToggle.bind(this));
+      // WooCommerce toggles
+      $("#wc_enabled").on("change", this.handleWooCommerceToggle.bind(this));
+      $("#wc_convert_lead_enabled").on(
+        "change",
+        this.handleConvertLeadToggle.bind(this),
+      );
+      $("#wc_abandoned_cart_enabled").on(
+        "change",
+        this.handleAbandonedCartToggle.bind(this),
+      );
+      $("#wc_abandoned_cart_remove_on_purchase").on(
+        "change",
+        this.handleTagRemovalToggle.bind(this),
+      );
+      $("#wc_abandoned_cart_cleanup_enabled").on(
+        "change",
+        this.handleCleanupToggle.bind(this),
+      );
 
-			// LearnDash toggle
-			$('#learndash_enabled').on('change', this.handleLearnDashToggle.bind(this));
-			
-			// Opportunities toggles
-			$('#wc_opportunities_enabled').on('change', this.handleOpportunitiesToggle.bind(this));
-			$('#wc_opportunities_pipeline').on('change', this.handlePipelineChange.bind(this));
-			$('#wc_opportunities_filter_type').on('change', this.handleFilterTypeChange.bind(this));
+      // LearnDash toggle
+      $("#learndash_enabled").on(
+        "change",
+        this.handleLearnDashToggle.bind(this),
+      );
 
-			// Prevent form submission on enter
-			$(document).on('keypress', function (e) {
-				if (e.which === 13 && $(e.target).closest('.ghl-tab-panel').length) {
-					e.preventDefault();
-					return false;
-				}
-			});
-		},
+      // Opportunities toggles
+      $("#wc_opportunities_enabled").on(
+        "change",
+        this.handleOpportunitiesToggle.bind(this),
+      );
+      $("#wc_opportunities_pipeline").on(
+        "change",
+        this.handlePipelineChange.bind(this),
+      );
+      $("#wc_opportunities_filter_type").on(
+        "change",
+        this.handleFilterTypeChange.bind(this),
+      );
 
-		/**
-		 * Switch between tabs
-		 */
-		switchTab(e) {
-			const $button = $(e.currentTarget);
-			
-			// Don't switch if disabled
-			if ($button.prop('disabled')) {
-				return;
-			}
+      // Prevent form submission on enter
+      $(document).on("keypress", function (e) {
+        if (e.which === 13 && $(e.target).closest(".ghl-tab-panel").length) {
+          e.preventDefault();
+          return false;
+        }
+      });
+    },
 
-			const tabName = $button.data('tab');
+    /**
+     * Switch between tabs
+     */
+    switchTab(e) {
+      const $button = $(e.currentTarget);
 
-			// Update active states
-			$('.ghl-tab-button').removeClass('active');
-			$button.addClass('active');
+      // Don't switch if disabled
+      if ($button.prop("disabled")) {
+        return;
+      }
 
-			$('.ghl-tab-panel').removeClass('active');
-			$(`.ghl-tab-panel[data-tab="${tabName}"]`).addClass('active');
-		},
+      const tabName = $button.data("tab");
 
-		/**
-		 * Load current settings
-		 */
-		loadSettings() {
-			// Settings are already loaded in PHP template
-			// This method is kept for potential AJAX reload in future
-		},
+      // Update active states
+      $(".ghl-tab-button").removeClass("active");
+      $button.addClass("active");
 
-		/**
-		 * Initialize tags Select2 dropdowns
-		 */
-		initTagsSelect() {
-			const $tagsSelects = $('.ghl-tags-select');
+      $(".ghl-tab-panel").removeClass("active");
+      $(`.ghl-tab-panel[data-tab="${tabName}"]`).addClass("active");
+    },
 
-			if ($tagsSelects.length === 0 || typeof $.fn.select2 === 'undefined') {
-				return;
-			}
+    /**
+     * Load current settings
+     */
+    loadSettings() {
+      // Settings are already loaded in PHP template
+      // This method is kept for potential AJAX reload in future
+      console.log("Integrations settings loaded");
+    },
 
-			// Initialize each Select2 dropdown
-			$tagsSelects.each(function() {
-				const $select = $(this);
-				
-				// Initialize Select2 with AJAX
-				$select.select2({
-					placeholder: $select.data('placeholder') || 'Select tags...',
-					allowClear: true,
-					width: '100%',
-					closeOnSelect: false,
-					scrollAfterSelect: false,
-					ajax: {
-						url: ghl_crm_integrations_js_data.ajaxUrl,
-						type: 'POST',
-						dataType: 'json',
-						delay: 250,
-						data: function(params) {
-							return {
-								action: 'ghl_crm_get_tags',
-								nonce: ghl_crm_integrations_js_data.nonce,
-								search: params.term || ''
-							};
-						},
-						processResults: function(response, params) {
-							if (!response.success || !response.data || !response.data.tags) {
-								return { results: [] };
-							}
+    /**
+     * Initialize tags Select2 dropdowns
+     */
+    initTagsSelect() {
+      const $tagsSelects = $(".ghl-tags-select");
 
-							var items = response.data.tags.map(function(tag) {
-								if (typeof tag === 'object' && tag !== null) {
-									var label = String(tag.name || tag.id || '');
-									return {
-										id: label,
-										text: label
-									};
-								}
-								var value = String(tag || '');
-								return {
-									id: value,
-									text: value
-								};
-							});
+      if ($tagsSelects.length === 0 || typeof $.fn.select2 === "undefined") {
+        return;
+      }
 
-							if (params && params.term) {
-								var term = params.term.toLowerCase();
-								items = items.filter(function(item) {
-									return item.text && item.text.toLowerCase().indexOf(term) !== -1;
-								});
-							}
+      // Initialize each Select2 dropdown
+      $tagsSelects.each(function () {
+        const $select = $(this);
 
-							return { results: items };
-						},
-						cache: true
-					},
-					minimumInputLength: 0
-				});
+        // Initialize Select2 with AJAX
+        $select.select2({
+          placeholder: $select.data("placeholder") || "Select tags...",
+          allowClear: true,
+          width: "100%",
+          closeOnSelect: false,
+          scrollAfterSelect: false,
+          ajax: {
+            url: ghl_crm_integrations_js_data.ajaxUrl,
+            type: "POST",
+            dataType: "json",
+            delay: 250,
+            data: function (params) {
+              return {
+                action: "ghl_crm_get_tags",
+                nonce: ghl_crm_integrations_js_data.nonce,
+                search: params.term || "",
+              };
+            },
+            processResults: function (response, params) {
+              if (!response.success || !response.data || !response.data.tags) {
+                return { results: [] };
+              }
 
-				// Pre-populate with saved tags from data attribute
-				const savedTags = $select.data('saved-tags') || [];
-				if (Array.isArray(savedTags) && savedTags.length > 0) {
-					savedTags.forEach(function(tag) {
-						// Create option if it doesn't exist
-						if ($select.find("option[value='" + tag + "']").length === 0) {
-							const newOption = new Option(tag, tag, true, true);
-							$select.append(newOption);
-						}
-					});
-					$select.val(savedTags).trigger('change');
-				}
-			});
-		},
+              var items = response.data.tags.map(function (tag) {
+                if (typeof tag === "object" && tag !== null) {
+                  var label = String(tag.name || tag.id || "");
+                  return {
+                    id: label,
+                    text: label,
+                  };
+                }
+                var value = String(tag || "");
+                return {
+                  id: value,
+                  text: value,
+                };
+              });
 
-		/**
-		 * Initialize Order Status Select2
-		 */
-		initOrderStatusSelect() {
-			const $orderStatusSelect = $('.ghl-order-status-select');
+              if (params && params.term) {
+                var term = params.term.toLowerCase();
+                items = items.filter(function (item) {
+                  return (
+                    item.text && item.text.toLowerCase().indexOf(term) !== -1
+                  );
+                });
+              }
 
-			if ($orderStatusSelect.length === 0 || typeof $.fn.select2 === 'undefined') {
-				return;
-			}
+              return { results: items };
+            },
+            cache: true,
+          },
+          minimumInputLength: 0,
+        });
 
-			// Initialize Select2 for order status (no AJAX needed, options already in HTML)
-			$orderStatusSelect.each(function() {
-				const $select = $(this);
-				
-				$select.select2({
-					placeholder: $select.data('placeholder') || 'Leave empty to convert on any order...',
-					allowClear: true,
-					width: '100%',
-					closeOnSelect: false,
-					scrollAfterSelect: false
-				});
-			});
-		},
+        // Pre-populate with saved tags from data attribute
+        const savedTags = $select.data("saved-tags") || [];
+        if (Array.isArray(savedTags) && savedTags.length > 0) {
+          savedTags.forEach(function (tag) {
+            // Create option if it doesn't exist
+            if ($select.find("option[value='" + tag + "']").length === 0) {
+              const newOption = new Option(tag, tag, true, true);
+              $select.append(newOption);
+            }
+          });
+          $select.val(savedTags).trigger("change");
+        }
+      });
+    },
 
-		/**
-		 * Initialize Group Type Select2 for BuddyBoss
-		 */
-		initGroupTypeSelect() {
-			const $groupTypeSelect = $('.ghl-group-type-select');
+    /**
+     * Initialize Order Status Select2
+     */
+    initOrderStatusSelect() {
+      const $orderStatusSelect = $(".ghl-order-status-select");
 
-			if ($groupTypeSelect.length === 0 || typeof $.fn.select2 === 'undefined') {
-				return;
-			}
+      if (
+        $orderStatusSelect.length === 0 ||
+        typeof $.fn.select2 === "undefined"
+      ) {
+        return;
+      }
 
-			// Initialize Select2 for group type (no AJAX needed, options already in HTML)
-			$groupTypeSelect.each(function() {
-				const $select = $(this);
-				
-				$select.select2({
-					placeholder: $select.find('option:first').text() || 'Skip groups without a type',
-					allowClear: true,
-					width: '100%',
-					minimumResultsForSearch: 5, // Show search if more than 5 options
-					scrollAfterSelect: false
-				});
-			});
-		},
+      // Initialize Select2 for order status (no AJAX needed, options already in HTML)
+      $orderStatusSelect.each(function () {
+        const $select = $(this);
 
-		/**
-		 * Gather form data
-		 */
-		   gatherFormData() {
-			   const data = {
-				   action: 'ghl_crm_save_integrations',
-				   nonce: ghl_crm_integrations_js_data.nonce,
-			   };
+        $select.select2({
+          placeholder:
+            $select.data("placeholder") ||
+            "Leave empty to convert on any order...",
+          allowClear: true,
+          width: "100%",
+          closeOnSelect: false,
+          scrollAfterSelect: false,
+        });
+      });
+    },
 
-			   // Serialize all inputs in the active tab panel
-			   const $activePanel = $('.ghl-tab-panel.active');
-			   $activePanel.find('input, select, textarea').each(function() {
-				   const $el = $(this);
-				   const name = $el.attr('name') || $el.attr('id');
-				   if (!name) return;
+    /**
+     * Initialize Group Type Select2 for BuddyBoss
+     */
+    initGroupTypeSelect() {
+      const $groupTypeSelect = $(".ghl-group-type-select");
 
-				   if ($el.is(':checkbox')) {
-					   data[name] = $el.is(':checked') ? '1' : '0';
-				   } else if ($el.is(':radio')) {
-					   if ($el.is(':checked')) {
-						   data[name] = $el.val();
-					   }
-				   } else if ($el.is('select[multiple]')) {
-					   data[name] = $el.val() || [];
-				   } else {
-					   data[name] = $el.val();
-				   }
-			   });
+      if (
+        $groupTypeSelect.length === 0 ||
+        typeof $.fn.select2 === "undefined"
+      ) {
+        return;
+      }
 
-			   return data;
-		   },
+      // Initialize Select2 for group type (no AJAX needed, options already in HTML)
+      $groupTypeSelect.each(function () {
+        const $select = $(this);
 
-		/**
-		 * Save settings via AJAX
-		 */
-		saveSettings() {
-			const $button = $('#save-integrations-settings');
-			const $buttonText = $button.find('.button-text');
-			const $spinner = $button.find('.spinner');
+        $select.select2({
+          placeholder:
+            $select.find("option:first").text() || "Skip groups without a type",
+          allowClear: true,
+          width: "100%",
+          minimumResultsForSearch: 5, // Show search if more than 5 options
+          scrollAfterSelect: false,
+        });
+      });
+    },
 
-			// Store original button text if not already stored
-			if (!$buttonText.data('original-text')) {
-				$buttonText.data('original-text', $buttonText.text());
-			}
+    /**
+     * Gather form data
+     */
+    gatherFormData() {
+      const data = {
+        action: "ghl_crm_save_integrations",
+        nonce: ghl_crm_integrations_js_data.nonce,
+      };
 
-			// Disable button and show loading state
-			$button.prop('disabled', true).addClass('is-loading');
-			$spinner.addClass('is-active');
-			$buttonText.text('Saving...');
+      // WooCommerce Settings
+      if ($("#wc_enabled").length) {
+        data.wc_enabled = $("#wc_enabled").is(":checked") ? "1" : "0";
+        data.wc_convert_lead_enabled = $("#wc_convert_lead_enabled").is(
+          ":checked",
+        )
+          ? "1"
+          : "0";
 
-			// Gather form data
-			const formData = this.gatherFormData();
+        // Get customer tags (Select2 returns array)
+        const customerTags = $("#wc_customer_tag").val();
+        data.wc_customer_tag = Array.isArray(customerTags)
+          ? customerTags
+          : customerTags
+            ? [customerTags]
+            : [];
 
-			// Make AJAX request
-			$.ajax({
-				url: ghl_crm_integrations_js_data.ajaxUrl,
-				type: 'POST',
-				data: formData,
-				success: (response) => {
-					if (response.success) {
-						// Show success state on button
-						$buttonText.html('<span class="dashicons dashicons-yes-alt" style="font-size: 14px; margin-right: 4px;"></span>Saved!');
-						$button.addClass('is-success');
-						
-						// Show SweetAlert toast notification
-						if (typeof Swal !== 'undefined') {
-							Swal.fire({
-								toast: true,
-								position: 'top-end',
-								icon: 'success',
-								title: response.data.message || 'Settings saved successfully!',
-								showConfirmButton: false,
-								timer: 3000,
-								timerProgressBar: true,
-								customClass: {
-									popup: 'ghl-swal-top-toast',
-								},
-							});
-						}
-						
-						// Reset button text after 3 seconds
-						setTimeout(() => {
-							$buttonText.text($buttonText.data('original-text') || 'Save Integration Settings');
-							$button.removeClass('is-success');
-						}, 3000);
-					} else {
-						// Show error state on button
-						$buttonText.html('<span class="dashicons dashicons-dismiss" style="font-size: 14px; margin-right: 4px;"></span>Failed');
-						$button.addClass('is-error');
-						
-						// Show SweetAlert toast notification
-						if (typeof Swal !== 'undefined') {
-							Swal.fire({
-								toast: true,
-								position: 'top-end',
-								icon: 'error',
-								title: response.data.message || 'Failed to save settings',
-								showConfirmButton: false,
-								timer: 4000,
-								timerProgressBar: true,
-								customClass: {
-									popup: 'ghl-swal-top-toast',
-								},
-							});
-						}
-						
-						// Reset button text after 3 seconds
-						setTimeout(() => {
-							$buttonText.text($buttonText.data('original-text') || 'Save Integration Settings');
-							$button.removeClass('is-error');
-						}, 3000);
-					}
-				},
-				error: (xhr, status, error) => {
-					let errorMessage = ghl_crm_integrations_js_data.i18n.saveError || 'An error occurred while saving settings.';
-					
-					// Try to parse JSON response for error message
-					if (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
-						errorMessage = xhr.responseJSON.data.message;
-					} else if (xhr.responseText) {
-						try {
-							const parsed = JSON.parse(xhr.responseText);
-							if (parsed.data && parsed.data.message) {
-								errorMessage = parsed.data.message;
-							}
-						} catch (e) {
-							// If parsing fails, use default error message
-						}
-					}
-					
-					// Show error state on button
-					$buttonText.html('<span class="dashicons dashicons-dismiss" style="font-size: 14px; margin-right: 4px;"></span>Error');
-					$button.addClass('is-error');
-					
-					// Show SweetAlert toast notification
-					if (typeof Swal !== 'undefined') {
-						Swal.fire({
-							toast: true,
-							position: 'top-end',
-							icon: 'error',
-							title: errorMessage,
-							showConfirmButton: false,
-							timer: 4000,
-							timerProgressBar: true,
-							customClass: {
-								popup: 'ghl-swal-top-toast',
-							},
-						});
-					}
-					
-					// Reset button text after 3 seconds
-					setTimeout(() => {
-						$buttonText.text($buttonText.data('original-text') || 'Save Integration Settings');
-						$button.removeClass('is-error');
-					}, 3000);
-				},
-				complete: () => {
-					// Re-enable button and hide spinner
-					$button.prop('disabled', false).removeClass('is-loading');
-					$spinner.removeClass('is-active');
-				},
-			});
-		},
+        // Get order statuses for conversion (Select2 returns array)
+        const orderStatuses = $("#wc_convert_order_statuses").val();
+        data.wc_convert_order_statuses = Array.isArray(orderStatuses)
+          ? orderStatuses
+          : orderStatuses
+            ? [orderStatuses]
+            : [];
 
-		/**
-		 * Handle WooCommerce main toggle
-		 */
-		handleWooCommerceToggle(e) {
-			const $checkbox = $(e.target);
-			const $label = $checkbox.closest('.ghl-checkbox');
-			const $checkboxInput = $label.find('.ghl-checkbox-input');
-			const $checkboxLabel = $label.find('.ghl-checkbox-label');
-			const $settingsBody = $('#wc-settings-body');
-			
-			if ($checkbox.is(':checked')) {
-				$label.addClass('is-checked');
-				$checkboxInput.addClass('is-checked');
-				$checkboxLabel.text('Enabled');
-				$settingsBody.slideDown(300);
-				
-				// Show success feedback
-				this.showInlineFeedback($checkbox, 'WooCommerce integration enabled', 'success');
-			} else {
-				$label.removeClass('is-checked');
-				$checkboxInput.removeClass('is-checked');
-				$checkboxLabel.text('Disabled');
-				$settingsBody.slideUp(300);
-				
-				// Show info feedback
-				this.showInlineFeedback($checkbox, 'WooCommerce integration disabled', 'info');
-			}
-		},
+        data.wc_abandoned_cart_enabled = $("#wc_abandoned_cart_enabled").is(
+          ":checked",
+        )
+          ? "1"
+          : "0";
+        data.wc_abandoned_cart_time = $("#wc_abandoned_cart_time").val();
 
-		/**
-		 * Handle LearnDash toggle
-		 */
-		handleLearnDashToggle(e) {
-			const $checkbox = $(e.target);
-			const $settingsBody = $('[data-integration-section="learndash"]');
-			
-			if ($checkbox.is(':checked')) {
-				$settingsBody.slideDown(300);
-				this.showInlineFeedback($checkbox, 'LearnDash integration enabled', 'success');
-			} else {
-				$settingsBody.slideUp(300);
-				this.showInlineFeedback($checkbox, 'LearnDash integration disabled', 'info');
-			}
-		},
+        // Get abandoned cart tags (Select2 returns array)
+        const abandonedTags = $("#wc_abandoned_cart_tag").val();
+        data.wc_abandoned_cart_tag = Array.isArray(abandonedTags)
+          ? abandonedTags
+          : abandonedTags
+            ? [abandonedTags]
+            : [];
+        // Tag removal and recovery settings
+        data.wc_abandoned_cart_remove_on_purchase = $(
+          "#wc_abandoned_cart_remove_on_purchase",
+        ).is(":checked")
+          ? "1"
+          : "0";
+        const recoveryTags = $("#wc_abandoned_cart_recovery_tag").val();
+        data.wc_abandoned_cart_recovery_tag = Array.isArray(recoveryTags)
+          ? recoveryTags
+          : recoveryTags
+            ? [recoveryTags]
+            : [];
+        data.wc_abandoned_cart_remove_recovery_on_reabandonment = $(
+          "#wc_abandoned_cart_remove_recovery_on_reabandonment",
+        ).is(":checked")
+          ? "1"
+          : "0";
 
-		/**
-		 * Handle convert lead toggle
-		 */
-		handleConvertLeadToggle(e) {
-			const $checkbox = $(e.target);
-			const $label = $checkbox.closest('.ghl-checkbox');
-			const $checkboxInput = $label.find('.ghl-checkbox-input');
-			const $tagField = $('#wc-customer-tag-field');
-			const $statusField = $('#wc-convert-order-status-field');
-			
-			if ($checkbox.is(':checked')) {
-				$label.addClass('is-checked');
-				$checkboxInput.addClass('is-checked');
-				$tagField.slideDown(300);
-				$statusField.slideDown(300);
-				
-				// Show success feedback
-				this.showInlineFeedback($checkbox, 'Lead-to-customer conversion enabled', 'success');
-			} else {
-				$label.removeClass('is-checked');
-				$checkboxInput.removeClass('is-checked');
-				$tagField.slideUp(300);
-				$statusField.slideUp(300);
-				
-				// Show info feedback
-				this.showInlineFeedback($checkbox, 'Lead-to-customer conversion disabled', 'info');
-			}
-		},
+        // Cleanup settings
+        data.wc_abandoned_cart_cleanup_enabled = $(
+          "#wc_abandoned_cart_cleanup_enabled",
+        ).is(":checked")
+          ? "1"
+          : "0";
+        data.wc_abandoned_cart_cleanup_days = $(
+          "#wc_abandoned_cart_cleanup_days",
+        ).val();
+        // Opportunities Settings
+        data.wc_opportunities_enabled = $("#wc_opportunities_enabled").is(
+          ":checked",
+        )
+          ? "1"
+          : "0";
+        data.wc_opportunities_pipeline =
+          $("#wc_opportunities_pipeline").val() || "";
+        data.wc_opportunities_stage_abandoned =
+          $("#wc_opportunities_stage_abandoned").val() || "";
+        data.wc_opportunities_stage_pending =
+          $("#wc_opportunities_stage_pending").val() || "";
+        data.wc_opportunities_stage_processing =
+          $("#wc_opportunities_stage_processing").val() || "";
+        data.wc_opportunities_stage_completed =
+          $("#wc_opportunities_stage_completed").val() || "";
+        data.wc_opportunities_stage_cancelled =
+          $("#wc_opportunities_stage_cancelled").val() || "";
+        data.wc_opportunities_filter_type =
+          $("#wc_opportunities_filter_type").val() || "all";
+        data.wc_opportunities_min_value =
+          $("#wc_opportunities_min_value").val() || 0;
 
-		/**
-		 * Handle abandoned cart toggle
-		 */
-		handleAbandonedCartToggle(e) {
-			const $checkbox = $(e.target);
-			const $label = $checkbox.closest('.ghl-checkbox');
-			const $checkboxInput = $label.find('.ghl-checkbox-input');
-			const $settings = $('#wc-abandoned-cart-settings');
-			
-			if ($checkbox.is(':checked')) {
-				$label.addClass('is-checked');
-				$checkboxInput.addClass('is-checked');
-				$settings.slideDown(300);
-				
-				// Show success feedback
-				this.showInlineFeedback($checkbox, 'Abandoned cart tracking enabled', 'success');
-			} else {
-				$label.removeClass('is-checked');
-				$checkboxInput.removeClass('is-checked');
-				$settings.slideUp(300);
-				
-				// Show info feedback
-				this.showInlineFeedback($checkbox, 'Abandoned cart tracking disabled', 'info');
-			}
-		},
+        // Get opportunities products (Select2 returns array)
+        const opportunityProducts = $("#wc_opportunities_products").val();
+        data.wc_opportunities_products = Array.isArray(opportunityProducts)
+          ? opportunityProducts
+          : opportunityProducts
+            ? [opportunityProducts]
+            : [];
 
-		/**
-		 * Show inline feedback near an element
-		 */
-		showInlineFeedback($element, message, type = 'success') {
-			// Remove any existing feedback
-			$element.closest('.ghl-form-item').find('.ghl-inline-feedback').remove();
-			
-			// Determine icon and color
-			let icon = 'yes-alt';
-			let color = '#22c55e';
-			
-			if (type === 'info') {
-				icon = 'info';
-				color = '#3b82f6';
-			} else if (type === 'error') {
-				icon = 'dismiss';
-				color = '#ef4444';
-			}
-			
-			// Create feedback element
-			const $feedback = $(`
+        // Get opportunities categories (Select2 returns array)
+        const opportunityCategories = $("#wc_opportunities_categories").val();
+        data.wc_opportunities_categories = Array.isArray(opportunityCategories)
+          ? opportunityCategories
+          : opportunityCategories
+            ? [opportunityCategories]
+            : [];
+      }
+
+      // BuddyBoss Settings
+      if ($("#buddyboss_groups_enabled").length) {
+        data.buddyboss_groups_enabled = $("#buddyboss_groups_enabled").is(
+          ":checked",
+        )
+          ? "1"
+          : "0";
+        data.buddyboss_auto_delete_custom_objects = $(
+          "#buddyboss_auto_delete_custom_objects",
+        ).is(":checked")
+          ? "1"
+          : "0";
+        data.buddyboss_field_length_limit =
+          $("#buddyboss_field_length_limit").val() || 250;
+        data.buddyboss_sync_private_groups = $(
+          "#buddyboss_sync_private_groups",
+        ).is(":checked")
+          ? "1"
+          : "0";
+        data.buddyboss_sync_hidden_groups = $(
+          "#buddyboss_sync_hidden_groups",
+        ).is(":checked")
+          ? "1"
+          : "0";
+        data.buddyboss_real_time_sync = $("#buddyboss_real_time_sync").is(
+          ":checked",
+        )
+          ? "1"
+          : "0";
+        data.buddyboss_log_sync_operations = $(
+          "#buddyboss_log_sync_operations",
+        ).is(":checked")
+          ? "1"
+          : "0";
+
+        // Association behavior settings
+        data.buddyboss_missing_contact_strategy =
+          $('input[name="buddyboss_missing_contact_strategy"]:checked').val() ||
+          "skip";
+        data.buddyboss_default_group_type =
+          $("#buddyboss_default_group_type").val() || "";
+      }
+
+      // LearnDash Settings
+      if ($("#learndash_enabled").length) {
+        data.learndash_enabled = $("#learndash_enabled").is(":checked")
+          ? "1"
+          : "0";
+
+        // Get enrolled tags (Select2 returns array)
+        const enrolledTags = $("#learndash_enrolled_tags").val();
+        data.learndash_enrolled_tags = Array.isArray(enrolledTags)
+          ? enrolledTags
+          : enrolledTags
+            ? [enrolledTags]
+            : [];
+
+        // Get completed tags (Select2 returns array)
+        const completedTags = $("#learndash_completed_tags").val();
+        data.learndash_completed_tags = Array.isArray(completedTags)
+          ? completedTags
+          : completedTags
+            ? [completedTags]
+            : [];
+
+        // Get revoked tags (Select2 returns array)
+        const revokedTags = $("#learndash_revoked_tags").val();
+        data.learndash_revoked_tags = Array.isArray(revokedTags)
+          ? revokedTags
+          : revokedTags
+            ? [revokedTags]
+            : [];
+      }
+
+      return data;
+    },
+
+    /**
+     * Save settings via AJAX
+     */
+    saveSettings() {
+      const $button = $("#save-integrations-settings");
+      const $buttonText = $button.find(".button-text");
+      const $spinner = $button.find(".spinner");
+
+      // Store original button text if not already stored
+      if (!$buttonText.data("original-text")) {
+        $buttonText.data("original-text", $buttonText.text());
+      }
+
+      // Disable button and show loading state
+      $button.prop("disabled", true).addClass("is-loading");
+      $spinner.addClass("is-active");
+      $buttonText.text("Saving...");
+
+      // Gather form data
+      const formData = this.gatherFormData();
+
+      // Make AJAX request
+      $.ajax({
+        url: ghl_crm_integrations_js_data.ajaxUrl,
+        type: "POST",
+        data: formData,
+        success: (response) => {
+          if (response.success) {
+            // Show success state on button
+            $buttonText.html(
+              '<span class="dashicons dashicons-yes-alt" style="font-size: 14px; margin-right: 4px;"></span>Saved!',
+            );
+            $button.addClass("is-success");
+
+            // Show SweetAlert toast notification
+            if (typeof Swal !== "undefined") {
+              Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "success",
+                title: response.data.message || "Settings saved successfully!",
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                customClass: {
+                  popup: "ghl-swal-top-toast",
+                },
+              });
+            }
+
+            // Reset button text after 3 seconds
+            setTimeout(() => {
+              $buttonText.text(
+                $buttonText.data("original-text") ||
+                  "Save Integration Settings",
+              );
+              $button.removeClass("is-success");
+            }, 3000);
+          } else {
+            // Show error state on button
+            $buttonText.html(
+              '<span class="dashicons dashicons-dismiss" style="font-size: 14px; margin-right: 4px;"></span>Failed',
+            );
+            $button.addClass("is-error");
+
+            // Show SweetAlert toast notification
+            if (typeof Swal !== "undefined") {
+              Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "error",
+                title: response.data.message || "Failed to save settings",
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true,
+                customClass: {
+                  popup: "ghl-swal-top-toast",
+                },
+              });
+            }
+
+            // Reset button text after 3 seconds
+            setTimeout(() => {
+              $buttonText.text(
+                $buttonText.data("original-text") ||
+                  "Save Integration Settings",
+              );
+              $button.removeClass("is-error");
+            }, 3000);
+          }
+        },
+        error: (xhr, status, error) => {
+          console.error("Save error:", error);
+          console.error("XHR response:", xhr.responseText);
+
+          let errorMessage =
+            ghl_crm_integrations_js_data.i18n.saveError ||
+            "An error occurred while saving settings.";
+
+          // Try to parse JSON response for error message
+          if (
+            xhr.responseJSON &&
+            xhr.responseJSON.data &&
+            xhr.responseJSON.data.message
+          ) {
+            errorMessage = xhr.responseJSON.data.message;
+          } else if (xhr.responseText) {
+            try {
+              const parsed = JSON.parse(xhr.responseText);
+              if (parsed.data && parsed.data.message) {
+                errorMessage = parsed.data.message;
+              }
+            } catch (e) {
+              // If parsing fails, use default error message
+            }
+          }
+
+          // Show error state on button
+          $buttonText.html(
+            '<span class="dashicons dashicons-dismiss" style="font-size: 14px; margin-right: 4px;"></span>Error',
+          );
+          $button.addClass("is-error");
+
+          // Show SweetAlert toast notification
+          if (typeof Swal !== "undefined") {
+            Swal.fire({
+              toast: true,
+              position: "top-end",
+              icon: "error",
+              title: errorMessage,
+              showConfirmButton: false,
+              timer: 4000,
+              timerProgressBar: true,
+              customClass: {
+                popup: "ghl-swal-top-toast",
+              },
+            });
+          }
+
+          // Reset button text after 3 seconds
+          setTimeout(() => {
+            $buttonText.text(
+              $buttonText.data("original-text") || "Save Integration Settings",
+            );
+            $button.removeClass("is-error");
+          }, 3000);
+        },
+        complete: () => {
+          // Re-enable button and hide spinner
+          $button.prop("disabled", false).removeClass("is-loading");
+          $spinner.removeClass("is-active");
+        },
+      });
+    },
+
+    /**
+     * Handle WooCommerce main toggle
+     */
+    handleWooCommerceToggle(e) {
+      const $checkbox = $(e.target);
+      const $label = $checkbox.closest(".ghl-checkbox");
+      const $checkboxInput = $label.find(".ghl-checkbox-input");
+      const $checkboxLabel = $label.find(".ghl-checkbox-label");
+      const $settingsBody = $("#wc-settings-body");
+
+      if ($checkbox.is(":checked")) {
+        $label.addClass("is-checked");
+        $checkboxInput.addClass("is-checked");
+        $checkboxLabel.text("Enabled");
+        $settingsBody.slideDown(300);
+
+        // Show success feedback
+        this.showInlineFeedback(
+          $checkbox,
+          "WooCommerce integration enabled",
+          "success",
+        );
+      } else {
+        $label.removeClass("is-checked");
+        $checkboxInput.removeClass("is-checked");
+        $checkboxLabel.text("Disabled");
+        $settingsBody.slideUp(300);
+
+        // Show info feedback
+        this.showInlineFeedback(
+          $checkbox,
+          "WooCommerce integration disabled",
+          "info",
+        );
+      }
+    },
+
+    /**
+     * Handle LearnDash toggle
+     */
+    handleLearnDashToggle(e) {
+      const $checkbox = $(e.target);
+      const $settingsBody = $('[data-integration-section="learndash"]');
+
+      if ($checkbox.is(":checked")) {
+        $settingsBody.slideDown(300);
+        this.showInlineFeedback(
+          $checkbox,
+          "LearnDash integration enabled",
+          "success",
+        );
+      } else {
+        $settingsBody.slideUp(300);
+        this.showInlineFeedback(
+          $checkbox,
+          "LearnDash integration disabled",
+          "info",
+        );
+      }
+    },
+
+    /**
+     * Handle convert lead toggle
+     */
+    handleConvertLeadToggle(e) {
+      const $checkbox = $(e.target);
+      const $label = $checkbox.closest(".ghl-checkbox");
+      const $checkboxInput = $label.find(".ghl-checkbox-input");
+      const $tagField = $("#wc-customer-tag-field");
+      const $statusField = $("#wc-convert-order-status-field");
+
+      if ($checkbox.is(":checked")) {
+        $label.addClass("is-checked");
+        $checkboxInput.addClass("is-checked");
+        $tagField.slideDown(300);
+        $statusField.slideDown(300);
+
+        // Show success feedback
+        this.showInlineFeedback(
+          $checkbox,
+          "Lead-to-customer conversion enabled",
+          "success",
+        );
+      } else {
+        $label.removeClass("is-checked");
+        $checkboxInput.removeClass("is-checked");
+        $tagField.slideUp(300);
+        $statusField.slideUp(300);
+
+        // Show info feedback
+        this.showInlineFeedback(
+          $checkbox,
+          "Lead-to-customer conversion disabled",
+          "info",
+        );
+      }
+    },
+
+    /**
+     * Handle abandoned cart toggle
+     */
+    handleAbandonedCartToggle(e) {
+      const $checkbox = $(e.target);
+      const $label = $checkbox.closest(".ghl-checkbox");
+      const $checkboxInput = $label.find(".ghl-checkbox-input");
+      const $settings = $("#wc-abandoned-cart-settings");
+
+      if ($checkbox.is(":checked")) {
+        $label.addClass("is-checked");
+        $checkboxInput.addClass("is-checked");
+        $settings.slideDown(300);
+
+        // Show success feedback
+        this.showInlineFeedback(
+          $checkbox,
+          "Abandoned cart tracking enabled",
+          "success",
+        );
+      } else {
+        $label.removeClass("is-checked");
+        $checkboxInput.removeClass("is-checked");
+        $settings.slideUp(300);
+
+        // Show info feedback
+        this.showInlineFeedback(
+          $checkbox,
+          "Abandoned cart tracking disabled",
+          "info",
+        );
+      }
+    },
+
+    /**
+     * Handle tag removal on purchase toggle
+     */
+    handleTagRemovalToggle(e) {
+      const $checkbox = $(e.target);
+      const $label = $checkbox.closest(".ghl-checkbox");
+      const $checkboxInput = $label.find(".ghl-checkbox-input");
+      const $recoveryField = $("#wc-recovery-tag-field");
+
+      if ($checkbox.is(":checked")) {
+        $label.addClass("is-checked");
+        $checkboxInput.addClass("is-checked");
+        $recoveryField.slideDown(300);
+
+        // Show success feedback
+        this.showInlineFeedback(
+          $checkbox,
+          "Tag auto-removal enabled on purchase",
+          "success",
+        );
+      } else {
+        $label.removeClass("is-checked");
+        $checkboxInput.removeClass("is-checked");
+        $recoveryField.slideUp(300);
+
+        // Show info feedback
+        this.showInlineFeedback(
+          $checkbox,
+          "Tags will be kept after purchase",
+          "info",
+        );
+      }
+    },
+
+    /**
+     * Handle cleanup toggle
+     */
+    handleCleanupToggle(e) {
+      const $checkbox = $(e.target);
+      const $label = $checkbox.closest(".ghl-checkbox");
+      const $checkboxInput = $label.find(".ghl-checkbox-input");
+      const $daysField = $("#wc-cleanup-days-field");
+
+      if ($checkbox.is(":checked")) {
+        $label.addClass("is-checked");
+        $checkboxInput.addClass("is-checked");
+        $daysField.slideDown(300);
+
+        // Show success feedback
+        this.showInlineFeedback(
+          $checkbox,
+          "Auto-cleanup enabled for non-recovered carts",
+          "success",
+        );
+      } else {
+        $label.removeClass("is-checked");
+        $checkboxInput.removeClass("is-checked");
+        $daysField.slideUp(300);
+
+        // Show info feedback
+        this.showInlineFeedback(
+          $checkbox,
+          "Tags will be kept indefinitely",
+          "info",
+        );
+      }
+    },
+
+    /**
+     * Show inline feedback near an element
+     */
+    showInlineFeedback($element, message, type = "success") {
+      // Remove any existing feedback
+      $element.closest(".ghl-form-item").find(".ghl-inline-feedback").remove();
+
+      // Determine icon and color
+      let icon = "yes-alt";
+      let color = "#22c55e";
+
+      if (type === "info") {
+        icon = "info";
+        color = "#3b82f6";
+      } else if (type === "error") {
+        icon = "dismiss";
+        color = "#ef4444";
+      }
+
+      // Create feedback element
+      const $feedback = $(`
 				<span class="ghl-inline-feedback" style="
 					display: inline-flex;
 					align-items: center;
@@ -514,339 +838,356 @@
 					${message}
 				</span>
 			`);
-			
-			// Add animation styles if not already present
-			if (!$('#ghl-inline-feedback-animation').length) {
-				$('<style id="ghl-inline-feedback-animation">@keyframes fadeInSlide { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }</style>').appendTo('head');
-			}
-			
-			// Insert feedback
-			$element.closest('.ghl-checkbox-label').after($feedback);
-			
-			// Auto-remove after 3 seconds
-			setTimeout(() => {
-				$feedback.fadeOut(300, function() {
-					$(this).remove();
-				});
-			}, 3000);
-		},
 
-		/**
-		 * Initialize Opportunities selects
-		 */
-		initOpportunitiesSelects() {
-			this.initPipelineSelect();
-			this.initProductsSelect();
-			this.initCategoriesSelect();
-		},
+      // Add animation styles if not already present
+      if (!$("#ghl-inline-feedback-animation").length) {
+        $(
+          '<style id="ghl-inline-feedback-animation">@keyframes fadeInSlide { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }</style>',
+        ).appendTo("head");
+      }
 
-		/**
-		 * Initialize pipeline Select2
-		 */
-		initPipelineSelect() {
-			const $pipelineSelect = $('#wc_opportunities_pipeline');
-			
-			if ($pipelineSelect.length === 0 || typeof $.fn.select2 === 'undefined') {
-				return;
-			}
+      // Insert feedback
+      $element.closest(".ghl-checkbox-label").after($feedback);
 
-			// Get saved value
-			const savedValue = $pipelineSelect.data('saved-value');
+      // Auto-remove after 3 seconds
+      setTimeout(() => {
+        $feedback.fadeOut(300, function () {
+          $(this).remove();
+        });
+      }, 3000);
+    },
 
-			// Store pipelines data for stage lookup
-			this.pipelinesData = {};
+    /**
+     * Initialize Opportunities selects
+     */
+    initOpportunitiesSelects() {
+      this.initPipelineSelect();
+      this.initProductsSelect();
+      this.initCategoriesSelect();
+    },
 
-			// Initialize Select2
-			$pipelineSelect.select2({
-				placeholder: $pipelineSelect.data('placeholder') || 'Select a pipeline...',
-				allowClear: true,
-				width: '100%',
-				scrollAfterSelect: false,
-				ajax: {
-					url: ghl_crm_integrations_js_data.ajaxUrl,
-					dataType: 'json',
-					delay: 250,
-					data: (params) => ({
-						action: 'ghl_get_pipelines',
-						nonce: ghl_crm_integrations_js_data.nonce,
-						search: params.term,
-						page: params.page || 1
-					}),
-					processResults: (data) => {
-						if (data.success && data.data.pipelines) {
-							// Store pipelines with stages for later use
-							data.data.pipelines.forEach(pipeline => {
-								this.pipelinesData[pipeline.id] = pipeline;
-							});
+    /**
+     * Initialize pipeline Select2
+     */
+    initPipelineSelect() {
+      const $pipelineSelect = $("#wc_opportunities_pipeline");
 
-							return {
-								results: data.data.pipelines.map(pipeline => ({
-									id: pipeline.id,
-									text: pipeline.name
-								}))
-							};
-						}
-						return { results: [] };
-					},
-					cache: true
-				},
-				minimumInputLength: 0
-			});
+      if ($pipelineSelect.length === 0 || typeof $.fn.select2 === "undefined") {
+        return;
+      }
 
-			// Set saved value if exists
-			if (savedValue) {
-				// Trigger change to load stages
-				setTimeout(() => {
-					$pipelineSelect.val(savedValue).trigger('change');
-				}, 500);
-			}
-		},
+      // Get saved value
+      const savedValue = $pipelineSelect.data("saved-value");
 
-		/**
-		 * Initialize stage selects for a pipeline
-		 */
-		initStageSelects(pipelineId) {
-			const $stageSelects = $('.ghl-stage-select');
-			
-			if ($stageSelects.length === 0 || !pipelineId) {
-				return;
-			}
+      // Store pipelines data for stage lookup
+      this.pipelinesData = {};
 
-			// Get pipeline data from stored pipelines
-			const pipeline = this.pipelinesData[pipelineId];
-			
-			if (!pipeline || !pipeline.stages) {
-				// If pipeline not in cache, load all pipelines first
-				this.loadPipelineStages(pipelineId, $stageSelects);
-				return;
-			}
+      // Initialize Select2
+      $pipelineSelect.select2({
+        placeholder:
+          $pipelineSelect.data("placeholder") || "Select a pipeline...",
+        allowClear: true,
+        width: "100%",
+        scrollAfterSelect: false,
+        ajax: {
+          url: ghl_crm_integrations_js_data.ajaxUrl,
+          dataType: "json",
+          delay: 250,
+          data: (params) => ({
+            action: "ghl_get_pipelines",
+            nonce: ghl_crm_integrations_js_data.nonce,
+            search: params.term,
+            page: params.page || 1,
+          }),
+          processResults: (data) => {
+            if (data.success && data.data.pipelines) {
+              // Store pipelines with stages for later use
+              data.data.pipelines.forEach((pipeline) => {
+                this.pipelinesData[pipeline.id] = pipeline;
+              });
 
-			// Populate stage selects with stages from pipeline
-			$stageSelects.each(function() {
-				const $select = $(this);
-				const savedValue = $select.data('saved-value');
+              return {
+                results: data.data.pipelines.map((pipeline) => ({
+                  id: pipeline.id,
+                  text: pipeline.name,
+                })),
+              };
+            }
+            return { results: [] };
+          },
+          cache: true,
+        },
+        minimumInputLength: 0,
+      });
 
-				// Clear existing options
-				$select.empty().append('<option value="">Select stage...</option>');
-				
-				// Add stage options (sorted by position)
-				const sortedStages = pipeline.stages.sort((a, b) => a.position - b.position);
-				sortedStages.forEach(stage => {
-					const $option = $('<option></option>')
-						.val(stage.id)
-						.text(stage.name)
-						.prop('selected', stage.id === savedValue);
-					$select.append($option);
-				});
+      // Set saved value if exists
+      if (savedValue) {
+        // Trigger change to load stages
+        setTimeout(() => {
+          $pipelineSelect.val(savedValue).trigger("change");
+        }, 500);
+      }
+    },
 
-				// Initialize Select2 on stage select
-				$select.select2({
-					placeholder: 'Select stage...',
-					allowClear: true,
-					width: '100%',
-					scrollAfterSelect: false
-				});
-			});
-		},
+    /**
+     * Initialize stage selects for a pipeline
+     */
+    initStageSelects(pipelineId) {
+      const $stageSelects = $(".ghl-stage-select");
 
-		/**
-		 * Load pipeline stages if not in cache
-		 */
-		loadPipelineStages(pipelineId, $stageSelects) {
-			$.ajax({
-				url: ghl_crm_integrations_js_data.ajaxUrl,
-				type: 'POST',
-				dataType: 'json',
-				data: {
-					action: 'ghl_get_pipelines',
-					nonce: ghl_crm_integrations_js_data.nonce,
-					page: 1
-				},
-				success: (response) => {
-					if (response.success && response.data.pipelines) {
-						// Store all pipelines
-						response.data.pipelines.forEach(pipeline => {
-							this.pipelinesData[pipeline.id] = pipeline;
-						});
-						// Try again now that we have the data
-						this.initStageSelects(pipelineId);
-					}
-				},
-				error: () => {
-					$stageSelects.empty().append('<option value="">Failed to load stages</option>');
-				}
-			});
-		},
+      if ($stageSelects.length === 0 || !pipelineId) {
+        return;
+      }
 
-		/**
-		 * Initialize products Select2 with AJAX search
-		 */
-		initProductsSelect() {
-			const $productsSelect = $('#wc_opportunities_products');
-			
-			if ($productsSelect.length === 0 || typeof $.fn.select2 === 'undefined') {
-				return;
-			}
+      // Get pipeline data from stored pipelines
+      const pipeline = this.pipelinesData[pipelineId];
 
-			$productsSelect.select2({
-				placeholder: $productsSelect.data('placeholder') || 'Search and select products...',
-				allowClear: true,
-				width: '100%',
-				closeOnSelect: false,
-				scrollAfterSelect: false,
-				ajax: {
-					url: ghl_crm_integrations_js_data.ajaxUrl,
-					dataType: 'json',
-					delay: 250,
-					data: (params) => ({
-						action: 'ghl_search_products',
-						nonce: ghl_crm_integrations_js_data.nonce,
-						search: params.term,
-						page: params.page || 1
-					}),
-					processResults: (data) => {
-						if (data.success && data.data.products) {
-							return {
-								results: data.data.products.map(product => ({
-									id: product.id,
-									text: product.name
-								}))
-							};
-						}
-						return { results: [] };
-					},
-					cache: true
-				},
-				minimumInputLength: 2
-			});
-		},
+      if (!pipeline || !pipeline.stages) {
+        // If pipeline not in cache, load all pipelines first
+        this.loadPipelineStages(pipelineId, $stageSelects);
+        return;
+      }
 
-		/**
-		 * Initialize categories Select2
-		 */
-		initCategoriesSelect() {
-			const $categoriesSelect = $('#wc_opportunities_categories');
-			
-			if ($categoriesSelect.length === 0 || typeof $.fn.select2 === 'undefined') {
-				return;
-			}
+      // Populate stage selects with stages from pipeline
+      $stageSelects.each(function () {
+        const $select = $(this);
+        const savedValue = $select.data("saved-value");
 
-			$categoriesSelect.select2({
-				placeholder: $categoriesSelect.data('placeholder') || 'Select categories...',
-				allowClear: true,
-				width: '100%',
-				closeOnSelect: false,
-				scrollAfterSelect: false
-			});
-		},
+        // Clear existing options
+        $select.empty().append('<option value="">Select stage...</option>');
 
-		/**
-		 * Handle opportunities toggle
-		 */
-		handleOpportunitiesToggle(e) {
-			const $checkbox = $(e.currentTarget);
-			const isChecked = $checkbox.is(':checked');
-			const $settings = $('#wc-opportunities-settings');
+        // Add stage options (sorted by position)
+        const sortedStages = pipeline.stages.sort(
+          (a, b) => a.position - b.position,
+        );
+        sortedStages.forEach((stage) => {
+          const $option = $("<option></option>")
+            .val(stage.id)
+            .text(stage.name)
+            .prop("selected", stage.id === savedValue);
+          $select.append($option);
+        });
 
-			if (isChecked) {
-				$settings.slideDown(300);
-			} else {
-				$settings.slideUp(300);
-			}
+        // Initialize Select2 on stage select
+        $select.select2({
+          placeholder: "Select stage...",
+          allowClear: true,
+          width: "100%",
+          scrollAfterSelect: false,
+        });
+      });
+    },
 
-			// Update checkbox UI
-			$checkbox.closest('.ghl-checkbox').toggleClass('is-checked', isChecked);
-			$checkbox.siblings('.ghl-checkbox-input').toggleClass('is-checked', isChecked);
-		},
+    /**
+     * Load pipeline stages if not in cache
+     */
+    loadPipelineStages(pipelineId, $stageSelects) {
+      $.ajax({
+        url: ghl_crm_integrations_js_data.ajaxUrl,
+        type: "POST",
+        dataType: "json",
+        data: {
+          action: "ghl_get_pipelines",
+          nonce: ghl_crm_integrations_js_data.nonce,
+          page: 1,
+        },
+        success: (response) => {
+          if (response.success && response.data.pipelines) {
+            // Store all pipelines
+            response.data.pipelines.forEach((pipeline) => {
+              this.pipelinesData[pipeline.id] = pipeline;
+            });
+            // Try again now that we have the data
+            this.initStageSelects(pipelineId);
+          }
+        },
+        error: () => {
+          $stageSelects
+            .empty()
+            .append('<option value="">Failed to load stages</option>');
+        },
+      });
+    },
 
-		/**
-		 * Handle pipeline change - load stages
-		 */
-		handlePipelineChange(e) {
-			const $select = $(e.currentTarget);
-			const pipelineId = $select.val();
-			const $stageMapping = $('#wc-opportunities-stage-mapping');
+    /**
+     * Initialize products Select2 with AJAX search
+     */
+    initProductsSelect() {
+      const $productsSelect = $("#wc_opportunities_products");
 
-			if (pipelineId) {
-				$stageMapping.slideDown(300);
-				this.initStageSelects(pipelineId);
-			} else {
-				$stageMapping.slideUp(300);
-			}
-		},
+      if ($productsSelect.length === 0 || typeof $.fn.select2 === "undefined") {
+        return;
+      }
 
-		/**
-		 * Handle filter type change
-		 */
-		handleFilterTypeChange(e) {
-			const $select = $(e.currentTarget);
-			const filterType = $select.val();
+      $productsSelect.select2({
+        placeholder:
+          $productsSelect.data("placeholder") ||
+          "Search and select products...",
+        allowClear: true,
+        width: "100%",
+        closeOnSelect: false,
+        scrollAfterSelect: false,
+        ajax: {
+          url: ghl_crm_integrations_js_data.ajaxUrl,
+          dataType: "json",
+          delay: 250,
+          data: (params) => ({
+            action: "ghl_search_products",
+            nonce: ghl_crm_integrations_js_data.nonce,
+            search: params.term,
+            page: params.page || 1,
+          }),
+          processResults: (data) => {
+            if (data.success && data.data.products) {
+              return {
+                results: data.data.products.map((product) => ({
+                  id: product.id,
+                  text: product.name,
+                })),
+              };
+            }
+            return { results: [] };
+          },
+          cache: true,
+        },
+        minimumInputLength: 2,
+      });
+    },
 
-			// Hide all filter sections
-			$('#wc-opportunities-products-filter').hide();
-			$('#wc-opportunities-categories-filter').hide();
-			$('#wc-opportunities-minvalue-filter').hide();
+    /**
+     * Initialize categories Select2
+     */
+    initCategoriesSelect() {
+      const $categoriesSelect = $("#wc_opportunities_categories");
 
-			// Show selected filter section
-			switch(filterType) {
-				case 'products':
-					$('#wc-opportunities-products-filter').slideDown(300);
-					break;
-				case 'categories':
-					$('#wc-opportunities-categories-filter').slideDown(300);
-					break;
-				case 'min_value':
-					$('#wc-opportunities-minvalue-filter').slideDown(300);
-					break;
-			}
-		},
+      if (
+        $categoriesSelect.length === 0 ||
+        typeof $.fn.select2 === "undefined"
+      ) {
+        return;
+      }
 
-		/**
-		 * Show message
-		 */
-		showMessage(type, message) {
-			const $container = $('#ghl-integrations-messages');
-			const noticeClass = type === 'success' ? 'notice-success' : 'notice-error';
+      $categoriesSelect.select2({
+        placeholder:
+          $categoriesSelect.data("placeholder") || "Select categories...",
+        allowClear: true,
+        width: "100%",
+        closeOnSelect: false,
+        scrollAfterSelect: false,
+      });
+    },
 
-			const html = `
+    /**
+     * Handle opportunities toggle
+     */
+    handleOpportunitiesToggle(e) {
+      const $checkbox = $(e.currentTarget);
+      const isChecked = $checkbox.is(":checked");
+      const $settings = $("#wc-opportunities-settings");
+
+      if (isChecked) {
+        $settings.slideDown(300);
+      } else {
+        $settings.slideUp(300);
+      }
+
+      // Update checkbox UI
+      $checkbox.closest(".ghl-checkbox").toggleClass("is-checked", isChecked);
+      $checkbox
+        .siblings(".ghl-checkbox-input")
+        .toggleClass("is-checked", isChecked);
+    },
+
+    /**
+     * Handle pipeline change - load stages
+     */
+    handlePipelineChange(e) {
+      const $select = $(e.currentTarget);
+      const pipelineId = $select.val();
+      const $stageMapping = $("#wc-opportunities-stage-mapping");
+
+      if (pipelineId) {
+        $stageMapping.slideDown(300);
+        this.initStageSelects(pipelineId);
+      } else {
+        $stageMapping.slideUp(300);
+      }
+    },
+
+    /**
+     * Handle filter type change
+     */
+    handleFilterTypeChange(e) {
+      const $select = $(e.currentTarget);
+      const filterType = $select.val();
+
+      // Hide all filter sections
+      $("#wc-opportunities-products-filter").hide();
+      $("#wc-opportunities-categories-filter").hide();
+      $("#wc-opportunities-minvalue-filter").hide();
+
+      // Show selected filter section
+      switch (filterType) {
+        case "products":
+          $("#wc-opportunities-products-filter").slideDown(300);
+          break;
+        case "categories":
+          $("#wc-opportunities-categories-filter").slideDown(300);
+          break;
+        case "min_value":
+          $("#wc-opportunities-minvalue-filter").slideDown(300);
+          break;
+      }
+    },
+
+    /**
+     * Show message
+     */
+    showMessage(type, message) {
+      const $container = $("#ghl-integrations-messages");
+      const noticeClass =
+        type === "success" ? "notice-success" : "notice-error";
+
+      const html = `
 				<div class="notice ${noticeClass} is-dismissible">
 					<p>${message}</p>
 				</div>
 			`;
 
-			// Remove existing messages
-			$container.empty();
+      // Remove existing messages
+      $container.empty();
 
-			// Add new message
-			$container.html(html);
+      // Add new message
+      $container.html(html);
 
-			// Auto-dismiss after 5 seconds
-			setTimeout(() => {
-				$container.find('.notice').fadeOut(300, function () {
-					$(this).remove();
-				});
-			}, 5000);
+      // Auto-dismiss after 5 seconds
+      setTimeout(() => {
+        $container.find(".notice").fadeOut(300, function () {
+          $(this).remove();
+        });
+      }, 5000);
 
-			// Handle dismiss button click
-			$container.find('.notice-dismiss').on('click', function () {
-				$(this).closest('.notice').fadeOut(300, function () {
-					$(this).remove();
-				});
-			});
-		},
-	};
+      // Handle dismiss button click
+      $container.find(".notice-dismiss").on("click", function () {
+        $(this)
+          .closest(".notice")
+          .fadeOut(300, function () {
+            $(this).remove();
+          });
+      });
+    },
+  };
 
-	/**
-	 * Initialize integrations functionality
-	 */
-	function initIntegrations() {
-		IntegrationsManager.init();
-	}
+  /**
+   * Initialize integrations functionality
+   */
+  function initIntegrations() {
+    IntegrationsManager.init();
+  }
 
-	// Export to global scope for SPA to call
-	window.initIntegrations = initIntegrations;
+  // Export to global scope for SPA to call
+  window.initIntegrations = initIntegrations;
 
-	// Initialize on document ready (for non-SPA page loads)
-	$(document).ready(initIntegrations);
-
+  // Initialize on document ready (for non-SPA page loads)
+  $(document).ready(initIntegrations);
 })(jQuery);
