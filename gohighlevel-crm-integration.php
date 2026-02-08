@@ -70,3 +70,26 @@ function ghl_crm_init() {
 ghl_crm_init();
 
 include_once GHL_CRM_PATH . 'functions.php';
+
+// not for production
+// Install lightweight error handler to suppress noisy translation timing notices
+// Only suppress messages that reference _load_textdomain_just_in_time or early translation loading for specific domains
+$ghl_prev_error_handler = null;
+$ghl_prev_error_handler = set_error_handler(function ( $errno, $errstr, $errfile, $errline ) use ( &$ghl_prev_error_handler ) {
+    // Normalize string for case-insensitive checks
+    $lower = strtolower( $errstr );
+
+    // Suppress known noisy translation timing notices
+    if ( strpos( $lower, '_load_textdomain_just_in_time' ) !== false || strpos( $lower, 'translation loading for the' ) !== false || strpos( $lower, 'deprecated' ) !== false ) {
+        // Return true to indicate the PHP internal error handler should not proceed
+        return true;
+    }
+
+    // Delegate to previous handler if present
+    if ( is_callable( $ghl_prev_error_handler ) ) {
+        return call_user_func( $ghl_prev_error_handler, $errno, $errstr, $errfile, $errline );
+    }
+
+    // Not handled here — allow default PHP handler
+    return false;
+});
