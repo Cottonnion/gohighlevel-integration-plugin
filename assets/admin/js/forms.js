@@ -5,7 +5,7 @@
  * @subpackage Assets/Admin/JS
  */
 
-(function($) {
+(function ($) {
 	'use strict';
 
 	const formsData = window.ghl_crm_forms_js_data || {};
@@ -19,7 +19,7 @@
 		initialized: false,
 		loading: false,
 
-		init: function() {
+		init: function () {
 			if (this.initialized) {
 				// Already initialized, just rebind events
 				this.bindEvents();
@@ -30,20 +30,20 @@
 			this.loadForms();
 		},
 
-		reset: function() {
+		reset: function () {
 			this.initialized = false;
 			this.loading = false;
 		},
 
-		bindEvents: function() {
+		bindEvents: function () {
 			const self = this;
-			$('#ghl-refresh-forms').off('click').on('click', function(e) {
+			$('#ghl-refresh-forms').off('click').on('click', function (e) {
 				e.preventDefault();
 				self.loadForms();
 			});
 		},
 
-		loadForms: function() {
+		loadForms: function () {
 			if (this.loading) {
 				return;
 			}
@@ -63,7 +63,7 @@
 				success: (response) => {
 					this.loading = false;
 					$('#ghl-forms-loading').hide();
-					
+
 					if (response.success) {
 						this.renderForms(response.data.forms || []);
 					} else {
@@ -78,10 +78,10 @@
 			});
 		},
 
-		renderForms: function(forms) {
+		renderForms: function (forms) {
 			const $wrapper = $('#ghl-forms-table-wrapper');
 			$wrapper.empty();
-			
+
 			if (!forms || forms.length === 0) {
 				$wrapper.html(`
 					<div class="ghl-forms-empty">
@@ -152,30 +152,30 @@
 			$wrapper.html(tableHtml);
 
 			// Bind copy button events
-			$('.ghl-copy-shortcode').on('click', function() {
+			$('.ghl-copy-shortcode').on('click', function () {
 				const shortcode = $(this).data('shortcode');
 				FormsManager.copyToClipboard(shortcode, $(this));
 			});
 
 			// Bind shortcode box click events
-			$('.ghl-shortcode-box').on('click', function() {
+			$('.ghl-shortcode-box').on('click', function () {
 				const text = $(this).text().trim();
 				FormsManager.copyToClipboard(text, $(this));
 			});
 
 			// Bind form settings button events
-			$('.ghl-form-settings-btn').on('click', function() {
+			$('.ghl-form-settings-btn').on('click', function () {
 				const formId = $(this).data('form-id');
 				FormsManager.showFormSettings(formId);
 			});
 		},
 
-		showError: function(message) {
+		showError: function (message) {
 			$('#ghl-forms-error-message').text(message);
 			$('#ghl-forms-error').show();
 		},
 
-		copyToClipboard: function(text, $element) {
+		copyToClipboard: function (text, $element) {
 			if (!navigator.clipboard) {
 				// Fallback for older browsers
 				const $temp = $('<textarea>');
@@ -199,15 +199,15 @@
 			});
 		},
 
-		showCopyFeedback: function($element) {
+		showCopyFeedback: function ($element) {
 			const originalBg = $element.css('background-color');
 			const originalText = $element.html();
-			
+
 			$element.css('background-color', '#46b450');
 			if ($element.hasClass('button')) {
 				$element.html('<span class="dashicons dashicons-yes"></span> Copied!');
 			}
-			
+
 			setTimeout(() => {
 				$element.css('background-color', originalBg);
 				if ($element.hasClass('button')) {
@@ -216,7 +216,7 @@
 			}, 1500);
 		},
 
-		escapeHtml: function(text) {
+		escapeHtml: function (text) {
 			const map = {
 				'&': '&amp;',
 				'<': '&lt;',
@@ -225,30 +225,30 @@
 				"'": '&#039;'
 			};
 			return text.replace(/[&<>"']/g, m => map[m]);
-	},
+		},
 
-	showFormSettings: function(formId) {
-		// Get existing settings from localized data
-		const existingSettings = formSettings[formId] || {};
-		
-		const autofillEnabled = existingSettings.autofill_enabled !== false; // Default to true
-		const loggedOnly = existingSettings.logged_only === true; // Default to false
-		const customParams = existingSettings.custom_params || [];
-		const submissionLimit = existingSettings.submission_limit || 'unlimited';
-		const submittedMessage = existingSettings.submitted_message || '';
-		
-		// Build custom params HTML
-		let customParamsHtml = '';
-		if (customParams.length > 0) {
-			customParams.forEach((param, index) => {
-				customParamsHtml += this.buildCustomParamRow(index, param.key, param.value);
-			});
-		} else {
-			customParamsHtml = this.buildCustomParamRow(0, '', '');
-		}
-		
-		// Create settings panel HTML
-		const panelHtml = `
+		showFormSettings: function (formId) {
+			// Get existing settings from localized data
+			const existingSettings = formSettings[formId] || {};
+
+			const autofillEnabled = existingSettings.autofill_enabled !== false; // Default to true
+			const loggedOnly = existingSettings.logged_only === true; // Default to false
+			const customParams = existingSettings.custom_params || [];
+			const submissionLimit = existingSettings.submission_limit || 'unlimited';
+			const submittedMessage = existingSettings.submitted_message || '';
+
+			// Build custom params HTML
+			let customParamsHtml = '';
+			if (customParams.length > 0) {
+				customParams.forEach((param, index) => {
+					customParamsHtml += this.buildCustomParamRow(index, param.key, param.value);
+				});
+			} else {
+				customParamsHtml = this.buildCustomParamRow(0, '', '');
+			}
+
+			// Create settings panel HTML
+			const panelHtml = `
 			<div class="ghl-form-settings-panel" data-form-id="${formId}">
 				<div class="ghl-form-settings-overlay"></div>
 				<div class="ghl-form-settings-sidebar">
@@ -405,35 +405,35 @@
 					</div>
 				</div>
 			`;
-			
+
 			// Remove any existing panel
 			$('.ghl-form-settings-panel').remove();
-			
+
 			// Add panel to body
 			$('body').append(panelHtml);
-			
+
 			// Initialize tooltips
 			if (window.initializeTooltips) {
 				window.initializeTooltips();
 			}
-			
+
 			// Show panel with animation
 			setTimeout(() => {
 				$('.ghl-form-settings-panel').addClass('is-open');
 			}, 10);
-			
+
 			// Bind close events
-			$('.ghl-settings-close, .ghl-form-settings-overlay').on('click', function() {
+			$('.ghl-settings-close, .ghl-form-settings-overlay').on('click', function () {
 				FormsManager.closeFormSettings();
 			});
-			
+
 			// Bind checkbox toggle
-			$('.ghl-checkbox').on('click', function() {
+			$('.ghl-checkbox').on('click', function () {
 				const $checkbox = $(this).find('.ghl-checkbox-original');
 				const $input = $(this).find('.ghl-checkbox-input');
-				
+
 				$checkbox.prop('checked', !$checkbox.prop('checked'));
-				
+
 				if ($checkbox.prop('checked')) {
 					$(this).addClass('is-checked');
 					$input.addClass('is-checked');
@@ -441,100 +441,100 @@
 					$(this).removeClass('is-checked');
 					$input.removeClass('is-checked');
 				}
-		});
-		
-		// Bind submission limit dropdown
-		$(`#ghl-form-submission-limit-${formId}`).on('change', function() {
-			const value = $(this).val();
-			const $msgWrapper = $(`#ghl-submitted-message-wrapper-${formId}`);
-			if (value === 'once') {
-				$msgWrapper.slideDown(200);
-			} else {
-				$msgWrapper.slideUp(200);
-			}
-		});
-		
-		// Bind add parameter button
-		$('.ghl-add-custom-param').on('click', function() {
-			const $container = $(`#ghl-custom-params-${formId}`);
-			const index = $container.find('.ghl-custom-param-row').length;
-			const rowHtml = FormsManager.buildCustomParamRow(index, '', '');
-			$container.append(rowHtml);
-			FormsManager.bindCustomParamEvents();
-		});
-		
-		// Bind copy variable events
-		$('.ghl-copy-variable').on('click', function(e) {
-			e.preventDefault();
-			const variable = $(this).data('variable');
-			FormsManager.copyToClipboard(variable, $(this));
-		});
-		
-		// Bind remove parameter events
-		this.bindCustomParamEvents();
-		
-		// Bind save button
-		$('.ghl-save-form-settings').on('click', function() {
-			const $btn = $(this);
-			
-			// Collect custom parameters
-			const custom_params = [];
-			$(`#ghl-custom-params-${formId} .ghl-custom-param-row`).each(function() {
-				const key = $(this).find('.ghl-param-key').val().trim();
-				const value = $(this).find('.ghl-param-value').val().trim();
-				if (key && value) {
-					custom_params.push({ key, value });
+			});
+
+			// Bind submission limit dropdown
+			$(`#ghl-form-submission-limit-${formId}`).on('change', function () {
+				const value = $(this).val();
+				const $msgWrapper = $(`#ghl-submitted-message-wrapper-${formId}`);
+				if (value === 'once') {
+					$msgWrapper.slideDown(200);
+				} else {
+					$msgWrapper.slideUp(200);
 				}
 			});
-			
-			const settings = {
-				autofill_enabled: $(`#ghl-form-autofill-${formId}`).prop('checked'),
-				logged_only: $(`#ghl-form-logged-only-${formId}`).prop('checked'),
-				custom_params: custom_params,
-				submission_limit: $(`#ghl-form-submission-limit-${formId}`).val(),
-				submitted_message: $(`#ghl-form-submitted-message-${formId}`).val()
-			};
-			
-		
-		// Disable button during save
-		$btn.prop('disabled', true).text('Saving...');
-		
-		// Save via AJAX
-		$.ajax({
-			url: ajaxUrl,
-			type: 'POST',
-			data: {
-				action: 'ghl_save_form_settings',
-				nonce: nonce,
-				form_id: formId,
-				settings: settings
-			},
-			success: function(response) {
-				if (response.success) {
-					// Update local reference
-					formSettings[formId] = settings;
-					
-					// Show success message
-					FormsManager.showSuccessToast('Form settings saved successfully');						// Close panel
-						FormsManager.closeFormSettings();
-					} else {
-						alert('Error: ' + (response.data || 'Unknown error'));
+
+			// Bind add parameter button
+			$('.ghl-add-custom-param').on('click', function () {
+				const $container = $(`#ghl-custom-params-${formId}`);
+				const index = $container.find('.ghl-custom-param-row').length;
+				const rowHtml = FormsManager.buildCustomParamRow(index, '', '');
+				$container.append(rowHtml);
+				FormsManager.bindCustomParamEvents();
+			});
+
+			// Bind copy variable events
+			$('.ghl-copy-variable').on('click', function (e) {
+				e.preventDefault();
+				const variable = $(this).data('variable');
+				FormsManager.copyToClipboard(variable, $(this));
+			});
+
+			// Bind remove parameter events
+			this.bindCustomParamEvents();
+
+			// Bind save button
+			$('.ghl-save-form-settings').on('click', function () {
+				const $btn = $(this);
+
+				// Collect custom parameters
+				const custom_params = [];
+				$(`#ghl-custom-params-${formId} .ghl-custom-param-row`).each(function () {
+					const key = $(this).find('.ghl-param-key').val().trim();
+					const value = $(this).find('.ghl-param-value').val().trim();
+					if (key && value) {
+						custom_params.push({ key, value });
+					}
+				});
+
+				const settings = {
+					autofill_enabled: $(`#ghl-form-autofill-${formId}`).prop('checked'),
+					logged_only: $(`#ghl-form-logged-only-${formId}`).prop('checked'),
+					custom_params: custom_params,
+					submission_limit: $(`#ghl-form-submission-limit-${formId}`).val(),
+					submitted_message: $(`#ghl-form-submitted-message-${formId}`).val()
+				};
+
+
+				// Disable button during save
+				$btn.prop('disabled', true).text('Saving...');
+
+				// Save via AJAX
+				$.ajax({
+					url: ajaxUrl,
+					type: 'POST',
+					data: {
+						action: 'ghl_save_form_settings',
+						nonce: nonce,
+						form_id: formId,
+						settings: settings
+					},
+					success: function (response) {
+						if (response.success) {
+							// Update local reference
+							formSettings[formId] = settings;
+
+							// Show success message
+							FormsManager.showSuccessToast('Form settings saved successfully');						// Close panel
+							FormsManager.closeFormSettings();
+						} else {
+							alert('Error: ' + (response.data || 'Unknown error'));
+							$btn.prop('disabled', false).html('<span class="dashicons dashicons-yes"></span> Save Settings');
+						}
+					},
+					error: function (xhr, status, error) {
+						alert('AJAX Error: ' + error);
 						$btn.prop('disabled', false).html('<span class="dashicons dashicons-yes"></span> Save Settings');
 					}
-				},
-				error: function(xhr, status, error) {
-					alert('AJAX Error: ' + error);
-					$btn.prop('disabled', false).html('<span class="dashicons dashicons-yes"></span> Save Settings');
-				}
+				});
 			});
-		});
-	},
-	
-	buildCustomParamRow: function(index, key, value) {
-		key = key || '';
-		value = value || '';
-		
-		return `
+		},
+
+		buildCustomParamRow: function (index, key, value) {
+			key = key || '';
+			value = value || '';
+
+			return `
 			<div class="ghl-custom-param-row ghl-form-item">
 				<div class="ghl-param-inputs">
 					<input type="text" 
@@ -551,33 +551,33 @@
 				</div>
 			</div>
 		`;
-	},
-	
-	bindCustomParamEvents: function() {
-		$('.ghl-remove-custom-param').off('click').on('click', function() {
-			$(this).closest('.ghl-custom-param-row').remove();
-		});
-	},
-	
-	closeFormSettings: function() {
+		},
+
+		bindCustomParamEvents: function () {
+			$('.ghl-remove-custom-param').off('click').on('click', function () {
+				$(this).closest('.ghl-custom-param-row').remove();
+			});
+		},
+
+		closeFormSettings: function () {
 			$('.ghl-form-settings-panel').removeClass('is-open');
 			setTimeout(() => {
 				$('.ghl-form-settings-panel').remove();
 			}, 300);
 		},
 
-		showSuccessToast: function(message) {
+		showSuccessToast: function (message) {
 			const toast = $('<div class="ghl-toast ghl-toast-success">' +
 				'<span class="dashicons dashicons-yes-alt"></span> ' +
 				message +
 				'</div>');
-			
+
 			$('body').append(toast);
-			
+
 			setTimeout(() => {
 				toast.addClass('is-visible');
 			}, 10);
-			
+
 			setTimeout(() => {
 				toast.removeClass('is-visible');
 				setTimeout(() => {
@@ -588,7 +588,7 @@
 	};
 
 	// Initialize when document is ready
-	$(document).ready(function() {
+	$(document).ready(function () {
 		FormsManager.init();
 	});
 
