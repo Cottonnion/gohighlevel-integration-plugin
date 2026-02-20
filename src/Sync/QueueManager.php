@@ -229,12 +229,6 @@ class QueueManager {
 			]
 		);
 
-		if ( $inserted ) {
-
-		} else {
-
-		}
-
 		return $inserted ? $wpdb->insert_id : false;
 	}
 
