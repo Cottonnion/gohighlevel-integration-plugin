@@ -319,11 +319,27 @@
          */
         showLoading() {
             this.appContainer.html(`
-                <div class="ghl-spa-loading">
-                    <div class="ghl-loading-spinner"></div>
-                    <p>${this.config.strings.loading}</p>
-                </div>
-            `);
+                    <div class="ghl-spa-loading">
+                        <div class="ghl-skeleton-hero"></div>
+                        <div class="ghl-skeleton-grid">
+                            <div class="ghl-skeleton-card">
+                                <div class="ghl-skeleton-bar wide"></div>
+                                <div class="ghl-skeleton-bar"></div>
+                                <div class="ghl-skeleton-bar short"></div>
+                            </div>
+                            <div class="ghl-skeleton-card">
+                                <div class="ghl-skeleton-bar wide"></div>
+                                <div class="ghl-skeleton-bar"></div>
+                                <div class="ghl-skeleton-bar short"></div>
+                            </div>
+                            <div class="ghl-skeleton-card">
+                                <div class="ghl-skeleton-bar wide"></div>
+                                <div class="ghl-skeleton-bar"></div>
+                                <div class="ghl-skeleton-bar short"></div>
+                            </div>
+                        </div>
+                    </div>
+                `);
         }
 
         /**

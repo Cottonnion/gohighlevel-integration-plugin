@@ -182,7 +182,7 @@ class AssetsManager {
 			'spa-app.css',
 			[],
 			[],
-			'1.0.2'
+			'1.0.3'
 		);
 
 		$this->add_admin_asset(
@@ -191,7 +191,7 @@ class AssetsManager {
 			'spa-router.js',
 			[ 'jquery', 'sweetalert2' ],
 			[],
-			'1.0.35',
+			'1.0.36',
 			true
 		);
 
