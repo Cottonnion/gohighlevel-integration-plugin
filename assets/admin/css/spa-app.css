@@ -11,7 +11,7 @@
 .ghl-spa-container {
     min-height: 400px;
     position: relative;
-    margin-top: 20px;
+    margin-top: 0px !important;
 }
 
 /* Loading State */
@@ -127,7 +127,8 @@
 
 /* Settings Section */
 .ghl-crm-settings {
-    padding: 20px 0;
+    padding: 0 0 20px 0;
+    margin-top: 0px !important;
 }
 
 .ghl-settings-section {

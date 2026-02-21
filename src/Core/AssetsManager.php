@@ -182,7 +182,7 @@ class AssetsManager {
 			'spa-app.css',
 			[],
 			[],
-			'1.0.3'
+			'1.0.4'
 		);
 
 		$this->add_admin_asset(
