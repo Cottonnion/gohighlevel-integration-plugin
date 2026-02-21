@@ -65,6 +65,37 @@ class RestAPIController {
 	 * @return void
 	 */
 	public function register_routes(): void {
+		// Editor-only routes (admin-only) — registered regardless of public REST toggle
+		register_rest_route(
+			'ghl-crm/v1',
+			'/connection/status',
+			[
+				'methods'             => 'GET',
+				'callback'            => [ $this, 'get_editor_connection_status' ],
+				'permission_callback' => [ $this, 'check_editor_permission' ],
+			]
+		);
+
+		register_rest_route(
+			'ghl-crm/v1',
+			'/forms',
+			[
+				'methods'             => 'GET',
+				'callback'            => [ $this, 'get_editor_forms' ],
+				'permission_callback' => [ $this, 'check_editor_permission' ],
+			]
+		);
+
+		register_rest_route(
+			'ghl-crm/v1',
+			'/tags',
+			[
+				'methods'             => 'GET',
+				'callback'            => [ $this, 'get_editor_tags' ],
+				'permission_callback' => [ $this, 'check_editor_permission' ],
+			]
+		);
+
 		$settings         = $this->settings_manager->get_settings_array();
 		$rest_api_enabled = $settings['rest_api_enabled'] ?? false;
 
@@ -136,10 +167,139 @@ class RestAPIController {
 	}
 
 	/**
+	 * Check editor permission - administrators only
+	 *
+	 * @return bool|\WP_Error
+	 */
+	public function check_editor_permission() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return new \WP_Error(
+				'rest_forbidden',
+				__( 'You do not have permission to access this endpoint.', 'ghl-crm-integration' ),
+				[ 'status' => 403 ]
+			);
+		}
+		return true;
+	}
+
+	/**
+	 * Get connection status for block editor
+	 *
+	 * @return \WP_REST_Response
+	 */
+	public function get_editor_connection_status(): \WP_REST_Response {
+		$connection_manager = ConnectionManager::get_instance();
+		return new \WP_REST_Response(
+			[
+				'connected' => $connection_manager->is_connection_verified(),
+			]
+		);
+	}
+
+	/**
+	 * Get forms for block editor
+	 *
+	 * @return \WP_REST_Response
+	 */
+	public function get_editor_forms(): \WP_REST_Response {
+		$connection_manager = ConnectionManager::get_instance();
+
+		if ( ! $connection_manager->is_connection_verified() ) {
+			return new \WP_REST_Response(
+				[
+					'forms' => [],
+					'error' => __( 'Not connected to GoHighLevel', 'ghl-crm-integration' ),
+				]
+			);
+		}
+
+		try {
+			$forms_resource = new \GHL_CRM\API\Resources\FormsResource();
+			$forms          = $forms_resource->get_forms();
+
+			if ( is_wp_error( $forms ) ) {
+				return new \WP_REST_Response(
+					[
+						'forms' => [],
+						'error' => $forms->get_error_message(),
+					]
+				);
+			}
+
+			return new \WP_REST_Response(
+				[
+					'forms' => $forms,
+				]
+			);
+		} catch ( \Exception $e ) {
+			return new \WP_REST_Response(
+				[
+					'forms' => [],
+					'error' => $e->getMessage(),
+				]
+			);
+		}
+	}
+
+	/**
+	 * Get tags for block editor
+	 *
+	 * @return \WP_REST_Response
+	 */
+	public function get_editor_tags(): \WP_REST_Response {
+		$connection_manager = ConnectionManager::get_instance();
+
+		if ( ! $connection_manager->is_connection_verified() ) {
+			return new \WP_REST_Response(
+				[
+					'tags'  => [],
+					'error' => __( 'Not connected to GoHighLevel', 'ghl-crm-integration' ),
+				]
+			);
+		}
+
+		try {
+			$tag_manager = \GHL_CRM\Core\TagManager::get_instance();
+			$tags        = $tag_manager->get_tags( false );
+
+			if ( empty( $tags ) ) {
+				return new \WP_REST_Response(
+					[
+						'tags'  => [],
+						'error' => __( 'No tags found. Please sync your GoHighLevel tags in settings.', 'ghl-crm-integration' ),
+					]
+				);
+			}
+
+			$formatted_tags = [];
+			foreach ( $tags as $tag ) {
+				$formatted_tags[] = [
+					'id'   => $tag['id'] ?? '',
+					'name' => $tag['name'] ?? $tag['id'] ?? '',
+				];
+			}
+
+			return new \WP_REST_Response(
+				[
+					'tags' => $formatted_tags,
+				]
+			);
+		} catch ( \Exception $e ) {
+			return new \WP_REST_Response(
+				[
+					'tags'  => [],
+					'error' => $e->getMessage(),
+				],
+				500
+			);
+		}
+	}
+
+	/**
 	 * Check API permission (authentication)
 	 *
 	 * @param \WP_REST_Request $request Request object
-	 * @return bool|\ WP_Error
+	 * @return true|\WP_Error
 	 */
 	public function check_api_permission( \WP_REST_Request $request ) {
 		$settings   = $this->settings_manager->get_settings_array();
@@ -208,6 +368,15 @@ class RestAPIController {
 	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function create_or_update_contact( \WP_REST_Request $request ) {
+		$raw_body = $request->get_body();
+		if ( strlen( (string) $raw_body ) > 100000 ) {
+			return new \WP_Error(
+				'payload_too_large',
+				__( 'Payload too large.', 'ghl-crm-integration' ),
+				[ 'status' => 413 ]
+			);
+		}
+
 		$params = $request->get_json_params();
 
 		if ( empty( $params['email'] ) ) {
@@ -252,9 +421,9 @@ class RestAPIController {
 					200
 				);
 			} else {
-				// Create new user
+				// Create new user (always generate password server-side)
 				$username = sanitize_user( $params['username'] ?? $params['email'] );
-				$password = $params['password'] ?? wp_generate_password();
+				$password = wp_generate_password();
 
 				$user_id = wp_create_user( $username, $password, sanitize_email( $params['email'] ) );
 
@@ -378,17 +547,27 @@ class RestAPIController {
 		$settings            = $this->settings_manager->get_settings_array();
 		$requests_per_minute = $settings['rest_api_requests_per_minute'] ?? 60;
 		$client_ip           = $this->get_client_ip();
+		$sanitized_ip        = sanitize_key( $client_ip );
+		$sanitized_ip        = $sanitized_ip ?: 'unknown';
 
-		$transient_key = 'ghl_rest_api_rate_' . md5( $client_ip );
-		$request_count = get_transient( $transient_key );
+		$transient_key = 'ghl_rest_api_rate_' . $sanitized_ip;
+		$lock_key      = 'ghl_rest_api_rate_lock_' . $sanitized_ip;
 
-		if ( false === $request_count ) {
-			// First request in this minute
-			set_transient( $transient_key, 1, MINUTE_IN_SECONDS );
-			return true;
+		if ( ! $this->acquire_rate_limit_lock( $lock_key ) ) {
+			return new \WP_Error(
+				'rate_limit_busy',
+				__( 'Rate limit is busy. Please retry shortly.', 'ghl-crm-integration' ),
+				[ 'status' => 429 ]
+			);
 		}
 
-		if ( $request_count >= $requests_per_minute ) {
+		$request_count = get_transient( $transient_key );
+		$request_count = ( false === $request_count ) ? 1 : ( (int) $request_count + 1 );
+
+		set_transient( $transient_key, $request_count, MINUTE_IN_SECONDS );
+
+		if ( $request_count > $requests_per_minute ) {
+			$this->release_rate_limit_lock( $lock_key );
 			return new \WP_Error(
 				'rate_limit_exceeded',
 				sprintf(
@@ -400,15 +579,46 @@ class RestAPIController {
 					'status'      => 429,
 					'retry_after' => 60,
 					'limit'       => $requests_per_minute,
-					'remaining'   => 0,
+					'remaining'   => max( 0, $requests_per_minute - $request_count ),
 				]
 			);
 		}
 
-		// Increment counter
-		set_transient( $transient_key, $request_count + 1, MINUTE_IN_SECONDS );
-
+		$this->release_rate_limit_lock( $lock_key );
 		return true;
+	}
+
+	/**
+	 * Acquire a short-lived lock for rate limiting.
+	 *
+	 * @param string $lock_key Lock transient/cache key.
+	 * @return bool
+	 */
+	private function acquire_rate_limit_lock( string $lock_key ): bool {
+		if ( wp_using_ext_object_cache() ) {
+			return wp_cache_add( $lock_key, 1, '', 5 );
+		}
+
+		if ( false === get_transient( $lock_key ) ) {
+			set_transient( $lock_key, 1, 5 );
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Release a rate limit lock.
+	 *
+	 * @param string $lock_key Lock transient/cache key.
+	 * @return void
+	 */
+	private function release_rate_limit_lock( string $lock_key ): void {
+		if ( wp_using_ext_object_cache() ) {
+			wp_cache_delete( $lock_key, '' );
+		} else {
+			delete_transient( $lock_key );
+		}
 	}
 
 	/**
@@ -425,13 +635,17 @@ class RestAPIController {
 		];
 
 		foreach ( $ip_keys as $key ) {
-			if ( ! empty( $_SERVER[ $key ] ) ) {
-				$ip = sanitize_text_field( wp_unslash( $_SERVER[ $key ] ) );
-				// Handle comma-separated IPs (take first one)
-				if ( strpos( $ip, ',' ) !== false ) {
-					$ip = trim( explode( ',', $ip )[0] );
+			if ( empty( $_SERVER[ $key ] ) ) {
+				continue;
+			}
+
+			$raw_ip = sanitize_text_field( wp_unslash( $_SERVER[ $key ] ) );
+			$parts  = array_map( 'trim', explode( ',', $raw_ip ) );
+
+			foreach ( $parts as $candidate ) {
+				if ( filter_var( $candidate, FILTER_VALIDATE_IP ) ) {
+					return $candidate;
 				}
-				return $ip;
 			}
 		}
 
@@ -473,11 +687,20 @@ class RestAPIController {
 	 * @return bool
 	 */
 	private function ip_in_cidr( string $ip, string $cidr ): bool {
+		if ( strpos( $cidr, '/' ) === false ) {
+			return false;
+		}
+
 		list( $subnet, $mask ) = explode( '/', $cidr );
 
 		$ip_long     = ip2long( $ip );
 		$subnet_long = ip2long( $subnet );
-		$mask_long   = -1 << ( 32 - (int) $mask );
+		$mask        = (int) $mask;
+		if ( false === $ip_long || false === $subnet_long || $mask < 0 || $mask > 32 ) {
+			return false;
+		}
+
+		$mask_long = -1 << ( 32 - $mask );
 
 		return ( $ip_long & $mask_long ) === ( $subnet_long & $mask_long );
 	}

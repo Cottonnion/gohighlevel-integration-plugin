@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace GHL_CRM\Membership;
 
+use GHL_CRM\Core\AssetsManager;
 use GHL_CRM\Core\SettingsManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -121,14 +122,7 @@ class Restrictions {
 	 * @return void
 	 */
 	public function enqueue_frontend_assets(): void {
-		$plugin_dir = plugin_dir_url( dirname( dirname( __DIR__ ) ) . '/gohighlevel-crm-integration.php' );
-
-		wp_enqueue_style(
-			'ghl-restrictions',
-			$plugin_dir . 'assets/frontend/css/restrictions.css',
-			[],
-			GHL_CRM_VERSION
-		);
+		AssetsManager::get_instance()->enqueue_public_asset( 'ghl-restrictions' );
 	}
 
 	/**

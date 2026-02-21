@@ -102,6 +102,7 @@ class Loader {
 			'integrations.buddyboss.group_metabox' => \GHL_CRM\Integrations\BuddyBoss\GroupMetaBox::class,
 
 			'integrations.elementor'               => \GHL_CRM\Integrations\Elementor\ElementorIntegration::class,
+			'integrations.gutenberg'               => \GHL_CRM\Integrations\Gutenberg\BlocksManager::class,
 
 			// Membership components
 			'membership.metaboxes'                 => \GHL_CRM\Membership\Admin\MetaBoxes::class,
