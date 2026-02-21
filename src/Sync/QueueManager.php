@@ -650,6 +650,20 @@ class QueueManager {
 					microtime( true ) - $start_time,
 					$item->item_type // Sync type
 				);
+
+				do_action(
+					'ghl_crm_log_event',
+					'queue_item_success',
+					'Queue item processed successfully',
+					[
+						'queue_id'  => $item->id,
+						'item_type' => $item->item_type,
+						'action'    => $item->action,
+						'item_id'   => $item->item_id,
+						'site_id'   => get_current_blog_id(),
+					],
+					'info'
+				);
 			} else {
 				// Build detailed error context for logging
 				$error_context = [
@@ -743,6 +757,22 @@ class QueueManager {
 				$e->getMessage(),
 				microtime( true ) - $start_time,
 				$item->item_type
+			);
+
+			do_action(
+				'ghl_crm_log_event',
+				'queue_item_error',
+				'Queue item processing failed',
+				[
+					'queue_id'  => $item->id,
+					'item_type' => $item->item_type,
+					'action'    => $item->action,
+					'item_id'   => $item->item_id,
+					'error'     => $e->getMessage(),
+					'status'    => $status,
+					'site_id'   => get_current_blog_id(),
+				],
+				'error'
 			);
 		}
 	}

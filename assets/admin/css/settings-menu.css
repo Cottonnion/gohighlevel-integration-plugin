@@ -24,19 +24,19 @@
 }
 
 .ghl-settings-nav li {
-    border-bottom: 1px solid var(--ghl-sidemenu-border);
-    margin-bottom: 0px !important;
-    min-height: 50px;
-    display: flex;
-    align-items: center;
-    gap: var(--ghl-spacing-sm);
-    padding: var(--ghl-sidemenu-padding-y) var(--ghl-sidemenu-padding-x);
-    color: var(--ghl-sidemenu-text);
-    font-size: var(--ghl-sidemenu-font-size);
-    transition: var(--ghl-sidemenu-transition);
-    cursor: pointer;
-    user-select: none;
-    position: relative;
+	border-bottom: 1px solid var(--ghl-sidemenu-border);
+	margin-bottom: 0px !important;
+	min-height: 30px;
+	display: flex;
+	align-items: center;
+	gap: var(--ghl-spacing-sm);
+	padding: 8px 14px;
+	color: var(--ghl-sidemenu-text);
+	font-size: var(--ghl-sidemenu-font-size);
+	transition: var(--ghl-sidemenu-transition);
+	cursor: pointer;
+	user-select: none;
+	position: relative;
 }
 
 .ghl-settings-nav li:last-child {
@@ -180,7 +180,7 @@
 	}
 
 	.ghl-settings-nav li {
-		min-height: 56px;
+		min-height: 50px;
 		justify-content: flex-start;
 		white-space: nowrap;
 	}

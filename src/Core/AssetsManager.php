@@ -334,7 +334,7 @@ class AssetsManager {
 			'settings-menu.css',
 			[],
 			[],
-			'1.0.2'
+			'1.0.4'
 		);
 
 		$this->add_admin_asset(

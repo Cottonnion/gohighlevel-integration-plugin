@@ -81,6 +81,7 @@ class Loader {
 			'core.shortcodes'                      => \GHL_CRM\Core\ShortcodeManager::class,
 			'core.notifications'                   => \GHL_CRM\Core\NotificationManager::class,
 			'core.form_settings'                   => \GHL_CRM\Core\FormSettings::class,
+			'core.reporting'                       => \GHL_CRM\Core\Reporting\ReportingManager::class,
 
 			// Admin UI components
 			'admin.ui'                             => \GHL_CRM\Admin\AdminUI::class,
@@ -226,6 +227,7 @@ class Loader {
 	public static function deactivate(): void {
 		// Unschedule all Action Scheduler actions
 		\GHL_CRM\Sync\QueueManager::unschedule_actions();
+		\GHL_CRM\Core\Reporting\ReportingManager::get_instance()->unschedule_dispatch();
 
 		// Unschedule cleanup (Action Scheduler)
 		if ( function_exists( 'as_unschedule_all_actions' ) ) {

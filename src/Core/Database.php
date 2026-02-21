@@ -21,7 +21,7 @@ class Database {
 	 *
 	 * @var string
 	 */
-	private const DB_VERSION = '1.9.1';
+	private const DB_VERSION = '1.10.0';
 
 	/**
 	 * Singleton instance
@@ -178,8 +178,32 @@ class Database {
 			$this->migrate_database( $installed_version );
 			$settings_manager->update_option( 'ghl_crm_db_version', self::DB_VERSION );
 
+			do_action(
+				'ghl_crm_log_event',
+				'database_update',
+				'GHL CRM database updated successfully.',
+				[
+					'from_version' => $installed_version,
+					'to_version'   => self::DB_VERSION,
+					'site_id'      => get_current_blog_id(),
+				],
+				'info'
+			);
+
 			wp_send_json_success( __( 'Database updated successfully', 'ghl-crm-integration' ) );
 		} catch ( Exception $e ) {
+			do_action(
+				'ghl_crm_log_event',
+				'database_update_failed',
+				'GHL CRM database update failed.',
+				[
+					'from_version' => $installed_version ?? 'unknown',
+					'to_version'   => self::DB_VERSION,
+					'error'        => $e->getMessage(),
+					'site_id'      => get_current_blog_id(),
+				],
+				'error'
+			);
 			wp_send_json_error( __( 'Database update failed: ', 'ghl-crm-integration' ) . $e->getMessage() );
 		}
 	}
@@ -354,6 +378,7 @@ class Database {
 		$sync_queue_table           = $wpdb->prefix . 'ghl_sync_queue';
 		$sync_log_table             = $wpdb->prefix . 'ghl_sync_log';
 		$family_relationships_table = $wpdb->prefix . 'ghl_family_relationships';
+		$reporting_events_table     = $wpdb->prefix . 'ghl_reporting_events';
 
 		// SQL for sync queue table
 		// Supports all integrations: users, orders, groups, courses, etc.
@@ -426,6 +451,23 @@ class Database {
 			KEY updated_at (updated_at)
 		) {$charset_collate};";
 
+		$sql_reporting_events = "CREATE TABLE {$reporting_events_table} (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			event_type varchar(50) NOT NULL,
+			severity varchar(20) NOT NULL DEFAULT 'info',
+			message text NOT NULL,
+			context longtext DEFAULT NULL,
+			status varchar(20) NOT NULL DEFAULT 'pending',
+			attempts tinyint(2) unsigned NOT NULL DEFAULT 0,
+			sent_at datetime DEFAULT NULL,
+			created_at datetime NOT NULL,
+			site_id bigint(20) unsigned NOT NULL DEFAULT 1,
+			PRIMARY KEY (id),
+			KEY status_site_created (status, site_id, created_at),
+			KEY site_created (site_id, created_at),
+			KEY event_severity (event_type, severity)
+		) {$charset_collate};";
+
 		// Create tables
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange -- dbDelta handles schema creation/updates for plugin tables.
 		dbDelta( $sql_queue );
@@ -433,6 +475,8 @@ class Database {
 		dbDelta( $sql_log );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange -- dbDelta handles schema creation/updates for plugin tables.
 		dbDelta( $sql_family );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange -- dbDelta handles schema creation/updates for plugin tables.
+		dbDelta( $sql_reporting_events );
 	}
 
 	/**
@@ -448,6 +492,7 @@ class Database {
 			$wpdb->prefix . 'ghl_sync_queue',
 			$wpdb->prefix . 'ghl_sync_log',
 			$wpdb->prefix . 'ghl_family_relationships',
+			$wpdb->prefix . 'ghl_reporting_events',
 		];
 
 		foreach ( $tables as $table ) {
@@ -492,9 +537,10 @@ class Database {
 	public function cleanup(): void {
 		global $wpdb;
 
-		$sync_queue_table = $wpdb->prefix . 'ghl_sync_queue';
-		$sync_log_table   = $wpdb->prefix . 'ghl_sync_log';
-		$current_site_id  = get_current_blog_id();
+		$sync_queue_table       = $wpdb->prefix . 'ghl_sync_queue';
+		$sync_log_table         = $wpdb->prefix . 'ghl_sync_log';
+		$reporting_events_table = $wpdb->prefix . 'ghl_reporting_events';
+		$current_site_id        = get_current_blog_id();
 
 		// Get retention period from settings via SettingsManager (default: 30 days)
 		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
@@ -526,6 +572,16 @@ class Database {
 		$deleted_logs = $wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$sync_log_table} WHERE site_id = %d AND created_at < %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$current_site_id,
+				gmdate( 'Y-m-d H:i:s', strtotime( "-{$retention_days} days" ) )
+			)
+		);
+
+		// Delete reporting events that have been sent or failed beyond retention
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Scheduled maintenance against plugin reporting table.
+		$deleted_reporting = $wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$reporting_events_table} WHERE site_id = %d AND status IN ('sent','failed') AND created_at < %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 				$current_site_id,
 				gmdate( 'Y-m-d H:i:s', strtotime( "-{$retention_days} days" ) )
 			)

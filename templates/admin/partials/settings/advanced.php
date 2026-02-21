@@ -147,6 +147,36 @@ $settings = $settings_manager->get_settings_array();
 						<?php endif; ?>
 					</td>
 				</tr>
+
+				<tr>
+					<th scope="row">
+						<label for="enable_telemetry_reporting">
+							<?php esc_html_e( 'Telemetry & Reporting (Opt-in)', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'When enabled, the plugin stores anonymized error and usage events locally and sends batched reports to the developer endpoint to improve stability. No personal data or content is sent.', 'ghl-crm-integration' ); ?>">?</span>
+						</label>
+					</th>
+					<td>
+						<label class="ghl-checkbox ghl-advanced-checkbox-label <?php echo ! empty( $settings['enable_telemetry_reporting'] ) ? 'is-checked' : ''; ?>">
+							<input 
+								type="checkbox" 
+								class="ghl-checkbox-original"
+								id="enable_telemetry_reporting" 
+								name="enable_telemetry_reporting" 
+								value="1"
+								<?php checked( ! empty( $settings['enable_telemetry_reporting'] ), true ); ?>
+							>
+							<span class="ghl-checkbox-input <?php echo ! empty( $settings['enable_telemetry_reporting'] ) ? 'is-checked' : ''; ?>">
+								<span class="ghl-checkbox-inner"></span>
+							</span>
+							<span class="ghl-checkbox-label">
+								<?php esc_html_e( 'Share anonymized diagnostics to help improve stability', 'ghl-crm-integration' ); ?>
+							</span>
+						</label>
+						<p class="description ghl-description-spacing">
+							<?php esc_html_e( 'If enabled, the plugin will capture error and performance events, store them locally, and periodically send summaries. Disable to keep all diagnostics on this site only.', 'ghl-crm-integration' ); ?>
+						</p>
+					</td>
+				</tr>
 					</tbody>
 				</table>
 			</form>
