@@ -171,7 +171,7 @@ class AssetsManager {
 			'menu-router.js',
 			[ 'jquery' ],
 			[],
-			'1.0.0',
+			'1.0.2',
 			true
 		);
 
@@ -191,7 +191,7 @@ class AssetsManager {
 			'spa-router.js',
 			[ 'jquery', 'sweetalert2' ],
 			[],
-			'1.0.36',
+			'1.0.39',
 			true
 		);
 

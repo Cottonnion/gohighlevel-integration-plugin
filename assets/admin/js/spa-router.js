@@ -21,7 +21,7 @@
             this.viewCache = {};
             this.prefetchCache = {};
             this.inflightPrefetch = {};
-            this.prefetchTtl = 60000; // 60s cache window for prefetch payloads
+            this.prefetchTtl = 60000; // retain TTL for cache validation
             this.currentParams = {};
             
             this.init();
@@ -36,9 +36,6 @@
             
             // Load initial route
             this.handleRouteChange();
-
-            // Prefetch heavy views on intent (hover) and idle
-            this.bindPrefetchTriggers();
         }
 
         /**
@@ -128,7 +125,6 @@
         loadView(view, params = {}, callback = null) {
             const cacheKey = this.getCacheKey(view, params);
             const cached = this.viewCache[cacheKey];
-            const prefetched = this.prefetchCache[cacheKey];
 
             const validCache = (entry) => entry && (Date.now() - entry.fetchedAt) < this.prefetchTtl;
 
@@ -142,17 +138,10 @@
                     callback();
                 }
 
-                // Refresh in background to keep data fresh without blocking UI
-                this.prefetchView(view, params, true);
             };
 
             if (validCache(cached)) {
                 useEntry(cached);
-                return;
-            }
-
-            if (validCache(prefetched)) {
-                useEntry(prefetched);
                 return;
             }
 
@@ -353,86 +342,6 @@
                     <p><strong>Error:</strong> ${message}</p>
                 </div>
             `);
-        }
-
-        /**
-         * Bind hover/idle prefetch triggers for heavy views.
-         */
-        bindPrefetchTriggers() {
-            const hoverViews = ['integrations', 'field-mapping', 'sync-logs', 'custom-objects', 'settings', 'forms', 'custom-objects'];
-
-            hoverViews.forEach((view) => {
-                const selector = `.ghl-nav-tab[data-route="${view}"], a[href*="#/${view}"]`;
-                $(document).on('mouseenter', selector, () => {
-                    this.debouncedPrefetch(view);
-                });
-            });
-
-            // Idle prefetch after initial load to warm caches without blocking first paint
-            setTimeout(() => {
-                hoverViews.forEach((view) => this.prefetchView(view));
-            }, 800);
-        }
-
-        debouncedPrefetch(view) {
-            clearTimeout(this.prefetchTimer);
-            this.prefetchTimer = setTimeout(() => {
-                this.prefetchView(view);
-            }, 200);
-        }
-
-        /**
-         * Prefetch a view without touching the UI.
-         * @param {string} view
-         * @param {Object} params
-         * @param {boolean} silent  If true, suppresses caching into prefetch cache (used for background refresh).
-         */
-        prefetchView(view, params = {}, silent = false) {
-            const cacheKey = this.getCacheKey(view, params);
-            const cached = this.viewCache[cacheKey];
-            const preCached = this.prefetchCache[cacheKey];
-
-            if (cached && (Date.now() - cached.fetchedAt) < this.prefetchTtl) {
-                return;
-            }
-
-            if (preCached && (Date.now() - preCached.fetchedAt) < this.prefetchTtl) {
-                return;
-            }
-
-            if (this.inflightPrefetch[cacheKey]) {
-                return;
-            }
-
-            this.inflightPrefetch[cacheKey] = true;
-
-            $.ajax({
-                url: this.config.ajaxUrl,
-                type: 'POST',
-                data: {
-                    action: 'ghl_crm_spa_view',
-                    nonce: this.config.nonce,
-                    view: view,
-                    params: params
-                },
-                success: (response) => {
-                    if (response.success && response.data) {
-                        const payload = {
-                            data: response.data,
-                            fetchedAt: Date.now(),
-                        };
-
-                        if (silent) {
-                            this.viewCache[cacheKey] = payload;
-                        } else {
-                            this.prefetchCache[cacheKey] = payload;
-                        }
-                    }
-                },
-                complete: () => {
-                    delete this.inflightPrefetch[cacheKey];
-                }
-            });
         }
 
         getCacheKey(view, params = {}) {
