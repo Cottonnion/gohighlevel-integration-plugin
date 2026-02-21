@@ -1,0 +1,21 @@
+/**
+ * Editor styles for Restricted Content Block
+ */
+
+.ghl-restricted-content-block {
+	box-sizing: border-box;
+}
+
+.ghl-restriction-indicator {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.ghl-tag-selector-wrapper {
+	margin-bottom: 16px;
+}
+
+.ghl-tag-selector-wrapper .select2-container {
+	margin-top: 8px;
+}

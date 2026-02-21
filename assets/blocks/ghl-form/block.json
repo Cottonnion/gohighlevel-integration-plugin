@@ -1,0 +1,36 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "ghl-crm/form",
+	"version": "1.0.0",
+	"title": "GoHighLevel Form",
+	"category": "ghl-crm",
+	"icon": "forms",
+	"description": "Embed a GoHighLevel form with customizable settings.",
+	"keywords": ["ghl", "gohighlevel", "form", "crm", "contact"],
+	"supports": {
+		"html": false,
+		"align": ["wide", "full"],
+		"spacing": {
+			"margin": true,
+			"padding": true
+		}
+	},
+	"attributes": {
+		"formId": {
+			"type": "string",
+			"default": ""
+		},
+		"width": {
+			"type": "string",
+			"default": "100%"
+		},
+		"height": {
+			"type": "string",
+			"default": "auto"
+		}
+	},
+	"textdomain": "ghl-crm-integration",
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./editor.css"
+}

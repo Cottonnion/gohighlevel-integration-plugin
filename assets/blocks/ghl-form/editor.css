@@ -1,0 +1,13 @@
+/**
+ * Editor styles for GHL Form Block
+ */
+
+.ghl-form-block-preview {
+	box-sizing: border-box;
+}
+
+.ghl-form-block-preview svg {
+	max-width: 48px;
+	margin-bottom: 10px;
+	opacity: 0.6;
+}

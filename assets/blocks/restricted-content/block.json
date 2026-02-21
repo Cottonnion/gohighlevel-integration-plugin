@@ -1,0 +1,44 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "ghl-crm/restricted-content",
+	"version": "1.0.0",
+	"title": "Restricted Content",
+	"category": "ghl-crm",
+	"icon": "lock",
+	"description": "Show or hide content based on user's GoHighLevel tags.",
+	"keywords": ["ghl", "restrict", "membership", "access", "tags", "protection"],
+	"supports": {
+		"html": false,
+		"align": ["wide", "full"],
+		"spacing": {
+			"margin": true,
+			"padding": true
+		}
+	},
+	"attributes": {
+		"rule": {
+			"type": "string",
+			"default": "any",
+			"enum": ["any", "all", "none"]
+		},
+		"tags": {
+			"type": "array",
+			"default": [],
+			"items": {
+				"type": "string"
+			}
+		},
+		"fallbackContent": {
+			"type": "string",
+			"default": ""
+		},
+		"showMessage": {
+			"type": "boolean",
+			"default": true
+		}
+	},
+	"textdomain": "ghl-crm-integration",
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./editor.css"
+}
