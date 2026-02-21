@@ -383,18 +383,15 @@ body.admin-bar .ghl-header-nav {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
-    color: #ffffff;
-    padding: 14px 24px;
+    background: #ffffff;
+    color: #111827;
+    padding: 14px 20px;
     margin: 0;
-    border-radius: 0 0 12px 12px;
-    border-bottom: 3px solid rgba(255, 255, 255, 0.2);
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 0 0 8px 8px;
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid #111827;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     position: relative;
-    animation: ghl-slide-down 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    backdrop-filter: blur(10px);
 }
 
 @keyframes ghl-slide-down {
@@ -419,71 +416,57 @@ body.admin-bar .ghl-header-nav {
 }
 
 .ghl-upgrade-icon {
-    color: #fbbf24;
+    color: #111827;
     font-size: 22px;
     width: 22px;
     height: 22px;
     flex-shrink: 0;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-    animation: ghl-pulse 2s ease-in-out infinite;
-}
-
-@keyframes ghl-pulse {
-    0%, 100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-    50% {
-        transform: scale(1.1);
-        opacity: 0.9;
-    }
 }
 
 .ghl-upgrade-notice__link {
     color: #ffffff;
     text-decoration: none;
     font-weight: 600;
-    padding: 8px 18px;
-    background: rgba(255, 255, 255, 0.25);
-    border-radius: 6px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 8px 16px;
+    background: #111827;
+    border-radius: 4px;
+    transition: all 0.2s ease;
     display: inline-block;
     margin-left: 10px;
-    border: 1.5px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    letter-spacing: 0.3px;
+    border: 1px solid #111827;
+    letter-spacing: 0.2px;
     font-size: 13px;
 }
 
 .ghl-upgrade-notice__link:hover {
-    background: rgba(255, 255, 255, 0.4);
+    background: #0b1220;
     color: #ffffff;
     text-decoration: none;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-    border-color: rgba(255, 255, 255, 0.6);
+    transform: none;
+    box-shadow: none;
+    border-color: #0b1220;
 }
 
 .ghl-dismiss-upgrade-notice {
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: rgba(255, 255, 255, 0.9);
+    background: transparent;
+    border: 1px solid #d1d5db;
+    color: #4b5563;
     cursor: pointer;
     padding: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: 6px;
+    transition: all 0.2s ease;
+    border-radius: 4px;
     flex-shrink: 0;
     width: 32px;
     height: 32px;
 }
 
 .ghl-dismiss-upgrade-notice:hover {
-    background: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
-    transform: scale(1.1);
+    background: #f3f4f6;
+    color: #111827;
+    transform: none;
 }
 
 .ghl-dismiss-upgrade-notice .dashicons {
@@ -532,7 +515,7 @@ body.admin-bar .ghl-header-nav {
 
 /* Animation for dismissal */
 .ghl-upgrade-notice.ghl-dismissing {
-    animation: ghl-slide-up 0.4s cubic-bezier(0.4, 0, 1, 1) forwards;
+    animation: ghl-slide-up 0.3s ease forwards;
 }
 
 @keyframes ghl-slide-up {

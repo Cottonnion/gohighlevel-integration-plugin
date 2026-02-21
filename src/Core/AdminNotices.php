@@ -317,8 +317,8 @@ class AdminNotices {
 				<?php
 				printf(
 					/* translators: %s: upgrade link */
-					wp_kses_post( __( 'Unlock powerful Pro features like custom objects, advanced field mapping, and more! %s', 'ghl-crm-integration' ) ),
-					'<a href="' . esc_url( $upgrade_url ) . '" class="ghl-upgrade-notice__link" target="_blank">' . esc_html__( 'Upgrade to Pro', 'ghl-crm-integration' ) . '</a>'
+					wp_kses_post( __( 'Access GoHighLevel Pro for advanced custom objects, precise field mapping, and streamlined automation. %s', 'ghl-crm-integration' ) ),
+					'<a href="' . esc_url( $upgrade_url ) . '" class="ghl-upgrade-notice__link" target="_blank">' . esc_html__( 'Explore Pro', 'ghl-crm-integration' ) . '</a>'
 				);
 				?>
 			</span>
