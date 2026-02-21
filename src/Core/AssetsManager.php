@@ -787,12 +787,13 @@ class AssetsManager {
 	/**
 	 * Add a public/frontend asset
 	 *
-	 * @param string $handle           Unique handle for the asset.
-	 * @param string $file             File name (e.g., 'style.css' or 'script.js').
-	 * @param array  $dependencies     Array of dependency handles.
-	 * @param array  $localization     Array of data to localize for scripts.
-	 * @param string $version          Version string for cache busting.
-	 * @param bool   $enqueue_in_footer Whether to enqueue script in footer (scripts only).
+	 * @param string      $handle            Unique handle for the asset.
+	 * @param string      $file              File name (e.g., 'style.css' or 'script.js').
+	 * @param array       $dependencies      Array of dependency handles.
+	 * @param array       $localization      Array of data to localize for scripts.
+	 * @param string      $version           Version string for cache busting.
+	 * @param bool        $enqueue_in_footer Whether to enqueue script in footer (scripts only).
+	 * @param string|null $base_url          Optional custom base URL for the asset (must end with slash if provided).
 	 * @return void
 	 */
 	public function add_public_asset(
@@ -801,7 +802,8 @@ class AssetsManager {
 		array $dependencies = [],
 		array $localization = [],
 		string $version = GHL_CRM_VERSION,
-		bool $enqueue_in_footer = true
+		bool $enqueue_in_footer = true,
+		?string $base_url = null
 	): void {
 		$this->public_assets[ $handle ] = [
 			'file'              => $file,
@@ -809,6 +811,7 @@ class AssetsManager {
 			'version'           => $version,
 			'enqueue_in_footer' => $enqueue_in_footer,
 			'localization'      => $localization,
+			'base_url'          => $base_url,
 		];
 	}
 
@@ -827,6 +830,28 @@ class AssetsManager {
 			[],
 			'1.0.1',
 			false
+		);
+
+		// Restrictions frontend CSS (used by membership restrictions)
+		$this->add_public_asset(
+			'ghl-restrictions',
+			'restrictions.css',
+			[],
+			[],
+			GHL_CRM_VERSION,
+			false,
+			GHL_CRM_URL . 'assets/frontend/css/'
+		);
+
+		// Blocks frontend CSS (for block render output)
+		$this->add_public_asset(
+			'ghl-crm-blocks',
+			'blocks-frontend.css',
+			[],
+			[],
+			'1.1.2',
+			false,
+			GHL_CRM_URL . 'assets/blocks/'
 		);
 
 		// GHL Forms frontend JS
@@ -882,6 +907,18 @@ class AssetsManager {
 	public function enqueue_public_assets(): void {
 		foreach ( $this->public_assets as $handle => $asset ) {
 			$this->enqueue_asset( $handle, $asset, 'public' );
+		}
+	}
+
+	/**
+	 * Enqueue a single public asset by handle.
+	 *
+	 * @param string $handle Asset handle registered via add_public_asset().
+	 * @return void
+	 */
+	public function enqueue_public_asset( string $handle ): void {
+		if ( isset( $this->public_assets[ $handle ] ) ) {
+			$this->enqueue_asset( $handle, $this->public_assets[ $handle ], 'public' );
 		}
 	}
 
