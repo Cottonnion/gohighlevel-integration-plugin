@@ -5,6 +5,7 @@ namespace GHL_CRM\Integrations\BuddyBoss;
 
 use GHL_CRM\API\Resources\CustomObjectResource;
 use GHL_CRM\Core\SettingsManager;
+use GHL_CRM\Core\TagManager;
 use GHL_CRM\Sync\QueueManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -43,6 +44,13 @@ class GroupsSync {
 	private QueueManager $queue_manager;
 
 	/**
+	 * Location-scoped meta key for GHL contact IDs.
+	 *
+	 * @var string
+	 */
+	private string $contact_meta_key;
+
+	/**
 	 * Group type to Custom Object mappings
 	 *
 	 * @var array
@@ -66,6 +74,7 @@ class GroupsSync {
 		$this->custom_object_resource = new CustomObjectResource();
 		$this->settings_manager       = SettingsManager::get_instance();
 		$this->queue_manager          = QueueManager::get_instance();
+		$this->contact_meta_key       = TagManager::get_instance()->get_user_contact_id_meta_key();
 
 		// Defer initialization until BuddyBoss is loaded
 		// BuddyBoss fires bp_init after it's fully loaded
@@ -771,7 +780,7 @@ class GroupsSync {
 	 */
 	private function create_member_association( int $user_id, int $group_id, string $record_id, string $association_id ): array {
 		// Get user's GHL contact ID
-		$contact_id = get_user_meta( $user_id, '_ghl_contact_id', true );
+		$contact_id = get_user_meta( $user_id, $this->contact_meta_key, true );
 		$settings   = $this->settings_manager->get_settings_array();
 		$strategy   = $settings['buddyboss_missing_contact_strategy'] ?? 'skip';
 
@@ -938,10 +947,10 @@ class GroupsSync {
 		}
 
 		// Get user's GHL contact ID
-		$contact_id = get_user_meta( $user_id, '_ghl_contact_id', true );
+		$contact_id = get_user_meta( $user_id, $this->contact_meta_key, true );
 
 		if ( ! $contact_id ) {
-			$error_msg = sprintf( 'User %d has no GHL contact ID (_ghl_contact_id meta is empty)', $user_id );
+			$error_msg = sprintf( 'User %d has no GHL contact ID (%s meta is empty)', $user_id, $this->contact_meta_key );
 			return [
 				'success' => false,
 				'error'   => 'User not synced to GoHighLevel - ' . $error_msg,

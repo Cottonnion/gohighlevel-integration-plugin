@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace GHL_CRM\Sync;
 
 use GHL_CRM\Core\SettingsManager;
+use GHL_CRM\Core\TagManager;
 use GHL_CRM\API\Resources\ContactResource;
 use GHL_CRM\API\Client\Client;
 
@@ -42,6 +43,20 @@ class GHLToWordPressSync {
 	private SyncLogger $logger;
 
 	/**
+	 * Tag Manager
+	 *
+	 * @var TagManager
+	 */
+	private TagManager $tag_manager;
+
+	/**
+	 * Location-scoped meta key for GHL contact IDs.
+	 *
+	 * @var string
+	 */
+	private string $contact_meta_key;
+
+	/**
 	 * Singleton instance
 	 *
 	 * @var self|null
@@ -68,6 +83,8 @@ class GHLToWordPressSync {
 		$client                 = Client::get_instance();
 		$this->contact_resource = new ContactResource( $client );
 		$this->logger           = SyncLogger::get_instance();
+		$this->tag_manager      = TagManager::get_instance();
+		$this->contact_meta_key = $this->tag_manager->get_user_contact_id_meta_key();
 	}
 
 	/**
@@ -85,10 +102,13 @@ class GHLToWordPressSync {
 				$contact_data = $response['contact'] ?? [];
 			} catch ( \Exception $e ) {
 				$this->logger->log(
-					'ghl_to_wp_fetch_failed',
-					$contact_id,
+					'user',
+					0,
 					'ghl_to_wp',
-					[ 'error' => $e->getMessage() ]
+					'failed',
+					'Failed to fetch contact from GHL',
+					[ 'error' => $e->getMessage() ],
+					$contact_id
 				);
 				return new \WP_Error( 'fetch_failed', $e->getMessage() );
 			}
@@ -106,10 +126,13 @@ class GHLToWordPressSync {
 				}
 			} catch ( \Exception $e ) {
 				$this->logger->log(
-					'webhook_invalid',
-					$contact_id,
+					'user',
+					0,
 					'ghl_to_wp',
-					[ 'error' => $e->getMessage() ]
+					'failed',
+					'Failed to hydrate tags from GHL',
+					[ 'error' => $e->getMessage() ],
+					$contact_id
 				);
 			}
 		}
@@ -142,7 +165,7 @@ class GHLToWordPressSync {
 		// phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 		$users = get_users(
 			[
-				'meta_key'   => '_ghl_contact_id',
+				'meta_key'   => $this->contact_meta_key,
 				'meta_value' => $contact_data['id'],
 				'number'     => 1,
 			]
@@ -214,16 +237,19 @@ class GHLToWordPressSync {
 
 		if ( is_wp_error( $user_id ) ) {
 			$this->logger->log(
-				'wp_user_create_failed',
-				$contact_id,
+				'user',
+				0,
 				'ghl_to_wp',
-				[ 'error' => $user_id->get_error_message() ]
+				'failed',
+				'Failed to create WordPress user from GHL contact',
+				[ 'error' => $user_id->get_error_message() ],
+				$contact_id
 			);
 			return $user_id;
 		}
 
-		// Store GHL contact ID
-		update_user_meta( $user_id, '_ghl_contact_id', $contact_id );
+		// Store GHL contact ID (writes both scoped and legacy keys)
+		$this->tag_manager->store_user_contact_id( $user_id, $contact_id );
 		update_user_meta( $user_id, '_ghl_synced_at', current_time( 'mysql' ) );
 		update_user_meta( $user_id, '_ghl_last_sync', time() );
 
@@ -234,10 +260,13 @@ class GHLToWordPressSync {
 		$this->sync_contact_tags_to_user( $user_id, $contact_data );
 
 		$this->logger->log(
-			'wp_user_created_from_ghl',
-			$contact_id,
+			'user',
+			$user_id,
 			'ghl_to_wp',
-			[ 'user_id' => $user_id ]
+			'success',
+			'WordPress user created from GHL contact',
+			[ 'user_id' => $user_id ],
+			$contact_id
 		);
 		return $user_id;
 	}
@@ -298,18 +327,21 @@ class GHLToWordPressSync {
 
 			if ( is_wp_error( $result ) ) {
 				$this->logger->log(
-					'wp_user_update_failed',
-					$contact_id,
+					'user',
+					$user_id,
 					'ghl_to_wp',
-					[ 'error' => $result->get_error_message() ]
+					'failed',
+					'Failed to update WordPress user from GHL contact',
+					[ 'error' => $result->get_error_message() ],
+					$contact_id
 				);
 				return $result;
 			}
 		}
 
 		// Update GHL contact ID if not set
-		if ( ! get_user_meta( $user_id, '_ghl_contact_id', true ) ) {
-			update_user_meta( $user_id, '_ghl_contact_id', $contact_id );
+		if ( ! $this->tag_manager->get_user_contact_id( $user_id ) ) {
+			$this->tag_manager->store_user_contact_id( $user_id, $contact_id );
 		}
 		update_user_meta( $user_id, '_ghl_synced_at', current_time( 'mysql' ) );
 		update_user_meta( $user_id, '_ghl_last_sync', time() );
@@ -346,7 +378,7 @@ class GHLToWordPressSync {
 		// phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 		$users = get_users(
 			[
-				'meta_key'   => '_ghl_contact_id',
+				'meta_key'   => $this->contact_meta_key,
 				'meta_value' => $contact_id,
 				'number'     => 1,
 			]
@@ -363,14 +395,18 @@ class GHLToWordPressSync {
 		$allow_deletion = $this->settings_manager->get_setting( 'allow_user_deletion', false );
 		if ( ! $allow_deletion ) {
 			// Just remove the GHL association
+			delete_user_meta( $user_id, $this->contact_meta_key );
 			delete_user_meta( $user_id, '_ghl_contact_id' );
 			update_user_meta( $user_id, '_ghl_deleted_at', current_time( 'mysql' ) );
 
 			$this->logger->log(
-				'wp_user_unlinked',
-				$contact_id,
+				'user',
+				$user_id,
 				'ghl_to_wp',
-				[ 'user_id' => $user_id ]
+				'success',
+				'WordPress user unlinked from GHL contact (deletion disabled)',
+				[ 'user_id' => $user_id ],
+				$contact_id
 			);
 			return true;
 		}
@@ -381,10 +417,13 @@ class GHLToWordPressSync {
 
 		if ( $deleted ) {
 			$this->logger->log(
-				'wp_user_deleted',
-				$contact_id,
+				'user',
+				$user_id,
 				'ghl_to_wp',
-				[ 'user_id' => $user_id ]
+				'success',
+				'WordPress user deleted from GHL contact deletion',
+				[ 'user_id' => $user_id ],
+				$contact_id
 			);
 			return true;
 		}

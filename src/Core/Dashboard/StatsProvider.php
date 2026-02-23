@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace GHL_CRM\Core\Dashboard;
 
 use GHL_CRM\Core\SettingsManager;
+use GHL_CRM\Core\TagManager;
 use GHL_CRM\Sync\SyncStats;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -27,6 +28,13 @@ class StatsProvider {
 	private static ?self $instance = null;
 
 	/**
+	 * Location-scoped meta key for GHL contact IDs.
+	 *
+	 * @var string
+	 */
+	private string $contact_meta_key;
+
+	/**
 	 * Sync stats cache for current request.
 	 *
 	 * @var array<string, mixed>
@@ -42,6 +50,13 @@ class StatsProvider {
 		}
 
 		return self::$instance;
+	}
+
+	/**
+	 * Private constructor.
+	 */
+	private function __construct() {
+		$this->contact_meta_key = TagManager::get_instance()->get_user_contact_id_meta_key();
 	}
 
 	/**
@@ -166,14 +181,7 @@ class StatsProvider {
 
 		$table       = $wpdb->prefix . 'ghl_sync_log';
 		$site        = get_current_blog_id();
-		$location_id = SettingsManager::get_instance()->get_setting( 'location_id' );
-
-		if ( empty( $location_id ) ) {
-			return [];
-		}
 		
-		$meta_key = '_ghl_contact_id_' . $location_id;
-
 		// Get recent activity for users in this location
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Fetching latest sync log entries for dashboard.
 		$rows = $wpdb->get_results(
@@ -183,7 +191,7 @@ class StatsProvider {
 				INNER JOIN {$wpdb->usermeta} um ON l.item_id = um.user_id AND um.meta_key = %s
 				WHERE l.site_id = %d AND l.sync_type = 'user' AND um.meta_value != ''
 				ORDER BY l.created_at DESC LIMIT 5",
-				$meta_key,
+				$this->contact_meta_key,
 				$site
 			),
 			ARRAY_A
@@ -236,17 +244,13 @@ class StatsProvider {
 	 * @return int Number of synced users
 	 */
 	private function get_synced_users_count(): int {
-		$location_id = SettingsManager::get_instance()->get_setting( 'location_id' );
-		
-		if ( empty( $location_id ) ) {
+		if ( empty( $this->contact_meta_key ) ) {
 			return 0;
 		}
-		
-		$meta_key = '_ghl_contact_id_' . $location_id;
-		
+
 		$users = get_users(
 			[
-				'meta_key'     => $meta_key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_key'     => $this->contact_meta_key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 				'meta_value'   => '', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				'meta_compare' => '!=',
 				'fields'       => 'ID',
@@ -318,15 +322,12 @@ class StatsProvider {
 
 	private function get_pending_queue_count(): int {
 		global $wpdb;
-		$table       = $wpdb->prefix . 'ghl_sync_queue';
-		$site        = get_current_blog_id();
-		$location_id = SettingsManager::get_instance()->get_setting( 'location_id' );
-		
-		if ( empty( $location_id ) ) {
+		$table = $wpdb->prefix . 'ghl_sync_queue';
+		$site  = get_current_blog_id();
+
+		if ( empty( $this->contact_meta_key ) ) {
 			return 0;
 		}
-		
-		$meta_key = '_ghl_contact_id_' . $location_id;
 
 		// Count pending items for users who belong to this location
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Counting pending queue rows for dashboard.
@@ -336,7 +337,7 @@ class StatsProvider {
 				FROM {$table} q
 				INNER JOIN {$wpdb->usermeta} um ON q.item_id = um.user_id AND um.meta_key = %s
 				WHERE q.site_id = %d AND q.status = 'pending' AND q.item_type = 'user' AND um.meta_value != ''",
-				$meta_key,
+				$this->contact_meta_key,
 				$site
 			)
 		);
@@ -349,15 +350,12 @@ class StatsProvider {
 	 */
 	private function get_failed_queue_count(): int {
 		global $wpdb;
-		$table       = $wpdb->prefix . 'ghl_sync_queue';
-		$site        = get_current_blog_id();
-		$location_id = SettingsManager::get_instance()->get_setting( 'location_id' );
-		
-		if ( empty( $location_id ) ) {
+		$table = $wpdb->prefix . 'ghl_sync_queue';
+		$site  = get_current_blog_id();
+
+		if ( empty( $this->contact_meta_key ) ) {
 			return 0;
 		}
-		
-		$meta_key = '_ghl_contact_id_' . $location_id;
 
 		// Count failed items for users who belong to this location
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Counting failed queue rows for dashboard.
@@ -367,7 +365,7 @@ class StatsProvider {
 				FROM {$table} q
 				INNER JOIN {$wpdb->usermeta} um ON q.item_id = um.user_id AND um.meta_key = %s
 				WHERE q.site_id = %d AND q.status = 'failed' AND q.item_type = 'user' AND um.meta_value != ''",
-				$meta_key,
+				$this->contact_meta_key,
 				$site
 			)
 		);
@@ -375,15 +373,12 @@ class StatsProvider {
 
 	private function count_logs_since( string $relative_time ): int {
 		global $wpdb;
-		$table       = $wpdb->prefix . 'ghl_sync_log';
-		$site        = get_current_blog_id();
-		$location_id = SettingsManager::get_instance()->get_setting( 'location_id' );
+		$table = $wpdb->prefix . 'ghl_sync_log';
+		$site  = get_current_blog_id();
 
-		if ( empty( $location_id ) ) {
+		if ( empty( $this->contact_meta_key ) ) {
 			return 0;
 		}
-		
-		$meta_key = '_ghl_contact_id_' . $location_id;
 
 		$base_timestamp = current_time( 'timestamp' );
 		$target_time    = strtotime( $relative_time, $base_timestamp );
@@ -404,7 +399,7 @@ class StatsProvider {
 				FROM {$table} l
 				INNER JOIN {$wpdb->usermeta} um ON l.item_id = um.user_id AND um.meta_key = %s
 				WHERE l.site_id = %d AND l.created_at >= %s AND l.sync_type = 'user' AND um.meta_value != ''",
-				$meta_key,
+				$this->contact_meta_key,
 				$site,
 				$datetime
 			)

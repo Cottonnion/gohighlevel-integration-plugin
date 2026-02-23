@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace GHL_CRM\Integrations\Users;
 
 use GHL_CRM\Core\SettingsManager;
+use GHL_CRM\Core\TagManager;
 use GHL_CRM\Sync\QueueManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -48,6 +49,13 @@ class RoleTagsManager {
 	private QueueManager $queue_manager;
 
 	/**
+	 * Location-scoped meta key for GHL contact IDs.
+	 *
+	 * @var string
+	 */
+	private string $contact_meta_key;
+
+	/**
 	 * Get singleton instance
 	 *
 	 * @return self
@@ -65,6 +73,7 @@ class RoleTagsManager {
 	private function __construct() {
 		$this->settings_manager = SettingsManager::get_instance();
 		$this->queue_manager    = QueueManager::get_instance();
+		$this->contact_meta_key = TagManager::get_instance()->get_user_contact_id_meta_key();
 
 		$this->init_hooks();
 	}
@@ -97,7 +106,7 @@ class RoleTagsManager {
 		$role_tags = $this->get_location_role_tags_config();
 
 		// Get contact ID
-		$contact_id = get_user_meta( $user_id, '_ghl_contact_id', true );
+		$contact_id = get_user_meta( $user_id, $this->contact_meta_key, true );
 		if ( empty( $contact_id ) ) {
 			return; // User not synced with GHL
 		}
@@ -146,7 +155,7 @@ class RoleTagsManager {
 		$role_tags = $this->get_location_role_tags_config();
 
 		// Get contact ID
-		$contact_id = get_user_meta( $user_id, '_ghl_contact_id', true );
+		$contact_id = get_user_meta( $user_id, $this->contact_meta_key, true );
 		if ( empty( $contact_id ) ) {
 			return;
 		}
@@ -173,7 +182,7 @@ class RoleTagsManager {
 		$role_tags = $this->get_location_role_tags_config();
 
 		// Get contact ID
-		$contact_id = get_user_meta( $user_id, '_ghl_contact_id', true );
+		$contact_id = get_user_meta( $user_id, $this->contact_meta_key, true );
 		if ( empty( $contact_id ) ) {
 			return;
 		}
@@ -414,7 +423,7 @@ class RoleTagsManager {
 
 			foreach ( $users as $user ) {
 				try {
-					$contact_id = get_user_meta( $user->ID, '_ghl_contact_id', true );
+					$contact_id = get_user_meta( $user->ID, $this->contact_meta_key, true );
 					if ( ! empty( $contact_id ) ) {
 						$this->queue_tag_addition( $user->ID, $contact_id, $tags );
 						++$queued;
@@ -510,7 +519,7 @@ class RoleTagsManager {
 
 			foreach ( $users as $user ) {
 				try {
-					$contact_id = get_user_meta( $user->ID, '_ghl_contact_id', true );
+					$contact_id = get_user_meta( $user->ID, $this->contact_meta_key, true );
 					if ( ! empty( $contact_id ) ) {
 						$this->queue_tag_removal( $user->ID, $contact_id, $tags );
 						++$queued;

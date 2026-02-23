@@ -258,7 +258,7 @@ class UserColumns {
 
 		switch ( $orderby ) {
 			case 'ghl_contact_id':
-				$query->set( 'meta_key', '_ghl_contact_id' );
+				$query->set( 'meta_key', \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id_meta_key() );
 				$query->set( 'orderby', 'meta_value' );
 				break;
 

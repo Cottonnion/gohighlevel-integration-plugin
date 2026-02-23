@@ -1114,7 +1114,7 @@ class QueueManager {
 				if ( ! empty( $response['contact'] ) ) {
 					$contact = $response['contact'];
 
-					update_user_meta( $user_id, '_ghl_contact_id', $contact_id );
+					TagManager::get_instance()->store_user_contact_id( $user_id, $contact_id );
 					update_user_meta( $user_id, '_ghl_last_sync', time() );
 
 					if ( ! empty( $contact['tags'] ) && is_array( $contact['tags'] ) ) {
