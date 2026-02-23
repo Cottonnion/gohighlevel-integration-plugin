@@ -353,7 +353,7 @@ class GHLToWordPressSync {
 		$this->sync_contact_tags_to_user( $user_id, $contact_data );
 
 		$this->logger->log(
-			'wp_user_updated_from_ghl',
+			'user',
 			$user_id,
 			'ghl_to_wp',
 			'success',
@@ -396,7 +396,7 @@ class GHLToWordPressSync {
 		if ( ! $allow_deletion ) {
 			// Just remove the GHL association
 			delete_user_meta( $user_id, $this->contact_meta_key );
-			delete_user_meta( $user_id, '_ghl_contact_id' );
+			delete_user_meta( $user_id, TagManager::LEGACY_CONTACT_META_KEY );
 			update_user_meta( $user_id, '_ghl_deleted_at', current_time( 'mysql' ) );
 
 			$this->logger->log(
