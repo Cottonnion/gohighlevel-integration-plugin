@@ -226,6 +226,165 @@ class Client implements ClientInterface {
 			}
 		}
 
+		// Handle contact not found (deleted/merged in GHL) - Auto-recovery
+		if ( 404 === $response_code || 
+				( 400 === $response_code && 
+					isset( $body_json['error'] ) && 
+					( stripos( $body_json['error'], 'Contact with id' ) !== false || 
+					  stripos( $body_json['message'] ?? '', 'not found' ) !== false ) ) ) {
+
+			// Only attempt recovery for PUT/DELETE requests (updates/deletes on existing contacts)
+			if ( in_array( $args['method'], [ 'PUT', 'DELETE' ], true ) ) {
+				// Extract email from request body for lookup
+				$request_body = json_decode( $args['body'] ?? '{}', true );
+				$email = $request_body['email'] ?? null;
+
+				// Extract old contact ID from URL
+				if ( preg_match( '/contacts\/([a-zA-Z0-9_-]+)/', $url, $matches ) ) {
+					$old_contact_id = $matches[1];
+
+					if ( $email ) {
+						try {
+							// Try to find contact by email (they may have been merged)
+							$search_response = $this->get( 
+								'contacts', 
+								[ 'query' => $email ] 
+							);
+
+							if ( ! empty( $search_response['contacts'][0]['id'] ) ) {
+								// Contact found by email - they merged it
+								$new_contact = $search_response['contacts'][0];
+								$new_contact_id = $new_contact['id'];
+
+								// Only continue if we found a different contact ID
+								if ( $new_contact_id !== $old_contact_id ) {
+									// Find WordPress user(s) with this old contact ID
+									global $wpdb;
+									$location_id = $this->location_id;
+									
+									// Check location-scoped key
+									$location_meta_key = '_ghl_contact_id_' . $location_id;
+									
+									// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+									$user_ids = $wpdb->get_col(
+										$wpdb->prepare(
+											"SELECT user_id FROM {$wpdb->usermeta} 
+											WHERE (meta_key = %s OR meta_key = '_ghl_contact_id') 
+											AND meta_value = %s",
+											$location_meta_key,
+											$old_contact_id
+										)
+									);
+
+									// Update all found users using TagManager for proper location-scoped storage
+									$tag_manager = \GHL_CRM\Core\TagManager::get_instance();
+									$updated_count = 0;
+
+									foreach ( array_unique( $user_ids ) as $user_id ) {
+										$tag_manager->store_user_contact_id( (int) $user_id, $new_contact_id, $location_id );
+										$updated_count++;
+									}
+
+									// Log the auto-recovery
+									// if ( $updated_count > 0 ) {
+									// 	error_log( 
+									// 		sprintf(
+									// 			'GHL Auto-Recovery (MERGED): Contact %s was merged into %s (email: %s). Updated %d user(s).',
+									// 			$old_contact_id,
+									// 			$new_contact_id,
+									// 			$email,
+									// 			$updated_count
+									// 		)
+									// 	);
+									// }
+
+									// Retry request with new contact ID
+									$new_url = str_replace( 
+										"contacts/{$old_contact_id}", 
+										"contacts/{$new_contact_id}", 
+										$url 
+									);
+
+									return wp_remote_request( $new_url, $args );
+								}
+							} else {
+								// Contact not found by email - they deleted it completely
+								// For PUT requests, convert to POST to create a new contact
+								if ( 'PUT' === $args['method'] ) {
+									// Add locationId back to body for creation
+									$contact_data = $request_body;
+									if ( ! isset( $contact_data['locationId'] ) && ! empty( $this->location_id ) ) {
+										$contact_data['locationId'] = $this->location_id;
+									}
+
+									// Change to POST and remove contact ID from URL
+									$args['method'] = 'POST';
+									$args['body'] = wp_json_encode( $contact_data );
+									$new_url = preg_replace( '#/contacts/[a-zA-Z0-9_-]+#', '/contacts', $url );
+
+									// Retry as POST (create)
+									$create_response = wp_remote_request( $new_url, $args );
+									
+									// Update WordPress database with new contact ID if successful
+									if ( ! is_wp_error( $create_response ) && 
+											in_array( wp_remote_retrieve_response_code( $create_response ), [ 200, 201 ], true ) ) {
+										$create_body = json_decode( wp_remote_retrieve_body( $create_response ), true );
+										
+										if ( ! empty( $create_body['contact']['id'] ) ) {
+											$new_contact_id = $create_body['contact']['id'];
+											
+											// Update database
+											global $wpdb;
+											$location_id = $this->location_id;
+											$location_meta_key = '_ghl_contact_id_' . $location_id;
+											
+											// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+											$user_ids = $wpdb->get_col(
+												$wpdb->prepare(
+													"SELECT user_id FROM {$wpdb->usermeta} 
+													WHERE (meta_key = %s OR meta_key = '_ghl_contact_id') 
+													AND meta_value = %s",
+													$location_meta_key,
+													$old_contact_id
+												)
+											);
+
+											$tag_manager = \GHL_CRM\Core\TagManager::get_instance();
+											foreach ( array_unique( $user_ids ) as $user_id ) {
+												$tag_manager->store_user_contact_id( (int) $user_id, $new_contact_id, $location_id );
+											}
+										}
+									}
+
+									return $create_response;
+								}
+
+								// For DELETE requests on non-existent contacts, succeed silently
+								if ( 'DELETE' === $args['method'] ) {
+
+									// Return fake success response
+									return [
+										'success' => true,
+										'message' => 'Contact already deleted',
+									];
+								}
+							}
+						} catch ( \Exception $e ) {
+							// Email lookup failed, continue with original error
+							error_log( 
+								sprintf(
+									'GHL Auto-Recovery failed for contact %s (email: %s): %s',
+									$old_contact_id,
+									$email,
+									$e->getMessage()
+								)
+							);
+						}
+					}
+				}
+			}
+		}
+
 		// Handle 401/403 authentication errors
 		if ( ( 401 === $response_code || 403 === $response_code ) &&
 				isset( $body_json['message'] ) ) {
