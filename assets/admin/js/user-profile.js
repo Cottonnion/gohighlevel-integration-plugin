@@ -11,6 +11,7 @@
          */
         init: function() {
             this.initSelect2();
+            this.initActivityTimeline();
             // this.initSyncButton();
         },
 
@@ -470,6 +471,81 @@
             } catch (err) {
                 alert('Failed to copy. Please copy manually: ' + $input.value);
             }
+        },
+
+        /**
+         * Initialize Activity Timeline collapse/expand and pagination
+         */
+        initActivityTimeline: function() {
+            const self = this;
+            let currentPage = 1;
+
+            // Toggle expand/collapse
+            $('[data-toggle="ghl-activity-timeline"]').on('click', function() {
+                const $wrapper = $('.ghl-activity-content-wrapper');
+                const $toggle = $('.ghl-activity-toggle');
+                
+                if ($wrapper.is(':visible')) {
+                    $wrapper.slideUp(300);
+                    $toggle.css('transform', 'rotate(0deg)');
+                } else {
+                    $wrapper.slideDown(300);
+                    $toggle.css('transform', 'rotate(180deg)');
+                }
+            });
+
+            // Pagination - Previous
+            $('.ghl-activity-prev').on('click', function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    self.switchActivityPage(currentPage);
+                }
+            });
+
+            // Pagination - Next
+            $('.ghl-activity-next').on('click', function() {
+                const totalPages = parseInt($(this).data('total-pages')) || 1;
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    self.switchActivityPage(currentPage);
+                }
+            });
+        },
+
+        /**
+         * Switch activity timeline page
+         */
+        switchActivityPage: function(page) {
+            // Hide all pages
+            $('.ghl-activity-page').hide();
+            
+            // Show target page
+            $('.ghl-activity-page[data-page="' + page + '"]').show();
+            
+            // Update page counter
+            $('.ghl-current-page').text(page);
+            
+            // Update button states
+            const $prevBtn = $('.ghl-activity-prev');
+            const $nextBtn = $('.ghl-activity-next');
+            const totalPages = parseInt($nextBtn.data('total-pages')) || 1;
+            
+            if (page === 1) {
+                $prevBtn.hide();
+            } else {
+                $prevBtn.show();
+            }
+            
+            if (page >= totalPages) {
+                $nextBtn.hide();
+            } else {
+                $nextBtn.show();
+            }
+            
+            // Scroll to timeline
+            $('html, body').animate({
+                scrollTop: $('.ghl-activity-timeline').offset().top - 100
+            }, 300);
         }
         
     };

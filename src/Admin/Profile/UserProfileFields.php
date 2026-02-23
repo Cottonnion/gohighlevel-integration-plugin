@@ -512,9 +512,172 @@ class UserProfileFields {
 				</div>
 			<?php endif; ?>
 
+			<!-- User Activity Log Section -->
+			<div class="ghl-activity-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e5e5;">
+				<?php
+				$activity_data = $this->get_user_activity_logs( $user->ID, 50 );
+				$activity_logs = $activity_data['logs'];
+				$total_logs    = $activity_data['total'];
+				?>
+				
+				<div class="ghl-activity-header-wrapper" style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;" data-toggle="ghl-activity-timeline">
+					<h3 style="margin:0; display: flex; align-items: center; gap: 8px;">
+						<span class="dashicons dashicons-clock" style="color: #2271b1;"></span>
+						<?php esc_html_e( 'Activity Timeline', 'ghl-crm-integration' ); ?>
+						<?php if ( $total_logs > 0 ) : ?>
+							<span class="ghl-activity-count" style="background: #2271b1; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 600;">
+								<?php echo esc_html( number_format( $total_logs ) ); ?>
+							</span>
+						<?php endif; ?>
+					</h3>
+					<span class="dashicons dashicons-arrow-down-alt2 ghl-activity-toggle" style="color: #2271b1; transition: transform 0.3s ease;"></span>
+				</div>
+				
+				<div class="ghl-activity-content-wrapper" style="display: none; margin-top: 15px;">
+					<p class="description" style="margin-bottom: 15px;">
+						<?php esc_html_e( 'Sync activities and events for this user.', 'ghl-crm-integration' ); ?>
+					</p>
+					
+					<?php if ( ! empty( $activity_logs ) ) : ?>
+						<div class="ghl-activity-timeline">
+							<?php 
+							$per_page = 10;
+							$total_pages = ceil( count( $activity_logs ) / $per_page );
+							
+							for ( $page = 1; $page <= $total_pages; $page++ ) :
+								$offset = ( $page - 1 ) * $per_page;
+								$page_logs = array_slice( $activity_logs, $offset, $per_page );
+								?>
+								<div class="ghl-activity-page" data-page="<?php echo esc_attr( $page ); ?>" style="<?php echo 1 === $page ? '' : 'display: none;'; ?>">
+									<?php foreach ( $page_logs as $log ) : ?>
+										<?php
+										$status_class = strtolower( $log['status'] ?? 'unknown' );
+										$icon = 'yes-alt';
+										if ( 'failed' === $status_class ) {
+											$icon = 'dismiss';
+										} elseif ( 'pending' === $status_class ) {
+											$icon = 'clock';
+										}
+										?>
+										<div class="ghl-activity-item ghl-activity-<?php echo esc_attr( $status_class ); ?>">
+											<div class="ghl-activity-icon">
+												<span class="dashicons dashicons-<?php echo esc_attr( $icon ); ?>"></span>
+											</div>
+											<div class="ghl-activity-content">
+												<div class="ghl-activity-header">
+													<strong><?php echo esc_html( ucfirst( str_replace( '_', ' ', $log['action'] ?? 'Unknown' ) ) ); ?></strong>
+													<span class="ghl-activity-status ghl-status-<?php echo esc_attr( $status_class ); ?>">
+														<?php echo esc_html( ucfirst( $log['status'] ?? 'Unknown' ) ); ?>
+													</span>
+												</div>
+												<div class="ghl-activity-message">
+													<?php echo esc_html( $log['message'] ?? '' ); ?>
+												</div>
+												<div class="ghl-activity-time">
+													<?php
+													if ( ! empty( $log['created_at'] ) ) {
+														$timestamp = strtotime( $log['created_at'] );
+														if ( $timestamp ) {
+															$time_ago = human_time_diff( $timestamp, current_time( 'timestamp' ) );
+															printf(
+																/* translators: %s: Time difference */
+																esc_html__( '%s ago', 'ghl-crm-integration' ),
+																esc_html( $time_ago )
+															);
+														}
+													}
+													?>
+												</div>
+											</div>
+										</div>
+									<?php endforeach; ?>
+								</div>
+							<?php endfor; ?>
+						</div>
+						
+						<?php if ( $total_pages > 1 ) : ?>
+							<div class="ghl-activity-pagination" style="margin-top: 20px; display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f6f7f7; border-radius: 4px;">
+								<button type="button" class="ghl-button ghl-button-small ghl-button-secondary ghl-activity-prev" style="display: none;">
+									<span class="dashicons dashicons-arrow-left-alt2"></span>
+									<?php esc_html_e( 'Previous', 'ghl-crm-integration' ); ?>
+								</button>
+								<span class="ghl-activity-page-info" style="color: #50575e; font-size: 13px;">
+									<?php
+									printf(
+										/* translators: 1: Current page, 2: Total pages */
+										esc_html__( 'Page %1$d of %2$d', 'ghl-crm-integration' ),
+										'<span class="ghl-current-page">1</span>',
+										esc_html( $total_pages )
+									);
+									?>
+								</span>
+								<button type="button" class="ghl-button ghl-button-small ghl-button-secondary ghl-activity-next" data-total-pages="<?php echo esc_attr( $total_pages ); ?>">
+									<?php esc_html_e( 'Next', 'ghl-crm-integration' ); ?>
+									<span class="dashicons dashicons-arrow-right-alt2"></span>
+								</button>
+							</div>
+						<?php endif; ?>
+					<?php else : ?>
+						<p class="description">
+							<?php esc_html_e( 'No activity recorded yet.', 'ghl-crm-integration' ); ?>
+						</p>
+					<?php endif; ?>
+				</div>
+			</div>
+
 			<?php wp_nonce_field( 'ghl_save_user_data', 'ghl_user_nonce' ); ?>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Get user activity logs from sync log table
+	 *
+	 * @param int $user_id User ID
+	 * @param int $limit   Number of logs to retrieve
+	 * @return array Array with 'logs' and 'total' count
+	 */
+	private function get_user_activity_logs( int $user_id, int $limit = 50 ): array {
+		global $wpdb;
+		
+		$table_name = $wpdb->prefix . 'ghl_sync_log';
+		
+		// Get total count for this user
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Counting user activity logs.
+		$total = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) 
+				 FROM {$table_name} 
+				 WHERE sync_type = 'user' 
+				   AND item_id = %d 
+				   AND site_id = %d",
+				$user_id,
+				get_current_blog_id()
+			)
+		);
+		
+		// Get logs for this user
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Reading user activity from plugin sync log table.
+		$logs = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT sync_type, item_id, action, status, message, created_at, ghl_id 
+				 FROM {$table_name} 
+				 WHERE sync_type = 'user' 
+				   AND item_id = %d 
+				   AND site_id = %d 
+				 ORDER BY created_at DESC 
+				 LIMIT %d",
+				$user_id,
+				get_current_blog_id(),
+				$limit
+			),
+			ARRAY_A
+		);
+		
+		return [
+			'logs'  => $logs ?: [],
+			'total' => $total,
+		];
 	}
 
 	/**
