@@ -38,6 +38,7 @@ class ScopeChecker {
 		'locations'      => array( 'locations.readonly' ),
 		'tasks'          => array( 'locations/tasks.write' ),
 		'opportunities'  => array( 'opportunities.readonly', 'opportunities.write' ),
+		// 'conversations'  => array( 'conversations.readonly', 'conversations.write', 'conversations/message.readonly', 'conversations/message.write' ),
 	);
 
 	/**
@@ -62,6 +63,9 @@ class ScopeChecker {
 		try {
 			// Get Client instance
 			$client = \GHL_CRM\API\Client\Client::get_instance();
+
+			// Prevent scope checks from triggering OAuth refresh/disconnect cascades
+			$client->set_skip_oauth_refresh( true );
 
 			$endpoint = self::get_test_endpoint( $scope_name );
 
@@ -121,6 +125,14 @@ class ScopeChecker {
 					}
 				}
 			}
+		}
+
+		// Restore normal OAuth refresh behavior
+		try {
+			$client = \GHL_CRM\API\Client\Client::get_instance();
+			$client->set_skip_oauth_refresh( false );
+		} catch ( \Exception $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch
+			// Client may not be available, safe to ignore.
 		}
 
 		// Update result with access status
@@ -198,6 +210,12 @@ class ScopeChecker {
 			),
 			'opportunities'  => array(
 				'path'   => 'opportunities/pipelines',
+				'params' => array(
+					'locationId' => $location_id,
+				),
+			),
+			'conversations'  => array(
+				'path'   => 'conversations/search',
 				'params' => array(
 					'locationId' => $location_id,
 				),
