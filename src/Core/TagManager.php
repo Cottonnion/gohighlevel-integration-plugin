@@ -18,7 +18,7 @@ class TagManager {
 	/**
 	 * Legacy contact ID user meta key (global, non-location scoped).
 	 */
-	private const LEGACY_CONTACT_META_KEY = '_ghl_contact_id';
+	public const LEGACY_CONTACT_META_KEY = '_ghl_contact_id';
 
 	/**
 	 * Singleton instance
@@ -70,7 +70,7 @@ class TagManager {
 	 * @param string|null $location_id Optional location ID, uses current if not provided
 	 * @return string
 	 */
-	private function get_user_contact_id_meta_key( ?string $location_id = null ): string {
+	public function get_user_contact_id_meta_key( ?string $location_id = null ): string {
 		if ( null === $location_id ) {
 			$location_id = $this->settings_manager->get_setting( 'location_id' );
 		}
