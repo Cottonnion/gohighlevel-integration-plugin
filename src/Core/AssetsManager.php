@@ -191,7 +191,7 @@ class AssetsManager {
 			'spa-router.js',
 			[ 'jquery', 'sweetalert2' ],
 			[],
-			'1.0.39',
+			'1.0.34',
 			true
 		);
 
