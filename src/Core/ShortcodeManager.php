@@ -50,6 +50,7 @@ class ShortcodeManager {
 	public function init(): void {
 		add_shortcode( 'ghl_form', array( $this, 'render_form_shortcode' ) );
 		add_shortcode( 'ghl_family_manager', array( $this, 'render_family_manager_shortcode' ) );
+		add_shortcode( 'ghl_restrict', array( $this, 'render_restrict_shortcode' ) );
 	}
 
 	/**
@@ -106,7 +107,7 @@ class ShortcodeManager {
 
 		// Sanitize dimensions
 		$width  = $this->sanitize_dimension( $atts['width'] );
-		$height = $atts['height'] === 'auto' ? 'auto' : $this->sanitize_dimension( $atts['height'] );
+		$height = 'auto' === $atts['height'] ? 'auto' : $this->sanitize_dimension( $atts['height'] );
 
 		// Generate unique ID for this form instance
 		$wrapper_id = 'ghl-form-' . sanitize_key( $form_id ) . '-' . wp_rand( 1000, 9999 );
@@ -125,7 +126,7 @@ class ShortcodeManager {
 			</div>
 			<iframe 
 				src="<?php echo esc_url( $embed_url ); ?>" 
-				style="width: 100%; <?php echo $height === 'auto' ? 'height: 800px;' : 'height: ' . esc_attr( $height ) . ';'; ?> border: none; display: none;"
+				style="width: 100%; <?php echo 'auto' === $height ? 'height: 800px;' : 'height: ' . esc_attr( $height ) . ';'; ?> border: none; display: none;"
 				scrolling="yes"
 				id="<?php echo esc_attr( $wrapper_id ); ?>-iframe"
 				data-form-id="<?php echo esc_attr( $form_id ); ?>"
@@ -264,10 +265,13 @@ class ShortcodeManager {
 	/**
 	 * Render family manager from PRO plugin
 	 *
-	 * @param array|string $atts Shortcode attributes.
+	 * @param array|string $atts Shortcode attributes (unused, reserved for future).
 	 * @return string HTML output
 	 */
 	private function render_family_manager_pro( $atts ): string {
+		// Suppressing unused parameter warning - reserved for future use
+		unset( $atts );
+
 		// Check if user is logged in
 		if ( ! is_user_logged_in() ) {
 			return '<p>' . esc_html__( 'Please log in to manage family accounts.', 'ghl-crm-integration' ) . '</p>';
@@ -337,5 +341,81 @@ class ShortcodeManager {
 		include GHL_CRM_PATH . 'templates/admin/partials/pro-upgrade-notice.php';
 
 		return ob_get_clean();
+	}
+
+	/**
+	 * Render conditional content shortcode
+	 *
+	 * @param array|string $atts    Shortcode attributes.
+	 * @param string|null  $content Shortcode content.
+	 * @return string HTML output or empty string if access denied
+	 */
+	public function render_restrict_shortcode( $atts, $content = null ): string {
+		// Non-logged-in users have no tags
+		if ( ! is_user_logged_in() ) {
+			return '';
+		}
+
+		// Parse attributes
+		$atts = shortcode_atts(
+			array(
+				'tags' => '',
+				'type' => 'any', // any, all, none
+			),
+			$atts,
+			'ghl_restrict'
+		);
+
+		// Validate tags
+		if ( empty( $atts['tags'] ) ) {
+			// No tags specified - show to all logged-in users
+			return do_shortcode( $content );
+		}
+
+		// Parse tags (comma-separated)
+		$required_tags = array_map( 'trim', explode( ',', $atts['tags'] ) );
+		$required_tags = array_filter( $required_tags );
+
+		if ( empty( $required_tags ) ) {
+			return do_shortcode( $content );
+		}
+
+		// Get user's tags
+		$user_id        = get_current_user_id();
+		$access_control = \GHL_CRM\Membership\AccessControl::get_instance();
+		$user_tags      = $access_control->get_user_tags( $user_id );
+
+		// Normalize tags for comparison
+		$required_tags_lower = array_map( 'strtolower', $required_tags );
+		$user_tags_lower     = array_map( 'strtolower', $user_tags );
+
+		// Check access based on type
+		$has_access = false;
+
+		switch ( strtolower( $atts['type'] ) ) {
+			case 'all':
+				// User must have ALL required tags
+				$has_access = empty( array_diff( $required_tags_lower, $user_tags_lower ) );
+				break;
+
+			case 'none':
+				// User must NOT have any of the tags
+				$has_access = empty( array_intersect( $required_tags_lower, $user_tags_lower ) );
+				break;
+
+			case 'any':
+			default:
+				// User must have AT LEAST ONE tag
+				$has_access = ! empty( array_intersect( $required_tags_lower, $user_tags_lower ) );
+				break;
+		}
+
+		// Return content if access granted
+		if ( $has_access ) {
+			return do_shortcode( $content );
+		}
+
+		// Access denied - return empty string
+		return '';
 	}
 }

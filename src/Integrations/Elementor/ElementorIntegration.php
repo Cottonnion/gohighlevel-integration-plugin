@@ -60,6 +60,9 @@ class ElementorIntegration {
 
 		// Enqueue editor styles
 		add_action( 'elementor/editor/after_enqueue_styles', [ $this, 'enqueue_editor_styles' ] );
+
+		// Initialize conditional restrictions
+		ElementorConditions::init();
 	}
 
 	/**
