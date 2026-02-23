@@ -86,6 +86,10 @@ $oauth_handler = $oauth_handler ?? new \GHL_CRM\API\OAuth\OAuthHandler();
 						'associations/relations.readonly' => __( 'View Associations Relation', 'ghl-crm-integration' ),
 						'associations/relations.write' => __( 'Write Associations Relation', 'ghl-crm-integration' ),
 						'forms.readonly'       => __( 'View Forms', 'ghl-crm-integration' ),
+						'conversations.readonly' => __( 'View Conversations', 'ghl-crm-integration' ),
+						'conversations.write'  => __( 'Create/Update Conversations', 'ghl-crm-integration' ),
+						'conversations/message.readonly' => __( 'View Messages', 'ghl-crm-integration' ),
+						'conversations/message.write' => __( 'Send Messages', 'ghl-crm-integration' ),
 					);
 
 					foreach ( $required_scopes as $scope => $label ) :
@@ -169,6 +173,10 @@ $oauth_handler = $oauth_handler ?? new \GHL_CRM\API\OAuth\OAuthHandler();
 						'associations/relations.readonly' => __( 'View Associations Relation', 'ghl-crm-integration' ),
 						'associations/relations.write' => __( 'Write Associations Relation', 'ghl-crm-integration' ),
 						'forms.readonly'       => __( 'View Forms', 'ghl-crm-integration' ),
+						'conversations.readonly' => __( 'View Conversations', 'ghl-crm-integration' ),
+						'conversations.write'  => __( 'Create/Update Conversations', 'ghl-crm-integration' ),
+						'conversations/message.readonly' => __( 'View Messages', 'ghl-crm-integration' ),
+						'conversations/message.write' => __( 'Send Messages', 'ghl-crm-integration' ),
 					);
 
 					foreach ( $required_scopes as $scope => $label ) :

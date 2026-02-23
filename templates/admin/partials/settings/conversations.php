@@ -75,22 +75,10 @@ $form_plugins = [
 ];
 ?>
 
-<div class="ghl-conversations-container">
-	<!-- Header -->
-	<div class="notice notice-info" style="margin: 20px 0; padding: 15px; border-left-color: #2271b1;">
-		<h3 style="margin-top: 0;">
-			<span class="dashicons dashicons-format-chat" style="color: #2271b1;"></span>
-			<?php esc_html_e( 'Form → Conversation Sync', 'ghl-crm-integration' ); ?>
-		</h3>
-		<p>
-			<?php esc_html_e( 'Automatically sync form submissions from your WordPress form plugins to GoHighLevel conversations. When a visitor submits a form, a conversation message is created for the matched GHL contact.', 'ghl-crm-integration' ); ?>
-		</p>
-		<ul style="list-style: disc; margin-left: 20px;">
-			<li><strong><?php esc_html_e( 'Contact Matching:', 'ghl-crm-integration' ); ?></strong> <?php esc_html_e( 'The email in the form submission is used to find the GHL contact.', 'ghl-crm-integration' ); ?></li>
-			<li><strong><?php esc_html_e( 'Queue System:', 'ghl-crm-integration' ); ?></strong> <?php esc_html_e( 'Submissions are processed via the background queue with rate limiting and retries.', 'ghl-crm-integration' ); ?></li>
-			<li><strong><?php esc_html_e( 'Custom Channel:', 'ghl-crm-integration' ); ?></strong> <?php esc_html_e( 'Messages appear in GHL under a "Custom" channel type for easy identification.', 'ghl-crm-integration' ); ?></li>
-		</ul>
-	</div>
+<div class="ghl-settings-wrapper">
+	<?php wp_nonce_field( 'ghl_crm_settings_nonce', 'ghl_crm_nonce' ); ?>
+
+	<?php \GHL_CRM\Core\ScopeChecker::render_scope_notice( 'conversations' ); ?>
 
 	<!-- Form Plugins Grid -->
 	<div class="ghl-conversations-plugins" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 20px; margin: 20px 0;">
@@ -200,53 +188,9 @@ $form_plugins = [
 	</div>
 
 	<!-- Save Button -->
-	<div style="margin: 20px 0; padding: 20px 0; border-top: 1px solid #c3c4c7;">
-		<button type="button" id="ghl-save-conversations-settings" class="button button-primary" style="min-width: 150px; height: 36px;">
-			<span class="dashicons dashicons-saved" style="margin-top: 3px;"></span>
-			<?php esc_html_e( 'Save Settings', 'ghl-crm-integration' ); ?>
-		</button>
-		<span id="ghl-conversations-save-status" style="margin-left: 10px; display: none;"></span>
-	</div>
+	<button type="button" id="save-conversations-settings" class="ghl-button ghl-button-primary ghl-save-settings-btn">
+		<span class="ghl-button-text"><?php esc_html_e( 'Save Conversations Settings', 'ghl-crm-integration' ); ?></span>
+	</button>
 </div>
 
-<script>
-(function($) {
-	'use strict';
 
-	$('#ghl-save-conversations-settings').on('click', function() {
-		var $btn = $(this);
-		var $status = $('#ghl-conversations-save-status');
-		var enabledPlugins = [];
-
-		$('.ghl-conversations-toggle:checked').each(function() {
-			enabledPlugins.push($(this).data('plugin'));
-		});
-
-		$btn.prop('disabled', true).text('<?php echo esc_js( __( 'Saving...', 'ghl-crm-integration' ) ); ?>');
-
-		$.ajax({
-			url: ajaxurl,
-			type: 'POST',
-			data: {
-				action: 'ghl_crm_save_conversations_settings',
-				nonce: '<?php echo esc_js( wp_create_nonce( 'ghl_crm_conversations_settings' ) ); ?>',
-				enabled_plugins: enabledPlugins
-			},
-			success: function(response) {
-				if (response.success) {
-					$status.html('<span style="color: #00a32a;">✓ ' + response.data.message + '</span>').show();
-				} else {
-					$status.html('<span style="color: #d63638;">✗ ' + (response.data.message || '<?php echo esc_js( __( 'Save failed', 'ghl-crm-integration' ) ); ?>') + '</span>').show();
-				}
-			},
-			error: function() {
-				$status.html('<span style="color: #d63638;">✗ <?php echo esc_js( __( 'Network error', 'ghl-crm-integration' ) ); ?></span>').show();
-			},
-			complete: function() {
-				$btn.prop('disabled', false).html('<span class="dashicons dashicons-saved" style="margin-top: 3px;"></span> <?php echo esc_js( __( 'Save Settings', 'ghl-crm-integration' ) ); ?>');
-				setTimeout(function() { $status.fadeOut(); }, 4000);
-			}
-		});
-	});
-})(jQuery);
-</script>
