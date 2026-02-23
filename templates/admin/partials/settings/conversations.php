@@ -165,16 +165,18 @@ $form_plugins = [
 
 				<!-- Toggle -->
 				<?php if ( $is_installed ) : ?>
-					<label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-						<input
-							type="checkbox"
-							name="conversations_enabled_plugins[]"
-							value="<?php echo esc_attr( $plugin_key ); ?>"
-							class="ghl-conversations-toggle"
-							data-plugin="<?php echo esc_attr( $plugin_key ); ?>"
-							<?php checked( $is_enabled ); ?>
-						/>
-						<span style="font-size: 13px; font-weight: 500;">
+					<label class="ghl-checkbox <?php echo $is_enabled ? 'is-checked' : ''; ?>">
+						<input type="checkbox"
+							   class="ghl-checkbox-original ghl-conversations-toggle"
+							   name="conversations_enabled_plugins[]"
+							   value="<?php echo esc_attr( $plugin_key ); ?>"
+							   data-plugin="<?php echo esc_attr( $plugin_key ); ?>"
+							   <?php checked( $is_enabled ); ?>
+							   >
+						<span class="ghl-checkbox-input <?php echo $is_enabled ? 'is-checked' : ''; ?>">
+							<span class="ghl-checkbox-inner"></span>
+						</span>
+						<span class="ghl-checkbox-label">
 							<?php esc_html_e( 'Enable conversation sync', 'ghl-crm-integration' ); ?>
 						</span>
 					</label>

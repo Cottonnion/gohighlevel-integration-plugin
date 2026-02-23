@@ -79,10 +79,10 @@ class QueueLogger {
 		// Prepare metadata
 		$metadata = [];
 		if ( ! empty( $request_data ) ) {
-			$metadata['request'] = $request_data;
+			$metadata['request'] = $this->redact_sensitive_fields( $request_data );
 		}
 		if ( ! empty( $response_data ) ) {
-			$metadata['response'] = $response_data;
+			$metadata['response'] = $this->redact_sensitive_fields( $response_data );
 		}
 		if ( null !== $execution_time ) {
 			$metadata['execution_time'] = $execution_time;
@@ -104,5 +104,46 @@ class QueueLogger {
 			$metadata,
 			$contact_id ?? ''
 		);
+	}
+
+	/**
+	 * Recursively redact sensitive keys from request/response payloads.
+	 *
+	 * @param array $payload Data to sanitize.
+	 * @return array
+	 */
+	private function redact_sensitive_fields( array $payload ): array {
+		$sensitive_keys = [
+			'authorization',
+			'access_token',
+			'oauth_access_token',
+			'oauth_refresh_token',
+			'refresh_token',
+			'api_token',
+			'token',
+			'secret',
+			'client_secret',
+		];
+
+		foreach ( $payload as $key => $value ) {
+			$normalized_key = strtolower( (string) $key );
+
+			if ( is_array( $value ) ) {
+				$payload[ $key ] = $this->redact_sensitive_fields( $value );
+				continue;
+			}
+
+			if ( in_array( $normalized_key, $sensitive_keys, true ) ) {
+				$payload[ $key ] = '[REDACTED]';
+				continue;
+			}
+
+			// Redact authorization header values that include bearer tokens.
+			if ( 'authorization' === $normalized_key && is_string( $value ) ) {
+				$payload[ $key ] = '[REDACTED]';
+			}
+		}
+
+		return $payload;
 	}
 }

@@ -66,6 +66,8 @@ class SyncLogger {
 
 		$table_name = $wpdb->prefix . 'ghl_sync_log';
 
+		$metadata = $this->sanitize_metadata( $metadata );
+
 		$data = [
 			'sync_type'  => sanitize_text_field( $sync_type ),
 			'item_id'    => $item_id,
@@ -95,6 +97,46 @@ class SyncLogger {
 		}
 
 		return (int) $wpdb->insert_id;
+	}
+
+	/**
+	 * Redact sensitive values from metadata before persistence.
+	 *
+	 * @param array $metadata Metadata payload.
+	 * @return array
+	 */
+	private function sanitize_metadata( array $metadata ): array {
+		$sensitive_keys = [
+			'authorization',
+			'access_token',
+			'oauth_access_token',
+			'oauth_refresh_token',
+			'refresh_token',
+			'api_token',
+			'token',
+			'secret',
+			'client_secret',
+		];
+
+		foreach ( $metadata as $key => $value ) {
+			$normalized_key = strtolower( (string) $key );
+
+			if ( is_array( $value ) ) {
+				$metadata[ $key ] = $this->sanitize_metadata( $value );
+				continue;
+			}
+
+			if ( in_array( $normalized_key, $sensitive_keys, true ) ) {
+				$metadata[ $key ] = '[REDACTED]';
+				continue;
+			}
+
+			if ( 'authorization' === $normalized_key && is_string( $value ) ) {
+				$metadata[ $key ] = '[REDACTED]';
+			}
+		}
+
+		return $metadata;
 	}
 
 	/**

@@ -24,6 +24,17 @@ class SettingsRepository {
 	private const OPTION_NAME = 'ghl_crm_settings';
 
 	/**
+	 * Sensitive keys that should be encrypted at rest.
+	 *
+	 * @var string[]
+	 */
+	private const SENSITIVE_KEYS = [
+		'oauth_access_token',
+		'oauth_refresh_token',
+		'api_token',
+	];
+
+	/**
 	 * Network-wide settings option name
 	 *
 	 * @var string
@@ -76,6 +87,8 @@ class SettingsRepository {
 			$settings = get_option( self::OPTION_NAME, [] );
 		}
 
+		$settings = $this->decrypt_sensitive_settings( $settings );
+
 		// Return with defaults
 		return wp_parse_args(
 			$settings,
@@ -108,17 +121,19 @@ class SettingsRepository {
 	 * @return bool
 	 */
 	public function save_site_settings( array $settings, ?int $site_id = null ): bool {
+		$settings_to_store = $this->encrypt_sensitive_settings( $settings );
+
 		if ( is_multisite() && null !== $site_id && $site_id !== get_current_blog_id() ) {
 			switch_to_blog( $site_id );
 			$old   = get_option( self::OPTION_NAME );
-			$saved = update_option( self::OPTION_NAME, $settings, true );
+			$saved = update_option( self::OPTION_NAME, $settings_to_store, false );
 			restore_current_blog();
-			return $saved || $old === $settings;
+			return $saved || $old === $settings_to_store;
 		}
 
 			$old   = get_option( self::OPTION_NAME );
-			$saved = update_option( self::OPTION_NAME, $settings, true );
-			return $saved || $old === $settings;
+			$saved = update_option( self::OPTION_NAME, $settings_to_store, false );
+			return $saved || $old === $settings_to_store;
 	}
 
 	/**
@@ -239,14 +254,16 @@ class SettingsRepository {
 	 * @return bool True on success, false on failure
 	 */
 	public function update_option( string $option_name, $value, ?int $site_id = null ): bool {
+		$autoload = ( self::VERIFICATION_OPTION_NAME === $option_name ) ? false : null;
+
 		if ( is_multisite() && null !== $site_id && $site_id !== get_current_blog_id() ) {
 			switch_to_blog( $site_id );
-			$result = update_option( $option_name, $value );
+			$result = update_option( $option_name, $value, $autoload );
 			restore_current_blog();
 			return $result;
 		}
 
-		return update_option( $option_name, $value );
+		return update_option( $option_name, $value, $autoload );
 	}
 
 	/**
@@ -303,12 +320,88 @@ class SettingsRepository {
 
 		if ( is_multisite() && null !== $site_id && $site_id !== get_current_blog_id() ) {
 			switch_to_blog( $site_id );
-			$saved = update_option( self::VERIFICATION_OPTION_NAME, $verification_data, true );
+			$saved = update_option( self::VERIFICATION_OPTION_NAME, $verification_data, false );
 			restore_current_blog();
 			return $saved;
 		}
 
-		return update_option( self::VERIFICATION_OPTION_NAME, $verification_data, true );
+		return update_option( self::VERIFICATION_OPTION_NAME, $verification_data, false );
+	}
+
+	/**
+	 * Encrypt sensitive settings before persisting.
+	 *
+	 * @param array $settings Raw settings array.
+	 * @return array
+	 */
+	private function encrypt_sensitive_settings( array $settings ): array {
+		foreach ( self::SENSITIVE_KEYS as $key ) {
+			if ( isset( $settings[ $key ] ) && is_string( $settings[ $key ] ) && '' !== $settings[ $key ] ) {
+				$settings[ $key ] = $this->encrypt_value( $settings[ $key ] );
+			}
+		}
+
+		return $settings;
+	}
+
+	/**
+	 * Decrypt sensitive settings after retrieval.
+	 *
+	 * @param array $settings Settings array from storage.
+	 * @return array
+	 */
+	private function decrypt_sensitive_settings( array $settings ): array {
+		foreach ( self::SENSITIVE_KEYS as $key ) {
+			if ( isset( $settings[ $key ] ) && is_string( $settings[ $key ] ) && '' !== $settings[ $key ] ) {
+				$settings[ $key ] = $this->decrypt_value( $settings[ $key ] );
+			}
+		}
+
+		return $settings;
+	}
+
+	/**
+	 * Encrypt a single value using AES-256-CBC with a key derived from WordPress salts.
+	 *
+	 * @param string $value Plain text value.
+	 * @return string Encrypted value (base64-encoded) or empty string on failure.
+	 */
+	private function encrypt_value( string $value ): string {
+		$key = hash( 'sha256', wp_salt( 'secure_auth' ), true );
+		$iv  = substr( $key, 0, 16 );
+
+		$encrypted = openssl_encrypt( $value, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv );
+
+		if ( false === $encrypted ) {
+			return $value; // Fallback to plaintext to avoid data loss.
+		}
+
+		return base64_encode( $encrypted );
+	}
+
+	/**
+	 * Decrypt a single value encrypted by encrypt_value().
+	 * Falls back to returning the original value if decryption fails (supports legacy plaintext storage).
+	 *
+	 * @param string $value Encrypted value.
+	 * @return string Decrypted or original value.
+	 */
+	private function decrypt_value( string $value ): string {
+		$key = hash( 'sha256', wp_salt( 'secure_auth' ), true );
+		$iv  = substr( $key, 0, 16 );
+
+		$decoded = base64_decode( $value, true );
+		if ( false === $decoded ) {
+			return $value;
+		}
+
+		$decrypted = openssl_decrypt( $decoded, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv );
+
+		if ( false === $decrypted ) {
+			return $value; // Likely plaintext legacy value.
+		}
+
+		return $decrypted;
 	}
 
 	/**
