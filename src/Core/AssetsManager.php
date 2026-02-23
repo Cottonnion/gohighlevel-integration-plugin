@@ -463,7 +463,7 @@ class AssetsManager {
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
 			],
-			'1.0.0',
+			'1.0.2',
 			true
 		);
 

@@ -593,6 +593,20 @@ textarea.ghl-input {
 	line-height: 1.6;
 }
 
+.ghl-progress-bar-indeterminate {
+	width: 30% !important;
+	animation: ghl-indeterminate 1.5s ease-in-out infinite;
+}
+
+@keyframes ghl-indeterminate {
+	0% {
+		transform: translateX(-100%);
+	}
+	100% {
+		transform: translateX(333%);
+	}
+}
+
 .ghl-progress-text strong {
 	color: var(--ghl-text-primary);
 	font-weight: var(--ghl-font-weight-semibold);
