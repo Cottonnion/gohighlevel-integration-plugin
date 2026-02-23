@@ -31,6 +31,7 @@ $form_plugins = [
 		'icon'        => 'dashicons-email',
 		'description' => __( 'Sync Contact Form 7 submissions to GHL conversations. Each form submission creates a message thread with the matched contact.', 'ghl-crm-integration' ),
 		'docs_url'    => 'https://contactform7.com/',
+		'pro'         => false,
 	],
 	'gravity_forms' => [
 		'name'        => __( 'Gravity Forms', 'ghl-crm-integration' ),
@@ -39,6 +40,7 @@ $form_plugins = [
 		'icon'        => 'dashicons-feedback',
 		'description' => __( 'Sync Gravity Forms entries to GHL conversations. Advanced form data including conditional logic fields are captured.', 'ghl-crm-integration' ),
 		'docs_url'    => 'https://www.gravityforms.com/',
+		'pro'         => true,
 	],
 	'wpforms'       => [
 		'name'        => __( 'WPForms', 'ghl-crm-integration' ),
@@ -47,6 +49,7 @@ $form_plugins = [
 		'icon'        => 'dashicons-list-view',
 		'description' => __( 'Sync WPForms submissions to GHL conversations. Works with both Lite and Pro versions.', 'ghl-crm-integration' ),
 		'docs_url'    => 'https://wpforms.com/',
+		'pro'         => true,
 	],
 	'ninja_forms'   => [
 		'name'        => __( 'Ninja Forms', 'ghl-crm-integration' ),
@@ -55,6 +58,7 @@ $form_plugins = [
 		'icon'        => 'dashicons-forms',
 		'description' => __( 'Sync Ninja Forms submissions to GHL conversations. Supports multi-step forms and calculated fields.', 'ghl-crm-integration' ),
 		'docs_url'    => 'https://ninjaforms.com/',
+		'pro'         => true,
 	],
 	'elementor'     => [
 		'name'        => __( 'Elementor Forms', 'ghl-crm-integration' ),
@@ -63,6 +67,7 @@ $form_plugins = [
 		'icon'        => 'dashicons-welcome-widgets-menus',
 		'description' => __( 'Sync Elementor Pro form submissions to GHL conversations. Requires Elementor Pro with the Forms widget.', 'ghl-crm-integration' ),
 		'docs_url'    => 'https://elementor.com/',
+		'pro'         => true,
 	],
 	'fluent_forms'  => [
 		'name'        => __( 'Fluent Forms', 'ghl-crm-integration' ),
@@ -71,6 +76,7 @@ $form_plugins = [
 		'icon'        => 'dashicons-editor-table',
 		'description' => __( 'Sync Fluent Forms submissions to GHL conversations. Lightweight and fast form processing.', 'ghl-crm-integration' ),
 		'docs_url'    => 'https://fluentforms.com/',
+		'pro'         => true,
 	],
 ];
 ?>
@@ -78,32 +84,49 @@ $form_plugins = [
 <div class="ghl-settings-wrapper">
 	<?php wp_nonce_field( 'ghl_crm_settings_nonce', 'ghl_crm_nonce' ); ?>
 
-	<?php \GHL_CRM\Core\ScopeChecker::render_scope_notice( 'conversations' ); ?>
-
 	<!-- Form Plugins Grid -->
 	<div class="ghl-conversations-plugins" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 20px; margin: 20px 0;">
 		<?php foreach ( $form_plugins as $plugin_key => $plugin ) : ?>
 			<?php
 			$is_installed = $plugin['detect'];
 			$is_enabled   = in_array( $plugin_key, $enabled_plugins, true );
+			$is_pro       = ! empty( $plugin['pro'] );
 			$card_class   = 'ghl-plugin-card';
-			if ( $is_enabled && $is_installed ) {
+			if ( ! $is_pro && $is_enabled && $is_installed ) {
 				$card_class .= ' ghl-plugin-active';
 			}
 			if ( ! $is_installed ) {
 				$card_class .= ' ghl-plugin-not-installed';
 			}
+			if ( $is_pro ) {
+				$card_class .= ' ghl-plugin-pro-only';
+			}
 			?>
 			<div class="<?php echo esc_attr( $card_class ); ?>" style="
-				border: 1px solid <?php echo $is_enabled && $is_installed ? '#00a32a' : '#c3c4c7'; ?>;
+				border: 1px solid <?php echo ! $is_pro && $is_enabled && $is_installed ? '#00a32a' : '#c3c4c7'; ?>;
 				border-radius: 8px;
 				padding: 20px;
-				background: <?php echo $is_enabled && $is_installed ? '#f0fdf4' : ( $is_installed ? '#fff' : '#f6f7f7' ); ?>;
+				background: <?php echo ! $is_pro && $is_enabled && $is_installed ? '#f0fdf4' : ( $is_pro ? '#f9f6ff' : ( $is_installed ? '#fff' : '#f6f7f7' ) ); ?>;
 				position: relative;
 				transition: border-color 0.2s;
+				<?php echo $is_pro ? 'opacity: 0.85;' : ''; ?>
 			">
 				<!-- Status Badge -->
-				<?php if ( ! $is_installed ) : ?>
+				<?php if ( $is_pro ) : ?>
+					<span style="
+						position: absolute;
+						top: 12px;
+						right: 12px;
+						background: linear-gradient(135deg, #7e3bd0, #9b59b6);
+						color: #fff;
+						padding: 2px 10px;
+						border-radius: 12px;
+						font-size: 11px;
+						font-weight: 600;
+					">
+						<?php esc_html_e( 'Pro Only', 'ghl-crm-integration' ); ?>
+					</span>
+				<?php elseif ( ! $is_installed ) : ?>
 					<span style="
 						position: absolute;
 						top: 12px;
@@ -139,9 +162,9 @@ $form_plugins = [
 						font-size: 28px;
 						width: 28px;
 						height: 28px;
-						color: <?php echo $is_installed ? '#2271b1' : '#a7aaad'; ?>;
+						color: <?php echo $is_pro ? '#9b59b6' : ( $is_installed ? '#2271b1' : '#a7aaad' ); ?>;
 					"></span>
-					<h3 style="margin: 0; font-size: 16px; color: <?php echo $is_installed ? '#1d2327' : '#a7aaad'; ?>;">
+					<h3 style="margin: 0; font-size: 16px; color: <?php echo $is_pro ? '#5b2d8e' : ( $is_installed ? '#1d2327' : '#a7aaad' ); ?>;">
 						<?php echo esc_html( $plugin['name'] ); ?>
 					</h3>
 				</div>
@@ -151,8 +174,13 @@ $form_plugins = [
 					<?php echo esc_html( $plugin['description'] ); ?>
 				</p>
 
-				<!-- Toggle -->
-				<?php if ( $is_installed ) : ?>
+				<!-- Toggle / Pro Notice -->
+				<?php if ( $is_pro ) : ?>
+					<p style="color: #7e3bd0; font-size: 12px; font-weight: 500; margin: 0;">
+						<span class="dashicons dashicons-lock" style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle;"></span>
+						<?php esc_html_e( 'Available in Pro version. Upgrade to unlock all form integrations.', 'ghl-crm-integration' ); ?>
+					</p>
+				<?php elseif ( $is_installed ) : ?>
 					<label class="ghl-checkbox <?php echo $is_enabled ? 'is-checked' : ''; ?>">
 						<input type="checkbox"
 							   class="ghl-checkbox-original ghl-conversations-toggle"
