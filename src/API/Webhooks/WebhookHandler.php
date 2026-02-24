@@ -296,7 +296,7 @@ class WebhookHandler {
 
 		// Log webhook receipt
 		$this->logger->log(
-			'webhook_received',
+			'webhook',
 			0,
 			'ghl_to_wp',
 			'success',
@@ -311,7 +311,7 @@ class WebhookHandler {
 		// Validate payload
 		if ( empty( $normalized['type'] ) ) {
 			$this->logger->log(
-				'webhook_invalid',
+				'webhook',
 				0,
 				'ghl_to_wp',
 				'error',
@@ -328,9 +328,9 @@ class WebhookHandler {
 			$this->logger->log(
 				'webhook',
 				0,
-				'location_mismatch',
+				'ghl_to_wp',
 				'info',
-				'Webhook ignored due to location mismatch',
+				'Webhook ignored: location mismatch',
 				[
 					'active_location'  => $active_location_id,
 					'webhook_location' => $webhook_location_id,
@@ -345,7 +345,7 @@ class WebhookHandler {
 
 		if ( is_wp_error( $result ) ) {
 			$this->logger->log(
-				'webhook_processing_error',
+				'webhook',
 				0,
 				'ghl_to_wp',
 				'error',
@@ -469,7 +469,7 @@ class WebhookHandler {
 			default:
 				// Log unsupported event type
 				$this->logger->log(
-					'webhook_unsupported',
+					'webhook',
 					0,
 					'ghl_to_wp',
 					'warning',
@@ -496,7 +496,7 @@ class WebhookHandler {
 		// Check if sync from GHL to WP is enabled
 		if ( ! $this->is_sync_direction_enabled( 'ghl_to_wp' ) ) {
 			$this->logger->log(
-				'webhook_skipped',
+				'webhook',
 				0,
 				'ghl_to_wp',
 				'info',
@@ -533,7 +533,7 @@ class WebhookHandler {
 		// Check if sync from GHL to WP is enabled
 		if ( ! $this->is_sync_direction_enabled( 'ghl_to_wp' ) ) {
 			$this->logger->log(
-				'webhook_skipped',
+				'webhook',
 				0,
 				'ghl_to_wp',
 				'info',
@@ -752,7 +752,7 @@ class WebhookHandler {
 			$response_body = wp_remote_retrieve_body( $response );
 
 			$this->logger->log(
-				'webhook_test_completed',
+				'webhook',
 				0,
 				'system',
 				$status_code === 200 ? 'success' : 'warning',
