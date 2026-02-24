@@ -57,7 +57,7 @@ class TagManager {
 	 * @param string|null $location_id Optional location ID, uses current if not provided
 	 * @return string
 	 */
-	private function get_user_tags_meta_key( ?string $location_id = null ): string {
+	public function get_user_tags_meta_key( ?string $location_id = null ): string {
 		if ( null === $location_id ) {
 			$location_id = $this->settings_manager->get_setting( 'location_id' );
 		}
@@ -292,7 +292,24 @@ class TagManager {
 		$normalized = $this->normalize_tag_input( $tags );
 		$ids        = $normalized['ids'];
 
+		// Capture previous tag IDs for change detection.
+		$old_ids = get_user_meta( $user_id, $meta_key, true );
+		if ( ! is_array( $old_ids ) ) {
+			$old_ids = [];
+		}
+
 		update_user_meta( $user_id, $meta_key, $ids );
+
+		// Fire hook when tags changed so integrations (e.g. LearnDash auto-enrollment) can react.
+		if ( $ids !== $old_ids ) {
+			/**
+			 * Fires after a user's GHL tags are updated.
+			 *
+			 * @param int   $user_id WordPress user ID.
+			 * @param array $ids     Normalized tag IDs that were stored.
+			 */
+			do_action( 'ghl_crm_user_tags_updated', $user_id, $ids );
+		}
 
 		return $ids;
 	}

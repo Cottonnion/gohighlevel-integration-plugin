@@ -717,8 +717,8 @@ class UserProfileFields {
 				$this->sync_tags_to_ghl( $contact_id, $payload_tags );
 			}
 
-			// Fire action so other integrations (like LearnDash) can react
-			do_action( 'ghl_crm_user_tags_updated', $user_id, $stored_ids );
+			// Note: ghl_crm_user_tags_updated hook is now fired automatically
+			// inside TagManager::store_user_tags() when tags change.
 		}
 	}
 
