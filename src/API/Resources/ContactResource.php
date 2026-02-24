@@ -198,4 +198,36 @@ class ContactResource extends AbstractResource {
 	public function get_appointments( string $contact_id ): array {
 		return $this->client->get( $this->build_endpoint( "{$contact_id}/appointments" ) );
 	}
+
+	/**
+	 * List contacts with cursor-based pagination
+	 *
+	 * NOTE: The GET /contacts/ endpoint is deprecated and will be removed
+	 * in a future GHL API version. Use until replacement is available.
+	 *
+	 * @param int         $limit       Number of contacts per page (max 100).
+	 * @param string|null $start_after Cursor from previous page (startAfterId).
+	 * @param string|null $query       Optional search/filter string.
+	 * @return array{contacts: array, meta: array{total: int, startAfterId: string|null}}
+	 */
+	public function list_contacts( int $limit = 100, ?string $start_after = null, ?string $query = null ): array {
+		$params = [
+			'limit' => min( $limit, 100 ),
+		];
+
+		if ( ! empty( $start_after ) ) {
+			$params['startAfterId'] = $start_after;
+		}
+
+		if ( ! empty( $query ) ) {
+			$params['query'] = $query;
+		}
+
+		$response = $this->client->get( $this->endpoint, $params );
+
+		return [
+			'contacts' => $response['contacts'] ?? [],
+			'meta'     => $response['meta'] ?? [],
+		];
+	}
 }
