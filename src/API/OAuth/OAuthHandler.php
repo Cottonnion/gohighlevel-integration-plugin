@@ -364,33 +364,37 @@ class OAuthHandler {
 	 * @return bool Success status
 	 */
 	public function disconnect(): bool {
-		// Remove OAuth-related settings using SettingsManager (multisite-aware)
-		$oauth_keys = [
-			'oauth_access_token',
-			'oauth_refresh_token',
-			'oauth_expires_at',
-			'oauth_connected_at',
-			'location_id',
-			'location_name',
-		];
+		try {
+			// Remove OAuth-related settings using SettingsManager (multisite-aware)
+			$oauth_keys = [
+				'oauth_access_token',
+				'oauth_refresh_token',
+				'oauth_expires_at',
+				'oauth_connected_at',
+				'location_id',
+				'location_name',
+			];
 
-		$success = true;
-		foreach ( $oauth_keys as $key ) {
-			$result = $this->settings_manager->delete_setting( $key );
-			if ( ! $result ) {
-				$success = false;
+			foreach ( $oauth_keys as $key ) {
+				$this->settings_manager->delete_setting( $key );
 			}
+
+			// Remove verification using SettingsManager (multisite-aware)
+			$this->settings_manager->update_option( 'ghl_crm_connection_verified', false );
+
+			// Clear cached token state so refresh guard does not trip after disconnect
+			self::$access_token_cache = null;
+			self::$last_refresh_time  = 0;
+			self::$last_refresh_error = null;
+
+			// Trigger disconnection action
+			do_action( 'ghl_crm_connection_status_changed', false, 'oauth_disconnected' );
+
+			return true;
+		} catch ( \Throwable $e ) {
+			error_log( '[GHL][OAuthHandler] Error during disconnect: ' . $e->getMessage() );
+			return false;
 		}
-
-		// Remove verification using SettingsManager (multisite-aware)
-		$this->settings_manager->update_option( 'ghl_crm_connection_verified', false );
-
-		// Clear cached token state so refresh guard does not trip after disconnect
-		self::$access_token_cache = null;
-		self::$last_refresh_time  = 0;
-		self::$last_refresh_error = null;
-
-		return $success;
 	}
 
 	/**

@@ -447,21 +447,34 @@ class MenuManager {
 			);
 		}
 
-		$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
-		$result        = $oauth_handler->disconnect();
+		try {
+			$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
+			$result        = $oauth_handler->disconnect();
 
-		if ( $result ) {
-			wp_send_json_success(
-				[
-					'message' => __( 'Successfully disconnected from GoHighLevel.', 'ghl-crm-integration' ),
-				]
-			);
-		} else {
+			if ( $result ) {
+				wp_send_json_success(
+					[
+						'message' => __( 'Successfully disconnected from GoHighLevel.', 'ghl-crm-integration' ),
+					]
+				);
+			} else {
+				wp_send_json_error(
+					[
+						'message' => __( 'Failed to disconnect. Please try again.', 'ghl-crm-integration' ),
+					]
+				);
+			}
+		} catch ( \Throwable $e ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'Failed to disconnect. Please try again.', 'ghl-crm-integration' ),
-				],
-				500
+					'message' => sprintf(
+						/* translators: 1: error message, 2: file path, 3: line number */
+						__( 'Disconnect error: %1$s in %2$s:%3$d', 'ghl-crm-integration' ),
+						$e->getMessage(),
+						$e->getFile(),
+						$e->getLine()
+					),
+				]
 			);
 		}
 	}

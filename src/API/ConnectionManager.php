@@ -279,12 +279,12 @@ class ConnectionManager {
 		$settings = $this->settings_repository->get_settings_array( $site_id );
 
 		// Clear BOTH OAuth and manual API credentials
-		$settings['api_token']   = '';
-		$settings['location_id'] = '';
+		$settings['api_token']          = '';
+		$settings['location_id']        = '';
 		$settings['oauth_access_token'] = '';
 		$settings['oauth_refresh_token'] = '';
-		$settings['oauth_expires_at'] = 0;
-		$settings['updated_at']  = current_time( 'mysql' );
+		$settings['oauth_expires_at']   = 0;
+		$settings['updated_at']         = current_time( 'mysql' );
 
 		// Save cleared settings
 		$saved = $this->settings_repository->save_site_settings( $settings, $site_id );
@@ -292,10 +292,10 @@ class ConnectionManager {
 		if ( $saved ) {
 			// Mark as unverified
 			$this->mark_connection_unverified( $site_id );
-			
+
 			// Trigger disconnection action
 			do_action( 'ghl_crm_connection_status_changed', false, 'disconnected' );
-			
+
 			return true;
 		}
 

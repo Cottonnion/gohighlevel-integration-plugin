@@ -131,9 +131,9 @@ class SettingsRepository {
 			return $saved || $old === $settings_to_store;
 		}
 
-			$old   = get_option( self::OPTION_NAME );
-			$saved = update_option( self::OPTION_NAME, $settings_to_store, false );
-			return $saved || $old === $settings_to_store;
+		$old   = get_option( self::OPTION_NAME );
+		$saved = update_option( self::OPTION_NAME, $settings_to_store, false );
+		return $saved || $old === $settings_to_store;
 	}
 
 	/**
@@ -214,9 +214,10 @@ class SettingsRepository {
 		// Get current settings
 		$settings = $this->get_settings_array( $site_id );
 
-		// Check if key exists
-		if ( ! isset( $settings[ $key ] ) ) {
-			return false; // Key doesn't exist, nothing to delete
+		// Check if key exists in stored settings (not defaults from wp_parse_args)
+		$raw_settings = $this->get_raw_settings( $site_id );
+		if ( ! array_key_exists( $key, $raw_settings ) ) {
+			return true; // Key doesn't exist in stored data — already deleted, treat as success.
 		}
 
 		// Remove the specific key
@@ -224,6 +225,24 @@ class SettingsRepository {
 
 		// Save back to database
 		return $this->save_site_settings( $settings, $site_id );
+	}
+
+	/**
+	 * Get raw settings without defaults (for checking if a key actually exists in stored data).
+	 *
+	 * @param int|null $site_id Optional. Site ID for multisite.
+	 * @return array Raw stored settings.
+	 */
+	private function get_raw_settings( ?int $site_id = null ): array {
+		if ( is_multisite() && null !== $site_id && $site_id !== get_current_blog_id() ) {
+			switch_to_blog( $site_id );
+			$settings = get_option( self::OPTION_NAME, [] );
+			restore_current_blog();
+		} else {
+			$settings = get_option( self::OPTION_NAME, [] );
+		}
+
+		return is_array( $settings ) ? $settings : [];
 	}
 
 	/**

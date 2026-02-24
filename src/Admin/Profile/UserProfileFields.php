@@ -320,11 +320,13 @@ class UserProfileFields {
 		// Get GHL data
 		$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
 		$contact_id = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user->ID, $location_id );
-		$last_sync     = get_user_meta( $user->ID, '_ghl_last_sync', true );
-		$synced_on_reg = get_user_meta( $user->ID, '_ghl_synced_on_register', true );
+
+		// Only show sync timestamps when the user actually has a contact on this location.
+		$last_sync     = $contact_id ? get_user_meta( $user->ID, '_ghl_last_sync', true ) : '';
+		$synced_on_reg = $contact_id ? get_user_meta( $user->ID, '_ghl_synced_on_register', true ) : '';
 		$tag_manager      = $this->get_tag_manager();
-		$current_tag_ids  = $tag_manager->get_user_tag_ids( $user->ID );
-		$current_tag_map  = $tag_manager->map_ids_to_names( $current_tag_ids );
+		$current_tag_ids  = $contact_id ? $tag_manager->get_user_tag_ids( $user->ID ) : [];
+		$current_tag_map  = $contact_id ? $tag_manager->map_ids_to_names( $current_tag_ids ) : [];
 
 		// Get settings
 		$settings           = $this->settings_manager->get_settings_array();

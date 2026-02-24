@@ -216,6 +216,20 @@ class AjaxHandler {
 				}
 			}
 
+			// LearnDash settings
+			if ( isset( $_POST['learndash_enabled'] ) ) {
+				$integration_settings['learndash_enabled'] = sanitize_text_field( wp_unslash( $_POST['learndash_enabled'] ) ) === '1';
+			}
+
+			/**
+			 * Filter integration settings before saving.
+			 *
+			 * Allows pro or third-party plugins to add their own integration settings.
+			 *
+			 * @param array $integration_settings Parsed integration settings to save.
+			 */
+			$integration_settings = apply_filters( 'ghl_crm_save_integration_settings', $integration_settings );
+
 			// Merge with current settings
 			$settings = array_merge(
 				$current_settings,
@@ -917,5 +931,141 @@ class AjaxHandler {
 				'per_page' => $per_page,
 			]
 		);
+	}
+
+	/**
+	 * Bulk import contacts from GoHighLevel → WordPress
+	 *
+	 * Fetches one page of GHL contacts per AJAX request using cursor-based
+	 * pagination. The JS handler calls this repeatedly until has_more is false.
+	 *
+	 * NOTE: Uses the GET /contacts/ endpoint which is deprecated but functional.
+	 *
+	 * @return void
+	 */
+	public static function bulk_import_from_ghl(): void {
+		self::verify_admin_nonce();
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to perform this action.', 'ghl-crm-integration' ),
+				],
+				403
+			);
+		}
+
+		try {
+			$cursor = isset( $_POST['cursor'] ) ? sanitize_text_field( wp_unslash( $_POST['cursor'] ) ) : '';
+			$query  = isset( $_POST['query'] ) ? sanitize_text_field( wp_unslash( $_POST['query'] ) ) : '';
+			$page   = isset( $_POST['page'] ) ? absint( $_POST['page'] ) : 1;
+
+			// Empty string → null for the sync class
+			$cursor = ! empty( $cursor ) ? $cursor : null;
+			$query  = ! empty( $query ) ? $query : null;
+
+			// Calculate running total from previous pages
+			$progress = \GHL_CRM\Sync\BulkImportSync::get_progress();
+			$total_processed = 0;
+			if ( false !== $progress && $page > 1 ) {
+				$total_processed = ( $progress['total_created'] ?? 0 )
+					+ ( $progress['total_updated'] ?? 0 )
+					+ ( $progress['total_skipped_no_email'] ?? 0 )
+					+ ( $progress['total_skipped_duplicate'] ?? 0 )
+					+ ( $progress['total_failed'] ?? 0 );
+			}
+
+			// Get processed IDs from previous pages to detect API duplicates
+			$processed_ids = [];
+			if ( false !== $progress && $page > 1 ) {
+				$processed_ids = $progress['processed_ids'] ?? [];
+			}
+
+			$importer = \GHL_CRM\Sync\BulkImportSync::get_instance();
+			$result   = $importer->process_page( $cursor, $query, $total_processed, $processed_ids );
+
+			// Accumulate totals via transient
+			if ( false === $progress || 1 === $page ) {
+				$progress = [
+					'total_created'          => 0,
+					'total_updated'          => 0,
+					'total_skipped_no_email' => 0,
+					'total_skipped_duplicate' => 0,
+					'total_failed'           => 0,
+					'total_contacts'         => $result['total_contacts'],
+					'processed_ids'          => [],
+					'pages'                  => 0,
+					'started_at'             => current_time( 'mysql' ),
+				];
+			}
+
+			// Keep total_contacts updated (first page sets it, subsequent pages can confirm)
+			if ( $result['total_contacts'] > 0 ) {
+				$progress['total_contacts'] = $result['total_contacts'];
+			}
+
+			$progress['total_created']           += $result['created'];
+			$progress['total_updated']           += $result['updated'];
+			$progress['total_skipped_no_email']  += $result['skipped_no_email'];
+			$progress['total_skipped_duplicate'] += $result['skipped_duplicate'];
+			$progress['total_failed']            += $result['failed'];
+
+			// Merge newly processed IDs for deduplication across pages
+			$progress['processed_ids'] = array_merge(
+				$progress['processed_ids'] ?? [],
+				$result['new_processed_ids'] ?? []
+			);
+			++$progress['pages'];
+
+			\GHL_CRM\Sync\BulkImportSync::save_progress( $progress );
+
+			// Clean up when done
+			if ( ! $result['has_more'] ) {
+				\GHL_CRM\Sync\BulkImportSync::clear_progress();
+				update_option( 'ghl_crm_last_bulk_import', current_time( 'mysql' ), false );
+			}
+
+			$grand_total = $progress['total_created'] + $progress['total_updated']
+				+ $progress['total_skipped_no_email']
+				+ $progress['total_skipped_duplicate'] + $progress['total_failed'];
+
+			wp_send_json_success(
+				[
+					'created'                 => $result['created'],
+					'updated'                 => $result['updated'],
+					'skipped_no_email'        => $result['skipped_no_email'],
+					'skipped_duplicate'       => $result['skipped_duplicate'],
+					'failed'                  => $result['failed'],
+					'processed'               => $result['processed'],
+					'has_more'                => $result['has_more'],
+					'next_cursor'             => $result['next_cursor'],
+					'next_page'               => $page + 1,
+					'errors'                  => array_slice( $result['errors'], 0, 5 ),
+					'total_created'           => $progress['total_created'],
+					'total_updated'           => $progress['total_updated'],
+					'total_skipped_no_email'  => $progress['total_skipped_no_email'],
+					'total_skipped_duplicate' => $progress['total_skipped_duplicate'],
+					'total_failed'            => $progress['total_failed'],
+					'total_contacts'         => $progress['total_contacts'] ?? 0,
+					'total_processed'        => $grand_total,
+					'pages_complete'         => $progress['pages'],
+					'last_import'            => ! $result['has_more'] ? current_time( 'mysql' ) : null,
+					'message'                => sprintf(
+						/* translators: 1: processed count, 2: total contacts */
+						__( '%1$d of %2$d contacts processed…', 'ghl-crm-integration' ),
+						$grand_total,
+						$progress['total_contacts'] ?? 0
+					),
+				]
+			);
+
+		} catch ( \Exception $e ) {
+			wp_send_json_error(
+				[
+					'message' => $e->getMessage(),
+				],
+				500
+			);
+		}
 	}
 }

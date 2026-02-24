@@ -269,7 +269,7 @@ class Client implements ClientInterface {
 									$user_ids = $wpdb->get_col(
 										$wpdb->prepare(
 											"SELECT user_id FROM {$wpdb->usermeta} 
-											WHERE (meta_key = %s OR meta_key = '_ghl_contact_id') 
+											WHERE meta_key = %s 
 											AND meta_value = %s",
 											$location_meta_key,
 											$old_contact_id
@@ -342,7 +342,7 @@ class Client implements ClientInterface {
 											$user_ids = $wpdb->get_col(
 												$wpdb->prepare(
 													"SELECT user_id FROM {$wpdb->usermeta} 
-													WHERE (meta_key = %s OR meta_key = '_ghl_contact_id') 
+													WHERE meta_key = %s 
 													AND meta_value = %s",
 													$location_meta_key,
 													$old_contact_id

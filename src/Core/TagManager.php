@@ -85,19 +85,12 @@ class TagManager {
 	 * @return string|null Contact ID or null if not found
 	 */
 	public function get_user_contact_id( int $user_id, ?string $location_id = null ): ?string {
-		$meta_key = $this->get_user_contact_id_meta_key( $location_id );
+		$meta_key   = $this->get_user_contact_id_meta_key( $location_id );
 		$contact_id = get_user_meta( $user_id, $meta_key, true );
 
-		if ( ! $contact_id ) {
-			$legacy_contact_id = get_user_meta( $user_id, self::LEGACY_CONTACT_META_KEY, true );
-
-			if ( $legacy_contact_id ) {
-				$contact_id = $legacy_contact_id;
-
-				// Keep scoped meta synchronized when legacy key is the only available value.
-				update_user_meta( $user_id, $meta_key, $legacy_contact_id );
-			}
-		}
+		// No legacy fallback — each location stores its own contact ID.
+		// The un-scoped '_ghl_contact_id' key is ignored to prevent
+		// cross-location contamination.
 
 		return $contact_id ? (string) $contact_id : null;
 	}
@@ -113,7 +106,10 @@ class TagManager {
 	public function store_user_contact_id( int $user_id, string $contact_id, ?string $location_id = null ): void {
 		$meta_key = $this->get_user_contact_id_meta_key( $location_id );
 		update_user_meta( $user_id, $meta_key, $contact_id );
-		update_user_meta( $user_id, self::LEGACY_CONTACT_META_KEY, $contact_id );
+
+		// Only write the legacy key when no other location-scoped key exists yet
+		// (first-time migration path).  Otherwise, leaving the legacy key stale
+		// is intentional — it must not overwrite with a different location's ID.
 	}
 
 	/**

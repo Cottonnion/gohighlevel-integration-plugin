@@ -21,7 +21,7 @@ class Database {
 	 *
 	 * @var string
 	 */
-	private const DB_VERSION = '1.10.0';
+	private const DB_VERSION = '1.11.0';
 
 	/**
 	 * Singleton instance
@@ -258,6 +258,22 @@ class Database {
 			$this->remove_enhanced_logging_columns();
 		}
 
+		// Add location_id column to family relationships table for version 1.11.0
+		if ( version_compare( $from_version, '1.11.0', '<' ) ) {
+			$family_table = $wpdb->prefix . 'ghl_family_relationships';
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Schema migration.
+			$columns = $wpdb->get_results( "SHOW COLUMNS FROM {$family_table}" );
+			if ( ! empty( $columns ) ) {
+				$column_names = wp_list_pluck( $columns, 'Field' );
+				if ( ! in_array( 'location_id', $column_names, true ) ) {
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Adding column during migration.
+					$wpdb->query( "ALTER TABLE {$family_table} ADD COLUMN location_id varchar(100) DEFAULT NULL AFTER status" );
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Adding index during migration.
+					$wpdb->query( "ALTER TABLE {$family_table} ADD KEY location_id (location_id)" );
+				}
+			}
+		}
+
 		// Create/update tables with new schema
 		$this->create_tables();
 	}
@@ -439,6 +455,7 @@ class Database {
 			child_user_id bigint(20) unsigned NOT NULL,
 			family_group_id char(36) NOT NULL DEFAULT '',
 			status enum('active','inactive','pending') NOT NULL DEFAULT 'active',
+			location_id varchar(100) DEFAULT NULL,
 			created_at datetime NOT NULL,
 			updated_at datetime DEFAULT NULL,
 			site_id bigint(20) unsigned NOT NULL DEFAULT 1,
@@ -448,7 +465,8 @@ class Database {
 			KEY family_group (family_group_id, site_id),
 			KEY status (status),
 			KEY site_id (site_id),
-			KEY updated_at (updated_at)
+			KEY updated_at (updated_at),
+			KEY location_id (location_id)
 		) {$charset_collate};";
 
 		$sql_reporting_events = "CREATE TABLE {$reporting_events_table} (
