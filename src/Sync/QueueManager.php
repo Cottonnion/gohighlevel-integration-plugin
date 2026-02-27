@@ -36,6 +36,11 @@ class QueueManager {
 	private const BATCH_SIZE = 50;
 
 	/**
+	 * Queue processing interval in seconds
+	 */
+	private const PROCESSING_INTERVAL = 10;
+
+	/**
 	 * Singleton instance
 	 *
 	 * @var self|null
@@ -122,7 +127,7 @@ class QueueManager {
 			$next_scheduled = as_next_scheduled_action( 'ghl_crm_process_queue' );
 
 			if ( false === $next_scheduled ) {
-				as_schedule_recurring_action( time(), 10, 'ghl_crm_process_queue', [], 'ghl-crm' );
+				as_schedule_recurring_action( time(), self::PROCESSING_INTERVAL, 'ghl_crm_process_queue', [], 'ghl-crm' );
 			}
 		} else {
 			// Fallback to WP-Cron if Action Scheduler not available
