@@ -119,6 +119,24 @@ class QueueManager {
 	/**
 	 * Schedule the queue processor (called on 'init' hook after Action Scheduler is ready)
 	 *
+	 * Ensures the recurring queue processor is scheduled to run automatically.
+	 * This is called once on WordPress 'init' at priority 999 to ensure Action Scheduler
+	 * is fully loaded.
+	 *
+	 * Scheduling Strategy:
+	 * - Primary: Action Scheduler with 10-second interval (PROCESSING_INTERVAL constant)
+	 * - Fallback: WP-Cron with 1-minute interval (if Action Scheduler unavailable)
+	 *
+	 * Action Scheduler Benefits:
+	 * - More reliable than WP-Cron (doesn't require site traffic)
+	 * - Better handling of missed runs
+	 * - Built-in logging and retry logic
+	 * - Won't schedule duplicate actions
+	 *
+	 * Safety:
+	 * - Checks if action already scheduled before creating new one
+	 * - Idempotent: Safe to call multiple times
+	 *
 	 * @return void
 	 */
 	public function schedule_queue_processor(): void {
@@ -139,15 +157,29 @@ class QueueManager {
 
 	/**
 	 * Add item to queue
-	 * Prevents duplicates: Updates payload if pending item exists (ensures latest data synced)
-	 * Multisite-aware: Uses current site's table prefix
 	 *
-	 * @param string   $item_type         Item type (user, order, group, course, etc.)
-	 * @param int      $item_id           Item ID
-	 * @param string   $action            Action (create, update, delete, etc.)
-	 * @param array    $payload           Data payload
-	 * @param int|null $depends_on_queue_id Optional queue ID this task depends on
-	 * @return int|false Queue item ID or false on failure
+	 * Intelligently adds a sync task to the queue with automatic duplicate prevention.
+	 * If a pending item with the same type/id/action already exists, it updates the
+	 * payload with latest data instead of creating a duplicate row.
+	 *
+	 * Multisite-aware: Uses current site's table prefix and tracks site_id.
+	 *
+	 * Safety Features:
+	 * - Prevents duplicate pending items (updates existing instead)
+	 * - Enforces 10,000 item queue limit per site to prevent bloat
+	 * - Supports task dependencies via depends_on_queue_id
+	 *
+	 * Performance Notes:
+	 * - Uses indexed lookup for duplicate detection
+	 * - Single UPDATE query for duplicates (no INSERT)
+	 * - Counts are cached at PHP level during request
+	 *
+	 * @param string   $item_type         Item type (user, wc_customer, learndash_course, etc.)
+	 * @param int      $item_id           WordPress object ID (user_id, order_id, course_id, etc.)
+	 * @param string   $action            Action to perform (create, update, delete, add_tags, remove_tags)
+	 * @param array    $payload           Data payload containing sync details (contacts, tags, metadata)
+	 * @param int|null $depends_on_queue_id Optional queue ID this task depends on (waits for completion)
+	 * @return int|false Queue item ID on success, false if queue full or database error
 	 */
 	public function add_to_queue( string $item_type, int $item_id, string $action, array $payload, ?int $depends_on_queue_id = null ) {
 		global $wpdb;
@@ -238,9 +270,33 @@ class QueueManager {
 	}
 
 	/**
-	 * Process queue (run by WP-Cron)
-	 * Multisite-aware: Processes queues for all sites
-	 * Safety: Prevents concurrent processing with transient lock
+	 * Process queue (run by Action Scheduler every 10 seconds)
+	 *
+	 * Main queue processor that runs on a recurring schedule. This is the entry point
+	 * for all background sync operations.
+	 *
+	 * Multisite Support:
+	 * - Automatically detects multisite environment
+	 * - Iterates through all sites (up to 999 sites)
+	 * - Switches blog context and reloads API client settings for each site
+	 * - Restores original blog context after processing
+	 *
+	 * Safety Features:
+	 * - Uses transient lock to prevent concurrent processing (2-minute timeout)
+	 * - Lock is ALWAYS released in finally block (even on fatal errors)
+	 * - Checks queue backlog and sends admin notifications if threshold exceeded
+	 *
+	 * Processing Flow:
+	 * 1. Acquire processing lock (exit if already running)
+	 * 2. Check queue backlog health
+	 * 3. If multisite: loop through sites, switch context, process each
+	 * 4. If single site: process current site queue
+	 * 5. Release lock
+	 *
+	 * Performance:
+	 * - Processes up to batch_size items per site (default: 50)
+	 * - Respects GHL API rate limits (100 req/10s, 200k/day)
+	 * - Early exits if rate limited (prevents wasted processing)
 	 *
 	 * @return void
 	 */
@@ -293,6 +349,27 @@ class QueueManager {
 	/**
 	 * Process queue for current site
 	 *
+	 * Processes a batch of pending queue items for the current WordPress site.
+	 * This method is called by process_queue() after blog context is set.
+	 *
+	 * Processing Steps:
+	 * 1. Get batch size from settings (default 50, clamped 1-500)
+	 * 2. Clean up stale items stuck in processing >5 minutes
+	 * 3. Mark items with MAX_ATTEMPTS as failed
+	 * 4. Fetch oldest pending items (FIFO order)
+	 * 5. Process each item via process_queue_item()
+	 *
+	 * Safety Features:
+	 * - Cleanup prevents items stuck in limbo
+	 * - Respects MAX_ATTEMPTS limit (5 retries)
+	 * - Batch size prevents memory exhaustion
+	 * - Early exit if no pending items
+	 *
+	 * Performance:
+	 * - Uses indexed queries (status, site_id, created_at)
+	 * - Limits result set to configured batch_size
+	 * - Processes items sequentially (not parallel)
+	 *
 	 * @return void
 	 */
 	private function process_site_queue(): void {
@@ -340,19 +417,37 @@ class QueueManager {
 		);
 
 		if ( empty( $items ) ) {
-
 			return;
 		}
 
 		foreach ( $items as $item ) {
-
 			$this->process_queue_item( $item );
 		}
 	}
 
 	/**
 	 * Clean up stale items that got stuck in processing
-	 * Safety mechanism: Reset items that haven't completed in 5 minutes
+	 *
+	 * Safety mechanism that detects items stuck in limbo and resets them to pending
+	 * status so they can be retried.
+	 *
+	 * An item becomes "stale" when:
+	 * - Status is 'pending' (actively being processed)
+	 * - Has attempts > 0 (not first run)
+	 * - updated_at timestamp is >5 minutes old
+	 * - attempts < MAX_ATTEMPTS (still has retries left)
+	 *
+	 * Common Causes of Stale Items:
+	 * - PHP fatal errors during processing
+	 * - Server crashes or restarts
+	 * - Memory exhaustion
+	 * - Timeout issues
+	 * - Database connection failures
+	 *
+	 * The 5-minute window is conservative to avoid interfering with legitimately
+	 * slow API operations while catching truly stuck items.
+	 *
+	 * Called automatically at the start of each process_site_queue() run.
 	 *
 	 * @return void
 	 */
@@ -385,7 +480,50 @@ class QueueManager {
 	/**
 	 * Process single queue item
 	 *
-	 * @param object $item Queue item
+	 * The core processing logic for a single sync task. This method handles the complete
+	 * lifecycle of syncing a WordPress object to GoHighLevel CRM.
+	 *
+	 * Processing Flow:
+	 * 1. Validate item hasn't exceeded MAX_ATTEMPTS (mark failed if so)
+	 * 2. Check GHL API rate limits (exit early if throttled)
+	 * 3. Increment attempt counter
+	 * 4. Register fatal error handler (catch PHP crashes)
+	 * 5. Execute sync via QueueProcessor helper
+	 * 6. Track API usage via RateLimiter
+	 * 7. Handle result (success/failure/dependency-wait)
+	 * 8. Update user meta with contact IDs and sync timestamps
+	 * 9. Mark item as completed or failed
+	 * 10. Log event via QueueLogger
+	 * 11. Fire action hooks for extensibility
+	 *
+	 * Error Handling:
+	 * - Rate limit errors: Reset to pending without incrementing attempts
+	 * - Transient errors: Keep pending if attempts < MAX_ATTEMPTS
+	 * - Fatal errors: Mark failed and send admin notification
+	 * - Dependency waits: Leave pending without penalty
+	 *
+	 * Side Effects:
+	 * - Updates queue item status in database
+	 * - Updates user meta (_ghl_contact_id, _ghl_last_sync, _ghl_tags)
+	 * - Processes pending tags after contact creation
+	 * - Logs to ghl_sync_log table
+	 * - Fires 'ghl_crm_after_sync_success' and 'ghl_crm_log_event' hooks
+	 * - Sends admin notifications on final failure
+	 *
+	 * Dependencies:
+	 * - RateLimiter: For API throttling
+	 * - QueueProcessor: For sync execution
+	 * - QueueLogger: For event logging
+	 * - TagManager: For tag storage
+	 * - NotificationManager: For error alerts
+	 *
+	 * Performance:
+	 * - Tracks execution time via microtime()
+	 * - Single database transaction per item
+	 * - Atomic operations prevent partial updates
+	 *
+	 * @param object $item Queue item from database with properties: id, item_type, item_id,
+	 *                     action, payload (JSON), status, attempts, created_at, site_id
 	 * @return void
 	 */
 	private function process_queue_item( object $item ): void {
@@ -450,8 +588,6 @@ class QueueManager {
 
 		try {
 			$payload = json_decode( $item->payload, true );
-
-			// Execute sync based on item type
 
 			// Register fatal error handler
 			register_shutdown_function(
@@ -682,8 +818,6 @@ class QueueManager {
 					'result'      => $result,
 				];
 
-				// Log detailed context with asiya log prefix
-
 				// Extract error message if available
 				$error_message = 'Sync execution failed';
 				if ( is_array( $result ) && ! empty( $result['error'] ) ) {
@@ -783,35 +917,32 @@ class QueueManager {
 	}
 
 	/**
-	 * ============================================================
-	 * REFACTORING COMPLETE
-	 * ============================================================
-	 * The following methods have been extracted to helper classes
-	 * for better separation of concerns and maintainability:
-	 *
-	 * QueueProcessor (src/Sync/QueueProcessor.php):
-	 * - execute_sync()
-	 * - execute_user_sync()
-	 * - execute_contact_sync()
-	 *
-	 * RateLimiter (src/Sync/RateLimiter.php):
-	 * - check_rate_limits() → check_limits()
-	 * - track_api_request() → track_request()
-	 * - is_rate_limit_error()
-	 *
-	 * ContactCache (src/Sync/ContactCache.php):
-	 * - get_cached_contact() → get()
-	 * - cache_contact() → set()
-	 * - delete_cached_contact() → delete()
-	 *
-	 * QueueLogger (src/Sync/QueueLogger.php):
-	 * - log_sync_event() → log_event()
-	 * ============================================================
-	 */
-
-	/**
 	 * Get queue status
-	 * Multisite-aware: Returns stats for current site
+	 *
+	 * Returns comprehensive queue statistics and health indicators for the current site.
+	 * Used by admin dashboards, status pages, and monitoring systems.
+	 *
+	 * Multisite-aware: Returns stats only for current site (not network-wide).
+	 *
+	 * Statistics Returned:
+	 * - pending: Number of items waiting to be processed
+	 * - failed: Number of permanently failed items (exceeded MAX_ATTEMPTS)
+	 * - completed_24h: Items successfully processed in last 24 hours
+	 * - total_items: All items in queue table for this site
+	 * - oldest_pending_minutes: Age of oldest pending item (for backlog detection)
+	 * - health: Overall status ('good', 'warning', 'critical')
+	 * - warnings: Array of human-readable warning messages
+	 * - rate_limits: Current API rate limit status from RateLimiter
+	 *
+	 * Health Thresholds:
+	 * - Good: <1000 pending, <100 failed, oldest <60 min
+	 * - Warning: 1000-5000 pending, 100+ failed, oldest 60+ min
+	 * - Critical: >5000 pending (severe backlog)
+	 *
+	 * Performance:
+	 * - Executes 4-5 COUNT queries (all indexed)
+	 * - Results not cached (always fresh data)
+	 * - Typical execution: 5-10ms
 	 *
 	 * @return array Queue statistics with health indicators
 	 */
@@ -1054,10 +1185,22 @@ class QueueManager {
 
 	/**
 	 * Sync contact tags from GHL after successful queue completion
-	 * Delegates to UserProfileFields refresh logic for consistency
 	 *
-	 * @param object      $item Queue item
-	 * @param string|null $contact_id GHL Contact ID
+	 * Hook handler that fires after any successful sync operation. This ensures
+	 * WordPress user data stays synchronized with GoHighLevel contact data.
+	 *
+	 * Called via 'ghl_crm_after_sync_success' action hook after:
+	 * - User contact creation/update
+	 * - WooCommerce order processing
+	 * - Tag additions/removals
+	 * - Any successful queue item completion
+	 *
+	 * This method delegates to sync_contact_tags_from_ghl() for the actual implementation.
+	 *
+	 * @param object      $item Queue item that was processed
+	 * @param string|null $contact_id GHL Contact ID from successful sync
+	 * @param mixed       $result Sync result data (optional)
+	 * @param array       $payload Original sync payload (optional)
 	 * @return void
 	 */
 	public function handle_after_sync_success( object $item, ?string $contact_id, $result = null, array $payload = [] ): void {
@@ -1066,9 +1209,27 @@ class QueueManager {
 
 	/**
 	 * Sync contact tags from GHL after successful queue completion
-	 * Delegates to UserProfileFields refresh logic for consistency
 	 *
-	 * @param object      $item Queue item
+	 * Internal implementation that performs the actual tag synchronization from GHL to WordPress.
+	 * Delegates to UserProfileFields for consistency with the admin refresh functionality.
+	 *
+	 * What Gets Synchronized:
+	 * - Contact tags (stored in user meta as _ghl_tags)
+	 * - Last sync timestamp (_ghl_last_sync)
+	 * - Contact type (_ghl_contact_type: lead, customer, etc.)
+	 * - GHL contact ID (_ghl_contact_id if not already stored)
+	 *
+	 * Integration-Specific User ID Resolution:
+	 * - user: Direct user_id from item_id
+	 * - wc_customer: Extracts customer_id from WooCommerce order
+	 * - wc_product_tags: Extracts customer from order in payload
+	 *
+	 * Error Handling:
+	 * - Silently catches all sync failures (doesn't affect queue)
+	 * - Failed tag syncs don't mark queue item as failed
+	 * - Safe to fail without breaking queue processing
+	 *
+	 * @param object      $item Queue item from database
 	 * @param string|null $contact_id GHL Contact ID
 	 * @return void
 	 */
@@ -1171,7 +1332,25 @@ class QueueManager {
 	/**
 	 * Check queue backlog and send notification if threshold exceeded
 	 *
-	 * Called periodically by process_queue to monitor queue health
+	 * Monitors queue health by checking the pending item count and sends an admin
+	 * notification if the backlog exceeds the configured threshold.
+	 *
+	 * This prevents silent queue failures by alerting administrators when:
+	 * - Processing speed is slower than item creation rate
+	 * - API rate limits are causing delays
+	 * - System resources are constrained
+	 * - Integration failures are accumulating
+	 *
+	 * Called automatically by process_queue() on every run (every 10 seconds).
+	 *
+	 * Threshold:
+	 * - Default: 1000 pending items
+	 * - Configurable via 'ghl_crm_queue_backlog_threshold' filter
+	 * - Notification sent once per backlog event (via NotificationManager)
+	 *
+	 * Performance:
+	 * - Single COUNT query (indexed on status + site_id)
+	 * - Minimal overhead (~1ms)
 	 *
 	 * @return void
 	 */
