@@ -252,6 +252,7 @@ class QueueManager {
 				'status'     => 'pending',
 				'attempts'   => 0,
 				'created_at' => current_time( 'mysql' ),
+				'updated_at' => current_time( 'mysql' ),
 				'site_id'    => $current_site_id,
 			],
 			[
@@ -261,6 +262,7 @@ class QueueManager {
 				'%s',
 				'%s',
 				'%d',
+				'%s',
 				'%s',
 				'%d',
 			]
@@ -529,10 +531,15 @@ class QueueManager {
 	private function process_queue_item( object $item ): void {
 		global $wpdb;
 
+		// Declare variables at method scope to avoid undefined variable errors in catch blocks
+		$table_name  = $this->get_queue_table_name();
+		$start_time  = microtime( true );
+		$location_id = null;
+		$result      = null;
+		$payload     = json_decode( $item->payload, true );
+
 		// Safety check: If item already has MAX_ATTEMPTS, mark as failed immediately
 		if ( $item->attempts >= self::MAX_ATTEMPTS ) {
-
-			$table_name = $this->get_queue_table_name();
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Marking exhausted job as failed in queue table.
 			$wpdb->update(
 				$table_name,
@@ -549,24 +556,16 @@ class QueueManager {
 		}
 
 		try {
-			$table_name = $this->get_queue_table_name();
-
-			$start_time = microtime( true );
-
 			// Check rate limits before processing (using RateLimiter helper)
-
 			$location_id = $this->get_ghl_location_id();
 			$rate_ok     = $location_id ? $this->rate_limiter->check_limits( $location_id ) : true;
 
 			if ( ! $rate_ok ) {
-
 				return;
 			}
 		} catch ( \Exception $e ) {
-
 			return;
 		} catch ( \Throwable $e ) {
-
 			return;
 		}
 
@@ -587,14 +586,11 @@ class QueueManager {
 		$item->attempts = $item->attempts + 1;
 
 		try {
-			$payload = json_decode( $item->payload, true );
-
 			// Register fatal error handler
 			register_shutdown_function(
 				function () use ( $item ) {
 					$error = error_get_last();
 					if ( $error && in_array( $error['type'], [ E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR ] ) ) {
-
 					}
 				}
 			);
@@ -613,7 +609,7 @@ class QueueManager {
 			$should_skip = false;
 
 			if ( is_array( $result ) && isset( $result['success'] ) ) {
-				$is_success = $result['success'];
+				$is_success  = $result['success'];
 				// Check if this is a dependency wait (don't increment retry counter)
 				$should_skip = ! empty( $result['skip'] );
 			} elseif ( $result ) {
@@ -644,7 +640,7 @@ class QueueManager {
 				// Extract contact ID or opportunity ID from result if available
 				$contact_id    = null;
 				$ghl_object_id = null;
-				
+
 				// Try to get contact_id from result first
 				if ( is_array( $result ) ) {
 					// For contacts
@@ -660,8 +656,7 @@ class QueueManager {
 
 				// If contact_id not in result, try to get it from payload (for add_tags/remove_tags actions)
 				if ( empty( $contact_id ) ) {
-					$payload_data = json_decode( $item->payload, true );
-					$contact_id   = $payload_data['contact_id'] ?? null;
+					$contact_id = $payload['contact_id'] ?? null;
 					if ( ! empty( $contact_id ) ) {
 						$ghl_object_id = $contact_id;
 					}
@@ -676,7 +671,7 @@ class QueueManager {
 					$pending_tags = get_user_meta( (int) $item->item_id, '_ghl_pending_tags', true );
 					if ( is_array( $pending_tags ) && ! empty( $pending_tags ) ) {
 						$normalized_pending = $tag_manager->normalize_tag_input( $pending_tags );
-						$payload_tags      = $tag_manager->prepare_tags_for_payload( $normalized_pending['ids'], $normalized_pending['pairs'] );
+						$payload_tags       = $tag_manager->prepare_tags_for_payload( $normalized_pending['ids'], $normalized_pending['pairs'] );
 
 						if ( ! empty( $payload_tags ) ) {
 							$this->add_to_queue(
@@ -733,13 +728,11 @@ class QueueManager {
 
 					// If tags not in response, use what we sent in the payload
 					if ( null === $tags_to_cache ) {
-						$payload_data = json_decode( $item->payload, true );
-						if ( ! empty( $payload_data['tags'] ) && is_array( $payload_data['tags'] ) ) {
-							$tags_to_cache = $payload_data['tags'];
+						if ( ! empty( $payload['tags'] ) && is_array( $payload['tags'] ) ) {
+							$tags_to_cache = $payload['tags'];
 						}
 					}
 
-					// Update user meta with tags (store as IDs)
 					if ( ! empty( $tags_to_cache ) && is_array( $tags_to_cache ) ) {
 						TagManager::get_instance()->store_user_tags( (int) $item->item_id, $tags_to_cache );
 					}
@@ -749,15 +742,14 @@ class QueueManager {
 				if ( 'wc_customer' === $item->item_type && ! empty( $contact_id ) && class_exists( 'WooCommerce' ) ) {
 					$order = wc_get_order( $item->item_id );
 					if ( $order && $order->get_customer_id() ) {
-						$user_id = $order->get_customer_id();
+						$user_id     = $order->get_customer_id();
 						$tag_manager = TagManager::get_instance();
 						$tag_manager->store_user_contact_id( $user_id, (string) $contact_id );
 						update_user_meta( $user_id, '_ghl_last_sync', time() );
 
 						// Store tags from payload
-						$payload_data = json_decode( $item->payload, true );
-						if ( ! empty( $payload_data['tags'] ) && is_array( $payload_data['tags'] ) ) {
-							$tag_manager->store_user_tags( $user_id, $payload_data['tags'] );
+						if ( ! empty( $payload['tags'] ) && is_array( $payload['tags'] ) ) {
+							$tag_manager->store_user_tags( $user_id, $payload['tags'] );
 						}
 					}
 				}
@@ -785,7 +777,7 @@ class QueueManager {
 					$item->action,
 					'success',
 					$ghl_object_id, // Contact ID for users, Opportunity ID for WooCommerce
-					$payload, // Request data
+					$payload,       // Request data
 					is_array( $result ) ? $result : null, // Response data
 					null,
 					microtime( true ) - $start_time,
@@ -805,7 +797,9 @@ class QueueManager {
 					],
 					'info'
 				);
+
 			} else {
+
 				// Build detailed error context for logging
 				$error_context = [
 					'queue_id'    => $item->id,
@@ -830,11 +824,12 @@ class QueueManager {
 
 				throw new \Exception( $error_message );
 			}
+
 		} catch ( \Exception $e ) {
+
 			// Check if it's a rate limit error (using RateLimiter helper)
 			if ( $this->rate_limiter->is_rate_limit_error( $e ) ) {
 				// Don't increment attempts for rate limit errors
-				// Reset attempt counter so it will retry
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Resetting queue item to pending after rate limit to ensure retry.
 				$wpdb->update(
 					$table_name,
@@ -871,7 +866,7 @@ class QueueManager {
 			if ( 'failed' === $status ) {
 				$notification_manager = \GHL_CRM\Core\NotificationManager::get_instance();
 				$sync_type_label      = $this->get_friendly_sync_type_label( $item->item_type, $item->action );
-				
+
 				$notification_manager->send_sync_error(
 					$sync_type_label,
 					$e->getMessage(),
@@ -915,7 +910,6 @@ class QueueManager {
 			);
 		}
 	}
-
 	/**
 	 * Get queue status
 	 *
@@ -1195,6 +1189,10 @@ class QueueManager {
 	 * - Tag additions/removals
 	 * - Any successful queue item completion
 	 *
+	 * Only syncs tags back for specific actions to avoid unnecessary API calls:
+	 * - add_tags, remove_tags (tag operations where drift may occur)
+	 * - update (updates where GHL may modify tags)
+	 *
 	 * This method delegates to sync_contact_tags_from_ghl() for the actual implementation.
 	 *
 	 * @param object      $item Queue item that was processed
@@ -1204,7 +1202,11 @@ class QueueManager {
 	 * @return void
 	 */
 	public function handle_after_sync_success( object $item, ?string $contact_id, $result = null, array $payload = [] ): void {
-		$this->sync_contact_tags_from_ghl( $item, $contact_id );
+		// Only sync tags back for specific actions to reduce API calls
+		$sync_actions = [ 'add_tags', 'remove_tags', 'update' ];
+		if ( in_array( $item->action, $sync_actions, true ) ) {
+			$this->sync_contact_tags_from_ghl( $item, $contact_id );
+		}
 	}
 
 	/**
@@ -1360,9 +1362,12 @@ class QueueManager {
 		// Threshold for backlog warning (configurable via filter)
 		$threshold = apply_filters( 'ghl_crm_queue_backlog_threshold', 1000 );
 
-		if ( $pending_count > $threshold ) {
+		// Add cooldown to prevent notification spam (once per hour)
+		if ( $pending_count > $threshold && ! get_transient( 'ghl_crm_backlog_notified' ) ) {
 			$notification_manager = \GHL_CRM\Core\NotificationManager::get_instance();
 			$notification_manager->send_queue_backlog( $pending_count );
+			// Set cooldown to prevent spam (1 hour)
+			set_transient( 'ghl_crm_backlog_notified', true, HOUR_IN_SECONDS );
 		}
 	}
 }
