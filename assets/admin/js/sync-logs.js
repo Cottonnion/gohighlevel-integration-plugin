@@ -4,7 +4,7 @@
  * @package GHL_CRM_Integration
  */
 
-(function($) {
+(function ($) {
     'use strict';
 
     const SyncLogsPage = {
@@ -16,7 +16,7 @@
         /**
          * Initialize
          */
-        init: function(params = {}) {
+        init: function (params = {}) {
             this.currentParams = params || {};
             this.cacheElements();
             this.bindEvents();
@@ -26,11 +26,11 @@
         /**
          * Cache frequently accessed DOM elements
          */
-        cacheElements: function() {
+        cacheElements: function () {
             this.modal = $('#ghl-details-modal');
             this.closeBtn = $('#ghl-close-modal');
             this.content = $('#ghl-details-content');
-            
+
             /**
              * Allow PRO plugin to cache additional elements
              */
@@ -42,19 +42,19 @@
         /**
          * Bind events
          */
-        bindEvents: function() {
+        bindEvents: function () {
             const self = this;
 
             // View details button - works for both free and PRO
             $(document)
                 .off('click.ghlSyncLogs', '.ghl-view-details')
-                .on('click.ghlSyncLogs', '.ghl-view-details', function(e) {
+                .on('click.ghlSyncLogs', '.ghl-view-details', function (e) {
                     e.preventDefault();
                     const details = $(this).attr('data-details');
                     const isPreviewMode = $(this).hasClass('ghl-preview-mode');
                     self.showDetailsModal(details, isPreviewMode);
                 });
-            
+
             /**
              * Allow PRO plugin to bind additional events
              */
@@ -64,14 +64,14 @@
 
             // Close modal button
             if (this.closeBtn && this.closeBtn.length) {
-                this.closeBtn.off('click.ghlSyncLogs').on('click.ghlSyncLogs', function() {
+                this.closeBtn.off('click.ghlSyncLogs').on('click.ghlSyncLogs', function () {
                     self.hideModal();
                 });
             }
 
             // Click outside to close
             if (this.modal && this.modal.length) {
-                this.modal.off('click.ghlSyncLogs').on('click.ghlSyncLogs', function(e) {
+                this.modal.off('click.ghlSyncLogs').on('click.ghlSyncLogs', function (e) {
                     if (e.target === self.modal[0]) {
                         self.hideModal();
                     }
@@ -81,26 +81,26 @@
             // ESC key to close
             $(document)
                 .off('keydown.ghlSyncLogs')
-                .on('keydown.ghlSyncLogs', function(e) {
+                .on('keydown.ghlSyncLogs', function (e) {
                     if (e.key === 'Escape' && self.modal && self.modal.is(':visible')) {
                         self.hideModal();
                     }
                 });
 
             // Delete logs button
-            $('#ghl-delete-logs').off('click.ghlSyncLogs').on('click.ghlSyncLogs', function(e) {
+            $('#ghl-delete-logs').off('click.ghlSyncLogs').on('click.ghlSyncLogs', function (e) {
                 e.preventDefault();
                 self.deleteLogs();
             });
 
             // Clear logs button (different from delete, clears all)
-            $('#ghl-clear-all-logs').off('click.ghlSyncLogs').on('click.ghlSyncLogs', function(e) {
+            $('#ghl-clear-all-logs').off('click.ghlSyncLogs').on('click.ghlSyncLogs', function (e) {
                 e.preventDefault();
                 self.clearAllLogs();
             });
 
             // Process queue button
-            $('#ghl-process-queue').off('click.ghlSyncLogs').on('click.ghlSyncLogs', function(e) {
+            $('#ghl-process-queue').off('click.ghlSyncLogs').on('click.ghlSyncLogs', function (e) {
                 e.preventDefault();
                 self.processQueue();
             });
@@ -108,21 +108,21 @@
             // Pagination
             $(document)
                 .off('click.ghlSyncLogs', '.ghl-pagination-link')
-                .on('click.ghlSyncLogs', '.ghl-pagination-link', function(e) {
+                .on('click.ghlSyncLogs', '.ghl-pagination-link', function (e) {
                     e.preventDefault();
                     const page = $(this).data('page');
                     self.loadPage(page);
                 });
 
             // Filter by status
-            $('#ghl-filter-status').off('change.ghlSyncLogs').on('change.ghlSyncLogs', function() {
+            $('#ghl-filter-status').off('change.ghlSyncLogs').on('change.ghlSyncLogs', function () {
                 self.loadPage(1);
             });
 
             // Per-page selector - save to user meta and reload
-            $('#ghl-per-page').off('change.ghlPerPage').on('change.ghlPerPage', function() {
+            $('#ghl-per-page').off('change.ghlPerPage').on('change.ghlPerPage', function () {
                 const perPage = $(this).val();
-                
+
                 // Save to user meta via AJAX
                 $.ajax({
                     url: ajaxurl,
@@ -132,7 +132,7 @@
                         per_page: perPage,
                         nonce: ghl_crm_sync_logs_js_data.nonce
                     },
-                    success: function() {
+                    success: function () {
                         // Reload page to apply new per-page setting
                         window.location.reload();
                     }
@@ -140,9 +140,9 @@
             });
 
             // Search/filter
-            $('#ghl-search-logs').off('keyup.ghlSyncLogs').on('keyup.ghlSyncLogs', function() {
+            $('#ghl-search-logs').off('keyup.ghlSyncLogs').on('keyup.ghlSyncLogs', function () {
                 clearTimeout(self.searchTimeout);
-                self.searchTimeout = setTimeout(function() {
+                self.searchTimeout = setTimeout(function () {
                     self.loadPage(1);
                 }, 500);
             });
@@ -151,7 +151,7 @@
         /**
          * Apply hash/route parameters to the current view
          */
-        applyRouteParams: function() {
+        applyRouteParams: function () {
             const params = this.currentParams || {};
             let statusParam = params.status || params.filter;
 
@@ -185,7 +185,7 @@
         /**
          * Extract status parameter from window hash (fallback for non-SPA loads)
          */
-        extractStatusFromHash: function() {
+        extractStatusFromHash: function () {
             if (!window.location || !window.location.hash) {
                 return '';
             }
@@ -232,7 +232,7 @@
          * @param {string} details - JSON string with log details
          * @param {boolean} isPreviewMode - Whether this is free version preview
          */
-        showDetailsModal: function(details, isPreviewMode = false) {
+        showDetailsModal: function (details, isPreviewMode = false) {
             // Allow PRO plugin to override this method when active
             if (typeof window.ghlCrmSyncLogsPro !== 'undefined' && !isPreviewMode) {
                 // Ensure any blur class is removed when PRO handles display
@@ -265,7 +265,7 @@
         /**
          * Hide modal (free and PRO)
          */
-        hideModal: function() {
+        hideModal: function () {
             if (this.modal && this.modal.length) {
                 this.modal.fadeOut(200);
             }
@@ -276,18 +276,18 @@
          * @param {string} text - Original text
          * @returns {string} - Blurred text
          */
-        blurText: function(text) {
+        blurText: function (text) {
             // Replace characters with similar looking blurred characters
-            return text.replace(/[a-zA-Z0-9]/g, function(char) {
+            return text.replace(/[a-zA-Z0-9]/g, function (char) {
                 const blurChars = ['█', '▓', '▒', '░'];
                 return blurChars[Math.floor(Math.random() * blurChars.length)];
             });
         },
-        
+
         /**
          * Show PRO upgrade notice for detailed view
          */
-        showProUpgradeNotice: function() {
+        showProUpgradeNotice: function () {
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
                     title: '🔒 PRO Feature',
@@ -309,7 +309,7 @@
         /**
          * Delete old logs
          */
-        deleteLogs: function() {
+        deleteLogs: function () {
             Swal.fire({
                 title: 'Delete Old Logs?',
                 text: 'This will delete logs older than 30 days. This cannot be undone.',
@@ -335,7 +335,7 @@
                         action: 'ghl_delete_old_logs',
                         nonce: ghl_crm_sync_logs_js_data.nonce
                     },
-                    success: function(response) {
+                    success: function (response) {
                         if (response.success) {
                             Swal.fire({
                                 title: 'Success!',
@@ -352,14 +352,14 @@
                             });
                         }
                     },
-                    error: function() {
+                    error: function () {
                         Swal.fire({
                             title: 'Error!',
                             text: 'Failed to delete logs',
                             icon: 'error'
                         });
                     },
-                    complete: function() {
+                    complete: function () {
                         button.prop('disabled', false).find('.ghl-button-text').text(originalText);
                     }
                 });
@@ -369,7 +369,7 @@
         /**
          * Clear all logs
          */
-        clearAllLogs: function() {
+        clearAllLogs: function () {
             Swal.fire({
                 title: '⚠️ WARNING!',
                 text: 'This will DELETE ALL sync logs permanently. This cannot be undone. Are you absolutely sure?',
@@ -395,7 +395,7 @@
                         action: 'ghl_clear_all_logs',
                         nonce: ghl_crm_sync_logs_js_data.nonce
                     },
-                    success: function(response) {
+                    success: function (response) {
                         if (response.success) {
                             Swal.fire({
                                 title: 'Success!',
@@ -412,14 +412,14 @@
                             });
                         }
                     },
-                    error: function() {
+                    error: function () {
                         Swal.fire({
                             title: 'Error!',
                             text: 'Failed to clear logs',
                             icon: 'error'
                         });
                     },
-                    complete: function() {
+                    complete: function () {
                         button.prop('disabled', false).find('.ghl-button-text').text(originalText);
                     }
                 });
@@ -429,7 +429,7 @@
         /**
          * Process queue manually
          */
-        processQueue: function() {
+        processQueue: function () {
             const button = $('#ghl-process-queue');
             const originalText = button.find('.ghl-button-text').text();
             button.prop('disabled', true).find('.ghl-button-text').text('Processing...');
@@ -441,7 +441,7 @@
                     action: 'ghl_crm_manual_queue_trigger',
                     nonce: ghl_crm_sync_logs_js_data.nonce
                 },
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         Swal.fire({
                             title: 'Success!',
@@ -458,14 +458,14 @@
                         });
                     }
                 },
-                error: function() {
+                error: function () {
                     Swal.fire({
                         title: 'Error!',
                         text: 'Failed to process queue',
                         icon: 'error'
                     });
                 },
-                complete: function() {
+                complete: function () {
                     button.prop('disabled', false).find('.ghl-button-text').text(originalText);
                 }
             });
@@ -474,7 +474,7 @@
         /**
          * Load page via AJAX
          */
-        loadPage: function(page) {
+        loadPage: function (page) {
             const status = $('#ghl-filter-status').val();
             const search = $('#ghl-search-logs').val();
 
@@ -488,10 +488,10 @@
                     status: status,
                     search: search
                 },
-                beforeSend: function() {
+                beforeSend: function () {
                     $('#ghl-logs-table-container').css('opacity', '0.5');
                 },
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         $('#ghl-logs-table-container').html(response.data.html);
                     } else {
@@ -502,14 +502,14 @@
                         });
                     }
                 },
-                error: function() {
+                error: function () {
                     Swal.fire({
                         title: 'Error!',
                         text: 'Failed to load logs',
                         icon: 'error'
                     });
                 },
-                complete: function() {
+                complete: function () {
                     $('#ghl-logs-table-container').css('opacity', '1');
                 }
             });
@@ -517,7 +517,7 @@
     };
 
     // Initialize on document ready
-    $(document).ready(function() {
+    $(document).ready(function () {
         SyncLogsPage.init();
     });
 
