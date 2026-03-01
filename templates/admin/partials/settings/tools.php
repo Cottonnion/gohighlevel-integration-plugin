@@ -173,14 +173,33 @@ $settings = $settings_manager->get_settings_array();
 							</div>
 						</td>
 					</tr>
-				</tbody>
-			</table>
-		</div>
-	</div>
-	
-	<!-- System Diagnostics Section -->
-	<div class="ghl-settings-section ghl-settings-card" style="margin-top: 20px;">
-		<div class="ghl-settings-header">
+
+					<tr>
+						<th scope="row">
+							<label><?php esc_html_e( 'Import from GHL', 'ghl-crm-integration' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Fetches all contacts from your GoHighLevel location and creates WordPress users for each one with a valid email. Already-synced contacts are automatically skipped.', 'ghl-crm-integration' ); ?>">?</span>
+							</label>
+						</th>
+						<td>
+							<button type="button" class="ghl-button ghl-button-primary" id="bulk-import-ghl-btn">
+								<span class="dashicons dashicons-download"></span>
+								<?php esc_html_e( 'Import Contacts from GHL', 'ghl-crm-integration' ); ?>
+							</button>
+							<p class="description">
+								<?php esc_html_e( 'Fetch all contacts from GoHighLevel and create WordPress users. Contacts without email and already-synced users are skipped.', 'ghl-crm-integration' ); ?>
+								<br>
+								<span style="color: #dba617;">
+									<?php esc_html_e( 'Note: Uses the deprecated GET /contacts/ endpoint (v2). Will be updated when GHL provides a replacement.', 'ghl-crm-integration' ); ?>
+								</span>
+							</p>
+							<div id="bulk-import-progress" style="display: none; margin-top: 15px;">
+								<div class="ghl-progress-bar-container">
+									<div class="ghl-progress-bar" id="bulk-import-progress-bar"></div>
+								</div>
+								<p class="ghl-progress-text" id="bulk-import-progress-text"></p>
+							</div>
+						</td>
+					</tr>
 			<h2>
 				<span class="dashicons dashicons-admin-tools"></span>
 				<?php esc_html_e( 'System Diagnostics', 'ghl-crm-integration' ); ?>

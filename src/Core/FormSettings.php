@@ -99,9 +99,9 @@ class FormSettings {
 
 		// FREE plugin defaults (Pro plugin can extend via filter if needed)
 		$defaults = [
-			'autofill_enabled'  => true,       // Auto-fill enabled by default
-			'logged_only'       => false,      // Show to everyone by default
-			'submission_limit'  => 'unlimited', // Unlimited submissions by default
+			'autofill_enabled' => true,       // Auto-fill enabled by default
+			'logged_only'      => false,      // Show to everyone by default
+			'submission_limit' => 'unlimited', // Unlimited submissions by default
 		];
 
 		if ( isset( $all_settings[ $form_id ] ) && is_array( $all_settings[ $form_id ] ) ) {

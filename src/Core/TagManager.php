@@ -80,7 +80,7 @@ class TagManager {
 	/**
 	 * Get user's contact ID for current location
 	 *
-	 * @param int $user_id User ID
+	 * @param int         $user_id User ID
 	 * @param string|null $location_id Optional location ID, uses current if not provided
 	 * @return string|null Contact ID or null if not found
 	 */
@@ -98,8 +98,8 @@ class TagManager {
 	/**
 	 * Store user's contact ID for current location
 	 *
-	 * @param int $user_id User ID
-	 * @param string $contact_id Contact ID
+	 * @param int         $user_id User ID
+	 * @param string      $contact_id Contact ID
 	 * @param string|null $location_id Optional location ID, uses current if not provided
 	 * @return void
 	 */
@@ -115,7 +115,7 @@ class TagManager {
 	/**
 	 * Delete user's contact ID for current location
 	 *
-	 * @param int $user_id User ID
+	 * @param int         $user_id User ID
 	 * @param string|null $location_id Optional location ID, uses current if not provided
 	 * @return void
 	 */
@@ -264,7 +264,7 @@ class TagManager {
 	 */
 	public function get_user_tag_ids( int $user_id, ?string $location_id = null ): array {
 		$meta_key = $this->get_user_tags_meta_key( $location_id );
-		$stored = get_user_meta( $user_id, $meta_key, true );
+		$stored   = get_user_meta( $user_id, $meta_key, true );
 
 		if ( ! is_array( $stored ) ) {
 			$stored = [];
@@ -284,7 +284,7 @@ class TagManager {
 	 * Convenience wrapper to persist tag IDs for a user.
 	 */
 	public function store_user_tags( int $user_id, array $tags, ?string $location_id = null ): array {
-		$meta_key = $this->get_user_tags_meta_key( $location_id );
+		$meta_key   = $this->get_user_tags_meta_key( $location_id );
 		$normalized = $this->normalize_tag_input( $tags );
 		$ids        = $normalized['ids'];
 

@@ -698,7 +698,7 @@ class AjaxHandler {
 				} elseif ( is_string( $tags ) ) {
 					$sanitized = array_map( 'trim', explode( ',', sanitize_text_field( $tags ) ) );
 				}
-				$register_key = $location_id ? 'user_register_tags_' . $location_id : 'user_register_tags';
+				$register_key                      = $location_id ? 'user_register_tags_' . $location_id : 'user_register_tags';
 				$current_settings[ $register_key ] = $sanitized;
 			}
 
@@ -745,16 +745,16 @@ class AjaxHandler {
 					$role_key    = $location_id ? 'role_tags_' . $location_id : 'role_tags';
 
 					// If enabling role tags and none exist for this location, initialize with empty array
-					if ( (bool) $wizard_settings['enable_role_tags'] ) {
-						if ( empty( $current_settings[ $role_key ] ) || ! is_array( $current_settings[ $role_key ] ) ) {
-							$current_settings[ $role_key ] = [];
-						}
-					}
+			if ( (bool) $wizard_settings['enable_role_tags'] ) {
+				if ( empty( $current_settings[ $role_key ] ) || ! is_array( $current_settings[ $role_key ] ) ) {
+					$current_settings[ $role_key ] = [];
+				}
+			}
 
 					// When a location is present, drop legacy key to avoid duplicates
-					if ( ! empty( $location_id ) ) {
-						unset( $current_settings['role_tags'] );
-					}
+			if ( ! empty( $location_id ) ) {
+				unset( $current_settings['role_tags'] );
+			}
 
 					// Note: We don't disable role_tags here as user may want to keep their configuration
 		} catch ( \Exception $e ) {
@@ -965,7 +965,7 @@ class AjaxHandler {
 			$query  = ! empty( $query ) ? $query : null;
 
 			// Calculate running total from previous pages
-			$progress = \GHL_CRM\Sync\BulkImportSync::get_progress();
+			$progress        = \GHL_CRM\Sync\BulkImportSync::get_progress();
 			$total_processed = 0;
 			if ( false !== $progress && $page > 1 ) {
 				$total_processed = ( $progress['total_created'] ?? 0 )
@@ -987,15 +987,15 @@ class AjaxHandler {
 			// Accumulate totals via transient
 			if ( false === $progress || 1 === $page ) {
 				$progress = [
-					'total_created'          => 0,
-					'total_updated'          => 0,
-					'total_skipped_no_email' => 0,
+					'total_created'           => 0,
+					'total_updated'           => 0,
+					'total_skipped_no_email'  => 0,
 					'total_skipped_duplicate' => 0,
-					'total_failed'           => 0,
-					'total_contacts'         => $result['total_contacts'],
-					'processed_ids'          => [],
-					'pages'                  => 0,
-					'started_at'             => current_time( 'mysql' ),
+					'total_failed'            => 0,
+					'total_contacts'          => $result['total_contacts'],
+					'processed_ids'           => [],
+					'pages'                   => 0,
+					'started_at'              => current_time( 'mysql' ),
 				];
 			}
 
@@ -1046,11 +1046,11 @@ class AjaxHandler {
 					'total_skipped_no_email'  => $progress['total_skipped_no_email'],
 					'total_skipped_duplicate' => $progress['total_skipped_duplicate'],
 					'total_failed'            => $progress['total_failed'],
-					'total_contacts'         => $progress['total_contacts'] ?? 0,
-					'total_processed'        => $grand_total,
-					'pages_complete'         => $progress['pages'],
-					'last_import'            => ! $result['has_more'] ? current_time( 'mysql' ) : null,
-					'message'                => sprintf(
+					'total_contacts'          => $progress['total_contacts'] ?? 0,
+					'total_processed'         => $grand_total,
+					'pages_complete'          => $progress['pages'],
+					'last_import'             => ! $result['has_more'] ? current_time( 'mysql' ) : null,
+					'message'                 => sprintf(
 						/* translators: 1: processed count, 2: total contacts */
 						__( '%1$d of %2$d contacts processed…', 'ghl-crm-integration' ),
 						$grand_total,

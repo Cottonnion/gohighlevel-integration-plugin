@@ -56,7 +56,7 @@ class SyncStats {
 		$stats     = $this->get_site_stats( $blog_id );
 		$timestamp = $timestamp ?: current_time( 'mysql' );
 
-		$key = ( 'success' === $status ) ? 'success_total' : 'failed_total';
+		$key           = ( 'success' === $status ) ? 'success_total' : 'failed_total';
 		$stats[ $key ] = isset( $stats[ $key ] ) ? ( (int) $stats[ $key ] + 1 ) : 1;
 
 		if ( 'success' === $status ) {

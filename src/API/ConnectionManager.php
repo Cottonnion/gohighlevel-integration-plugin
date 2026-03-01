@@ -113,9 +113,9 @@ class ConnectionManager {
 		$settings = $this->settings_repository->get_settings_array();
 
 		// Check for OAuth token OR manual API token
-		$has_oauth = ! empty( $settings['oauth_access_token'] );
+		$has_oauth  = ! empty( $settings['oauth_access_token'] );
 		$has_manual = ! empty( $settings['api_token'] );
-		
+
 		if ( ! $has_oauth && ! $has_manual ) {
 			return [
 				'success' => false,
@@ -126,10 +126,10 @@ class ConnectionManager {
 
 		// Use OAuth token if available, otherwise use manual token
 		$auth_token = $has_oauth ? $settings['oauth_access_token'] : $settings['api_token'];
-		
+
 		// For OAuth, location_id might be stored differently
 		$location_id = $settings['location_id'] ?? '';
-		
+
 		if ( empty( $location_id ) ) {
 			return [
 				'success' => false,
@@ -214,12 +214,12 @@ class ConnectionManager {
 	 */
 	public function mark_connection_verified( ?int $site_id = null ): bool {
 		$result = $this->settings_repository->mark_connection_verified( $site_id );
-		
+
 		if ( $result ) {
 			// Trigger action to notify other components that connection status has changed
 			do_action( 'ghl_crm_connection_status_changed', true, 'manual' );
 		}
-		
+
 		return $result;
 	}
 
@@ -244,8 +244,8 @@ class ConnectionManager {
 		$is_verified = $this->is_connection_verified( $site_id );
 
 		// Check for OAuth OR manual credentials
-		$has_oauth = ! empty( $settings['oauth_access_token'] );
-		$has_manual = ! empty( $settings['api_token'] ) && ! empty( $settings['location_id'] );
+		$has_oauth       = ! empty( $settings['oauth_access_token'] );
+		$has_manual      = ! empty( $settings['api_token'] ) && ! empty( $settings['location_id'] );
 		$has_credentials = $has_oauth || $has_manual;
 
 		// Show token preview (OAuth or manual)
@@ -279,12 +279,12 @@ class ConnectionManager {
 		$settings = $this->settings_repository->get_settings_array( $site_id );
 
 		// Clear BOTH OAuth and manual API credentials
-		$settings['api_token']          = '';
-		$settings['location_id']        = '';
-		$settings['oauth_access_token'] = '';
+		$settings['api_token']           = '';
+		$settings['location_id']         = '';
+		$settings['oauth_access_token']  = '';
 		$settings['oauth_refresh_token'] = '';
-		$settings['oauth_expires_at']   = 0;
-		$settings['updated_at']         = current_time( 'mysql' );
+		$settings['oauth_expires_at']    = 0;
+		$settings['updated_at']          = current_time( 'mysql' );
 
 		// Save cleared settings
 		$saved = $this->settings_repository->save_site_settings( $settings, $site_id );

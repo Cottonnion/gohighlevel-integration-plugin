@@ -112,7 +112,13 @@ class OAuthHandler {
 		$state = $this->generate_state_token();
 
 		// Log outbound authorization initiation for debugging.
-		$this->log_oauth_event( 'oauth_authorize_start', [ 'redirect_uri' => $redirect_uri, 'state' => $state ] );
+		$this->log_oauth_event(
+			'oauth_authorize_start',
+			[
+				'redirect_uri' => $redirect_uri,
+				'state'        => $state,
+			]
+		);
 
 		return $this->client->get_oauth_authorization_url( $redirect_uri, $state );
 	}
@@ -187,7 +193,13 @@ class OAuthHandler {
 					admin_url( 'admin.php?page=ghl-crm-admin' )
 				)
 			);
-			$this->log_oauth_event( 'oauth_callback_admin_state_rebuilt', [ 'state_nonce' => $state_nonce, 'state' => $state ] );
+			$this->log_oauth_event(
+				'oauth_callback_admin_state_rebuilt',
+				[
+					'state_nonce' => $state_nonce,
+					'state'       => $state,
+				]
+			);
 		}
 
 		// If still empty, fail early with clear error
@@ -212,7 +224,13 @@ class OAuthHandler {
 
 		// Redirect with result
 		if ( is_wp_error( $result ) ) {
-			$this->log_oauth_event( 'oauth_callback_error', [ 'source' => 'admin', 'error' => $result->get_error_message() ] );
+			$this->log_oauth_event(
+				'oauth_callback_error',
+				[
+					'source' => 'admin',
+					'error'  => $result->get_error_message(),
+				]
+			);
 			wp_safe_redirect(
 				add_query_arg(
 					[
@@ -244,7 +262,13 @@ class OAuthHandler {
 		$result = $this->process_oauth_callback( $code, $state );
 
 		if ( is_wp_error( $result ) ) {
-			$this->log_oauth_event( 'oauth_callback_error', [ 'source' => 'rest', 'error' => $result->get_error_message() ] );
+			$this->log_oauth_event(
+				'oauth_callback_error',
+				[
+					'source' => 'rest',
+					'error'  => $result->get_error_message(),
+				]
+			);
 			wp_safe_redirect(
 				add_query_arg(
 					[
@@ -283,7 +307,13 @@ class OAuthHandler {
 		}
 
 		$state_nonce = isset( $query_params['ghl_state'] ) ? sanitize_text_field( (string) $query_params['ghl_state'] ) : '';
-		$this->log_oauth_event( 'oauth_state_parsed', [ 'state_nonce' => $state_nonce, 'decoded_state' => $decoded_state ] );
+		$this->log_oauth_event(
+			'oauth_state_parsed',
+			[
+				'state_nonce'   => $state_nonce,
+				'decoded_state' => $decoded_state,
+			]
+		);
 
 		if ( empty( $state_nonce ) ) {
 			$this->log_oauth_event( 'oauth_state_nonce_missing', [] );
@@ -303,7 +333,7 @@ class OAuthHandler {
 
 		try {
 			// Exchange code for tokens - use REST callback URL to match what was sent to GHL
-			$redirect_uri = rest_url( 'ghl/v1/callback' );
+			$redirect_uri   = rest_url( 'ghl/v1/callback' );
 			$token_response = $this->client->exchange_code_for_token( $code, $redirect_uri );
 
 			// Extract location ID from response (single location only)

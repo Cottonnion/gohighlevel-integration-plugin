@@ -608,8 +608,8 @@ class AssetsManager {
 		$settings_manager = SettingsManager::get_instance();
 		$settings         = $settings_manager->get_settings_array();
 		$location_id      = $settings['location_id'] ?? $settings['oauth_location_id'] ?? '';
-		$oauth_token = $settings['oauth_access_token'] ?? '';
-		$api_token   = $settings['api_token'] ?? '';
+		$oauth_token      = $settings['oauth_access_token'] ?? '';
+		$api_token        = $settings['api_token'] ?? '';
 
 		// Get current setting values for pre-population
 		$enable_user_sync              = $settings['enable_user_sync'] ?? false;
@@ -856,15 +856,15 @@ class AssetsManager {
 
 		// GHL Forms frontend JS
 		// $this->add_public_asset(
-		// 	'ghl-crm-forms-frontend-js',
-		// 	'form-handler.js',
-		// 	[ 'jquery' ],
-		// 	[
-		// 		'ajax_url' => admin_url( 'admin-ajax.php' ),
-		// 		'nonce'    => wp_create_nonce( 'ghl_form_submission' ),
-		// 	],
-		// 	GHL_CRM_VERSION,
-		// 	true
+		// 'ghl-crm-forms-frontend-js',
+		// 'form-handler.js',
+		// [ 'jquery' ],
+		// [
+		// 'ajax_url' => admin_url( 'admin-ajax.php' ),
+		// 'nonce'    => wp_create_nonce( 'ghl_form_submission' ),
+		// ],
+		// GHL_CRM_VERSION,
+		// true
 		// );
 
 		// GHL Form Auto-fill (experimental - tests URL parameter pre-filling)

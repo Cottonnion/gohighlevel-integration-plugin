@@ -158,7 +158,6 @@ class WebhookHandler {
 
 		$provided_token = trim( (string) $request->get_header( self::WEBHOOK_SECRET_HEADER ) );
 
-
 		if ( '' === $provided_token || ! hash_equals( $secret, $provided_token ) ) {
 			return new \WP_Error( 'invalid_webhook_signature', __( 'Invalid or missing webhook token.', 'ghl-crm-integration' ), [ 'status' => 401 ] );
 		}
@@ -322,8 +321,8 @@ class WebhookHandler {
 		}
 
 		// Enforce location scoping: ignore webhooks from a different sub-account
-		$active_location_id   = $this->settings_manager->get_setting( 'location_id', '' );
-		$webhook_location_id  = $normalized['locationId'] ?? '';
+		$active_location_id  = $this->settings_manager->get_setting( 'location_id', '' );
+		$webhook_location_id = $normalized['locationId'] ?? '';
 		if ( ! empty( $active_location_id ) && ! empty( $webhook_location_id ) && $webhook_location_id !== $active_location_id ) {
 			$this->logger->log(
 				'webhook',
@@ -624,11 +623,11 @@ class WebhookHandler {
 	private function is_sync_direction_enabled( string $direction ): bool {
 		$settings       = $this->settings_manager->get_settings_array();
 		$sync_direction = $settings['sync_direction'] ?? 'both'; // Changed default to 'both'
-		
+
 		if ( 'both' === $sync_direction ) {
 			return true;
 		}
-		
+
 		return $sync_direction === $direction;
 	}
 
@@ -638,7 +637,7 @@ class WebhookHandler {
 	 * @return array
 	 */
 	public function get_webhook_setup_instructions(): array {
-		$webhook_url = $this->get_webhook_url();
+		$webhook_url    = $this->get_webhook_url();
 		$webhook_secret = $this->get_or_create_webhook_secret();
 
 		return [
@@ -712,7 +711,7 @@ class WebhookHandler {
 	 * @return array|\WP_Error
 	 */
 	public function test_webhook_endpoint() {
-		$webhook_url = $this->get_webhook_url();
+		$webhook_url    = $this->get_webhook_url();
 		$webhook_secret = $this->get_or_create_webhook_secret();
 
 		// Sample contact create payload

@@ -114,27 +114,27 @@ class BlocksManager {
 			[
 				'render_callback' => [ $this, 'render_restricted_content_block' ],
 				'attributes'      => [
-					'rule'            => [
+					'rule'                => [
 						'type'    => 'string',
 						'default' => 'any',
 					],
-					'tags'            => [
+					'tags'                => [
 						'type'    => 'array',
 						'default' => [],
 					],
-					'fallbackContent' => [
+					'fallbackContent'     => [
 						'type'    => 'string',
 						'default' => '',
 					],
-					'showMessage'     => [
+					'showMessage'         => [
 						'type'    => 'boolean',
 						'default' => true,
 					],
-					'fallbackBgColor' => [
+					'fallbackBgColor'     => [
 						'type'    => 'string',
 						'default' => '#fff3cd',
 					],
-					'fallbackTextColor' => [
+					'fallbackTextColor'   => [
 						'type'    => 'string',
 						'default' => '#856404',
 					],
@@ -142,7 +142,7 @@ class BlocksManager {
 						'type'    => 'string',
 						'default' => '#ffc107',
 					],
-					'fallbackPadding' => [
+					'fallbackPadding'     => [
 						'type'    => 'number',
 						'default' => 12,
 					],
@@ -189,14 +189,14 @@ class BlocksManager {
 		// Pass GHL settings to JavaScript
 		$connection_status = $this->connection_manager->get_connection_status();
 		$is_connected      = ( $connection_status['has_credentials'] && $connection_status['is_verified'] );
-		
+
 		wp_localize_script(
 			'ghl-crm-form-block',
 			'ghlCrmSettings',
 			[
-				'locationId'   => $connection_status['location_id'] ?? '',
-				'connected'    => $is_connected,
-				'settingsUrl'  => admin_url( 'admin.php?page=ghl-crm-settings' ),
+				'locationId'  => $connection_status['location_id'] ?? '',
+				'connected'   => $is_connected,
+				'settingsUrl' => admin_url( 'admin.php?page=ghl-crm-settings' ),
 			]
 		);
 
@@ -378,5 +378,4 @@ class BlocksManager {
 				return false;
 		}
 	}
-
 }

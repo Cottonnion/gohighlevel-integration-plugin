@@ -179,9 +179,9 @@ class StatsProvider {
 	private function get_recent_activity(): array {
 		global $wpdb;
 
-		$table       = $wpdb->prefix . 'ghl_sync_log';
-		$site        = get_current_blog_id();
-		
+		$table = $wpdb->prefix . 'ghl_sync_log';
+		$site  = get_current_blog_id();
+
 		// Get recent activity for users in this location
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Fetching latest sync log entries for dashboard.
 		$rows = $wpdb->get_results(

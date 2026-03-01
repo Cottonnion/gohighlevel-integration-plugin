@@ -227,17 +227,17 @@ class Client implements ClientInterface {
 		}
 
 		// Handle contact not found (deleted/merged in GHL) - Auto-recovery
-		if ( 404 === $response_code || 
-				( 400 === $response_code && 
-					isset( $body_json['error'] ) && 
-					( stripos( $body_json['error'], 'Contact with id' ) !== false || 
-					  stripos( $body_json['message'] ?? '', 'not found' ) !== false ) ) ) {
+		if ( 404 === $response_code ||
+				( 400 === $response_code &&
+					isset( $body_json['error'] ) &&
+					( stripos( $body_json['error'], 'Contact with id' ) !== false ||
+						stripos( $body_json['message'] ?? '', 'not found' ) !== false ) ) ) {
 
 			// Only attempt recovery for PUT/DELETE requests (updates/deletes on existing contacts)
 			if ( in_array( $args['method'], [ 'PUT', 'DELETE' ], true ) ) {
 				// Extract email from request body for lookup
 				$request_body = json_decode( $args['body'] ?? '{}', true );
-				$email = $request_body['email'] ?? null;
+				$email        = $request_body['email'] ?? null;
 
 				// Extract old contact ID from URL
 				if ( preg_match( '/contacts\/([a-zA-Z0-9_-]+)/', $url, $matches ) ) {
@@ -246,14 +246,14 @@ class Client implements ClientInterface {
 					if ( $email ) {
 						try {
 							// Try to find contact by email (they may have been merged)
-							$search_response = $this->get( 
-								'contacts', 
-								[ 'query' => $email ] 
+							$search_response = $this->get(
+								'contacts',
+								[ 'query' => $email ]
 							);
 
 							if ( ! empty( $search_response['contacts'][0]['id'] ) ) {
 								// Contact found by email - they merged it
-								$new_contact = $search_response['contacts'][0];
+								$new_contact    = $search_response['contacts'][0];
 								$new_contact_id = $new_contact['id'];
 
 								// Only continue if we found a different contact ID
@@ -261,10 +261,10 @@ class Client implements ClientInterface {
 									// Find WordPress user(s) with this old contact ID
 									global $wpdb;
 									$location_id = $this->location_id;
-									
+
 									// Check location-scoped key
 									$location_meta_key = '_ghl_contact_id_' . $location_id;
-									
+
 									// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 									$user_ids = $wpdb->get_col(
 										$wpdb->prepare(
@@ -277,32 +277,32 @@ class Client implements ClientInterface {
 									);
 
 									// Update all found users using TagManager for proper location-scoped storage
-									$tag_manager = \GHL_CRM\Core\TagManager::get_instance();
+									$tag_manager   = \GHL_CRM\Core\TagManager::get_instance();
 									$updated_count = 0;
 
 									foreach ( array_unique( $user_ids ) as $user_id ) {
 										$tag_manager->store_user_contact_id( (int) $user_id, $new_contact_id, $location_id );
-										$updated_count++;
+										++$updated_count;
 									}
 
 									// Log the auto-recovery
 									// if ( $updated_count > 0 ) {
-									// 	error_log( 
-									// 		sprintf(
-									// 			'GHL Auto-Recovery (MERGED): Contact %s was merged into %s (email: %s). Updated %d user(s).',
-									// 			$old_contact_id,
-									// 			$new_contact_id,
-									// 			$email,
-									// 			$updated_count
-									// 		)
-									// 	);
+									// error_log(
+									// sprintf(
+									// 'GHL Auto-Recovery (MERGED): Contact %s was merged into %s (email: %s). Updated %d user(s).',
+									// $old_contact_id,
+									// $new_contact_id,
+									// $email,
+									// $updated_count
+									// )
+									// );
 									// }
 
 									// Retry request with new contact ID
-									$new_url = str_replace( 
-										"contacts/{$old_contact_id}", 
-										"contacts/{$new_contact_id}", 
-										$url 
+									$new_url = str_replace(
+										"contacts/{$old_contact_id}",
+										"contacts/{$new_contact_id}",
+										$url
 									);
 
 									return wp_remote_request( $new_url, $args );
@@ -319,25 +319,25 @@ class Client implements ClientInterface {
 
 									// Change to POST and remove contact ID from URL
 									$args['method'] = 'POST';
-									$args['body'] = wp_json_encode( $contact_data );
-									$new_url = preg_replace( '#/contacts/[a-zA-Z0-9_-]+#', '/contacts', $url );
+									$args['body']   = wp_json_encode( $contact_data );
+									$new_url        = preg_replace( '#/contacts/[a-zA-Z0-9_-]+#', '/contacts', $url );
 
 									// Retry as POST (create)
 									$create_response = wp_remote_request( $new_url, $args );
-									
+
 									// Update WordPress database with new contact ID if successful
-									if ( ! is_wp_error( $create_response ) && 
+									if ( ! is_wp_error( $create_response ) &&
 											in_array( wp_remote_retrieve_response_code( $create_response ), [ 200, 201 ], true ) ) {
 										$create_body = json_decode( wp_remote_retrieve_body( $create_response ), true );
-										
+
 										if ( ! empty( $create_body['contact']['id'] ) ) {
 											$new_contact_id = $create_body['contact']['id'];
-											
+
 											// Update database
 											global $wpdb;
-											$location_id = $this->location_id;
+											$location_id       = $this->location_id;
 											$location_meta_key = '_ghl_contact_id_' . $location_id;
-											
+
 											// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 											$user_ids = $wpdb->get_col(
 												$wpdb->prepare(
@@ -371,7 +371,7 @@ class Client implements ClientInterface {
 							}
 						} catch ( \Exception $e ) {
 							// Email lookup failed, continue with original error
-							error_log( 
+							error_log(
 								sprintf(
 									'GHL Auto-Recovery failed for contact %s (email: %s): %s',
 									$old_contact_id,
@@ -446,10 +446,10 @@ class Client implements ClientInterface {
 					$this->log_oauth_event(
 						'Auto-refresh failed after 401/403',
 						[
-							'url'     => $url,
-							'error'   => $e->getMessage(),
-							'status'  => $response_code,
-							'body'    => $body_json,
+							'url'    => $url,
+							'error'  => $e->getMessage(),
+							'status' => $response_code,
+							'body'   => $body_json,
 						]
 					);
 
@@ -639,7 +639,13 @@ class Client implements ClientInterface {
 		$status_code = wp_remote_retrieve_response_code( $response );
 		$body        = wp_remote_retrieve_body( $response );
 		$decoded     = json_decode( $body, true );
-		$this->log_oauth_event( 'Exchange token proxy body', [ 'status' => $status_code, 'body' => is_array( $decoded ) ? $decoded : $body ] );
+		$this->log_oauth_event(
+			'Exchange token proxy body',
+			[
+				'status' => $status_code,
+				'body'   => is_array( $decoded ) ? $decoded : $body,
+			]
+		);
 
 		if ( $status_code !== 200 || empty( $decoded['access_token'] ) ) {
 			$decoded_array = $this->sanitize_response_payload( $decoded );
@@ -710,7 +716,13 @@ class Client implements ClientInterface {
 		// Throttle repeated attempts within 30 seconds to avoid hammering
 		$now = time();
 		if ( self::$last_refresh_attempt_ts && ( $now - self::$last_refresh_attempt_ts ) < 30 ) {
-			$this->log_oauth_event( 'Refresh skipped: throttled', [ 'seconds_since_last' => $now - self::$last_refresh_attempt_ts, 'last_error' => self::$last_refresh_error ] );
+			$this->log_oauth_event(
+				'Refresh skipped: throttled',
+				[
+					'seconds_since_last' => $now - self::$last_refresh_attempt_ts,
+					'last_error'         => self::$last_refresh_error,
+				]
+			);
 			throw new ApiException(
 				self::$last_refresh_error
 					? sprintf( esc_html__( 'Recent refresh attempt failed: %s', 'ghl-crm-integration' ), self::$last_refresh_error )
@@ -771,11 +783,17 @@ class Client implements ClientInterface {
 		$status_code = wp_remote_retrieve_response_code( $response );
 		$body        = wp_remote_retrieve_body( $response );
 		$decoded     = json_decode( $body, true );
-		$this->log_oauth_event( 'Refresh token endpoint body', [ 'status' => $status_code, 'body' => is_array( $decoded ) ? $decoded : $body ] );
+		$this->log_oauth_event(
+			'Refresh token endpoint body',
+			[
+				'status' => $status_code,
+				'body'   => is_array( $decoded ) ? $decoded : $body,
+			]
+		);
 
 		if ( $status_code !== 200 || empty( $decoded['access_token'] ) ) {
-			$decoded_array  = is_array( $decoded ) ? $decoded : [];
-			$error_message = $decoded_array['message'] ?? ( is_string( $body ) ? $body : 'unknown' );
+			$decoded_array            = is_array( $decoded ) ? $decoded : [];
+			$error_message            = $decoded_array['message'] ?? ( is_string( $body ) ? $body : 'unknown' );
 			self::$last_refresh_error = sprintf( 'Refresh HTTP %d: %s', $status_code, sanitize_text_field( (string) $error_message ) );
 
 			// If refresh token is invalid, clear tokens and force reconnect to avoid loops
@@ -793,10 +811,10 @@ class Client implements ClientInterface {
 			if ( ! empty( $this->location_id ) ) {
 				try {
 					$this->log_oauth_event( 'Primary refresh failed, attempting reconnect', [ 'location_id' => $this->location_id ] );
-					$auth_code     = $this->reconnect_api();
-					$redirect_uri  = admin_url( 'admin.php?page=ghl-crm-settings' );
-					$token_payload = $this->exchange_code_for_token( $auth_code, $redirect_uri );
-					$expires_at    = time() + ( $token_payload['expires_in'] ?? 3600 );
+					$auth_code                     = $this->reconnect_api();
+					$redirect_uri                  = admin_url( 'admin.php?page=ghl-crm-settings' );
+					$token_payload                 = $this->exchange_code_for_token( $auth_code, $redirect_uri );
+					$expires_at                    = time() + ( $token_payload['expires_in'] ?? 3600 );
 					$this->access_token_expires_at = $expires_at;
 					$this->save_oauth_tokens( $expires_at );
 					$this->log_oauth_event( 'Reconnect succeeded after refresh failure', [ 'expires_at' => $expires_at ] );
@@ -1061,7 +1079,14 @@ class Client implements ClientInterface {
 
 		// Execute request
 		$response = wp_remote_request( $url, $args );
-		$this->log_oauth_event( 'Request sent', [ 'method' => $method, 'url' => $url, 'status' => is_wp_error( $response ) ? 'error' : wp_remote_retrieve_response_code( $response ) ] );
+		$this->log_oauth_event(
+			'Request sent',
+			[
+				'method' => $method,
+				'url'    => $url,
+				'status' => is_wp_error( $response ) ? 'error' : wp_remote_retrieve_response_code( $response ),
+			]
+		);
 
 		// Check for WP errors
 		if ( is_wp_error( $response ) ) {

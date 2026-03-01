@@ -129,11 +129,11 @@ class UserProfileFields {
 	 * Build normalized tag pairs for client consumption.
 	 */
 	private function build_tag_pairs( array $raw_tags, array $tag_ids, array $normalized_pairs ): array {
-		$tag_manager   = $this->get_tag_manager();
-		$pairs_lookup  = [];
-		$raw_lookup    = [];
-		$unique_pairs  = [];
-		$seen_ids      = [];
+		$tag_manager  = $this->get_tag_manager();
+		$pairs_lookup = [];
+		$raw_lookup   = [];
+		$unique_pairs = [];
+		$seen_ids     = [];
 
 		foreach ( $normalized_pairs as $pair ) {
 			$pair_id   = isset( $pair['id'] ) ? (string) $pair['id'] : '';
@@ -166,7 +166,7 @@ class UserProfileFields {
 			$tag_map = $tag_manager->map_ids_to_names( $tag_ids );
 
 			foreach ( $tag_ids as $tag_id ) {
-				$id   = (string) $tag_id;
+				$id = (string) $tag_id;
 				if ( '' === $id || isset( $seen_ids[ $id ] ) ) {
 					continue;
 				}
@@ -182,7 +182,7 @@ class UserProfileFields {
 					$name = $id;
 				}
 
-				$unique_pairs[] = [
+				$unique_pairs[]  = [
 					'id'   => $id,
 					'name' => $name,
 				];
@@ -196,7 +196,7 @@ class UserProfileFields {
 				if ( '' === $id || isset( $seen_ids[ $id ] ) ) {
 					continue;
 				}
-				$unique_pairs[] = [
+				$unique_pairs[]  = [
 					'id'   => $id,
 					'name' => '' !== $name ? $name : $id,
 				];
@@ -215,7 +215,7 @@ class UserProfileFields {
 						continue;
 					}
 
-					$unique_pairs[] = [
+					$unique_pairs[]  = [
 						'id'   => $id,
 						'name' => '' !== $rname ? $rname : $id,
 					];
@@ -226,7 +226,7 @@ class UserProfileFields {
 						continue;
 					}
 
-					$unique_pairs[] = [
+					$unique_pairs[]     = [
 						'id'   => $value,
 						'name' => $value,
 					];
@@ -319,14 +319,14 @@ class UserProfileFields {
 
 		// Get GHL data
 		$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
-		$contact_id = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user->ID, $location_id );
+		$contact_id  = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user->ID, $location_id );
 
 		// Only show sync timestamps when the user actually has a contact on this location.
-		$last_sync     = $contact_id ? get_user_meta( $user->ID, '_ghl_last_sync', true ) : '';
-		$synced_on_reg = $contact_id ? get_user_meta( $user->ID, '_ghl_synced_on_register', true ) : '';
-		$tag_manager      = $this->get_tag_manager();
-		$current_tag_ids  = $contact_id ? $tag_manager->get_user_tag_ids( $user->ID ) : [];
-		$current_tag_map  = $contact_id ? $tag_manager->map_ids_to_names( $current_tag_ids ) : [];
+		$last_sync       = $contact_id ? get_user_meta( $user->ID, '_ghl_last_sync', true ) : '';
+		$synced_on_reg   = $contact_id ? get_user_meta( $user->ID, '_ghl_synced_on_register', true ) : '';
+		$tag_manager     = $this->get_tag_manager();
+		$current_tag_ids = $contact_id ? $tag_manager->get_user_tag_ids( $user->ID ) : [];
+		$current_tag_map = $contact_id ? $tag_manager->map_ids_to_names( $current_tag_ids ) : [];
 
 		// Get settings
 		$settings           = $this->settings_manager->get_settings_array();
@@ -542,19 +542,19 @@ class UserProfileFields {
 					
 					<?php if ( ! empty( $activity_logs ) ) : ?>
 						<div class="ghl-activity-timeline">
-							<?php 
-							$per_page = 10;
+							<?php
+							$per_page    = 10;
 							$total_pages = ceil( count( $activity_logs ) / $per_page );
-							
+
 							for ( $page = 1; $page <= $total_pages; $page++ ) :
-								$offset = ( $page - 1 ) * $per_page;
+								$offset    = ( $page - 1 ) * $per_page;
 								$page_logs = array_slice( $activity_logs, $offset, $per_page );
 								?>
 								<div class="ghl-activity-page" data-page="<?php echo esc_attr( $page ); ?>" style="<?php echo 1 === $page ? '' : 'display: none;'; ?>">
 									<?php foreach ( $page_logs as $log ) : ?>
 										<?php
 										$status_class = strtolower( $log['status'] ?? 'unknown' );
-										$icon = 'yes-alt';
+										$icon         = 'yes-alt';
 										if ( 'failed' === $status_class ) {
 											$icon = 'dismiss';
 										} elseif ( 'pending' === $status_class ) {
@@ -641,9 +641,9 @@ class UserProfileFields {
 	 */
 	private function get_user_activity_logs( int $user_id, int $limit = 50 ): array {
 		global $wpdb;
-		
+
 		$table_name = $wpdb->prefix . 'ghl_sync_log';
-		
+
 		// Get total count for this user
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Counting user activity logs.
 		$total = (int) $wpdb->get_var(
@@ -657,7 +657,7 @@ class UserProfileFields {
 				get_current_blog_id()
 			)
 		);
-		
+
 		// Get logs for this user
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Reading user activity from plugin sync log table.
 		$logs = $wpdb->get_results(
@@ -675,7 +675,7 @@ class UserProfileFields {
 			),
 			ARRAY_A
 		);
-		
+
 		return [
 			'logs'  => $logs ?: [],
 			'total' => $total,
@@ -704,15 +704,15 @@ class UserProfileFields {
 			? array_map( 'sanitize_text_field', wp_unslash( $_POST['ghl_contact_tags'] ) )
 			: [];
 
-		$tag_manager   = $this->get_tag_manager();
-		$current_ids  = $tag_manager->get_user_tag_ids( $user_id );
-		$normalized    = $tag_manager->normalize_tag_input( $submitted_tags );
-		$new_ids       = $normalized['ids'];
+		$tag_manager = $this->get_tag_manager();
+		$current_ids = $tag_manager->get_user_tag_ids( $user_id );
+		$normalized  = $tag_manager->normalize_tag_input( $submitted_tags );
+		$new_ids     = $normalized['ids'];
 
 		if ( $new_ids !== $current_ids ) {
-			$stored_ids = $tag_manager->store_user_tags( $user_id, $submitted_tags );
+			$stored_ids  = $tag_manager->store_user_tags( $user_id, $submitted_tags );
 			$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
-			$contact_id = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+			$contact_id  = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 
 			if ( ! empty( $contact_id ) ) {
 				$payload_tags = $tag_manager->prepare_tags_for_payload( $stored_ids, $normalized['pairs'] ?? [] );
@@ -763,7 +763,7 @@ class UserProfileFields {
 		}
 
 		$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
-		$contact_id = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+		$contact_id  = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 
 		if ( empty( $contact_id ) ) {
 			wp_send_json_error( [ 'message' => __( 'User not synced to GHL', 'ghl-crm-integration' ) ] );
@@ -925,16 +925,17 @@ class UserProfileFields {
 			// Fetch fresh contact data from GHL
 			$response = $client->get( "contacts/{$contact_id}" );
 
-		if ( empty( $response['contact'] ) ) {
-			return false;
-		}
+			if ( empty( $response['contact'] ) ) {
+				return false;
+			}
 
-		$contact = $response['contact'];
+			$contact = $response['contact'];
 
-		// Update user meta with fresh data
-		$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
-		$tag_manager->store_user_contact_id( $user_id, $contact_id, $location_id );
-		update_user_meta( $user_id, '_ghl_last_sync', time() );			$raw_tags = [];
+			// Update user meta with fresh data
+			$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
+			$tag_manager->store_user_contact_id( $user_id, $contact_id, $location_id );
+			update_user_meta( $user_id, '_ghl_last_sync', time() );
+			$raw_tags = [];
 			if ( ! empty( $contact['tags'] ) && is_array( $contact['tags'] ) ) {
 				$raw_tags = $contact['tags'];
 			}
@@ -981,29 +982,30 @@ class UserProfileFields {
 			// Fetch fresh contact data from GHL
 			$response = $client->get( "contacts/{$contact_id}" );
 
-		if ( empty( $response['contact'] ) ) {
-			wp_send_json_error( [ 'message' => __( 'Contact not found in GoHighLevel', 'ghl-crm-integration' ) ] );
-		}
+			if ( empty( $response['contact'] ) ) {
+				wp_send_json_error( [ 'message' => __( 'Contact not found in GoHighLevel', 'ghl-crm-integration' ) ] );
+			}
 
-		$contact = $response['contact'];
+			$contact = $response['contact'];
 
-		// Update user meta with fresh data
-		$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
-		$tag_manager->store_user_contact_id( $user_id, $contact_id, $location_id );
-		update_user_meta( $user_id, '_ghl_last_sync', time() );			$raw_tags = [];
+			// Update user meta with fresh data
+			$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
+			$tag_manager->store_user_contact_id( $user_id, $contact_id, $location_id );
+			update_user_meta( $user_id, '_ghl_last_sync', time() );
+			$raw_tags = [];
 			if ( ! empty( $contact['tags'] ) && is_array( $contact['tags'] ) ) {
 				$raw_tags = $contact['tags'];
 			}
-			$normalized = $tag_manager->normalize_tag_input( $raw_tags );
-			$tag_ids    = $tag_manager->store_user_tags( $user_id, $raw_tags );
-			$tag_pairs  = $this->build_tag_pairs( $raw_tags, $tag_ids, $normalized['pairs'] );
-			$tag_names  = array_map(
+			$normalized           = $tag_manager->normalize_tag_input( $raw_tags );
+			$tag_ids              = $tag_manager->store_user_tags( $user_id, $raw_tags );
+			$tag_pairs            = $this->build_tag_pairs( $raw_tags, $tag_ids, $normalized['pairs'] );
+			$tag_names            = array_map(
 				static function ( array $pair ): string {
 					return isset( $pair['name'] ) ? (string) $pair['name'] : '';
 				},
 				$tag_pairs
 			);
-			$tag_id_list = array_map(
+			$tag_id_list          = array_map(
 				static function ( array $pair ): string {
 					return isset( $pair['id'] ) ? (string) $pair['id'] : '';
 				},
@@ -1020,12 +1022,12 @@ class UserProfileFields {
 
 			wp_send_json_success(
 				[
-					'message' => __( 'Successfully synced from GoHighLevel!', 'ghl-crm-integration' ),
-					'contact' => $contact,
-					'tags'    => $tag_names,
-					'tag_ids' => $tag_id_list,
+					'message'   => __( 'Successfully synced from GoHighLevel!', 'ghl-crm-integration' ),
+					'contact'   => $contact,
+					'tags'      => $tag_names,
+					'tag_ids'   => $tag_id_list,
 					'tag_pairs' => $tag_pairs,
-					'type'    => $contact['type'] ?? 'lead',
+					'type'      => $contact['type'] ?? 'lead',
 				]
 			);
 

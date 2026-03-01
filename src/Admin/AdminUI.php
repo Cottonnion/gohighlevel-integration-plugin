@@ -78,7 +78,6 @@ class AdminUI {
 		// Initialize user profile fields (adds GHL section to user edit pages)
 		UserProfileFields::init();
 
-
 		// Initialize user bulk actions (adds GHL tag assignment bulk actions)
 		UserBulkActions::init();
 		// Future: Initialize other admin components

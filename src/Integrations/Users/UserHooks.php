@@ -285,7 +285,7 @@ class UserHooks {
 		$existing_tags = [];
 		// Get contact ID for current location
 		$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
-		$contact_id = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+		$contact_id  = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 
 		// If this user just came from an inbound webhook, skip outbound profile sync to avoid loops
 		if ( $contact_id ) {
@@ -320,7 +320,7 @@ class UserHooks {
 					return $tag !== '';
 				}
 			);
-			$existing_tags = $tag_manager->convert_ids_to_names( $tag_ids );
+			$existing_tags          = $tag_manager->convert_ids_to_names( $tag_ids );
 		}
 
 		$role_tags_manager = RoleTagsManager::get_instance();
@@ -380,7 +380,7 @@ class UserHooks {
 		if ( class_exists( 'GHL_CRM_Pro\Database\FamilyRelationshipsRepository' ) ) {
 			$family_repo = \GHL_CRM_Pro\Database\FamilyRelationshipsRepository::get_instance();
 			$children    = $family_repo->get_children( $user_id );
-			
+
 			if ( ! empty( $children ) && class_exists( 'GHL_CRM_Pro\FamilyManager' ) ) {
 				$family_manager = \GHL_CRM_Pro\FamilyManager::get_instance();
 				foreach ( $children as $child_id ) {

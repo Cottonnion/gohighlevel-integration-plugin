@@ -78,46 +78,46 @@ class SyncPreview {
 		}
 
 		// Get field mappings from settings
-		$settings = $this->settings_manager->get_settings_array();
+		$settings       = $this->settings_manager->get_settings_array();
 		$field_mappings = $settings['user_field_mapping'] ?? [];
 
 		// Build preview data
 		$preview = [
-			'success'       => true,
-			'user_id'       => $user_id,
-			'user_email'    => $user->user_email,
-			'user_name'     => $user->display_name,
-			'action'        => 'unknown',
-			'ghl_contact'   => null,
+			'success'        => true,
+			'user_id'        => $user_id,
+			'user_email'     => $user->user_email,
+			'user_name'      => $user->display_name,
+			'action'         => 'unknown',
+			'ghl_contact'    => null,
 			'fields_to_sync' => [],
 			'fields_changed' => [],
-			'tags_to_add'   => [],
+			'tags_to_add'    => [],
 			'tags_to_remove' => [],
-			'conflicts'     => [],
-			'validations'   => [],
-			'api_calls'     => 0,
+			'conflicts'      => [],
+			'validations'    => [],
+			'api_calls'      => 0,
 		];
 
 		// Step 1: Check if contact exists in GHL
 		try {
 			$existing_contact = $this->contact_resource->find_by_email( $user->user_email );
-			
+
 			if ( $existing_contact ) {
-				$preview['action'] = 'update';
+				$preview['action']      = 'update';
 				$preview['ghl_contact'] = [
 					'id'    => $existing_contact['id'] ?? '',
 					'name'  => $existing_contact['name'] ?? '',
 					'email' => $existing_contact['email'] ?? '',
 				];
-				$preview['api_calls'] = 1; // 1 GET to check, 1 PUT to update
+				$preview['api_calls']   = 1; // 1 GET to check, 1 PUT to update
 			} else {
-				$preview['action'] = 'create';
+				$preview['action']    = 'create';
 				$preview['api_calls'] = 1; // 1 POST to create
 			}
 		} catch ( \Exception $e ) {
 			$preview['conflicts'][] = [
 				'type'    => 'api_error',
-				'message' => sprintf( 
+				'message' => sprintf(
 					/* translators: %s: error message */
 					__( 'Could not check GHL: %s', 'ghl-crm-integration' ),
 					$e->getMessage()
@@ -127,7 +127,7 @@ class SyncPreview {
 
 		// Step 2: Validate email
 		if ( empty( $user->user_email ) || ! is_email( $user->user_email ) ) {
-			$preview['success'] = false;
+			$preview['success']       = false;
 			$preview['validations'][] = [
 				'field'   => 'email',
 				'status'  => 'error',
@@ -151,7 +151,7 @@ class SyncPreview {
 
 		// Step 6: Add API call estimate for tags
 		if ( ! empty( $preview['tags_to_add'] ) ) {
-			$preview['api_calls']++; // Additional call for adding tags
+			++$preview['api_calls']; // Additional call for adding tags
 		}
 
 		// Step 7: Ensure all required fields have values (prevent "no data" errors)
@@ -184,9 +184,9 @@ class SyncPreview {
 	/**
 	 * Build field-by-field comparison
 	 *
-	 * @param \WP_User $user WordPress user
+	 * @param \WP_User   $user WordPress user
 	 * @param array|null $ghl_contact Existing GHL contact data
-	 * @param array $field_mappings Field mapping configuration
+	 * @param array      $field_mappings Field mapping configuration
 	 * @return array Field comparison data
 	 */
 	private function build_field_comparison( \WP_User $user, ?array $ghl_contact, array $field_mappings ): array {
@@ -258,7 +258,7 @@ class SyncPreview {
 	 * Get WordPress user field value
 	 *
 	 * @param \WP_User $user WordPress user
-	 * @param string $field_name Field name
+	 * @param string   $field_name Field name
 	 * @return mixed Field value
 	 */
 	private function get_user_field_value( \WP_User $user, string $field_name ) {
@@ -285,7 +285,7 @@ class SyncPreview {
 	/**
 	 * Get GHL contact field value
 	 *
-	 * @param array $contact GHL contact data
+	 * @param array  $contact GHL contact data
 	 * @param string $field_name GHL field name
 	 * @return mixed Field value
 	 */
@@ -307,7 +307,7 @@ class SyncPreview {
 	 * Validate field value
 	 *
 	 * @param string $field_name Field name
-	 * @param mixed $value Field value
+	 * @param mixed  $value Field value
 	 * @return array Validation result
 	 */
 	private function validate_field_value( string $field_name, $value ): array {
@@ -319,10 +319,10 @@ class SyncPreview {
 		// Email validation
 		if ( in_array( $field_name, [ 'email', 'user_email' ], true ) ) {
 			if ( empty( $value ) ) {
-				$validation['status'] = 'error';
+				$validation['status']  = 'error';
 				$validation['message'] = __( 'Email is required', 'ghl-crm-integration' );
 			} elseif ( ! is_email( $value ) ) {
-				$validation['status'] = 'error';
+				$validation['status']  = 'error';
 				$validation['message'] = __( 'Invalid email format', 'ghl-crm-integration' );
 			}
 		}
@@ -330,7 +330,7 @@ class SyncPreview {
 		// Phone validation
 		if ( in_array( $field_name, [ 'phone', 'phone_number' ], true ) ) {
 			if ( ! empty( $value ) && ! preg_match( '/^[\d\s\-\+\(\)]+$/', $value ) ) {
-				$validation['status'] = 'warning';
+				$validation['status']  = 'warning';
 				$validation['message'] = __( 'Phone format may be invalid', 'ghl-crm-integration' );
 			}
 		}
@@ -356,7 +356,7 @@ class SyncPreview {
 		if ( ! is_array( $role_tags_config ) ) {
 			$role_tags_config = [];
 		}
-		
+
 		foreach ( $user->roles as $role ) {
 			if ( isset( $role_tags_config[ $role ]['tags'] ) ) {
 				$role_tags = $role_tags_config[ $role ]['tags'];
@@ -391,14 +391,14 @@ class SyncPreview {
 	 */
 	public function preview_bulk_sync( array $user_ids ): array {
 		$summary = [
-			'success'       => true,
-			'total'         => count( $user_ids ),
-			'will_create'   => 0,
-			'will_update'   => 0,
-			'will_skip'     => 0,
-			'will_fail'     => 0,
-			'conflicts'     => [],
-			'users'         => [],
+			'success'         => true,
+			'total'           => count( $user_ids ),
+			'will_create'     => 0,
+			'will_update'     => 0,
+			'will_skip'       => 0,
+			'will_fail'       => 0,
+			'conflicts'       => [],
+			'users'           => [],
 			'total_api_calls' => 0,
 		];
 
@@ -406,13 +406,13 @@ class SyncPreview {
 			$preview = $this->preview_user_sync( $user_id );
 
 			if ( ! $preview['success'] ) {
-				$summary['will_fail']++;
+				++$summary['will_fail'];
 			} elseif ( $preview['action'] === 'create' ) {
-				$summary['will_create']++;
+				++$summary['will_create'];
 			} elseif ( $preview['action'] === 'update' ) {
-				$summary['will_update']++;
+				++$summary['will_update'];
 			} else {
-				$summary['will_skip']++;
+				++$summary['will_skip'];
 			}
 
 			$summary['total_api_calls'] += $preview['api_calls'];

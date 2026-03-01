@@ -139,8 +139,8 @@ class UserColumns {
 	 */
 	private function render_contact_id_column( int $user_id ): string {
 		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
-		$location_id = $settings_manager->get_setting( 'location_id' ) ?: $settings_manager->get_setting( 'oauth_location_id' );
-		$contact_id = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+		$location_id      = $settings_manager->get_setting( 'location_id' ) ?: $settings_manager->get_setting( 'oauth_location_id' );
+		$contact_id       = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 
 		if ( empty( $contact_id ) ) {
 			return '<span class="ghl-no-contact">—</span>';
@@ -175,18 +175,18 @@ class UserColumns {
 		}
 
 		return sprintf( '<code>%s</code>', esc_html( substr( $contact_id, 0, 8 ) . '...' ) );
-	}	/**
-	 * Render sync status column
-	 *
-	 * @param int $user_id User ID
-	 * @return string Column HTML
-	 */
+	}   /**
+		 * Render sync status column
+		 *
+		 * @param int $user_id User ID
+		 * @return string Column HTML
+		 */
 	private function render_sync_status_column( int $user_id ): string {
 		$synced_on_register = get_user_meta( $user_id, '_ghl_synced_on_register', true );
 		$last_sync_time     = get_user_meta( $user_id, '_ghl_last_sync', true );
-		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
-		$location_id = $settings_manager->get_setting( 'location_id' ) ?: $settings_manager->get_setting( 'oauth_location_id' );
-		$contact_id = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+		$settings_manager   = \GHL_CRM\Core\SettingsManager::get_instance();
+		$location_id        = $settings_manager->get_setting( 'location_id' ) ?: $settings_manager->get_setting( 'oauth_location_id' );
+		$contact_id         = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 
 		if ( empty( $contact_id ) ) {
 			// Not synced yet

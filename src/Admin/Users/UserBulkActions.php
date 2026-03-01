@@ -19,9 +19,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @subpackage Admin/Users
  */
 class UserBulkActions {
-	private const BULK_ACTION_KEY      = 'ghl_sync_users';
-	private const QUERY_ARG_SUCCESS    = 'ghl_sync_users';
-	private const QUERY_ARG_FAILURE    = 'ghl_sync_users_failed';
+	private const BULK_ACTION_KEY   = 'ghl_sync_users';
+	private const QUERY_ARG_SUCCESS = 'ghl_sync_users';
+	private const QUERY_ARG_FAILURE = 'ghl_sync_users_failed';
 
 	/**
 	 * Singleton instance.
@@ -137,18 +137,18 @@ class UserBulkActions {
 		foreach ( $user_ids as $user_id ) {
 			$user = get_userdata( $user_id );
 			if ( ! $user instanceof \WP_User ) {
-				$failed++;
+				++$failed;
 				continue;
 			}
 
 			$old_user_data = clone $user;
 
 			if ( $this->user_hooks->queue_user_profile_sync( $user_id, $old_user_data ) ) {
-				$queued++;
+				++$queued;
 				continue;
 			}
 
-			$failed++;
+			++$failed;
 		}
 
 		$redirect_to = remove_query_arg(

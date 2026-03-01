@@ -23,20 +23,20 @@ class FieldMatcher {
 	 * @var array
 	 */
 	private static $synonyms = array(
-		'phone'        => array( 'mobile', 'telephone', 'cell', 'phone_number', 'phoneNumber', 'phonenumber', 'billing_phone', 'billingphone', 'shipping_phone', 'shippingphone' ),
-		'email'        => array( 'mail', 'emailAddress', 'email_address', 'e-mail', 'user_email', 'useremail', 'billing_email', 'billingemail' ),
-		'name'         => array( 'fullName', 'full_name', 'userName', 'user_name', 'display_name', 'displayname', 'fullname', 'username' ),
-		'first'        => array( 'firstName', 'first_name', 'fname', 'given_name', 'firstname', 'givenname', 'billing_first_name', 'billingfirstname', 'shipping_first_name', 'shippingfirstname' ),
-		'last'         => array( 'lastName', 'last_name', 'lname', 'surname', 'family_name', 'lastname', 'familyname', 'billing_last_name', 'billinglastname', 'shipping_last_name', 'shippinglastname' ),
-		'address'      => array( 'street', 'address1', 'address_1', 'street_address', 'streetaddress', 'addr', 'billing_address_1', 'billingaddress1', 'shipping_address_1', 'shippingaddress1' ),
-		'city'         => array( 'town', 'locality', 'billing_city', 'billingcity', 'shipping_city', 'shippingcity' ),
-		'state'        => array( 'province', 'region', 'billing_state', 'billingstate', 'shipping_state', 'shippingstate' ),
-		'zip'          => array( 'postal', 'postcode', 'postal_code', 'zipcode', 'zip_code', 'postalcode', 'billing_postcode', 'billingpostcode', 'shipping_postcode', 'shippingpostcode' ),
-		'country'      => array( 'nation', 'country_code', 'countrycode', 'billing_country', 'billingcountry', 'shipping_country', 'shippingcountry' ),
-		'company'      => array( 'business', 'organization', 'companyName', 'company_name', 'companyname', 'billing_company', 'billingcompany', 'shipping_company', 'shippingcompany' ),
-		'website'      => array( 'url', 'site', 'web', 'homepage', 'user_url', 'userurl' ),
-		'description'  => array( 'bio', 'about', 'desc', 'user_description', 'description' ),
-		'nickname'     => array( 'nick', 'alias' ),
+		'phone'       => array( 'mobile', 'telephone', 'cell', 'phone_number', 'phoneNumber', 'phonenumber', 'billing_phone', 'billingphone', 'shipping_phone', 'shippingphone' ),
+		'email'       => array( 'mail', 'emailAddress', 'email_address', 'e-mail', 'user_email', 'useremail', 'billing_email', 'billingemail' ),
+		'name'        => array( 'fullName', 'full_name', 'userName', 'user_name', 'display_name', 'displayname', 'fullname', 'username' ),
+		'first'       => array( 'firstName', 'first_name', 'fname', 'given_name', 'firstname', 'givenname', 'billing_first_name', 'billingfirstname', 'shipping_first_name', 'shippingfirstname' ),
+		'last'        => array( 'lastName', 'last_name', 'lname', 'surname', 'family_name', 'lastname', 'familyname', 'billing_last_name', 'billinglastname', 'shipping_last_name', 'shippinglastname' ),
+		'address'     => array( 'street', 'address1', 'address_1', 'street_address', 'streetaddress', 'addr', 'billing_address_1', 'billingaddress1', 'shipping_address_1', 'shippingaddress1' ),
+		'city'        => array( 'town', 'locality', 'billing_city', 'billingcity', 'shipping_city', 'shippingcity' ),
+		'state'       => array( 'province', 'region', 'billing_state', 'billingstate', 'shipping_state', 'shippingstate' ),
+		'zip'         => array( 'postal', 'postcode', 'postal_code', 'zipcode', 'zip_code', 'postalcode', 'billing_postcode', 'billingpostcode', 'shipping_postcode', 'shippingpostcode' ),
+		'country'     => array( 'nation', 'country_code', 'countrycode', 'billing_country', 'billingcountry', 'shipping_country', 'shippingcountry' ),
+		'company'     => array( 'business', 'organization', 'companyName', 'company_name', 'companyname', 'billing_company', 'billingcompany', 'shipping_company', 'shippingcompany' ),
+		'website'     => array( 'url', 'site', 'web', 'homepage', 'user_url', 'userurl' ),
+		'description' => array( 'bio', 'about', 'desc', 'user_description', 'description' ),
+		'nickname'    => array( 'nick', 'alias' ),
 	);
 
 	/**
@@ -53,38 +53,41 @@ class FieldMatcher {
 		foreach ( $wp_fields as $wp_field ) {
 			$best_match = self::find_best_match( $wp_field, $ghl_fields );
 			if ( $best_match ) {
-				$details = self::get_match_details( $wp_field, $best_match );
+				$details       = self::get_match_details( $wp_field, $best_match );
 				$all_matches[] = $details;
 			}
 		}
 
 		// Remove duplicate GHL field mappings, keeping only the highest confidence match
 		$suggestions = array();
-		$ghl_used = array(); // Track which GHL fields have been used
+		$ghl_used    = array(); // Track which GHL fields have been used
 
 		// Sort by confidence descending
-		usort( $all_matches, function( $a, $b ) {
-			if ( $a['confidence'] === $b['confidence'] ) {
-				// If same confidence, prioritize core WP fields over billing/shipping
-				$a_is_core = ! preg_match( '/^(billing|shipping)_/', $a['wp_field'] );
-				$b_is_core = ! preg_match( '/^(billing|shipping)_/', $b['wp_field'] );
-				if ( $a_is_core && ! $b_is_core ) {
-					return -1;
+		usort(
+			$all_matches,
+			function ( $a, $b ) {
+				if ( $a['confidence'] === $b['confidence'] ) {
+					// If same confidence, prioritize core WP fields over billing/shipping
+					$a_is_core = ! preg_match( '/^(billing|shipping)_/', $a['wp_field'] );
+					$b_is_core = ! preg_match( '/^(billing|shipping)_/', $b['wp_field'] );
+					if ( $a_is_core && ! $b_is_core ) {
+						return -1;
+					}
+					if ( ! $a_is_core && $b_is_core ) {
+						return 1;
+					}
+					return 0;
 				}
-				if ( ! $a_is_core && $b_is_core ) {
-					return 1;
-				}
-				return 0;
+				return $b['confidence'] - $a['confidence'];
 			}
-			return $b['confidence'] - $a['confidence'];
-		});
+		);
 
 		// Keep only the first (highest confidence) match for each GHL field
 		foreach ( $all_matches as $match ) {
 			$ghl_field = $match['ghl_field'];
 			if ( ! isset( $ghl_used[ $ghl_field ] ) ) {
 				$suggestions[ $match['wp_field'] ] = $ghl_field;
-				$ghl_used[ $ghl_field ] = true;
+				$ghl_used[ $ghl_field ]            = true;
 			}
 		}
 
@@ -99,9 +102,9 @@ class FieldMatcher {
 	 * @return string|null Best matching GHL field or null.
 	 */
 	private static function find_best_match( $wp_field, $ghl_fields ) {
-		$wp_normalized = self::normalize_field_name( $wp_field );
-		$best_match    = null;
-		$best_score    = 0; // Higher is better.
+		$wp_normalized  = self::normalize_field_name( $wp_field );
+		$best_match     = null;
+		$best_score     = 0; // Higher is better.
 		$min_confidence = 70; // Minimum confidence threshold.
 
 		// Skip custom fields and meta fields that can't be meaningfully matched
@@ -293,12 +296,12 @@ class FieldMatcher {
 		$ghl_normalized = self::normalize_field_name( $ghl_field );
 		$is_exact       = $wp_normalized === $ghl_normalized;
 		$is_synonym     = self::are_synonyms( $wp_normalized, $ghl_normalized );
-		
+
 		// Calculate various match metrics.
 		$suffix_score   = self::get_suffix_match_score( $wp_normalized, $ghl_normalized );
 		$contains_score = self::get_contains_score( $wp_normalized, $ghl_normalized );
-		$distance       = ( abs( strlen( $wp_normalized ) - strlen( $ghl_normalized ) ) <= 5 ) 
-			? levenshtein( $wp_normalized, $ghl_normalized ) 
+		$distance       = ( abs( strlen( $wp_normalized ) - strlen( $ghl_normalized ) ) <= 5 )
+			? levenshtein( $wp_normalized, $ghl_normalized )
 			: 999;
 
 		return array(

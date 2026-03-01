@@ -888,7 +888,6 @@ class GroupsSync {
 			if ( $first_key === 'contact' ) {
 				$direction = 'second';
 			}
-
 		}
 			// --- End new validation/logging ---
 

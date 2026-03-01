@@ -114,7 +114,6 @@ class GHLToWordPressSync {
 			}
 		}
 
-
 		// If tags are missing/empty in webhook payload, hydrate from API to avoid dropping tags
 		if ( empty( $contact_data['tags'] ) || ! is_array( $contact_data['tags'] ) ) {
 			try {
@@ -358,9 +357,9 @@ class GHLToWordPressSync {
 			'ghl_to_wp',
 			'success',
 			'WordPress user updated from GHL contact',
-			[ 
-				'user_id' => $user_id,
-				'contact_id' => $contact_id 
+			[
+				'user_id'    => $user_id,
+				'contact_id' => $contact_id,
 			],
 			$contact_id
 		);
@@ -472,13 +471,13 @@ class GHLToWordPressSync {
 			// Use TagManager to store tags with the correct location-scoped meta key
 			// and automatically fire the ghl_crm_user_tags_updated hook on change.
 			\GHL_CRM\Core\TagManager::get_instance()->store_user_tags( $user_id, $tags );
-		} else {
-			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-				error_log( sprintf(
-					'[GHL GHLToWordPressSync::sync_contact_tags_to_user] SKIPPED — empty/non-array tags for user_id=%d',
-					$user_id
-				) );
-			}
+		} elseif ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log(
+					sprintf(
+						'[GHL GHLToWordPressSync::sync_contact_tags_to_user] SKIPPED — empty/non-array tags for user_id=%d',
+						$user_id
+					)
+				);
 		}
 	}
 
@@ -509,7 +508,7 @@ class GHLToWordPressSync {
 				'to_ghl'   => 'wp_to_ghl',
 				'both'     => 'both',
 			];
-			$direction = $direction_map[ $direction ] ?? $direction;
+			$direction     = $direction_map[ $direction ] ?? $direction;
 
 			// Only include if direction allows GHL to WP sync
 			if ( ! empty( $ghl_field ) && ( 'ghl_to_wp' === $direction || 'both' === $direction ) ) {
@@ -565,7 +564,7 @@ class GHLToWordPressSync {
 		$field_direction = $field_mappings[ $field ]['direction'] ?? 'both';
 
 		// Normalize frontend values to backend values
-		$direction_map = [
+		$direction_map   = [
 			'from_ghl' => 'ghl_to_wp',
 			'to_ghl'   => 'wp_to_ghl',
 			'both'     => 'both',

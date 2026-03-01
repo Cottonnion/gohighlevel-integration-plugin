@@ -383,20 +383,20 @@ class CustomObjectResource extends AbstractResource {
 			return $response;
 		} catch ( \Exception $e ) {
 			$error_message = $e->getMessage();
-			
+
 			// Check if this is a duplicate relation error (idempotent - already exists)
 			if ( strpos( $error_message, 'duplicate relation' ) !== false ) {
-				
+
 				// Return success response - the desired end state is achieved
 				return [
-					'success' => true,
-					'message' => 'Relation already exists',
-					'firstRecordId' => $first_id,
+					'success'        => true,
+					'message'        => 'Relation already exists',
+					'firstRecordId'  => $first_id,
 					'secondRecordId' => $second_id,
-					'associationId' => $association_id,
+					'associationId'  => $association_id,
 				];
 			}
-			
+
 			// For other errors, throw as usual
 			$reason = $this->sanitize_exception_message( $error_message );
 			throw new \Exception(
@@ -424,7 +424,7 @@ class CustomObjectResource extends AbstractResource {
 		try {
 			// GHL API endpoint: DELETE /associations/relations/{relationId}
 			// We need to find the relation ID first, then delete it
-			
+
 			// Determine correct order based on association direction
 			if ( $direction === 'second' ) {
 				// Association is: contact (first) → custom_object (second)
@@ -444,7 +444,7 @@ class CustomObjectResource extends AbstractResource {
 			// Get existing relations for the first record
 			// Endpoint: GET /associations/relations/:recordId
 			$get_endpoint = 'associations/relations/' . $first_id;
-			
+
 			try {
 				$relations = $this->client->get( $get_endpoint );
 			} catch ( \Exception $e ) {
@@ -462,7 +462,7 @@ class CustomObjectResource extends AbstractResource {
 				foreach ( $relations['relations'] as $relation ) {
 					// Match both associationId AND secondRecordId
 					if ( isset( $relation['associationId'] ) && $relation['associationId'] === $association_id &&
-					     isset( $relation['secondRecordId'] ) && $relation['secondRecordId'] === $second_id ) {
+						isset( $relation['secondRecordId'] ) && $relation['secondRecordId'] === $second_id ) {
 						$relation_id = $relation['id'] ?? null;
 						break;
 					}
