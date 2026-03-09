@@ -80,7 +80,7 @@ $ghl_prev_error_handler = set_error_handler(function ( $errno, $errstr, $errfile
     $lower = strtolower( $errstr );
 
     // Suppress known noisy translation timing notices
-    if ( strpos( $lower, '_load_textdomain_just_in_time' ) !== false || strpos( $lower, 'translation loading for the' ) !== false || strpos( $lower, 'deprecated' ) !== false ) {
+    if ( strpos( $lower, '_load_textdomain_just_in_time' ) !== false || strpos( $lower, 'translation loading for the' ) !== false || strpos( $lower, 'deprecated' ) !== false || strpos( $lower, 'as_has_scheduled_action' ) !== false || strpos( $lower, 'as_schedule_recurring_action' ) !== false ) {
         // Return true to indicate the PHP internal error handler should not proceed
         return true;
     }
