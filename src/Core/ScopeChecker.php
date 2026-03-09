@@ -38,7 +38,7 @@ class ScopeChecker {
 		'locations'      => array( 'locations.readonly' ),
 		'tasks'          => array( 'locations/tasks.write' ),
 		'opportunities'  => array( 'opportunities.readonly', 'opportunities.write' ),
-		// 'conversations'  => array( 'conversations.readonly', 'conversations.write', 'conversations/message.readonly', 'conversations/message.write' ),
+		// 'conversations'  => array( 'conversations.readonly', 'conversations.write', 'conversations/message.readonly', 'conversations/message.write' ), // TODO: Requires per-sub-account Marketplace App install.
 	);
 
 	/**
@@ -214,12 +214,12 @@ class ScopeChecker {
 					'locationId' => $location_id,
 				),
 			),
-			'conversations'  => array(
-				'path'   => 'conversations/search',
-				'params' => array(
-					'locationId' => $location_id,
-				),
-			),
+			// 'conversations'  => array(
+			// 	'path'   => 'conversations/search',
+			// 	'params' => array(
+			// 		'locationId' => $location_id,
+			// 	),
+			// ), // TODO: Requires per-sub-account Marketplace App install.
 		);
 
 		return $endpoints[ $scope_name ] ?? null;
