@@ -277,9 +277,6 @@ class QueueProcessor {
 			'wc_customer'     => function ( string $action, int $item_id, array $payload ) {
 				return $this->execute_woocommerce_sync( $action, $item_id, $payload );
 			},
-			'form_submission' => function ( string $action, int $item_id, array $payload ) {
-				return $this->execute_form_submission_sync( $action, $item_id, $payload );
-			},
 		);
 	}
 
@@ -806,86 +803,6 @@ class QueueProcessor {
 			default:
 				throw new \Exception( esc_html( 'Unknown WooCommerce action: ' . $action ) );
 		}
-	}
-
-	/**
-	 * Execute form submission sync (WordPress Form → GHL Conversation)
-	 *
-	 * Finds the GHL contact by email and sends the form data as
-	 * an inbound conversation message via the Conversations API.
-	 *
-	 * @param string $action  Action name (sync_to_conversation).
-	 * @param int    $item_id Form ID.
-	 * @param array  $payload Payload containing email, message, source, etc.
-	 * @return array Sync result.
-	 * @throws \Exception When contact is not found or API call fails.
-	 */
-	private function execute_form_submission_sync( string $action, int $item_id, array $payload ): array {
-
-		$email   = $payload['email'] ?? '';
-		$message = $payload['message'] ?? '';
-		$source  = $payload['source'] ?? 'unknown';
-		$alt_id  = $payload['alt_id'] ?? '';
-
-		if ( empty( $email ) || empty( $message ) ) {
-			throw new \Exception( esc_html( 'Email and message are required for form submission sync' ) );
-		}
-
-		// Find contact in GHL by email.
-		$client_factory = $this->client_factory;
-		$client         = $client_factory();
-		$existing       = $client->get( 'contacts/', [ 'query' => $email ] );
-
-		if ( empty( $existing['contacts'][0]['id'] ) ) {
-			throw new \Exception(
-				esc_html(
-					sprintf(
-						'Contact not found in GHL for email: %s (source: %s, form: %d)',
-						$email,
-						$source,
-						$item_id
-					)
-				)
-			);
-		}
-
-		$contact_id = $existing['contacts'][0]['id'];
-
-		// Send inbound message to GHL Conversation.
-		$conversation_resource = new \GHL_CRM\API\Resources\ConversationResource( $client );
-		$extra_params          = [
-			'html' => nl2br( esc_html( $message ) ),
-		];
-
-		if ( ! empty( $alt_id ) ) {
-			$extra_params['altId'] = $alt_id;
-		}
-
-		$result = $conversation_resource->add_inbound_message(
-			$contact_id,
-			$message,
-			'Custom',
-			$extra_params
-		);
-
-		$this->dispatch_event(
-			'form_submission_synced',
-			[
-				'source'     => $source,
-				'email'      => $email,
-				'contact_id' => $contact_id,
-				'form_id'    => $item_id,
-				'message_id' => $result['messageId'] ?? 'unknown',
-			]
-		);
-
-		return [
-			'success'    => true,
-			'contact_id' => $contact_id,
-			'message_id' => $result['messageId'] ?? 'unknown',
-			'source'     => $source,
-			'action'     => $action,
-		];
 	}
 
 	/**
