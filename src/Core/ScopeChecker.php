@@ -38,7 +38,6 @@ class ScopeChecker {
 		'locations'      => array( 'locations.readonly' ),
 		'tasks'          => array( 'locations/tasks.write' ),
 		'opportunities'  => array( 'opportunities.readonly', 'opportunities.write' ),
-		// 'conversations'  => array( 'conversations.readonly', 'conversations.write', 'conversations/message.readonly', 'conversations/message.write' ), // TODO: Requires per-sub-account Marketplace App install.
 	);
 
 	/**
