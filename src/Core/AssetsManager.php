@@ -103,10 +103,10 @@ class AssetsManager {
 			true
 		);
 
-		// Register Chart.js
+		// Register Chart.js (local)
 		wp_register_script(
 			'ghl-chartjs',
-			'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
+			GHL_CRM_URL . 'assets/admin/js/chart.umd.min.js',
 			[],
 			'4.4.0',
 			true

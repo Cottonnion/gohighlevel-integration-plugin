@@ -279,7 +279,7 @@ class UserProfileFields {
 			'ghl-user-profile-js',
 			GHL_CRM_URL . 'assets/admin/js/user-profile.js',
 			[ 'jquery', 'ghl-crm-select2' ],
-			'1.0.1',
+			'1.0.2',
 			true
 		);
 
