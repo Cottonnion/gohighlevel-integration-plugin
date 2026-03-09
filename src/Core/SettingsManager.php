@@ -92,6 +92,7 @@ class SettingsManager {
 		add_action( 'wp_ajax_ghl_crm_reset_settings', [ $this, 'reset_settings' ] );
 		add_action( 'wp_ajax_ghl_crm_system_health_check', [ $this, 'system_health_check' ] );
 		add_action( 'wp_ajax_ghl_crm_bulk_sync_users', [ $this, 'handle_bulk_sync_users' ] );
+		add_action( 'wp_ajax_ghl_crm_bulk_import_from_ghl', [ $this, 'handle_bulk_import_from_ghl' ] );
 		add_action( 'wp_ajax_ghl_crm_get_custom_objects', [ $this, 'get_custom_objects' ] );
 		add_action( 'wp_ajax_ghl_crm_get_schema_details', [ $this, 'get_schema_details' ] );
 		add_action( 'wp_ajax_ghl_crm_get_forms', [ $this, 'handle_get_forms' ] );
@@ -121,6 +122,9 @@ class SettingsManager {
 
 		// Field Mapping Suggestions (delegated to AjaxHandler)
 		add_action( 'wp_ajax_ghl_crm_get_field_suggestions', [ $this, 'handle_get_field_suggestions' ] );
+
+		// Purge caches when connection status changes (location switch, OAuth, disconnect)
+		add_action( 'ghl_crm_connection_status_changed', [ $this, 'purge_location_caches' ] );
 	}
 
 	/**
@@ -237,9 +241,10 @@ class SettingsManager {
 			$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
 			$saved      = $repository->save_site_settings( $settings );
 
-			// If credentials changed, invalidate verification
+			// If credentials changed, invalidate verification and purge caches
 			if ( $credentials_changed && $saved ) {
 				$this->mark_connection_unverified();
+				$this->purge_location_caches();
 			}
 
 			if ( ! $saved ) {
@@ -250,14 +255,14 @@ class SettingsManager {
 				$response_settings = $this->get_settings_array();
 				$location_id       = $response_settings['location_id'] ?? $response_settings['oauth_location_id'] ?? '';
 
-				if ( ! empty( $location_id ) ) {
-					// Preserve only location-scoped tag keys in the response
-					$response_settings[ "role_tags_{$location_id}" ]          = $this->get_location_role_tags( $location_id );
-					$response_settings[ "global_tags_{$location_id}" ]        = $this->get_location_global_tags( $location_id );
-					$response_settings[ "user_register_tags_{$location_id}" ] = $this->get_location_register_tags( $location_id );
+			if ( ! empty( $location_id ) ) {
+				// Preserve only location-scoped tag keys in the response
+				$response_settings[ "role_tags_{$location_id}" ]          = $this->get_location_role_tags( $location_id );
+				$response_settings[ "global_tags_{$location_id}" ]        = $this->get_location_global_tags( $location_id );
+				$response_settings[ "user_register_tags_{$location_id}" ] = $this->get_location_register_tags( $location_id );
 
-					unset( $response_settings['role_tags'], $response_settings['global_tags'], $response_settings['user_register_tags'] );
-				}
+				unset( $response_settings['role_tags'], $response_settings['global_tags'], $response_settings['user_register_tags'] );
+			}
 
 				$response_data = [
 					'message'  => __( 'Settings saved successfully!', 'ghl-crm-integration' ),
@@ -417,11 +422,11 @@ class SettingsManager {
 		try {
 			// Get OAuth authorization URL
 			$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
-			$auth_url = $oauth_handler->get_authorization_url();
-			
+			$auth_url      = $oauth_handler->get_authorization_url();
+
 			wp_send_json_success(
 				[
-					'message' => __( 'Redirecting to GoHighLevel for reconnection...', 'ghl-crm-integration' ),
+					'message'      => __( 'Redirecting to GoHighLevel for reconnection...', 'ghl-crm-integration' ),
 					'redirect_url' => $auth_url,
 				]
 			);
@@ -2237,6 +2242,16 @@ class SettingsManager {
 	}
 
 	/**
+	 * Handle bulk import from GHL AJAX request
+	 *
+	 * @return void
+	 */
+	public function handle_bulk_import_from_ghl(): void {
+		// Delegate to AjaxHandler (nonce and permissions checked there)
+		AjaxHandler::bulk_import_from_ghl();
+	}
+
+	/**
 	 * Handle get field suggestions AJAX request
 	 *
 	 * @return void
@@ -2320,15 +2335,15 @@ class SettingsManager {
 		if ( null === $location_id ) {
 			$location_id = $this->get_setting( 'location_id' ) ?: $this->get_setting( 'oauth_location_id' );
 		}
-		
+
 		if ( empty( $location_id ) ) {
 			return [];
 		}
-		
+
 		$key = "role_tags_{$location_id}";
 		return $this->get_setting( $key, [] );
 	}
-	
+
 	/**
 	 * Get location-specific global tags configuration
 	 *
@@ -2339,15 +2354,15 @@ class SettingsManager {
 		if ( null === $location_id ) {
 			$location_id = $this->get_setting( 'location_id' ) ?: $this->get_setting( 'oauth_location_id' );
 		}
-		
+
 		if ( empty( $location_id ) ) {
 			return [];
 		}
-		
+
 		$key = "global_tags_{$location_id}";
 		return $this->get_setting( $key, [] );
 	}
-	
+
 	/**
 	 * Get location-specific registration tags configuration
 	 *
@@ -2358,11 +2373,11 @@ class SettingsManager {
 		if ( null === $location_id ) {
 			$location_id = $this->get_setting( 'location_id' ) ?: $this->get_setting( 'oauth_location_id' );
 		}
-		
+
 		if ( empty( $location_id ) ) {
 			return [];
 		}
-		
+
 		$key = "user_register_tags_{$location_id}";
 		return $this->get_setting( $key, [] );
 	}
@@ -2376,13 +2391,13 @@ class SettingsManager {
 	 */
 	private function save_location_specific_tags( string $tag_type, $value ): ?array {
 		$location_id = $this->get_setting( 'location_id' ) ?: $this->get_setting( 'oauth_location_id' );
-		
+
 		if ( empty( $location_id ) ) {
 			return null;
 		}
-		
+
 		$key = "{$tag_type}_{$location_id}";
-		
+
 		// Sanitize based on tag type
 		if ( 'role_tags' === $tag_type && is_array( $value ) ) {
 			$sanitized_value = $this->sanitize_role_tags( $value );
@@ -2391,11 +2406,64 @@ class SettingsManager {
 		} else {
 			$sanitized_value = sanitize_text_field( (string) $value );
 		}
-		
+
 		return [
 			'key'   => $key,
 			'value' => $sanitized_value,
 		];
+	}
+
+	/**
+	 * Purge all location-specific caches.
+	 *
+	 * Called automatically when location_id changes (via settings save or connection status change)
+	 * to ensure the UI always reflects the current location's data.
+	 *
+	 * @return void
+	 */
+	public function purge_location_caches(): void {
+		global $wpdb;
+		$site_id = get_current_blog_id();
+
+		// 1. Delete ALL tag transients for this site (covers old + new location)
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Removing plugin transient rows directly.
+		$wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$wpdb->options}
+				WHERE (option_name LIKE %s OR option_name LIKE %s)
+				AND option_name LIKE %s",
+				$wpdb->esc_like( '_transient_ghl_tags_' ) . '%',
+				$wpdb->esc_like( '_transient_timeout_ghl_tags_' ) . '%',
+				'%' . $wpdb->esc_like( '_site_' . (string) $site_id )
+			)
+		);
+
+		// 2. Delete contact cache transients (contain location ID in the hash key)
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Removing plugin transient rows directly.
+		$wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$wpdb->options}
+				WHERE option_name LIKE %s
+				OR option_name LIKE %s",
+				$wpdb->esc_like( '_transient_ghl_contact_' ) . '%',
+				$wpdb->esc_like( '_transient_timeout_ghl_contact_' ) . '%'
+			)
+		);
+
+		// 3. Clear WordPress object cache
+		if ( function_exists( 'wp_cache_flush' ) ) {
+			wp_cache_flush();
+		}
+
+		// 4. Reset TagManager in-memory cache if it's already instantiated
+		if ( class_exists( '\GHL_CRM\Core\TagManager' ) ) {
+			try {
+				$tag_manager = TagManager::get_instance();
+				$tag_manager->refresh_cache();
+			} catch ( \Throwable $e ) {
+				// TagManager may not be fully initialized yet during early hooks — safe to ignore.
+			}
+		}
 	}
 
 	/**

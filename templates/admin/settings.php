@@ -99,10 +99,10 @@ $settings_tabs = [
 		'label' => __( 'Sync Preview', 'ghl-crm-integration' ),
 		'icon'  => 'dashicons-visibility',
 	],
-	'conversations' => [
-		'label' => __( 'Conversations', 'ghl-crm-integration' ),
-		'icon'  => 'dashicons-format-chat',
-	],
+	// 'conversations' => [
+	// 	'label' => __( 'Conversations', 'ghl-crm-integration' ),
+	// 	'icon'  => 'dashicons-format-chat',
+	// ],
 	'advanced' => [
 		'label' => __( 'Advanced', 'ghl-crm-integration' ),
 		'icon'  => 'dashicons-admin-tools',
