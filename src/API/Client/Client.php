@@ -536,16 +536,6 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Set API version
-	 *
-	 * @param string $version API version.
-	 * @return void
-	 */
-	public function set_api_version( string $version ): void {
-		$this->api_version = $version;
-	}
-
-	/**
 	 * Skip OAuth token refresh for manual API key testing
 	 *
 	 * @param bool $skip Whether to skip OAuth refresh.
@@ -1135,6 +1125,12 @@ class Client implements ClientInterface {
 		$decoded = json_decode( $body, true );
 
 		if ( json_last_error() !== JSON_ERROR_NONE ) {
+			// If the response is successful (2xx) with an empty body, return an empty array
+			// Some GHL endpoints return 200/201 with no body
+			if ( $status_code >= 200 && $status_code < 300 && '' === trim( $body ) ) {
+				return [];
+			}
+			
 			throw new ApiException(
 				esc_html__( 'Invalid JSON response from API', 'ghl-crm-integration' ),
 				(int) $status_code,
