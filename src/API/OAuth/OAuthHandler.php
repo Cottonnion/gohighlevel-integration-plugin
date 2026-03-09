@@ -111,15 +111,6 @@ class OAuthHandler {
 		// Generate and persist a nonce-backed state token to prevent CSRF
 		$state = $this->generate_state_token();
 
-		// Log outbound authorization initiation for debugging.
-		$this->log_oauth_event(
-			'oauth_authorize_start',
-			[
-				'redirect_uri' => $redirect_uri,
-				'state'        => $state,
-			]
-		);
-
 		return $this->client->get_oauth_authorization_url( $redirect_uri, $state );
 	}
 
@@ -422,7 +413,6 @@ class OAuthHandler {
 
 			return true;
 		} catch ( \Throwable $e ) {
-			error_log( '[GHL][OAuthHandler] Error during disconnect: ' . $e->getMessage() );
 			return false;
 		}
 	}
@@ -464,6 +454,7 @@ class OAuthHandler {
 	 * @return void
 	 */
 	private function log_oauth_event( string $event, array $context = [] ): void {
+		return; // Disable logging for now.
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			$message = '[GHL][OAuthHandler] ' . $event;
 
