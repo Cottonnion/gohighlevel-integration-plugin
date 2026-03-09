@@ -167,8 +167,200 @@
 	 * Initialize bulk sync handler
 	 * Called from settings-menu.js when tools tab is loaded
 	 */
+	/**
+	 * Bulk Import Handler – imports GHL contacts as WordPress users
+	 */
+	const BulkImportHandler = {
+		isRunning: false,
+		totals: { created: 0, updated: 0, skipped_no_email: 0, skipped_duplicate: 0, failed: 0 },
+		totalContacts: 0,
+		pages: 0,
+
+		/**
+		 * Initialize the import handler
+		 */
+		init() {
+			$('#bulk-import-ghl-btn').on('click', () => {
+				if (this.isRunning) return;
+
+				Swal.fire({
+					title: 'Import Contacts from GHL',
+					html: 'This will fetch all contacts from GoHighLevel and create or update WordPress users for each one that has an email address.<br><br><strong>Existing users will be updated with the latest data.</strong>',
+					icon: 'question',
+					showCancelButton: true,
+					confirmButtonText: 'Start Import',
+					cancelButtonText: 'Cancel',
+				}).then((result) => {
+					if (result.isConfirmed) {
+						this.start();
+					}
+				});
+			});
+		},
+
+		/**
+		 * Start the import process
+		 */
+		start() {
+			this.reset();
+			this.isRunning = true;
+			$('#bulk-import-progress').show();
+			$('#bulk-import-progress-bar').addClass('ghl-progress-bar-indeterminate').css('width', '30%');
+			$('#bulk-import-progress-text').html('Starting import from GoHighLevel&hellip;');
+			this.processPage(null, 1);
+		},
+
+		/**
+		 * Reset counters
+		 */
+		reset() {
+			this.totals = { created: 0, updated: 0, skipped_no_email: 0, skipped_duplicate: 0, failed: 0 };
+			this.totalContacts = 0;
+			this.pages = 0;
+		},
+
+		/**
+		 * Process one page of GHL contacts
+		 *
+		 * @param {string|null} cursor - Cursor for the next page
+		 * @param {number}      page   - Current page number
+		 */
+		processPage(cursor, page) {
+			this.isRunning = true;
+
+			$('#bulk-import-progress').show();
+			$('#bulk-import-ghl-btn').prop('disabled', true);
+
+			const postData = {
+				action: 'ghl_crm_bulk_import_from_ghl',
+				nonce: ghl_crm_tools_js_data.nonce,
+				page: page,
+			};
+
+			if (cursor) {
+				postData.cursor = cursor;
+			}
+
+			$.ajax({
+				url: ghl_crm_tools_js_data.ajaxUrl,
+				type: 'POST',
+				data: postData,
+				success: (response) => {
+					if (response.success) {
+						const d = response.data;
+
+						this.totals.created           = d.total_created || 0;
+						this.totals.updated           = d.total_updated || 0;
+						this.totals.skipped_no_email  = d.total_skipped_no_email || 0;
+						this.totals.skipped_duplicate = d.total_skipped_duplicate || 0;
+						this.totals.failed            = d.total_failed  || 0;
+						this.totalContacts  = d.total_contacts || 0;
+						this.pages          = d.pages_complete || page;
+
+						const processed = d.total_processed || 0;
+
+						// Update progress bar — use real percentage if total is known
+						const $bar = $('#bulk-import-progress-bar');
+						if (this.totalContacts > 0) {
+							const pct = Math.min(100, Math.round((processed / this.totalContacts) * 100));
+							$bar.removeClass('ghl-progress-bar-indeterminate').css('width', pct + '%');
+						}
+
+						// Update progress text
+						const ofTotal = this.totalContacts > 0 ? ` of <strong>${this.totalContacts}</strong>` : '';
+						// Build progress text — only show categories that have counts
+						const parts = [
+							`<strong>${processed}</strong>${ofTotal} contacts processed &mdash; `,
+							`<span style="color:#46b450;">\u2713 ${this.totals.created} created</span>`,
+							`<span style="color:#0073aa;">\u21bb ${this.totals.updated} updated</span>`,
+						];
+						if (this.totals.skipped_no_email > 0) {
+							parts.push(`<span style="color:#999;">\u2298 ${this.totals.skipped_no_email} no email</span>`);
+						}
+						if (this.totals.skipped_duplicate > 0) {
+							parts.push(`<span style="color:#aaa;">\u2298 ${this.totals.skipped_duplicate} API duplicates</span>`);
+						}
+						parts.push(`<span style="color:${this.totals.failed > 0 ? '#dc3232' : '#666'};">${this.totals.failed > 0 ? '\u2717 ' : ''}${this.totals.failed} failed</span>`);
+						$('#bulk-import-progress-text').html(parts[0] + parts.slice(1).join(' | '));
+
+						if (d.has_more && d.next_cursor) {
+							this.processPage(d.next_cursor, d.next_page);
+						} else {
+							this.complete();
+						}
+					} else {
+						this.error(response.data?.message || 'An error occurred during import.');
+					}
+				},
+				error: () => {
+					this.error('Network error occurred. Please try again.');
+				},
+			});
+		},
+
+		/**
+		 * Handle completion
+		 */
+		complete() {
+			this.isRunning = false;
+			$('#bulk-import-ghl-btn').prop('disabled', false);
+
+			setTimeout(() => {
+				$('#bulk-import-progress').fadeOut();
+			}, 5000);
+
+			const total = this.totals.created + this.totals.updated + this.totals.skipped_no_email
+				+ this.totals.skipped_duplicate + this.totals.failed;
+			const unique = total - this.totals.skipped_duplicate;
+
+			let message =
+				`<strong>${unique}</strong> unique contacts processed across <strong>${this.pages}</strong> page(s):<br><br>` +
+				`<span style="color:#46b450;">\u2713 ${this.totals.created} created</span><br>` +
+				`<span style="color:#0073aa;">\u21bb ${this.totals.updated} updated</span><br>` +
+				`<span style="color:#999;">\u2298 ${this.totals.skipped_no_email} skipped (no email)</span>`;
+
+			if (this.totals.skipped_duplicate > 0) {
+				message += `<br><span style="color:#aaa;">\u2298 ${this.totals.skipped_duplicate} API duplicates filtered</span>`;
+			}
+
+			if (this.totals.failed > 0) {
+				message += `<br><span style="color:#dc3232;">\u2717 ${this.totals.failed} failed</span>`;
+			}
+
+			Swal.fire({
+				title: 'Import Complete!',
+				html: message,
+				icon: this.totals.failed > 0 ? 'warning' : 'success',
+				confirmButtonText: 'OK',
+			});
+
+			this.reset();
+		},
+
+		/**
+		 * Handle error
+		 *
+		 * @param {string} message - Error message
+		 */
+		error(message) {
+			this.isRunning = false;
+			$('#bulk-import-ghl-btn').prop('disabled', false);
+			$('#bulk-import-progress').hide();
+
+			Swal.fire({
+				title: 'Import Error',
+				text: message,
+				icon: 'error',
+				confirmButtonText: 'OK',
+			});
+
+			this.reset();
+		},
+	};
+
 	function initToolsHandlers() {
 		BulkSyncHandler.init();
+		BulkImportHandler.init();
 	}
 
 	// Export for use in settings-menu.js
