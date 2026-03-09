@@ -87,25 +87,25 @@ class AssetsManager {
 	 * @return void
 	 */
 	public function register_external_libraries(): void {
-		// Register SweetAlert2
+		// Register SweetAlert2 (local)
 		wp_register_style(
-			'sweetalert2',
-			'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css',
+			'ghl-sweetalert2',
+			GHL_CRM_URL . 'assets/admin/css/sweetalert2.min.css',
 			[],
-			'11.0.0'
+			'11.26.22'
 		);
 
 		wp_register_script(
-			'sweetalert2',
-			'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js',
+			'ghl-sweetalert2',
+			GHL_CRM_URL . 'assets/admin/js/sweetalert2.all.min.js',
 			[],
-			'11.0.0',
+			'11.26.22',
 			true
 		);
 
 		// Register Chart.js
 		wp_register_script(
-			'chartjs',
+			'ghl-chartjs',
 			'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
 			[],
 			'4.4.0',
@@ -189,7 +189,7 @@ class AssetsManager {
 			'ghl-crm-spa-js',
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'spa-router.js',
-			[ 'jquery', 'sweetalert2' ],
+			[ 'jquery', 'ghl-sweetalert2' ],
 			[],
 			'1.0.34',
 			true
@@ -220,7 +220,7 @@ class AssetsManager {
 			'ghl-crm-dashboard-js',
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'dashboard.js',
-			[ 'jquery', 'sweetalert2', 'chartjs' ],
+			[ 'jquery', 'ghl-sweetalert2', 'ghl-chartjs' ],
 			[
 				'ajaxUrl'            => admin_url( 'admin-ajax.php' ),
 				'nonce'              => wp_create_nonce( 'ghl_crm_admin' ),
@@ -259,7 +259,7 @@ class AssetsManager {
 			'ghl-crm-analytics-js',
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'analytics.js',
-			[ 'jquery', 'sweetalert2', 'chartjs' ],
+			[ 'jquery', 'ghl-sweetalert2', 'ghl-chartjs' ],
 			[],
 			'1.0.0',
 			true
@@ -278,7 +278,7 @@ class AssetsManager {
 			'ghl-crm-field-mapping-js',
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'field-mapping.js',
-			[ 'jquery', 'sweetalert2' ],
+			[ 'jquery', 'ghl-sweetalert2' ],
 			[
 				'nonce' => wp_create_nonce( 'ghl_crm_field_mapping_nonce' ),
 			],
@@ -300,7 +300,7 @@ class AssetsManager {
 			'ghl-crm-integrations-js',
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'integrations.js',
-			[ 'jquery', 'sweetalert2' ],
+			[ 'jquery', 'ghl-sweetalert2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
@@ -314,7 +314,7 @@ class AssetsManager {
 			'ghl-crm-settings-css',
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'settings.css',
-			[ 'sweetalert2', 'ghl-crm-select2-css' ],
+			[ 'ghl-sweetalert2', 'ghl-crm-select2-css' ],
 			[],
 			'1.0.3'
 		);
@@ -351,7 +351,7 @@ class AssetsManager {
 			'ghl-crm-settings-js',
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'settings.js',
-			[ 'jquery', 'sweetalert2', 'ghl-crm-select2' ],
+			[ 'jquery', 'ghl-sweetalert2', 'ghl-crm-select2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
@@ -374,7 +374,7 @@ class AssetsManager {
 			'ghl-crm-sync-preview-js',
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'sync-preview.js',
-			[ 'jquery', 'sweetalert2', 'ghl-crm-select2' ],
+			[ 'jquery', 'ghl-sweetalert2', 'ghl-crm-select2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
@@ -434,7 +434,7 @@ class AssetsManager {
 			'ghl-crm-settings-css',
 			[ 'toplevel_page_ghl-crm-settings' ],
 			'settings.css',
-			[ 'ghl-crm-globals-css', 'sweetalert2', 'ghl-crm-select2-css' ],
+			[ 'ghl-crm-globals-css', 'ghl-sweetalert2', 'ghl-crm-select2-css' ],
 			[],
 			'1.0.2'
 		);
@@ -444,7 +444,7 @@ class AssetsManager {
 			'ghl-crm-settings-js',
 			[ 'toplevel_page_ghl-crm-settings' ],
 			'settings.js',
-			[ 'jquery', 'sweetalert2', 'ghl-crm-select2' ],
+			[ 'jquery', 'ghl-sweetalert2', 'ghl-crm-select2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
@@ -458,7 +458,7 @@ class AssetsManager {
 			'ghl-crm-tools-js',
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'tools.js',
-			[ 'jquery', 'sweetalert2' ],
+			[ 'jquery', 'ghl-sweetalert2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
@@ -482,7 +482,7 @@ class AssetsManager {
 			'ghl-crm-field-mapping-js',
 			[ 'toplevel_page_ghl-crm-settings' ],
 			'field-mapping.js',
-			[ 'jquery', 'sweetalert2' ],
+			[ 'jquery', 'ghl-sweetalert2' ],
 			[
 				'nonce' => wp_create_nonce( 'ghl_crm_field_mapping_nonce' ),
 			],
@@ -505,7 +505,7 @@ class AssetsManager {
 			'ghl-crm-integrations-js',
 			[ 'toplevel_page_ghl-crm-settings' ],
 			'integrations.js',
-			[ 'jquery', 'sweetalert2' ],
+			[ 'jquery', 'ghl-sweetalert2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
@@ -528,7 +528,7 @@ class AssetsManager {
 			'ghl-crm-sync-logs-js',
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'sync-logs.js',
-			[ 'jquery', 'sweetalert2' ],
+			[ 'jquery', 'ghl-sweetalert2' ],
 			[
 				'nonce'   => wp_create_nonce( 'ghl_sync_logs_nonce' ),
 				'ajaxurl' => admin_url( 'admin-ajax.php' ),
@@ -630,7 +630,7 @@ class AssetsManager {
 			'ghl-crm-setup-wizard-js',
 			[ 'admin_page_ghl-crm-setup-wizard' ],
 			'setup-wizard.js',
-			[ 'jquery', 'sweetalert2' ],
+			[ 'jquery', 'ghl-sweetalert2' ],
 			[
 				'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
 				'nonce'        => wp_create_nonce( 'ghl_crm_spa_nonce' ),
