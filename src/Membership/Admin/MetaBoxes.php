@@ -99,7 +99,13 @@ class MetaBoxes {
 
 		// Check if this post type supports our meta box
 		$screen = get_current_screen();
-		if ( ! $screen || ! in_array( $screen->post_type, [ 'page', 'post', 'product', 'sfwd-courses', 'sfwd-lessons', 'sfwd-topic' ] ) ) {
+		if ( ! $screen ) {
+			return;
+		}
+
+		// Get all supported post types
+		$supported_types = $this->get_supported_post_types();
+		if ( ! in_array( $screen->post_type, $supported_types, true ) ) {
 			return;
 		}
 
@@ -145,24 +151,35 @@ class MetaBoxes {
 	}
 
 	/**
+	 * Get supported post types for membership restrictions
+	 *
+	 * @return array
+	 */
+	private function get_supported_post_types(): array {
+		// Get all public post types
+		$post_types = get_post_types(
+			[
+				'public' => true,
+			],
+			'names'
+		);
+
+		// Remove attachment as it's not a content type we want to restrict
+		$post_types = array_diff( $post_types, [ 'attachment' ] );
+
+		// Allow filtering of supported post types
+		$post_types = apply_filters( 'ghl_crm_restriction_post_types', $post_types );
+
+		return array_values( $post_types );
+	}
+
+	/**
 	 * Add membership meta box to post types
 	 *
 	 * @return void
 	 */
 	public function add_membership_meta_box(): void {
-		$post_types = [ 'page', 'post' ];
-
-		// Add WooCommerce products if WooCommerce is active
-		if ( class_exists( 'WooCommerce' ) ) {
-			$post_types[] = 'product';
-		}
-
-		// Add LearnDash courses if LearnDash is active
-		if ( class_exists( 'SFWD_LMS' ) ) {
-			$post_types[] = 'sfwd-courses';
-			$post_types[] = 'sfwd-lessons';
-			$post_types[] = 'sfwd-topic';
-		}
+		$post_types = $this->get_supported_post_types();
 
 		foreach ( $post_types as $post_type ) {
 			add_meta_box(
