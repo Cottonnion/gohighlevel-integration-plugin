@@ -454,7 +454,6 @@ class OAuthHandler {
 	 * @return void
 	 */
 	private function log_oauth_event( string $event, array $context = [] ): void {
-		return; // Disable logging for now.
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			$message = '[GHL][OAuthHandler] ' . $event;
 

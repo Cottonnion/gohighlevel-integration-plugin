@@ -80,6 +80,26 @@ class Client implements ClientInterface {
 	private static ?string $last_refresh_error = null;
 
 	/**
+	 * Circuit breaker transient key for tracking refresh failures.
+	 */
+	private const CIRCUIT_BREAKER_KEY = 'ghl_crm_refresh_circuit_breaker';
+
+	/**
+	 * Circuit breaker: minutes to wait after consecutive failures before retrying.
+	 */
+	private const CIRCUIT_BREAKER_COOLDOWN = 5;
+
+	/**
+	 * Circuit breaker: max consecutive failures before opening circuit.
+	 */
+	private const CIRCUIT_BREAKER_THRESHOLD = 3;
+
+	/**
+	 * Transient key for throttling reconnect attempts.
+	 */
+	private const RECONNECT_THROTTLE_KEY = 'ghl_crm_reconnect_throttle';
+
+	/**
 	 * OAuth2 Refresh Token
 	 *
 	 * @var string
@@ -418,6 +438,12 @@ class Client implements ClientInterface {
 				try {
 					// Only attempt to refresh if we have OAuth tokens
 					if ( ! empty( $this->refresh_token ) ) {
+						// Skip refresh on frontend if circuit breaker is open (avoid blocking page loads)
+						if ( ! is_admin() && $this->is_circuit_breaker_open() ) {
+							$this->log_oauth_event( 'Frontend refresh skipped: circuit breaker open' );
+							return $response;
+						}
+
 						// Attempt to refresh the access token
 						$this->refresh_access_token();
 
@@ -656,8 +682,11 @@ class Client implements ClientInterface {
 	/**
 	 * Ensure access token is still valid; refresh if close to expiry.
 	 *
+	 * This is a best-effort proactive refresh. If it fails (e.g. circuit breaker
+	 * is open, proxy is down), we let the request proceed with the current token.
+	 * The 401 handler will catch actual auth failures downstream.
+	 *
 	 * @return void
-	 * @throws ApiException When refresh fails
 	 */
 	private function ensure_fresh_access_token(): void {
 		// If we do not know expiry, skip pre-emptive refresh (will rely on 401 handler)
@@ -668,8 +697,13 @@ class Client implements ClientInterface {
 		// Refresh one minute before expiry to avoid mid-request failures
 		$refresh_threshold = $this->access_token_expires_at - 60;
 		if ( time() >= $refresh_threshold ) {
-			$this->log_oauth_event( 'Proactive refresh before expiry', [ 'expires_at' => $this->access_token_expires_at ] );
-			$this->refresh_access_token();
+			try {
+				$this->log_oauth_event( 'Proactive refresh before expiry', [ 'expires_at' => $this->access_token_expires_at ] );
+				$this->refresh_access_token();
+			} catch ( \Exception $e ) {
+				// Best-effort: let the request proceed; 401 handler will catch it.
+				$this->log_oauth_event( 'Proactive refresh failed (non-fatal)', [ 'error' => $e->getMessage() ] );
+			}
 		}
 	}
 
@@ -692,6 +726,61 @@ class Client implements ClientInterface {
 	}
 
 	/**
+	 * Check if circuit breaker is open (too many recent failures).
+	 *
+	 * @return bool True if circuit is open and refresh should not be attempted.
+	 */
+	private function is_circuit_breaker_open(): bool {
+		$circuit_data = get_transient( self::CIRCUIT_BREAKER_KEY );
+		if ( ! $circuit_data ) {
+			return false;
+		}
+
+		$failures    = $circuit_data['failures'] ?? 0;
+		$last_failed = $circuit_data['last_failed'] ?? 0;
+
+		// Circuit is open if we hit threshold
+		if ( $failures >= self::CIRCUIT_BREAKER_THRESHOLD ) {
+			$cooldown_expires = $last_failed + ( self::CIRCUIT_BREAKER_COOLDOWN * MINUTE_IN_SECONDS );
+			if ( time() < $cooldown_expires ) {
+				return true;
+			}
+			// Cooldown expired, reset circuit
+			delete_transient( self::CIRCUIT_BREAKER_KEY );
+		}
+
+		return false;
+	}
+
+	/**
+	 * Record a refresh failure in the circuit breaker.
+	 *
+	 * @return void
+	 */
+	private function record_refresh_failure(): void {
+		$circuit_data = get_transient( self::CIRCUIT_BREAKER_KEY );
+		$failures     = isset( $circuit_data['failures'] ) ? (int) $circuit_data['failures'] + 1 : 1;
+
+		set_transient(
+			self::CIRCUIT_BREAKER_KEY,
+			[
+				'failures'    => $failures,
+				'last_failed' => time(),
+			],
+			self::CIRCUIT_BREAKER_COOLDOWN * MINUTE_IN_SECONDS
+		);
+	}
+
+	/**
+	 * Clear the circuit breaker after successful refresh.
+	 *
+	 * @return void
+	 */
+	private function reset_circuit_breaker(): void {
+		delete_transient( self::CIRCUIT_BREAKER_KEY );
+	}
+
+	/**
 	 * Refresh OAuth2 access token
 	 *
 	 * @return array Token response
@@ -699,8 +788,47 @@ class Client implements ClientInterface {
 	 */
 	public function refresh_access_token(): array {
 		if ( empty( $this->refresh_token ) ) {
+			// If circuit breaker is open but no tokens exist, clear it to avoid confusion
+			if ( $this->is_circuit_breaker_open() ) {
+				$this->reset_circuit_breaker();
+			}
 			$this->log_oauth_event( 'Refresh aborted: no refresh token stored' );
-			throw new ApiException( esc_html__( 'No refresh token available', 'ghl-crm-integration' ) );
+			throw new ApiException( esc_html__( 'No refresh token available. Please connect your GoHighLevel account.', 'ghl-crm-integration' ) );
+		}
+
+		// Check circuit breaker (prevents hammering failing proxy)
+		if ( $this->is_circuit_breaker_open() ) {
+			$this->log_oauth_event( 'Refresh blocked: circuit breaker open (too many recent failures)' );
+
+			// Circuit breaker blocks refresh, but still attempt reconnect API as recovery path
+			// Reconnect uses a different GHL endpoint and may work even when refresh proxy is failing
+			if ( ! empty( $this->location_id ) ) {
+				try {
+					$this->log_oauth_event( 'Circuit breaker open, attempting reconnect recovery', [ 'location_id' => $this->location_id ] );
+					$auth_code    = $this->reconnect_api();
+					$redirect_uri = admin_url( 'admin.php?page=ghl-crm-settings' );
+					$token_payload                 = $this->exchange_code_for_token( $auth_code, $redirect_uri );
+					$expires_at                    = time() + ( $token_payload['expires_in'] ?? 3600 );
+					$this->access_token_expires_at = $expires_at;
+					$this->save_oauth_tokens( $expires_at );
+					$this->reset_circuit_breaker();
+					self::$last_refresh_attempt_ts = 0;
+					$this->log_oauth_event( 'Reconnect recovered from circuit breaker state', [ 'expires_at' => $expires_at ] );
+
+					return $token_payload;
+				} catch ( \Exception $reconnect_error ) {
+					$this->log_oauth_event( 'Reconnect also failed during circuit breaker', [ 'error' => $reconnect_error->getMessage() ] );
+					// Fall through to circuit breaker error
+				}
+			}
+
+			throw new ApiException(
+				sprintf(
+					/* translators: %d: cooldown minutes */
+					esc_html__( 'Token refresh temporarily disabled due to repeated failures. Please try again in %d minutes or reconnect your account.', 'ghl-crm-integration' ),
+					self::CIRCUIT_BREAKER_COOLDOWN
+				)
+			);
 		}
 
 		// Throttle repeated attempts within 30 seconds to avoid hammering
@@ -745,13 +873,16 @@ class Client implements ClientInterface {
 			'refresh_token' => $this->refresh_token,
 		];
 
+		// Use shorter timeout on frontend to avoid blocking page loads
+		$timeout = is_admin() ? 15 : 8;
+
 		$args = [
 			'method'  => 'POST',
 			'headers' => [
 				'Content-Type' => 'application/json',
 			],
 			'body'    => wp_json_encode( $data ),
-			'timeout' => 30,
+			'timeout' => $timeout,
 		];
 
 		$proxy_url = self::OAUTH_PROXY_URL . '/refresh-token';
@@ -760,7 +891,30 @@ class Client implements ClientInterface {
 
 		if ( is_wp_error( $response ) ) {
 			self::$last_refresh_error = $response->get_error_message();
+			$this->record_refresh_failure();
 			$this->log_oauth_event( 'Refresh token WP_Error', [ 'error' => $response->get_error_message() ] );
+
+			// Proxy timed out or is unreachable - try reconnect API as fallback
+			// Reconnect uses a different GHL endpoint and may succeed even when refresh proxy times out
+			if ( ! empty( $this->location_id ) ) {
+				try {
+					$this->log_oauth_event( 'Proxy unreachable, attempting reconnect fallback', [ 'location_id' => $this->location_id ] );
+					$auth_code    = $this->reconnect_api();
+					$redirect_uri = admin_url( 'admin.php?page=ghl-crm-settings' );
+					$token_payload                 = $this->exchange_code_for_token( $auth_code, $redirect_uri );
+					$expires_at                    = time() + ( $token_payload['expires_in'] ?? 3600 );
+					$this->access_token_expires_at = $expires_at;
+					$this->save_oauth_tokens( $expires_at );
+					$this->reset_circuit_breaker();
+					$this->log_oauth_event( 'Reconnect succeeded after proxy timeout', [ 'expires_at' => $expires_at ] );
+
+					return $token_payload;
+				} catch ( \Exception $reconnect_error ) {
+					$this->log_oauth_event( 'Reconnect also failed after proxy timeout', [ 'error' => $reconnect_error->getMessage() ] );
+					// Fall through to throw original error
+				}
+			}
+
 			throw new ApiException(
 				sprintf(
 					/* translators: %s: Error message */
@@ -785,6 +939,7 @@ class Client implements ClientInterface {
 			$decoded_array            = is_array( $decoded ) ? $decoded : [];
 			$error_message            = $decoded_array['message'] ?? ( is_string( $body ) ? $body : 'unknown' );
 			self::$last_refresh_error = sprintf( 'Refresh HTTP %d: %s', $status_code, sanitize_text_field( (string) $error_message ) );
+			$this->record_refresh_failure();
 
 			// If refresh token is invalid, clear tokens and force reconnect to avoid loops
 			if ( isset( $decoded_array['error'] ) && 'invalid_grant' === $decoded_array['error'] ) {
@@ -852,6 +1007,10 @@ class Client implements ClientInterface {
 		$this->access_token_expires_at = $expires_at;
 		self::$last_refresh_error      = null;
 		$this->save_oauth_tokens( $expires_at );
+		
+		// Reset circuit breaker on successful refresh
+		$this->reset_circuit_breaker();
+		
 		$this->log_oauth_event( 'Token refresh succeeded', [ 'expires_at' => $expires_at ] );
 
 		return $decoded;
@@ -870,6 +1029,8 @@ class Client implements ClientInterface {
 	 * Reconnect API - Get new authorization code when refresh token fails
 	 * Uses GoHighLevel's reconnect endpoint for emergency token recovery
 	 *
+	 * Includes a 2-minute throttle to avoid hammering the proxy when it's down.
+	 *
 	 * @return string Authorization code
 	 * @throws ApiException
 	 */
@@ -877,6 +1038,12 @@ class Client implements ClientInterface {
 		if ( empty( $this->location_id ) ) {
 			throw new ApiException( esc_html__( 'Missing location ID for HighLevel reconnect', 'ghl-crm-integration' ) );
 		}
+
+		// Throttle reconnect attempts (2-minute cooldown)
+		if ( get_transient( self::RECONNECT_THROTTLE_KEY ) ) {
+			throw new ApiException( esc_html__( 'Reconnect attempt throttled. Please wait before retrying.', 'ghl-crm-integration' ) );
+		}
+		set_transient( self::RECONNECT_THROTTLE_KEY, true, 2 * MINUTE_IN_SECONDS );
 
 		$data = [
 			'location_id' => $this->location_id,
@@ -1177,6 +1344,9 @@ class Client implements ClientInterface {
 		$settings_manager->delete_setting( 'oauth_access_token' );
 		$settings_manager->delete_setting( 'oauth_refresh_token' );
 		$settings_manager->delete_setting( 'oauth_expires_at' );
+
+		// Clear circuit breaker when disconnecting to avoid confusing errors
+		$this->reset_circuit_breaker();
 	}
 
 	/**

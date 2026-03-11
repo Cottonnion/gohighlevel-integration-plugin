@@ -380,10 +380,16 @@ class QueueManager {
 		$table_name      = $this->get_queue_table_name();
 		$current_site_id = get_current_blog_id();
 
-		// Get batch size from settings via SettingsManager
+		// CRITICAL: Skip processing if OAuth is not connected
+		// Prevents burning retry attempts when auth is down
 		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
-		$batch_size       = absint( $settings_manager->get_setting( 'batch_size', self::BATCH_SIZE ) );
-		$batch_size       = max( 1, min( 500, $batch_size ) ); // Clamp between 1-500
+		if ( ! $settings_manager->is_connection_verified() ) {
+			return;
+		}
+
+		// Get batch size from settings via SettingsManager
+		$batch_size = absint( $settings_manager->get_setting( 'batch_size', self::BATCH_SIZE ) );
+		$batch_size = max( 1, min( 500, $batch_size ) ); // Clamp between 1-500
 
 		// Clean up stale items first (stuck in processing for >5 minutes)
 		$this->cleanup_stale_items();
@@ -844,6 +850,49 @@ class QueueManager {
 				);
 
 				return; // Stop processing this batch
+			}
+
+			// Check if it's an authentication/token error (circuit breaker, token refresh failure, etc.)
+			// Don't burn retry attempts on auth errors - the item itself isn't broken, auth is.
+			$is_auth_error = ( $e instanceof \GHL_CRM\API\Exceptions\AuthenticationException )
+				|| false !== stripos( $e->getMessage(), 'Token refresh' )
+				|| false !== stripos( $e->getMessage(), 'refresh temporarily disabled' )
+				|| false !== stripos( $e->getMessage(), 'No refresh token' )
+				|| false !== stripos( $e->getMessage(), 'No authentication method' )
+				|| false !== stripos( $e->getMessage(), 'reconnect your account' )
+				|| false !== stripos( $e->getMessage(), 'Recent refresh attempt' );
+
+			if ( $is_auth_error ) {
+				// Roll back the attempt counter - don't penalize the item for auth issues.
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Resetting queue item to pending after auth error.
+				$wpdb->update(
+					$table_name,
+					[
+						'status'        => 'pending',
+						'attempts'      => max( 0, $item->attempts - 1 ),
+						'error_message' => 'Authentication error - will retry when reconnected: ' . $e->getMessage(),
+						'updated_at'    => current_time( 'mysql' ),
+					],
+					[ 'id' => $item->id ],
+					[ '%s', '%d', '%s', '%s' ],
+					[ '%d' ]
+				);
+
+				// Log but don't count as failure.
+				$this->logger->log_event(
+					(int) $item->item_id,
+					$item->action,
+					'failed',
+					null,
+					$payload,
+					null,
+					$e->getMessage(),
+					microtime( true ) - $start_time,
+					$item->item_type
+				);
+
+				// Stop processing this entire batch - all items will hit the same auth error.
+				return;
 			}
 
 			// Mark as failed if max attempts reached (attempts already incremented above)
