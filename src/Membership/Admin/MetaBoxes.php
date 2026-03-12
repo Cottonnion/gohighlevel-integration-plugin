@@ -146,6 +146,7 @@ class MetaBoxes {
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_user_profile' ),
+				'tags'    => \GHL_CRM\Core\TagManager::get_instance()->get_tags_for_localization(),
 			]
 		);
 	}
@@ -372,7 +373,7 @@ class MetaBoxes {
 			'ghl-membership-admin',
 			GHL_CRM_URL . 'assets/admin/js/membership-admin.js',
 			[ 'jquery', 'ghl-crm-select2' ],
-			'1.0.0',
+			GHL_CRM_VERSION,
 			true
 		);
 
@@ -383,6 +384,7 @@ class MetaBoxes {
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
+				'tags'    => \GHL_CRM\Core\TagManager::get_instance()->get_tags_for_localization(),
 			]
 		);
 

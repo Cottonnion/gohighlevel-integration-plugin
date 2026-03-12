@@ -138,6 +138,7 @@ class AssetsManager {
 	public function define_admin_assets(): void {
 		$settings           = SettingsManager::get_instance()->get_settings_array();
 		$white_label_domain = $settings['ghl_white_label_domain'] ?? '';
+		$ghl_tags           = TagManager::get_instance()->get_tags_for_localization();
 
 		// Tooltip System (loads on all GHL admin pages)
 		$this->add_admin_asset(
@@ -150,7 +151,7 @@ class AssetsManager {
 			'tooltip-system.js',
 			[],
 			[],
-			'1.0.2',
+			GHL_CRM_VERSION,
 			true
 		);
 
@@ -161,7 +162,7 @@ class AssetsManager {
 			'admin-menu.css',
 			[],
 			[],
-			'1.0.0'
+			GHL_CRM_VERSION
 		);
 
 		// Menu Router for SPA active state management
@@ -171,7 +172,7 @@ class AssetsManager {
 			'menu-router.js',
 			[ 'jquery' ],
 			[],
-			'1.0.2',
+			GHL_CRM_VERSION,
 			true
 		);
 
@@ -182,7 +183,7 @@ class AssetsManager {
 			'spa-app.css',
 			[],
 			[],
-			'1.0.5'
+			GHL_CRM_VERSION
 		);
 
 		$this->add_admin_asset(
@@ -191,7 +192,7 @@ class AssetsManager {
 			'spa-router.js',
 			[ 'jquery', 'ghl-sweetalert2' ],
 			[],
-			'1.0.34',
+			GHL_CRM_VERSION,
 			true
 		);
 
@@ -202,7 +203,7 @@ class AssetsManager {
 			'upgrade-notice.js',
 			[ 'jquery' ],
 			[],
-			'1.0.0',
+			GHL_CRM_VERSION,
 			true
 		);
 
@@ -213,7 +214,7 @@ class AssetsManager {
 			'dashboard.css',
 			[],
 			[],
-			'1.0.2'
+			GHL_CRM_VERSION
 		);
 
 		$this->add_admin_asset(
@@ -282,7 +283,7 @@ class AssetsManager {
 			[
 				'nonce' => wp_create_nonce( 'ghl_crm_field_mapping_nonce' ),
 			],
-			'1.0.3',
+			GHL_CRM_VERSION,
 			true
 		);
 
@@ -304,8 +305,9 @@ class AssetsManager {
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
+				'tags'    => $ghl_tags,
 			],
-			'1.0.7',
+			GHL_CRM_VERSION,
 			true
 		);
 
@@ -316,7 +318,7 @@ class AssetsManager {
 			'settings.css',
 			[ 'ghl-sweetalert2', 'ghl-crm-select2-css' ],
 			[],
-			'1.0.3'
+			GHL_CRM_VERSION
 		);
 
 		$this->add_admin_asset(
@@ -325,7 +327,7 @@ class AssetsManager {
 			'advanced-settings.css',
 			[ 'ghl-crm-settings-css' ],
 			[],
-			'1.0.0'
+			GHL_CRM_VERSION
 		);
 
 		$this->add_admin_asset(
@@ -334,7 +336,7 @@ class AssetsManager {
 			'settings-menu.css',
 			[],
 			[],
-			'1.0.4'
+			GHL_CRM_VERSION
 		);
 
 		$this->add_admin_asset(
@@ -343,7 +345,7 @@ class AssetsManager {
 			'settings-menu.js',
 			[ 'jquery' ],
 			[],
-			'1.0.1',
+			GHL_CRM_VERSION,
 			true
 		);
 
@@ -355,8 +357,9 @@ class AssetsManager {
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
+				'tags'    => $ghl_tags,
 			],
-			'1.0.8',
+			GHL_CRM_VERSION,
 			true
 		);
 
@@ -367,7 +370,7 @@ class AssetsManager {
 			'sync-preview.css',
 			[ 'ghl-crm-settings-css' ],
 			[],
-			'1.0.0'
+			GHL_CRM_VERSION
 		);
 
 		$this->add_admin_asset(
@@ -411,85 +414,85 @@ class AssetsManager {
 					'gotIt'              => __( 'Got it!', 'ghl-crm-integration' ),
 				],
 			],
-			'1.0.0',
-			true
-		);
+		GHL_CRM_VERSION,
+		true
+	);
 
-		// Global CSS for all admin pages (now includes tabbed main-settings page)
-		$this->add_admin_asset(
-			'ghl-crm-globals-css',
-			[
-				'toplevel_page_ghl-crm-settings',           // Legacy main tabbed page
-				'toplevel_page_ghl-crm-admin',              // New SPA page
-				'ghl-crm_page_ghl-crm-sync-logs',
-			],
-			'globals.css',
-			[],
-			[],
-			'1.0.3'
-		);
+	// Global CSS for all admin pages (now includes tabbed main-settings page)
+	$this->add_admin_asset(
+		'ghl-crm-globals-css',
+		[
+			'toplevel_page_ghl-crm-settings',           // Legacy main tabbed page
+			'toplevel_page_ghl-crm-admin',              // New SPA page
+			'ghl-crm_page_ghl-crm-sync-logs',
+		],
+		'globals.css',
+		[],
+		[],
+		GHL_CRM_VERSION
+	);
 
-		// Settings page CSS (loads on main-settings page for all tabs)
-		$this->add_admin_asset(
-			'ghl-crm-settings-css',
-			[ 'toplevel_page_ghl-crm-settings' ],
-			'settings.css',
-			[ 'ghl-crm-globals-css', 'ghl-sweetalert2', 'ghl-crm-select2-css' ],
-			[],
-			'1.0.2'
-		);
+	// Settings page CSS (loads on main-settings page for all tabs)
+	$this->add_admin_asset(
+		'ghl-crm-settings-css',
+		[ 'toplevel_page_ghl-crm-settings' ],
+		'settings.css',
+		[ 'ghl-crm-globals-css', 'ghl-sweetalert2', 'ghl-crm-select2-css' ],
+		[],
+		GHL_CRM_VERSION
+	);
 
-		// Settings page JS (loads on main-settings page for settings tab)
-		$this->add_admin_asset(
-			'ghl-crm-settings-js',
-			[ 'toplevel_page_ghl-crm-settings' ],
-			'settings.js',
-			[ 'jquery', 'ghl-sweetalert2', 'ghl-crm-select2' ],
-			[
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
-			],
-			'1.0.2',
-			true
-		);
+	// Settings page JS (loads on main-settings page for settings tab)
+	$this->add_admin_asset(
+		'ghl-crm-settings-js',
+		[ 'toplevel_page_ghl-crm-settings' ],
+		'settings.js',
+		[ 'jquery', 'ghl-sweetalert2', 'ghl-crm-select2' ],
+		[
+			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+			'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
+			'tags'    => $ghl_tags,
+		],
+		GHL_CRM_VERSION,
+		true
+	);
 
-		// Tools page JS (loads on main-settings page for tools tab)
-		$this->add_admin_asset(
-			'ghl-crm-tools-js',
-			[ 'toplevel_page_ghl-crm-admin' ],
-			'tools.js',
-			[ 'jquery', 'ghl-sweetalert2' ],
-			[
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
-			],
-			'1.0.2',
-			true
-		);
+	// Tools page JS (loads on main-settings page for tools tab)
+	$this->add_admin_asset(
+		'ghl-crm-tools-js',
+		[ 'toplevel_page_ghl-crm-admin' ],
+		'tools.js',
+		[ 'jquery', 'ghl-sweetalert2' ],
+		[
+			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+			'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
+		],
+		GHL_CRM_VERSION,
+		true
+	);
 
-		// Field Mapping CSS (loads on main-settings page for field-mapping tab)
-		$this->add_admin_asset(
-			'ghl-crm-field-mapping-css',
-			[ 'toplevel_page_ghl-crm-settings' ],
-			'field-mapping.css',
-			[ 'ghl-crm-globals-css' ],
-			[],
-			'1.0.2'
-		);
+	// Field Mapping CSS (loads on main-settings page for field-mapping tab)
+	$this->add_admin_asset(
+		'ghl-crm-field-mapping-css',
+		[ 'toplevel_page_ghl-crm-settings' ],
+		'field-mapping.css',
+		[ 'ghl-crm-globals-css' ],
+		[],
+		GHL_CRM_VERSION
+	);
 
-		// Field Mapping JS (loads on main-settings page for field-mapping tab)
-		$this->add_admin_asset(
-			'ghl-crm-field-mapping-js',
-			[ 'toplevel_page_ghl-crm-settings' ],
-			'field-mapping.js',
-			[ 'jquery', 'ghl-sweetalert2' ],
-			[
-				'nonce' => wp_create_nonce( 'ghl_crm_field_mapping_nonce' ),
-			],
-			'1.0.6',
-			true
-		);
-
+	// Field Mapping JS (loads on main-settings page for field-mapping tab)
+	$this->add_admin_asset(
+		'ghl-crm-field-mapping-js',
+		[ 'toplevel_page_ghl-crm-settings' ],
+		'field-mapping.js',
+		[ 'jquery', 'ghl-sweetalert2' ],
+		[
+			'nonce' => wp_create_nonce( 'ghl_crm_field_mapping_nonce' ),
+		],
+		GHL_CRM_VERSION,
+		true
+	);
 		// Integrations CSS (loads on main-settings page for integrations tab)
 		$this->add_admin_asset(
 			'ghl-crm-integrations-css',
@@ -509,8 +512,9 @@ class AssetsManager {
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
+				'tags'    => $ghl_tags,
 			],
-			'1.0.7',
+			GHL_CRM_VERSION,
 			true
 		);
 
@@ -521,7 +525,7 @@ class AssetsManager {
 			'sync-logs.css',
 			[ 'ghl-crm-globals-css' ],
 			[],
-			'1.0.4'
+			GHL_CRM_VERSION
 		);
 
 		$this->add_admin_asset(
@@ -533,7 +537,7 @@ class AssetsManager {
 				'nonce'   => wp_create_nonce( 'ghl_sync_logs_nonce' ),
 				'ajaxurl' => admin_url( 'admin-ajax.php' ),
 			],
-			'1.0.5',
+			GHL_CRM_VERSION,
 			true
 		);
 
@@ -638,6 +642,7 @@ class AssetsManager {
 				'settingsUrl'  => admin_url( 'admin.php?page=ghl-crm-admin#/settings' ),
 				'dashboardUrl' => admin_url( 'admin.php?page=ghl-crm-admin' ),
 				'isConnected'  => ( ! empty( $oauth_token ) || ! empty( $api_token ) ) ? '1' : '0',
+				'tags'         => $ghl_tags,
 				'settings'     => [
 					'enable_user_sync'              => $enable_user_sync,
 					'user_register'                 => $user_register_enabled,
@@ -649,7 +654,7 @@ class AssetsManager {
 					'enable_role_tags'              => $enable_role_tags,
 				],
 			],
-			'1.0.1',
+			GHL_CRM_VERSION,
 			true
 		);
 	}
@@ -828,7 +833,7 @@ class AssetsManager {
 			'forms.css',
 			[],
 			[],
-			'1.0.1',
+			GHL_CRM_VERSION,
 			false
 		);
 
@@ -849,7 +854,7 @@ class AssetsManager {
 			'blocks-frontend.css',
 			[],
 			[],
-			'1.1.2',
+			GHL_CRM_VERSION,
 			false,
 			GHL_CRM_URL . 'assets/blocks/'
 		);

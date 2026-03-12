@@ -263,7 +263,7 @@ class UserProfileFields {
 			'ghl-settings',
 			GHL_CRM_URL . 'assets/admin/css/settings.css',
 			[],
-			'1.0.0'
+			GHL_CRM_VERSION
 		);
 
 		// Enqueue custom styles
@@ -271,7 +271,7 @@ class UserProfileFields {
 			'ghl-user-profile',
 			GHL_CRM_URL . 'assets/admin/css/user-profile.css',
 			[ 'ghl-crm-select2-css', 'ghl-settings' ],
-			'1.0.0'
+			GHL_CRM_VERSION
 		);
 
 		// Enqueue custom script
@@ -279,7 +279,7 @@ class UserProfileFields {
 			'ghl-user-profile-js',
 			GHL_CRM_URL . 'assets/admin/js/user-profile.js',
 			[ 'jquery', 'ghl-crm-select2' ],
-			'1.0.2',
+			GHL_CRM_VERSION,
 			true
 		);
 
@@ -290,6 +290,7 @@ class UserProfileFields {
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_user_profile' ),
+				'tags'    => \GHL_CRM\Core\TagManager::get_instance()->get_tags_for_localization(),
 				'strings' => [
 					'loading'        => __( 'Loading...', 'ghl-crm-integration' ),
 					'syncSuccess'    => __( 'User synced successfully!', 'ghl-crm-integration' ),
