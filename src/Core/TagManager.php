@@ -197,6 +197,35 @@ class TagManager {
 	}
 
 	/**
+	 * Get tags formatted for wp_localize_script.
+	 *
+	 * Returns an array of associative arrays with 'id' and 'name' keys,
+	 * suitable for embedding in JS without an AJAX round-trip.
+	 * Silently returns an empty array on failure.
+	 *
+	 * @return array<int, array{id: string, name: string}>
+	 */
+	public function get_tags_for_localization(): array {
+		try {
+			$tags = $this->get_tags();
+		} catch ( \Throwable $e ) {
+			return [];
+		}
+
+		return array_values(
+			array_map(
+				static function ( array $tag ): array {
+					return [
+						'id'   => isset( $tag['id'] ) ? (string) $tag['id'] : '',
+						'name' => isset( $tag['name'] ) ? (string) $tag['name'] : '',
+					];
+				},
+				$tags
+			)
+		);
+	}
+
+	/**
 	 * Build and memoize the internal tag cache keyed by ID.
 	 */
 	private function ensure_tag_cache(): void {
