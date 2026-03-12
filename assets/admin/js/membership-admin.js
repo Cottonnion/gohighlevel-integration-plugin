@@ -24,6 +24,19 @@
                 return;
             }
 
+            // Pre-populate options from localized tags (already selected tags are in HTML)
+            var allTags = (typeof ghlMembership !== 'undefined' && ghlMembership.tags) ? ghlMembership.tags : [];
+            var selectedIds = $tagsSelect.find('option').map(function() {
+                return $(this).val();
+            }).get();
+
+            allTags.forEach(function(tag) {
+                var label = String(tag.name || tag.id || '');
+                if (label && selectedIds.indexOf(label) === -1) {
+                    $tagsSelect.append(new Option(label, label, false, false));
+                }
+            });
+
             $tagsSelect.select2({
                 tags: true,
                 tokenSeparators: [','],
@@ -31,51 +44,7 @@
                 closeOnSelect: false,
                 allowClear: true,
                 width: '100%',
-                scrollAfterSelect: false,
-                ajax: {
-                    url: ghlMembership.ajaxUrl,
-                    dataType: 'json',
-                    type: 'POST',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            action: 'ghl_crm_get_tags',
-                            nonce: ghlMembership.nonce,
-                            search: params.term || ''
-                        };
-                    },
-                    processResults: function(response, params) {
-                        if (!response.success || !response.data || !response.data.tags) {
-                            return { results: [] };
-                        }
-
-                        var items = response.data.tags.map(function(tag) {
-                            if (typeof tag === 'object' && tag !== null) {
-                                var label = String(tag.name || tag.id || '');
-                                return {
-                                    id: label,
-                                    text: label
-                                };
-                            }
-                            var value = String(tag || '');
-                            return {
-                                id: value,
-                                text: value
-                            };
-                        });
-
-                        if (params && params.term) {
-                            var term = params.term.toLowerCase();
-                            items = items.filter(function(item) {
-                                return item.text && item.text.toLowerCase().indexOf(term) !== -1;
-                            });
-                        }
-
-                        return { results: items };
-                    },
-                    cache: true
-                },
-                minimumInputLength: 0
+                scrollAfterSelect: false
             });
         },
 

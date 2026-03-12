@@ -25,6 +25,20 @@
                 return;
             }
 
+            // Pre-populate options from localized tags (already selected tags are in HTML)
+            var allTags = (ghlUserProfile.tags || []);
+            var selectedIds = $tagsSelect.find('option').map(function() {
+                return $(this).val();
+            }).get();
+
+            allTags.forEach(function(tag) {
+                var id = String(tag.id || tag.name || '');
+                var name = String(tag.name || tag.id || '');
+                if (id && selectedIds.indexOf(id) === -1) {
+                    $tagsSelect.append(new Option(name, id, false, false));
+                }
+            });
+
             $tagsSelect.select2({
                 tags: true,
                 tokenSeparators: [','],
@@ -32,80 +46,7 @@
                 closeOnSelect: false,
                 allowClear: true,
                 width: '100%',
-                scrollAfterSelect: false,
-                ajax: {
-                    url: ghlUserProfile.ajaxUrl,
-                    type: 'POST',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            action: 'ghl_crm_get_tags',
-                            nonce: ghlUserProfile.nonce,
-                            search: params.term || ''
-                        };
-                    },
-                    processResults: function(response, params) {
-                        if (!response.success || !response.data || !response.data.tags) {
-                            return { results: [] };
-                        }
-
-                        var items = response.data.tags.map(function(tag) {
-                            if (tag && typeof tag === 'object') {
-                                var id = '';
-                                var text = '';
-
-                                if (tag.id !== undefined && tag.id !== null && String(tag.id).length) {
-                                    id = String(tag.id);
-                                }
-
-                                if (tag.name !== undefined && tag.name !== null && String(tag.name).length) {
-                                    text = String(tag.name);
-                                }
-
-                                if (!id && text) {
-                                    id = text;
-                                }
-
-                                if (!text && id) {
-                                    text = id;
-                                }
-
-                                if (!id) {
-                                    return null;
-                                }
-
-                                return {
-                                    id: id,
-                                    text: text
-                                };
-                            }
-
-                            var value = String(tag || '');
-                            if (!value) {
-                                return null;
-                            }
-
-                            return {
-                                id: value,
-                                text: value
-                            };
-                        }).filter(function(item) {
-                            return item !== null;
-                        });
-
-                        if (params && params.term) {
-                            var term = params.term.toLowerCase();
-                            items = items.filter(function(item) {
-                                return item.text && item.text.toLowerCase().indexOf(term) !== -1;
-                            });
-                        }
-
-                        return { results: items };
-                    },
-                    cache: true
-                },
-                minimumInputLength: 0
+                scrollAfterSelect: false
             });
         },
 

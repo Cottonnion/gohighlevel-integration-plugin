@@ -125,63 +125,29 @@
         return;
       }
 
+      var allTags = (typeof ghl_crm_integrations_js_data !== "undefined" && ghl_crm_integrations_js_data.tags) ? ghl_crm_integrations_js_data.tags : [];
+
       // Initialize each Select2 dropdown
       $tagsSelects.each(function () {
         const $select = $(this);
 
-        // Initialize Select2 with AJAX
+        // Pre-populate options from localized tags
+        var existingVals = $select.find("option").map(function() { return $(this).val(); }).get();
+        allTags.forEach(function(tag) {
+          var label = String(tag.name || tag.id || "");
+          if (label && existingVals.indexOf(label) === -1) {
+            $select.append(new Option(label, label, false, false));
+          }
+        });
+
         $select.select2({
+          tags: true,
+          tokenSeparators: [","],
           placeholder: $select.data("placeholder") || "Select tags...",
           allowClear: true,
           width: "100%",
           closeOnSelect: false,
           scrollAfterSelect: false,
-          ajax: {
-            url: ghl_crm_integrations_js_data.ajaxUrl,
-            type: "POST",
-            dataType: "json",
-            delay: 250,
-            data: function (params) {
-              return {
-                action: "ghl_crm_get_tags",
-                nonce: ghl_crm_integrations_js_data.nonce,
-                search: params.term || "",
-              };
-            },
-            processResults: function (response, params) {
-              if (!response.success || !response.data || !response.data.tags) {
-                return { results: [] };
-              }
-
-              var items = response.data.tags.map(function (tag) {
-                if (typeof tag === "object" && tag !== null) {
-                  var label = String(tag.name || tag.id || "");
-                  return {
-                    id: label,
-                    text: label,
-                  };
-                }
-                var value = String(tag || "");
-                return {
-                  id: value,
-                  text: value,
-                };
-              });
-
-              if (params && params.term) {
-                var term = params.term.toLowerCase();
-                items = items.filter(function (item) {
-                  return (
-                    item.text && item.text.toLowerCase().indexOf(term) !== -1
-                  );
-                });
-              }
-
-              return { results: items };
-            },
-            cache: true,
-          },
-          minimumInputLength: 0,
         });
 
         // Pre-populate with saved tags from data attribute

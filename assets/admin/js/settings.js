@@ -717,67 +717,44 @@
 	}
 	
 	/**
-	 * Load tags from GoHighLevel
+	 * Load tags from localized data for user registration
 	 */
 	function loadGoHighLevelTags() {
 		const $tagsSelect = $('#user_register_tags');
 		const savedTags = $tagsSelect.data('saved-tags') || [];
-		
-		// Show loading state
-		$tagsSelect.html('<option value="">Loading tags...</option>').prop('disabled', true);
+		const tags = (typeof ghl_crm_settings_js_data !== 'undefined' && ghl_crm_settings_js_data.tags) ? ghl_crm_settings_js_data.tags : [];
 
-		$.ajax({
-			url: ajaxurl,
-			type: 'POST',
-			data: {
-				action: 'ghl_crm_get_tags',
-				nonce: $('#ghl_crm_nonce').val()
-			},
-			success: function(response) {
-				if (response.success && response.data.tags) {
-					const tags = response.data.tags;
-					$tagsSelect.empty();
+		$tagsSelect.empty();
 
-					if (tags.length === 0) {
-						$tagsSelect.append('<option value="">No tags found in your GoHighLevel location</option>');
-					} else {
-						// Add placeholder option
-						$tagsSelect.append('<option value="">Select tags...</option>');
-
-						// Add each tag as an option
-						tags.forEach(function(tag) {
-							const tagValue = tag.name || tag;
-							const tagLabel = tag.name || tag;
-							const isSelected = savedTags.includes(tagValue);
-							$tagsSelect.append(
-								$('<option></option>')
-									.attr('value', tagValue)
-									.text(tagLabel)
-									.prop('selected', isSelected)
-							);
-						});
-					}
-
-					$tagsSelect.prop('disabled', false);
-
-					// Initialize Select2 if available
-					if (typeof $.fn.select2 !== 'undefined') {
-						$tagsSelect.select2({
-							placeholder: 'Select tags to apply on user registration',
-							allowClear: true,
-							width: '100%',
-							closeOnSelect: false, // Keep dropdown open when selecting multiple tags
-							scrollAfterSelect: false
-						});
-					}
-				} else {
-					$tagsSelect.html('<option value="">Failed to load tags</option>');
+		if (tags.length === 0) {
+			$tagsSelect.append('<option value="">No tags found</option>');
+		} else {
+			tags.forEach(function(tag) {
+				var tagValue = String(tag.name || tag.id || '');
+				if (!tagValue) {
+					return;
 				}
-			},
-			error: function(xhr, status, error) {
-				$tagsSelect.html('<option value="">Error loading tags</option>').prop('disabled', false);
-			}
-		});
+				var isSelected = savedTags.includes(tagValue);
+				$tagsSelect.append(
+					$('<option></option>')
+						.attr('value', tagValue)
+						.text(tagValue)
+						.prop('selected', isSelected)
+				);
+			});
+		}
+
+		if (typeof $.fn.select2 !== 'undefined') {
+			$tagsSelect.select2({
+				tags: true,
+				tokenSeparators: [','],
+				placeholder: 'Select or type tags to apply on user registration',
+				allowClear: true,
+				width: '100%',
+				closeOnSelect: false,
+				scrollAfterSelect: false
+			});
+		}
 	}
 
 	/**
@@ -790,60 +767,27 @@
 			return;
 		}
 
-		// Initialize Select2 with AJAX
+		var tags = (typeof ghl_crm_settings_js_data !== 'undefined' && ghl_crm_settings_js_data.tags) ? ghl_crm_settings_js_data.tags : [];
+
+		// Pre-populate options from localized tags
+		tags.forEach(function(tag) {
+			var label = String(tag.name || tag.id || '');
+			if (label && $tagsSelect.find("option[value='" + label + "']").length === 0) {
+				$tagsSelect.append(new Option(label, label, false, false));
+			}
+		});
+
 		$tagsSelect.select2({
+			tags: true,
+			tokenSeparators: [','],
 			placeholder: $tagsSelect.data('placeholder') || 'Select tags that can bypass restrictions...',
 			allowClear: true,
 			width: '100%',
 			closeOnSelect: false,
-			scrollAfterSelect: false,
-			ajax: {
-				url: ajaxurl,
-				type: 'POST',
-				dataType: 'json',
-				delay: 250,
-				data: function(params) {
-					return {
-						action: 'ghl_crm_get_tags',
-						nonce: $('#ghl_crm_nonce').val(),
-						search: params.term || ''
-					};
-				},
-				processResults: function(response, params) {
-					if (!response.success || !response.data || !response.data.tags) {
-						return { results: [] };
-					}
-
-					var items = response.data.tags.map(function(tag) {
-						if (typeof tag === 'object' && tag !== null) {
-							var label = String(tag.name || tag.id || '');
-							return {
-								id: label,
-								text: label
-							};
-						}
-						var value = String(tag || '');
-						return {
-							id: value,
-							text: value
-						};
-					});
-
-					if (params && params.term) {
-						var term = params.term.toLowerCase();
-						items = items.filter(function(item) {
-							return item.text && item.text.toLowerCase().indexOf(term) !== -1;
-						});
-					}
-
-					return { results: items };
-				},
-				cache: true
-			},
-			minimumInputLength: 0
+			scrollAfterSelect: false
 		});
 
-		// Load current settings and pre-populate saved tags
+		// Pre-select saved tags from settings
 		$.ajax({
 			url: ajaxurl,
 			type: 'POST',
@@ -853,15 +797,11 @@
 			},
 			success: function(response) {
 				if (response.success && response.data.settings) {
-					const savedTags = response.data.settings.restrictions_allowed_tags || [];
-					
-					// Pre-populate with saved tags
+					var savedTags = response.data.settings.restrictions_allowed_tags || [];
 					if (Array.isArray(savedTags) && savedTags.length > 0) {
 						savedTags.forEach(function(tag) {
-							// Create option if it doesn't exist
 							if ($tagsSelect.find("option[value='" + tag + "']").length === 0) {
-								const newOption = new Option(tag, tag, true, true);
-								$tagsSelect.append(newOption);
+								$tagsSelect.append(new Option(tag, tag, true, true));
 							}
 						});
 						$tagsSelect.val(savedTags).trigger('change');
@@ -883,57 +823,27 @@
 	 */
 	function initRoleTagsSelect2() {
 		if (typeof $.fn.select2 !== 'undefined' && $('.ghl-role-tags-select').length > 0) {
+			var tags = (typeof ghl_crm_settings_js_data !== 'undefined' && ghl_crm_settings_js_data.tags) ? ghl_crm_settings_js_data.tags : [];
+
+			// Pre-populate options from localized tags on each select
+			$('.ghl-role-tags-select').each(function() {
+				var $select = $(this);
+				var existingVals = $select.find('option').map(function() { return $(this).val(); }).get();
+				tags.forEach(function(tag) {
+					var label = String(tag.name || tag.id || '');
+					if (label && existingVals.indexOf(label) === -1) {
+						$select.append(new Option(label, label, false, false));
+					}
+				});
+			});
+
 			$('.ghl-role-tags-select').select2({
 				tags: true,
 				tokenSeparators: [','],
 				allowClear: true,
 				width: '100%',
-				closeOnSelect: false, // Keep dropdown open when selecting multiple tags
+				closeOnSelect: false,
 				scrollAfterSelect: false,
-				ajax: {
-					url: ajaxurl,
-					type: 'POST',
-					dataType: 'json',
-					delay: 250,
-					data: function(params) {
-						return {
-							action: 'ghl_crm_get_tags',
-							nonce: $('#ghl_crm_nonce').val(),
-							search: params.term || ''
-						};
-					},
-					processResults: function(response, params) {
-						if (!response.success || !response.data || !response.data.tags) {
-							return { results: [] };
-						}
-
-						var items = response.data.tags.map(function(tag) {
-							if (typeof tag === 'object' && tag !== null) {
-								var label = String(tag.name || tag.id || '');
-								return {
-									id: label,
-									text: label
-								};
-							}
-							var value = String(tag || '');
-							return {
-								id: value,
-								text: value
-							};
-						});
-
-						if (params && params.term) {
-							var term = params.term.toLowerCase();
-							items = items.filter(function(item) {
-								return item.text && item.text.toLowerCase().indexOf(term) !== -1;
-							});
-						}
-
-						return { results: items };
-					},
-					cache: true
-				},
-				minimumInputLength: 0,
 				createTag: function(params) {
 					var term = $.trim(params.term);
 					if (term === '') {
@@ -1112,60 +1022,40 @@
 	function loadFamilyParentTags() {
 		const $tagsSelect = $('#family_parent_tag');
 		const savedTag = $tagsSelect.data('saved-tag') || '';
-		
-		// Show loading state
-		$tagsSelect.html('<option value="">Loading tags...</option>').prop('disabled', true);
+		var tags = (typeof ghl_crm_settings_js_data !== 'undefined' && ghl_crm_settings_js_data.tags) ? ghl_crm_settings_js_data.tags : [];
 
-		$.ajax({
-			url: ajaxurl,
-			type: 'POST',
-			data: {
-				action: 'ghl_crm_get_tags',
-				nonce: $('#ghl_crm_nonce').val()
-			},
-			success: function(response) {
-				if (response.success && response.data.tags) {
-					const tags = response.data.tags;
-					$tagsSelect.empty();
+		$tagsSelect.empty();
 
-					if (tags.length === 0) {
-						$tagsSelect.append('<option value="">No tags found in your GoHighLevel location</option>');
-					} else {
-						// Add placeholder option
-						$tagsSelect.append('<option value="">-- Select a tag --</option>');
+		if (tags.length === 0) {
+			$tagsSelect.append('<option value="">No tags found</option>');
+		} else {
+			$tagsSelect.append('<option value="">-- Select a tag --</option>');
 
-						// Add each tag as an option
-						tags.forEach(function(tag) {
-							const tagId = tag.id || tag;
-							const tagName = tag.name || tag;
-							const isSelected = savedTag === tagId;
-							$tagsSelect.append(
-								$('<option></option>')
-									.attr('value', tagId)
-									.text(tagName)
-									.prop('selected', isSelected)
-							);
-						});
-					}
-
-					$tagsSelect.prop('disabled', false);
-
-					// Initialize Select2 if available
-					if (typeof $.fn.select2 !== 'undefined') {
-						$tagsSelect.select2({
-							placeholder: '-- Select a tag --',
-							allowClear: true,
-							width: '300px'
-						});
-					}
-				} else {
-					$tagsSelect.html('<option value="">Failed to load tags</option>');
+			tags.forEach(function(tag) {
+				var tagId = String(tag.id || tag.name || '');
+				var tagName = String(tag.name || tag.id || '');
+				if (!tagId) {
+					return;
 				}
-			},
-			error: function(xhr, status, error) {
-				$tagsSelect.html('<option value="">Error loading tags</option>').prop('disabled', false);
-			}
-		});
+				var isSelected = savedTag === tagId;
+				$tagsSelect.append(
+					$('<option></option>')
+						.attr('value', tagId)
+						.text(tagName)
+						.prop('selected', isSelected)
+				);
+			});
+		}
+
+		if (typeof $.fn.select2 !== 'undefined') {
+			$tagsSelect.select2({
+				tags: true,
+				tokenSeparators: [','],
+				placeholder: '-- Select a tag --',
+				allowClear: true,
+				width: '300px'
+			});
+		}
 	}
 
 	/**

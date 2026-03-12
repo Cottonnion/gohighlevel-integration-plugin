@@ -35,60 +35,25 @@
         // Get saved tags from data attribute
         const savedTags = $select.data('saved-tags') || [];
 
-        // Initialize Select2 with AJAX
+        // Pre-populate options from localized tags
+        var allTags = (typeof ghl_crm_pro_woocommerce_data !== 'undefined' && ghl_crm_pro_woocommerce_data.tags) ? ghl_crm_pro_woocommerce_data.tags : [];
+        allTags.forEach(function(tag) {
+            var label = String(tag.name || tag.id || '');
+            if (label && $select.find("option[value='" + label + "']").length === 0) {
+                var isSelected = savedTags.indexOf(label) !== -1;
+                $select.append(new Option(label, label, isSelected, isSelected));
+            }
+        });
+
+        // Initialize Select2 without AJAX
         $select.select2({
             placeholder: $select.data('placeholder') || 'Select tags...',
             allowClear: true,
             closeOnSelect: false,
-            tags: false,
+            tags: true,
+            tokenSeparators: [','],
             scrollAfterSelect: false,
-            width: '100%',
-            ajax: {
-                url: ghl_crm_pro_woocommerce_data.ajaxUrl + '?action=' + encodeURIComponent(ghl_crm_pro_woocommerce_data.action),
-                type: 'POST',
-                dataType: 'json',
-                contentType: 'application/json; charset=UTF-8',
-                processData: false,
-                delay: 250,
-                data: function(params) {
-                    return JSON.stringify({
-                        nonce: ghl_crm_pro_woocommerce_data.nonce,
-                        search: params.term || ''
-                    });
-                },
-                processResults: function(response, params) {
-                    if (!response.success || !response.data || !response.data.tags) {
-                        return { results: [] };
-                    }
-
-                    var items = response.data.tags.map(function(tag) {
-                        if (typeof tag === 'object' && tag !== null) {
-                            var label = String(tag.name || tag.id || '');
-                            return {
-                                id: label,
-                                text: label
-                            };
-                        }
-
-                        var value = String(tag || '');
-                        return {
-                            id: value,
-                            text: value
-                        };
-                    });
-
-                    if (params && params.term) {
-                        var term = params.term.toLowerCase();
-                        items = items.filter(function(item) {
-                            return item.text && item.text.toLowerCase().indexOf(term) !== -1;
-                        });
-                    }
-
-                    return { results: items };
-                },
-                cache: true
-            },
-            minimumInputLength: 0
+            width: '100%'
         });
 
         // Prevent dropdown from auto-scrolling on selection/unselection

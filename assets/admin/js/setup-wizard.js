@@ -59,61 +59,40 @@
         loadTags: function () {
             const $tagsSelect = $('#wizard_user_register_tags');
             const savedTags = ghl_crm_setup_wizard_js_data.settings.user_register_tags || [];
+            var tags = ghl_crm_setup_wizard_js_data.tags || [];
 
-            // Show loading state
-            $tagsSelect.html('<option value="">Loading tags...</option>').prop('disabled', true);
+            $tagsSelect.empty();
 
-            $.ajax({
-                url: ghl_crm_setup_wizard_js_data.ajaxUrl,
-                type: 'POST',
-                data: {
-                    action: 'ghl_crm_get_tags',
-                    nonce: ghl_crm_setup_wizard_js_data.nonce
-                },
-                success: (response) => {
-                    if (response.success && response.data.tags) {
-                        const tags = response.data.tags;
-                        $tagsSelect.empty();
-
-                        if (tags.length === 0) {
-                            $tagsSelect.append('<option value="">No tags found in your GoHighLevel location</option>');
-                        } else {
-                            // Add each tag as an option
-                            tags.forEach((tag) => {
-                                const tagValue = tag.name || tag;
-                                const tagLabel = tag.name || tag;
-                                const isSelected = savedTags.includes(tagValue);
-                                $tagsSelect.append(
-                                    $('<option></option>')
-                                        .attr('value', tagValue)
-                                        .text(tagLabel)
-                                        .prop('selected', isSelected)
-                                );
-                            });
-                        }
-
-                        $tagsSelect.prop('disabled', false);
-
-                        // Initialize Select2 if available
-                        if (typeof $.fn.select2 !== 'undefined') {
-                            $tagsSelect.select2({
-                                tags: true,
-                                tokenSeparators: [','],
-                                placeholder: 'Select tags to apply on user registration',
-                                allowClear: true,
-                                width: '100%',
-                                closeOnSelect: false,
-                                scrollAfterSelect: false
-                            });
-                        }
-                    } else {
-                        $tagsSelect.html('<option value="">Failed to load tags</option>');
+            if (tags.length === 0) {
+                $tagsSelect.append('<option value="">No tags found</option>');
+            } else {
+                tags.forEach((tag) => {
+                    const tagValue = String(tag.name || tag.id || '');
+                    if (!tagValue) {
+                        return;
                     }
-                },
-                error: (xhr, status, error) => {
-                    $tagsSelect.html('<option value="">Error loading tags</option>').prop('disabled', false);
-                }
-            });
+                    const isSelected = savedTags.includes(tagValue);
+                    $tagsSelect.append(
+                        $('<option></option>')
+                            .attr('value', tagValue)
+                            .text(tagValue)
+                            .prop('selected', isSelected)
+                    );
+                });
+            }
+
+            // Initialize Select2 if available
+            if (typeof $.fn.select2 !== 'undefined') {
+                $tagsSelect.select2({
+                    tags: true,
+                    tokenSeparators: [','],
+                    placeholder: 'Select tags to apply on user registration',
+                    allowClear: true,
+                    width: '100%',
+                    closeOnSelect: false,
+                    scrollAfterSelect: false
+                });
+            }
         },
 
         bindEvents: function () {

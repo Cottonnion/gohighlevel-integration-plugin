@@ -70,41 +70,24 @@
                     savedTags = [];
                 }
                 
+                // Pre-populate options from localized tags
+                var allTags = (typeof ghlMenuEditor !== 'undefined' && ghlMenuEditor.tags) ? ghlMenuEditor.tags : [];
+                allTags.forEach(function(tag) {
+                    var tagId = String(tag.id || tag.name || '');
+                    var tagName = String(tag.name || tag.id || '');
+                    if (tagId && $tagSelect.find("option[value='" + tagId + "']").length === 0) {
+                        $tagSelect.append(new Option(tagName, tagId, false, false));
+                    }
+                });
+
                 // Initialize Select2
                 $tagSelect.select2({
                     tags: true,
                     tokenSeparators: [','],
-                    placeholder: ghlMenuEditor.strings.searchTags,
+                    placeholder: (typeof ghlMenuEditor !== 'undefined' && ghlMenuEditor.strings) ? ghlMenuEditor.strings.searchTags : 'Search tags...',
                     allowClear: true,
                     width: '100%',
-                    minimumInputLength: 0,
-                    ajax: {
-                        url: ghlMenuEditor.ajaxUrl,
-                        type: 'POST',
-                        dataType: 'json',
-                        delay: 250,
-                        data: function(params) {
-                            return {
-                                action: 'ghl_crm_get_tags',
-                                nonce: ghlMenuEditor.nonce,
-                                search: params.term
-                            };
-                        },
-                        processResults: function(response) {
-                            if (response.success && response.data && response.data.tags) {
-                                return {
-                                    results: response.data.tags.map(function(tag) {
-                                        return {
-                                            id: tag.id,        // Use tag ID as value
-                                            text: tag.name     // Display tag name
-                                        };
-                                    })
-                                };
-                            }
-                            return { results: [] };
-                        },
-                        cache: true
-                    }
+                    minimumInputLength: 0
                 });
                 
                 // Load saved tags immediately
