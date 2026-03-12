@@ -3,7 +3,7 @@
  * Plugin Name:       GoHighLevel CRM Integration
  * Plugin URI:        https://labgenz.com/
  * Description:       Integrate WordPress + WooCommerce + BuddyBoss + LearnDash with GoHighLevel CRM for seamless two-way sync
- * Version:           1.0.0
+ * Version:           1.0.1
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Yahya Eddaqqaq
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'GHL_CRM_VERSION', '1.0.0' );
+define( 'GHL_CRM_VERSION', '1.0.1' );
 define( 'GHL_CRM_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GHL_CRM_URL', plugin_dir_url( __FILE__ ) );
 define( 'GHL_CRM_BASENAME', plugin_basename( __FILE__ ) );
@@ -70,26 +70,3 @@ function ghl_crm_init() {
 ghl_crm_init();
 
 include_once GHL_CRM_PATH . 'functions.php';
-
-// not for production
-// Install lightweight error handler to suppress noisy translation timing notices
-// Only suppress messages that reference _load_textdomain_just_in_time or early translation loading for specific domains
-$ghl_prev_error_handler = null;
-$ghl_prev_error_handler = set_error_handler(function ( $errno, $errstr, $errfile, $errline ) use ( &$ghl_prev_error_handler ) {
-    // Normalize string for case-insensitive checks
-    $lower = strtolower( $errstr );
-
-    // Suppress known noisy translation timing notices
-    if ( strpos( $lower, '_load_textdomain_just_in_time' ) !== false || strpos( $lower, 'translation loading for the' ) !== false || strpos( $lower, 'deprecated' ) !== false || strpos( $lower, 'as_has_scheduled_action' ) !== false || strpos( $lower, 'as_schedule_recurring_action' ) !== false ) {
-        // Return true to indicate the PHP internal error handler should not proceed
-        return true;
-    }
-
-    // Delegate to previous handler if present
-    if ( is_callable( $ghl_prev_error_handler ) ) {
-        return call_user_func( $ghl_prev_error_handler, $errno, $errstr, $errfile, $errline );
-    }
-
-    // Not handled here — allow default PHP handler
-    return false;
-});
