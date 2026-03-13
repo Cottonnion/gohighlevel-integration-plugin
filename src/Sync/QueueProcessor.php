@@ -268,13 +268,13 @@ class QueueProcessor {
 	 */
 	private function boot_default_handlers(): void {
 		$this->handlers = array(
-			'user'            => function ( string $action, int $item_id, array $payload ) {
+			'user'        => function ( string $action, int $item_id, array $payload ) {
 				return $this->execute_user_sync( $action, $item_id, $payload );
 			},
-			'contact'         => function ( string $action, int $item_id, array $payload ) {
+			'contact'     => function ( string $action, int $item_id, array $payload ) {
 				return $this->execute_contact_sync( $action, (string) $item_id, $payload );
 			},
-			'wc_customer'     => function ( string $action, int $item_id, array $payload ) {
+			'wc_customer' => function ( string $action, int $item_id, array $payload ) {
 				return $this->execute_woocommerce_sync( $action, $item_id, $payload );
 			},
 		);

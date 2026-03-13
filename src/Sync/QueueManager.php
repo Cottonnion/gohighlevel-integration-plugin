@@ -615,7 +615,7 @@ class QueueManager {
 			$should_skip = false;
 
 			if ( is_array( $result ) && isset( $result['success'] ) ) {
-				$is_success  = $result['success'];
+				$is_success = $result['success'];
 				// Check if this is a dependency wait (don't increment retry counter)
 				$should_skip = ! empty( $result['skip'] );
 			} elseif ( $result ) {
@@ -830,7 +830,6 @@ class QueueManager {
 
 				throw new \Exception( $error_message );
 			}
-
 		} catch ( \Exception $e ) {
 
 			// Check if it's a rate limit error (using RateLimiter helper)

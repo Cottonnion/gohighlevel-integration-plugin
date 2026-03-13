@@ -214,10 +214,10 @@ class ScopeChecker {
 				),
 			),
 			// 'conversations'  => array(
-			// 	'path'   => 'conversations/search',
-			// 	'params' => array(
-			// 		'locationId' => $location_id,
-			// 	),
+			// 'path'   => 'conversations/search',
+			// 'params' => array(
+			// 'locationId' => $location_id,
+			// ),
 			// ), // TODO: Requires per-sub-account Marketplace App install.
 		);
 

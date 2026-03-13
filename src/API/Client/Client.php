@@ -805,8 +805,8 @@ class Client implements ClientInterface {
 			if ( ! empty( $this->location_id ) ) {
 				try {
 					$this->log_oauth_event( 'Circuit breaker open, attempting reconnect recovery', [ 'location_id' => $this->location_id ] );
-					$auth_code    = $this->reconnect_api();
-					$redirect_uri = admin_url( 'admin.php?page=ghl-crm-settings' );
+					$auth_code                     = $this->reconnect_api();
+					$redirect_uri                  = admin_url( 'admin.php?page=ghl-crm-settings' );
 					$token_payload                 = $this->exchange_code_for_token( $auth_code, $redirect_uri );
 					$expires_at                    = time() + ( $token_payload['expires_in'] ?? 3600 );
 					$this->access_token_expires_at = $expires_at;
@@ -899,8 +899,8 @@ class Client implements ClientInterface {
 			if ( ! empty( $this->location_id ) ) {
 				try {
 					$this->log_oauth_event( 'Proxy unreachable, attempting reconnect fallback', [ 'location_id' => $this->location_id ] );
-					$auth_code    = $this->reconnect_api();
-					$redirect_uri = admin_url( 'admin.php?page=ghl-crm-settings' );
+					$auth_code                     = $this->reconnect_api();
+					$redirect_uri                  = admin_url( 'admin.php?page=ghl-crm-settings' );
 					$token_payload                 = $this->exchange_code_for_token( $auth_code, $redirect_uri );
 					$expires_at                    = time() + ( $token_payload['expires_in'] ?? 3600 );
 					$this->access_token_expires_at = $expires_at;
@@ -1007,10 +1007,10 @@ class Client implements ClientInterface {
 		$this->access_token_expires_at = $expires_at;
 		self::$last_refresh_error      = null;
 		$this->save_oauth_tokens( $expires_at );
-		
+
 		// Reset circuit breaker on successful refresh
 		$this->reset_circuit_breaker();
-		
+
 		$this->log_oauth_event( 'Token refresh succeeded', [ 'expires_at' => $expires_at ] );
 
 		return $decoded;
@@ -1297,7 +1297,7 @@ class Client implements ClientInterface {
 			if ( $status_code >= 200 && $status_code < 300 && '' === trim( $body ) ) {
 				return [];
 			}
-			
+
 			throw new ApiException(
 				esc_html__( 'Invalid JSON response from API', 'ghl-crm-integration' ),
 				(int) $status_code,

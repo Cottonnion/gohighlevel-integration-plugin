@@ -414,85 +414,85 @@ class AssetsManager {
 					'gotIt'              => __( 'Got it!', 'ghl-crm-integration' ),
 				],
 			],
-		GHL_CRM_VERSION,
-		true
-	);
+			GHL_CRM_VERSION,
+			true
+		);
 
-	// Global CSS for all admin pages (now includes tabbed main-settings page)
-	$this->add_admin_asset(
-		'ghl-crm-globals-css',
-		[
-			'toplevel_page_ghl-crm-settings',           // Legacy main tabbed page
-			'toplevel_page_ghl-crm-admin',              // New SPA page
-			'ghl-crm_page_ghl-crm-sync-logs',
-		],
-		'globals.css',
-		[],
-		[],
-		GHL_CRM_VERSION
-	);
+		// Global CSS for all admin pages (now includes tabbed main-settings page)
+		$this->add_admin_asset(
+			'ghl-crm-globals-css',
+			[
+				'toplevel_page_ghl-crm-settings',           // Legacy main tabbed page
+				'toplevel_page_ghl-crm-admin',              // New SPA page
+				'ghl-crm_page_ghl-crm-sync-logs',
+			],
+			'globals.css',
+			[],
+			[],
+			GHL_CRM_VERSION
+		);
 
-	// Settings page CSS (loads on main-settings page for all tabs)
-	$this->add_admin_asset(
-		'ghl-crm-settings-css',
-		[ 'toplevel_page_ghl-crm-settings' ],
-		'settings.css',
-		[ 'ghl-crm-globals-css', 'ghl-sweetalert2', 'ghl-crm-select2-css' ],
-		[],
-		GHL_CRM_VERSION
-	);
+		// Settings page CSS (loads on main-settings page for all tabs)
+		$this->add_admin_asset(
+			'ghl-crm-settings-css',
+			[ 'toplevel_page_ghl-crm-settings' ],
+			'settings.css',
+			[ 'ghl-crm-globals-css', 'ghl-sweetalert2', 'ghl-crm-select2-css' ],
+			[],
+			GHL_CRM_VERSION
+		);
 
-	// Settings page JS (loads on main-settings page for settings tab)
-	$this->add_admin_asset(
-		'ghl-crm-settings-js',
-		[ 'toplevel_page_ghl-crm-settings' ],
-		'settings.js',
-		[ 'jquery', 'ghl-sweetalert2', 'ghl-crm-select2' ],
-		[
-			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-			'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
-			'tags'    => $ghl_tags,
-		],
-		GHL_CRM_VERSION,
-		true
-	);
+		// Settings page JS (loads on main-settings page for settings tab)
+		$this->add_admin_asset(
+			'ghl-crm-settings-js',
+			[ 'toplevel_page_ghl-crm-settings' ],
+			'settings.js',
+			[ 'jquery', 'ghl-sweetalert2', 'ghl-crm-select2' ],
+			[
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
+				'tags'    => $ghl_tags,
+			],
+			GHL_CRM_VERSION,
+			true
+		);
 
-	// Tools page JS (loads on main-settings page for tools tab)
-	$this->add_admin_asset(
-		'ghl-crm-tools-js',
-		[ 'toplevel_page_ghl-crm-admin' ],
-		'tools.js',
-		[ 'jquery', 'ghl-sweetalert2' ],
-		[
-			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-			'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
-		],
-		GHL_CRM_VERSION,
-		true
-	);
+		// Tools page JS (loads on main-settings page for tools tab)
+		$this->add_admin_asset(
+			'ghl-crm-tools-js',
+			[ 'toplevel_page_ghl-crm-admin' ],
+			'tools.js',
+			[ 'jquery', 'ghl-sweetalert2' ],
+			[
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
+			],
+			GHL_CRM_VERSION,
+			true
+		);
 
-	// Field Mapping CSS (loads on main-settings page for field-mapping tab)
-	$this->add_admin_asset(
-		'ghl-crm-field-mapping-css',
-		[ 'toplevel_page_ghl-crm-settings' ],
-		'field-mapping.css',
-		[ 'ghl-crm-globals-css' ],
-		[],
-		GHL_CRM_VERSION
-	);
+		// Field Mapping CSS (loads on main-settings page for field-mapping tab)
+		$this->add_admin_asset(
+			'ghl-crm-field-mapping-css',
+			[ 'toplevel_page_ghl-crm-settings' ],
+			'field-mapping.css',
+			[ 'ghl-crm-globals-css' ],
+			[],
+			GHL_CRM_VERSION
+		);
 
-	// Field Mapping JS (loads on main-settings page for field-mapping tab)
-	$this->add_admin_asset(
-		'ghl-crm-field-mapping-js',
-		[ 'toplevel_page_ghl-crm-settings' ],
-		'field-mapping.js',
-		[ 'jquery', 'ghl-sweetalert2' ],
-		[
-			'nonce' => wp_create_nonce( 'ghl_crm_field_mapping_nonce' ),
-		],
-		GHL_CRM_VERSION,
-		true
-	);
+		// Field Mapping JS (loads on main-settings page for field-mapping tab)
+		$this->add_admin_asset(
+			'ghl-crm-field-mapping-js',
+			[ 'toplevel_page_ghl-crm-settings' ],
+			'field-mapping.js',
+			[ 'jquery', 'ghl-sweetalert2' ],
+			[
+				'nonce' => wp_create_nonce( 'ghl_crm_field_mapping_nonce' ),
+			],
+			GHL_CRM_VERSION,
+			true
+		);
 		// Integrations CSS (loads on main-settings page for integrations tab)
 		$this->add_admin_asset(
 			'ghl-crm-integrations-css',
