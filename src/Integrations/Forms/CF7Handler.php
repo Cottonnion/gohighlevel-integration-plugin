@@ -317,8 +317,6 @@ class CF7Handler {
 			);
 		}
 
-		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging for CF7 integration
-		error_log( 'GHL CRM CF7: Successfully queued submission for form ID ' . $form_id . ' (email: ' . ( $contact_data['email'] ?? 'N/A' ) . ')' );
 	}
 
 	/**
