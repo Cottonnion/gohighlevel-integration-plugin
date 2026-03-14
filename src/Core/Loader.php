@@ -105,6 +105,8 @@ class Loader {
 			'integrations.elementor'               => \GHL_CRM\Integrations\Elementor\ElementorIntegration::class,
 			'integrations.gutenberg'               => \GHL_CRM\Integrations\Gutenberg\BlocksManager::class,
 
+			'integrations.forms.cf7'               => \GHL_CRM\Integrations\Forms\CF7Handler::class,
+
 			// Membership components
 			'membership.metaboxes'                 => \GHL_CRM\Membership\Admin\MetaBoxes::class,
 			'membership.restrictions'              => \GHL_CRM\Membership\Restrictions::class,

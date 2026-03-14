@@ -277,6 +277,9 @@ class QueueProcessor {
 			'wc_customer' => function ( string $action, int $item_id, array $payload ) {
 				return $this->execute_woocommerce_sync( $action, $item_id, $payload );
 			},
+			'form'        => function ( string $action, int $item_id, array $payload ) {
+				return $this->execute_form_sync( $action, $item_id, $payload );
+			},
 		);
 	}
 
@@ -401,6 +404,15 @@ class QueueProcessor {
 		$contact_id = $payload['contact_id'] ?? '';
 		$tags       = $payload['tags'] ?? [];
 
+		// Resolve contact_id from email via cache when not provided directly
+		// (e.g., form submissions where contact was just created by a prior queue item).
+		if ( empty( $contact_id ) && ! empty( $payload['email'] ) ) {
+			$cached = $this->contact_cache->get( $payload['email'] );
+			if ( $cached ) {
+				$contact_id = $cached['id'] ?? '';
+			}
+		}
+
 		if ( empty( $contact_id ) || empty( $tags ) ) {
 			throw new \Exception( 'Contact ID and tags are required' );
 		}
@@ -493,6 +505,10 @@ class QueueProcessor {
 			throw new \Exception( 'Email is required' );
 		}
 
+		// Extract internal flags before sending to API.
+		$update_exists = $payload['_update_exists'] ?? true;
+		unset( $payload['_update_exists'] );
+
 		// Check if contact_id is provided in payload (indicates UPDATE operation)
 		$provided_contact_id = $payload['contact_id'] ?? '';
 
@@ -527,6 +543,14 @@ class QueueProcessor {
 		$cached_contact = $this->contact_cache->get( $email );
 
 		if ( $cached_contact ) {
+			if ( ! $update_exists ) {
+				return [
+					'success' => true,
+					'skipped' => true,
+					'reason'  => 'Contact exists (cached), update_exists disabled',
+				];
+			}
+
 			$result = $contact_resource->update( $cached_contact['id'], $payload );
 
 			if ( ! empty( $result ) ) {
@@ -549,6 +573,14 @@ class QueueProcessor {
 
 				// Cache the contact
 				$this->contact_cache->set( $email, $contact );
+
+				if ( ! $update_exists ) {
+					return [
+						'success' => true,
+						'skipped' => true,
+						'reason'  => 'Contact exists, update_exists disabled',
+					];
+				}
 
 				// UPDATE existing contact
 				$result = $contact_resource->update( $contact['id'], $payload );
@@ -802,6 +834,40 @@ class QueueProcessor {
 
 			default:
 				throw new \Exception( esc_html( 'Unknown WooCommerce action: ' . $action ) );
+		}
+	}
+
+	/**
+	 * Execute form sync — routes to existing user handlers for reuse.
+	 *
+	 * Keeps 'form' as a distinct item_type in the queue table for log differentiation
+	 * while delegating to the same handlers used by user sync.
+	 *
+	 * @param string $action  Action name (e.g., 'cf7_submission', 'add_tags').
+	 * @param int    $form_id Form ID.
+	 * @param array  $payload Payload data.
+	 * @return array|bool API response.
+	 * @throws \Exception When action is unknown.
+	 */
+	private function execute_form_sync( string $action, int $form_id, array $payload ) {
+		$client_factory           = $this->client_factory;
+		$contact_resource_factory = $this->contact_resource_factory;
+		$client                   = $client_factory();
+		$contact_resource         = $contact_resource_factory( $client );
+
+		switch ( $action ) {
+			case 'cf7_submission':
+			case 'gf_submission':
+				return $this->handle_user_register_update( $client, $contact_resource, $payload );
+
+			case 'add_tags':
+				return $this->handle_add_tags( $contact_resource, $payload );
+
+			case 'remove_tags':
+				return $this->handle_remove_tags( $contact_resource, $payload );
+
+			default:
+				throw new \Exception( esc_html( 'Unknown form action: ' . $action ) );
 		}
 	}
 
