@@ -425,6 +425,7 @@ class AssetsManager {
 				'toplevel_page_ghl-crm-settings',           // Legacy main tabbed page
 				'toplevel_page_ghl-crm-admin',              // New SPA page
 				'ghl-crm_page_ghl-crm-sync-logs',
+				'toplevel_page_wpcf7'
 			],
 			'globals.css',
 			[],
@@ -435,7 +436,7 @@ class AssetsManager {
 		// Settings page CSS (loads on main-settings page for all tabs)
 		$this->add_admin_asset(
 			'ghl-crm-settings-css',
-			[ 'toplevel_page_ghl-crm-settings' ],
+			[ 'toplevel_page_ghl-crm-settings', 'toplevel_page_wpcf7' ],
 			'settings.css',
 			[ 'ghl-crm-globals-css', 'ghl-sweetalert2', 'ghl-crm-select2-css' ],
 			[],
