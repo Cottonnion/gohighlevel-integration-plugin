@@ -556,6 +556,12 @@ class UserHooks {
 				$value = get_user_meta( $user->ID, $wp_field, true );
 			}
 
+			// Allow integrations to resolve virtual/computed field values
+			// (e.g. LearnDash progress extracted from serialized meta).
+			if ( empty( $value ) ) {
+				$value = apply_filters( 'ghl_crm_resolve_field_value', $value, $wp_field, $user->ID );
+			}
+
 			// Only add non-empty values
 			if ( ! empty( $value ) ) {
 				// Check if this is a GHL custom field (prefixed with "custom.")
