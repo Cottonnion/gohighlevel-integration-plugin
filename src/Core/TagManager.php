@@ -12,128 +12,88 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Tag Manager
  *
- * Provides cached access to GoHighLevel tags and helpers for ID/name conversion.
+ * Central service for GoHighLevel tag operations. Provides cached access
+ * to the GHL Tags API, ID/name conversion helpers, and location-scoped
+ * user meta storage for contact IDs and tags.
+ *
+ * Key Responsibilities:
+ * - Fetching and caching tags from the GHL API (per-location, per-site)
+ * - Converting between tag IDs and human-readable names
+ * - Normalizing mixed tag input (IDs, names, pairs) into canonical form
+ * - Storing/retrieving per-user contact IDs and tags in location-scoped meta
+ *
+ * @package    GHL_CRM_Integration
+ * @subpackage Core
  */
 class TagManager {
+
 	/**
 	 * Legacy contact ID user meta key (global, non-location scoped).
+	 *
+	 * Retained for backward compatibility only. New code must use
+	 * the location-scoped key returned by get_user_contact_id_meta_key().
+	 *
+	 * @var string
 	 */
 	public const LEGACY_CONTACT_META_KEY = '_ghl_contact_id';
 
 	/**
-	 * Singleton instance
+	 * Singleton instance.
 	 *
 	 * @var self|null
 	 */
 	private static ?self $instance = null;
 
 	/**
-	 * Settings manager dependency
+	 * Settings manager dependency.
+	 *
+	 * @var SettingsManager
 	 */
 	private SettingsManager $settings_manager;
 
 	/**
-	 * Tag cache index by tag ID
+	 * In-memory tag cache indexed by tag ID.
 	 *
-	 * @var array<string, array>
+	 * Populated lazily via ensure_tag_cache() on first access.
+	 *
+	 * @var array<string, array{id: string, name: string}>
 	 */
 	private array $tag_cache = [];
 
 	/**
-	 * Tag cache keyed by lowercase tag ID for case-insensitive lookups.
+	 * In-memory tag cache indexed by lowercase tag ID.
 	 *
-	 * @var array<string, array>
+	 * Used for case-insensitive lookups alongside the primary cache.
+	 *
+	 * @var array<string, array{id: string, name: string}>
 	 */
 	private array $tag_cache_lower = [];
 
 	/**
-	 * Whether the last retrieval hit the transient cache
+	 * Whether the most recent get_tags() call was served from the transient cache.
+	 *
+	 * @var bool
 	 */
 	private bool $last_cache_hit = false;
 
+	// =========================================================================
+	// Singleton
+	// =========================================================================
+
 	/**
-	 * Get location-specific meta key for user tags
+	 * Private constructor.
 	 *
-	 * @param string|null $location_id Optional location ID, uses current if not provided
-	 * @return string
-	 */
-	public function get_user_tags_meta_key( ?string $location_id = null ): string {
-		if ( null === $location_id ) {
-			$location_id = $this->settings_manager->get_setting( 'location_id' );
-		}
-		return '_ghl_contact_tags_' . $location_id;
-	}
-
-	/**
-	 * Get location-specific meta key for user contact ID
-	 *
-	 * @param string|null $location_id Optional location ID, uses current if not provided
-	 * @return string
-	 */
-	public function get_user_contact_id_meta_key( ?string $location_id = null ): string {
-		if ( null === $location_id ) {
-			$location_id = $this->settings_manager->get_setting( 'location_id' );
-		}
-		return '_ghl_contact_id_' . $location_id;
-	}
-
-	/**
-	 * Get user's contact ID for current location
-	 *
-	 * @param int         $user_id User ID
-	 * @param string|null $location_id Optional location ID, uses current if not provided
-	 * @return string|null Contact ID or null if not found
-	 */
-	public function get_user_contact_id( int $user_id, ?string $location_id = null ): ?string {
-		$meta_key   = $this->get_user_contact_id_meta_key( $location_id );
-		$contact_id = get_user_meta( $user_id, $meta_key, true );
-
-		// No legacy fallback — each location stores its own contact ID.
-		// The un-scoped '_ghl_contact_id' key is ignored to prevent
-		// cross-location contamination.
-
-		return $contact_id ? (string) $contact_id : null;
-	}
-
-	/**
-	 * Store user's contact ID for current location
-	 *
-	 * @param int         $user_id User ID
-	 * @param string      $contact_id Contact ID
-	 * @param string|null $location_id Optional location ID, uses current if not provided
-	 * @return void
-	 */
-	public function store_user_contact_id( int $user_id, string $contact_id, ?string $location_id = null ): void {
-		$meta_key = $this->get_user_contact_id_meta_key( $location_id );
-		update_user_meta( $user_id, $meta_key, $contact_id );
-
-		// Only write the legacy key when no other location-scoped key exists yet
-		// (first-time migration path).  Otherwise, leaving the legacy key stale
-		// is intentional — it must not overwrite with a different location's ID.
-	}
-
-	/**
-	 * Delete user's contact ID for current location
-	 *
-	 * @param int         $user_id User ID
-	 * @param string|null $location_id Optional location ID, uses current if not provided
-	 * @return void
-	 */
-	public function delete_user_contact_id( int $user_id, ?string $location_id = null ): void {
-		$meta_key = $this->get_user_contact_id_meta_key( $location_id );
-		delete_user_meta( $user_id, $meta_key );
-		delete_user_meta( $user_id, self::LEGACY_CONTACT_META_KEY );
-	}
-
-	/**
-	 * Private constructor
+	 * Initializes the SettingsManager dependency. Use get_instance() to
+	 * obtain the singleton.
 	 */
 	private function __construct() {
 		$this->settings_manager = SettingsManager::get_instance();
 	}
 
 	/**
-	 * Get singleton instance
+	 * Get the singleton instance.
+	 *
+	 * @return self
 	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
@@ -143,8 +103,21 @@ class TagManager {
 		return self::$instance;
 	}
 
+	// =========================================================================
+	// Tag Retrieval & Cache
+	// =========================================================================
+
 	/**
-	 * Retrieve tag objects from cache or remote API.
+	 * Retrieve tag objects from the GHL API or transient cache.
+	 *
+	 * Tags are cached per-location and per-site using a WordPress transient.
+	 * The cache duration is controlled by the 'cache_duration' plugin setting
+	 * (defaults to 1 hour).
+	 *
+	 * On API failure, the method falls back to the cached value if one exists.
+	 *
+	 * @param bool $force_refresh When true, bypass the transient cache and hit the API.
+	 * @return array<int, array{id: string, name: string}> Array of tag objects.
 	 */
 	public function get_tags( bool $force_refresh = false ): array {
 		$this->last_cache_hit = false;
@@ -190,43 +163,42 @@ class TagManager {
 	}
 
 	/**
-	 * Indicator for the most recent cache usage.
+	 * Force-refresh the in-memory cache and the transient.
+	 *
+	 * Clears the memoized tag_cache, fetches fresh data from the API,
+	 * and rebuilds the in-memory index.
+	 *
+	 * @return void
+	 */
+	public function refresh_cache(): void {
+		$this->tag_cache = [];
+		$this->get_tags( true );
+		$this->ensure_tag_cache();
+	}
+
+	/**
+	 * Check whether the most recent get_tags() call was served from cache.
+	 *
+	 * Useful for diagnostics and health checks.
+	 *
+	 * @return bool True if the last fetch was a cache hit.
 	 */
 	public function last_fetch_was_cached(): bool {
 		return $this->last_cache_hit;
 	}
 
-	/**
-	 * Get tags formatted for wp_localize_script.
-	 *
-	 * Returns an array of associative arrays with 'id' and 'name' keys,
-	 * suitable for embedding in JS without an AJAX round-trip.
-	 * Silently returns an empty array on failure.
-	 *
-	 * @return array<int, array{id: string, name: string}>
-	 */
-	public function get_tags_for_localization(): array {
-		try {
-			$tags = $this->get_tags();
-		} catch ( \Throwable $e ) {
-			return [];
-		}
-
-		return array_values(
-			array_map(
-				static function ( array $tag ): array {
-					return [
-						'id'   => isset( $tag['id'] ) ? (string) $tag['id'] : '',
-						'name' => isset( $tag['name'] ) ? (string) $tag['name'] : '',
-					];
-				},
-				$tags
-			)
-		);
-	}
+	// =========================================================================
+	// Internal Cache Helpers
+	// =========================================================================
 
 	/**
-	 * Build and memoize the internal tag cache keyed by ID.
+	 * Lazily build the in-memory tag cache from the transient/API data.
+	 *
+	 * Populates both $tag_cache (exact ID key) and $tag_cache_lower
+	 * (lowercased ID key) for case-insensitive lookups. No-ops if the
+	 * cache is already populated.
+	 *
+	 * @return void
 	 */
 	private function ensure_tag_cache(): void {
 		if ( ! empty( $this->tag_cache ) ) {
@@ -245,7 +217,12 @@ class TagManager {
 	}
 
 	/**
-	 * Attempt to resolve tag data by ID case-insensitively.
+	 * Look up a single tag by its ID (case-insensitive).
+	 *
+	 * Ensures the in-memory cache is populated before searching.
+	 *
+	 * @param string $tag_id The tag ID to look up.
+	 * @return array{id: string, name: string}|null Tag data or null if not found.
 	 */
 	private function get_tag_by_id( string $tag_id ): ?array {
 		$this->ensure_tag_cache();
@@ -262,8 +239,17 @@ class TagManager {
 		return null;
 	}
 
+	// =========================================================================
+	// Tag Search & Lookup
+	// =========================================================================
+
 	/**
-	 * Search cached tags by name (case-insensitive contains).
+	 * Search cached tags by name using case-insensitive substring matching.
+	 *
+	 * Returns all tags if the search string is empty.
+	 *
+	 * @param string $search Substring to match against tag names.
+	 * @return array<int, array{id: string, name: string}> Matching tag objects.
 	 */
 	public function search_tags( string $search = '' ): array {
 		$this->ensure_tag_cache();
@@ -289,184 +275,12 @@ class TagManager {
 	}
 
 	/**
-	 * Retrieve stored tag IDs for a user, converting legacy name storage when needed.
-	 */
-	public function get_user_tag_ids( int $user_id, ?string $location_id = null ): array {
-		$meta_key = $this->get_user_tags_meta_key( $location_id );
-		$stored   = get_user_meta( $user_id, $meta_key, true );
-
-		if ( ! is_array( $stored ) ) {
-			$stored = [];
-		}
-
-		$normalized = $this->normalize_tag_input( $stored );
-		$ids        = $normalized['ids'];
-
-		if ( $ids !== $stored ) {
-			update_user_meta( $user_id, $meta_key, $ids );
-		}
-
-		return $ids;
-	}
-
-	/**
-	 * Convenience wrapper to persist tag IDs for a user.
-	 */
-	public function store_user_tags( int $user_id, array $tags, ?string $location_id = null ): array {
-		$meta_key   = $this->get_user_tags_meta_key( $location_id );
-		$normalized = $this->normalize_tag_input( $tags );
-		$ids        = $normalized['ids'];
-
-		// Capture previous tag IDs for change detection.
-		$old_ids = get_user_meta( $user_id, $meta_key, true );
-		if ( ! is_array( $old_ids ) ) {
-			$old_ids = [];
-		}
-
-		update_user_meta( $user_id, $meta_key, $ids );
-
-		// Fire hook when tags changed so integrations (e.g. LearnDash auto-enrollment) can react.
-		if ( $ids !== $old_ids ) {
-			/**
-			 * Fires after a user's GHL tags are updated.
-			 *
-			 * @param int   $user_id WordPress user ID.
-			 * @param array $ids     Normalized tag IDs that were stored.
-			 */
-			do_action( 'ghl_crm_user_tags_updated', $user_id, $ids );
-		}
-
-		return $ids;
-	}
-
-	/**
-	 * Retrieve tag names for a user (used for display/UI logic).
-	 */
-	public function get_user_tag_names( int $user_id, ?string $location_id = null ): array {
-		$ids = $this->get_user_tag_ids( $user_id, $location_id );
-
-		return $this->convert_ids_to_names( $ids );
-	}
-
-	/**
-	 * Prepare a list of tag names for syncing payloads.
-	 */
-	public function prepare_tags_for_payload( array $tag_ids, array $fallback_pairs = [] ): array {
-		if ( empty( $tag_ids ) ) {
-			return [];
-		}
-
-		$tag_ids = array_values(
-			array_filter(
-				array_map(
-					static function ( $tag_id ) {
-						return '' !== $tag_id ? (string) $tag_id : '';
-					},
-					$tag_ids
-				),
-				static function ( string $tag_id ): bool {
-					return '' !== $tag_id;
-				}
-			)
-		);
-
-		if ( empty( $tag_ids ) ) {
-			return [];
-		}
-
-		$this->ensure_tag_cache();
-
-		$fallback_map       = [];
-		$fallback_map_lower = [];
-		foreach ( $fallback_pairs as $pair ) {
-			if ( ! is_array( $pair ) ) {
-				continue;
-			}
-
-			$id   = isset( $pair['id'] ) ? (string) $pair['id'] : '';
-			$name = isset( $pair['name'] ) ? trim( (string) $pair['name'] ) : '';
-
-			if ( '' === $id && '' !== $name ) {
-				$id = $name;
-			}
-
-			if ( '' === $id ) {
-				continue;
-			}
-
-			if ( '' === $name ) {
-				continue;
-			}
-
-			$fallback_map[ $id ]                     = $name;
-			$fallback_map_lower[ strtolower( $id ) ] = $name;
-		}
-
-		$names           = $this->map_ids_to_names( $tag_ids );
-		$resolved_names  = [];
-		$refreshed_cache = false;
-
-		foreach ( $tag_ids as $tag_id ) {
-			$name = $names[ $tag_id ] ?? '';
-
-			if ( '' === $name || $name === $tag_id ) {
-				if ( isset( $fallback_map[ $tag_id ] ) ) {
-					$name = $fallback_map[ $tag_id ];
-				} elseif ( isset( $fallback_map_lower[ strtolower( $tag_id ) ] ) ) {
-					$name = $fallback_map_lower[ strtolower( $tag_id ) ];
-				}
-			}
-
-			if ( '' === $name || $name === $tag_id ) {
-				if ( ! $refreshed_cache ) {
-					$this->refresh_cache();
-					$names           = $this->map_ids_to_names( $tag_ids );
-					$refreshed_cache = true;
-					$name            = $names[ $tag_id ] ?? $name;
-
-					if ( '' === $name || $name === $tag_id ) {
-						if ( isset( $fallback_map[ $tag_id ] ) ) {
-							$name = $fallback_map[ $tag_id ];
-						} elseif ( isset( $fallback_map_lower[ strtolower( $tag_id ) ] ) ) {
-							$name = $fallback_map_lower[ strtolower( $tag_id ) ];
-						}
-					}
-				}
-			}
-
-			if ( '' === $name || $name === $tag_id ) {
-				// Avoid sending raw hashed IDs which cause unintended tag creation
-				if ( preg_match( '/^[A-Za-z0-9]{16,}$/', $tag_id ) ) {
-					continue;
-				}
-				$name = $tag_id;
-			}
-
-			$name = trim( $name );
-
-			if ( '' === $name ) {
-				continue;
-			}
-
-			$resolved_names[] = $name;
-		}
-
-		$resolved_names = array_values(
-			array_unique(
-				array_filter(
-					$resolved_names,
-					static function ( string $name ): bool {
-						return '' !== $name;
-					}
-				)
-			)
-		);
-
-		return $resolved_names;
-	}
-
-	/**
-	 * Convert a tag ID to its name. Returns ID if the name is unknown.
+	 * Resolve a single tag ID to its human-readable name.
+	 *
+	 * Returns the raw ID string when the tag is not found in the cache.
+	 *
+	 * @param string $tag_id The GHL tag ID.
+	 * @return string The tag name, or the original ID if unresolvable.
 	 */
 	public function get_tag_name( string $tag_id ): string {
 		$this->ensure_tag_cache();
@@ -477,7 +291,45 @@ class TagManager {
 	}
 
 	/**
-	 * Convert tag IDs to names, preserving order.
+	 * Get tags formatted for wp_localize_script().
+	 *
+	 * Returns a flat indexed array of associative arrays with 'id' and 'name'
+	 * keys, suitable for embedding in JavaScript without an AJAX round-trip.
+	 * Silently returns an empty array on failure.
+	 *
+	 * @return array<int, array{id: string, name: string}>
+	 */
+	public function get_tags_for_localization(): array {
+		try {
+			$tags = $this->get_tags();
+		} catch ( \Throwable $e ) {
+			return [];
+		}
+
+		return array_values(
+			array_map(
+				static function ( array $tag ): array {
+					return [
+						'id'   => isset( $tag['id'] ) ? (string) $tag['id'] : '',
+						'name' => isset( $tag['name'] ) ? (string) $tag['name'] : '',
+					];
+				},
+				$tags
+			)
+		);
+	}
+
+	// =========================================================================
+	// Tag Conversion Helpers
+	// =========================================================================
+
+	/**
+	 * Convert an array of tag IDs to their human-readable names.
+	 *
+	 * Order is preserved. Unknown IDs are kept as-is in the output.
+	 *
+	 * @param array<int, string> $tag_ids Tag IDs to convert.
+	 * @return array<int, string> Tag names in the same order.
 	 */
 	public function convert_ids_to_names( array $tag_ids ): array {
 		if ( empty( $tag_ids ) ) {
@@ -496,26 +348,14 @@ class TagManager {
 	}
 
 	/**
-	 * Create associative map of tag ID => tag name.
-	 */
-	public function map_ids_to_names( array $tag_ids ): array {
-		if ( empty( $tag_ids ) ) {
-			return [];
-		}
-
-		$map = [];
-
-		foreach ( $tag_ids as $id ) {
-			$id          = (string) $id;
-			$tag_details = $this->get_tag_by_id( $id );
-			$map[ $id ]  = ( $tag_details && isset( $tag_details['name'] ) ) ? (string) $tag_details['name'] : $id;
-		}
-
-		return $map;
-	}
-
-	/**
-	 * Convert tag names to IDs when possible. Unknown names are kept as-is for compatibility.
+	 * Convert an array of tag names to their IDs.
+	 *
+	 * Performs case-insensitive matching against the tag cache. Names that
+	 * cannot be resolved are kept as-is for forward compatibility (GHL will
+	 * auto-create tags by name).
+	 *
+	 * @param array<int, string> $tag_names Tag names to convert.
+	 * @return array<int, string> Unique tag IDs (or original names if unresolved).
 	 */
 	public function convert_names_to_ids( array $tag_names ): array {
 		if ( empty( $tag_names ) ) {
@@ -551,7 +391,45 @@ class TagManager {
 	}
 
 	/**
-	 * Normalize a list of tags to stored IDs while preserving readable names.
+	 * Create an associative map of tag ID => tag name.
+	 *
+	 * Useful when you need to look up names by ID without losing the association.
+	 * Unknown IDs map to themselves.
+	 *
+	 * @param array<int, string> $tag_ids Tag IDs to map.
+	 * @return array<string, string> Associative array of ID => name.
+	 */
+	public function map_ids_to_names( array $tag_ids ): array {
+		if ( empty( $tag_ids ) ) {
+			return [];
+		}
+
+		$map = [];
+
+		foreach ( $tag_ids as $id ) {
+			$id          = (string) $id;
+			$tag_details = $this->get_tag_by_id( $id );
+			$map[ $id ]  = ( $tag_details && isset( $tag_details['name'] ) ) ? (string) $tag_details['name'] : $id;
+		}
+
+		return $map;
+	}
+
+	/**
+	 * Normalize a mixed list of tags into canonical IDs, names, and pairs.
+	 *
+	 * Accepts any combination of:
+	 * - Plain string IDs (e.g. 'abc123')
+	 * - Plain string names (e.g. 'VIP Customer')
+	 * - Associative arrays with 'id' and/or 'name' keys
+	 *
+	 * Returns a structured array with three keys:
+	 * - 'ids':   Deduplicated array of resolved tag IDs
+	 * - 'names': Deduplicated array of resolved tag names
+	 * - 'pairs': Array of {id, name} associative arrays
+	 *
+	 * @param array $tags Mixed tag input (strings, arrays, or both).
+	 * @return array{ids: string[], names: string[], pairs: array<int, array{id: string, name: string}>}
 	 */
 	public function normalize_tag_input( array $tags ): array {
 		if ( empty( $tags ) ) {
@@ -702,11 +580,301 @@ class TagManager {
 	}
 
 	/**
-	 * Refresh local cache and transient synchronously.
+	 * Prepare a list of tag names suitable for GHL API sync payloads.
+	 *
+	 * Resolves tag IDs to human-readable names using the cache, with an
+	 * optional fallback_pairs map for tags that may not yet exist in GHL.
+	 * If the initial cache miss occurs, triggers a single cache refresh
+	 * before falling back to the ID itself.
+	 *
+	 * Safety: Filters out raw hashed IDs (16+ alphanumeric chars) that
+	 * would cause unintended tag creation on the GHL side.
+	 *
+	 * @param array<int, string>                             $tag_ids        Tag IDs to resolve.
+	 * @param array<int, array{id: string, name: string}>    $fallback_pairs Optional ID/name pairs for IDs not in cache.
+	 * @return array<int, string> Deduplicated array of resolved tag names.
 	 */
-	public function refresh_cache(): void {
-		$this->tag_cache = [];
-		$this->get_tags( true );
+	public function prepare_tags_for_payload( array $tag_ids, array $fallback_pairs = [] ): array {
+		if ( empty( $tag_ids ) ) {
+			return [];
+		}
+
+		$tag_ids = array_values(
+			array_filter(
+				array_map(
+					static function ( $tag_id ) {
+						return '' !== $tag_id ? (string) $tag_id : '';
+					},
+					$tag_ids
+				),
+				static function ( string $tag_id ): bool {
+					return '' !== $tag_id;
+				}
+			)
+		);
+
+		if ( empty( $tag_ids ) ) {
+			return [];
+		}
+
 		$this->ensure_tag_cache();
+
+		$fallback_map       = [];
+		$fallback_map_lower = [];
+		foreach ( $fallback_pairs as $pair ) {
+			if ( ! is_array( $pair ) ) {
+				continue;
+			}
+
+			$id   = isset( $pair['id'] ) ? (string) $pair['id'] : '';
+			$name = isset( $pair['name'] ) ? trim( (string) $pair['name'] ) : '';
+
+			if ( '' === $id && '' !== $name ) {
+				$id = $name;
+			}
+
+			if ( '' === $id ) {
+				continue;
+			}
+
+			if ( '' === $name ) {
+				continue;
+			}
+
+			$fallback_map[ $id ]                     = $name;
+			$fallback_map_lower[ strtolower( $id ) ] = $name;
+		}
+
+		$names           = $this->map_ids_to_names( $tag_ids );
+		$resolved_names  = [];
+		$refreshed_cache = false;
+
+		foreach ( $tag_ids as $tag_id ) {
+			$name = $names[ $tag_id ] ?? '';
+
+			if ( '' === $name || $name === $tag_id ) {
+				if ( isset( $fallback_map[ $tag_id ] ) ) {
+					$name = $fallback_map[ $tag_id ];
+				} elseif ( isset( $fallback_map_lower[ strtolower( $tag_id ) ] ) ) {
+					$name = $fallback_map_lower[ strtolower( $tag_id ) ];
+				}
+			}
+
+			if ( '' === $name || $name === $tag_id ) {
+				if ( ! $refreshed_cache ) {
+					$this->refresh_cache();
+					$names           = $this->map_ids_to_names( $tag_ids );
+					$refreshed_cache = true;
+					$name            = $names[ $tag_id ] ?? $name;
+
+					if ( '' === $name || $name === $tag_id ) {
+						if ( isset( $fallback_map[ $tag_id ] ) ) {
+							$name = $fallback_map[ $tag_id ];
+						} elseif ( isset( $fallback_map_lower[ strtolower( $tag_id ) ] ) ) {
+							$name = $fallback_map_lower[ strtolower( $tag_id ) ];
+						}
+					}
+				}
+			}
+
+			if ( '' === $name || $name === $tag_id ) {
+				// Avoid sending raw hashed IDs which cause unintended tag creation
+				if ( preg_match( '/^[A-Za-z0-9]{16,}$/', $tag_id ) ) {
+					continue;
+				}
+				$name = $tag_id;
+			}
+
+			$name = trim( $name );
+
+			if ( '' === $name ) {
+				continue;
+			}
+
+			$resolved_names[] = $name;
+		}
+
+		$resolved_names = array_values(
+			array_unique(
+				array_filter(
+					$resolved_names,
+					static function ( string $name ): bool {
+						return '' !== $name;
+					}
+				)
+			)
+		);
+
+		return $resolved_names;
+	}
+
+	// =========================================================================
+	// User Meta — Contact ID (Location-Scoped)
+	// =========================================================================
+
+	/**
+	 * Build the location-scoped user meta key for storing a GHL contact ID.
+	 *
+	 * Format: _ghl_contact_id_{location_id}
+	 *
+	 * @param string|null $location_id GHL location ID. Defaults to the current configured location.
+	 * @return string The meta key string.
+	 */
+	public function get_user_contact_id_meta_key( ?string $location_id = null ): string {
+		if ( null === $location_id ) {
+			$location_id = $this->settings_manager->get_setting( 'location_id' );
+		}
+		return '_ghl_contact_id_' . $location_id;
+	}
+
+	/**
+	 * Retrieve the GHL contact ID stored for a user in the current (or specified) location.
+	 *
+	 * No legacy fallback — each location stores its own contact ID. The un-scoped
+	 * '_ghl_contact_id' key is intentionally ignored to prevent cross-location
+	 * contamination.
+	 *
+	 * @param int         $user_id     WordPress user ID.
+	 * @param string|null $location_id GHL location ID. Defaults to the current configured location.
+	 * @return string|null The GHL contact ID, or null if not found.
+	 */
+	public function get_user_contact_id( int $user_id, ?string $location_id = null ): ?string {
+		$meta_key   = $this->get_user_contact_id_meta_key( $location_id );
+		$contact_id = get_user_meta( $user_id, $meta_key, true );
+
+		return $contact_id ? (string) $contact_id : null;
+	}
+
+	/**
+	 * Persist a GHL contact ID for a user under the current (or specified) location.
+	 *
+	 * The legacy un-scoped key is intentionally not written to prevent
+	 * cross-location contamination when switching GHL locations.
+	 *
+	 * @param int         $user_id     WordPress user ID.
+	 * @param string      $contact_id  The GHL contact ID to store.
+	 * @param string|null $location_id GHL location ID. Defaults to the current configured location.
+	 * @return void
+	 */
+	public function store_user_contact_id( int $user_id, string $contact_id, ?string $location_id = null ): void {
+		$meta_key = $this->get_user_contact_id_meta_key( $location_id );
+		update_user_meta( $user_id, $meta_key, $contact_id );
+	}
+
+	/**
+	 * Delete the GHL contact ID for a user in the current (or specified) location.
+	 *
+	 * Also removes the legacy un-scoped meta key for cleanup.
+	 *
+	 * @param int         $user_id     WordPress user ID.
+	 * @param string|null $location_id GHL location ID. Defaults to the current configured location.
+	 * @return void
+	 */
+	public function delete_user_contact_id( int $user_id, ?string $location_id = null ): void {
+		$meta_key = $this->get_user_contact_id_meta_key( $location_id );
+		delete_user_meta( $user_id, $meta_key );
+		delete_user_meta( $user_id, self::LEGACY_CONTACT_META_KEY );
+	}
+
+	// =========================================================================
+	// User Meta — Tags (Location-Scoped)
+	// =========================================================================
+
+	/**
+	 * Build the location-scoped user meta key for storing GHL tags.
+	 *
+	 * Format: _ghl_contact_tags_{location_id}
+	 *
+	 * @param string|null $location_id GHL location ID. Defaults to the current configured location.
+	 * @return string The meta key string.
+	 */
+	public function get_user_tags_meta_key( ?string $location_id = null ): string {
+		if ( null === $location_id ) {
+			$location_id = $this->settings_manager->get_setting( 'location_id' );
+		}
+		return '_ghl_contact_tags_' . $location_id;
+	}
+
+	/**
+	 * Retrieve stored GHL tag IDs for a user.
+	 *
+	 * Normalizes legacy name-based storage to IDs on read and persists
+	 * the corrected values back to user meta when a migration occurs.
+	 *
+	 * @param int         $user_id     WordPress user ID.
+	 * @param string|null $location_id GHL location ID. Defaults to the current configured location.
+	 * @return array<int, string> Array of tag IDs.
+	 */
+	public function get_user_tag_ids( int $user_id, ?string $location_id = null ): array {
+		$meta_key = $this->get_user_tags_meta_key( $location_id );
+		$stored   = get_user_meta( $user_id, $meta_key, true );
+
+		if ( ! is_array( $stored ) ) {
+			$stored = [];
+		}
+
+		$normalized = $this->normalize_tag_input( $stored );
+		$ids        = $normalized['ids'];
+
+		if ( $ids !== $stored ) {
+			update_user_meta( $user_id, $meta_key, $ids );
+		}
+
+		return $ids;
+	}
+
+	/**
+	 * Persist GHL tag IDs for a user after normalization.
+	 *
+	 * Fires the 'ghl_crm_user_tags_updated' action when the stored tags
+	 * actually change, allowing integrations (e.g. LearnDash auto-enrollment)
+	 * to react.
+	 *
+	 * @param int         $user_id     WordPress user ID.
+	 * @param array       $tags        Mixed tag input (IDs, names, or pairs).
+	 * @param string|null $location_id GHL location ID. Defaults to the current configured location.
+	 * @return array<int, string> The normalized tag IDs that were stored.
+	 */
+	public function store_user_tags( int $user_id, array $tags, ?string $location_id = null ): array {
+		$meta_key   = $this->get_user_tags_meta_key( $location_id );
+		$normalized = $this->normalize_tag_input( $tags );
+		$ids        = $normalized['ids'];
+
+		// Capture previous tag IDs for change detection.
+		$old_ids = get_user_meta( $user_id, $meta_key, true );
+		if ( ! is_array( $old_ids ) ) {
+			$old_ids = [];
+		}
+
+		update_user_meta( $user_id, $meta_key, $ids );
+
+		// Fire hook when tags changed so integrations can react.
+		if ( $ids !== $old_ids ) {
+			/**
+			 * Fires after a user's GHL tags are updated.
+			 *
+			 * @param int   $user_id WordPress user ID.
+			 * @param array $ids     Normalized tag IDs that were stored.
+			 */
+			do_action( 'ghl_crm_user_tags_updated', $user_id, $ids );
+		}
+
+		return $ids;
+	}
+
+	/**
+	 * Retrieve the human-readable tag names for a user.
+	 *
+	 * Convenience wrapper that fetches the user's stored tag IDs and
+	 * converts them to names via the tag cache.
+	 *
+	 * @param int         $user_id     WordPress user ID.
+	 * @param string|null $location_id GHL location ID. Defaults to the current configured location.
+	 * @return array<int, string> Array of tag names.
+	 */
+	public function get_user_tag_names( int $user_id, ?string $location_id = null ): array {
+		$ids = $this->get_user_tag_ids( $user_id, $location_id );
+
+		return $this->convert_ids_to_names( $ids );
 	}
 }
