@@ -92,6 +92,7 @@ if ( false === $all_meta_keys ) {
 $custom_user_fields = array();
 $woocommerce_fields = array();
 $buddyboss_fields   = array();
+$learndash_fields   = array();
 
 /**
  * Filter: Allow PRO plugin to add custom user meta fields
@@ -118,6 +119,13 @@ $woocommerce_fields = apply_filters( 'ghl_crm_field_mapping_woocommerce_fields',
  */
 $buddyboss_fields = apply_filters( 'ghl_crm_field_mapping_buddyboss_fields', $buddyboss_fields );
 
+/**
+ * Filter: Allow PRO plugin to add LearnDash course progress fields
+ *
+ * @param array $learndash_fields LearnDash progress fields (key => label)
+ */
+$learndash_fields = apply_filters( 'ghl_crm_field_mapping_learndash_fields', $learndash_fields );
+
 // Sort custom fields alphabetically
 asort( $custom_user_fields );
 asort( $buddyboss_fields );
@@ -130,7 +138,7 @@ $ghl_fields = array(
 );
 
 // Calculate total fields
-$total_fields = count( $default_wp_fields ) + count( $custom_user_fields ) + count( $buddyboss_fields );
+$total_fields = count( $default_wp_fields ) + count( $custom_user_fields ) + count( $buddyboss_fields ) + count( $learndash_fields );
 
 // Get current field mappings
 $saved_mappings = $settings['user_field_mapping'] ?? [];
@@ -390,6 +398,57 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 							<td>
 								<strong><?php echo esc_html( $label ); ?></strong>
 								<span class="ghl-field-badge ghl-field-badge--woocommerce"><?php esc_html_e( 'WooCommerce', 'ghl-crm-integration' ); ?></span><br>
+								<code><?php echo esc_html( $key ); ?></code>
+							</td>
+							<td>
+								<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="ghl-select" data-saved-value="<?php echo esc_attr( $saved_ghl_field ); ?>">
+									<?php foreach ( $ghl_fields as $ghl_key => $ghl_label ) : ?>
+										<option value="<?php echo esc_attr( $ghl_key ); ?>" <?php selected( $saved_ghl_field, $ghl_key ); ?>>
+											<?php echo esc_html( $ghl_label ); ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+							</td>
+							<td>
+								<select name="sync_direction_<?php echo esc_attr( $key ); ?>" class="ghl-select">
+									<option value="both" <?php selected( $saved_direction, 'both' ); ?>><?php esc_html_e( '↔ Both Ways', 'ghl-crm-integration' ); ?></option>
+									<option value="to_ghl" <?php selected( $saved_direction, 'to_ghl' ); ?>><?php esc_html_e( '→ To GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
+									<option value="from_ghl" <?php selected( $saved_direction, 'from_ghl' ); ?>><?php esc_html_e( '← From GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
+								</select>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+		<?php endif; ?>
+
+		<?php if ( ! empty( $learndash_fields ) ) : ?>
+			<!-- LearnDash Course Progress Fields -->
+			<div class="ghl-field-section-header">
+				<h3><?php esc_html_e( 'LearnDash Course Progress', 'ghl-crm-integration' ); ?></h3>
+				<p class="description">
+					<?php esc_html_e( 'Map LearnDash course progress data (percentage, status, completed steps, total steps) to GoHighLevel custom fields. These fields sync automatically on lesson, topic, and course completion.', 'ghl-crm-integration' ); ?>
+				</p>
+			</div>
+
+			<table class="ghl-table" role="presentation">
+				<thead>
+					<tr>
+						<th style="width: 30%;"><?php esc_html_e( 'LearnDash Field', 'ghl-crm-integration' ); ?></th>
+						<th style="width: 35%;"><?php esc_html_e( 'GoHighLevel Field', 'ghl-crm-integration' ); ?></th>
+						<th style="width: 35%;"><?php esc_html_e( 'Sync Direction', 'ghl-crm-integration' ); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php foreach ( $learndash_fields as $key => $label ) :
+						$is_explicitly_saved = isset( $saved_mappings[ $key ] );
+						$saved_ghl_field = isset( $saved_mappings[ $key ]['ghl_field'] ) ? $saved_mappings[ $key ]['ghl_field'] : '';
+						$saved_direction = isset( $saved_mappings[ $key ]['direction'] ) ? $saved_mappings[ $key ]['direction'] : 'to_ghl';
+					?>
+						<tr class="ghl-field-row" data-section="learndash" data-key="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( wp_strip_all_tags( $label ) ); ?>" data-search="<?php echo esc_attr( strtolower( wp_strip_all_tags( $label ) . ' ' . $key ) ); ?>" data-explicitly-saved="<?php echo $is_explicitly_saved ? '1' : '0'; ?>">
+							<td>
+								<strong><?php echo esc_html( $label ); ?></strong>
+								<span class="ghl-field-badge ghl-field-badge--learndash"><?php esc_html_e( 'LearnDash', 'ghl-crm-integration' ); ?></span><br>
 								<code><?php echo esc_html( $key ); ?></code>
 							</td>
 							<td>

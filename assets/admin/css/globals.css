@@ -424,13 +424,15 @@ textarea.ghl-input {
 
 .ghl-table tbody td code {
 	display: inline-block;
-	padding: 2px 6px;
-	margin-top: 4px;
-	font-size: var(--ghl-font-size-xs);
+	padding: 1px 5px;
+	margin-top: 3px;
+	font-size: 11px;
 	font-family: var(--ghl-font-family-mono);
-	color: var(--ghl-text-secondary);
+	color: var(--ghl-text-tertiary, #94a3b8);
 	background-color: var(--ghl-bg-tertiary);
 	border-radius: var(--ghl-radius-sm);
+	letter-spacing: -0.01em;
+	line-height: 1.4;
 }
 
 /* Table row highlighting for mapped fields */
@@ -471,6 +473,11 @@ textarea.ghl-input {
 .ghl-field-badge--custom {
 	background-color: #fef3c7;
 	color: #d97706;
+}
+
+.ghl-field-badge--learndash {
+	background-color: #e0f2fe;
+	color: #0054a6;
 }
 
 /* Field section headers */
