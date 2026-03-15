@@ -305,14 +305,16 @@ class QueueManager {
 	public function process_queue(): void {
 
 		// Prevent concurrent processing (race condition protection)
+		// Use site transient for network-wide lock in multisite (wp_sitemeta table).
+		// In single-site this falls back to wp_options (same as get_transient).
 		$lock_key = 'ghl_crm_queue_processing';
-		if ( get_transient( $lock_key ) ) {
+		if ( get_site_transient( $lock_key ) ) {
 
 			return; // Already processing
 		}
 
 		// Set lock for 2 minutes
-		set_transient( $lock_key, time(), 2 * MINUTE_IN_SECONDS );
+		set_site_transient( $lock_key, time(), 2 * MINUTE_IN_SECONDS );
 
 		try {
 			// Check for queue backlog and send notification if needed
@@ -343,7 +345,7 @@ class QueueManager {
 			}
 		} finally {
 			// Always release lock
-			delete_transient( $lock_key );
+			delete_site_transient( $lock_key );
 
 		}
 	}
