@@ -7,10 +7,6 @@
 	position: relative;
 }
 
-.ghl-restricted-content.ghl-access-granted {
-	/* Content is accessible */
-}
-
 .ghl-restricted-content.ghl-access-denied {
 	padding: 20px;
 	background: #fff3cd;
