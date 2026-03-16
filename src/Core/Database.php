@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Database Manager
  *
- * Handles creation and management of custom database tables
+ * Handles creation and management of custom database tables.
  *
  * @package    GHL_CRM_Integration
  * @subpackage Core
