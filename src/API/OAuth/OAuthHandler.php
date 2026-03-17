@@ -5,6 +5,7 @@ namespace GHL_CRM\API\OAuth;
 
 use GHL_CRM\API\Client\Client;
 use GHL_CRM\Core\SettingsManager;
+use GHL_CRM\Utilities\FileLogger;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -447,21 +448,13 @@ class OAuthHandler {
 	}
 
 	/**
-	 * Lightweight OAuth debug logger for handler events.
+	 * Log an OAuth handler event via the dedicated FileLogger.
 	 *
 	 * @param string $event   Event name.
 	 * @param array  $context Context data.
 	 * @return void
 	 */
 	private function log_oauth_event( string $event, array $context = [] ): void {
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			$message = '[GHL][OAuthHandler] ' . $event;
-
-			if ( ! empty( $context ) ) {
-				$message .= ' | ' . wp_json_encode( $context );
-			}
-
-			error_log( $message );
-		}
+		FileLogger::get_instance()->log( 'oauth', $event, $context );
 	}
 }

@@ -6,6 +6,7 @@ namespace GHL_CRM\API\Client;
 use GHL_CRM\API\Exceptions\ApiException;
 use GHL_CRM\API\Exceptions\RateLimitException;
 use GHL_CRM\API\Exceptions\AuthenticationException;
+use GHL_CRM\Utilities\FileLogger;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -59,13 +60,6 @@ class Client implements ClientInterface {
 	private int $access_token_expires_at = 0;
 
 	/**
-	 * Lightweight logger prefix for OAuth events.
-	 *
-	 * @var string
-	 */
-	private string $oauth_log_prefix = '[GHL][OAuth] ';
-
-	/**
 	 * Throttle repeated refresh attempts within a short window to avoid loops.
 	 *
 	 * @var int
@@ -98,6 +92,17 @@ class Client implements ClientInterface {
 	 * Transient key for throttling reconnect attempts.
 	 */
 	private const RECONNECT_THROTTLE_KEY = 'ghl_crm_reconnect_throttle';
+
+	/**
+	 * Transient key for cross-process refresh mutex.
+	 * Prevents concurrent requests from racing to refresh the same token.
+	 */
+	private const REFRESH_LOCK_KEY = 'ghl_crm_token_refresh_lock';
+
+	/**
+	 * Duration in seconds the refresh lock is held.
+	 */
+	private const REFRESH_LOCK_TTL = 30;
 
 	/**
 	 * OAuth2 Refresh Token
@@ -708,21 +713,15 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Write a concise OAuth log line to the PHP error log.
+	 * Log an OAuth event via the dedicated FileLogger.
 	 *
-	 * @param string $message Log message
-	 * @param array  $context Optional context data
+	 * @param string $message Log message.
+	 * @param array  $context Optional context data.
+	 * @param string $level   Log level (debug, info, warning, error).
 	 * @return void
 	 */
-	private function log_oauth_event( string $message, array $context = [] ): void {
-		return; // Disabled Logging for now
-		$log = $this->oauth_log_prefix . $message;
-
-		if ( ! empty( $context ) ) {
-			$log .= ' | ' . wp_json_encode( $context );
-		}
-
-		error_log( $log );
+	private function log_oauth_event( string $message, array $context = [], string $level = 'info' ): void {
+		FileLogger::get_instance()->log( 'oauth', $message, $context, $level );
 	}
 
 	/**
@@ -851,13 +850,35 @@ class Client implements ClientInterface {
 		self::$last_refresh_attempt_ts = $now;
 		self::$last_refresh_error      = null;
 
+		// Cross-process mutex: if another process is already refreshing, wait and reload
+		$lock_owner = get_transient( self::REFRESH_LOCK_KEY );
+		if ( $lock_owner && getmypid() !== $lock_owner ) {
+			$this->log_oauth_event( 'Refresh deferred: another process holds the lock', [ 'lock_owner' => $lock_owner ] );
+			// Wait briefly for the other process to finish, then reload tokens from DB
+			usleep( 500000 ); // 0.5 seconds
+			$this->reload_settings();
+
+			// If the other process succeeded, we now have fresh tokens
+			if ( $this->access_token_expires_at > time() + 60 ) {
+				$this->log_oauth_event( 'Refresh resolved by another process', [ 'expires_at' => $this->access_token_expires_at ] );
+				return [
+					'access_token'  => $this->access_token,
+					'refresh_token' => $this->refresh_token,
+				];
+			}
+			// Other process may have failed — fall through and try ourselves
+		}
+
+		// Acquire the refresh lock for this process
+		set_transient( self::REFRESH_LOCK_KEY, getmypid(), self::REFRESH_LOCK_TTL );
+
 		// Handle edge case where refresh token might be corrupted (not a string)
 		if ( ! is_string( $this->refresh_token ) ) {
 			// Try reconnect API as fallback
 			try {
 				$auth_code = $this->reconnect_api();
 				// Exchange auth code for new tokens
-				$redirect_uri = admin_url( 'admin.php?page=ghl-crm-settings' );
+				$redirect_uri = admin_url( 'admin.php?page=ghl-crm-admin' );
 				return $this->exchange_code_for_token( $auth_code, $redirect_uri );
 			} catch ( ApiException $e ) {
 				$this->log_oauth_event( 'Refresh token corrupted and reconnect failed', [ 'error' => $e->getMessage() ] );
@@ -1010,6 +1031,9 @@ class Client implements ClientInterface {
 
 		// Reset circuit breaker on successful refresh
 		$this->reset_circuit_breaker();
+
+		// Release the refresh lock
+		delete_transient( self::REFRESH_LOCK_KEY );
 
 		$this->log_oauth_event( 'Token refresh succeeded', [ 'expires_at' => $expires_at ] );
 
@@ -1283,8 +1307,20 @@ class Client implements ClientInterface {
 					$this->last_response_headers = $headers->getAll();
 				}
 			} catch ( ApiException $e ) {
-				// Refresh failed, clear OAuth tokens
-				$this->clear_oauth_tokens();
+				// Refresh failed — reload settings to check if another process saved valid tokens
+				$this->reload_settings();
+				$this->log_oauth_event(
+					'Refresh failed in request() 401 handler, reloaded settings',
+					[
+						'error'        => $e->getMessage(),
+						'has_token'    => ! empty( $this->access_token ),
+						'expires_at'   => $this->access_token_expires_at,
+					]
+				);
+				// Only clear tokens if they are genuinely expired (not just refreshed by another process)
+				if ( empty( $this->access_token ) || $this->access_token_expires_at <= time() ) {
+					$this->clear_oauth_tokens();
+				}
 			}
 		}
 
