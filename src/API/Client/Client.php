@@ -13,27 +13,73 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Class Client
+ * API Client
  *
- * Handles all HTTP communication with GoHighLevel API including OAuth2 authentication.
+ * Central HTTP client for all GoHighLevel API communication.
+ * Implements OAuth2 authentication with automatic token lifecycle management.
+ *
+ * Authentication Strategy:
+ * - Primary: OAuth2 Bearer tokens obtained via labgenz.com proxy (keeps client secret server-side)
+ * - Fallback: Manual Location API Key for simple setups
+ *
+ * Token Lifecycle:
+ * - Proactive refresh 60s before expiry via ensure_fresh_access_token()
+ * - Reactive refresh on 401/403 via handle_http_response() filter and request() retry
+ * - Circuit breaker after 3 consecutive failures (5-minute cooldown)
+ * - Cross-process mutex lock prevents concurrent refresh races
+ * - Reconnect API as emergency recovery when refresh proxy is unreachable
+ *
+ * Auto-Recovery (handle_http_response):
+ * - Duplicate contacts: Auto-converts POST→PUT on duplicate detection
+ * - Deleted/merged contacts: Email re-lookup, meta update, and request retry
+ * - Deleted contacts on DELETE: Silent success (idempotent)
+ *
+ * Rate Limiting:
+ * - Tracks X-RateLimit-* headers from every response
+ * - Throws RateLimitException on 429 with retry-after value
+ *
+ * Multisite:
+ * - All token storage is multisite-aware via SettingsManager
+ * - Circuit breaker uses per-site transients
  *
  * @package    GHL_CRM_Integration
  * @subpackage API/Client
  */
 class Client implements ClientInterface {
+	// =========================================================================
+	// Constants — API Endpoints
+	// =========================================================================
+
 	/**
-	 * API Base URL
+	 * GoHighLevel API base URL.
+	 *
+	 * All REST endpoints are relative to this root.
+	 *
+	 * @var string
 	 */
 	private const BASE_URL = 'https://services.leadconnectorhq.com';
 
 	/**
-	 * OAuth2 Authorization URL
+	 * OAuth2 authorization URL.
+	 *
+	 * Users are redirected here to choose a location and grant scopes.
+	 *
+	 * @var string
 	 */
 	private const OAUTH_AUTH_URL = 'https://marketplace.leadconnectorhq.com/oauth/chooselocation';
 
 	/**
-	 * OAuth Proxy Base URL (labgenz.com server)
-	 * Handles OAuth token exchanges securely without exposing client secret
+	 * OAuth proxy base URL (labgenz.com server).
+	 *
+	 * All token exchange/refresh requests route through this proxy so the
+	 * OAuth client secret is never exposed in plugin source or browser.
+	 *
+	 * Endpoints:
+	 * - /exchange-token — Authorization code → access + refresh tokens
+	 * - /refresh-token  — Refresh token → new access + refresh tokens
+	 * - /reconnect      — Location ID → new authorization code (emergency)
+	 *
+	 * @var string
 	 */
 	private const OAUTH_PROXY_URL = 'https://labgenz.com/wp-json/ghl-proxy/v1';
 
@@ -45,15 +91,25 @@ class Client implements ClientInterface {
 	 */
 	private const OAUTH_CLIENT_ID = '68ff9baa25051d0ca83341e9-mh9cljcg';
 
+	// =========================================================================
+	// Properties — OAuth State
+	// =========================================================================
+
 	/**
-	 * OAuth2 Access Token
+	 * Current OAuth2 access token (Bearer).
+	 *
+	 * Loaded from DB on construct and refreshed in-memory after each
+	 * successful token refresh.
 	 *
 	 * @var string
 	 */
 	private string $access_token = '';
 
 	/**
-	 * OAuth2 Access Token Expiry (unix timestamp)
+	 * Unix timestamp when the current access token expires.
+	 *
+	 * Used by ensure_fresh_access_token() to trigger proactive refresh
+	 * 60 seconds before actual expiry.
 	 *
 	 * @var int
 	 */
@@ -73,78 +129,134 @@ class Client implements ClientInterface {
 	 */
 	private static ?string $last_refresh_error = null;
 
+	// =========================================================================
+	// Constants — Circuit Breaker
+	// =========================================================================
+
 	/**
-	 * Circuit breaker transient key for tracking refresh failures.
+	 * Transient key for tracking consecutive refresh failures.
+	 *
+	 * Stores an array with 'failures' count and 'last_failed' timestamp.
+	 *
+	 * @var string
 	 */
 	private const CIRCUIT_BREAKER_KEY = 'ghl_crm_refresh_circuit_breaker';
 
 	/**
-	 * Circuit breaker: minutes to wait after consecutive failures before retrying.
+	 * Minutes to wait after hitting the failure threshold before retrying.
+	 *
+	 * @var int
 	 */
 	private const CIRCUIT_BREAKER_COOLDOWN = 5;
 
 	/**
-	 * Circuit breaker: max consecutive failures before opening circuit.
+	 * Max consecutive refresh failures before the circuit opens.
+	 *
+	 * Once opened, all refresh attempts are blocked until the cooldown expires
+	 * (except for the reconnect API recovery path).
+	 *
+	 * @var int
 	 */
 	private const CIRCUIT_BREAKER_THRESHOLD = 3;
 
+	// =========================================================================
+	// Constants — Throttle & Locking
+	// =========================================================================
+
 	/**
 	 * Transient key for throttling reconnect attempts.
+	 *
+	 * Enforces a 2-minute cooldown between reconnect API calls to avoid
+	 * hammering the proxy when it is down.
+	 *
+	 * @var string
 	 */
 	private const RECONNECT_THROTTLE_KEY = 'ghl_crm_reconnect_throttle';
 
 	/**
 	 * Transient key for cross-process refresh mutex.
-	 * Prevents concurrent requests from racing to refresh the same token.
+	 *
+	 * When one PHP process is refreshing the token, other processes that
+	 * detect this lock will wait 0.5s and reload settings from DB instead
+	 * of issuing a parallel refresh request.
+	 *
+	 * @var string
 	 */
 	private const REFRESH_LOCK_KEY = 'ghl_crm_token_refresh_lock';
 
 	/**
 	 * Duration in seconds the refresh lock is held.
+	 *
+	 * @var int
 	 */
 	private const REFRESH_LOCK_TTL = 30;
 
 	/**
-	 * OAuth2 Refresh Token
+	 * OAuth2 refresh token used to obtain fresh access tokens.
+	 *
+	 * Rotated on every refresh; the new value is persisted to DB immediately.
 	 *
 	 * @var string
 	 */
 	private string $refresh_token = '';
 
 	/**
-	 * API Token (fallback for manual token entry)
+	 * Manual Location API Key (fallback when OAuth is not configured).
+	 *
+	 * If set and no OAuth access token exists, request() uses this for
+	 * Bearer authentication instead.
 	 *
 	 * @var string
 	 */
 	private string $token = '';
 
+	// =========================================================================
+	// Properties — Request State
+	// =========================================================================
+
 	/**
-	 * Location ID
+	 * GoHighLevel location (sub-account) ID.
+	 *
+	 * Appended as `locationId` query parameter to most API requests
+	 * via build_url() unless the endpoint path already contains a location.
 	 *
 	 * @var string
 	 */
 	private string $location_id = '';
 
 	/**
-	 * API Version
+	 * API version header sent with every request.
+	 *
+	 * GHL uses date-based versioning ("Version" header).
+	 * Default: 2021-07-28 (v1 endpoints).
 	 *
 	 * @var string
 	 */
 	private string $api_version = '2021-07-28';
 
 	/**
-	 * Last response headers
+	 * Headers from the most recent API response.
+	 *
+	 * Stored after every request() call and exposed via
+	 * get_last_response_headers() for rate-limit inspection.
 	 *
 	 * @var array
 	 */
 	private array $last_response_headers = [];
 
 	/**
-	 * Skip OAuth token refresh (for manual API key testing)
+	 * When true, suppresses automatic OAuth token refresh on 401/403.
+	 *
+	 * Set during manual API key testing so a failing key doesn't trigger
+	 * an unrelated refresh attempt on the OAuth tokens.
 	 *
 	 * @var bool
 	 */
 	private bool $skip_oauth_refresh = false;
+
+	// =========================================================================
+	// Singleton
+	// =========================================================================
 
 	/**
 	 * Singleton instance
@@ -174,7 +286,13 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Initialize WordPress hooks
+	 * Initialize WordPress hooks.
+	 *
+	 * Registers the global HTTP response filter that intercepts every
+	 * outgoing wp_remote_* call to GHL endpoints for:
+	 * - Duplicate contact auto-recovery (POST→PUT)
+	 * - Deleted/merged contact re-lookup and retry
+	 * - 401/403 automatic token refresh and retry
 	 *
 	 * @return void
 	 */
@@ -184,13 +302,38 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Handle HTTP response globally
-	 * Automatically refreshes tokens on 401/403 errors and retries the request
+	 * Handle HTTP response globally.
 	 *
-	 * @param array|WP_Error $response HTTP response.
-	 * @param array          $args     HTTP request arguments.
-	 * @param string         $url      Request URL.
-	 * @return array|WP_Error Modified response.
+	 * Hooked into WordPress `http_response` filter at priority 50.
+	 * Only processes responses from `services.leadconnectorhq.com` or
+	 * `rest.gohighlevel.com`; all other URLs pass through untouched.
+	 *
+	 * Recovery Strategies (in order of evaluation):
+	 *
+	 * 1. **Duplicate Contact (400)** — If GHL returns "does not allow duplicated
+	 *    contacts" with a matching contactId, the original POST is converted to
+	 *    a PUT against `/contacts/{id}` and retried immediately.
+	 *
+	 * 2. **Contact Not Found (404/400)** — For PUT/DELETE on a vanished contact:
+	 *    - Email re-lookup via `GET /contacts?query={email}`
+	 *    - If found under a new ID (merge scenario): update all WP user meta,
+	 *      then retry the original request against the new ID.
+	 *    - If not found (hard delete): convert PUT→POST to re-create, or
+	 *      return silent success for DELETE (idempotent).
+	 *
+	 * 3. **Auth Error (401/403)** — If the error message matches known token
+	 *    strings, refresh the access token and retry. On failure, shows an
+	 *    admin notice and returns WP_Error.
+	 *
+	 * Safety:
+	 * - Skips token/reconnect URLs to avoid infinite loops
+	 * - Respects skip_oauth_refresh flag for manual key testing
+	 * - Circuit breaker blocks frontend refreshes when proxy is failing
+	 *
+	 * @param array|\WP_Error $response HTTP response or WP_Error.
+	 * @param array           $args     HTTP request arguments.
+	 * @param string          $url      Request URL.
+	 * @return array|\WP_Error Modified or original response.
 	 */
 	public function handle_http_response( $response, $args, $url ) {
 		// Only handle GoHighLevel API requests
@@ -501,7 +644,11 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Load settings from options (multisite-aware)
+	 * Load settings from options (multisite-aware).
+	 *
+	 * Reads all OAuth tokens, manual API key, location ID, and API version
+	 * from SettingsManager. Called once during construction and again by
+	 * reload_settings() when another process may have refreshed tokens.
 	 *
 	 * @return void
 	 */
@@ -538,7 +685,10 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Reload settings (useful after settings update)
+	 * Reload settings from the database.
+	 *
+	 * Used after a failed refresh to check whether a concurrent process
+	 * already saved valid tokens, avoiding unnecessary reconnect attempts.
 	 *
 	 * @return void
 	 */
@@ -577,11 +727,23 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Generate OAuth2 authorization URL
+	 * Generate the OAuth2 authorization URL.
 	 *
-	 * @param string $redirect_uri Redirect URI after authorization.
-	 * @param string $state        Random state parameter for security.
-	 * @return string Authorization URL.
+	 * Builds the marketplace chooselocation URL with all required scopes.
+	 * The redirect_uri always points to labgenz.com/wp-json/ghl/v1/callback
+	 * (the proxy), which then forwards back to the WordPress site.
+	 *
+	 * Scopes requested:
+	 * - contacts.readonly / contacts.write
+	 * - locations/tags.readonly / locations/tags.write
+	 * - locations/customFields.readonly / locations/customFields.write
+	 * - opportunities.readonly / opportunities.write
+	 * - workflows.readonly / forms.readonly / forms.write
+	 * - objects/schema + record + associations (Custom Objects)
+	 *
+	 * @param string $redirect_uri Unused directly (proxy handles redirect).
+	 * @param string $return_url   The WP admin URL to return to after auth; passed as `state`.
+	 * @return string Full authorization URL with query params.
 	 */
 	public function get_oauth_authorization_url( string $redirect_uri, string $return_url ): string {
 		$params = [
@@ -618,13 +780,18 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Exchange authorization code for access token
-	 * Uses labgenz.com proxy to keep client secret secure
+	 * Exchange an authorization code for OAuth2 tokens.
 	 *
-	 * @param string $code         Authorization code from callback
-	 * @param string $redirect_uri Redirect URI used in authorization
-	 * @return array Token response
-	 * @throws ApiException
+	 * Sends the code to the labgenz.com proxy which pairs it with the
+	 * client secret and calls GHL’s `/oauth/token` endpoint.
+	 *
+	 * On success, both access_token and refresh_token are updated in-memory
+	 * (caller is responsible for persisting via save_oauth_tokens).
+	 *
+	 * @param string $code         Authorization code from the OAuth callback.
+	 * @param string $redirect_uri Redirect URI that was used during authorization.
+	 * @return array Decoded token payload (access_token, refresh_token, expires_in, etc.).
+	 * @throws ApiException On network error or invalid response from proxy.
 	 */
 	public function exchange_code_for_token( string $code, string $redirect_uri ): array {
 		$data = [
@@ -780,10 +947,38 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Refresh OAuth2 access token
+	 * Refresh the OAuth2 access token.
 	 *
-	 * @return array Token response
-	 * @throws ApiException
+	 * Full refresh flow with multiple layers of protection:
+	 *
+	 * 1. **Guard: no refresh token** — Aborts immediately.
+	 * 2. **Guard: circuit breaker open** — If ≥ 3 consecutive failures within
+	 *    the last 5 minutes, blocks the attempt. Falls through to reconnect
+	 *    API as an emergency recovery path.
+	 * 3. **Guard: in-process throttle** — Skips if another attempt was made
+	 *    less than 30 seconds ago (avoids hammering within one PHP process).
+	 * 4. **Guard: cross-process mutex** — If another PHP process holds the
+	 *    refresh lock, waits 0.5s then reloads settings from DB. If tokens
+	 *    are now fresh, returns immediately.
+	 * 5. **Primary path** — POSTs refresh_token to the proxy’s `/refresh-token`.
+	 * 6. **Fallback: reconnect API** — If the proxy returns an error or is
+	 *    unreachable, attempts the GHL reconnect endpoint to obtain a new
+	 *    authorization code, then exchanges it for fresh tokens.
+	 * 7. **Invalid grant** — If GHL returns `invalid_grant`, tokens are cleared
+	 *    and the user must reconnect manually.
+	 *
+	 * On success:
+	 * - Updates in-memory access_token / refresh_token / expires_at
+	 * - Persists to DB via save_oauth_tokens()
+	 * - Resets circuit breaker
+	 * - Releases refresh lock
+	 *
+	 * Timeout:
+	 * - Admin context: 15s
+	 * - Frontend context: 8s (avoids blocking page loads)
+	 *
+	 * @return array Decoded token payload from proxy.
+	 * @throws ApiException On all recovery paths exhausted.
 	 */
 	public function refresh_access_token(): array {
 		if ( empty( $this->refresh_token ) ) {
@@ -1050,13 +1245,22 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Reconnect API - Get new authorization code when refresh token fails
-	 * Uses GoHighLevel's reconnect endpoint for emergency token recovery
+	 * Reconnect API — emergency token recovery.
 	 *
-	 * Includes a 2-minute throttle to avoid hammering the proxy when it's down.
+	 * When the refresh token is exhausted or the proxy is unreachable,
+	 * this method calls GHL’s install-level reconnect endpoint (via proxy)
+	 * to obtain a fresh authorization code without requiring user interaction.
 	 *
-	 * @return string Authorization code
-	 * @throws ApiException
+	 * The returned authorization code must be exchanged via
+	 * exchange_code_for_token() to obtain usable access + refresh tokens.
+	 *
+	 * Safety:
+	 * - Requires a valid location_id (throws if missing)
+	 * - 2-minute transient throttle prevents hammering
+	 * - Timeout: 15s
+	 *
+	 * @return string Fresh authorization code.
+	 * @throws ApiException On missing location ID, throttle, network error, or invalid response.
 	 */
 	public function reconnect_api(): string {
 		if ( empty( $this->location_id ) ) {
@@ -1111,14 +1315,18 @@ class Client implements ClientInterface {
 		return $decoded['authorizationCode'];
 	}
 
+	// =========================================================================
+	// HTTP Verb Helpers
+	// =========================================================================
+
 	/**
-	 * Send GET request
+	 * Send a GET request to the GHL API.
 	 *
-	 * @param string $endpoint            API endpoint
-	 * @param array  $params              Query parameters
-	 * @param bool   $include_location_id Whether to include locationId in query params (default: true)
-	 * @return array Response data
-	 * @throws ApiException
+	 * @param string $endpoint            API endpoint (e.g. 'contacts', 'contacts/{id}').
+	 * @param array  $params              Query parameters appended to the URL.
+	 * @param bool   $include_location_id Whether to auto-append locationId (default: true).
+	 * @return array Decoded JSON response.
+	 * @throws ApiException|AuthenticationException|RateLimitException
 	 */
 	public function get( string $endpoint, array $params = [], bool $include_location_id = true ): array {
 		$url = $this->build_url( $endpoint, $params, $include_location_id );
@@ -1126,13 +1334,13 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Send POST request
+	 * Send a POST request to the GHL API.
 	 *
-	 * @param string $endpoint            API endpoint
-	 * @param array  $data                Request body
-	 * @param bool   $include_location_id Whether to include locationId in query params (default: true)
-	 * @return array Response data
-	 * @throws ApiException
+	 * @param string $endpoint            API endpoint.
+	 * @param array  $data                Request body (JSON-encoded automatically).
+	 * @param bool   $include_location_id Whether to auto-append locationId (default: true).
+	 * @return array Decoded JSON response.
+	 * @throws ApiException|AuthenticationException|RateLimitException
 	 */
 	public function post( string $endpoint, array $data = [], bool $include_location_id = true ): array {
 		$url = $this->build_url( $endpoint, [], $include_location_id );
@@ -1140,13 +1348,13 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Send PUT request
+	 * Send a PUT request to the GHL API.
 	 *
-	 * @param string $endpoint            API endpoint
-	 * @param array  $data                Request body
-	 * @param bool   $include_location_id Whether to include locationId in query params (default: true)
-	 * @return array Response data
-	 * @throws ApiException
+	 * @param string $endpoint            API endpoint.
+	 * @param array  $data                Request body (JSON-encoded automatically).
+	 * @param bool   $include_location_id Whether to auto-append locationId (default: true).
+	 * @return array Decoded JSON response.
+	 * @throws ApiException|AuthenticationException|RateLimitException
 	 */
 	public function put( string $endpoint, array $data = [], bool $include_location_id = true ): array {
 		$url = $this->build_url( $endpoint, [], $include_location_id );
@@ -1154,13 +1362,13 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Send DELETE request
+	 * Send a DELETE request to the GHL API.
 	 *
-	 * @param string $endpoint            API endpoint
-	 * @param bool   $include_location_id Whether to include locationId in query params (default: true)
-	 * @param array  $data                Optional request body data
-	 * @return array Response data
-	 * @throws ApiException
+	 * @param string $endpoint            API endpoint.
+	 * @param bool   $include_location_id Whether to auto-append locationId (default: true).
+	 * @param array  $data                Optional request body data.
+	 * @return array Decoded JSON response.
+	 * @throws ApiException|AuthenticationException|RateLimitException
 	 */
 	public function delete( string $endpoint, bool $include_location_id = true, array $data = [] ): array {
 		$url = $this->build_url( $endpoint, [], $include_location_id );
@@ -1177,9 +1385,12 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Get rate limit status from last response
+	 * Get rate limit status from the last API response.
 	 *
-	 * @return array ['remaining' => int, 'limit' => int, 'reset' => int]
+	 * Reads `X-RateLimit-*` headers stored by request().
+	 * Useful for RateLimiter to decide whether to delay the next call.
+	 *
+	 * @return array{remaining: int, limit: int, reset: int}
 	 */
 	public function get_rate_limit_status(): array {
 		$headers = $this->last_response_headers;
@@ -1191,13 +1402,22 @@ class Client implements ClientInterface {
 		];
 	}
 
+	// =========================================================================
+	// Internal Request Engine
+	// =========================================================================
+
 	/**
-	 * Build full URL with endpoint and params
+	 * Build the full API URL from an endpoint path and optional query params.
 	 *
-	 * @param string $endpoint            Endpoint path
-	 * @param array  $params              Query parameters
-	 * @param bool   $include_location_id Whether to include locationId in query params (default: true)
-	 * @return string Full URL
+	 * Automatically appends `locationId` unless:
+	 * - $include_location_id is false
+	 * - The endpoint path already contains `locations/{id}/`
+	 * - locationId is already present in $params
+	 *
+	 * @param string $endpoint            Endpoint path (e.g. 'contacts/{id}').
+	 * @param array  $params              Additional query parameters.
+	 * @param bool   $include_location_id Whether to auto-append locationId.
+	 * @return string Fully qualified URL.
 	 */
 	private function build_url( string $endpoint, array $params = [], bool $include_location_id = true ): string {
 		$url = self::BASE_URL . '/' . ltrim( $endpoint, '/' );
@@ -1218,13 +1438,31 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Execute HTTP request
+	 * Execute an HTTP request against the GHL API.
 	 *
-	 * @param string $method HTTP method
-	 * @param string $url    Full URL
-	 * @param array  $data   Request body
-	 * @return array Response data
-	 * @throws ApiException
+	 * Core request engine used by all HTTP verb helpers (get/post/put/delete).
+	 *
+	 * Authentication:
+	 * - Prefers OAuth2 access token when available
+	 * - Falls back to manual Location API Key
+	 * - Throws AuthenticationException if neither is configured
+	 *
+	 * Token Lifecycle:
+	 * - Calls ensure_fresh_access_token() before sending (proactive refresh)
+	 * - On 401, attempts refresh_access_token() and retries once
+	 * - On refresh failure, reloads settings to check for concurrent refresh
+	 * - Clears tokens only if genuinely expired (not just refreshed by another process)
+	 *
+	 * Response Handling:
+	 * - Stores response headers for rate-limit inspection
+	 * - Decodes JSON body; returns empty array for 2xx with empty body
+	 * - Delegates error classification to handle_error_response()
+	 *
+	 * @param string $method HTTP method (GET, POST, PUT, DELETE).
+	 * @param string $url    Fully qualified URL (from build_url).
+	 * @param array  $data   Request body for POST/PUT/DELETE.
+	 * @return array Decoded JSON response.
+	 * @throws ApiException|AuthenticationException|RateLimitException
 	 */
 	private function request( string $method, string $url, array $data = [] ): array {
 		// Proactively refresh if token is near expiry
@@ -1347,9 +1585,17 @@ class Client implements ClientInterface {
 		return $decoded;
 	}
 
+	// =========================================================================
+	// Token Persistence (multisite-aware)
+	// =========================================================================
+
 	/**
-	 * Save OAuth2 tokens to database (multisite-aware)
+	 * Persist OAuth2 tokens to the database.
 	 *
+	 * Uses SettingsManager for multisite-safe storage.
+	 * Called after every successful refresh or token exchange.
+	 *
+	 * @param int|null $expires_at Optional unix timestamp for token expiry.
 	 * @return void
 	 */
 	private function save_oauth_tokens( ?int $expires_at = null ): void {
@@ -1366,7 +1612,15 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Clear OAuth2 tokens from database (multisite-aware)
+	 * Clear all OAuth2 tokens from in-memory state and the database.
+	 *
+	 * Called when:
+	 * - GHL returns `invalid_grant` (token permanently revoked)
+	 * - Admin disconnects the account
+	 * - Refresh fails and tokens are genuinely expired
+	 *
+	 * Also resets the circuit breaker to avoid confusing
+	 * "temporarily disabled" errors after a manual disconnect.
 	 *
 	 * @return void
 	 */
@@ -1385,15 +1639,24 @@ class Client implements ClientInterface {
 		$this->reset_circuit_breaker();
 	}
 
+	// =========================================================================
+	// Connection Testing
+	// =========================================================================
+
 	/**
-	 * Test manual API connection
+	 * Test a manual API key connection.
 	 *
-	 * Tests if the provided API token and location ID can successfully authenticate.
-	 * Uses Bearer token authentication method.
+	 * Performs a lightweight `GET /contacts/?limit=1` call using the provided
+	 * token and location ID to verify credentials without side effects.
 	 *
-	 * @param string $api_token   The API token to test.
-	 * @param string $location_id The location ID to test.
-	 * @return array Result array with 'success' boolean, 'message' string, and optional 'data'.
+	 * Validation:
+	 * - Rejects empty inputs
+	 * - Detects JWT (temporary) tokens and advises the user to use a
+	 *   permanent Location API Key instead
+	 *
+	 * @param string $api_token   The Location API Key to test.
+	 * @param string $location_id The GHL location (sub-account) ID.
+	 * @return array{success: bool, message: string, data?: array} Result with status and message.
 	 */
 	public function test_manual_connection( string $api_token, string $location_id ): array {
 		// Validate inputs
@@ -1478,15 +1741,25 @@ class Client implements ClientInterface {
 		];
 	}
 
+	// =========================================================================
+	// Error Handling & Response Sanitization
+	// =========================================================================
+
 	/**
-	 * Handle API error responses
+	 * Classify and throw typed exceptions for non-2xx API responses.
 	 *
-	 * @param int   $status_code HTTP status code
-	 * @param array $response    Decoded response body
+	 * Exception mapping:
+	 * - 429 → RateLimitException (includes retry-after seconds)
+	 * - 401/403 → AuthenticationException
+	 * - All others → ApiException
+	 *
+	 * All exception payloads are sanitized via sanitize_response_payload()
+	 * before being attached as context.
+	 *
+	 * @param int   $status_code HTTP status code.
+	 * @param array $response    Decoded JSON response body.
 	 * @return void
-	 * @throws ApiException
-	 * @throws AuthenticationException
-	 * @throws RateLimitException
+	 * @throws ApiException|AuthenticationException|RateLimitException
 	 */
 	private function handle_error_response( int $status_code, array $response ): void {
 		if ( $status_code >= 200 && $status_code < 300 ) {
@@ -1541,9 +1814,13 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Sanitize response payload before attaching to exceptions.
+	 * Sanitize an API response payload for safe exception context.
 	 *
-	 * @param mixed $payload Raw payload data from the API.
+	 * Recursively walks the decoded response array and applies
+	 * sanitize_text_field + wp_strip_all_tags to all string values.
+	 * Non-array input returns an empty array.
+	 *
+	 * @param mixed $payload Raw decoded API response.
 	 * @return array Sanitized payload safe for logging or exception context.
 	 */
 	private function sanitize_response_payload( $payload ): array {
@@ -1561,9 +1838,13 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Sanitize individual payload values recursively.
+	 * Sanitize a single payload value recursively.
 	 *
-	 * @param mixed $value Payload value.
+	 * Delegates arrays/objects to sanitize_response_payload(),
+	 * strings to sanitize_response_scalar(), and passes through
+	 * booleans, integers, floats, and null unchanged.
+	 *
+	 * @param mixed $value Raw value from the API response.
 	 * @return mixed Sanitized value.
 	 */
 	private function sanitize_response_value( $value ) {
@@ -1587,10 +1868,12 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Sanitize scalar payload value.
+	 * Sanitize a scalar string value.
 	 *
-	 * @param string $value Raw string value.
-	 * @return string Sanitized string.
+	 * Strips HTML tags and applies WordPress sanitize_text_field().
+	 *
+	 * @param string $value Raw string from the API response.
+	 * @return string Sanitized string safe for logging.
 	 */
 	private function sanitize_response_scalar( string $value ): string {
 		return sanitize_text_field( wp_strip_all_tags( $value ) );
