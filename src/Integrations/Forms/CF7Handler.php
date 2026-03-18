@@ -9,6 +9,7 @@ use GHL_CRM\Core\AssetsManager;
 use GHL_CRM\Core\SettingsManager;
 use GHL_CRM\Core\TagManager;
 use GHL_CRM\Sync\QueueManager;
+use GHL_CRM\Sync\QueueProcessor;
 
 /**
  * Contact Form 7 Integration Handler
@@ -68,6 +69,17 @@ class CF7Handler {
 	 * @return void
 	 */
 	public function init(): void {
+		// Register the 'form' queue handler so QueueProcessor can route form submissions.
+		// QueueProcessor singleton is already instantiated by the time CF7Handler::init() runs
+		// (sync.queue component is resolved before integrations.forms.cf7 in Loader).
+		$processor = QueueProcessor::get_instance();
+		if ( ! $processor->has_handler( 'form' ) ) {
+			$processor->register_handler(
+				'form',
+				[ $processor, 'execute_form_sync' ]
+			);
+		}
+
 		// Defer to 'init' hook so CF7 is fully loaded and WPCF7_VERSION is defined
 		add_action( 'init', [ $this, 'register_hooks' ] );
 	}
