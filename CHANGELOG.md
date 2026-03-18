@@ -2,6 +2,22 @@
 
 All notable changes to GoHighLevel CRM Integration will be documented in this file.
 
+## [1.0.2] - 2026-03-18
+
+### Improved
+
+- **Version Constant Consistency** — Replaced all hardcoded version strings in `add_admin_asset()` / `wp_enqueue_*` calls with `GHL_CRM_VERSION` and `GHL_CRM_PRO_VERSION` constants for single-point version management.
+
+### Fixed
+
+- **User Deletion Sync (WP→GHL)** — Fixed duplicate hook registration in `UserHooks` and unreliable email-based contact lookup; now resolves stored `contact_id` from user meta.
+- **Webhook Delete Sync (GHL→WP)** — Added ping-pong prevention on the delete path via `_ghl_skip_delete_sync` meta flag.
+- **QueueProcessor Dead Code** — Removed orphaned `wc_customer` and `form` default handlers; added `ghl_crm_queue_processor_ready` hook for handler self-registration.
+- **CF7 Submission Timing** — Changed CF7Handler from hook-based to direct `register_handler()` call to fix race condition.
+- **Settings Page jQuery Crash** — Applied `CSS.escape()` for dynamic tag name values in jQuery selectors across all JS files.
+- **WooCommerce Tag Overwrite** — `WooCommerceSync` convert-lead and product-tag flows now use the additive `add_tags()` (POST) endpoint instead of the destructive full-contact `update()` (PUT).
+- **Tag Display Special Characters (Comprehensive)** — Fixed single-quote breakage in `data-saved-tags` HTML attributes via `esc_attr()` around `wp_json_encode()` in 10 PHP files; replaced broken Select2 `data:` config with DOM `<option>` population in 4 JS files; removed destructive `$select.empty()` / `$select.html('')` calls in 4 JS files; added `CSS.escape()` in 8 JS files.
+
 ## [1.0.1] - 2026-03-17
 
 ### Added
