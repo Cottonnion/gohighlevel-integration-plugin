@@ -68,6 +68,10 @@ class UserHooks {
 	public function register_hooks(): void {
 		$settings = $this->settings_manager->get_settings_array();
 
+		// Remove any previously registered hooks to prevent duplicates
+		// (this method may fire again on ghl_crm_connection_status_changed).
+		$this->remove_hooks();
+
 		// Check if connection is verified first
 		$is_verified = $this->settings_manager->is_connection_verified();
 
@@ -124,6 +128,31 @@ class UserHooks {
 			if ( is_multisite() ) {
 				add_action( 'remove_user_from_blog', [ $this, 'on_user_remove_from_blog' ], 10, 2 );
 			}
+		}
+	}
+
+	/**
+	 * Remove all previously registered hooks.
+	 *
+	 * Called at the top of register_hooks() to prevent duplicate callbacks
+	 * when the method is invoked more than once in the same request (e.g.
+	 * after ghl_crm_connection_status_changed fires).
+	 *
+	 * @return void
+	 */
+	private function remove_hooks(): void {
+		remove_action( 'user_register', [ $this, 'on_user_register' ], 999 );
+		remove_action( 'edit_user_created_user', [ $this, 'on_user_register' ], 999 );
+		remove_action( 'profile_update', [ $this, 'on_user_update' ], 10 );
+		remove_action( 'wp_login', [ $this, 'on_user_login' ], 10 );
+		remove_action( 'delete_user', [ $this, 'on_user_delete' ], 10 );
+
+		if ( is_multisite() ) {
+			remove_action( 'wpmu_new_user', [ $this, 'on_user_register' ], 999 );
+			remove_action( 'wpmu_activate_user', [ $this, 'on_multisite_activate_user' ], 999 );
+			remove_action( 'wpmu_activate_blog', [ $this, 'on_multisite_activate_blog' ], 999 );
+			remove_action( 'add_user_to_blog', [ $this, 'on_add_user_to_blog' ], 10 );
+			remove_action( 'remove_user_from_blog', [ $this, 'on_user_remove_from_blog' ], 10 );
 		}
 	}
 	/**
@@ -418,10 +447,19 @@ class UserHooks {
 			return;
 		}
 		$settings = $this->settings_manager->get_settings_array();
+
+		// Resolve the stored GHL contact ID before the user (and its meta) is deleted.
+		$location_id = $settings['location_id'] ?? ( $settings['oauth_location_id'] ?? '' );
+		$contact_id  = '';
+		if ( ! empty( $location_id ) ) {
+			$contact_id = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+		}
+
 		// Queue deletion with settings
 		$data          = [
-			'email'  => $user->user_email,
-			'delete' => ! empty( $settings['delete_contact_on_user_delete'] ),
+			'email'      => $user->user_email,
+			'contact_id' => $contact_id ?: '',
+			'delete'     => ! empty( $settings['delete_contact_on_user_delete'] ),
 		];
 		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
 		$queue_manager->add_to_queue( 'user', $user_id, 'delete_user', $data );
@@ -448,11 +486,19 @@ class UserHooks {
 
 		$settings = $this->settings_manager->get_settings_array();
 
+		// Resolve the stored GHL contact ID before the user meta is removed.
+		$location_id = $settings['location_id'] ?? ( $settings['oauth_location_id'] ?? '' );
+		$contact_id  = '';
+		if ( ! empty( $location_id ) ) {
+			$contact_id = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+		}
+
 		// Queue deletion with settings (same as delete_user)
 		$data = [
-			'email'   => $user->user_email,
-			'delete'  => ! empty( $settings['delete_contact_on_user_delete'] ),
-			'blog_id' => $blog_id, // Track which site triggered this
+			'email'      => $user->user_email,
+			'contact_id' => $contact_id ?: '',
+			'delete'     => ! empty( $settings['delete_contact_on_user_delete'] ),
+			'blog_id'    => $blog_id, // Track which site triggered this
 		];
 
 		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();

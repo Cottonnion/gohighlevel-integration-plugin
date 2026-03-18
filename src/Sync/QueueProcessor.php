@@ -636,15 +636,25 @@ class QueueProcessor {
 			];
 		}
 
-		$email    = $payload['email'] ?? '';
-		$existing = $client->get( 'contacts/', [ 'query' => $email ] );
+		$contact_id = $payload['contact_id'] ?? '';
+		$email      = $payload['email'] ?? '';
 
-		if ( ! empty( $existing['contacts'][0]['id'] ) ) {
-			$contact_resource->delete( $existing['contacts'][0]['id'] );
-			$this->contact_cache->delete( $email );
+		// Prefer the stored contact ID (exact match); fall back to email search.
+		if ( empty( $contact_id ) && ! empty( $email ) ) {
+			$existing = $client->get( 'contacts/', [ 'query' => $email ] );
+			if ( ! empty( $existing['contacts'][0]['id'] ) ) {
+				$contact_id = $existing['contacts'][0]['id'];
+			}
+		}
+
+		if ( ! empty( $contact_id ) ) {
+			$contact_resource->delete( $contact_id );
+			if ( ! empty( $email ) ) {
+				$this->contact_cache->delete( $email );
+			}
 			return [
 				'deleted'    => true,
-				'contact_id' => $existing['contacts'][0]['id'],
+				'contact_id' => $contact_id,
 			];
 		}
 
