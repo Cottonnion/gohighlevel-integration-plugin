@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'GHL_CRM_VERSION', '1.0.2' );
+define( 'GHL_CRM_VERSION', '1.1.0' );
 define( 'GHL_CRM_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GHL_CRM_URL', plugin_dir_url( __FILE__ ) );
 define( 'GHL_CRM_BASENAME', plugin_basename( __FILE__ ) );
