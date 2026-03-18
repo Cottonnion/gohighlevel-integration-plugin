@@ -442,6 +442,12 @@ class UserHooks {
 	 * @return void
 	 */
 	public function on_user_delete( int $user_id ): void {
+		// Skip if deletion was triggered by inbound GHL webhook to prevent ping-pong
+		$skip = get_user_meta( $user_id, '_ghl_skip_delete_sync', true );
+		if ( $skip ) {
+			return;
+		}
+
 		$user = get_userdata( $user_id );
 		if ( ! $user ) {
 			return;

@@ -412,6 +412,9 @@ class GHLToWordPressSync {
 
 		// Delete user
 		require_once ABSPATH . 'wp-admin/includes/user.php';
+
+		// Prevent ping-pong: skip outbound delete_user hook triggered by this inbound webhook deletion
+		update_user_meta( $user_id, '_ghl_skip_delete_sync', 1 );
 		$deleted = wp_delete_user( $user_id );
 
 		if ( $deleted ) {
