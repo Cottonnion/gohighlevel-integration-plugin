@@ -63,11 +63,8 @@ class ElementorConditions {
 		// Using high priority to run early
 		add_filter( 'elementor/widget/render_content', [ $this, 'filter_widget_content' ], 10, 2 );
 
-		// Enqueue editor scripts
+		// Register and enqueue editor scripts when Elementor editor loads
 		add_action( 'elementor/editor/after_enqueue_scripts', [ $this, 'enqueue_editor_scripts' ] );
-
-		// Register editor assets with AssetsManager
-		$this->register_editor_assets();
 	}
 
 	/**
@@ -346,9 +343,14 @@ class ElementorConditions {
 	/**
 	 * Enqueue editor scripts for dynamic tag loading
 	 *
+	 * Registers the asset here (instead of in the constructor) so that
+	 * the `elementor-editor` dependency is already registered by
+	 * Elementor before we call wp_register_script.
+	 *
 	 * @return void
 	 */
 	public function enqueue_editor_scripts(): void {
+		$this->register_editor_assets();
 		AssetsManager::get_instance()->enqueue_public_asset( 'ghl-elementor-conditions' );
 	}
 
