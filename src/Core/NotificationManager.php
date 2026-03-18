@@ -778,8 +778,8 @@ class NotificationManager {
 	 * @return void
 	 */
 	private function unschedule_daily_summary(): void {
-		// Unschedule from Action Scheduler if available
-		if ( function_exists( 'as_unschedule_all_actions' ) ) {
+		// Unschedule from Action Scheduler if available and initialized
+		if ( function_exists( 'as_unschedule_all_actions' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {
 			as_unschedule_all_actions( 'ghl_crm_daily_summary', [], 'ghl-crm' );
 		}
 

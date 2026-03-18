@@ -265,7 +265,7 @@ class ReportingManager {
 	 * @return void
 	 */
 	public function unschedule_dispatch(): void {
-		if ( function_exists( 'as_unschedule_all_actions' ) ) {
+		if ( function_exists( 'as_unschedule_all_actions' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {
 			as_unschedule_all_actions( self::DISPATCH_HOOK, [], 'ghl-crm' );
 		}
 

@@ -60,7 +60,6 @@ class Loader {
 	 * Private constructor to prevent direct creation
 	 */
 	private function __construct() {
-		$this->define_components();
 		$this->init_hooks();
 	}
 
@@ -129,9 +128,11 @@ class Loader {
 		register_activation_hook( GHL_CRM_PATH . 'gohighlevel-crm-integration.php', array( self::class, 'activate' ) );
 		register_deactivation_hook( GHL_CRM_PATH . 'gohighlevel-crm-integration.php', array( self::class, 'deactivate' ) );
 
-		// Initialize components EARLY (priority 1) to catch multisite activation
-		// wp-activate.php runs before most plugins, so we need to init ASAP
-		add_action( 'plugins_loaded', array( $this, 'init_components' ), 1 );
+		// Initialize components on 'init' priority 0.
+		// Must run on 'init' (not 'plugins_loaded') so that:
+		// 1. Textdomain auto-loading doesn't trigger before 'after_setup_theme' (WP 6.7+)
+		// 2. All plugin files are loaded, guaranteeing Pro filter is registered
+		add_action( 'init', array( $this, 'init_components' ), 0 );
 
 		// Register custom cron schedules
 		add_filter( 'cron_schedules', array( $this, 'add_cron_schedules' ) );
@@ -152,7 +153,7 @@ class Loader {
 	public function add_cron_schedules( array $schedules ): array {
 		$schedules['ghl_crm_15min'] = array(
 			'interval' => 15 * MINUTE_IN_SECONDS,
-			'display'  => __( 'Every 15 Minutes', 'ghl-crm-integration' ),
+			'display'  => 'Every 15 Minutes',
 		);
 		return $schedules;
 	}
@@ -163,6 +164,9 @@ class Loader {
 	 * @return void
 	 */
 	public function init_components(): void {
+		// Build the components list now (on 'init') so all plugin filters are registered.
+		$this->define_components();
+
 		foreach ( $this->components as $key => $class ) {
 			$this->resolve_component( $key, $class, true );
 		}
@@ -232,8 +236,10 @@ class Loader {
 		\GHL_CRM\Core\Reporting\ReportingManager::get_instance()->unschedule_dispatch();
 
 		// Unschedule cleanup (Action Scheduler)
-		if ( function_exists( 'as_unschedule_all_actions' ) ) {
+		if ( function_exists( 'as_unschedule_all_actions' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {
 			as_unschedule_all_actions( 'ghl_crm_cleanup_database', array(), 'ghl-crm' );
+		} else {
+			wp_clear_scheduled_hook( 'ghl_crm_cleanup_database' );
 		}
 
 		// Flush rewrite rules

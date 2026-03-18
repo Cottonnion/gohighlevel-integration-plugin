@@ -1216,10 +1216,10 @@ class QueueManager {
 	 * @return void
 	 */
 	public static function unschedule_actions(): void {
-		if ( function_exists( 'as_unschedule_all_actions' ) ) {
+		if ( function_exists( 'as_unschedule_all_actions' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {
 			as_unschedule_all_actions( 'ghl_crm_process_queue', [], 'ghl-crm' );
 		} else {
-			// Fallback: Clear WP-Cron
+			// Fallback: Clear WP-Cron (AS not available or not yet initialized)
 			$timestamp = wp_next_scheduled( 'ghl_crm_process_queue' );
 			if ( $timestamp ) {
 				wp_unschedule_event( $timestamp, 'ghl_crm_process_queue' );
