@@ -395,7 +395,7 @@ class CF7Handler {
 			'cf7-integration.css',
 			[ 'ghl-crm-globals-css', 'ghl-crm-select2-css' ],
 			[],
-			'1.0.2'
+			GHL_CRM_VERSION
 		);
 
 		$assets_manager->add_admin_asset(
@@ -407,7 +407,7 @@ class CF7Handler {
 				'tags'  => $ghl_tags,
 				'nonce' => wp_create_nonce( 'ghl_crm_field_mapping_nonce' ),
 			],
-			'1.0.3',
+			GHL_CRM_VERSION,
 			true
 		);
 	}

@@ -262,7 +262,7 @@ class AssetsManager {
 			'analytics.js',
 			[ 'jquery', 'ghl-sweetalert2', 'ghl-chartjs' ],
 			[],
-			'1.0.0',
+			GHL_CRM_VERSION,
 			true
 		);
 		// Field Mapping assets (need to load on SPA page)
