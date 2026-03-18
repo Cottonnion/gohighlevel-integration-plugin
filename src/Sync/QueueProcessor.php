@@ -46,13 +46,6 @@ class QueueProcessor {
 	private array $handlers = array();
 
 	/**
-	 * Factory for WooCommerce sync handler instances.
-	 *
-	 * @var callable
-	 */
-	private $woocommerce_sync_factory;
-
-	/**
 	 * Factory for API client instances.
 	 *
 	 * @var callable
@@ -82,7 +75,6 @@ class QueueProcessor {
 		?RateLimiter $rate_limiter = null,
 		?ContactCache $contact_cache = null,
 		?callable $event_dispatcher = null,
-		?callable $woocommerce_sync_factory = null,
 		?callable $client_factory = null,
 		?callable $contact_resource_factory = null
 	): self {
@@ -91,7 +83,6 @@ class QueueProcessor {
 				$rate_limiter,
 				$contact_cache,
 				$event_dispatcher,
-				$woocommerce_sync_factory,
 				$client_factory,
 				$contact_resource_factory
 			);
@@ -105,7 +96,6 @@ class QueueProcessor {
 	 * @param RateLimiter|null  $rate_limiter              Rate limiter dependency.
 	 * @param ContactCache|null $contact_cache             Contact cache dependency.
 	 * @param callable|null     $event_dispatcher          Event dispatcher callback.
-	 * @param callable|null     $woocommerce_sync_factory  WooCommerce sync factory.
 	 * @param callable|null     $client_factory            API client factory.
 	 * @param callable|null     $contact_resource_factory  Contact resource factory.
 	 */
@@ -113,7 +103,6 @@ class QueueProcessor {
 		?RateLimiter $rate_limiter = null,
 		?ContactCache $contact_cache = null,
 		?callable $event_dispatcher = null,
-		?callable $woocommerce_sync_factory = null,
 		?callable $client_factory = null,
 		?callable $contact_resource_factory = null
 	) {
@@ -125,10 +114,6 @@ class QueueProcessor {
 			do_action( "ghl_crm_queue_processor_{$event}", $context );
 		};
 
-		$this->woocommerce_sync_factory = $woocommerce_sync_factory ?? static function (): \GHL_CRM\Integrations\WooCommerce\WooCommerceSync {
-			return new \GHL_CRM\Integrations\WooCommerce\WooCommerceSync();
-		};
-
 		$this->client_factory = $client_factory ?? static function (): \GHL_CRM\API\Client\Client {
 			return \GHL_CRM\API\Client\Client::get_instance();
 		};
@@ -138,6 +123,16 @@ class QueueProcessor {
 		};
 
 		$this->boot_default_handlers();
+
+		/**
+		 * Fires after QueueProcessor boots its default handlers.
+		 *
+		 * Integration modules (forms, WooCommerce, etc.) should use this hook
+		 * to register their queue handlers via $processor->register_handler().
+		 *
+		 * @param QueueProcessor $processor The processor instance.
+		 */
+		do_action( 'ghl_crm_queue_processor_ready', $this );
 	}
 
 	/**
@@ -268,17 +263,11 @@ class QueueProcessor {
 	 */
 	private function boot_default_handlers(): void {
 		$this->handlers = array(
-			'user'        => function ( string $action, int $item_id, array $payload ) {
+			'user'    => function ( string $action, int $item_id, array $payload ) {
 				return $this->execute_user_sync( $action, $item_id, $payload );
 			},
-			'contact'     => function ( string $action, int $item_id, array $payload ) {
+			'contact' => function ( string $action, int $item_id, array $payload ) {
 				return $this->execute_contact_sync( $action, (string) $item_id, $payload );
-			},
-			'wc_customer' => function ( string $action, int $item_id, array $payload ) {
-				return $this->execute_woocommerce_sync( $action, $item_id, $payload );
-			},
-			'form'        => function ( string $action, int $item_id, array $payload ) {
-				return $this->execute_form_sync( $action, $item_id, $payload );
 			},
 		);
 	}
@@ -812,42 +801,6 @@ class QueueProcessor {
 	}
 
 	/**
-	 * Execute WooCommerce sync (WooCommerce → GHL)
-	 *
-	 * @param string $action  Action
-	 * @param int    $order_id Order ID
-	 * @param array  $payload Payload data
-	 * @return array|bool API response on success, false on failure
-	 * @throws \Exception
-	 */
-	private function execute_woocommerce_sync( string $action, int $order_id, array $payload ) {
-
-		// Check if WooCommerce is active
-		if ( ! class_exists( 'WooCommerce' ) ) {
-			throw new \Exception( esc_html__( 'WooCommerce is not active', 'ghl-crm-integration' ) );
-		}
-
-		// Get WooCommerce sync handler
-		$factory = $this->woocommerce_sync_factory;
-		$wc_sync = $factory();
-
-		switch ( $action ) {
-			case 'convert_lead':
-				return $wc_sync->process_customer_conversion( $payload );
-
-			case 'apply_tags':
-				return $wc_sync->process_product_tags( $payload );
-
-			case 'create_opportunity':
-			case 'update_opportunity':
-				return $wc_sync->process_opportunity_sync( $payload );
-
-			default:
-				throw new \Exception( esc_html( 'Unknown WooCommerce action: ' . $action ) );
-		}
-	}
-
-	/**
 	 * Execute form sync — routes to existing user handlers for reuse.
 	 *
 	 * Keeps 'form' as a distinct item_type in the queue table for log differentiation
@@ -859,7 +812,7 @@ class QueueProcessor {
 	 * @return array|bool API response.
 	 * @throws \Exception When action is unknown.
 	 */
-	private function execute_form_sync( string $action, int $form_id, array $payload ) {
+	public function execute_form_sync( string $action, int $form_id, array $payload ) {
 		$client_factory           = $this->client_factory;
 		$contact_resource_factory = $this->contact_resource_factory;
 		$client                   = $client_factory();
