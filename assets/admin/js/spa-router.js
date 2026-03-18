@@ -233,9 +233,14 @@
                     if (typeof window.initFieldMapping === 'function') {
                         window.initFieldMapping();
                     }
-                    // Load GHL custom fields
-                    if (typeof window.GHL_FieldMapping.loadFields === 'function') {
-                        window.GHL_FieldMapping.loadFields(false);
+                    // Init Select2 on server-rendered options & highlight mapped rows
+                    if (window.GHL_FieldMapping) {
+                        if (typeof window.GHL_FieldMapping.initSelect2 === 'function') {
+                            window.GHL_FieldMapping.initSelect2();
+                        }
+                        if (typeof window.GHL_FieldMapping.updateMappedRows === 'function') {
+                            window.GHL_FieldMapping.updateMappedRows();
+                        }
                     }
                     break;
                 case 'custom-objects':
