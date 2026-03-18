@@ -155,7 +155,7 @@
         if (Array.isArray(savedTags) && savedTags.length > 0) {
           savedTags.forEach(function (tag) {
             // Create option if it doesn't exist
-            if ($select.find("option[value='" + tag + "']").length === 0) {
+            if ($select[0].querySelector("option[value='" + CSS.escape(tag) + "']") === null) {
               const newOption = new Option(tag, tag, true, true);
               $select.append(newOption);
             }

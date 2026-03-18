@@ -268,7 +268,7 @@ $enable_role_tags = ! empty( $settings['role_tags'] ) && is_array( $settings['ro
                                 name="wizard_user_register_tags[]" 
                                 multiple 
                                 class="ghl-tags-select"
-                                data-saved-tags='<?php echo wp_json_encode( $user_register_tags ); ?>'
+                                data-saved-tags='<?php echo esc_attr( wp_json_encode( $user_register_tags ) ); ?>'
                                 data-placeholder="<?php esc_attr_e( 'Select tags to apply when user registers...', 'ghl-crm-integration' ); ?>">
                                 <option value=""><?php esc_html_e( 'Loading tags...', 'ghl-crm-integration' ); ?></option>
                             </select>

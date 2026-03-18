@@ -75,7 +75,7 @@
                 allTags.forEach(function(tag) {
                     var tagId = String(tag.id || tag.name || '');
                     var tagName = String(tag.name || tag.id || '');
-                    if (tagId && $tagSelect.find("option[value='" + tagId + "']").length === 0) {
+                    if (tagId && !$tagSelect[0].querySelector('option[value="' + CSS.escape(tagId) + '"]')) {
                         $tagSelect.append(new Option(tagName, tagId, false, false));
                     }
                 });

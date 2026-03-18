@@ -39,7 +39,7 @@
         var allTags = (typeof ghl_crm_pro_woocommerce_data !== 'undefined' && ghl_crm_pro_woocommerce_data.tags) ? ghl_crm_pro_woocommerce_data.tags : [];
         allTags.forEach(function(tag) {
             var label = String(tag.name || tag.id || '');
-            if (label && $select.find("option[value='" + label + "']").length === 0) {
+            if (label && !$select[0].querySelector('option[value="' + CSS.escape(label) + '"]')) {
                 var isSelected = savedTags.indexOf(label) !== -1;
                 $select.append(new Option(label, label, isSelected, isSelected));
             }
@@ -73,9 +73,6 @@
         // Load saved tags on initialization
         if (savedTags.length > 0) {
             loadSavedTags($select, savedTags);
-        } else {
-            // Clear loading state
-            $select.html('').trigger('change');
         }
     }
 

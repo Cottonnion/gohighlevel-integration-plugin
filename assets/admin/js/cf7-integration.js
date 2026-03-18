@@ -170,7 +170,7 @@
 			// Also add saved tags that might not be in the current list
 			if (savedTags.length) {
 				savedTags.forEach(function(tagName) {
-					if (!$select.find('option[value="' + tagName + '"]').length) {
+					if (!$select[0].querySelector('option[value="' + CSS.escape(tagName) + '"]')) {
 						const option = new Option(tagName, tagName, false, false);
 						$select.append(option);
 					}

@@ -78,7 +78,7 @@
 
     // Add saved tags not in the pre-loaded list
     tags.forEach(function (tagId) {
-      if (!$sel.find("option[value='" + tagId + "']").length) {
+      if (!$sel[0].querySelector('option[value="' + CSS.escape(tagId) + '"]')) {
         $sel.append(new Option(tagId, tagId, true, true));
       }
     });
