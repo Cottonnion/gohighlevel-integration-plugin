@@ -772,7 +772,7 @@
 		// Pre-populate options from localized tags
 		tags.forEach(function(tag) {
 			var label = String(tag.name || tag.id || '');
-			if (label && $tagsSelect.find("option[value='" + label + "']").length === 0) {
+			if (label && !$tagsSelect[0].querySelector('option[value="' + CSS.escape(label) + '"]')) {
 				$tagsSelect.append(new Option(label, label, false, false));
 			}
 		});
@@ -800,7 +800,7 @@
 					var savedTags = response.data.settings.restrictions_allowed_tags || [];
 					if (Array.isArray(savedTags) && savedTags.length > 0) {
 						savedTags.forEach(function(tag) {
-							if ($tagsSelect.find("option[value='" + tag + "']").length === 0) {
+							if (!$tagsSelect[0].querySelector('option[value="' + CSS.escape(tag) + '"]')) {
 								$tagsSelect.append(new Option(tag, tag, true, true));
 							}
 						});
