@@ -220,6 +220,10 @@
 }
 
 .select2-container--default .select2-selection--multiple {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px;
 	border: 2px solid #ccc;
 	border-radius: 6px;
 	min-height: 40px;
@@ -520,6 +524,10 @@ textarea.ghl-input {
 	max-width: 100%;
 }
 .select2-container--default .select2-selection--multiple {
+	display: flex !important;
+	flex-wrap: wrap !important;
+	align-items: center !important;
+	gap: 4px !important;
 	border: 2px solid #ccc !important;
 	border-radius: 6px !important;
 	min-height: 40px !important;
@@ -531,12 +539,7 @@ textarea.ghl-input {
 	border-color: #7e3bd0 !important;
 }
 .select2-container--default .select2-selection--multiple .select2-selection__rendered {
-	/* display: flex !important; */
-	flex-wrap: wrap !important;
-	gap: 4px !important;
-	padding: 0 !important;
-	max-width: 100% !important;
-	box-sizing: border-box !important;
+	display: contents !important;
 }
 .select2-container--default .select2-selection--multiple .select2-selection__choice {
 	background-color: var(--ghl-primary) !important;
@@ -547,9 +550,12 @@ textarea.ghl-input {
 	margin: 0 !important;
 	font-size: 13px !important;
 	line-height: 1.4 !important;
-	max-width: calc(100% - 10px) !important;
-	word-break: break-word !important;
-	white-space: normal !important;
+	max-width: 100% !important;
+	min-width: 0 !important;
+	overflow: hidden !important;
+	text-overflow: ellipsis !important;
+	white-space: nowrap !important;
+	flex-shrink: 0 !important;
 }
 .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
 	color: #fff !important;
@@ -561,12 +567,54 @@ textarea.ghl-input {
 	color: #f8d7da !important;
 }
 .select2-search--inline {
-	flex-shrink: 0 !important;
+	flex-grow: 1 !important;
+	flex-shrink: 1 !important;
+	min-width: 80px !important;
 }
 .select2-search--inline .select2-search__field {
-	min-width: 120px !important;
+	width: 100% !important;
+	min-width: 80px !important;
 	margin: 0 !important;
 	padding: 4px 0 !important;
+	box-sizing: border-box !important;
+}
+
+/* --- Single-select --- */
+.select2-container--default .select2-selection--single {
+	border: 2px solid #ccc !important;
+	border-radius: 6px !important;
+	height: 40px !important;
+	padding: 4px 8px !important;
+	box-sizing: border-box !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+	line-height: 30px !important;
+	color: var(--ghl-text-primary) !important;
+	padding-left: 0 !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+	height: 38px !important;
+}
+.select2-container--default.select2-container--focus .select2-selection--single {
+	border-color: var(--ghl-primary) !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+	color: var(--ghl-text-tertiary) !important;
+}
+
+/* --- Dropdown panel --- */
+.select2-container--default .select2-dropdown {
+	border: 1px solid var(--ghl-border-secondary) !important;
+	border-radius: 6px !important;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+	overflow: hidden !important;
+}
+.select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+	background-color: var(--ghl-primary-light, #f5f5ff) !important;
+	color: var(--ghl-text-primary) !important;
+}
+.select2-container--default .select2-results__option--selected {
+	background-color: var(--ghl-bg-tertiary, #f3f4f6) !important;
 }
 /* ========================================
    PROGRESS BAR
@@ -620,7 +668,5 @@ textarea.ghl-input {
 }
 
 span.select2-search.select2-search--inline {
-    width: 100%;
     line-height: 20px;
-    /* padding-block: 20px; */
 }
