@@ -270,7 +270,7 @@ class AssetsManager {
 			'ghl-crm-field-mapping-css',
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'field-mapping.css',
-			[],
+			[ 'ghl-crm-select2-css' ],
 			[],
 			GHL_CRM_VERSION
 		);
@@ -279,7 +279,7 @@ class AssetsManager {
 			'ghl-crm-field-mapping-js',
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'field-mapping.js',
-			[ 'jquery', 'ghl-sweetalert2' ],
+			[ 'jquery', 'ghl-sweetalert2', 'ghl-crm-select2' ],
 			[
 				'nonce' => wp_create_nonce( 'ghl_crm_field_mapping_nonce' ),
 			],
@@ -477,7 +477,7 @@ class AssetsManager {
 			'ghl-crm-field-mapping-css',
 			[ 'toplevel_page_ghl-crm-settings' ],
 			'field-mapping.css',
-			[ 'ghl-crm-globals-css' ],
+			[ 'ghl-crm-globals-css', 'ghl-crm-select2-css' ],
 			[],
 			GHL_CRM_VERSION
 		);
@@ -487,7 +487,7 @@ class AssetsManager {
 			'ghl-crm-field-mapping-js',
 			[ 'toplevel_page_ghl-crm-settings' ],
 			'field-mapping.js',
-			[ 'jquery', 'ghl-sweetalert2' ],
+			[ 'jquery', 'ghl-sweetalert2', 'ghl-crm-select2' ],
 			[
 				'nonce' => wp_create_nonce( 'ghl_crm_field_mapping_nonce' ),
 			],
