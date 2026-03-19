@@ -219,8 +219,9 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 
 	<div style="margin: 20px 0; display: flex; gap: 12px; align-items: center;">
 		<?php
-		// Build reload URL — preserves existing page/tab params, adds refresh_fields=1.
-		$reload_url = add_query_arg( 'refresh_fields', '1' );
+		// Build reload URL — use explicit admin page URL since this template may be
+		// loaded via AJAX (where REQUEST_URI would be admin-ajax.php).
+		$reload_url = add_query_arg( 'refresh_fields', '1', admin_url( 'admin.php?page=ghl-crm-admin' ) ) . '#/field-mapping';
 		?>
 		<a href="<?php echo esc_url( $reload_url ); ?>" class="ghl-button ghl-button-primary" style="text-decoration: none;">
 			<span class="dashicons dashicons-update" style="margin-top: 3px;"></span>
