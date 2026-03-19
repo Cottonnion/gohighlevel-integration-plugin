@@ -53,6 +53,7 @@ class FormSettings {
 	 * @return void
 	 */
 	public function init(): void {
+		add_action( 'wp_ajax_ghl_crm_get_forms', [ $this, 'handle_get_forms' ] );
 		add_action( 'wp_ajax_ghl_save_form_settings', [ $this, 'ajax_save_form_settings' ] );
 		add_action( 'wp_ajax_ghl_get_form_settings', [ $this, 'ajax_get_form_settings' ] );
 		add_action( 'wp_ajax_ghl_mark_form_submitted', [ $this, 'ajax_mark_form_submitted' ] );
@@ -446,6 +447,77 @@ class FormSettings {
 	 * Check if form should be hidden for user
 	 *
 	 * @param string $form_id Form ID.
+	 * @return bool
+	 */
+	/**
+	 * Handle AJAX request to get forms from GoHighLevel.
+	 *
+	 * @return void Outputs JSON response and exits.
+	 */
+	public function handle_get_forms(): void {
+		check_ajax_referer( 'ghl_crm_forms_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to access forms.', 'ghl-crm-integration' ),
+				],
+				403
+			);
+		}
+
+		$settings_manager = SettingsManager::get_instance();
+		if ( ! $settings_manager->is_connection_verified() ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'Please connect to GoHighLevel first.', 'ghl-crm-integration' ),
+				],
+				401
+			);
+		}
+
+		try {
+			$forms_resource = new \GHL_CRM\API\Resources\FormsResource();
+			$forms          = $forms_resource->get_forms( true );
+
+			$settings           = $settings_manager->get_settings_array();
+			$white_label_domain = $settings['ghl_white_label_domain'] ?? '';
+
+			wp_send_json_success(
+				[
+					'forms'              => $forms,
+					'white_label_domain' => $white_label_domain,
+				]
+			);
+		} catch ( \Exception $e ) {
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: Error message */
+						__( 'Failed to fetch forms: %s', 'ghl-crm-integration' ),
+						$e->getMessage()
+					),
+				],
+				500
+			);
+		} catch ( \Error $e ) {
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: error message */
+						__( 'A fatal error occurred while fetching forms: %s', 'ghl-crm-integration' ),
+						$e->getMessage()
+					),
+				],
+				500
+			);
+		}
+	}
+
+	/**
+	 * Check if a form should be hidden based on submission limits.
+	 *
+	 * @param string $form_id The GHL form ID.
 	 * @return bool
 	 */
 	public function should_hide_form( string $form_id ): bool {
