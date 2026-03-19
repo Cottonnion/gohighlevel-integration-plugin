@@ -73,6 +73,10 @@ class Loader {
 			// Core components
 			'core.database'                        => \GHL_CRM\Core\Database::class,
 			'core.settings'                        => \GHL_CRM\Core\SettingsManager::class,
+			'core.settings.metadata'               => \GHL_CRM\Core\Settings\MetadataService::class,
+			'core.settings.health_check'           => \GHL_CRM\Core\Settings\SystemHealthCheck::class,
+			'core.settings.custom_objects'         => \GHL_CRM\Core\Settings\CustomObjectAjaxHandler::class,
+			'core.settings.maintenance'            => \GHL_CRM\Core\Settings\MaintenanceHandler::class,
 			'core.assets'                          => \GHL_CRM\Core\AssetsManager::class,
 			'core.menu'                            => \GHL_CRM\Core\MenuManager::class,
 			'core.notices'                         => \GHL_CRM\Core\AdminNotices::class,
