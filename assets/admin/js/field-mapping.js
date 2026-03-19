@@ -45,41 +45,40 @@
 		 * Check for duplicate GHL field mappings and show warnings
 		 */
 		function checkDuplicateMappings() {
-			// Get all selected GHL fields
+			// Get all selected GHL fields from hidden inputs
 			const selectedFields = {};
 			
-			$('select[name^="ghl_field_"]').each(function () {
-				const $select = $(this);
-				const selectedValue = $select.val();
+			$('input[type="hidden"][name^="ghl_field_"]').each(function () {
+				const $input = $(this);
+				const selectedValue = $input.val();
 				
-				if (selectedValue !== '' && selectedValue !== undefined) {
+				if (selectedValue !== '' && selectedValue !== undefined && selectedValue !== null) {
 					if (!selectedFields[selectedValue]) {
 						selectedFields[selectedValue] = [];
 					}
-					selectedFields[selectedValue].push($select);
+					selectedFields[selectedValue].push($input);
 				}
 			});
 
-			// Clear all previous warnings
+			// Clear all previous warnings and border highlights
 			$('.ghl-duplicate-warning').remove();
-			$('select[name^="ghl_field_"]').css('border-color', '');
+			$('.ghl-lazy-select').css('border-color', '');
 
 			// Check for duplicates and add warnings
 			Object.keys(selectedFields).forEach(function(fieldValue) {
-				const selects = selectedFields[fieldValue];
+				const inputs = selectedFields[fieldValue];
 				
-				if (selects.length > 1) {
-					// Multiple WordPress fields are mapping to the same GHL field
-					selects.forEach(function($select) {
-						// Add yellow border to highlight the duplicate
-						$select.css('border-color', '#f0b849');
+				if (inputs.length > 1) {
+					inputs.forEach(function($input) {
+						// Add yellow border to the lazy-select trigger
+						$input.siblings('.ghl-lazy-select').css('border-color', '#f0b849');
 						
 						// Add warning message if not already present
-						const $cell = $select.closest('td');
+						const $cell = $input.closest('td');
 						if ($cell.find('.ghl-duplicate-warning').length === 0) {
-							const fieldName = $select.find('option:selected').text();
+							const fieldLabel = $input.siblings('.ghl-lazy-select').find('.ghl-lazy-select__text').text();
 							const warningHtml = '<div class="ghl-duplicate-warning" style="margin-top: 5px; padding: 5px 10px; background: #fff3cd; border-left: 3px solid #f0b849; font-size: 12px; color: #856404;">' +
-								'<span style="font-weight: 600;">⚠ Duplicate Mapping:</span> This GHL field is mapped ' + selects.length + ' times. ' +
+								'<span style="font-weight: 600;">⚠ Duplicate Mapping:</span> This GHL field is mapped ' + inputs.length + ' times. ' +
 								'Last sync will overwrite earlier values.' +
 								'</div>';
 							$cell.append(warningHtml);
@@ -121,14 +120,14 @@
 		function gatherFieldMappings() {
 			const mappings = {};
 
-			// Loop through all GHL field selects
-			$('select[name^="ghl_field_"]').each(function () {
-				const $select = $(this);
-				const fieldName = $select.attr('name').replace('ghl_field_', '');
-				const ghlField = $select.val();
+			// Loop through all GHL field hidden inputs
+			$('input[type="hidden"][name^="ghl_field_"]').each(function () {
+				const $input = $(this);
+				const fieldName = $input.attr('name').replace('ghl_field_', '');
+				const ghlField = $input.val();
 				
 				// Only save if a GHL field is selected (not empty "Do Not Sync")
-				if (ghlField !== '') {
+				if (ghlField && ghlField !== '') {
 					const directionSelect = $('select[name="sync_direction_' + fieldName + '"]');
 					const direction = directionSelect.val() || 'both';
 
@@ -199,29 +198,21 @@
 
 			// Collect unmapped WP fields (only those not explicitly saved)
 			const wpFields = [];
-			$('select[name^="ghl_field_"]').each(function() {
-				const $select = $(this);
-				const $row = $select.closest('tr.ghl-field-row');
-				const wpField = $select.attr('name').replace('ghl_field_', '');
-				const currentValue = $select.val();
+			$('input[type="hidden"][name^="ghl_field_"]').each(function() {
+				const $input = $(this);
+				const $row = $input.closest('tr.ghl-field-row');
+				const wpField = $input.attr('name').replace('ghl_field_', '');
+				const currentValue = $input.val();
 				const isExplicitlySaved = $row.attr('data-explicitly-saved') === '1';
 				
 				// Only suggest for fields that are unmapped AND haven't been explicitly saved
-				// This respects user's choice to set a field to "Do not sync"
 				if ((!currentValue || currentValue === '') && !isExplicitlySaved) {
 					wpFields.push(wpField);
 				}
 			});
 
-			// Collect all available GHL fields
-			const ghlFields = [];
-			const $firstSelect = $('select[name^="ghl_field_"]').first();
-			$firstSelect.find('option').each(function() {
-				const value = $(this).val();
-				if (value && value !== '') {
-					ghlFields.push(value);
-				}
-			});
+			// Collect all available GHL fields from global JSON
+			const ghlFields = Object.keys(window.GHL_FIELDS || {}).filter(function(k) { return k !== ''; });
 
 			$.ajax({
 				url: ajaxurl,
@@ -337,12 +328,21 @@
 			let appliedCount = 0;
 			
 			$.each(suggestions, function(wpField, details) {
-				const $select = $('select[name="ghl_field_' + wpField + '"]');
-				if ($select.length && $select.val() === '') {
-					$select.val(details.ghl_field);
+				const $input = $('input[type="hidden"][name="ghl_field_' + wpField + '"]');
+				if ($input.length && (!$input.val() || $input.val() === '')) {
+					// Update hidden input value
+					$input.val(details.ghl_field).trigger('change');
+					
+					// Update the lazy-select display text
+					const $lazySelect = $input.siblings('.ghl-lazy-select');
+					if ($lazySelect.length) {
+						$lazySelect.attr('data-value', details.ghl_field);
+						const label = (window.GHL_FIELDS || {})[details.ghl_field] || details.ghl_field;
+						$lazySelect.find('.ghl-lazy-select__text').text(label);
+					}
 					
 					// Add visual feedback - green highlight on the row
-					const $row = $select.closest('tr');
+					const $row = $input.closest('tr');
 					$row.addClass('ghl-field-changed');
 					
 					// Remove highlight after animation
@@ -382,18 +382,18 @@
 		let initialMappingCount = 0;
 		
 		// Count initial mappings on page load
-		$('select[name^="ghl_field_"]').each(function () {
+		$('input[type="hidden"][name^="ghl_field_"]').each(function () {
 			if ($(this).val() !== '') {
 				initialMappingCount++;
 			}
 		});
 
-		// Optional: Add visual feedback when changing mappings
-		$('select[name^="ghl_field_"], select[name^="sync_direction_"]').on('change', function () {
+		// Visual feedback when changing mappings (listen on hidden inputs + sync direction selects)
+		$(document).on('change', 'input[name^="ghl_field_"], select[name^="sync_direction_"]', function () {
 			const $row = $(this).closest('tr');
 			$row.addClass('ghl-field-changed');
 			
-			// Check for duplicate mappings when a GHL field is selected/changed
+			// Check for duplicate mappings when a GHL field is changed
 			if ($(this).attr('name').startsWith('ghl_field_')) {
 				checkDuplicateMappings();
 			}
@@ -417,217 +417,256 @@
 })(jQuery, window);
 
 /**
- * Field Mapping - GHL Field Loading
- * 
- * Handles loading GoHighLevel custom fields dynamically
+ * Field Mapping - Lazy Dropdown System
+ *
+ * Instead of rendering hundreds of <select> elements (one per row) each
+ * containing all GHL fields, we render a lightweight <div> trigger per row.
+ * The full searchable dropdown is built from window.GHL_FIELDS only when
+ * the user clicks a trigger — one dropdown at a time.
  */
 (function($) {
 	'use strict';
 
-	// Expose globally so SPA router can call it
+	var activeDropdown = null;
+
+	/* -------------------------------------------------- helpers */
+
+	function getDisplayText(value) {
+		if (!value) return '— Do Not Sync —';
+		var fields = window.GHL_FIELDS || {};
+		return fields[value] || value;
+	}
+
+	function escapeHtml(text) {
+		var map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'};
+		return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
+	}
+
+	/* -------------------------------------------------- open / close */
+
+	function openDropdown($trigger) {
+		closeDropdown();
+
+		var currentValue = $trigger.attr('data-value') || '';
+		var fields = window.GHL_FIELDS || {};
+
+		// Build dropdown DOM
+		var $dropdown = $('<div class="ghl-lazy-dropdown"></div>');
+		var $search   = $('<input type="text" class="ghl-lazy-dropdown__search" placeholder="Search fields…" autocomplete="off">');
+		var $list     = $('<div class="ghl-lazy-dropdown__list"></div>');
+
+		// "Do Not Sync" option
+		$list.append(
+			'<div class="ghl-lazy-dropdown__option' + (!currentValue ? ' ghl-lazy-dropdown__option--selected' : '') +
+			'" data-value=""><em>— Do Not Sync —</em></div>'
+		);
+
+		// All GHL fields
+		var keys = Object.keys(fields);
+		for (var i = 0; i < keys.length; i++) {
+			var key = keys[i];
+			if (key === '') continue;
+			var cls = (key === currentValue) ? ' ghl-lazy-dropdown__option--selected' : '';
+			$list.append(
+				'<div class="ghl-lazy-dropdown__option' + cls + '" data-value="' + escapeHtml(key) + '">' +
+				escapeHtml(fields[key]) + '</div>'
+			);
+		}
+
+		$dropdown.append($search).append($list);
+
+		// Append dropdown to body so it is never clipped by overflow:hidden ancestors
+		$(document.body).append($dropdown);
+		$trigger.addClass('ghl-lazy-select--open');
+
+		activeDropdown = { $trigger: $trigger, $dropdown: $dropdown };
+
+		// Position the fixed dropdown relative to the trigger
+		positionDropdown();
+
+		// Focus search input
+		$search[0].focus();
+
+		// Scroll to currently selected option
+		var $selected = $list.find('.ghl-lazy-dropdown__option--selected');
+		if ($selected.length) {
+			$list[0].scrollTop = $selected[0].offsetTop - $list[0].offsetHeight / 2;
+		}
+
+		// Live search filtering
+		$search.on('input', function() {
+			var query = this.value.toLowerCase();
+			$list.find('.ghl-lazy-dropdown__option').each(function() {
+				var text = this.textContent.toLowerCase();
+				var val  = (this.getAttribute('data-value') || '').toLowerCase();
+				this.style.display = (text.indexOf(query) !== -1 || val.indexOf(query) !== -1) ? '' : 'none';
+			});
+		});
+
+		// Option click
+		$list.on('click', '.ghl-lazy-dropdown__option', function(e) {
+			e.stopPropagation();
+			selectValue($trigger, $(this).attr('data-value') || '');
+			closeDropdown();
+		});
+
+		// Keyboard
+		$search.on('keydown', function(e) {
+			if (e.key === 'Escape') {
+				closeDropdown();
+				$trigger.focus();
+			} else if (e.key === 'Enter') {
+				var $visible = $list.find('.ghl-lazy-dropdown__option:visible');
+				if ($visible.length === 1) {
+					$visible.trigger('click');
+				}
+			} else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+				e.preventDefault();
+				var $opts = $list.find('.ghl-lazy-dropdown__option:visible');
+				var $focused = $list.find('.ghl-lazy-dropdown__option--focused');
+				var idx = $opts.index($focused);
+				$opts.removeClass('ghl-lazy-dropdown__option--focused');
+				if (e.key === 'ArrowDown') {
+					idx = (idx + 1) % $opts.length;
+				} else {
+					idx = (idx - 1 + $opts.length) % $opts.length;
+				}
+				$opts.eq(idx).addClass('ghl-lazy-dropdown__option--focused');
+				// Scroll into view
+				var el = $opts[idx];
+				if (el) el.scrollIntoView({ block: 'nearest' });
+			}
+		});
+
+		// Enter on focused option
+		$search.on('keyup', function(e) {
+			if (e.key === 'Enter') {
+				var $focused = $list.find('.ghl-lazy-dropdown__option--focused:visible');
+				if ($focused.length) {
+					$focused.trigger('click');
+				}
+			}
+		});
+	}
+
+	/**
+	 * Position the dropdown panel aligned to the trigger using fixed coords.
+	 * Flips upward automatically when there isn't enough room below.
+	 */
+	function positionDropdown() {
+		if (!activeDropdown) return;
+		var rect = activeDropdown.$trigger[0].getBoundingClientRect();
+		var dd   = activeDropdown.$dropdown[0];
+		var gap  = 2; // px between trigger and dropdown
+
+		// Temporarily show to measure height
+		dd.style.visibility = 'hidden';
+		dd.style.display = '';
+		var ddH = dd.offsetHeight;
+		dd.style.visibility = '';
+
+		var spaceBelow = window.innerHeight - rect.bottom - gap;
+		var flipUp = ddH > spaceBelow && rect.top > spaceBelow;
+
+		dd.style.left  = rect.left + 'px';
+		dd.style.width = rect.width + 'px';
+
+		if (flipUp) {
+			dd.style.top    = '';
+			dd.style.bottom = (window.innerHeight - rect.top + gap) + 'px';
+		} else {
+			dd.style.top    = (rect.bottom + gap) + 'px';
+			dd.style.bottom = '';
+		}
+	}
+
+	function closeDropdown() {
+		if (!activeDropdown) return;
+		activeDropdown.$dropdown.remove();
+		activeDropdown.$trigger.removeClass('ghl-lazy-select--open');
+		activeDropdown = null;
+	}
+
+	function selectValue($trigger, value) {
+		$trigger.attr('data-value', value);
+		$trigger.find('.ghl-lazy-select__text').text(getDisplayText(value));
+
+		// Update the sibling hidden input and fire change for other listeners
+		var name = $trigger.attr('data-name');
+		$trigger.siblings('input[type="hidden"][name="' + name + '"]').val(value).trigger('change');
+	}
+
+	/* -------------------------------------------------- event bindings */
+
+	// Click to open / toggle
+	$(document).on('click', '.ghl-lazy-select:not(.ghl-lazy-select--disabled)', function(e) {
+		// If click was inside the dropdown, ignore — it handles itself
+		if ($(e.target).closest('.ghl-lazy-dropdown').length) return;
+
+		e.stopPropagation();
+		var $this = $(this);
+		if ($this.hasClass('ghl-lazy-select--open')) {
+			closeDropdown();
+		} else {
+			openDropdown($this);
+		}
+	});
+
+	// Reposition on scroll / resize so the panel follows the trigger
+	$(window).on('scroll resize', function() {
+		positionDropdown();
+	});
+
+	// Outside click closes dropdown
+	$(document).on('mousedown', function(e) {
+		if (activeDropdown && !$(e.target).closest('.ghl-lazy-select--open').length && !$(e.target).closest('.ghl-lazy-dropdown').length) {
+			closeDropdown();
+		}
+	});
+
+	/* -------------------------------------------------- global API (SPA compat) */
+
 	window.GHL_FieldMapping = window.GHL_FieldMapping || {};
 
 	/**
-	 * Function to update row highlighting based on mapped status
+	 * No-op — kept for SPA-router backward compatibility.
+	 * Select2 is no longer used; dropdowns are lazy.
+	 */
+	window.GHL_FieldMapping.initSelect2 = function() {};
+
+	/**
+	 * Update row highlighting based on mapped status
 	 */
 	window.GHL_FieldMapping.updateMappedRows = function() {
-		$('select[name^="ghl_field_"]').each(function() {
-			const $select = $(this);
-			const $row = $select.closest('tr');
-			const selectedValue = $select.val();
-			
-			// Add/remove highlight class based on whether field is mapped
-			if (selectedValue && selectedValue !== '' && selectedValue !== '—') {
+		$('input[type="hidden"][name^="ghl_field_"]').each(function() {
+			var $input = $(this);
+			var $row   = $input.closest('tr');
+			if ($input.val()) {
 				$row.addClass('ghl-mapped-field');
 			} else {
 				$row.removeClass('ghl-mapped-field');
 			}
 		});
 	};
-	
-	/**
-	 * Function to load GHL fields
-	 */
-	window.GHL_FieldMapping.loadFields = function(isInitialLoad) {
-		const $button = $('#ghl-load-custom-fields');
-		// const $status = $('#ghl-custom-fields-status');
-		const $icon = $button.find('.dashicons');
-		
-		// Check if elements exist (may not be on this tab)
-		if ($button.length === 0) {
-			return;
-		}
-		
-		// Get nonce from data attribute or global
-		const nonce = $button.data('nonce') || (window.ghl_crm_field_mapping_nonce || '');
-		
-		// Show loading state
-		$button.prop('disabled', true);
-		$icon.removeClass('dashicons-update').addClass('dashicons-update-alt').css('animation', 'rotation 2s infinite linear');
-		
-		if (!isInitialLoad) {
-			// Get admin bar height for proper positioning
-			const adminBarHeight = $('#wpadminbar').outerHeight() || 0;
-			
-			// Show SweetAlert toast
-			Swal.fire({
-				toast: true,
-				position: 'top-end',
-				icon: 'info',
-				title: 'Loading fields...',
-				showConfirmButton: false,
-				timer: 3000,
-				timerProgressBar: true,
-				customClass: {
-					container: 'ghl-swal-with-adminbar'
-				},
-				didOpen: (toast) => {
-					toast.style.marginTop = adminBarHeight + 'px';
-				}
-			});
-		}
-		
-		$.ajax({
-			url: ajaxurl,
-			type: 'POST',
-			data: {
-				action: 'ghl_crm_get_custom_fields',
-				nonce: nonce
-			},
-			success: function(response) {
-				$button.prop('disabled', false);
-				$icon.removeClass('dashicons-update-alt').addClass('dashicons-update').css('animation', '');
-				
-				if (response.success && response.data.fields) {
-					// Update all GHL field dropdowns
-					const fields = response.data.fields;
-					let fieldCount = Object.keys(fields).length;
-					
-					$('select[name^="ghl_field_"]').each(function() {
-						const $select = $(this);
-						// Get saved value from data attribute (set by PHP)
-						let savedValue = $select.data('saved-value') || '';
-						
-						// Force email field to always be mapped to 'email'
-						const isEmailField = $select.attr('name') === 'ghl_field_user_email';
-						if (isEmailField) {
-							savedValue = 'email';
-						}
-						
-						// Clear existing options
-						$select.empty();
-						
-						// Add all fields (including custom fields)
-						$.each(fields, function(key, label) {
-							const $option = $('<option></option>')
-								.attr('value', key)
-								.text(label);
-							
-							// Restore saved selection from data attribute
-							if (key === savedValue) {
-								$option.attr('selected', 'selected');
-							}
-							
-							$select.append($option);
-						});
-						
-						// Set the value explicitly to ensure it's selected
-						if (savedValue) {
-							$select.val(savedValue);
-						}
-						
-						// Re-disable email field after populating
-						if (isEmailField) {
-							$select.prop('disabled', true);
-						}
-					});
-					
-					// Show success message via SweetAlert toast
-					if (!isInitialLoad) {
-						const adminBarHeight = $('#wpadminbar').outerHeight() || 0;
-						const customCount = response.data.count || 0;
-						let message = 'Loaded ' + fieldCount + ' fields';
-						
-						Swal.fire({
-							toast: true,
-							position: 'top-end',
-							icon: 'success',
-							title: message,
-							showConfirmButton: false,
-							timer: 3000,
-							timerProgressBar: true,
-							customClass: {
-								container: 'ghl-swal-with-adminbar'
-							},
-							didOpen: (toast) => {
-								toast.style.marginTop = adminBarHeight + 'px';
-							}
-						});
-					}
-					
-					// Show success message
-					const customCount = response.data.count || 0;
-					let message = '✅ Loaded ' + fieldCount + ' fields';
-					// if (customCount > 0) {
-					// 	message += ' (including ' + customCount + ' custom fields)';
-					// }
-					// $status.html('<span style="color: #46b450;">' + message + '</span>');
-					
-					// Show notice at top only on manual reload
-					// if (!isInitialLoad) {
-					// 	$('#ghl-field-mapping-messages').html(
-					// 		'<div class="notice notice-success is-dismissible"><p>' + message + '</p></div>'
-					// 	);
-					// }
-					
-					// setTimeout(function() {
-					// 	$status.fadeOut();
-					// }, 5000);
-					
-					// Update row highlighting for mapped fields
-					window.GHL_FieldMapping.updateMappedRows();
-					
-				} else {
-					// $status.html('<span style="color: #dc3232;">⚠ Failed to load fields</span>');
-					if (response.data && response.data.error) {
-						console.error('GHL Field Load Error:', response.data.error);
-					}
-				}
-			},
-			error: function(xhr, status, error) {
-				$button.prop('disabled', false);
-				$icon.removeClass('dashicons-update-alt').addClass('dashicons-update').css('animation', '');
-				// $status.html('<span style="color: #dc3232;">⚠ Error: ' + error + '</span>');
-			}
-		});
-	};
-	
-	/**
-	 * Initialize on document ready
-	 */
+
+	/* -------------------------------------------------- doc-ready */
+
 	$(document).ready(function() {
-		// Add data-label attributes for mobile responsiveness
-		$('.ghl-crm-field-mapping .form-table tbody tr').each(function() {
-			const $row = $(this);
-			const $cells = $row.find('td');
-			
-			// Add labels based on column index
+		// Add data-label attributes for mobile responsive card layout
+		$('.ghl-crm-field-mapping .ghl-table tbody tr').each(function() {
+			var $cells = $(this).find('td');
 			$cells.eq(0).attr('data-label', 'WordPress Field');
 			$cells.eq(1).attr('data-label', 'GoHighLevel Field');
 			$cells.eq(2).attr('data-label', 'Sync Direction');
 		});
-		
-		// Auto-load fields on initial page load
-		window.GHL_FieldMapping.loadFields(true);
-		
-		// Handle manual reload button click
-		$(document).on('click', '#ghl-load-custom-fields', function() {
-			window.GHL_FieldMapping.loadFields(false);
-		});
-		
-		// Handle field mapping changes to update row highlighting
-		$(document).on('change', 'select[name^="ghl_field_"]', function() {
+
+		// Initial row highlighting
+		window.GHL_FieldMapping.updateMappedRows();
+
+		// Re-highlight on change
+		$(document).on('change', 'input[name^="ghl_field_"]', function() {
 			window.GHL_FieldMapping.updateMappedRows();
 		});
 	});
+
 })(jQuery);

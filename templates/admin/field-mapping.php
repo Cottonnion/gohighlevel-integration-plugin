@@ -131,11 +131,24 @@ asort( $custom_user_fields );
 asort( $buddyboss_fields );
 asort( $woocommerce_fields );
 
-// GoHighLevel contact field list (placeholder - will be loaded dynamically via AJAX on page load)
-// This is just a fallback in case AJAX fails
-$ghl_fields = array(
-	'' => __( '— Loading fields... —', 'ghl-crm-integration' ),
-);
+// Handle refresh_fields query param — force-refresh the transient cache.
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only cache refresh, no state change.
+if ( isset( $_GET['refresh_fields'] ) && $_GET['refresh_fields'] === '1' ) {
+	$ghl_data = $settings_manager->get_ghl_fields_cached( true );
+} else {
+	$ghl_data = $settings_manager->get_ghl_fields_cached();
+}
+
+$ghl_fields      = $ghl_data['fields'];
+$ghl_field_types = $ghl_data['fieldTypes'];
+
+// Replace " (Custom)" labels with the field type when available.
+foreach ( $ghl_fields as $ghl_key => &$ghl_label ) {
+	if ( ! empty( $ghl_field_types[ $ghl_key ] ) ) {
+		$ghl_label = str_replace( ' (Custom)', ' (' . $ghl_field_types[ $ghl_key ] . ')', $ghl_label );
+	}
+}
+unset( $ghl_label );
 
 // Calculate total fields
 $total_fields = count( $default_wp_fields ) + count( $custom_user_fields ) + count( $buddyboss_fields ) + count( $learndash_fields );
@@ -205,15 +218,33 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 	</div>
 
 	<div style="margin: 20px 0; display: flex; gap: 12px; align-items: center;">
-		<button type="button" id="ghl-load-custom-fields" class="ghl-button ghl-button-primary" data-nonce="<?php echo esc_attr( wp_create_nonce( 'ghl_crm_field_mapping_nonce' ) ); ?>">
+		<?php
+		// Build reload URL — preserves existing page/tab params, adds refresh_fields=1.
+		$reload_url = add_query_arg( 'refresh_fields', '1' );
+		?>
+		<a href="<?php echo esc_url( $reload_url ); ?>" class="ghl-button ghl-button-primary" style="text-decoration: none;">
 			<span class="dashicons dashicons-update" style="margin-top: 3px;"></span>
 			<?php esc_html_e( 'Reload Fields from GoHighLevel', 'ghl-crm-integration' ); ?>
-		</button>
+		</a>
 		<button type="button" id="ghl-auto-suggest-mappings" class="ghl-button ghl-button-secondary">
 			<span class="dashicons dashicons-lightbulb" style="margin-top: 3px;"></span>
 			<?php esc_html_e( 'Auto-Suggest Mappings', 'ghl-crm-integration' ); ?>
 		</button>
 	</div>
+
+	<?php if ( isset( $_GET['refresh_fields'] ) && $_GET['refresh_fields'] === '1' ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+		<div class="notice notice-success is-dismissible" style="margin: 0 0 15px;">
+			<p>
+				<?php
+				printf(
+					/* translators: %d: number of custom fields loaded */
+					esc_html__( 'Fields refreshed from GoHighLevel. %d custom fields loaded.', 'ghl-crm-integration' ),
+					(int) $ghl_data['count']
+				);
+				?>
+			</p>
+		</div>
+	<?php endif; ?>
 
 	<form id="ghl-field-mapping-form" method="post" action="">
 		<?php wp_nonce_field( 'ghl_crm_field_mapping', 'ghl_crm_mapping_nonce' ); ?>
@@ -280,16 +311,18 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 							<?php endif; ?>
 						</td>
 						<td>
-							<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="ghl-select" data-saved-value="<?php echo esc_attr( $saved_ghl_field ); ?>" <?php echo $is_email_field ? 'disabled' : ''; ?>>
-								<?php foreach ( $ghl_fields as $ghl_key => $ghl_label ) : ?>
-									<option value="<?php echo esc_attr( $ghl_key ); ?>" <?php selected( $saved_ghl_field, $ghl_key ); ?>>
-										<?php echo esc_html( $ghl_label ); ?>
-									</option>
-								<?php endforeach; ?>
-							</select>
 							<?php if ( $is_email_field ) : ?>
-								<!-- Hidden input to ensure email mapping is submitted even though select is disabled -->
+								<div class="ghl-lazy-select ghl-lazy-select--disabled" data-name="ghl_field_<?php echo esc_attr( $key ); ?>" data-value="email">
+									<span class="ghl-lazy-select__text"><?php echo esc_html( $ghl_fields['email'] ?? 'Email' ); ?></span>
+									<span class="ghl-lazy-select__arrow">&#9662;</span>
+								</div>
 								<input type="hidden" name="ghl_field_<?php echo esc_attr( $key ); ?>" value="email">
+							<?php else : ?>
+								<div class="ghl-lazy-select" data-name="ghl_field_<?php echo esc_attr( $key ); ?>" data-value="<?php echo esc_attr( $saved_ghl_field ); ?>">
+									<span class="ghl-lazy-select__text"><?php echo esc_html( ! empty( $saved_ghl_field ) && isset( $ghl_fields[ $saved_ghl_field ] ) ? $ghl_fields[ $saved_ghl_field ] : '— Do Not Sync —' ); ?></span>
+									<span class="ghl-lazy-select__arrow">&#9662;</span>
+								</div>
+								<input type="hidden" name="ghl_field_<?php echo esc_attr( $key ); ?>" value="<?php echo esc_attr( $saved_ghl_field ); ?>">
 							<?php endif; ?>
 						</td>
 						<td>
@@ -344,13 +377,11 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 								<code><?php echo esc_html( $key ); ?></code>
 							</td>
 							<td>
-								<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="ghl-select" data-saved-value="<?php echo esc_attr( $saved_ghl_field ); ?>">
-									<?php foreach ( $ghl_fields as $ghl_key => $ghl_label ) : ?>
-										<option value="<?php echo esc_attr( $ghl_key ); ?>" <?php selected( $saved_ghl_field, $ghl_key ); ?>>
-											<?php echo esc_html( $ghl_label ); ?>
-										</option>
-									<?php endforeach; ?>
-								</select>
+								<div class="ghl-lazy-select" data-name="ghl_field_<?php echo esc_attr( $key ); ?>" data-value="<?php echo esc_attr( $saved_ghl_field ); ?>">
+									<span class="ghl-lazy-select__text"><?php echo esc_html( ! empty( $saved_ghl_field ) && isset( $ghl_fields[ $saved_ghl_field ] ) ? $ghl_fields[ $saved_ghl_field ] : '— Do Not Sync —' ); ?></span>
+									<span class="ghl-lazy-select__arrow">&#9662;</span>
+								</div>
+								<input type="hidden" name="ghl_field_<?php echo esc_attr( $key ); ?>" value="<?php echo esc_attr( $saved_ghl_field ); ?>">
 							</td>
 							<td>
 								<select name="sync_direction_<?php echo esc_attr( $key ); ?>" class="ghl-select">
@@ -401,13 +432,11 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 								<code><?php echo esc_html( $key ); ?></code>
 							</td>
 							<td>
-								<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="ghl-select" data-saved-value="<?php echo esc_attr( $saved_ghl_field ); ?>">
-									<?php foreach ( $ghl_fields as $ghl_key => $ghl_label ) : ?>
-										<option value="<?php echo esc_attr( $ghl_key ); ?>" <?php selected( $saved_ghl_field, $ghl_key ); ?>>
-											<?php echo esc_html( $ghl_label ); ?>
-										</option>
-									<?php endforeach; ?>
-								</select>
+								<div class="ghl-lazy-select" data-name="ghl_field_<?php echo esc_attr( $key ); ?>" data-value="<?php echo esc_attr( $saved_ghl_field ); ?>">
+									<span class="ghl-lazy-select__text"><?php echo esc_html( ! empty( $saved_ghl_field ) && isset( $ghl_fields[ $saved_ghl_field ] ) ? $ghl_fields[ $saved_ghl_field ] : '— Do Not Sync —' ); ?></span>
+									<span class="ghl-lazy-select__arrow">&#9662;</span>
+								</div>
+								<input type="hidden" name="ghl_field_<?php echo esc_attr( $key ); ?>" value="<?php echo esc_attr( $saved_ghl_field ); ?>">
 							</td>
 							<td>
 								<select name="sync_direction_<?php echo esc_attr( $key ); ?>" class="ghl-select">
@@ -452,13 +481,11 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 								<code><?php echo esc_html( $key ); ?></code>
 							</td>
 							<td>
-								<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="ghl-select" data-saved-value="<?php echo esc_attr( $saved_ghl_field ); ?>">
-									<?php foreach ( $ghl_fields as $ghl_key => $ghl_label ) : ?>
-										<option value="<?php echo esc_attr( $ghl_key ); ?>" <?php selected( $saved_ghl_field, $ghl_key ); ?>>
-											<?php echo esc_html( $ghl_label ); ?>
-										</option>
-									<?php endforeach; ?>
-								</select>
+								<div class="ghl-lazy-select" data-name="ghl_field_<?php echo esc_attr( $key ); ?>" data-value="<?php echo esc_attr( $saved_ghl_field ); ?>">
+									<span class="ghl-lazy-select__text"><?php echo esc_html( ! empty( $saved_ghl_field ) && isset( $ghl_fields[ $saved_ghl_field ] ) ? $ghl_fields[ $saved_ghl_field ] : '— Do Not Sync —' ); ?></span>
+									<span class="ghl-lazy-select__arrow">&#9662;</span>
+								</div>
+								<input type="hidden" name="ghl_field_<?php echo esc_attr( $key ); ?>" value="<?php echo esc_attr( $saved_ghl_field ); ?>">
 							</td>
 							<td>
 								<select name="sync_direction_<?php echo esc_attr( $key ); ?>" class="ghl-select">
@@ -513,13 +540,11 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 								<code><?php echo esc_html( $key ); ?></code>
 							</td>
 							<td>
-								<select name="ghl_field_<?php echo esc_attr( $key ); ?>" class="ghl-select" data-saved-value="<?php echo esc_attr( $saved_ghl_field ); ?>">
-									<?php foreach ( $ghl_fields as $ghl_key => $ghl_label ) : ?>
-										<option value="<?php echo esc_attr( $ghl_key ); ?>" <?php selected( $saved_ghl_field, $ghl_key ); ?>>
-											<?php echo esc_html( $ghl_label ); ?>
-										</option>
-									<?php endforeach; ?>
-								</select>
+								<div class="ghl-lazy-select" data-name="ghl_field_<?php echo esc_attr( $key ); ?>" data-value="<?php echo esc_attr( $saved_ghl_field ); ?>">
+									<span class="ghl-lazy-select__text"><?php echo esc_html( ! empty( $saved_ghl_field ) && isset( $ghl_fields[ $saved_ghl_field ] ) ? $ghl_fields[ $saved_ghl_field ] : '— Do Not Sync —' ); ?></span>
+									<span class="ghl-lazy-select__arrow">&#9662;</span>
+								</div>
+								<input type="hidden" name="ghl_field_<?php echo esc_attr( $key ); ?>" value="<?php echo esc_attr( $saved_ghl_field ); ?>">
 							</td>
 							<td>
 								<select name="sync_direction_<?php echo esc_attr( $key ); ?>" class="ghl-select">
@@ -559,6 +584,11 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 			</p>
 	</form>
 </div>
+
+<script>
+window.GHL_FIELDS = <?php echo wp_json_encode( $ghl_fields ); ?>;
+window.GHL_SAVED_MAPPINGS = <?php echo wp_json_encode( $saved_mappings ); ?>;
+</script>
 
 <style>
 	/* Rotation animation for loading spinner */

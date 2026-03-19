@@ -41,16 +41,148 @@
 }
 
 /* Disabled options in GHL field dropdowns */
-.ghl-crm-field-mapping select[name^="ghl_field_"] option:disabled {
-	color: #999 !important;
+.ghl-crm-field-mapping .ghl-lazy-select--disabled .ghl-lazy-select__text {
+	color: #999;
 	font-style: italic;
-	background-color: #f5f5f5;
 }
 
-/* Highlight currently focused dropdown */
-.ghl-crm-field-mapping select[name^="ghl_field_"]:focus {
+/* Highlight currently focused dropdown trigger */
+.ghl-crm-field-mapping .ghl-lazy-select:focus {
 	border-color: #635BFF;
 	box-shadow: 0 0 0 1px #635BFF;
+	outline: none;
+}
+
+/* ========================================
+   LAZY-SELECT DROPDOWN STYLING
+   ======================================== */
+
+/* Trigger container */
+.ghl-lazy-select {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+	max-width: 420px;
+	height: 36px;
+	padding: 0 8px;
+	border: 1px solid #8c8f94;
+	border-radius: 4px;
+	background: #fff;
+	cursor: pointer;
+	transition: border-color 0.15s ease;
+	box-sizing: border-box;
+	user-select: none;
+}
+
+.ghl-lazy-select:hover {
+	border-color: #635BFF;
+}
+
+.ghl-lazy-select--open {
+	border-color: #635BFF;
+	box-shadow: 0 0 0 1px #635BFF;
+}
+
+/* Display text */
+.ghl-lazy-select__text {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 13px;
+	color: #1d2327;
+	line-height: 36px;
+}
+
+/* Placeholder state (no value) */
+.ghl-lazy-select[data-value=""] .ghl-lazy-select__text {
+	color: #8c8f94;
+}
+
+/* Arrow indicator */
+.ghl-lazy-select__arrow {
+	flex-shrink: 0;
+	margin-left: 6px;
+	font-size: 14px;
+	color: #50575e;
+	transition: transform 0.15s ease;
+}
+
+.ghl-lazy-select--open .ghl-lazy-select__arrow {
+	transform: rotate(180deg);
+}
+
+/* Disabled state (email field) */
+.ghl-lazy-select--disabled {
+	background: #f0f0f1;
+	cursor: not-allowed;
+	opacity: 0.8;
+}
+
+.ghl-lazy-select--disabled:hover {
+	border-color: #8c8f94;
+}
+
+/* Dropdown panel — rendered at body level with position:fixed to avoid overflow clipping */
+.ghl-lazy-dropdown {
+	position: fixed;
+	background: #fff;
+	border: 1px solid #635BFF;
+	border-radius: 4px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+	z-index: 100000;
+	overflow: hidden;
+	box-sizing: border-box;
+}
+
+/* Search input */
+.ghl-lazy-dropdown__search {
+	display: block;
+	width: 100%;
+	padding: 8px 10px;
+	border: none;
+	border-bottom: 1px solid #dcdcde;
+	font-size: 13px;
+	outline: none;
+	box-sizing: border-box;
+}
+
+.ghl-lazy-dropdown__search:focus {
+	border-bottom-color: #635BFF;
+}
+
+/* Scrollable option list */
+.ghl-lazy-dropdown__list {
+	max-height: 260px;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+
+/* Individual option */
+.ghl-lazy-dropdown__option {
+	padding: 8px 10px;
+	font-size: 13px;
+	cursor: pointer;
+	color: #1d2327;
+	transition: background-color 0.1s ease;
+}
+
+.ghl-lazy-dropdown__option:hover,
+.ghl-lazy-dropdown__option--focused {
+	background-color: #f0edff;
+}
+
+.ghl-lazy-dropdown__option--selected {
+	background-color: #635BFF;
+	color: #fff;
+}
+
+.ghl-lazy-dropdown__option--selected:hover,
+.ghl-lazy-dropdown__option--selected.ghl-lazy-dropdown__option--focused {
+	background-color: #524ad9;
+	color: #fff;
 }
 
 .ghl-toggle-button {
@@ -165,10 +297,9 @@
 	}
 	
 	/* Dropdowns full width on mobile */
-	.ghl-crm-field-mapping select[name^="ghl_field_"] {
-		width: 100%;
-		max-width: 100%;
-		padding: 10px;
+	.ghl-crm-field-mapping .ghl-lazy-select {
+		width: 100% !important;
+		max-width: 100% !important;
 		font-size: 14px;
 	}
 	
@@ -205,7 +336,7 @@
 		margin-bottom: 12px;
 	}
 	
-	.ghl-crm-field-mapping select[name^="ghl_field_"] {
+	.ghl-crm-field-mapping .ghl-lazy-select {
 		font-size: 15px; /* Prevent iOS zoom on focus */
 	}
 	
