@@ -2,6 +2,25 @@
 
 All notable changes to GoHighLevel CRM Integration will be documented in this file.
 
+## [1.1.1] - 2026-03-19
+
+### Added
+
+- **Centralized UserMetaSync Class** — Extracted all post-sync user meta logic (pending tags, tag caching, GHL refresh) from `QueueManager` into a dedicated `UserMetaSync` class under `src/Sync/`, registered in `Loader` via the `ghl_crm_after_sync_success` hook.
+- **Asset Auto-Minification Pipeline** — Added `matthiasmullie/minify` dev dependency and `build-minify.php` script (`composer build`) that generates `.min.css` / `.min.js` for all plugin assets.
+- **AssetsManager .min Auto-Detection** — New `maybe_use_min_file()` helper in `AssetsManager` automatically serves `.min` assets in production and falls back to source files when `SCRIPT_DEBUG` is on.
+
+### Fixed
+
+- **WooCommerce Product-Tags Queue Routing** — `wc_product_tags` items were routed through a legacy `ghl_crm_execute_sync` filter instead of a proper `register_handler()` call; now registered alongside `wc_customer` in `WooCommerceSync::register_queue_handlers()`.
+- **Empty Tag Sync Failure** — Selecting the "Loading tags…" placeholder before tag list finished loading passed an empty string `""` to the API; `process_customer_conversion()` and `process_product_tags()` now strip empty values with `array_filter($tags, 'strlen')`.
+- **Tag Overwrite on WC Sync** — `wc_customer` and `wc_product_tags` user meta updates were overwriting existing tags; now fetches current tags via `get_user_tag_ids()` and merges before storing.
+- **QueueManager Dead Code Cleanup** — Removed orphaned `handle_after_sync_success()`, `sync_contact_tags_from_ghl()` methods, and legacy `ghl_crm_execute_sync` filter handler from QueueManager.
+
+### Improved
+
+- **Error Catching Robustness** — Changed `catch (\Exception)` to `catch (\Throwable)` in WooCommerceSync queue handlers to also capture `TypeError` and similar fatal errors.
+
 ## [1.0.2] - 2026-03-18
 
 ### Improved

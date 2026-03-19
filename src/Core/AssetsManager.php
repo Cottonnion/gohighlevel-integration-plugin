@@ -753,6 +753,9 @@ class AssetsManager {
 		$file_extension = pathinfo( $file, PATHINFO_EXTENSION );
 		$is_style       = ( 'css' === $file_extension );
 
+		// Use minified version when not in debug mode.
+		$file = $this->maybe_use_min_file( $file, $base_url, $context, $is_style );
+
 		// Build file URL
 		if ( $base_url ) {
 			$file_url = rtrim( $base_url, '/' ) . '/' . $file;
@@ -788,6 +791,53 @@ class AssetsManager {
 				);
 			}
 		}
+	}
+
+	/**
+	 * Swap a filename for its .min counterpart when it exists on disk and SCRIPT_DEBUG is off.
+	 *
+	 * @param string      $file     Original filename (e.g. 'style.css').
+	 * @param string|null $base_url Optional custom base URL supplied by the caller.
+	 * @param string      $context  'admin' or 'public'.
+	 * @param bool        $is_style Whether the file is a stylesheet.
+	 * @return string The (possibly swapped) filename.
+	 */
+	private function maybe_use_min_file( string $file, ?string $base_url, string $context, bool $is_style ): string {
+		// Never swap when WordPress is in script-debug mode.
+		if ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) {
+			return $file;
+		}
+
+		// Already minified — nothing to do.
+		if ( preg_match( '/\.min\.(css|js)$/i', $file ) ) {
+			return $file;
+		}
+
+		// Build the minified filename.
+		$ext      = $is_style ? '.css' : '.js';
+		$min_file = substr( $file, 0, -strlen( $ext ) ) . '.min' . $ext;
+
+		/*
+		 * Resolve the absolute filesystem path so we can check file_exists().
+		 *
+		 * When a $base_url is provided the asset may live outside this plugin
+		 * (e.g. the pro add-on).  We convert the URL back to a path by
+		 * replacing the plugins URL prefix with the plugins directory prefix.
+		 */
+		if ( $base_url ) {
+			// Normalise: plugins_url() may or may not have a trailing slash.
+			$plugins_url  = trailingslashit( plugins_url() );
+			$plugins_dir  = trailingslashit( WP_PLUGIN_DIR );
+			$relative_url = str_replace( $plugins_url, '', trailingslashit( $base_url ) );
+			$abs_path     = $plugins_dir . $relative_url . $min_file;
+		} else {
+			$sub_dir  = ( 'admin' === $context )
+				? 'assets/admin/' . ( $is_style ? 'css/' : 'js/' )
+				: 'assets/public/' . ( $is_style ? 'css/' : 'js/' );
+			$abs_path = GHL_CRM_PATH . $sub_dir . $min_file;
+		}
+
+		return file_exists( $abs_path ) ? $min_file : $file;
 	}
 
 	/**
