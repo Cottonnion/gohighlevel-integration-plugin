@@ -104,8 +104,8 @@ class UserProfileFields {
 		add_action( 'personal_options_update', [ $this, 'save_ghl_data' ] );
 		add_action( 'edit_user_profile_update', [ $this, 'save_ghl_data' ] );
 
-		// Enqueue Select2 and custom scripts
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
+		// Enqueue Select2 and custom scripts via AssetsManager
+		$this->register_assets();
 
 		// AJAX handlers
 		add_action( 'wp_ajax_ghl_crm_get_contact_data', [ $this, 'ajax_get_contact_data' ] );
@@ -239,59 +239,56 @@ class UserProfileFields {
 	}
 
 	/**
-	 * Enqueue scripts and styles
-	 *
-	 * @param string $hook Current admin page hook
-	 * @return void
+	 * Register assets via AssetsManager for user profile screens.
 	 */
-	public function enqueue_scripts( string $hook ): void {
-		// Only load on user edit pages
-		if ( ! in_array( $hook, [ 'profile.php', 'user-edit.php' ], true ) ) {
-			return;
-		}
+	private function register_assets(): void {
+		$assets_manager = \GHL_CRM\Core\AssetsManager::get_instance();
+		$screens        = array( 'profile', 'user-edit' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return;
-		}
-
-		// Enqueue Select2 (registered by AssetsManager with plugin-specific handles)
-		wp_enqueue_style( 'ghl-crm-select2-css' );
-		wp_enqueue_script( 'ghl-crm-select2' );
-
-		// Enqueue settings CSS (for button styles and layout)
-		wp_enqueue_style(
-			'ghl-settings',
-			GHL_CRM_URL . 'assets/admin/css/settings.css',
-			[],
-			GHL_CRM_VERSION
-		);
-
-		// Enqueue custom styles
-		wp_enqueue_style(
-			'ghl-user-profile',
-			GHL_CRM_URL . 'assets/admin/css/user-profile.css',
-			[ 'ghl-crm-select2-css', 'ghl-settings' ],
-			GHL_CRM_VERSION
-		);
-
-		// Enqueue custom script
-		wp_enqueue_script(
-			'ghl-user-profile-js',
-			GHL_CRM_URL . 'assets/admin/js/user-profile.js',
-			[ 'jquery', 'ghl-crm-select2' ],
+		// Globals CSS (Select2 custom styling: checkboxes, borders, highlight colors).
+		$assets_manager->add_admin_asset(
+			'ghl-crm-globals-css',
+			$screens,
+			'globals.css',
+			array(),
+			array(),
 			GHL_CRM_VERSION,
-			true
+			false
 		);
 
-		// Localize script
-		wp_localize_script(
+		// Settings CSS (button styles and layout).
+		$assets_manager->add_admin_asset(
+			'ghl-settings-css',
+			$screens,
+			'settings.css',
+			array(),
+			array(),
+			GHL_CRM_VERSION,
+			false
+		);
+
+		// User profile CSS.
+		$assets_manager->add_admin_asset(
+			'ghl-user-profile-css',
+			$screens,
+			'user-profile.css',
+			array( 'ghl-crm-select2-css', 'ghl-crm-globals-css', 'ghl-settings-css' ),
+			array(),
+			GHL_CRM_VERSION,
+			false
+		);
+
+		// User profile JS.
+		$assets_manager->add_admin_asset(
 			'ghl-user-profile-js',
-			'ghlUserProfile',
-			[
+			$screens,
+			'user-profile.js',
+			array( 'jquery', 'ghl-crm-select2' ),
+			array(
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_user_profile' ),
 				'tags'    => \GHL_CRM\Core\TagManager::get_instance()->get_tags_for_localization(),
-				'strings' => [
+				'strings' => array(
 					'loading'        => __( 'Loading...', 'ghl-crm-integration' ),
 					'syncSuccess'    => __( 'User synced successfully!', 'ghl-crm-integration' ),
 					'syncError'      => __( 'Sync failed. Please try again.', 'ghl-crm-integration' ),
@@ -301,8 +298,9 @@ class UserProfileFields {
 					'refreshError'   => __( 'Failed to sync from GoHighLevel. Please try again.', 'ghl-crm-integration' ),
 					'syncToSuccess'  => __( 'Successfully queued for sync to GoHighLevel!', 'ghl-crm-integration' ),
 					'syncToError'    => __( 'Failed to sync to GoHighLevel. Please try again.', 'ghl-crm-integration' ),
-				],
-			]
+				),
+			),
+			GHL_CRM_VERSION
 		);
 	}
 

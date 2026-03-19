@@ -81,73 +81,61 @@ class MetaBoxes {
 		// Save meta box data
 		add_action( 'save_post', [ $this, 'save_membership_meta_box' ], 10, 2 );
 
-		// Enqueue admin scripts
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
+		// Register admin assets via AssetsManager
+		add_action( 'init', [ $this, 'register_assets' ], 20 );
 	}
 
 	/**
-	 * Enqueue admin assets
-	 *
-	 * @param string $hook Current admin page hook
-	 * @return void
+	 * Register admin assets via AssetsManager for all supported post types.
 	 */
-	public function enqueue_admin_assets( string $hook ): void {
-		// Only load on post edit screens
-		if ( ! in_array( $hook, [ 'post.php', 'post-new.php' ] ) ) {
-			return;
-		}
-
-		// Check if this post type supports our meta box
-		$screen = get_current_screen();
-		if ( ! $screen ) {
-			return;
-		}
-
-		// Get all supported post types
+	public function register_assets(): void {
+		$assets_manager  = \GHL_CRM\Core\AssetsManager::get_instance();
 		$supported_types = $this->get_supported_post_types();
-		if ( ! in_array( $screen->post_type, $supported_types, true ) ) {
+		$screens         = array_map(
+			static function ( string $type ): string {
+				return 'cpt:' . $type;
+			},
+			$supported_types
+		);
+
+		if ( empty( $screens ) ) {
 			return;
 		}
 
-		// Enqueue Select2 (registered globally with plugin-specific handles)
-		wp_enqueue_style( 'ghl-crm-select2-css' );
-		wp_enqueue_script( 'ghl-crm-select2' );
-
-		// Enqueue our custom assets
-		$plugin_dir = plugin_dir_url( dirname( dirname( dirname( __DIR__ ) ) ) . '/gohighlevel-crm-integration.php' );
-
-		// Enqueue globals CSS
-		wp_enqueue_style(
-			'ghl-globals',
-			$plugin_dir . 'assets/admin/css/globals.css',
-			[],
-			GHL_CRM_VERSION
-		);
-
-		wp_enqueue_style(
-			'ghl-membership-admin',
-			$plugin_dir . 'assets/admin/css/membership-admin.css',
-			[ 'ghl-crm-select2-css', 'ghl-globals' ],
-			GHL_CRM_VERSION
-		);
-
-		wp_enqueue_script(
-			'ghl-membership-admin',
-			$plugin_dir . 'assets/admin/js/membership-admin.js',
-			[ 'jquery', 'ghl-crm-select2' ],
+		// Globals CSS.
+		$assets_manager->add_admin_asset(
+			'ghl-crm-globals-css',
+			$screens,
+			'globals.css',
+			array(),
+			array(),
 			GHL_CRM_VERSION,
-			true
+			false
 		);
 
-		// Localize script
-		wp_localize_script(
-			'ghl-membership-admin',
-			'ghlMembership',
-			[
+		// Membership admin CSS.
+		$assets_manager->add_admin_asset(
+			'ghl-membership-admin-css',
+			$screens,
+			'membership-admin.css',
+			array( 'ghl-crm-select2-css', 'ghl-crm-globals-css' ),
+			array(),
+			GHL_CRM_VERSION,
+			false
+		);
+
+		// Membership admin JS.
+		$assets_manager->add_admin_asset(
+			'ghl-membership-admin-js',
+			$screens,
+			'membership-admin.js',
+			array( 'jquery', 'ghl-crm-select2' ),
+			array(
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_user_profile' ),
 				'tags'    => \GHL_CRM\Core\TagManager::get_instance()->get_tags_for_localization(),
-			]
+			),
+			GHL_CRM_VERSION
 		);
 	}
 
@@ -350,63 +338,6 @@ class MetaBoxes {
 		// Save redirect URL
 		$redirect_url = isset( $_POST['ghl_redirect_url'] ) ? esc_url_raw( wp_unslash( $_POST['ghl_redirect_url'] ) ) : '';
 		update_post_meta( $post_id, '_ghl_redirect_url', $redirect_url );
-	}
-
-	/**
-	 * Enqueue admin scripts
-	 *
-	 * @param string $hook Current admin page hook
-	 * @return void
-	 */
-	public function enqueue_admin_scripts( string $hook ): void {
-		// Only load on post edit pages
-		if ( ! in_array( $hook, [ 'post.php', 'post-new.php' ], true ) ) {
-			return;
-		}
-
-		// Enqueue Select2 (registered globally with plugin-specific handles)
-		wp_enqueue_style( 'ghl-crm-select2-css' );
-		wp_enqueue_script( 'ghl-crm-select2' );
-
-		// Enqueue custom script
-		wp_enqueue_script(
-			'ghl-membership-admin',
-			GHL_CRM_URL . 'assets/admin/js/membership-admin.js',
-			[ 'jquery', 'ghl-crm-select2' ],
-			GHL_CRM_VERSION,
-			true
-		);
-
-		// Localize script
-		wp_localize_script(
-			'ghl-membership-admin',
-			'ghlMembership',
-			[
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
-				'tags'    => \GHL_CRM\Core\TagManager::get_instance()->get_tags_for_localization(),
-			]
-		);
-
-		// Add inline styles
-		wp_add_inline_style(
-			'ghl-crm-select2-css',
-			'
-			.ghl-membership-meta-box .select2-container {
-				width: 100% !important;
-			}
-			.ghl-membership-meta-box details {
-				margin-top: 10px;
-			}
-			.ghl-membership-meta-box details summary {
-				padding: 5px 0;
-				user-select: none;
-			}
-			.ghl-membership-meta-box details[open] summary {
-				margin-bottom: 10px;
-			}
-		'
-		);
 	}
 
 	/**

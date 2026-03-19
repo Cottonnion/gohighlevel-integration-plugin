@@ -5,6 +5,9 @@
 (function ($) {
   "use strict";
 
+  // AssetsManager localizes as ghl_buddyboss_group_meta_box_js_data.
+  const ghlBuddyBossGroup = window.ghl_buddyboss_group_meta_box_js_data || {};
+
   const GHLBuddyBossGroupMetaBox = {
     /**
      * Initialize

@@ -5,6 +5,9 @@
 (function($) {
     'use strict';
 
+    // AssetsManager localizes as ghl_membership_admin_js_data.
+    const ghlMembership = window.ghl_membership_admin_js_data || {};
+
     const GHLMembershipAdmin = {
         /**
          * Initialize

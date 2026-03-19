@@ -76,11 +76,61 @@ class GroupMetaBox {
 		// Add custom admin field to group edit screen
 		add_action( 'bp_groups_admin_meta_boxes', [ $this, 'add_meta_box' ] );
 
-		// Enqueue scripts
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
+		// Register admin assets via AssetsManager
+		$this->register_assets();
 
 		// AJAX handler for manual sync
 		add_action( 'wp_ajax_ghl_sync_buddyboss_group', [ $this, 'handle_manual_sync' ] );
+	}
+
+	/**
+	 * Register admin assets via AssetsManager.
+	 */
+	private function register_assets(): void {
+		$assets_manager = \GHL_CRM\Core\AssetsManager::get_instance();
+
+		// BuddyBoss group edit screen ID (child of buddyboss-platform menu).
+		$screens = array( 'buddyboss_page_bp-groups' );
+
+		// Globals CSS for design tokens (custom properties).
+		$assets_manager->add_admin_asset(
+			'ghl-crm-globals-css',
+			$screens,
+			'globals.css',
+			array(),
+			array(),
+			GHL_CRM_VERSION,
+			false
+		);
+
+		// BuddyBoss group meta box CSS.
+		$assets_manager->add_admin_asset(
+			'ghl-buddyboss-group-meta-box-css',
+			$screens,
+			'buddyboss-group-meta-box.css',
+			array( 'ghl-crm-globals-css' ),
+			array(),
+			GHL_CRM_VERSION,
+			false
+		);
+
+		// BuddyBoss group meta box JS.
+		$assets_manager->add_admin_asset(
+			'ghl-buddyboss-group-meta-box-js',
+			$screens,
+			'buddyboss-group-meta-box.js',
+			array( 'jquery' ),
+			array(
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'strings' => array(
+					'syncing'       => __( 'Syncing...', 'ghl-crm-integration' ),
+					'syncSuccess'   => __( 'Sync completed successfully!', 'ghl-crm-integration' ),
+					'syncError'     => __( 'Sync failed. Check logs for details.', 'ghl-crm-integration' ),
+					'membersQueued' => __( 'Members queued for sync!', 'ghl-crm-integration' ),
+				),
+			),
+			GHL_CRM_VERSION
+		);
 	}
 
 	/**
@@ -165,90 +215,6 @@ class GroupMetaBox {
 		wp_nonce_field( 'ghl_sync_group_' . $group_id, 'ghl_sync_nonce' );
 		?>
 		<div class="ghl-group-sync-meta-box">
-			<style>
-				.ghl-group-sync-meta-box { 
-					padding: var(--ghl-spacing-md); 
-				}
-				.ghl-sync-status { 
-					margin-bottom: var(--ghl-spacing-lg); 
-				}
-				.ghl-sync-status-item { 
-					display: flex; 
-					justify-content: space-between; 
-					padding: var(--ghl-spacing-sm) 0; 
-					border-bottom: 1px solid var(--ghl-border-primary);
-				}
-				.ghl-sync-status-item:last-child { 
-					border-bottom: none; 
-				}
-				.ghl-sync-label { 
-					font-weight: var(--ghl-font-weight-semibold); 
-					color: var(--ghl-text-primary); 
-				}
-				.ghl-sync-value { 
-					color: var(--ghl-text-secondary); 
-					font-family: var(--ghl-font-family-mono); 
-					font-size: var(--ghl-font-size-xs);
-					max-width: 60%;
-					text-align: right;
-					word-break: break-all;
-				}
-				.ghl-sync-value a {
-					color: var(--ghl-primary);
-					text-decoration: none;
-				}
-				.ghl-sync-value a:hover {
-					text-decoration: underline;
-				}
-				.ghl-sync-value .dashicons {
-					font-size: 14px;
-					width: 14px;
-					height: 14px;
-					vertical-align: text-top;
-				}
-				.ghl-sync-badge {
-					display: inline-block;
-					padding: 2px var(--ghl-spacing-sm);
-					border-radius: var(--ghl-radius-sm);
-					font-size: var(--ghl-font-size-xs);
-					font-weight: var(--ghl-font-weight-semibold);
-				}
-				.ghl-sync-badge.synced {
-					background: var(--ghl-success-light);
-					color: var(--ghl-success-dark);
-				}
-				.ghl-sync-badge.not-synced {
-					background: var(--ghl-error-light);
-					color: var(--ghl-error-dark);
-				}
-				.ghl-sync-actions { 
-					margin-top: var(--ghl-spacing-lg); 
-				}
-				.ghl-sync-btn {
-					width: 100%;
-					margin-bottom: var(--ghl-spacing-sm);
-				}
-				.ghl-sync-spinner {
-					display: none;
-					float: right;
-					margin: 5px 5px 0 0;
-				}
-				.ghl-sync-message {
-					margin-top: var(--ghl-spacing-md);
-					padding: var(--ghl-spacing-md);
-					border-radius: var(--ghl-radius-base);
-					font-size: var(--ghl-font-size-sm);
-					display: none;
-				}
-				.ghl-sync-message.success {
-					background: var(--ghl-success-light);
-					color: var(--ghl-success-dark);
-				}
-				.ghl-sync-message.error {
-					background: var(--ghl-error-light);
-					color: var(--ghl-error-dark);
-				}
-			</style>
 
 			<div class="ghl-sync-status">
 				<div class="ghl-sync-status-item">
@@ -331,57 +297,6 @@ class GroupMetaBox {
 			</p>
 		</div>
 		<?php
-	}
-
-	/**
-	 * Enqueue admin scripts
-	 *
-	 * @param string $hook Current page hook
-	 */
-	public function enqueue_scripts( string $hook ): void {
-		// Only load on BuddyBoss group edit screen
-		$screen = get_current_screen();
-		// if ( ! $screen || strpos( $screen->id, 'toplevel_page_bp-groups' ) === false ) {
-		// return;
-		// }
-
-		// Enqueue globals CSS for consistent design
-		wp_enqueue_style(
-			'ghl-globals',
-			GHL_CRM_URL . 'assets/admin/css/globals.css',
-			[],
-			GHL_CRM_VERSION
-		);
-
-		// Enqueue settings CSS for button styles
-		wp_enqueue_style(
-			'ghl-settings',
-			GHL_CRM_URL . 'assets/admin/css/settings.css',
-			[ 'ghl-globals' ],
-			GHL_CRM_VERSION
-		);
-
-		wp_enqueue_script(
-			'ghl-buddyboss-group-meta-box',
-			GHL_CRM_URL . 'assets/admin/js/buddyboss-group-meta-box.js',
-			[ 'jquery' ],
-			GHL_CRM_VERSION,
-			true
-		);
-
-		wp_localize_script(
-			'ghl-buddyboss-group-meta-box',
-			'ghlBuddyBossGroup',
-			[
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'strings' => [
-					'syncing'       => __( 'Syncing...', 'ghl-crm-integration' ),
-					'syncSuccess'   => __( 'Sync completed successfully!', 'ghl-crm-integration' ),
-					'syncError'     => __( 'Sync failed. Check logs for details.', 'ghl-crm-integration' ),
-					'membersQueued' => __( 'Members queued for sync!', 'ghl-crm-integration' ),
-				],
-			]
-		);
 	}
 
 	/**

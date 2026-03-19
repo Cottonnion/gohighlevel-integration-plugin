@@ -670,3 +670,121 @@ textarea.ghl-input {
 span.select2-search.select2-search--inline {
     line-height: 20px;
 }
+
+/* ========================================
+   MODERN BUTTONS
+   ======================================== */
+
+.ghl-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--ghl-spacing-sm);
+	padding: var(--ghl-spacing-md) var(--ghl-spacing-xl);
+	border: none;
+	border-radius: var(--ghl-radius-base);
+	font-size: var(--ghl-font-size-base);
+	font-weight: var(--ghl-font-weight-medium);
+	font-family: var(--ghl-font-family);
+	cursor: pointer;
+	transition: var(--ghl-transition-base);
+	text-decoration: none;
+	outline: none;
+}
+
+
+.ghl-button:focus {
+	box-shadow: var(--ghl-shadow-focus);
+}
+
+/* Button Sizes */
+.ghl-button-medium {
+	padding: 12px var(--ghl-spacing-xl);
+	font-size: var(--ghl-font-size-md);
+}
+
+.ghl-button-large {
+	padding: var(--ghl-spacing-lg) var(--ghl-spacing-2xl);
+	font-size: var(--ghl-font-size-lg);
+}
+
+/* Button Success Variant */
+.ghl-button-success {
+	background: var(--ghl-success);
+	color: var(--ghl-text-inverse);
+	border: 1px solid var(--ghl-success);
+}
+
+.ghl-button-success:hover {
+	background: var(--ghl-success-dark);
+	border-color: var(--ghl-success-dark);
+	transform: translateY(-1px);
+	box-shadow: var(--ghl-shadow-md);
+}
+
+.ghl-button-success:active {
+	transform: translateY(0);
+}
+
+/* Button Primary Variant */
+.ghl-button-primary {
+	background: var(--ghl-primary);
+	color: var(--ghl-text-inverse);
+	border: 1px solid var(--ghl-primary);
+}
+
+.ghl-button-primary:hover {
+	background: var(--ghl-primary-hover);
+	border-color: var(--ghl-primary-hover);
+	transform: translateY(-1px);
+	box-shadow: var(--ghl-shadow-md);
+}
+
+.ghl-button-primary:active {
+	transform: translateY(0);
+}
+
+/* Button Secondary Variant - Modern Flat Design */
+.ghl-button-secondary {
+	padding: 11px 22px;
+	border: none;
+	background: #edf2f7;
+	color: #2d3748;
+	border-radius: 6px;
+	font-size: 14px;
+	font-weight: 600;
+	letter-spacing: 0.3px;
+	transition: all 0.2s ease;
+	cursor: pointer;
+}
+
+.ghl-button-secondary:hover {
+	background: #e2e8f0;
+}
+
+.ghl-button-secondary:active {
+	background: #cbd5e0;
+}
+
+/* Button icon spacing (for dashicons) */
+.ghl-button .dashicons,
+.ghl-button-primary .dashicons,
+.ghl-button-secondary .dashicons,
+.ghl-button-success .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	margin-right: 6px;
+	vertical-align: middle;
+	margin-top: -2px;
+}
+
+/* WordPress native button with dashicons */
+.button.button-secondary .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	margin-right: 6px;
+	vertical-align: middle;
+	margin-top: -2px;
+}

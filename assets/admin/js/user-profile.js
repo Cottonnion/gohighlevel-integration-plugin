@@ -5,6 +5,9 @@
 (function($) {
     'use strict';
 
+    // AssetsManager localizes as ghl_user_profile_js_data.
+    const ghlUserProfile = window.ghl_user_profile_js_data || {};
+
     const GHLUserProfile = {
         /**
          * Initialize
