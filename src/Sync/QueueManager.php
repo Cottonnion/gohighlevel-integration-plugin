@@ -28,7 +28,7 @@ class QueueManager {
 	/**
 	 * Max retry attempts
 	 */
-	private const MAX_ATTEMPTS = 15;
+	private const MAX_ATTEMPTS = 3;
 
 	/**
 	 * Batch size for processing
