@@ -28,7 +28,7 @@ class QueueManager {
 	/**
 	 * Max retry attempts
 	 */
-	private const MAX_ATTEMPTS = 5;
+	private const MAX_ATTEMPTS = 15;
 
 	/**
 	 * Batch size for processing
@@ -112,8 +112,7 @@ class QueueManager {
 		// Schedule recurring action AFTER Action Scheduler is ready
 		add_action( 'init', [ $this, 'schedule_queue_processor' ], 999 );
 
-		// Listen for successful sync completions (provides enterprise-grade extensibility)
-		add_action( 'ghl_crm_after_sync_success', [ $this, 'handle_after_sync_success' ], 10, 4 );
+
 	}
 
 	/**
@@ -670,98 +669,6 @@ class QueueManager {
 					}
 				}
 
-				// Store contact ID, tags, and sync time in user meta (for admin columns and profile page)
-				if ( 'user' === $item->item_type && ! empty( $contact_id ) ) {
-					$tag_manager = TagManager::get_instance();
-					$tag_manager->store_user_contact_id( (int) $item->item_id, (string) $contact_id );
-					update_user_meta( (int) $item->item_id, '_ghl_last_sync', time() );
-
-					$pending_tags = get_user_meta( (int) $item->item_id, '_ghl_pending_tags', true );
-					if ( is_array( $pending_tags ) && ! empty( $pending_tags ) ) {
-						$normalized_pending = $tag_manager->normalize_tag_input( $pending_tags );
-						$payload_tags       = $tag_manager->prepare_tags_for_payload( $normalized_pending['ids'], $normalized_pending['pairs'] );
-
-						if ( ! empty( $payload_tags ) ) {
-							$this->add_to_queue(
-								'user',
-								(int) $item->item_id,
-								'add_tags',
-								[
-									'contact_id' => $contact_id,
-									'tags'       => array_values( array_unique( $payload_tags ) ),
-									'reason'     => 'Pending tags applied after contact creation',
-								]
-							);
-						}
-
-						delete_user_meta( (int) $item->item_id, '_ghl_pending_tags' );
-					}
-
-					// Check for pending family tags and queue them
-					$pending_family_tags = get_user_meta( (int) $item->item_id, '_ghl_pending_family_tags', true );
-					if ( is_array( $pending_family_tags ) && ! empty( $pending_family_tags ) ) {
-						$payload_tags = $tag_manager->prepare_tags_for_payload( $pending_family_tags );
-
-						$this->add_to_queue(
-							'user',
-							(int) $item->item_id,
-							'add_tags',
-							[
-								'contact_id' => $contact_id,
-								'tags'       => array_values( array_unique( $payload_tags ) ),
-								'reason'     => 'Family inheritance - pending tags applied after registration',
-							]
-						);
-
-						// Clear pending tags
-						delete_user_meta( (int) $item->item_id, '_ghl_pending_family_tags' );
-					}
-
-					// Store tags from payload (what we sent) OR from response
-					$tags_to_cache = null;
-
-					// First try to get tags from the API response
-					if ( is_array( $result ) ) {
-						// For remove_tags/add_tags actions, tags are directly in result
-						if ( ! empty( $result['tags'] ) && is_array( $result['tags'] ) ) {
-							$tags_to_cache = $result['tags'];
-						} else {
-							// For other actions, tags might be nested in contact data
-							$contact_data = $result['contact'] ?? $result;
-							if ( ! empty( $contact_data['tags'] ) && is_array( $contact_data['tags'] ) ) {
-								$tags_to_cache = $contact_data['tags'];
-							}
-						}
-					}
-
-					// If tags not in response, use what we sent in the payload
-					if ( null === $tags_to_cache ) {
-						if ( ! empty( $payload['tags'] ) && is_array( $payload['tags'] ) ) {
-							$tags_to_cache = $payload['tags'];
-						}
-					}
-
-					if ( ! empty( $tags_to_cache ) && is_array( $tags_to_cache ) ) {
-						TagManager::get_instance()->store_user_tags( (int) $item->item_id, $tags_to_cache );
-					}
-				}
-
-				// Handle WooCommerce customer conversion - update user meta for the customer
-				if ( 'wc_customer' === $item->item_type && ! empty( $contact_id ) && class_exists( 'WooCommerce' ) ) {
-					$order = wc_get_order( $item->item_id );
-					if ( $order && $order->get_customer_id() ) {
-						$user_id     = $order->get_customer_id();
-						$tag_manager = TagManager::get_instance();
-						$tag_manager->store_user_contact_id( $user_id, (string) $contact_id );
-						update_user_meta( $user_id, '_ghl_last_sync', time() );
-
-						// Store tags from payload
-						if ( ! empty( $payload['tags'] ) && is_array( $payload['tags'] ) ) {
-							$tag_manager->store_user_tags( $user_id, $payload['tags'] );
-						}
-					}
-				}
-
 				// Mark as completed
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Updating queue row status in custom table after successful sync.
 				$update_result = $wpdb->update(
@@ -1224,128 +1131,6 @@ class QueueManager {
 			if ( $timestamp ) {
 				wp_unschedule_event( $timestamp, 'ghl_crm_process_queue' );
 			}
-		}
-	}
-
-	/**
-	 * Sync contact tags from GHL after successful queue completion
-	 *
-	 * Hook handler that fires after any successful sync operation. This ensures
-	 * WordPress user data stays synchronized with GoHighLevel contact data.
-	 *
-	 * Called via 'ghl_crm_after_sync_success' action hook after:
-	 * - User contact creation/update
-	 * - WooCommerce order processing
-	 * - Tag additions/removals
-	 * - Any successful queue item completion
-	 *
-	 * Only syncs tags back for specific actions to avoid unnecessary API calls:
-	 * - add_tags, remove_tags (tag operations where drift may occur)
-	 * - update (updates where GHL may modify tags)
-	 *
-	 * This method delegates to sync_contact_tags_from_ghl() for the actual implementation.
-	 *
-	 * @param object      $item Queue item that was processed
-	 * @param string|null $contact_id GHL Contact ID from successful sync
-	 * @param mixed       $result Sync result data (optional)
-	 * @param array       $payload Original sync payload (optional)
-	 * @return void
-	 */
-	public function handle_after_sync_success( object $item, ?string $contact_id, $result = null, array $payload = [] ): void {
-		// Only sync tags back for specific actions to reduce API calls
-		$sync_actions = [ 'add_tags', 'remove_tags', 'update' ];
-		if ( in_array( $item->action, $sync_actions, true ) ) {
-			$this->sync_contact_tags_from_ghl( $item, $contact_id );
-		}
-	}
-
-	/**
-	 * Sync contact tags from GHL after successful queue completion
-	 *
-	 * Internal implementation that performs the actual tag synchronization from GHL to WordPress.
-	 * Delegates to UserProfileFields for consistency with the admin refresh functionality.
-	 *
-	 * What Gets Synchronized:
-	 * - Contact tags (stored in user meta as _ghl_tags)
-	 * - Last sync timestamp (_ghl_last_sync)
-	 * - Contact type (_ghl_contact_type: lead, customer, etc.)
-	 * - GHL contact ID (_ghl_contact_id if not already stored)
-	 *
-	 * Integration-Specific User ID Resolution:
-	 * - user: Direct user_id from item_id
-	 * - wc_customer: Extracts customer_id from WooCommerce order
-	 * - wc_product_tags: Extracts customer from order in payload
-	 *
-	 * Error Handling:
-	 * - Silently catches all sync failures (doesn't affect queue)
-	 * - Failed tag syncs don't mark queue item as failed
-	 * - Safe to fail without breaking queue processing
-	 *
-	 * @param object      $item Queue item from database
-	 * @param string|null $contact_id GHL Contact ID
-	 * @return void
-	 */
-	private function sync_contact_tags_from_ghl( object $item, ?string $contact_id ): void {
-		// Only sync for user-related items with a contact ID
-		if ( empty( $contact_id ) ) {
-			return;
-		}
-
-		$user_id = null;
-
-		// Determine user ID based on item type
-		if ( 'user' === $item->item_type ) {
-			$user_id = (int) $item->item_id;
-		} elseif ( 'wc_customer' === $item->item_type && class_exists( 'WooCommerce' ) ) {
-			$order = wc_get_order( $item->item_id );
-			if ( $order ) {
-				$user_id = (int) $order->get_customer_id();
-			}
-		} elseif ( 'wc_product_tags' === $item->item_type ) {
-			// Get user from order
-			$payload  = json_decode( $item->payload, true );
-			$order_id = $payload['order_id'] ?? 0;
-			if ( $order_id ) {
-				$order = wc_get_order( $order_id );
-				if ( $order ) {
-					$user_id = (int) $order->get_customer_id();
-				}
-			}
-		}
-
-		if ( empty( $user_id ) ) {
-			return;
-		}
-
-		try {
-			// Use the same refresh logic from UserProfileFields
-			$profile_fields = \GHL_CRM\Admin\Profile\UserProfileFields::get_instance();
-
-			// Call the internal refresh method (we'll create a public wrapper)
-			if ( method_exists( $profile_fields, 'refresh_user_from_ghl' ) ) {
-				$profile_fields->refresh_user_from_ghl( $user_id, $contact_id );
-			} else {
-				// Fallback: Use Client directly (same pattern as AJAX action)
-				$client   = \GHL_CRM\API\Client\Client::get_instance();
-				$response = $client->get( "contacts/{$contact_id}" );
-
-				if ( ! empty( $response['contact'] ) ) {
-					$contact = $response['contact'];
-
-					TagManager::get_instance()->store_user_contact_id( $user_id, $contact_id );
-					update_user_meta( $user_id, '_ghl_last_sync', time() );
-
-					if ( ! empty( $contact['tags'] ) && is_array( $contact['tags'] ) ) {
-						TagManager::get_instance()->store_user_tags( $user_id, $contact['tags'] );
-					}
-
-					if ( ! empty( $contact['type'] ) ) {
-						update_user_meta( $user_id, '_ghl_contact_type', $contact['type'] );
-					}
-				}
-			}
-		} catch ( \Throwable $e ) {
-			// Keep queue item intact if tag sync fails
 		}
 	}
 

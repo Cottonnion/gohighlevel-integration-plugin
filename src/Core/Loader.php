@@ -92,6 +92,7 @@ class Loader {
 
 			// Sync components
 			'sync.queue'                           => \GHL_CRM\Sync\QueueManager::class,
+			'sync.user_meta'                       => \GHL_CRM\Sync\UserMetaSync::class,
 			'sync.ghl_to_wp'                       => \GHL_CRM\Sync\GHLToWordPressSync::class,
 
 			// Integration components
