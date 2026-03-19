@@ -255,14 +255,14 @@ class SettingsManager {
 				$response_settings = $this->get_settings_array();
 				$location_id       = $response_settings['location_id'] ?? $response_settings['oauth_location_id'] ?? '';
 
-			if ( ! empty( $location_id ) ) {
-				// Preserve only location-scoped tag keys in the response
-				$response_settings[ "role_tags_{$location_id}" ]          = $this->get_location_role_tags( $location_id );
-				$response_settings[ "global_tags_{$location_id}" ]        = $this->get_location_global_tags( $location_id );
-				$response_settings[ "user_register_tags_{$location_id}" ] = $this->get_location_register_tags( $location_id );
+				if ( ! empty( $location_id ) ) {
+					// Preserve only location-scoped tag keys in the response
+					$response_settings[ "role_tags_{$location_id}" ]          = $this->get_location_role_tags( $location_id );
+					$response_settings[ "global_tags_{$location_id}" ]        = $this->get_location_global_tags( $location_id );
+					$response_settings[ "user_register_tags_{$location_id}" ] = $this->get_location_register_tags( $location_id );
 
-				unset( $response_settings['role_tags'], $response_settings['global_tags'], $response_settings['user_register_tags'] );
-			}
+					unset( $response_settings['role_tags'], $response_settings['global_tags'], $response_settings['user_register_tags'] );
+				}
 
 				$response_data = [
 					'message'  => __( 'Settings saved successfully!', 'ghl-crm-integration' ),
@@ -876,15 +876,87 @@ class SettingsManager {
 	}
 
 	/**
-	 * Get custom fields from GoHighLevel location
+	 * Get GHL fields with transient caching.
+	 *
+	 * Returns cached fields if available, otherwise fetches from API and caches.
+	 * Used by the PHP template to render <option> elements server-side
+	 * instead of relying on an AJAX call on every page load.
+	 *
+	 * @param bool $force_refresh Whether to bypass the cache and fetch fresh data.
+	 * @return array{fields: array<string, string>, fieldTypes: array<string, string>, count: int}
+	 */
+	public function get_ghl_fields_cached( bool $force_refresh = false ): array {
+		$settings    = $this->get_settings_array();
+		$location_id = $settings['location_id'] ?? '';
+		$site_id     = get_current_blog_id();
+
+		$transient_key = 'ghl_fields_' . $location_id . '_site_' . $site_id;
+
+		if ( ! $force_refresh ) {
+			$cached = get_transient( $transient_key );
+			if ( false !== $cached && is_array( $cached ) ) {
+				return $cached;
+			}
+		}
+
+		// Build default result with standard fields only
+		$result = [
+			'fields'     => $this->get_standard_ghl_fields(),
+			'fieldTypes' => [],
+			'count'      => 0,
+		];
+
+		if ( empty( $location_id ) ) {
+			return $result;
+		}
+
+		try {
+			$client   = \GHL_CRM\API\Client\Client::get_instance();
+			$response = $client->get( 'locations/' . $location_id . '/customFields', [] );
+
+			if ( ! empty( $response['customFields'] ) && is_array( $response['customFields'] ) ) {
+				$field_types = [];
+
+				foreach ( $response['customFields'] as $field ) {
+					$field_id   = $field['id'] ?? '';
+					$field_name = $field['name'] ?? '';
+					$data_type  = $field['dataType'] ?? '';
+
+					if ( $field_id && $field_name ) {
+						$result['fields'][ 'custom.' . $field_id ] = $field_name . ' (Custom)';
+						if ( $data_type ) {
+							$field_types[ 'custom.' . $field_id ] = strtolower( $data_type );
+						}
+					}
+				}
+
+				$result['fieldTypes'] = $field_types;
+				$result['count']      = count( $response['customFields'] );
+			}
+
+			$cache_duration = absint( $this->get_setting( 'cache_duration', HOUR_IN_SECONDS ) );
+			set_transient( $transient_key, $result, $cache_duration );
+
+		} catch ( \Exception $e ) {
+			// Silently fall back to standard fields on API failure.
+			// Don't cache the failure so next page load retries.
+		}
+
+		return $result;
+	}
+
+	/**
+	 * AJAX handler: Get GHL custom fields for field mapping dropdowns.
+	 *
+	 * Forces a fresh API fetch via get_ghl_fields_cached( true ).
+	 * Only used by the SPA reload button; the legacy page uses a query param redirect.
 	 *
 	 * @return void
 	 */
 	public function get_custom_fields(): void {
-		// Verify nonce
+		// Verify nonce.
 		check_ajax_referer( 'ghl_crm_field_mapping_nonce', 'nonce' );
 
-		// Check user capabilities
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
@@ -894,79 +966,9 @@ class SettingsManager {
 			);
 		}
 
-		try {
-			$settings    = $this->get_settings_array();
-			$location_id = $settings['location_id'] ?? '';
+		$result = $this->get_ghl_fields_cached( true );
 
-			if ( empty( $location_id ) ) {
-				wp_send_json_error(
-					[
-						'message' => __( 'Location ID not configured. Please save your settings first.', 'ghl-crm-integration' ),
-					],
-					400
-				);
-			}
-
-			$client = \GHL_CRM\API\Client\Client::get_instance();
-
-			// Fetch custom fields from GHL API
-			// Endpoint: GET /locations/{locationId}/customFields (no hyphen)
-			// Pass empty array to prevent auto-adding locationId as query param
-			$response = $client->get( 'locations/' . $location_id . '/customFields', [] );
-
-			if ( empty( $response['customFields'] ) ) {
-				// Return standard fields if no custom fields found
-				wp_send_json_success(
-					[
-						'fields'  => $this->get_standard_ghl_fields(),
-						'message' => __( 'No custom fields found. Showing standard fields only.', 'ghl-crm-integration' ),
-					]
-				);
-				return;
-			}
-
-			// Combine standard fields + custom fields
-			$all_fields = $this->get_standard_ghl_fields();
-
-			foreach ( $response['customFields'] as $field ) {
-				$field_id   = $field['id'] ?? '';
-				$field_name = $field['name'] ?? '';
-
-				if ( $field_id && $field_name ) {
-					$all_fields[ 'custom.' . $field_id ] = $field_name . ' (Custom)';
-				}
-			}
-
-			wp_send_json_success(
-				[
-					'fields' => $all_fields,
-					'count'  => count( $response['customFields'] ),
-				]
-			);
-
-		} catch ( \Exception $e ) {
-
-			// Get detailed debug info
-			$debug_info = [
-				'exception_message' => $e->getMessage(),
-				'exception_file'    => $e->getFile(),
-				'exception_line'    => $e->getLine(),
-				'location_id'       => $location_id ?? 'not set',
-				'has_oauth'         => ! empty( $settings['oauth_access_token'] ),
-				'has_api_token'     => ! empty( $settings['api_token'] ),
-				'endpoint'          => 'locations/' . ( $location_id ?? '{locationId}' ) . '/customFields',
-			];
-
-			// Fallback to standard fields
-			wp_send_json_success(
-				[
-					'fields'  => $this->get_standard_ghl_fields(),
-					'message' => __( 'Could not fetch custom fields. Showing standard fields only.', 'ghl-crm-integration' ),
-					'error'   => $e->getMessage(),
-					'debug'   => $debug_info,
-				]
-			);
-		}
+		wp_send_json_success( $result );
 	}
 
 	/**
