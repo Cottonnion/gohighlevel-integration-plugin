@@ -568,6 +568,14 @@ class QueueManager {
 			$rate_ok     = $location_id ? $this->rate_limiter->check_limits( $location_id ) : true;
 
 			if ( ! $rate_ok ) {
+				// If the daily limit specifically was hit, notify the admin (once per day).
+				if ( $location_id && $this->rate_limiter->is_daily_limit_reached( $location_id ) ) {
+					$notification_manager = \GHL_CRM\Admin\NotificationManager::get_instance();
+					$notification_manager->send_daily_limit_reached(
+						$this->rate_limiter->get_daily_count( $location_id ),
+						$this->get_pending_count()
+					);
+				}
 				return;
 			}
 		} catch ( \Exception $e ) {

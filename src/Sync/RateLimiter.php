@@ -228,6 +228,35 @@ class RateLimiter {
 	}
 
 	/**
+	 * Check if the daily limit has been reached for a location.
+	 *
+	 * @param string|null $location_id GHL location ID.
+	 * @return bool True if daily limit reached (200,000 requests).
+	 */
+	public function is_daily_limit_reached( ?string $location_id = null ): bool {
+		if ( empty( $location_id ) ) {
+			return false;
+		}
+
+		return ! $this->check_daily_limit( $location_id );
+	}
+
+	/**
+	 * Get the current daily request count for a location.
+	 *
+	 * @param string|null $location_id GHL location ID.
+	 * @return int Requests made today.
+	 */
+	public function get_daily_count( ?string $location_id = null ): int {
+		if ( empty( $location_id ) ) {
+			return 0;
+		}
+
+		$daily_key = $this->get_daily_key( $location_id );
+		return (int) get_site_transient( $daily_key );
+	}
+
+	/**
 	 * Check if exception is a rate limit error
 	 *
 	 * @param \Exception $e Exception to check

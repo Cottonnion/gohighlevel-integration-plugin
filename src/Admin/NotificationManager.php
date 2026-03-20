@@ -52,6 +52,7 @@ class NotificationManager {
 		'sync_errors'      => 'notify_sync_errors',
 		'queue_backlog'    => 'notify_queue_backlog',
 		'rate_limit'       => 'notify_rate_limit',
+		'daily_limit'      => 'notify_rate_limit',
 		'webhook_failures' => 'notify_webhook_failures',
 		'daily_summary'    => 'notify_daily_summary',
 	];
@@ -300,6 +301,61 @@ class NotificationManager {
 		);
 
 		return $this->send( 'rate_limit', $subject, $message, [ 'retry_after' => $retry_after ] );
+	}
+
+	/**
+	 * Send daily API limit reached alert.
+	 *
+	 * Notifies admin that the GHL 200,000 request/day limit has been hit.
+	 * Queue processing is paused automatically and will resume at midnight UTC.
+	 *
+	 * Uses the 'daily_limit' notification type (shares the rate_limit setting toggle)
+	 * with its own throttle key so it sends at most once per day.
+	 *
+	 * @param int $daily_count Number of API requests made today.
+	 * @param int $pending     Number of queue items still pending.
+	 * @return bool
+	 */
+	public function send_daily_limit_reached( int $daily_count, int $pending = 0 ): bool {
+		$resets_at = gmdate( 'Y-m-d H:i:s', strtotime( 'tomorrow midnight' ) );
+
+		$subject = __( '[CRITICAL] GoHighLevel Daily API Limit Reached (200,000 Requests)', 'ghl-crm-integration' );
+
+		$message = sprintf(
+			'<h2 style="color: #d63638;">%s</h2>
+			<p>%s</p>
+			<table style="border-collapse: collapse; width: 100%%; max-width: 400px;">
+				<tr><td style="padding: 6px 12px; border: 1px solid #ddd;"><strong>%s</strong></td><td style="padding: 6px 12px; border: 1px solid #ddd;">%s</td></tr>
+				<tr><td style="padding: 6px 12px; border: 1px solid #ddd;"><strong>%s</strong></td><td style="padding: 6px 12px; border: 1px solid #ddd;">%s</td></tr>
+				<tr><td style="padding: 6px 12px; border: 1px solid #ddd;"><strong>%s</strong></td><td style="padding: 6px 12px; border: 1px solid #ddd;">%s UTC</td></tr>
+			</table>
+			<p>%s</p>
+			<ul>
+				<li>%s</li>
+				<li>%s</li>
+				<li>%s</li>
+			</ul>
+			<p><a href="%s" style="display: inline-block; padding: 10px 20px; background: #0073aa; color: white; text-decoration: none; border-radius: 3px;">%s</a></p>',
+			esc_html__( 'Daily API Limit Reached', 'ghl-crm-integration' ),
+			esc_html__( 'Your site has reached the GoHighLevel daily limit of 200,000 API requests. Queue processing is paused and will automatically resume when the limit resets.', 'ghl-crm-integration' ),
+			esc_html__( 'Requests today', 'ghl-crm-integration' ),
+			number_format_i18n( $daily_count ),
+			esc_html__( 'Items still pending', 'ghl-crm-integration' ),
+			number_format_i18n( $pending ),
+			esc_html__( 'Resets at', 'ghl-crm-integration' ),
+			esc_html( $resets_at ),
+			esc_html__( 'What you can do:', 'ghl-crm-integration' ),
+			esc_html__( 'No action needed — processing resumes automatically at midnight UTC', 'ghl-crm-integration' ),
+			esc_html__( 'Reduce batch size in settings to spread requests more evenly', 'ghl-crm-integration' ),
+			esc_html__( 'Review which integrations are generating the most sync traffic', 'ghl-crm-integration' ),
+			esc_url( admin_url( 'admin.php?page=ghl-crm-admin&tab=queue' ) ),
+			esc_html__( 'View Queue Status', 'ghl-crm-integration' )
+		);
+
+		return $this->send( 'daily_limit', $subject, $message, [
+			'daily_count' => $daily_count,
+			'pending'     => $pending,
+		] );
 	}
 
 	/**
