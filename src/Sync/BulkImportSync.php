@@ -6,7 +6,7 @@ namespace GHL_CRM\Sync;
 use GHL_CRM\API\Client\Client;
 use GHL_CRM\API\Resources\ContactResource;
 use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Core\TagManager;
+use GHL_CRM\Sync\TagManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

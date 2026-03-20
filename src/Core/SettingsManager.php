@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace GHL_CRM\Core;
 
+use GHL_CRM\Core\Settings\AjaxHandler;
+use GHL_CRM\Sync\TagManager;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -1100,7 +1103,7 @@ class SettingsManager {
 		}
 
 		// 4. Reset TagManager in-memory cache if it's already instantiated
-		if ( class_exists( '\GHL_CRM\Core\TagManager' ) ) {
+		if ( class_exists( '\GHL_CRM\Sync\TagManager' ) ) {
 			try {
 				$tag_manager = TagManager::get_instance();
 				$tag_manager->refresh_cache();

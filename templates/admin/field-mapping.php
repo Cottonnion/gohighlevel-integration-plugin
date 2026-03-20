@@ -180,8 +180,8 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 
 	<?php
 	// Check scope access for Contacts and Custom Fields
-	\GHL_CRM\Core\ScopeChecker::render_scope_notice( 'contacts' );
-	\GHL_CRM\Core\ScopeChecker::render_scope_notice( 'custom_fields' );
+	\GHL_CRM\API\ScopeChecker::render_scope_notice( 'contacts' );
+	\GHL_CRM\API\ScopeChecker::render_scope_notice( 'custom_fields' );
 	?>
 
 	<!-- Helpful Information Notice -->

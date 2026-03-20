@@ -8,7 +8,7 @@
 
 declare(strict_types=1);
 
-use GHL_CRM\Core\TagManager;
+use GHL_CRM\Sync\TagManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	return;

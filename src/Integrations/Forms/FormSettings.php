@@ -1,7 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Core;
+namespace GHL_CRM\Integrations\Forms;
+
+use GHL_CRM\Core\SettingsManager;
 
 defined( 'ABSPATH' ) || exit;
 

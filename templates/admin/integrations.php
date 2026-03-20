@@ -47,8 +47,8 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 
 	<?php
 	// Check scope access for integrations
-	\GHL_CRM\Core\ScopeChecker::render_scope_notice( 'contacts' );
-	\GHL_CRM\Core\ScopeChecker::render_scope_notice( 'tags' );
+	\GHL_CRM\API\ScopeChecker::render_scope_notice( 'contacts' );
+	\GHL_CRM\API\ScopeChecker::render_scope_notice( 'tags' );
 	?>
 
 	<!-- Helpful Information Notice -->

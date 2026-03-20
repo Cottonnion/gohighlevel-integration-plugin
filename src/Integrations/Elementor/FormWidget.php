@@ -5,7 +5,7 @@ namespace GHL_CRM\Integrations\Elementor;
 
 use GHL_CRM\API\Resources\FormsResource;
 use GHL_CRM\API\Client\Client;
-use GHL_CRM\Core\ShortcodeManager;
+use GHL_CRM\Frontend\ShortcodeManager;
 
 defined( 'ABSPATH' ) || exit;
 

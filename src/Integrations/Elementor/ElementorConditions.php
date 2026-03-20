@@ -313,7 +313,7 @@ class ElementorConditions {
 	 * @return array Array of tag options [tag_name => tag_name]
 	 */
 	private function get_available_tags(): array {
-		$tag_manager = \GHL_CRM\Core\TagManager::get_instance();
+		$tag_manager = \GHL_CRM\Sync\TagManager::get_instance();
 
 		try {
 			// Get all tags for the current location

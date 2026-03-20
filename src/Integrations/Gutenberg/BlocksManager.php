@@ -6,7 +6,7 @@ namespace GHL_CRM\Integrations\Gutenberg;
 use GHL_CRM\API\ConnectionManager;
 use GHL_CRM\Core\AssetsManager;
 use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Core\TagManager;
+use GHL_CRM\Sync\TagManager;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -278,7 +278,7 @@ class BlocksManager {
 		}
 
 		// Use ShortcodeManager to render the form
-		$shortcode_manager = \GHL_CRM\Core\ShortcodeManager::get_instance();
+		$shortcode_manager = \GHL_CRM\Frontend\ShortcodeManager::get_instance();
 		return $shortcode_manager->render_form_shortcode(
 			[
 				'id'     => $form_id,

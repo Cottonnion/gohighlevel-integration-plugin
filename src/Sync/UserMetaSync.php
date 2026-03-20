@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace GHL_CRM\Sync;
 
-use GHL_CRM\Core\TagManager;
+use GHL_CRM\Sync\TagManager;
 
 defined( 'ABSPATH' ) || exit;
 

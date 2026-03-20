@@ -7,7 +7,9 @@
  * @package GHL_CRM_Integration
  */
 
-namespace GHL_CRM\Core;
+namespace GHL_CRM\API;
+
+use GHL_CRM\Core\SettingsManager;
 
 defined( 'ABSPATH' ) || exit;
 

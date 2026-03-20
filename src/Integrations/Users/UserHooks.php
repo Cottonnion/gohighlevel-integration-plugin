@@ -314,7 +314,7 @@ class UserHooks {
 		$existing_tags = [];
 		// Get contact ID for current location
 		$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
-		$contact_id  = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+		$contact_id  = \GHL_CRM\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 
 		// If this user just came from an inbound webhook, skip outbound profile sync to avoid loops
 		if ( $contact_id ) {
@@ -338,10 +338,10 @@ class UserHooks {
 			}
 		}
 
-		$profile_tags = \GHL_CRM\Core\TagManager::get_instance()->get_user_tag_ids( $user_id );
+		$profile_tags = \GHL_CRM\Sync\TagManager::get_instance()->get_user_tag_ids( $user_id );
 		if ( is_array( $profile_tags ) ) {
 			// Profile tags are now stored as IDs - convert to names for payload
-			$tag_manager            = \GHL_CRM\Core\TagManager::get_instance();
+			$tag_manager            = \GHL_CRM\Sync\TagManager::get_instance();
 			$sanitized_profile_tags = array_map( 'sanitize_text_field', $profile_tags );
 			$tag_ids                = array_filter(
 				$sanitized_profile_tags,
@@ -458,7 +458,7 @@ class UserHooks {
 		$location_id = $settings['location_id'] ?? ( $settings['oauth_location_id'] ?? '' );
 		$contact_id  = '';
 		if ( ! empty( $location_id ) ) {
-			$contact_id = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+			$contact_id = \GHL_CRM\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 		}
 
 		// Queue deletion with settings
@@ -496,7 +496,7 @@ class UserHooks {
 		$location_id = $settings['location_id'] ?? ( $settings['oauth_location_id'] ?? '' );
 		$contact_id  = '';
 		if ( ! empty( $location_id ) ) {
-			$contact_id = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+			$contact_id = \GHL_CRM\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 		}
 
 		// Queue deletion with settings (same as delete_user)

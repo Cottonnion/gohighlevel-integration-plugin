@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace GHL_CRM\Core\Settings;
 
 use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Core\TagManager;
+use GHL_CRM\Sync\TagManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

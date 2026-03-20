@@ -259,7 +259,7 @@ class RestAPIController {
 		}
 
 		try {
-			$tag_manager = \GHL_CRM\Core\TagManager::get_instance();
+			$tag_manager = \GHL_CRM\Sync\TagManager::get_instance();
 			$tags        = $tag_manager->get_tags( false );
 
 			if ( empty( $tags ) ) {

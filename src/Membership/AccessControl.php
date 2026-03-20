@@ -91,7 +91,7 @@ class AccessControl {
 	 * @return array Array of tag names
 	 */
 	public function get_user_tags( int $user_id ): array {
-		$tag_manager = \GHL_CRM\Core\TagManager::get_instance();
+		$tag_manager = \GHL_CRM\Sync\TagManager::get_instance();
 		$settings    = \GHL_CRM\Core\SettingsManager::get_instance();
 		$location_id = $settings->get_setting( 'location_id' ) ?: $settings->get_setting( 'oauth_location_id' );
 		$tags        = $tag_manager->get_user_tag_names( $user_id, $location_id );

@@ -1,9 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Core;
+namespace GHL_CRM\Frontend;
 
 use GHL_CRM\API\Resources\FormsResource;
+use GHL_CRM\Core\SettingsManager;
+use GHL_CRM\Integrations\Forms\FormSettings;
+use GHL_CRM\Sync\TagManager;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -79,7 +82,7 @@ class ShortcodeManager {
 		$form_id = $atts['id'];
 
 		// Check if form is logged-in only
-		$form_settings = \GHL_CRM\Core\FormSettings::get_instance();
+			$form_settings = FormSettings::get_instance();
 		if ( $form_settings->is_logged_only( $form_id ) && ! is_user_logged_in() ) {
 			// Return empty string - don't show form to non-logged-in users
 			return '';
@@ -295,7 +298,7 @@ class ShortcodeManager {
 		$has_parent_tag = false;
 		$parent_tag_id  = $settings_manager->get_setting( 'family_parent_tag' );
 		if ( ! empty( $parent_tag_id ) ) {
-			$tag_manager     = \GHL_CRM\Core\TagManager::get_instance();
+					$tag_manager     = TagManager::get_instance();
 			$parent_map      = $tag_manager->map_ids_to_names( [ (string) $parent_tag_id ] );
 			$parent_tag_name = $parent_map[ (string) $parent_tag_id ] ?? '';
 			$user_tag_names  = $tag_manager->get_user_tag_names( $user_id );

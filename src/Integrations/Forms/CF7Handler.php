@@ -7,7 +7,7 @@ defined( 'ABSPATH' ) || exit;
 
 use GHL_CRM\Core\AssetsManager;
 use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Core\TagManager;
+use GHL_CRM\Sync\TagManager;
 use GHL_CRM\Sync\QueueManager;
 use GHL_CRM\Sync\QueueProcessor;
 

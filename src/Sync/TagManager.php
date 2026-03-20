@@ -1,9 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Core;
+namespace GHL_CRM\Sync;
 
 use GHL_CRM\API\Client\Client;
+use GHL_CRM\Core\SettingsManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

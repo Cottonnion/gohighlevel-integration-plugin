@@ -9,7 +9,9 @@
  * @subpackage Core
  */
 
-namespace GHL_CRM\Core;
+namespace GHL_CRM\Core\Settings;
+
+use GHL_CRM\Core\SettingsManager;
 
 defined( 'ABSPATH' ) || exit;
 

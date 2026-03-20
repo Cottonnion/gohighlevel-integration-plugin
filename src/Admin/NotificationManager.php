@@ -12,7 +12,9 @@
 
 declare(strict_types=1);
 
-namespace GHL_CRM\Core;
+namespace GHL_CRM\Admin;
+
+use GHL_CRM\Core\SettingsManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

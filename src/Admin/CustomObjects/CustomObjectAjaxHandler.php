@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Core\Settings;
+namespace GHL_CRM\Admin\CustomObjects;
 
 use GHL_CRM\Core\SettingsManager;
 
@@ -102,39 +102,14 @@ class CustomObjectAjaxHandler {
 
 			$schemas = $custom_object_resource->get_schemas( ! $force_refresh );
 
-			$debug_data = [
-				'endpoint'       => $endpoint_value,
-				'full_url'       => 'https://services.gohighlevel.com/' . $endpoint_value,
-				'has_oauth'      => $oauth_status['connected'],
-				'has_manual_api' => ! empty( $settings['api_token'] ),
-				'location_id'    => $settings['location_id'] ?? 'not set',
-				'oauth_token'    => ! empty( $settings['oauth_access_token'] ) ? 'present' : 'not set',
-				'api_token'      => ! empty( $settings['api_token'] ) ? 'present' : 'not set',
-				'force_refresh'  => $force_refresh,
-				'cache_used'     => ! $force_refresh,
-				'schemas_count'  => count( $schemas ),
-				'raw_response'   => $schemas,
-			];
-
 			wp_send_json_success(
 				[
 					'schemas' => $schemas,
 					'count'   => count( $schemas ),
 					'cached'  => ! $force_refresh,
-					'debug'   => $debug_data,
 				]
 			);
 		} catch ( \Exception $e ) {
-			$error_debug = [
-				'exception_message' => $e->getMessage(),
-				'exception_file'    => $e->getFile(),
-				'exception_line'    => $e->getLine(),
-				'has_oauth'         => $oauth_status['connected'],
-				'has_manual_api'    => ! empty( $settings['api_token'] ),
-				'location_id'       => $settings['location_id'] ?? 'not set',
-				'oauth_token'       => ! empty( $settings['oauth_access_token'] ) ? 'present' : 'not set',
-				'api_token'         => ! empty( $settings['api_token'] ) ? 'present' : 'not set',
-			];
 
 			wp_send_json_error(
 				[
@@ -143,7 +118,6 @@ class CustomObjectAjaxHandler {
 						__( 'Failed to fetch Custom Objects: %s', 'ghl-crm-integration' ),
 						$e->getMessage()
 					),
-					'debug'   => $error_debug,
 				],
 				500
 			);

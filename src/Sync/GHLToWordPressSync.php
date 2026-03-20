@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace GHL_CRM\Sync;
 
 use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Core\TagManager;
+use GHL_CRM\Sync\TagManager;
 use GHL_CRM\API\Resources\ContactResource;
 use GHL_CRM\API\Client\Client;
 
@@ -473,7 +473,7 @@ class GHLToWordPressSync {
 		if ( ! empty( $tags ) && is_array( $tags ) ) {
 			// Use TagManager to store tags with the correct location-scoped meta key
 			// and automatically fire the ghl_crm_user_tags_updated hook on change.
-			\GHL_CRM\Core\TagManager::get_instance()->store_user_tags( $user_id, $tags );
+			\GHL_CRM\Sync\TagManager::get_instance()->store_user_tags( $user_id, $tags );
 		} elseif ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 				error_log(
 					sprintf(

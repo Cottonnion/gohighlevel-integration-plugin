@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace GHL_CRM\Admin\Profile;
 
 use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Core\TagManager;
+use GHL_CRM\Sync\TagManager;
 use GHL_CRM\API\Client\Client;
 use GHL_CRM\API\Resources\ContactResource;
 
@@ -287,7 +287,7 @@ class UserProfileFields {
 			array(
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_user_profile' ),
-				'tags'    => \GHL_CRM\Core\TagManager::get_instance()->get_tags_for_localization(),
+				'tags'    => \GHL_CRM\Sync\TagManager::get_instance()->get_tags_for_localization(),
 				'strings' => array(
 					'loading'        => __( 'Loading...', 'ghl-crm-integration' ),
 					'syncSuccess'    => __( 'User synced successfully!', 'ghl-crm-integration' ),
@@ -318,7 +318,7 @@ class UserProfileFields {
 
 		// Get GHL data
 		$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
-		$contact_id  = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user->ID, $location_id );
+		$contact_id  = \GHL_CRM\Sync\TagManager::get_instance()->get_user_contact_id( $user->ID, $location_id );
 
 		// Only show sync timestamps when the user actually has a contact on this location.
 		$last_sync       = $contact_id ? get_user_meta( $user->ID, '_ghl_last_sync', true ) : '';
@@ -711,7 +711,7 @@ class UserProfileFields {
 		if ( $new_ids !== $current_ids ) {
 			$stored_ids  = $tag_manager->store_user_tags( $user_id, $submitted_tags );
 			$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
-			$contact_id  = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+			$contact_id  = \GHL_CRM\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 
 			if ( ! empty( $contact_id ) ) {
 				$payload_tags = $tag_manager->prepare_tags_for_payload( $stored_ids, $normalized['pairs'] ?? [] );
@@ -762,7 +762,7 @@ class UserProfileFields {
 		}
 
 		$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
-		$contact_id  = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+		$contact_id  = \GHL_CRM\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 
 		if ( empty( $contact_id ) ) {
 			wp_send_json_error( [ 'message' => __( 'User not synced to GHL', 'ghl-crm-integration' ) ] );
@@ -886,7 +886,7 @@ class UserProfileFields {
 		}
 
 		try {
-			$auto_login_manager = \GHL_CRM\Core\AutoLoginManager::get_instance();
+			$auto_login_manager = \GHL_CRM\Auth\AutoLoginManager::get_instance();
 			$token_data         = $auto_login_manager->generate_token( $user_id );
 
 			// Get WordPress date/time format using SettingsManager (multisite-aware)

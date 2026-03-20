@@ -7,7 +7,7 @@
  * @package GHL_CRM_Integration
  */
 
-namespace GHL_CRM\Core;
+namespace GHL_CRM\Auth;
 
 defined( 'ABSPATH' ) || exit;
 

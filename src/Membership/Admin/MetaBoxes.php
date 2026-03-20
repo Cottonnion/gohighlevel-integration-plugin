@@ -133,7 +133,7 @@ class MetaBoxes {
 			array(
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_user_profile' ),
-				'tags'    => \GHL_CRM\Core\TagManager::get_instance()->get_tags_for_localization(),
+				'tags'    => \GHL_CRM\Sync\TagManager::get_instance()->get_tags_for_localization(),
 			),
 			GHL_CRM_VERSION
 		);

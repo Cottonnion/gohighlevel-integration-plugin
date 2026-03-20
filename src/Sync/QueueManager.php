@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace GHL_CRM\Sync;
 
-use GHL_CRM\Core\TagManager;
+use GHL_CRM\Sync\TagManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -821,7 +821,7 @@ class QueueManager {
 
 			// Send notification if max attempts reached (final failure)
 			if ( 'failed' === $status ) {
-				$notification_manager = \GHL_CRM\Core\NotificationManager::get_instance();
+				$notification_manager = \GHL_CRM\Admin\NotificationManager::get_instance();
 				$sync_type_label      = $this->get_friendly_sync_type_label( $item->item_type, $item->action );
 
 				$notification_manager->send_sync_error(
@@ -1199,7 +1199,7 @@ class QueueManager {
 
 		// Add cooldown to prevent notification spam (once per hour)
 		if ( $pending_count > $threshold && ! get_transient( 'ghl_crm_backlog_notified' ) ) {
-			$notification_manager = \GHL_CRM\Core\NotificationManager::get_instance();
+			$notification_manager = \GHL_CRM\Admin\NotificationManager::get_instance();
 			$notification_manager->send_queue_backlog( $pending_count );
 			// Set cooldown to prevent spam (1 hour)
 			set_transient( 'ghl_crm_backlog_notified', true, HOUR_IN_SECONDS );

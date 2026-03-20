@@ -140,7 +140,7 @@ class UserColumns {
 	private function render_contact_id_column( int $user_id ): string {
 		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 		$location_id      = $settings_manager->get_setting( 'location_id' ) ?: $settings_manager->get_setting( 'oauth_location_id' );
-		$contact_id       = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+		$contact_id       = \GHL_CRM\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 
 		if ( empty( $contact_id ) ) {
 			return '<span class="ghl-no-contact">—</span>';
@@ -186,7 +186,7 @@ class UserColumns {
 		$last_sync_time     = get_user_meta( $user_id, '_ghl_last_sync', true );
 		$settings_manager   = \GHL_CRM\Core\SettingsManager::get_instance();
 		$location_id        = $settings_manager->get_setting( 'location_id' ) ?: $settings_manager->get_setting( 'oauth_location_id' );
-		$contact_id         = \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+		$contact_id         = \GHL_CRM\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 
 		if ( empty( $contact_id ) ) {
 			// Not synced yet
@@ -258,7 +258,7 @@ class UserColumns {
 
 		switch ( $orderby ) {
 			case 'ghl_contact_id':
-				$query->set( 'meta_key', \GHL_CRM\Core\TagManager::get_instance()->get_user_contact_id_meta_key() );
+				$query->set( 'meta_key', \GHL_CRM\Sync\TagManager::get_instance()->get_user_contact_id_meta_key() );
 				$query->set( 'orderby', 'meta_value' );
 				break;
 

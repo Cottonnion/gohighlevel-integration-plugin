@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace GHL_CRM\Core;
 
+use GHL_CRM\Sync\TagManager;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -562,7 +564,7 @@ class AssetsManager {
 				'nonce'            => wp_create_nonce( 'ghl_crm_forms_nonce' ),
 				'whiteLabelDomain' => $white_label_domain,
 				'formSettings'     => $this->get_all_form_settings(),
-				'isPro'            => \GHL_CRM\Core\FormSettings::is_pro_active(),
+				'isPro'            => \GHL_CRM\Integrations\Forms\FormSettings::is_pro_active(),
 				'upgradeUrl'       => apply_filters( 'ghl_crm_upgrade_url', 'https://highlevelsync.com/upgrade-to-pro' ),
 				'strings'          => [
 					'errorLoad'        => __( 'Failed to load forms', 'ghl-crm-integration' ),
@@ -925,7 +927,7 @@ class AssetsManager {
 
 		// GHL Form Auto-fill (experimental - tests URL parameter pre-filling)
 		$user_data             = $this->get_current_user_data_for_autofill();
-		$form_settings_manager = \GHL_CRM\Core\FormSettings::get_instance();
+		$form_settings_manager = \GHL_CRM\Integrations\Forms\FormSettings::get_instance();
 		$all_form_settings     = $form_settings_manager->get_all_settings();
 
 		// Resolve custom parameters for each form
@@ -1059,7 +1061,7 @@ class AssetsManager {
 	 * @return array All form settings
 	 */
 	private function get_all_form_settings(): array {
-		$form_settings = \GHL_CRM\Core\FormSettings::get_instance();
+		$form_settings = \GHL_CRM\Integrations\Forms\FormSettings::get_instance();
 		return $form_settings->get_all_settings();
 	}
 

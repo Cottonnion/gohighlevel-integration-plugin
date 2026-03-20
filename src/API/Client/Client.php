@@ -445,7 +445,7 @@ class Client implements ClientInterface {
 									);
 
 									// Update all found users using TagManager for proper location-scoped storage
-									$tag_manager   = \GHL_CRM\Core\TagManager::get_instance();
+									$tag_manager   = \GHL_CRM\Sync\TagManager::get_instance();
 									$updated_count = 0;
 
 									foreach ( array_unique( $user_ids ) as $user_id ) {
@@ -517,7 +517,7 @@ class Client implements ClientInterface {
 												)
 											);
 
-											$tag_manager = \GHL_CRM\Core\TagManager::get_instance();
+											$tag_manager = \GHL_CRM\Sync\TagManager::get_instance();
 											foreach ( array_unique( $user_ids ) as $user_id ) {
 												$tag_manager->store_user_contact_id( (int) $user_id, $new_contact_id, $location_id );
 											}

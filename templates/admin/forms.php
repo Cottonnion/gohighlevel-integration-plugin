@@ -43,7 +43,7 @@ $white_label_domain = $settings['ghl_white_label_domain'] ?? '';
 	endif;
 
 	// Check scope access for Forms
-	\GHL_CRM\Core\ScopeChecker::render_scope_notice( 'forms' );
+	\GHL_CRM\API\ScopeChecker::render_scope_notice( 'forms' );
 	
 	// Helpful Information Notice
 	?>

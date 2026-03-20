@@ -146,7 +146,7 @@ class Restrictions {
 		if ( ! empty( $allowed_tags ) && is_array( $allowed_tags ) ) {
 			$user_id     = get_current_user_id();
 			$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
-			$user_tags   = \GHL_CRM\Core\TagManager::get_instance()->get_user_tag_names( $user_id, $location_id );
+			$user_tags   = \GHL_CRM\Sync\TagManager::get_instance()->get_user_tag_names( $user_id, $location_id );
 
 			if ( ! empty( $user_tags ) ) {
 				$allowed_lower = array_map( 'strtolower', $allowed_tags );

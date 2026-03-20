@@ -5,7 +5,7 @@ namespace GHL_CRM\Integrations\BuddyBoss;
 
 use GHL_CRM\API\Resources\CustomObjectResource;
 use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Core\TagManager;
+use GHL_CRM\Sync\TagManager;
 use GHL_CRM\Sync\QueueManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
