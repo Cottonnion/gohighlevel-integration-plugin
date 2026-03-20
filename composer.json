@@ -18,6 +18,11 @@
       "GHL_CRM\\": "src/"
     }
   },
+  "autoload-dev": {
+    "psr-4": {
+      "GHL_CRM\\Tests\\": "tests/"
+    }
+  },
   "config": {
     "optimize-autoloader": true,
     "sort-packages": true,
