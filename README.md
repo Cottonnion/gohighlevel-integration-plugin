@@ -4,7 +4,7 @@ Tags: gohighlevel, crm, woocommerce, buddyboss, learndash, membership, webhooks
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -16,7 +16,7 @@ A powerful WordPress plugin that seamlessly integrates GoHighLevel CRM with Word
 
 A powerful WordPress plugin that seamlessly integrates GoHighLevel CRM with WordPress, WooCommerce, BuddyBoss, and LearnDash. Features OAuth2 authentication, intelligent field mapping, automatic contact synchronization, role-based tagging, membership restrictions, webhook automation, custom objects, and comprehensive queue management.
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.1.2-blue.svg)
 ![WordPress](https://img.shields.io/badge/wordpress-5.8%2B-brightgreen.svg)
 ![PHP](https://img.shields.io/badge/php-7.4%2B-purple.svg)
 ![License](https://img.shields.io/badge/license-GPL--2.0%2B-red.svg)
@@ -736,7 +736,50 @@ We welcome contributions! Please follow these steps:
 
 ## 📝 Changelog
 
-### Version 1.0.0 - 2025-11-03
+### Version 1.1.2 - 2026-03-21
+
+**Maintenance Release**
+
+- 🔄 Version bump for Pro add-on 1.1.2 compatibility (LearnDash sync reliability fixes)
+
+### Version 1.1.1 - 2026-03-19
+
+**Quality & Reliability**
+
+- ✨ Centralized UserMetaSync class for cleaner post-sync logic
+- ✨ Asset auto-minification pipeline (`composer build`)
+- 🐛 Fixed WooCommerce product-tags queue routing
+- 🐛 Fixed empty tag sync failure
+- 🐛 Fixed tag overwrite on WooCommerce sync
+- 🧹 Removed dead code from QueueManager
+- 🛡️ Improved error catching with `\Throwable`
+
+### Version 1.0.2 - 2026-03-18
+
+**Stability Fixes**
+
+- 🔄 Version constants used everywhere for consistency
+- 🐛 Fixed user deletion sync (WP→GHL)
+- 🐛 Fixed webhook delete sync (GHL→WP)
+- 🐛 Fixed CF7 submission timing race condition
+- 🐛 Fixed Settings page jQuery crash on special characters
+- 🐛 Fixed WooCommerce tag overwrite
+- 🐛 Fixed tag display with special characters across 10 PHP + 4 JS files
+
+### Version 1.0.1 - 2026-03-17
+
+**New Features & Integrations**
+
+- ✨ LearnDash Course Progress Sync with debounce
+- ✨ Contact Form 7 Integration with per-form mapping
+- ✨ Sync Preview / Dry Run mode
+- ✨ Email Notification System (6 notification types)
+- ✨ Elementor Widget Restrictions
+- ✨ Gutenberg Restricted Content Block
+- 🐛 Fixed duplicate contact recovery
+- 🐛 Fixed ping-pong sync loops
+
+### Version 1.0.0 - 2026-01-01
 
 **Initial Release - Feature-Complete**
 

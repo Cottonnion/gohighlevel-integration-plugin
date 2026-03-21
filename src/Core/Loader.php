@@ -239,6 +239,7 @@ class Loader {
 		// Unschedule all Action Scheduler actions
 		\GHL_CRM\Sync\QueueManager::unschedule_actions();
 		\GHL_CRM\Core\Reporting\ReportingManager::get_instance()->unschedule_dispatch();
+		\GHL_CRM\API\Client\Client::unschedule_background_refresh();
 
 		// Unschedule cleanup (Action Scheduler)
 		if ( function_exists( 'as_unschedule_all_actions' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {

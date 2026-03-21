@@ -23,9 +23,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - Fallback: Manual Location API Key for simple setups
  *
  * Token Lifecycle:
- * - Proactive refresh 60s before expiry via ensure_fresh_access_token()
- * - Reactive refresh on 401/403 via handle_http_response() filter and request() retry
- * - Circuit breaker after 3 consecutive failures (5-minute cooldown)
+ * - Proactive refresh 30 min before expiry via ensure_fresh_access_token()
+ * - Scheduled background refresh via Action Scheduler (every 20 min)
+ * - Reactive refresh on 401/403 via request() retry
+ * - Circuit breaker after 5 consecutive failures (5-minute cooldown)
  * - Cross-process mutex lock prevents concurrent refresh races
  * - Reconnect API as emergency recovery when refresh proxy is unreachable
  *
@@ -109,7 +110,7 @@ class Client implements ClientInterface {
 	 * Unix timestamp when the current access token expires.
 	 *
 	 * Used by ensure_fresh_access_token() to trigger proactive refresh
-	 * 60 seconds before actual expiry.
+	 * 30 minutes before actual expiry.
 	 *
 	 * @var int
 	 */
@@ -157,7 +158,7 @@ class Client implements ClientInterface {
 	 *
 	 * @var int
 	 */
-	private const CIRCUIT_BREAKER_THRESHOLD = 3;
+	private const CIRCUIT_BREAKER_THRESHOLD = 5;
 
 	// =========================================================================
 	// Constants — Throttle & Locking
@@ -190,6 +191,30 @@ class Client implements ClientInterface {
 	 * @var int
 	 */
 	private const REFRESH_LOCK_TTL = 30;
+
+	/**
+	 * Seconds before token expiry to trigger proactive refresh.
+	 *
+	 * Set to 30 minutes to account for gaps between API requests
+	 * (e.g. 1-hour tag cache intervals).
+	 *
+	 * @var int
+	 */
+	private const PROACTIVE_REFRESH_BUFFER = 30 * MINUTE_IN_SECONDS;
+
+	/**
+	 * Action Scheduler hook for background token refresh.
+	 *
+	 * @var string
+	 */
+	public const SCHEDULED_REFRESH_HOOK = 'ghl_crm_refresh_oauth_token';
+
+	/**
+	 * How often (in seconds) the background refresh check runs.
+	 *
+	 * @var int
+	 */
+	private const SCHEDULED_REFRESH_INTERVAL = 20 * MINUTE_IN_SECONDS;
 
 	/**
 	 * OAuth2 refresh token used to obtain fresh access tokens.
@@ -254,6 +279,16 @@ class Client implements ClientInterface {
 	 */
 	private bool $skip_oauth_refresh = false;
 
+	/**
+	 * Flag to prevent duplicate 401 handling.
+	 *
+	 * When request() is retrying after a 401, this flag prevents
+	 * handle_http_response() from also attempting a refresh.
+	 *
+	 * @var bool
+	 */
+	private bool $is_retrying_after_refresh = false;
+
 	// =========================================================================
 	// Singleton
 	// =========================================================================
@@ -283,6 +318,7 @@ class Client implements ClientInterface {
 	private function __construct() {
 		$this->load_settings();
 		$this->init_hooks();
+		$this->maybe_schedule_background_refresh();
 	}
 
 	/**
@@ -299,6 +335,9 @@ class Client implements ClientInterface {
 	private function init_hooks(): void {
 		// Global HTTP response filter for automatic token refresh on ALL API calls
 		add_filter( 'http_response', [ $this, 'handle_http_response' ], 50, 3 );
+
+		// Register background token refresh handler
+		add_action( self::SCHEDULED_REFRESH_HOOK, [ $this, 'handle_scheduled_refresh' ] );
 	}
 
 	/**
@@ -345,6 +384,11 @@ class Client implements ClientInterface {
 		// Skip if it's a token request (avoid infinite loop)
 		if ( false !== strpos( $url, '/oauth/token' ) ||
 				false !== strpos( $url, '/oauth/reconnect' ) ) {
+			return $response;
+		}
+
+		// Skip if request() is already retrying after a refresh (prevent double handling)
+		if ( $this->is_retrying_after_refresh ) {
 			return $response;
 		}
 
@@ -852,6 +896,103 @@ class Client implements ClientInterface {
 	}
 
 	/**
+	 * Schedule a recurring background task to refresh the OAuth token.
+	 *
+	 * Uses Action Scheduler to run every 20 minutes. This ensures the token
+	 * is refreshed even if no user-facing API requests happen near expiry,
+	 * which was the root cause of disconnections on low-traffic sites.
+	 *
+	 * Only schedules if:
+	 * - Action Scheduler is available
+	 * - OAuth is configured with a refresh token
+	 * - No existing schedule is already active
+	 *
+	 * @return void
+	 */
+	private function maybe_schedule_background_refresh(): void {
+		// Only schedule if we have OAuth tokens and Action Scheduler is available
+		if ( empty( $this->refresh_token ) || ! function_exists( 'as_has_scheduled_action' ) ) {
+			return;
+		}
+
+		// Check if ActionScheduler is initialized (avoid premature scheduling)
+		if ( ! class_exists( 'ActionScheduler' ) || ! \ActionScheduler::is_initialized() ) {
+			return;
+		}
+
+		// Schedule recurring refresh if not already scheduled
+		if ( ! as_has_scheduled_action( self::SCHEDULED_REFRESH_HOOK, [], 'ghl-crm' ) ) {
+			as_schedule_recurring_action(
+				time() + self::SCHEDULED_REFRESH_INTERVAL,
+				self::SCHEDULED_REFRESH_INTERVAL,
+				self::SCHEDULED_REFRESH_HOOK,
+				[],
+				'ghl-crm'
+			);
+			$this->log_oauth_event(
+				'Scheduled background token refresh',
+				[ 'interval_min' => self::SCHEDULED_REFRESH_INTERVAL / MINUTE_IN_SECONDS ]
+			);
+		}
+	}
+
+	/**
+	 * Handle the scheduled background token refresh.
+	 *
+	 * Called by Action Scheduler every 20 minutes. Checks if the token
+	 * needs refreshing (within 2 hours of expiry) and refreshes if needed.
+	 *
+	 * This is the primary defense against token expiry on low-traffic sites
+	 * where the proactive per-request refresh may not fire in time.
+	 *
+	 * @return void
+	 */
+	public function handle_scheduled_refresh(): void {
+		// Reload settings to get latest token state
+		$this->reload_settings();
+
+		// Skip if OAuth is not configured
+		if ( ! $this->is_oauth_configured() || empty( $this->refresh_token ) ) {
+			$this->log_oauth_event( 'Scheduled refresh skipped: no OAuth tokens' );
+			return;
+		}
+
+		// Skip if token is still fresh (more than 2 hours until expiry)
+		$buffer = 2 * HOUR_IN_SECONDS;
+		if ( $this->access_token_expires_at > 0 && ( $this->access_token_expires_at - time() ) > $buffer ) {
+			return; // Token is still fresh, nothing to do
+		}
+
+		$this->log_oauth_event(
+			'Scheduled background refresh triggered',
+			[
+				'expires_at' => $this->access_token_expires_at,
+				'expires_in' => $this->access_token_expires_at - time(),
+			]
+		);
+
+		try {
+			$this->refresh_access_token();
+			$this->log_oauth_event( 'Scheduled background refresh succeeded', [ 'new_expires_at' => $this->access_token_expires_at ] );
+		} catch ( \Exception $e ) {
+			$this->log_oauth_event( 'Scheduled background refresh failed', [ 'error' => $e->getMessage() ], 'error' );
+		}
+	}
+
+	/**
+	 * Unschedule the background token refresh.
+	 *
+	 * Called on plugin deactivation or when OAuth is disconnected.
+	 *
+	 * @return void
+	 */
+	public static function unschedule_background_refresh(): void {
+		if ( function_exists( 'as_unschedule_all_actions' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {
+			as_unschedule_all_actions( self::SCHEDULED_REFRESH_HOOK, [], 'ghl-crm' );
+		}
+	}
+
+	/**
 	 * Ensure access token is still valid; refresh if close to expiry.
 	 *
 	 * This is a best-effort proactive refresh. If it fails (e.g. circuit breaker
@@ -866,8 +1007,9 @@ class Client implements ClientInterface {
 			return;
 		}
 
-		// Refresh one minute before expiry to avoid mid-request failures
-		$refresh_threshold = $this->access_token_expires_at - 60;
+		// Refresh 30 minutes before expiry to account for gaps between requests
+		// (e.g. tag cache is 1 hour, so a 60s buffer would miss the window entirely)
+		$refresh_threshold = $this->access_token_expires_at - self::PROACTIVE_REFRESH_BUFFER;
 		if ( time() >= $refresh_threshold ) {
 			try {
 				$this->log_oauth_event( 'Proactive refresh before expiry', [ 'expires_at' => $this->access_token_expires_at ] );
@@ -1025,9 +1167,9 @@ class Client implements ClientInterface {
 			);
 		}
 
-		// Throttle repeated attempts within 30 seconds to avoid hammering
+		// Throttle repeated attempts within 60 seconds to avoid hammering
 		$now = time();
-		if ( self::$last_refresh_attempt_ts && ( $now - self::$last_refresh_attempt_ts ) < 30 ) {
+		if ( self::$last_refresh_attempt_ts && ( $now - self::$last_refresh_attempt_ts ) < 60 ) {
 			$this->log_oauth_event(
 				'Refresh skipped: throttled',
 				[
@@ -1049,13 +1191,31 @@ class Client implements ClientInterface {
 		$lock_owner = get_transient( self::REFRESH_LOCK_KEY );
 		if ( $lock_owner && getmypid() !== $lock_owner ) {
 			$this->log_oauth_event( 'Refresh deferred: another process holds the lock', [ 'lock_owner' => $lock_owner ] );
-			// Wait briefly for the other process to finish, then reload tokens from DB
-			usleep( 500000 ); // 0.5 seconds
-			$this->reload_settings();
+			// Wait for the other process to finish, then reload tokens from DB
+			// Use progressive waits: 1s, then 2s, then check
+			for ( $wait_attempt = 0; $wait_attempt < 3; $wait_attempt++ ) {
+				usleep( ( $wait_attempt + 1 ) * 1000000 ); // 1s, 2s, 3s
+				$this->reload_settings();
 
-			// If the other process succeeded, we now have fresh tokens
+				// If the other process succeeded, we now have fresh tokens
+				if ( $this->access_token_expires_at > time() + 60 ) {
+					$this->log_oauth_event( 'Refresh resolved by another process', [ 'expires_at' => $this->access_token_expires_at ] );
+					return [
+						'access_token'  => $this->access_token,
+						'refresh_token' => $this->refresh_token,
+					];
+				}
+
+				// Check if lock was released (other process finished)
+				if ( ! get_transient( self::REFRESH_LOCK_KEY ) ) {
+					break;
+				}
+			}
+
+			// After waiting, reload one more time to check
+			$this->reload_settings();
 			if ( $this->access_token_expires_at > time() + 60 ) {
-				$this->log_oauth_event( 'Refresh resolved by another process', [ 'expires_at' => $this->access_token_expires_at ] );
+				$this->log_oauth_event( 'Refresh resolved by another process after wait', [ 'expires_at' => $this->access_token_expires_at ] );
 				return [
 					'access_token'  => $this->access_token,
 					'refresh_token' => $this->refresh_token,
@@ -1534,9 +1694,14 @@ class Client implements ClientInterface {
 				$this->save_oauth_tokens();
 				$this->log_oauth_event( 'Retrying request after 401 with refreshed token', [ 'url' => $url ] );
 
+				// Set flag to prevent handle_http_response from also attempting refresh
+				$this->is_retrying_after_refresh = true;
+
 				// Retry the request with new token
 				$args['headers']['Authorization'] = 'Bearer ' . $this->access_token;
 				$response                         = wp_remote_request( $url, $args );
+
+				$this->is_retrying_after_refresh = false;
 
 				if ( ! is_wp_error( $response ) ) {
 					$status_code                 = wp_remote_retrieve_response_code( $response );
@@ -1545,20 +1710,21 @@ class Client implements ClientInterface {
 					$this->last_response_headers = $headers->getAll();
 				}
 			} catch ( ApiException $e ) {
+				$this->is_retrying_after_refresh = false;
+
 				// Refresh failed — reload settings to check if another process saved valid tokens
 				$this->reload_settings();
 				$this->log_oauth_event(
 					'Refresh failed in request() 401 handler, reloaded settings',
 					[
-						'error'        => $e->getMessage(),
-						'has_token'    => ! empty( $this->access_token ),
-						'expires_at'   => $this->access_token_expires_at,
+						'error'      => $e->getMessage(),
+						'has_token'  => ! empty( $this->access_token ),
+						'expires_at' => $this->access_token_expires_at,
 					]
 				);
-				// Only clear tokens if they are genuinely expired (not just refreshed by another process)
-				if ( empty( $this->access_token ) || $this->access_token_expires_at <= time() ) {
-					$this->clear_oauth_tokens();
-				}
+				// NEVER clear tokens on temporary failures (timeout, 5xx, throttle)
+				// Only clear_oauth_tokens() is called on invalid_grant inside refresh_access_token()
+				// Keeping the refresh token allows recovery on the next attempt
 			}
 		}
 
@@ -1637,6 +1803,9 @@ class Client implements ClientInterface {
 
 		// Clear circuit breaker when disconnecting to avoid confusing errors
 		$this->reset_circuit_breaker();
+
+		// Unschedule background refresh since we no longer have tokens
+		self::unschedule_background_refresh();
 	}
 
 	// =========================================================================

@@ -2,6 +2,12 @@
 
 All notable changes to GoHighLevel CRM Integration will be documented in this file.
 
+## [1.1.2] - 2026-03-21
+
+### Improved
+
+- **Compatibility** — Version bump for Pro add-on 1.1.2 compatibility (LearnDash sync reliability fixes).
+
 ## [1.1.1] - 2026-03-19
 
 ### Added
