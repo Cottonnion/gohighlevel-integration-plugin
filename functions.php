@@ -109,7 +109,8 @@ if ( ! function_exists( 'ghl_crm_add_tags_to_user' ) ) {
 		$contact_id = $tag_manager->get_user_contact_id( $user_id, $location_id );
 
 		if ( ! $contact_id ) {
-			$pending_tags = get_user_meta( $user_id, '_ghl_pending_tags', true );
+			$pending_key  = $tag_manager->get_pending_tags_meta_key( $location_id );
+			$pending_tags = get_user_meta( $user_id, $pending_key, true );
 			$pending_tags = is_array( $pending_tags ) ? $pending_tags : [];
 
 			$merged_tags = array_values( array_unique( array_merge( $pending_tags, $normalized['ids'] ) ) );
@@ -118,7 +119,7 @@ if ( ! function_exists( 'ghl_crm_add_tags_to_user' ) ) {
 				return false;
 			}
 
-			update_user_meta( $user_id, '_ghl_pending_tags', $merged_tags );
+			update_user_meta( $user_id, $pending_key, $merged_tags );
 
 			return true;
 		}

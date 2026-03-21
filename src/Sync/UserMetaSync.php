@@ -182,7 +182,8 @@ class UserMetaSync {
 		}
 
 		// Regular pending tags.
-		$pending_tags = get_user_meta( $user_id, '_ghl_pending_tags', true );
+		$pending_key  = $this->tag_manager->get_pending_tags_meta_key();
+		$pending_tags = get_user_meta( $user_id, $pending_key, true );
 		if ( is_array( $pending_tags ) && ! empty( $pending_tags ) ) {
 			$normalized   = $this->tag_manager->normalize_tag_input( $pending_tags );
 			$payload_tags = $this->tag_manager->prepare_tags_for_payload( $normalized['ids'], $normalized['pairs'] );
@@ -200,11 +201,12 @@ class UserMetaSync {
 				);
 			}
 
-			delete_user_meta( $user_id, '_ghl_pending_tags' );
+			delete_user_meta( $user_id, $pending_key );
 		}
 
 		// Family-inherited pending tags.
-		$family_tags = get_user_meta( $user_id, '_ghl_pending_family_tags', true );
+		$family_key  = $this->tag_manager->get_pending_family_tags_meta_key();
+		$family_tags = get_user_meta( $user_id, $family_key, true );
 		if ( is_array( $family_tags ) && ! empty( $family_tags ) ) {
 			$payload_tags = $this->tag_manager->prepare_tags_for_payload( $family_tags );
 
@@ -219,7 +221,7 @@ class UserMetaSync {
 				]
 			);
 
-			delete_user_meta( $user_id, '_ghl_pending_family_tags' );
+			delete_user_meta( $user_id, $family_key );
 		}
 	}
 
@@ -345,7 +347,7 @@ class UserMetaSync {
 					}
 
 					if ( ! empty( $contact['type'] ) ) {
-						update_user_meta( $user_id, '_ghl_contact_type', $contact['type'] );
+						update_user_meta( $user_id, TagManager::scoped_meta_key( '_ghl_contact_type' ), $contact['type'] );
 					}
 				}
 			}

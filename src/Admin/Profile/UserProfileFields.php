@@ -942,7 +942,7 @@ class UserProfileFields {
 
 			// Update contact type if available
 			if ( ! empty( $contact['type'] ) ) {
-				update_user_meta( $user_id, '_ghl_contact_type', $contact['type'] );
+				update_user_meta( $user_id, TagManager::scoped_meta_key( '_ghl_contact_type' ), $contact['type'] );
 			}
 
 			return true;
@@ -1016,7 +1016,7 @@ class UserProfileFields {
 
 			// Update contact type if available
 			if ( ! empty( $contact['type'] ) ) {
-				update_user_meta( $user_id, '_ghl_contact_type', $contact['type'] );
+				update_user_meta( $user_id, TagManager::scoped_meta_key( '_ghl_contact_type' ), $contact['type'] );
 			}
 
 			wp_send_json_success(

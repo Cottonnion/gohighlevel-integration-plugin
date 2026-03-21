@@ -60,7 +60,7 @@ class AccessControl {
 		}
 
 		// Get required tags
-		$required_tags = get_post_meta( $post_id, '_ghl_required_tags', true );
+		$required_tags = get_post_meta( $post_id, \GHL_CRM\Sync\TagManager::scoped_meta_key( '_ghl_required_tags' ), true );
 		if ( ! is_array( $required_tags ) || empty( $required_tags ) ) {
 			return true; // No tags set, allow access
 		}
@@ -216,7 +216,7 @@ class AccessControl {
 	public function get_restriction_details( int $post_id ): array {
 		return [
 			'type'         => get_post_meta( $post_id, '_ghl_restriction_type', true ),
-			'tags'         => get_post_meta( $post_id, '_ghl_required_tags', true ),
+			'tags'         => get_post_meta( $post_id, \GHL_CRM\Sync\TagManager::scoped_meta_key( '_ghl_required_tags' ), true ),
 			'redirect_url' => get_post_meta( $post_id, '_ghl_redirect_url', true ),
 		];
 	}

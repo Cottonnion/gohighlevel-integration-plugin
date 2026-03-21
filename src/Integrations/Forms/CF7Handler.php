@@ -182,7 +182,7 @@ class CF7Handler {
 	 * @return array Form config with defaults.
 	 */
 	private function get_form_config( int $form_id ): array {
-		$config = get_post_meta( $form_id, self::META_KEY, true );
+		$config = get_post_meta( $form_id, \GHL_CRM\Sync\TagManager::scoped_meta_key( self::META_KEY ), true );
 
 		$defaults = [
 			'enabled'       => false,
@@ -250,7 +250,7 @@ class CF7Handler {
 			'update_exists' => $update_exists,
 		];
 
-		update_post_meta( $form_id, self::META_KEY, $config );
+		update_post_meta( $form_id, \GHL_CRM\Sync\TagManager::scoped_meta_key( self::META_KEY ), $config );
 	}
 
 	/**

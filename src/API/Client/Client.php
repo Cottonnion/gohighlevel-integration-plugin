@@ -627,6 +627,21 @@ class Client implements ClientInterface {
 			}
 
 			if ( $is_token_error ) {
+				$this->log_oauth_event(
+					'401/403 token error — about to attempt refresh',
+					[
+						'url'                    => $url,
+						'response_code'          => $response_code,
+						'error_message'          => $error_message,
+						'has_refresh_token'      => ! empty( $this->refresh_token ),
+						'location_id'            => $this->location_id ?? '(none)',
+						'access_token_expires_at'=> $this->access_token_expires_at ?? 0,
+						'now'                    => time(),
+						'last_refresh_ts'        => self::$last_refresh_attempt_ts,
+						'last_refresh_error'     => self::$last_refresh_error,
+					],
+					'warning'
+				);
 				try {
 					// Only attempt to refresh if we have OAuth tokens
 					if ( ! empty( $this->refresh_token ) ) {
@@ -642,8 +657,12 @@ class Client implements ClientInterface {
 						// Update authorization header with new token
 						$args['headers']['Authorization'] = 'Bearer ' . $this->access_token;
 
-						// Retry the original request
-						return wp_remote_request( $url, $args );
+						// Prevent handle_http_response from firing again on the retry
+						$this->is_retrying_after_refresh = true;
+						$retry_response                  = wp_remote_request( $url, $args );
+						$this->is_retrying_after_refresh = false;
+
+						return $retry_response;
 					}
 					// If no refresh token (manual API key), just return the error response
 					return $response;
@@ -1123,6 +1142,25 @@ class Client implements ClientInterface {
 	 * @throws ApiException On all recovery paths exhausted.
 	 */
 	public function refresh_access_token(): array {
+		$this->log_oauth_event(
+			'refresh_access_token() ENTER',
+			[
+				'has_refresh_token'       => ! empty( $this->refresh_token ),
+				'has_access_token'        => ! empty( $this->access_token ),
+				'access_token_expires_at' => $this->access_token_expires_at ?? 0,
+				'expires_in_seconds'      => ( $this->access_token_expires_at ?? 0 ) - time(),
+				'location_id'             => $this->location_id ?? '(none)',
+				'circuit_breaker_open'    => $this->is_circuit_breaker_open(),
+				'circuit_breaker_data'    => get_transient( self::CIRCUIT_BREAKER_KEY ),
+				'refresh_lock_owner'      => get_transient( self::REFRESH_LOCK_KEY ),
+				'my_pid'                  => getmypid(),
+				'static_last_refresh_ts'  => self::$last_refresh_attempt_ts,
+				'static_last_error'       => self::$last_refresh_error,
+				'time_since_last_refresh' => self::$last_refresh_attempt_ts ? ( time() - self::$last_refresh_attempt_ts ) : null,
+			],
+			'warning'
+		);
+
 		if ( empty( $this->refresh_token ) ) {
 			// If circuit breaker is open but no tokens exist, clear it to avoid confusion
 			if ( $this->is_circuit_breaker_open() ) {
@@ -1170,18 +1208,23 @@ class Client implements ClientInterface {
 		// Throttle repeated attempts within 60 seconds to avoid hammering
 		$now = time();
 		if ( self::$last_refresh_attempt_ts && ( $now - self::$last_refresh_attempt_ts ) < 60 ) {
+			$throttle_message = self::$last_refresh_error
+				? sprintf( esc_html__( 'Recent refresh attempt failed: %s', 'ghl-crm-integration' ), self::$last_refresh_error )
+				: esc_html__( 'Recent refresh attempt in progress or just failed. Reconnect required.', 'ghl-crm-integration' );
 			$this->log_oauth_event(
-				'Refresh skipped: throttled',
+				'Refresh THROTTLED — throwing exception',
 				[
-					'seconds_since_last' => $now - self::$last_refresh_attempt_ts,
-					'last_error'         => self::$last_refresh_error,
-				]
+					'seconds_since_last'  => $now - self::$last_refresh_attempt_ts,
+					'last_refresh_ts'     => self::$last_refresh_attempt_ts,
+					'last_error'          => self::$last_refresh_error,
+					'has_refresh_token'   => ! empty( $this->refresh_token ),
+					'location_id'         => $this->location_id ?? '(none)',
+					'throttle_message'    => $throttle_message,
+					'backtrace'           => wp_debug_backtrace_summary(),
+				],
+				'error'
 			);
-			throw new ApiException(
-				self::$last_refresh_error
-					? sprintf( esc_html__( 'Recent refresh attempt failed: %s', 'ghl-crm-integration' ), self::$last_refresh_error )
-					: esc_html__( 'Recent refresh attempt in progress or just failed. Reconnect required.', 'ghl-crm-integration' )
-			);
+			throw new ApiException( $throttle_message );
 		}
 
 		self::$last_refresh_attempt_ts = $now;
@@ -1504,6 +1547,12 @@ class Client implements ClientInterface {
 	 */
 	public function post( string $endpoint, array $data = [], bool $include_location_id = true ): array {
 		$url = $this->build_url( $endpoint, [], $include_location_id );
+
+		// GHL API requires locationId in the POST body for resource creation.
+		if ( $include_location_id && ! empty( $this->location_id ) && ! isset( $data['locationId'] ) ) {
+			$data['locationId'] = $this->location_id;
+		}
+
 		return $this->request( 'POST', $url, $data );
 	}
 

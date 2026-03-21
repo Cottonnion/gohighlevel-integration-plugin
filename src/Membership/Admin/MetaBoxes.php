@@ -191,7 +191,7 @@ class MetaBoxes {
 	public function render_membership_meta_box( \WP_Post $post ): void {
 		// Get saved values
 		$restriction_type = get_post_meta( $post->ID, '_ghl_restriction_type', true );
-		$required_tags    = get_post_meta( $post->ID, '_ghl_required_tags', true );
+		$required_tags    = get_post_meta( $post->ID, \GHL_CRM\Sync\TagManager::scoped_meta_key( '_ghl_required_tags' ), true );
 		$redirect_url     = get_post_meta( $post->ID, '_ghl_redirect_url', true );
 
 		if ( ! is_array( $required_tags ) ) {
@@ -333,7 +333,7 @@ class MetaBoxes {
 		$required_tags = isset( $_POST['ghl_required_tags'] ) && is_array( $_POST['ghl_required_tags'] )
 			? array_map( 'sanitize_text_field', wp_unslash( $_POST['ghl_required_tags'] ) )
 			: [];
-		update_post_meta( $post_id, '_ghl_required_tags', $required_tags );
+		update_post_meta( $post_id, \GHL_CRM\Sync\TagManager::scoped_meta_key( '_ghl_required_tags' ), $required_tags );
 
 		// Save redirect URL
 		$redirect_url = isset( $_POST['ghl_redirect_url'] ) ? esc_url_raw( wp_unslash( $_POST['ghl_redirect_url'] ) ) : '';

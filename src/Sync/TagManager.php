@@ -103,10 +103,34 @@ class TagManager {
 
 		return self::$instance;
 	}
-
+	
 	// =========================================================================
 	// Tag Retrieval & Cache
 	// =========================================================================
+	
+	/**
+	 * Append the current location ID to a base meta key.
+	 *
+	 * Use this for any post_meta or user_meta key that stores GHL tag IDs
+	 * so that switching locations doesn't cause cross-contamination.
+	 *
+	 * Example: scoped_meta_key('_ghl_purchase_tags') → '_ghl_purchase_tags_abc123'
+	 *
+	 * @since 1.1.4
+	 * @param string      $base_key    The base meta key without location suffix.
+	 * @param string|null $location_id Optional explicit location. Defaults to current.
+	 * @return string The location-scoped meta key.
+	 */
+	public static function scoped_meta_key( string $base_key, ?string $location_id = null ): string {
+		if ( null === $location_id ) {
+			try {
+				$location_id = (string) ( SettingsManager::get_instance()->get_setting( 'location_id' ) ?? '' );
+			} catch ( \Throwable $e ) {
+				$location_id = '';
+			}
+		}
+		return $location_id ? $base_key . '_' . $location_id : $base_key;
+	}
 
 	/**
 	 * Retrieve tag objects from the GHL API or transient cache.
@@ -877,5 +901,41 @@ class TagManager {
 		$ids = $this->get_user_tag_ids( $user_id, $location_id );
 
 		return $this->convert_ids_to_names( $ids );
+	}
+
+	// =========================================================================
+	// User Meta — Pending Tags (Location-Scoped)
+	// =========================================================================
+
+	/**
+	 * Build the location-scoped meta key for pending tags.
+	 *
+	 * Format: _ghl_pending_tags_{location_id}
+	 *
+	 * @since 1.1.4
+	 * @param string|null $location_id GHL location ID. Defaults to the current configured location.
+	 * @return string Meta key.
+	 */
+	public function get_pending_tags_meta_key( ?string $location_id = null ): string {
+		if ( null === $location_id ) {
+			$location_id = $this->settings_manager->get_setting( 'location_id' );
+		}
+		return '_ghl_pending_tags_' . $location_id;
+	}
+
+	/**
+	 * Build the location-scoped meta key for pending family tags.
+	 *
+	 * Format: _ghl_pending_family_tags_{location_id}
+	 *
+	 * @since 1.1.4
+	 * @param string|null $location_id GHL location ID. Defaults to the current configured location.
+	 * @return string Meta key.
+	 */
+	public function get_pending_family_tags_meta_key( ?string $location_id = null ): string {
+		if ( null === $location_id ) {
+			$location_id = $this->settings_manager->get_setting( 'location_id' );
+		}
+		return '_ghl_pending_family_tags_' . $location_id;
 	}
 }

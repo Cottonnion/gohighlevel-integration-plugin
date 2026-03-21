@@ -92,6 +92,9 @@ class RoleTagsManager {
 		// AJAX handlers for bulk operations
 		add_action( 'wp_ajax_ghl_crm_bulk_add_role_tags', [ $this, 'ajax_bulk_add_role_tags' ] );
 		add_action( 'wp_ajax_ghl_crm_bulk_remove_role_tags', [ $this, 'ajax_bulk_remove_role_tags' ] );
+
+		// Protect role-based tags from removal by other sources (e.g. group leave).
+		add_filter( 'ghl_crm_tags_protected_from_removal', [ $this, 'protect_role_tags' ], 10, 4 );
 	}
 
 	/**
@@ -563,6 +566,34 @@ class RoleTagsManager {
 	 *
 	 * @return void
 	 */
+	/**
+	 * Claim tags that the user's current roles provide.
+	 *
+	 * Hooked to `ghl_crm_tags_protected_from_removal` — prevents other sources
+	 * from removing tags that belong to the user's active WordPress role(s).
+	 *
+	 * @since 1.1.3
+	 * @param array  $protected Tags already protected by other sources.
+	 * @param int    $user_id   WordPress user ID.
+	 * @param string $source    Source requesting removal.
+	 * @param int    $source_id Source-specific ID.
+	 * @return array Merged protected tags.
+	 */
+	public function protect_role_tags( array $protected, int $user_id, string $source, int $source_id ): array {
+		$role_tags = $this->get_user_role_tags( $user_id );
+
+		if ( ! empty( $role_tags ) ) {
+			error_log( sprintf(
+				'[GHL RoleTags] User %d — protecting role tags: [%s]',
+				$user_id,
+				implode( ', ', $role_tags )
+			) );
+			$protected = array_merge( $protected, $role_tags );
+		}
+
+		return $protected;
+	}
+
 	public static function init(): void {
 		self::get_instance();
 	}
