@@ -103,7 +103,7 @@ class ElementorConditions {
 		$element->start_controls_section(
 			'ghl_restriction_section',
 			[
-				'label' => __( 'GoHighLevel Restrictions', 'ghl-crm-integration' ),
+				'label' => __( 'GHL Conditional Display', 'ghl-crm-integration' ),
 				'tab'   => Controls_Manager::TAB_ADVANCED,
 			]
 		);
