@@ -52,6 +52,7 @@
     const $clearCacheBtn = jQuery("#ghl-clear-cache");
     const $testConnBtn = jQuery("#ghl-test-connection");
     const $refreshMetaBtn = jQuery("#ghl-refresh-tags-fields");
+    const $reconnectBtn = jQuery("#ghl-reconnect-account");
     const i18n = ghl_crm_dashboard_js_data.i18n || {};
 
     if ($manualSyncBtn.length) {
@@ -186,6 +187,35 @@
               response?.data?.message ||
               i18n.refreshMetadataFailed ||
               "Failed to refresh tags and fields."
+            );
+          },
+          ajaxUrl: ajaxEndpoint,
+        });
+      });
+    }
+
+    if ($reconnectBtn.length) {
+      $reconnectBtn.on("click", function (event) {
+        event.preventDefault();
+        handleQuickAction(jQuery(this), {
+          action: "ghl_crm_refresh_access_token",
+          data: {
+            action: "ghl_crm_refresh_access_token",
+            nonce: ghl_crm_dashboard_js_data.settingsNonce,
+          },
+          loadingText: "Reconnecting...",
+          successMessage: function (response) {
+            // Reload page after short delay so the user sees fresh token state
+            setTimeout(function () {
+              window.location.reload();
+            }, 1500);
+            return (
+              response?.data?.message || "Account reconnected successfully!"
+            );
+          },
+          errorMessage: function (response) {
+            return (
+              response?.data?.message || "Failed to reconnect account."
             );
           },
           ajaxUrl: ajaxEndpoint,

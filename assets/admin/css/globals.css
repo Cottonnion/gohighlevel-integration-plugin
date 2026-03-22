@@ -746,16 +746,16 @@ span.select2-search.select2-search--inline {
 
 /* Button Secondary Variant - Modern Flat Design */
 .ghl-button-secondary {
-	padding: 11px 22px;
-	border: none;
-	background: #edf2f7;
-	color: #2d3748;
-	border-radius: 6px;
-	font-size: 14px;
-	font-weight: 600;
-	letter-spacing: 0.3px;
-	transition: all 0.2s ease;
-	cursor: pointer;
+    padding: 8px 18px;
+    border: none;
+    background: #edf2f7;
+    color: #2d3748;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    transition: all 0.2s ease;
+    cursor: pointer;
 }
 
 .ghl-button-secondary:hover {
