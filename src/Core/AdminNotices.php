@@ -91,6 +91,15 @@ class AdminNotices {
 	 * @return void
 	 */
 	public function add_notice( string $message, string $type = 'info', bool $dismissible = true, bool $global = false ): void {
+		$notices = $this->get_stored_notices();
+
+		// Deduplicate: skip if an identical message+type already exists
+		foreach ( $notices as $existing ) {
+			if ( ( $existing['message'] ?? '' ) === $message && ( $existing['type'] ?? '' ) === $type ) {
+				return;
+			}
+		}
+
 		$notice = [
 			'message'     => $message,
 			'type'        => $type,
@@ -99,7 +108,6 @@ class AdminNotices {
 			'timestamp'   => time(),
 		];
 
-		$notices   = $this->get_stored_notices();
 		$notices[] = $notice;
 
 		// Use site transient for multisite compatibility
