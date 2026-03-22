@@ -122,12 +122,12 @@ class MenuManager {
 
 		$page_hook = add_menu_page(
 			__( 'GoHighLevel CRM', 'ghl-crm-integration' ),
-			__( 'GoHighLevel', 'ghl-crm-integration' ),
+			__( 'GHL Bridge', 'ghl-crm-integration' ),
 			'manage_options',
 			'ghl-crm-admin',
 			[ $this, 'render_spa_app' ],
 			'dashicons-randomize',
-			58
+			10
 		);
 
 		remove_submenu_page( 'ghl-crm-admin', 'ghl-crm-admin' );
