@@ -2,6 +2,30 @@
 
 All notable changes to GoHighLevel CRM Integration will be documented in this file.
 
+## [1.1.3] - 2026-03-22
+
+### Fixed
+
+- **Action Scheduler Timing Race** — Scheduled OAuth token refresh was never registering because Action Scheduler initializes at `init` priority 1 while plugin components loaded at priority 0. Deferred scheduling to `action_scheduler_init` hook.
+- **Cron/CLI OAuth Timeout** — Cron and WP-CLI requests now receive 15s timeout (previously got 8s frontend timeout), preventing token refresh failures on slow connections.
+- **Cascading Refresh Failures** — Added per-request `$refresh_failed_this_request` flag to prevent retry loops within the same PHP process.
+- **Log Flood Prevention** — Added 30-second deduplication window in FileLogger to suppress identical repeated log entries.
+
+### Improved
+
+- **Scheduled Refresh Window** — Widened from 2-hour to 12-hour buffer before token expiry, ensuring low-traffic sites refresh in time.
+- **cURL Timeout Retry** — Auto-retry on cURL error 28 with 25s timeout before falling back to reconnect flow.
+- **Reconnect Endpoint Timeout** — Bumped from 15s to 25s for more reliable proxy communication.
+- **Action Scheduler Guards** — Added `ActionScheduler::is_initialized()` checks to NotificationManager, ReportingManager, and QueueManager scheduling methods.
+- **Token Expiry Display** — Connection status now shows exact HH:MM:SS countdown instead of approximate `human_time_diff`.
+
+### Added
+
+- **Reconnect Account Button** — Quick action on reports dashboard to manually trigger OAuth token refresh.
+- **GHL Quick Links** — Direct link to GoHighLevel dashboard from reports page.
+- **Compound Tag Conditions** — Gutenberg blocks and Elementor widgets now support AND/OR/NOT logic for tag-based content restriction.
+- **Elementor Widget Rename** — "GHL Restricted Content" renamed to "GHL Content" for clarity.
+
 ## [1.1.2] - 2026-03-21
 
 ### Improved

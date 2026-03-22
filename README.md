@@ -4,7 +4,7 @@ Tags: gohighlevel, crm, woocommerce, buddyboss, learndash, membership, webhooks
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.1.2
+Stable tag: 1.1.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -735,6 +735,24 @@ We welcome contributions! Please follow these steps:
 - Ensure backward compatibility
 
 ## 📝 Changelog
+
+### Version 1.1.3 - 2026-03-22
+
+**OAuth Stability & Dashboard UX**
+
+- 🐛 Fixed Action Scheduler timing race — scheduled token refresh was never registering (AS init at priority 1, plugin at priority 0)
+- 🐛 Fixed cron/CLI OAuth timeout — cron and WP-CLI now get 15s timeout instead of 8s frontend timeout
+- 🔄 Widened scheduled refresh window from 2h → 12h buffer before token expiry
+- 🔄 Added auto-retry on cURL timeout (error 28) with 25s timeout before fallback
+- 🔄 Bumped reconnect endpoint timeout from 15s → 25s
+- 🛡️ Added Action Scheduler readiness guards to NotificationManager, ReportingManager, QueueManager
+- 🛡️ Added per-request refresh failure flag to prevent cascading retry loops
+- 🛡️ Added log deduplication (30s window) in FileLogger
+- ✨ Added "Reconnect Account" quick action button on dashboard
+- ✨ Token expiry now shows exact HH:MM:SS instead of approximate "24 hours"
+- 🎨 Elementor widget renamed from "GHL Restricted Content" to "GHL Content"
+- 🎨 Added GHL Quick Links to reports dashboard
+- ✨ Gutenberg & Elementor compound AND/OR/NOT tag conditions
 
 ### Version 1.1.2 - 2026-03-21
 
