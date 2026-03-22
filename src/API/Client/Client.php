@@ -130,6 +130,16 @@ class Client implements ClientInterface {
 	 */
 	private static ?string $last_refresh_error = null;
 
+	/**
+	 * Whether a refresh failure has already been handled in this request.
+	 *
+	 * Prevents multiple 401/403 responses in the same PHP process from
+	 * each independently attempting a refresh and generating admin notices.
+	 *
+	 * @var bool
+	 */
+	private static bool $refresh_failed_this_request = false;
+
 	// =========================================================================
 	// Constants — Circuit Breaker
 	// =========================================================================
@@ -627,6 +637,12 @@ class Client implements ClientInterface {
 			}
 
 			if ( $is_token_error ) {
+				// If refresh already failed in this request, skip retry to avoid notice spam
+				if ( self::$refresh_failed_this_request ) {
+					$this->log_oauth_event( 'Refresh skipped: already failed in this request', [ 'url' => $url ] );
+					return $response;
+				}
+
 				$this->log_oauth_event(
 					'401/403 token error — about to attempt refresh',
 					[
@@ -668,7 +684,11 @@ class Client implements ClientInterface {
 					return $response;
 
 				} catch ( \Exception $e ) {
-					// Token refresh failed - show admin notice
+					// Mark that refresh has failed in this request to prevent further attempts
+					self::$refresh_failed_this_request = true;
+
+					// Only show admin notice if this is not a circuit-breaker or throttle block
+					// (those are expected rate-limiting states, not new errors worth notifying about)
 					$notices = \GHL_CRM\Core\AdminNotices::get_instance();
 					$notices->error(
 						sprintf(
