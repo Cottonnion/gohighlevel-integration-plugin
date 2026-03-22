@@ -143,7 +143,7 @@ class Loader {
 		add_filter( 'cron_schedules', array( $this, 'add_cron_schedules' ) );
 
 		// Register cleanup action (Action Scheduler hook)
-		add_action( 'ghl_crm_cleanup_database', array( \GHL_CRM\Core\Database::class, 'cleanup' ) );
+		add_action( 'ghl_crm_cleanup_database', array( \GHL_CRM\Core\Database::get_instance(), 'cleanup' ) );
 
 		// Setup wizard redirect on activation
 		add_action( 'admin_init', array( self::class, 'maybe_redirect_to_wizard' ) );

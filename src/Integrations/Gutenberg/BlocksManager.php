@@ -73,8 +73,7 @@ class BlocksManager {
 		// Add block category
 		add_filter( 'block_categories_all', [ $this, 'add_block_category' ], 10, 2 );
 
-		// Enqueue block editor assets
-		add_action( 'enqueue_block_editor_assets', [ $this, 'enqueue_editor_assets' ] );
+		// Block editor assets are now defined centrally in AssetsManager::define_block_editor_assets()
 
 		// Enqueue frontend assets
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_frontend_assets' ] );
@@ -168,84 +167,6 @@ class BlocksManager {
 				],
 			],
 			$categories
-		);
-	}
-
-	/**
-	 * Enqueue block editor assets
-	 *
-	 * @return void
-	 */
-	public function enqueue_editor_assets(): void {
-		// Enqueue GHL Form Block JS
-		wp_enqueue_script(
-			'ghl-crm-form-block',
-			GHL_CRM_URL . 'assets/blocks/ghl-form/index.js',
-			[ 'wp-blocks', 'wp-element', 'wp-editor', 'wp-components', 'wp-i18n', 'wp-api-fetch' ],
-			GHL_CRM_VERSION,
-			true
-		);
-
-		// Pass GHL settings to JavaScript
-		$connection_status = $this->connection_manager->get_connection_status();
-		$is_connected      = ( $connection_status['has_credentials'] && $connection_status['is_verified'] );
-
-		wp_localize_script(
-			'ghl-crm-form-block',
-			'ghlCrmSettings',
-			[
-				'locationId'  => $connection_status['location_id'] ?? '',
-				'connected'   => $is_connected,
-				'settingsUrl' => admin_url( 'admin.php?page=ghl-crm-settings' ),
-			]
-		);
-
-		// Enqueue GHL Form Block Editor CSS
-		wp_enqueue_style(
-			'ghl-crm-form-block-editor',
-			GHL_CRM_URL . 'assets/blocks/ghl-form/editor.css',
-			[ 'wp-edit-blocks' ],
-			GHL_CRM_VERSION
-		);
-
-		// Enqueue Restricted Content Block JS
-		wp_enqueue_script(
-			'ghl-crm-restricted-content-block',
-			GHL_CRM_URL . 'assets/blocks/restricted-content/index.js',
-			[ 'wp-blocks', 'wp-element', 'wp-editor', 'wp-block-editor', 'wp-components', 'wp-i18n', 'jquery', 'ghl-crm-select2' ],
-			GHL_CRM_VERSION,
-			true
-		);
-
-		// Pass data for the restricted content block
-		$tags           = [];
-		$formatted_tags = [];
-		if ( $is_connected ) {
-			$tag_manager = TagManager::get_instance();
-			$tags        = $tag_manager->get_tags( false );
-			foreach ( $tags as $tag ) {
-				$formatted_tags[] = [
-					'id'   => $tag['id'] ?? '',
-					'text' => $tag['name'] ?? $tag['id'] ?? '',
-				];
-			}
-		}
-
-		wp_localize_script(
-			'ghl-crm-restricted-content-block',
-			'ghlRestrictedBlock',
-			[
-				'tags'      => $formatted_tags,
-				'connected' => $is_connected,
-			]
-		);
-
-		// Enqueue Restricted Content Block Editor CSS
-		wp_enqueue_style(
-			'ghl-crm-restricted-content-block-editor',
-			GHL_CRM_URL . 'assets/blocks/restricted-content/editor.css',
-			[ 'wp-edit-blocks', 'ghl-crm-select2-css' ],
-			GHL_CRM_VERSION
 		);
 	}
 

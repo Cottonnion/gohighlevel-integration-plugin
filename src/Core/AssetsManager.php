@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace GHL_CRM\Core;
 
+use GHL_CRM\API\ConnectionManager;
 use GHL_CRM\Sync\TagManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -40,6 +41,13 @@ class AssetsManager {
 	private array $public_assets = [];
 
 	/**
+	 * Block editor assets (Gutenberg editor screens)
+	 *
+	 * @var array<string, array>
+	 */
+	private array $block_editor_assets = [];
+
+	/**
 	 * Get class instance | singleton pattern
 	 *
 	 * @return self
@@ -74,12 +82,17 @@ class AssetsManager {
 		// Register public assets
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_public_assets' ] );
 
+		// Register block editor assets (also register external libs for Select2, etc.)
+		add_action( 'enqueue_block_editor_assets', [ $this, 'register_external_libraries' ], 5 );
+		add_action( 'enqueue_block_editor_assets', [ $this, 'enqueue_block_editor_assets' ] );
+
 		// Remove TinyMCE branding
 		add_filter( 'tiny_mce_before_init', [ $this, 'remove_tinymce_branding' ] );
 
 		// Define assets after WordPress has loaded text domain
 		add_action( 'init', [ $this, 'define_admin_assets' ] );
 		add_action( 'init', [ $this, 'define_frontend_assets' ] );
+		add_action( 'init', [ $this, 'define_block_editor_assets' ] );
 	}
 
 	/**
@@ -978,6 +991,142 @@ class AssetsManager {
 		if ( isset( $this->public_assets[ $handle ] ) ) {
 			$this->enqueue_asset( $handle, $this->public_assets[ $handle ], 'public' );
 		}
+	}
+
+	/**
+	 * Add a block editor asset (for Gutenberg editor screens).
+	 *
+	 * Unlike admin assets (matched by page slug), block editor assets load on
+	 * all block editor screens via the `enqueue_block_editor_assets` hook.
+	 *
+	 * @param string $handle        Unique handle for the asset.
+	 * @param string $file_url      Full URL to the asset file.
+	 * @param array  $dependencies  Array of dependency handles.
+	 * @param string $version       Version string for cache busting.
+	 * @param bool   $in_footer     Whether to enqueue script in footer (scripts only).
+	 * @param array  $localizations Array of ['name' => string, 'data' => array] pairs.
+	 * @return void
+	 */
+	public function add_block_editor_asset(
+		string $handle,
+		string $file_url,
+		array $dependencies = [],
+		string $version = GHL_CRM_VERSION,
+		bool $in_footer = true,
+		array $localizations = []
+	): void {
+		$this->block_editor_assets[ $handle ] = [
+			'file_url'      => $file_url,
+			'dependencies'  => $dependencies,
+			'version'       => $version,
+			'in_footer'     => $in_footer,
+			'localizations' => $localizations,
+		];
+	}
+
+	/**
+	 * Enqueue all registered block editor assets.
+	 *
+	 * Hooked to `enqueue_block_editor_assets`.
+	 *
+	 * @return void
+	 */
+	public function enqueue_block_editor_assets(): void {
+		foreach ( $this->block_editor_assets as $handle => $asset ) {
+			$file_url = $asset['file_url'];
+			$deps     = $asset['dependencies'] ?? [];
+			$version  = $asset['version'] ?? GHL_CRM_VERSION;
+			$ext      = pathinfo( wp_parse_url( $file_url, PHP_URL_PATH ) ?: $file_url, PATHINFO_EXTENSION );
+
+			if ( 'css' === $ext ) {
+				wp_enqueue_style( $handle, $file_url, $deps, $version );
+			} else {
+				wp_enqueue_script( $handle, $file_url, $deps, $version, $asset['in_footer'] ?? true );
+
+				foreach ( $asset['localizations'] ?? [] as $localization ) {
+					if ( ! empty( $localization['name'] ) && ! empty( $localization['data'] ) ) {
+						wp_localize_script( $handle, $localization['name'], $localization['data'] );
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Define block editor assets.
+	 *
+	 * Called on 'init' hook to ensure translations and connection data are available.
+	 *
+	 * @return void
+	 */
+	public function define_block_editor_assets(): void {
+		$connection_status = ConnectionManager::get_instance()->get_connection_status();
+		$is_connected      = ( $connection_status['has_credentials'] && $connection_status['is_verified'] );
+
+		// GHL Form Block JS
+		$this->add_block_editor_asset(
+			'ghl-crm-form-block',
+			GHL_CRM_URL . 'assets/blocks/ghl-form/index.js',
+			[ 'wp-blocks', 'wp-element', 'wp-editor', 'wp-components', 'wp-i18n', 'wp-api-fetch' ],
+			GHL_CRM_VERSION,
+			true,
+			[
+				[
+					'name' => 'ghlCrmSettings',
+					'data' => [
+						'locationId'  => $connection_status['location_id'] ?? '',
+						'connected'   => $is_connected,
+						'settingsUrl' => admin_url( 'admin.php?page=ghl-crm-settings' ),
+					],
+				],
+			]
+		);
+
+		// GHL Form Block Editor CSS
+		$this->add_block_editor_asset(
+			'ghl-crm-form-block-editor',
+			GHL_CRM_URL . 'assets/blocks/ghl-form/editor.css',
+			[ 'wp-edit-blocks' ],
+			GHL_CRM_VERSION
+		);
+
+		// Restricted Content Block JS
+		$formatted_tags = [];
+		if ( $is_connected ) {
+			$tag_manager = TagManager::get_instance();
+			$tags        = $tag_manager->get_tags( false );
+			foreach ( $tags as $tag ) {
+				$formatted_tags[] = [
+					'id'   => $tag['id'] ?? '',
+					'text' => $tag['name'] ?? $tag['id'] ?? '',
+				];
+			}
+		}
+
+		$this->add_block_editor_asset(
+			'ghl-crm-restricted-content-block',
+			GHL_CRM_URL . 'assets/blocks/restricted-content/index.js',
+			[ 'wp-blocks', 'wp-element', 'wp-editor', 'wp-block-editor', 'wp-components', 'wp-i18n', 'jquery', 'ghl-crm-select2' ],
+			GHL_CRM_VERSION,
+			true,
+			[
+				[
+					'name' => 'ghlRestrictedBlock',
+					'data' => [
+						'tags'      => $formatted_tags,
+						'connected' => $is_connected,
+					],
+				],
+			]
+		);
+
+		// Restricted Content Block Editor CSS
+		$this->add_block_editor_asset(
+			'ghl-crm-restricted-content-block-editor',
+			GHL_CRM_URL . 'assets/blocks/restricted-content/editor.css',
+			[ 'wp-edit-blocks', 'ghl-crm-select2-css' ],
+			GHL_CRM_VERSION
+		);
 	}
 
 	/**
