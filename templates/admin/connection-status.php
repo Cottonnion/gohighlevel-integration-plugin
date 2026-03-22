@@ -45,9 +45,13 @@ $is_connected = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 					<?php
 					$expires_at = $oauth_status['expires_at'];
 					if ( $expires_at && $expires_at > time() ) {
-						$time_left = human_time_diff( time(), $expires_at );
+						$remaining = $expires_at - time();
+						$hours     = floor( $remaining / 3600 );
+						$minutes   = floor( ( $remaining % 3600 ) / 60 );
+						$seconds   = $remaining % 60;
+						$time_left = sprintf( '%02d:%02d:%02d', $hours, $minutes, $seconds );
 						printf(
-							/* translators: %s: Time remaining */
+							/* translators: %s: Time remaining in HH:MM:SS format */
 							esc_html__( 'Token expires in %s', 'ghl-crm-integration' ),
 							esc_html( $time_left )
 						);

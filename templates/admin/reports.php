@@ -36,12 +36,6 @@ $ghl_base_domain   = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/' 
 				<span class="dashicons dashicons-admin-site" style="font-size: 16px;"></span>
 				Test Connection
 			</button>
-			<?php if ( $is_oauth_connected ) : ?>
-			<button type="button" class="ghl-button ghl-button-secondary" id="ghl-oauth-reconnect" style="display: flex; align-items: center; gap: 6px;">
-				<span class="dashicons dashicons-controls-repeat" style="font-size: 16px;"></span>
-				Reconnect Account
-			</button>
-			<?php endif; ?>
 			<button type="button" class="ghl-button ghl-button-secondary" id="ghl-clear-cache" style="display: flex; align-items: center; gap: 6px;">
 				<span class="dashicons dashicons-trash" style="font-size: 16px;"></span>
 				Clear Cache
@@ -49,6 +43,10 @@ $ghl_base_domain   = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/' 
 			<button type="button" class="ghl-button ghl-button-secondary" id="ghl-refresh-tags-fields" style="display: flex; align-items: center; gap: 6px;">
 				<span class="dashicons dashicons-update-alt" style="font-size: 16px;"></span>
 				Refresh Tags &amp; Fields
+			</button>
+			<button type="button" class="ghl-button ghl-button-secondary" id="ghl-reconnect-account" style="display: flex; align-items: center; gap: 6px;">
+				<span class="dashicons dashicons-shield" style="font-size: 16px;"></span>
+				Reconnect Account
 			</button>
 			<a href="<?php echo esc_url( $ghl_base_domain ); ?>" class="ghl-button ghl-button-secondary" style="display: flex; align-items: center; gap: 6px; text-decoration: none;" target="_blank" rel="noopener noreferrer">
 				<span class="dashicons dashicons-external" style="font-size: 16px;"></span>
@@ -297,17 +295,17 @@ $ghl_base_domain   = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/' 
 						<?php esc_html_e( 'GHL Contacts', 'ghl-crm-integration' ); ?>
 						<span class="dashicons dashicons-external" style="color: #94a3b8; font-size: 14px; margin-left: auto;"></span>
 					</a>
-					<a href="<?php echo esc_url( $ghl_base_domain . $ghl_loc_path . '/settings' ); ?>" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f0fdf4; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #dcfce7;">
+					<a href="<?php echo esc_url( $ghl_base_domain . $ghl_loc_path . '/settings/company' ); ?>" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f0fdf4; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #dcfce7;">
 						<span class="dashicons dashicons-admin-generic" style="color: #10b981; font-size: 16px;"></span>
 						<?php esc_html_e( 'GHL Settings', 'ghl-crm-integration' ); ?>
 						<span class="dashicons dashicons-external" style="color: #94a3b8; font-size: 14px; margin-left: auto;"></span>
 					</a>
-					<a href="<?php echo esc_url( $ghl_base_domain . $ghl_loc_path . '/opportunities' ); ?>" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f0fdf4; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #dcfce7;">
+					<a href="<?php echo esc_url( $ghl_base_domain . $ghl_loc_path . '/opportunities/list' ); ?>" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f0fdf4; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #dcfce7;">
 						<span class="dashicons dashicons-money-alt" style="color: #10b981; font-size: 16px;"></span>
 						<?php esc_html_e( 'GHL Opportunities', 'ghl-crm-integration' ); ?>
 						<span class="dashicons dashicons-external" style="color: #94a3b8; font-size: 14px; margin-left: auto;"></span>
 					</a>
-					<a href="<?php echo esc_url( $ghl_base_domain . $ghl_loc_path . '/automation/list' ); ?>" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f0fdf4; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #dcfce7;">
+					<a href="<?php echo esc_url( $ghl_base_domain . $ghl_loc_path . '/automation/workflows' ); ?>" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f0fdf4; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #dcfce7;">
 						<span class="dashicons dashicons-controls-repeat" style="color: #10b981; font-size: 16px;"></span>
 						<?php esc_html_e( 'GHL Automations', 'ghl-crm-integration' ); ?>
 						<span class="dashicons dashicons-external" style="color: #94a3b8; font-size: 14px; margin-left: auto;"></span>
