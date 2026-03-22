@@ -816,8 +816,8 @@ class NotificationManager {
 			$next_run = strtotime( "tomorrow {$hour}:{$minute}" );
 		}
 
-		// Try Action Scheduler first (if available)
-		if ( function_exists( 'as_next_scheduled_action' ) ) {
+		// Try Action Scheduler first (if available and initialized)
+		if ( function_exists( 'as_next_scheduled_action' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {
 			// Check if already scheduled with Action Scheduler
 			if ( ! as_next_scheduled_action( 'ghl_crm_daily_summary' ) ) {
 				as_schedule_recurring_action( $next_run, DAY_IN_SECONDS, 'ghl_crm_daily_summary', [], 'ghl-crm' );

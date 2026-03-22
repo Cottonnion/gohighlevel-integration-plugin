@@ -243,7 +243,8 @@ class ReportingManager {
 			return;
 		}
 
-		$next_scheduled = function_exists( 'as_next_scheduled_action' ) ? as_next_scheduled_action( self::DISPATCH_HOOK ) : wp_next_scheduled( self::DISPATCH_HOOK );
+		$as_ready       = function_exists( 'as_next_scheduled_action' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized();
+		$next_scheduled = $as_ready ? as_next_scheduled_action( self::DISPATCH_HOOK ) : wp_next_scheduled( self::DISPATCH_HOOK );
 
 		if ( $next_scheduled ) {
 			return;
@@ -251,7 +252,7 @@ class ReportingManager {
 
 		$first_run = time() + self::DISPATCH_INTERVAL;
 
-		if ( function_exists( 'as_schedule_recurring_action' ) ) {
+		if ( $as_ready ) {
 			as_schedule_recurring_action( $first_run, self::DISPATCH_INTERVAL, self::DISPATCH_HOOK, [], 'ghl-crm' );
 			return;
 		}

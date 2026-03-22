@@ -90,6 +90,7 @@ class SettingsManager {
 		add_action( 'wp_ajax_ghl_crm_save_field_mapping', [ $this, 'save_field_mapping' ] );
 		add_action( 'wp_ajax_ghl_crm_preview_user_sync', [ $this, 'preview_user_sync' ] );
 		add_action( 'wp_ajax_ghl_crm_oauth_reconnect', [ $this, 'oauth_reconnect' ] );
+		add_action( 'wp_ajax_ghl_crm_refresh_access_token', [ $this, 'ajax_refresh_access_token' ] );
 		add_action( 'wp_ajax_ghl_crm_save_wizard_settings', [ $this, 'handle_save_wizard_settings' ] );
 		add_action( 'wp_ajax_ghl_crm_bulk_sync_users', [ $this, 'handle_bulk_sync_users' ] );
 		add_action( 'wp_ajax_ghl_crm_bulk_import_from_ghl', [ $this, 'handle_bulk_import_from_ghl' ] );
@@ -383,6 +384,39 @@ class SettingsManager {
 				],
 				$result['code'] ?? 500
 			);
+		}
+	}
+
+	/**
+	 * AJAX: Force-refresh the OAuth access token.
+	 *
+	 * Calls Client::refresh_access_token() directly so the admin can
+	 * manually recover a stale token without going through the full
+	 * OAuth re-authorization flow.
+	 *
+	 * @return void
+	 */
+	public function ajax_refresh_access_token(): void {
+		check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'ghl-crm-integration' ) ], 403 );
+		}
+
+		try {
+			$client  = \GHL_CRM\API\Client\Client::get_instance();
+			$result  = $client->refresh_access_token();
+			$expires = isset( $result['expires_in'] ) ? human_time_diff( time(), time() + (int) $result['expires_in'] ) : '24 hours';
+
+			wp_send_json_success( [
+				'message' => sprintf(
+					/* translators: %s: token validity duration */
+					__( 'Access token refreshed successfully. Valid for %s.', 'ghl-crm-integration' ),
+					$expires
+				),
+			] );
+		} catch ( \Exception $e ) {
+			wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
 		}
 	}
 

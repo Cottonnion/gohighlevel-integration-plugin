@@ -253,7 +253,7 @@ class AssetsManager {
 					'refreshMetadataFailed'     => __( 'Failed to refresh tags and fields.', 'ghl-crm-integration' ),
 				],
 			],
-			'1.1.1',
+			GHL_CRM_VERSION,
 			true
 		);
 

@@ -22,13 +22,24 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - Primary: OAuth2 Bearer tokens obtained via labgenz.com proxy (keeps client secret server-side)
  * - Fallback: Manual Location API Key for simple setups
  *
+ * GHL Token Lifetimes (per official docs):
+ * - Access token:  24 hours
+ * - Refresh token: 1 year (single-use — rotated on every refresh)
+ *
  * Token Lifecycle:
  * - Proactive refresh 30 min before expiry via ensure_fresh_access_token()
- * - Scheduled background refresh via Action Scheduler (every 20 min)
+ * - Scheduled background refresh via Action Scheduler (every 20 min, 12h window)
  * - Reactive refresh on 401/403 via request() retry
+ * - Automatic retry with longer timeout (25s) on proxy cURL timeouts
  * - Circuit breaker after 5 consecutive failures (5-minute cooldown)
  * - Cross-process mutex lock prevents concurrent refresh races
  * - Reconnect API as emergency recovery when refresh proxy is unreachable
+ *
+ * Low-Traffic Site Considerations:
+ * - WP-Cron only fires on page visits; sites with few visitors may miss refresh windows
+ * - The 12h scheduled refresh buffer covers this: any visit in the last 12h of a 24h token refreshes it
+ * - Cron/CLI contexts get the same 15s timeout as admin (not the 8s frontend timeout)
+ * - For truly zero-traffic sites, recommend server-side cron: wp-cron.php every 15 min
  *
  * Auto-Recovery (handle_http_response):
  * - Duplicate contacts: Auto-converts POST→PUT on duplicate detection
@@ -289,6 +300,17 @@ class Client implements ClientInterface {
 	 */
 	private bool $is_retrying_after_refresh = false;
 
+	/**
+	 * Flag indicating a refresh already failed during this request lifecycle.
+	 *
+	 * When true, subsequent calls to ensure_fresh_access_token() and the 401
+	 * handler in request() will skip refresh entirely to avoid cascading
+	 * failures and log spam within the same PHP process.
+	 *
+	 * @var bool
+	 */
+	private bool $refresh_failed_this_request = false;
+
 	// =========================================================================
 	// Singleton
 	// =========================================================================
@@ -318,7 +340,16 @@ class Client implements ClientInterface {
 	private function __construct() {
 		$this->load_settings();
 		$this->init_hooks();
-		$this->maybe_schedule_background_refresh();
+
+		// Defer scheduling to when Action Scheduler is fully initialized.
+		// AS fires 'action_scheduler_init' on `init` priority 1, but the Client
+		// singleton is typically created at `init` priority 0 — so AS is NOT
+		// ready yet in the constructor. Hooking here guarantees it.
+		if ( class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {
+			$this->maybe_schedule_background_refresh();
+		} else {
+			add_action( 'action_scheduler_init', [ $this, 'maybe_schedule_background_refresh' ] );
+		}
 	}
 
 	/**
@@ -627,6 +658,11 @@ class Client implements ClientInterface {
 			}
 
 			if ( $is_token_error ) {
+				// If refresh already failed this request, don't attempt again from this filter
+				if ( $this->refresh_failed_this_request ) {
+					return $response;
+				}
+
 				$this->log_oauth_event(
 					'401/403 token error — about to attempt refresh',
 					[
@@ -928,7 +964,7 @@ class Client implements ClientInterface {
 	 *
 	 * @return void
 	 */
-	private function maybe_schedule_background_refresh(): void {
+	public function maybe_schedule_background_refresh(): void {
 		// Only schedule if we have OAuth tokens and Action Scheduler is available
 		if ( empty( $this->refresh_token ) || ! function_exists( 'as_has_scheduled_action' ) ) {
 			return;
@@ -959,10 +995,12 @@ class Client implements ClientInterface {
 	 * Handle the scheduled background token refresh.
 	 *
 	 * Called by Action Scheduler every 20 minutes. Checks if the token
-	 * needs refreshing (within 2 hours of expiry) and refreshes if needed.
+	 * needs refreshing (within 12 hours of expiry) and refreshes if needed.
 	 *
-	 * This is the primary defense against token expiry on low-traffic sites
-	 * where the proactive per-request refresh may not fire in time.
+	 * The wide 12-hour window is critical for low-traffic sites where
+	 * WP-Cron (and therefore Action Scheduler) may only fire a few times
+	 * per day. GHL access tokens last 24h, so refreshing anytime in the
+	 * last 12 hours gives ample opportunity to succeed before expiry.
 	 *
 	 * @return void
 	 */
@@ -976,8 +1014,10 @@ class Client implements ClientInterface {
 			return;
 		}
 
-		// Skip if token is still fresh (more than 2 hours until expiry)
-		$buffer = 2 * HOUR_IN_SECONDS;
+		// Refresh if token is within 12 hours of expiry. GHL tokens last 24h,
+		// so this means we refresh on roughly every other scheduled run that
+		// actually fires — well before the token dies.
+		$buffer = 12 * HOUR_IN_SECONDS;
 		if ( $this->access_token_expires_at > 0 && ( $this->access_token_expires_at - time() ) > $buffer ) {
 			return; // Token is still fresh, nothing to do
 		}
@@ -1026,6 +1066,11 @@ class Client implements ClientInterface {
 			return;
 		}
 
+		// If a refresh already failed this request, don't try again (prevents cascade)
+		if ( $this->refresh_failed_this_request ) {
+			return;
+		}
+
 		// Refresh 30 minutes before expiry to account for gaps between requests
 		// (e.g. tag cache is 1 hour, so a 60s buffer would miss the window entirely)
 		$refresh_threshold = $this->access_token_expires_at - self::PROACTIVE_REFRESH_BUFFER;
@@ -1033,8 +1078,9 @@ class Client implements ClientInterface {
 			try {
 				$this->log_oauth_event( 'Proactive refresh before expiry', [ 'expires_at' => $this->access_token_expires_at ] );
 				$this->refresh_access_token();
+				$this->refresh_failed_this_request = false; // Reset on success
 			} catch ( \Exception $e ) {
-				// Best-effort: let the request proceed; 401 handler will catch it.
+				$this->refresh_failed_this_request = true;
 				$this->log_oauth_event( 'Proactive refresh failed (non-fatal)', [ 'error' => $e->getMessage() ] );
 			}
 		}
@@ -1135,30 +1181,21 @@ class Client implements ClientInterface {
 	 * - Releases refresh lock
 	 *
 	 * Timeout:
-	 * - Admin context: 15s
+	 * - Admin / cron / CLI context: 15s
 	 * - Frontend context: 8s (avoids blocking page loads)
+	 * - Auto-retry on cURL timeout: 25s (catches slow shared hosts)
 	 *
 	 * @return array Decoded token payload from proxy.
 	 * @throws ApiException On all recovery paths exhausted.
 	 */
 	public function refresh_access_token(): array {
 		$this->log_oauth_event(
-			'refresh_access_token() ENTER',
+			'Attempting token refresh',
 			[
-				'has_refresh_token'       => ! empty( $this->refresh_token ),
-				'has_access_token'        => ! empty( $this->access_token ),
-				'access_token_expires_at' => $this->access_token_expires_at ?? 0,
-				'expires_in_seconds'      => ( $this->access_token_expires_at ?? 0 ) - time(),
-				'location_id'             => $this->location_id ?? '(none)',
-				'circuit_breaker_open'    => $this->is_circuit_breaker_open(),
-				'circuit_breaker_data'    => get_transient( self::CIRCUIT_BREAKER_KEY ),
-				'refresh_lock_owner'      => get_transient( self::REFRESH_LOCK_KEY ),
-				'my_pid'                  => getmypid(),
-				'static_last_refresh_ts'  => self::$last_refresh_attempt_ts,
-				'static_last_error'       => self::$last_refresh_error,
-				'time_since_last_refresh' => self::$last_refresh_attempt_ts ? ( time() - self::$last_refresh_attempt_ts ) : null,
-			],
-			'warning'
+				'expires_in'           => ( $this->access_token_expires_at ?? 0 ) - time(),
+				'circuit_breaker_open' => $this->is_circuit_breaker_open(),
+				'pid'                  => getmypid(),
+			]
 		);
 
 		if ( empty( $this->refresh_token ) ) {
@@ -1212,17 +1249,11 @@ class Client implements ClientInterface {
 				? sprintf( esc_html__( 'Recent refresh attempt failed: %s', 'ghl-crm-integration' ), self::$last_refresh_error )
 				: esc_html__( 'Recent refresh attempt in progress or just failed. Reconnect required.', 'ghl-crm-integration' );
 			$this->log_oauth_event(
-				'Refresh THROTTLED — throwing exception',
+				'Refresh skipped: throttled',
 				[
-					'seconds_since_last'  => $now - self::$last_refresh_attempt_ts,
-					'last_refresh_ts'     => self::$last_refresh_attempt_ts,
-					'last_error'          => self::$last_refresh_error,
-					'has_refresh_token'   => ! empty( $this->refresh_token ),
-					'location_id'         => $this->location_id ?? '(none)',
-					'throttle_message'    => $throttle_message,
-					'backtrace'           => wp_debug_backtrace_summary(),
-				],
-				'error'
+					'seconds_since_last' => $now - self::$last_refresh_attempt_ts,
+					'last_error'         => self::$last_refresh_error,
+				]
 			);
 			throw new ApiException( $throttle_message );
 		}
@@ -1292,8 +1323,10 @@ class Client implements ClientInterface {
 			'refresh_token' => $this->refresh_token,
 		];
 
-		// Use shorter timeout on frontend to avoid blocking page loads
-		$timeout = is_admin() ? 15 : 8;
+		// Use longer timeout for admin, cron, and CLI contexts where blocking is acceptable.
+		// Frontend gets a shorter timeout to avoid blocking page loads.
+		$is_background = is_admin() || wp_doing_cron() || ( defined( 'WP_CLI' ) && WP_CLI );
+		$timeout       = $is_background ? 15 : 8;
 
 		$args = [
 			'method'  => 'POST',
@@ -1306,6 +1339,15 @@ class Client implements ClientInterface {
 
 		$proxy_url = self::OAUTH_PROXY_URL . '/refresh-token';
 		$response  = wp_remote_request( $proxy_url, $args );
+
+		// If the first attempt timed out, retry once with a longer timeout (25s).
+		// Some shared hosts need more time to reach the proxy, especially under load.
+		if ( is_wp_error( $response ) && str_contains( $response->get_error_message(), 'cURL error 28' ) && $timeout < 25 ) {
+			$this->log_oauth_event( 'Proxy timed out, retrying with 25s timeout', [ 'original_timeout' => $timeout ] );
+			$args['timeout'] = 25;
+			$response        = wp_remote_request( $proxy_url, $args );
+		}
+
 		$this->log_oauth_event( 'Refresh token proxy response', [ 'status' => is_wp_error( $response ) ? 'error' : wp_remote_retrieve_response_code( $response ) ] );
 
 		if ( is_wp_error( $response ) ) {
@@ -1460,7 +1502,7 @@ class Client implements ClientInterface {
 	 * Safety:
 	 * - Requires a valid location_id (throws if missing)
 	 * - 2-minute transient throttle prevents hammering
-	 * - Timeout: 15s
+	 * - Timeout: 25s (generous — reconnect is a last-resort recovery path)
 	 *
 	 * @return string Fresh authorization code.
 	 * @throws ApiException On missing location ID, throttle, network error, or invalid response.
@@ -1486,7 +1528,7 @@ class Client implements ClientInterface {
 				'Content-Type' => 'application/json',
 			],
 			'body'    => wp_json_encode( $data ),
-			'timeout' => 15,
+			'timeout' => 25,
 		];
 
 		$proxy_url = self::OAUTH_PROXY_URL . '/reconnect';
@@ -1734,7 +1776,7 @@ class Client implements ClientInterface {
 		$this->last_response_headers = $headers->getAll();
 
 		// Handle 401 with OAuth2 - try to refresh token
-		if ( 401 === $status_code && $this->is_oauth_configured() && ! empty( $this->refresh_token ) ) {
+		if ( 401 === $status_code && $this->is_oauth_configured() && ! empty( $this->refresh_token ) && ! $this->refresh_failed_this_request ) {
 			try {
 				// Attempt to refresh the token
 				$this->refresh_access_token();
@@ -1760,6 +1802,7 @@ class Client implements ClientInterface {
 				}
 			} catch ( ApiException $e ) {
 				$this->is_retrying_after_refresh = false;
+				$this->refresh_failed_this_request = true;
 
 				// Refresh failed — reload settings to check if another process saved valid tokens
 				$this->reload_settings();

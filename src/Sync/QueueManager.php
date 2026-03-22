@@ -140,14 +140,14 @@ class QueueManager {
 	 */
 	public function schedule_queue_processor(): void {
 		// Schedule recurring action via Action Scheduler (runs every 10 seconds)
-		if ( function_exists( 'as_next_scheduled_action' ) ) {
+		if ( function_exists( 'as_next_scheduled_action' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {
 			$next_scheduled = as_next_scheduled_action( 'ghl_crm_process_queue' );
 
 			if ( false === $next_scheduled ) {
 				as_schedule_recurring_action( time(), self::PROCESSING_INTERVAL, 'ghl_crm_process_queue', [], 'ghl-crm' );
 			}
 		} else {
-			// Fallback to WP-Cron if Action Scheduler not available
+			// Fallback to WP-Cron if Action Scheduler not available or not yet initialized
 			if ( ! wp_next_scheduled( 'ghl_crm_process_queue' ) ) {
 				wp_schedule_event( time(), 'every_minute', 'ghl_crm_process_queue' );
 			}
