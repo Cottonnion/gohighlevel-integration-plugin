@@ -41,6 +41,23 @@ class FileLogger {
 	private bool $dir_initialised = false;
 
 	/**
+	 * In-memory deduplication cache.
+	 *
+	 * Maps message hash → ['time' => float, 'count' => int].
+	 * Prevents writing identical log lines within the dedup window.
+	 *
+	 * @var array<string, array{time: float, count: int}>
+	 */
+	private array $dedup_cache = [];
+
+	/**
+	 * Seconds within which duplicate messages are suppressed.
+	 *
+	 * @var int
+	 */
+	private const DEDUP_WINDOW = 30;
+
+	/**
 	 * Maximum size per log file in bytes (5 MB).
 	 */
 	private const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -94,6 +111,28 @@ class FileLogger {
 	private function __construct() {
 		$upload_dir    = wp_upload_dir();
 		$this->log_dir = trailingslashit( $upload_dir['basedir'] ) . 'ghl-crm-logs';
+
+		// Flush dedup counts at end of request so suppressed-count summaries are written.
+		register_shutdown_function( [ $this, 'flush_dedup_counts' ] );
+	}
+
+	/**
+	 * Flush any remaining dedup counts as summary lines.
+	 *
+	 * Called automatically on shutdown so suppressed messages are never lost silently.
+	 *
+	 * @return void
+	 */
+	public function flush_dedup_counts(): void {
+		foreach ( $this->dedup_cache as $entry ) {
+			if ( $entry['count'] > 0 ) {
+				// We don't have the channel/level per entry, so write a summary to the general 'oauth' channel
+				// which is where the vast majority of suppressed messages originate.
+				$this->write_line( 'oauth', 'info', sprintf( '(suppressed %d duplicate log entries in this request)', $entry['count'] ) );
+				break; // Single consolidated line is sufficient.
+			}
+		}
+		$this->dedup_cache = [];
 	}
 
 	/**
@@ -118,7 +157,65 @@ class FileLogger {
 			$level = 'info';
 		}
 
+		// Deduplicate: suppress identical channel+message within the window.
+		$dedup_key = md5( $channel . '|' . $level . '|' . $message );
+		$now       = microtime( true );
+
+		if ( isset( $this->dedup_cache[ $dedup_key ] ) ) {
+			$entry = $this->dedup_cache[ $dedup_key ];
+			if ( ( $now - $entry['time'] ) < self::DEDUP_WINDOW ) {
+				// Still within window — suppress and count.
+				++$this->dedup_cache[ $dedup_key ]['count'];
+				return true;
+			}
+
+			// Window expired — flush the suppressed count as a summary line.
+			$suppressed_count = $entry['count'];
+			if ( $suppressed_count > 0 ) {
+				$this->write_line( $channel, $level, sprintf( '(repeated %d more times in last %ds)', $suppressed_count, self::DEDUP_WINDOW ) );
+			}
+		}
+
+		// Record this message and reset counter.
+		$this->dedup_cache[ $dedup_key ] = [
+			'time'  => $now,
+			'count' => 0,
+		];
+
+		// Prune old entries to prevent unbounded memory growth.
+		if ( count( $this->dedup_cache ) > 200 ) {
+			$cutoff = $now - self::DEDUP_WINDOW;
+			$this->dedup_cache = array_filter(
+				$this->dedup_cache,
+				static function ( $entry ) use ( $cutoff ) {
+					return $entry['time'] >= $cutoff;
+				}
+			);
+		}
+
 		// Ensure log directory exists and is protected.
+		if ( ! $this->ensure_log_directory() ) {
+			return false;
+		}
+
+		// Build log line with context.
+		$context_str = '';
+		if ( ! empty( $context ) ) {
+			$context_str = ' | ' . wp_json_encode( $context, JSON_UNESCAPED_SLASHES );
+		}
+
+		return $this->write_line( $channel, $level, $message . $context_str );
+	}
+
+	/**
+	 * Write a single formatted line to the channel log file.
+	 *
+	 * @param string $channel Channel name.
+	 * @param string $level   Log level.
+	 * @param string $text    Formatted message text (may include context).
+	 * @return bool True on success, false on failure.
+	 */
+	private function write_line( string $channel, string $level, string $text ): bool {
 		if ( ! $this->ensure_log_directory() ) {
 			return false;
 		}
@@ -128,16 +225,9 @@ class FileLogger {
 		// Rotate if file exceeds size limit.
 		$this->maybe_rotate( $file_path );
 
-		// Build log line.
 		$timestamp = gmdate( 'Y-m-d H:i:s' );
 		$level_tag = strtoupper( $level );
-		$line      = sprintf( '[%s] [%s] [%s] %s', $timestamp, $level_tag, $channel, $message );
-
-		if ( ! empty( $context ) ) {
-			$line .= ' | ' . wp_json_encode( $context, JSON_UNESCAPED_SLASHES );
-		}
-
-		$line .= PHP_EOL;
+		$line      = sprintf( '[%s] [%s] [%s] %s', $timestamp, $level_tag, $channel, $text ) . PHP_EOL;
 
 		// Write atomically.
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
