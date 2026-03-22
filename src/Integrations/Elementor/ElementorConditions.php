@@ -222,13 +222,14 @@ class ElementorConditions {
 		$element->add_control(
 			'ghl_tag_conditions',
 			[
-				'label'       => __( 'Condition Groups', 'ghl-crm-integration' ),
-				'type'        => Controls_Manager::REPEATER,
-				'fields'      => $repeater->get_controls(),
-				'default'     => [],
-				'title_field' => '{{{ match_type === "has_any" ? "Has ANY of" : match_type === "has_all" ? "Has ALL of" : "Has NONE of" }}} ({{{ tags ? tags.length : 0 }}} tags)',
-				'description' => __( 'Add condition groups to build compound rules. Leave empty to use only the primary condition above.', 'ghl-crm-integration' ),
-				'condition'   => [
+				'label'         => __( 'Condition Groups', 'ghl-crm-integration' ),
+				'type'          => Controls_Manager::REPEATER,
+				'fields'        => $repeater->get_controls(),
+				'default'       => [],
+				'prevent_empty' => false,
+				'title_field'   => '{{{ match_type === "has_any" ? "Has ANY of" : match_type === "has_all" ? "Has ALL of" : "Has NONE of" }}} ({{{ tags ? tags.length : 0 }}} tags)',
+				'description'   => __( 'Add condition groups to build compound rules. Leave empty to use only the primary condition above.', 'ghl-crm-integration' ),
+				'condition'     => [
 					'ghl_enable_restriction' => 'yes',
 					'ghl_restriction_type!'  => [ 'logged_in', 'logged_out' ],
 				],

@@ -29,6 +29,18 @@
 				"type": "string"
 			}
 		},
+		"conditionLogic": {
+			"type": "string",
+			"default": "and",
+			"enum": ["and", "or"]
+		},
+		"tagConditions": {
+			"type": "array",
+			"default": [],
+			"items": {
+				"type": "object"
+			}
+		},
 		"fallbackContent": {
 			"type": "string",
 			"default": ""

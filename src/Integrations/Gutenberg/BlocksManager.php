@@ -296,22 +296,24 @@ class BlocksManager {
 	 * @return string Rendered block HTML
 	 */
 	public function render_restricted_content_block( array $attributes, string $content = '' ): string {
-		$rule         = $attributes['rule'] ?? 'any';
-		$tags         = $attributes['tags'] ?? [];
-		$fallback     = $attributes['fallbackContent'] ?? '';
-		$show_message = $attributes['showMessage'] ?? true;
-		$bg_color     = $attributes['fallbackBgColor'] ?? '#fff3cd';
-		$text_color   = $attributes['fallbackTextColor'] ?? '#856404';
-		$border_color = $attributes['fallbackBorderColor'] ?? '#ffc107';
-		$padding      = isset( $attributes['fallbackPadding'] ) ? (int) $attributes['fallbackPadding'] : 12;
+		$rule            = $attributes['rule'] ?? 'any';
+		$tags            = $attributes['tags'] ?? [];
+		$fallback        = $attributes['fallbackContent'] ?? '';
+		$show_message    = $attributes['showMessage'] ?? true;
+		$bg_color        = $attributes['fallbackBgColor'] ?? '#fff3cd';
+		$text_color      = $attributes['fallbackTextColor'] ?? '#856404';
+		$border_color    = $attributes['fallbackBorderColor'] ?? '#ffc107';
+		$padding         = isset( $attributes['fallbackPadding'] ) ? (int) $attributes['fallbackPadding'] : 12;
+		$condition_logic = $attributes['conditionLogic'] ?? 'and';
+		$tag_conditions  = $attributes['tagConditions'] ?? [];
 
 		$bg_color     = ( is_string( $bg_color ) && preg_match( '/^#[0-9a-fA-F]{3,6}$/', $bg_color ) ) ? $bg_color : '#fff3cd';
 		$text_color   = ( is_string( $text_color ) && preg_match( '/^#[0-9a-fA-F]{3,6}$/', $text_color ) ) ? $text_color : '#856404';
 		$border_color = ( is_string( $border_color ) && preg_match( '/^#[0-9a-fA-F]{3,6}$/', $border_color ) ) ? $border_color : '#ffc107';
 		$padding      = max( 0, min( 200, $padding ) );
 
-		// Check if user has required access
-		if ( $this->check_content_access( $rule, $tags ) ) {
+		// Check if user has required access (compound-aware)
+		if ( $this->check_compound_access( $rule, $tags, $condition_logic, $tag_conditions ) ) {
 			return '<div class="ghl-restricted-content ghl-access-granted">' . $content . '</div>';
 		}
 
@@ -332,6 +334,51 @@ class BlocksManager {
 	}
 
 	/**
+	 * Check compound access — evaluates primary rule + additional condition groups
+	 *
+	 * @param string $rule            Primary rule (any, all, none).
+	 * @param array  $tags            Primary tags.
+	 * @param string $condition_logic Logic between groups (and, or).
+	 * @param array  $tag_conditions  Array of condition groups [{matchType, tags}].
+	 * @return bool True if user has access.
+	 */
+	private function check_compound_access( string $rule, array $tags, string $condition_logic, array $tag_conditions ): bool {
+		// Evaluate primary condition
+		$primary_result = $this->check_content_access( $rule, $tags );
+
+		// If no additional conditions, return primary result
+		if ( empty( $tag_conditions ) || ! is_array( $tag_conditions ) ) {
+			return $primary_result;
+		}
+
+		// Evaluate each additional condition group
+		$results = [ $primary_result ];
+
+		foreach ( $tag_conditions as $condition ) {
+			if ( ! is_array( $condition ) ) {
+				continue;
+			}
+
+			$match_type     = $condition['matchType'] ?? 'any';
+			$condition_tags = $condition['tags'] ?? [];
+
+			if ( empty( $condition_tags ) || ! is_array( $condition_tags ) ) {
+				continue; // Skip empty groups
+			}
+
+			$results[] = $this->check_content_access( $match_type, $condition_tags );
+		}
+
+		// Combine results
+		if ( 'or' === $condition_logic ) {
+			return in_array( true, $results, true );
+		}
+
+		// AND — all must pass
+		return ! in_array( false, $results, true );
+	}
+
+	/**
 	 * Check if user has access based on tag rules
 	 *
 	 * @param string $rule Rule type (any, all, none).
@@ -339,11 +386,6 @@ class BlocksManager {
 	 * @return bool True if user has access
 	 */
 	private function check_content_access( string $rule, array $tags ): bool {
-		// Admin always has access
-		if ( current_user_can( 'manage_options' ) ) {
-			return true;
-		}
-
 		// If no tags specified, allow access
 		if ( empty( $tags ) ) {
 			return true;

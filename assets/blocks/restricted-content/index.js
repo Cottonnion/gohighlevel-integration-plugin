@@ -142,6 +142,8 @@
     attributes: {
       rule: { type: "string", default: "any" },
       tags: { type: "array", default: [] },
+      conditionLogic: { type: "string", default: "and" },
+      tagConditions: { type: "array", default: [] },
       fallbackContent: { type: "string", default: "" },
       showMessage: { type: "boolean", default: true },
       fallbackBgColor: { type: "string", default: "#fff3cd" },
@@ -318,6 +320,138 @@
           }),
           tagSelector,
         ),
+        // ─── Additional Conditions Panel ─────────────────────────────────
+        el(
+          PanelBody,
+          {
+            title: __("Additional Conditions", "ghl-crm-integration"),
+            initialOpen: false,
+          },
+          el(SelectControl, {
+            label: __("Condition Logic", "ghl-crm-integration"),
+            value: attrs.conditionLogic || "and",
+            options: [
+              {
+                label: __("AND — all conditions must pass", "ghl-crm-integration"),
+                value: "and",
+              },
+              {
+                label: __("OR — any condition can pass", "ghl-crm-integration"),
+                value: "or",
+              },
+            ],
+            onChange: function (v) {
+              setAttrs({ conditionLogic: v });
+            },
+            help: __(
+              "How the primary rule above combines with additional conditions below.",
+              "ghl-crm-integration",
+            ),
+          }),
+          // Render existing condition groups
+          (attrs.tagConditions || []).map(function (condition, index) {
+            return el(
+              "div",
+              {
+                key: "condition-" + index,
+                style: {
+                  background: "#f8f9fa",
+                  border: "1px solid #e2e4e7",
+                  borderRadius: "4px",
+                  padding: "12px",
+                  marginBottom: "12px",
+                },
+              },
+              el(
+                "div",
+                {
+                  style: {
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: "8px",
+                  },
+                },
+                el(
+                  "strong",
+                  { style: { fontSize: "12px", textTransform: "uppercase", color: "#1e1e1e" } },
+                  __("Condition", "ghl-crm-integration") + " #" + (index + 1),
+                ),
+                el(
+                  "button",
+                  {
+                    className: "components-button is-small is-destructive",
+                    onClick: function () {
+                      var updated = (attrs.tagConditions || []).filter(function (_, i) {
+                        return i !== index;
+                      });
+                      setAttrs({ tagConditions: updated });
+                    },
+                    style: { fontSize: "11px" },
+                  },
+                  __("Remove", "ghl-crm-integration"),
+                ),
+              ),
+              el(SelectControl, {
+                label: __("Match Type", "ghl-crm-integration"),
+                value: condition.matchType || "any",
+                options: [
+                  { label: __("User has ANY of these tags", "ghl-crm-integration"), value: "any" },
+                  { label: __("User has ALL of these tags", "ghl-crm-integration"), value: "all" },
+                  { label: __("User has NONE of these tags", "ghl-crm-integration"), value: "none" },
+                ],
+                onChange: function (v) {
+                  var updated = (attrs.tagConditions || []).map(function (c, i) {
+                    return i === index ? Object.assign({}, c, { matchType: v }) : c;
+                  });
+                  setAttrs({ tagConditions: updated });
+                },
+              }),
+              el(SelectControl, {
+                label: __("Tags", "ghl-crm-integration"),
+                multiple: true,
+                value: condition.tags || [],
+                options: (blockData.tags || []).map(function (tag) {
+                  return { label: tag.text, value: String(tag.id) };
+                }),
+                onChange: function (v) {
+                  var updated = (attrs.tagConditions || []).map(function (c, i) {
+                    return i === index ? Object.assign({}, c, { tags: v }) : c;
+                  });
+                  setAttrs({ tagConditions: updated });
+                },
+                help: __("Hold Ctrl/Cmd to select multiple tags.", "ghl-crm-integration"),
+                style: { minHeight: "80px" },
+              }),
+            );
+          }),
+          // Add Condition button
+          el(
+            "button",
+            {
+              className: "components-button is-secondary",
+              onClick: function () {
+                var updated = (attrs.tagConditions || []).concat([
+                  { matchType: "none", tags: [] },
+                ]);
+                setAttrs({ tagConditions: updated });
+              },
+              style: { width: "100%" },
+            },
+            __("+ Add Condition Group", "ghl-crm-integration"),
+          ),
+          el(
+            "p",
+            {
+              className: "description",
+              style: { marginTop: "8px", fontSize: "12px", color: "#757575" },
+            },
+            __(
+              "Add condition groups to build compound rules. Example: has ANY of [premium, vip] AND has NONE of [suspended].",
+              "ghl-crm-integration",
+            ),
+          ),
+        ),
         el(
           PanelBody,
           {
@@ -438,6 +572,10 @@
         tagCount === 1
           ? __("tag", "ghl-crm-integration")
           : __("tags", "ghl-crm-integration");
+      var conditionCount = (attrs.tagConditions || []).length;
+      var conditionSuffix = conditionCount > 0
+        ? " + " + conditionCount + " " + (conditionCount === 1 ? __("condition", "ghl-crm-integration") : __("conditions", "ghl-crm-integration")) + " [" + (attrs.conditionLogic || "and").toUpperCase() + "]"
+        : "";
 
       var restrictionIndicator = el(
         "div",
@@ -467,7 +605,8 @@
             "span",
             { style: { fontSize: "13px", color: "#646970" } },
             getRuleLabel(attrs.rule) +
-              (tagCount > 0 ? " (" + tagCount + " " + tagLabel + ")" : ""),
+              (tagCount > 0 ? " (" + tagCount + " " + tagLabel + ")" : "") +
+              conditionSuffix,
           ),
         ),
       );
