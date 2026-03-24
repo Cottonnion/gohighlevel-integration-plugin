@@ -121,8 +121,8 @@ class MenuManager {
 		$icon_svg = $this->get_menu_icon();
 
 		$page_hook = add_menu_page(
-			__( 'GoHighLevel CRM', 'ghl-crm-integration' ),
-			__( 'GHL Bridge', 'ghl-crm-integration' ),
+			__( 'HighLevelSync', 'ghl-crm-integration' ),
+			__( 'HighLevelSync', 'ghl-crm-integration' ),
 			'manage_options',
 			'ghl-crm-admin',
 			[ $this, 'render_spa_app' ],
