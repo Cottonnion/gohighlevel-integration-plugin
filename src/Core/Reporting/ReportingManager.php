@@ -160,8 +160,26 @@ class ReportingManager {
 			return;
 		}
 
+		$file = $last_error['file'] ?? '';
+
+		// Only log if the error file is inside either free or pro plugin directory
+		$plugin_dirs = [
+			WP_CONTENT_DIR . '/plugins/ghl-crm-integration',
+			WP_CONTENT_DIR . '/plugins/ghl-crm-integration-pro',
+		];
+		$in_plugin = false;
+		foreach ( $plugin_dirs as $dir ) {
+			if ( strpos( $file, $dir ) !== false ) {
+				$in_plugin = true;
+				break;
+			}
+		}
+		if ( ! $in_plugin ) {
+			return;
+		}
+
 		$context = [
-			'file'    => $last_error['file'] ?? '',
+			'file'    => $file,
 			'line'    => isset( $last_error['line'] ) ? (int) $last_error['line'] : 0,
 			'plugin'  => 'ghl-crm-integration',
 			'php'     => PHP_VERSION,
