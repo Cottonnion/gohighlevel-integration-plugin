@@ -61,8 +61,17 @@ class ElementorIntegration {
 		// Enqueue editor styles
 		add_action( 'elementor/editor/after_enqueue_styles', [ $this, 'enqueue_editor_styles' ] );
 
-		// Initialize conditional restrictions
-		ElementorConditions::init();
+		/**
+		 * Allow Pro to initialize Elementor conditional display restrictions.
+		 *
+		 * Deferred to 'ghl_crm_loaded' so that Pro's FreePluginHooks has
+		 * registered its add_action callback before this fires.
+		 *
+		 * @since 1.2.0
+		 */
+		add_action( 'ghl_crm_loaded', static function () {
+			do_action( 'ghl_crm_init_elementor_conditions' );
+		} );
 	}
 
 	/**
