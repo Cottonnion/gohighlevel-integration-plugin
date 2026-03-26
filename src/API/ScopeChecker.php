@@ -215,12 +215,6 @@ class ScopeChecker {
 					'locationId' => $location_id,
 				),
 			),
-			// 'conversations'  => array(
-			// 'path'   => 'conversations/search',
-			// 'params' => array(
-			// 'locationId' => $location_id,
-			// ),
-			// ), // TODO: Requires per-sub-account Marketplace App install.
 		);
 
 		return $endpoints[ $scope_name ] ?? null;
