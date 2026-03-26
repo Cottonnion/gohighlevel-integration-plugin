@@ -20,6 +20,7 @@ $role_tags = $settings_manager->get_location_role_tags();
 $global_tags_raw = $settings_manager->get_location_global_tags();
 // Convert array to comma-separated string for display, or keep as is if string
 $global_tags = is_array( $global_tags_raw ) ? implode( ',', $global_tags_raw ) : $global_tags_raw;
+$global_tags_pro_active = apply_filters( 'ghl_crm_global_tags_enabled', false );
 ?>
 
 <div class="ghl-settings-wrapper">
@@ -130,7 +131,12 @@ $global_tags = is_array( $global_tags_raw ) ? implode( ',', $global_tags_raw ) :
 
 		<hr style="margin: 30px 0;">
 
-		<h3><?php esc_html_e( 'Additional Tag Settings', 'ghl-crm-integration' ); ?></h3>
+		<h3>
+			<?php esc_html_e( 'Additional Tag Settings', 'ghl-crm-integration' ); ?>
+			<?php if ( ! $global_tags_pro_active ) : ?>
+				<span style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; font-weight: 700;">PRO</span>
+			<?php endif; ?>
+		</h3>
 
 		<table class="form-table" role="presentation">
 			<tbody>
@@ -138,32 +144,38 @@ $global_tags = is_array( $global_tags_raw ) ? implode( ',', $global_tags_raw ) :
 					<th scope="row">
 						<label for="global_tags">
 							<?php esc_html_e( 'Global Tags', 'ghl-crm-integration' ); ?>
+							<?php if ( ! $global_tags_pro_active ) : ?>
+								<span style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; font-weight: 700;">PRO</span>
+							<?php endif; ?>
 							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'These tags are applied to EVERY contact synced from WordPress to GoHighLevel, regardless of their role.', 'ghl-crm-integration' ); ?>">?</span>
 						</label>
 					</th>
 					<td>
-						<select 
-							id="global_tags" 
-							name="global_tags[]" 
-							multiple 
-							class="ghl-role-tags-select"
-							style="width: 100%; max-width: 600px;"
-							data-placeholder="<?php esc_attr_e( 'Select or type tags to apply to all synced contacts...', 'ghl-crm-integration' ); ?>">
-							<?php
-							if ( ! empty( $global_tags ) ) {
-								$global_tags_array = array_map( 'trim', explode( ',', $global_tags ) );
-								foreach ( $global_tags_array as $tag ) {
-									if ( ! empty( $tag ) ) {
-										?>
-										<option value="<?php echo esc_attr( $tag ); ?>" selected="selected">
-											<?php echo esc_html( $tag ); ?>
-										</option>
-										<?php
+						<div <?php echo ! $global_tags_pro_active ? 'style="opacity: 0.6; pointer-events: none;"' : ''; ?>>
+							<select 
+								id="global_tags" 
+								name="global_tags[]" 
+								multiple 
+								class="ghl-role-tags-select"
+								style="width: 100%; max-width: 600px;"
+								data-placeholder="<?php esc_attr_e( 'Select or type tags to apply to all synced contacts...', 'ghl-crm-integration' ); ?>"
+								<?php disabled( ! $global_tags_pro_active ); ?>>
+								<?php
+								if ( ! empty( $global_tags ) ) {
+									$global_tags_array = array_map( 'trim', explode( ',', $global_tags ) );
+									foreach ( $global_tags_array as $tag ) {
+										if ( ! empty( $tag ) ) {
+											?>
+											<option value="<?php echo esc_attr( $tag ); ?>" selected="selected">
+												<?php echo esc_html( $tag ); ?>
+											</option>
+											<?php
+										}
 									}
 								}
-							}
-							?>
-						</select>
+								?>
+							</select>
+						</div>
 						<p class="description" style="margin-top: 8px;">
 							<?php esc_html_e( 'Tags to apply to all synced contacts regardless of role.', 'ghl-crm-integration' ); ?>
 						</p>

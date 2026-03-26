@@ -91,17 +91,15 @@ class Restrictions {
 		// Filter content for restricted posts
 		add_filter( 'the_content', [ $this, 'filter_restricted_content' ], 10, 1 );
 
-		// Maybe hide from archives
-		if ( $this->settings_manager->get_setting( 'restrictions_hide_archives', false ) ) {
-			add_action( 'pre_get_posts', [ $this, 'exclude_restricted_from_archives' ] );
-		}
-
-		// Maybe hide from REST API
-		if ( $this->settings_manager->get_setting( 'restrictions_hide_rest_api', false ) ) {
-			add_filter( 'rest_post_query', [ $this, 'exclude_restricted_from_rest_api' ], 10, 2 );
-			add_filter( 'rest_page_query', [ $this, 'exclude_restricted_from_rest_api' ], 10, 2 );
-			add_filter( 'rest_product_query', [ $this, 'exclude_restricted_from_rest_api' ], 10, 2 );
-		}
+		/**
+		 * Allow Pro to register advanced restriction hooks (archive & REST API protection).
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param \GHL_CRM\Membership\Restrictions $restrictions     The Restrictions instance.
+		 * @param \GHL_CRM\Core\SettingsManager    $settings_manager The SettingsManager instance.
+		 */
+		do_action( 'ghl_crm_register_advanced_restriction_hooks', $this, $this->settings_manager );
 
 		// Enqueue frontend styles
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_frontend_assets' ] );
@@ -132,6 +130,11 @@ class Restrictions {
 	 */
 	private function user_has_allowed_role(): bool {
 		if ( ! is_user_logged_in() ) {
+			return false;
+		}
+
+		// Override settings require Pro
+		if ( ! apply_filters( 'ghl_crm_restriction_overrides_enabled', false ) ) {
 			return false;
 		}
 

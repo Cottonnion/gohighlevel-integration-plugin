@@ -596,26 +596,25 @@ class AjaxHandler {
 
 			$ghl_fields = array_map( 'sanitize_text_field', $ghl_fields_raw );
 
-			// Get suggestions using FieldMatcher.
-			$matcher     = new \GHL_CRM\Utilities\FieldMatcher();
-			$suggestions = $matcher->get_suggestions( $wp_fields, $ghl_fields );
+			/**
+			 * Delegate field suggestions to Pro add-on.
+			 *
+			 * @since 1.0.0
+			 *
+			 * @param array|null $result     Null by default; Pro returns suggestions array.
+			 * @param array      $wp_fields  Sanitized WordPress field keys.
+			 * @param array      $ghl_fields Sanitized GoHighLevel field keys.
+			 */
+			$result = apply_filters( 'ghl_crm_field_suggestions_result', null, $wp_fields, $ghl_fields );
 
-			// Get detailed match info for each suggestion.
-			$detailed_suggestions = array();
-			foreach ( $suggestions as $wp_field => $ghl_field ) {
-				$details                           = $matcher->get_match_details( $wp_field, $ghl_field );
-				$detailed_suggestions[ $wp_field ] = $details;
+			if ( null !== $result ) {
+				wp_send_json_success( $result );
+				return;
 			}
 
-			wp_send_json_success(
-				array(
-					'message'     => sprintf(
-						/* translators: %d: number of suggestions found */
-						__( 'Found %d field mapping suggestions', 'ghl-crm-integration' ),
-						count( $suggestions )
-					),
-					'suggestions' => $detailed_suggestions,
-				)
+			wp_send_json_error(
+				[ 'message' => __( 'AI-assisted field suggestions is available with the Pro add-on.', 'ghl-crm-integration' ) ],
+				403
 			);
 
 		} catch ( \Exception $e ) {

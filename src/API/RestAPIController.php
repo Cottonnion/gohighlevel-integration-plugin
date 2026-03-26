@@ -96,74 +96,14 @@ class RestAPIController {
 			]
 		);
 
-		$settings         = $this->settings_manager->get_settings_array();
-		$rest_api_enabled = $settings['rest_api_enabled'] ?? false;
-
-		// Only register routes if REST API is enabled
-		if ( ! $rest_api_enabled ) {
-			return;
-		}
-
-		$allowed_endpoints = $settings['rest_api_endpoints'] ?? [];
-
-		// Contacts endpoint
-		if ( in_array( 'contacts', $allowed_endpoints, true ) ) {
-			register_rest_route(
-				'ghl-crm/v1',
-				'/contacts',
-				[
-					'methods'             => 'POST',
-					'callback'            => [ $this, 'create_or_update_contact' ],
-					'permission_callback' => [ $this, 'check_api_permission' ],
-				]
-			);
-		}
-
-		// Sync endpoint
-		if ( in_array( 'sync', $allowed_endpoints, true ) ) {
-			register_rest_route(
-				'ghl-crm/v1',
-				'/sync',
-				[
-					'methods'             => 'POST',
-					'callback'            => [ $this, 'trigger_sync' ],
-					'permission_callback' => [ $this, 'check_api_permission' ],
-				]
-			);
-		}
-
-		// Status endpoint
-		if ( in_array( 'status', $allowed_endpoints, true ) ) {
-			register_rest_route(
-				'ghl-crm/v1',
-				'/status',
-				[
-					'methods'             => 'GET',
-					'callback'            => [ $this, 'get_status' ],
-					'permission_callback' => [ $this, 'check_api_permission' ],
-				]
-			);
-		}
-
-		// Webhooks endpoint (GET for verification, POST for events)
-		if ( in_array( 'webhooks', $allowed_endpoints, true ) ) {
-			register_rest_route(
-				'ghl-crm/v1',
-				'/webhooks',
-				[
-					[
-						'methods'             => 'GET',
-						'callback'            => [ $this, 'verify_webhook' ],
-						'permission_callback' => '__return_true', // Public for verification
-					],
-					[
-						'methods'             => 'POST',
-						'callback'            => [ $this, 'handle_webhook' ],
-						'permission_callback' => [ $this, 'check_api_permission' ],
-					],
-				]
-			);
-		}
+		/**
+		 * Allow Pro to register public REST API routes.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param \GHL_CRM\API\RestAPIController $controller The REST API controller instance.
+		 */
+		do_action( 'ghl_crm_register_public_rest_routes', $this );
 	}
 
 	/**

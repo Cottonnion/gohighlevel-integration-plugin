@@ -227,9 +227,12 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 			<span class="dashicons dashicons-update" style="margin-top: 3px;"></span>
 			<?php esc_html_e( 'Reload Fields from GoHighLevel', 'ghl-crm-integration' ); ?>
 		</a>
-		<button type="button" id="ghl-auto-suggest-mappings" class="ghl-button ghl-button-secondary">
+		<button type="button" id="ghl-auto-suggest-mappings" class="ghl-button ghl-button-secondary" <?php echo ! apply_filters( 'ghl_crm_field_suggestions_enabled', false ) ? 'disabled style="opacity: 0.7; cursor: not-allowed;"' : ''; ?>>
 			<span class="dashicons dashicons-lightbulb" style="margin-top: 3px;"></span>
 			<?php esc_html_e( 'Auto-Suggest Mappings', 'ghl-crm-integration' ); ?>
+			<?php if ( ! apply_filters( 'ghl_crm_field_suggestions_enabled', false ) ) : ?>
+				<span style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; font-weight: 700;">PRO</span>
+			<?php endif; ?>
 		</button>
 	</div>
 

@@ -15,6 +15,7 @@ $oauth_status  = $oauth_handler->get_connection_status();
 $settings      = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
 
 $is_connected = $oauth_status['connected'] || ! empty( $settings['api_token'] );
+$has_analytics = has_action( 'ghl_crm_render_analytics_tab' );
 ?>
 <div class="ghl-crm-dashboard">
 	<?php if ( $is_connected ) : ?>
@@ -28,6 +29,9 @@ $is_connected = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 				<button class="ghl-dashboard-tab" data-tab="analytics" style="padding: 10px 20px; border: none; background: transparent; color: #64748b; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s;">
 					<span class="dashicons dashicons-chart-area" style="vertical-align: middle; margin-right: 6px;"></span>
 					<?php esc_html_e( 'Analytics', 'ghl-crm-integration' ); ?>
+					<?php if ( ! $has_analytics ) : ?>
+						<span style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; font-weight: 700;">PRO</span>
+					<?php endif; ?>
 				</button>
 			</div>
 		</div>
@@ -41,7 +45,20 @@ $is_connected = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 			
 			<!-- Analytics Tab -->
 			<div id="ghl-tab-analytics" class="ghl-tab-content" style="display: none;">
-				<?php include plugin_dir_path( __FILE__ ) . 'analytics.php'; ?>
+				<?php if ( $has_analytics ) : ?>
+					<?php do_action( 'ghl_crm_render_analytics_tab' ); ?>
+				<?php else : ?>
+					<div style="background: white; border: 1px solid #e2e8f0; padding: 40px; border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);">
+						<span class="dashicons dashicons-chart-area" style="font-size: 48px; width: 48px; height: 48px; color: #c7d2fe; margin-bottom: 16px;"></span>
+						<h3 style="margin: 0 0 8px; font-size: 20px; font-weight: 700; color: #1e293b;"><?php esc_html_e( 'Sync Analytics Dashboard', 'ghl-crm-integration' ); ?></h3>
+						<p style="margin: 0 0 20px; color: #64748b; font-size: 14px; max-width: 480px; margin-left: auto; margin-right: auto;">
+							<?php esc_html_e( 'Unlock detailed Chart visualizations including daily activity trends, sync type breakdowns, hourly activity, success/failure rates, and CSV export.', 'ghl-crm-integration' ); ?>
+						</p>
+						<a href="<?php echo esc_url( apply_filters( 'ghl_crm_upgrade_url', 'https://highlevelsync.com/upgrade-to-pro' ) ); ?>" target="_blank" class="ghl-button ghl-button-primary" style="text-decoration: none; background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none;">
+							<?php esc_html_e( 'Upgrade to Pro', 'ghl-crm-integration' ); ?>
+						</a>
+					</div>
+				<?php endif; ?>
 			</div>
 		</div>
 

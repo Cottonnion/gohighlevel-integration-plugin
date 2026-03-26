@@ -76,8 +76,10 @@ $settings_tabs = [
 		'icon'  => 'dashicons-lock',
 	],
 	'rest-api' => [
-		'label' => __( 'REST API', 'ghl-crm-integration' ),
-		'icon'  => 'dashicons-editor-code',
+		'label'      => __( 'REST API', 'ghl-crm-integration' ),
+		'icon'       => 'dashicons-editor-code',
+		'pro'        => true,
+		'pro_filter' => 'ghl_crm_public_rest_api_enabled',
 	],
 	'webhooks' => [
 		'label' => __( 'Webhooks', 'ghl-crm-integration' ),
@@ -95,9 +97,17 @@ $settings_tabs = [
 		'label' => __( 'Role-Based Tags', 'ghl-crm-integration' ),
 		'icon'  => 'dashicons-tag',
 	],
+	'family-relationships' => [
+		'label'      => __( 'Family Relationships', 'ghl-crm-integration' ),
+		'icon'       => 'dashicons-groups',
+		'pro'        => true,
+		'pro_filter' => 'ghl_crm_family_relationships_enabled',
+	],
 	'sync-preview' => [
-		'label' => __( 'Sync Preview', 'ghl-crm-integration' ),
-		'icon'  => 'dashicons-visibility',
+		'label'      => __( 'Sync Preview', 'ghl-crm-integration' ),
+		'icon'       => 'dashicons-visibility',
+		'pro'        => true,
+		'pro_filter' => 'ghl_crm_sync_preview_enabled',
 	],
 	// 'conversations' => [
 	// 	'label' => __( 'Conversations', 'ghl-crm-integration' ),
@@ -203,7 +213,12 @@ $settings_tabs = apply_filters( 'ghl_crm_settings_tabs', $settings_tabs, $is_con
 					?>
 					<li class="<?php echo esc_attr( $li_class ); ?>" data-tab="<?php echo esc_attr( $tab_key ); ?>" <?php echo $is_disabled ? 'title="' . esc_attr( $disabled_title ) . '"' : ''; ?>>
 						<span class="dashicons <?php echo esc_attr( $tab_data['icon'] ); ?>"></span>
-						<span class="ghl-tab-label"><?php echo esc_html( $tab_data['label'] ); ?></span>
+						<span class="ghl-tab-label">
+							<?php echo esc_html( $tab_data['label'] ); ?>
+							<?php if ( ! empty( $tab_data['pro'] ) && ( empty( $tab_data['pro_filter'] ) || ! apply_filters( $tab_data['pro_filter'], false ) ) ) : ?>
+								<span style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 9px; padding: 1px 5px; border-radius: 3px; margin-left: 4px; font-weight: 700;">PRO</span>
+							<?php endif; ?>
+						</span>
 					</li>
 				<?php endforeach; ?>
 			</ul>

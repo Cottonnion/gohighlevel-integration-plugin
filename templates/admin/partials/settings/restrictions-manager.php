@@ -28,6 +28,8 @@ $allow_admins = $settings['restrictions_allow_admins'] ?? true;
 $hide_restricted_archives = $settings['restrictions_hide_archives'] ?? false;
 $hide_from_rest_api = $settings['restrictions_hide_rest_api'] ?? false;
 $allowed_tags = $settings['restrictions_allowed_tags'] ?? [];
+$is_pro_active = apply_filters( 'ghl_crm_archive_protection_enabled', false );
+$overrides_pro_active = apply_filters( 'ghl_crm_restriction_overrides_enabled', false );
 ?>
 
 <div class="ghl-settings-wrapper">
@@ -230,15 +232,19 @@ $allowed_tags = $settings['restrictions_allowed_tags'] ?? [];
 				<tr>
 					<th scope="row">
 						<?php esc_html_e( 'Hide from Archives', 'ghl-crm-integration' ); ?>
+						<?php if ( ! $is_pro_active ) : ?>
+							<span style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; font-weight: 700;">PRO</span>
+						<?php endif; ?>
 					</th>
 					<td>
-						<label class="ghl-checkbox <?php echo $hide_restricted_archives ? 'is-checked' : ''; ?>">
+						<label class="ghl-checkbox <?php echo $hide_restricted_archives ? 'is-checked' : ''; ?>" <?php echo ! $is_pro_active ? 'style="opacity: 0.6; pointer-events: none;"' : ''; ?>>
 							<input type="checkbox" 
 								   class="ghl-checkbox-original"
 								   id="restrictions_hide_archives" 
 								   name="restrictions_hide_archives" 
 								   value="1" 
-								   <?php checked( $hide_restricted_archives ); ?>>
+								   <?php checked( $hide_restricted_archives ); ?>
+								   <?php disabled( ! $is_pro_active ); ?>>
 							<span class="ghl-checkbox-input <?php echo $hide_restricted_archives ? 'is-checked' : ''; ?>">
 								<span class="ghl-checkbox-inner"></span>
 							</span>
@@ -256,15 +262,19 @@ $allowed_tags = $settings['restrictions_allowed_tags'] ?? [];
 				<tr>
 					<th scope="row">
 						<?php esc_html_e( 'Hide from REST API', 'ghl-crm-integration' ); ?>
+						<?php if ( ! $is_pro_active ) : ?>
+							<span style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; font-weight: 700;">PRO</span>
+						<?php endif; ?>
 					</th>
 					<td>
-						<label class="ghl-checkbox <?php echo $hide_from_rest_api ? 'is-checked' : ''; ?>">
+						<label class="ghl-checkbox <?php echo $hide_from_rest_api ? 'is-checked' : ''; ?>" <?php echo ! $is_pro_active ? 'style="opacity: 0.6; pointer-events: none;"' : ''; ?>>
 							<input type="checkbox" 
 								   class="ghl-checkbox-original"
 								   id="restrictions_hide_rest_api" 
 								   name="restrictions_hide_rest_api" 
 								   value="1" 
-								   <?php checked( $hide_from_rest_api ); ?>>
+								   <?php checked( $hide_from_rest_api ); ?>
+								   <?php disabled( ! $is_pro_active ); ?>>
 							<span class="ghl-checkbox-input <?php echo $hide_from_rest_api ? 'is-checked' : ''; ?>">
 								<span class="ghl-checkbox-inner"></span>
 							</span>
@@ -284,21 +294,30 @@ $allowed_tags = $settings['restrictions_allowed_tags'] ?? [];
 		<hr>
 
 		<!-- Admin & Override Settings -->
-		<h3><?php esc_html_e( 'Override Settings', 'ghl-crm-integration' ); ?></h3>
+		<h3>
+			<?php esc_html_e( 'Override Settings', 'ghl-crm-integration' ); ?>
+			<?php if ( ! $overrides_pro_active ) : ?>
+				<span style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; font-weight: 700;">PRO</span>
+			<?php endif; ?>
+		</h3>
 		<table class="form-table" role="presentation">
 			<tbody>
 				<tr>
 					<th scope="row">
 						<?php esc_html_e( 'Allow Administrators', 'ghl-crm-integration' ); ?>
+						<?php if ( ! $overrides_pro_active ) : ?>
+							<span style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; font-weight: 700;">PRO</span>
+						<?php endif; ?>
 					</th>
 					<td>
-						<label class="ghl-checkbox <?php echo $allow_admins ? 'is-checked' : ''; ?>">
+						<label class="ghl-checkbox <?php echo $allow_admins ? 'is-checked' : ''; ?>" <?php echo ! $overrides_pro_active ? 'style="opacity: 0.6; pointer-events: none;"' : ''; ?>>
 							<input type="checkbox" 
 								   class="ghl-checkbox-original"
 								   id="restrictions_allow_admins" 
 								   name="restrictions_allow_admins" 
 								   value="1" 
-								   <?php checked( $allow_admins ); ?>>
+								   <?php checked( $allow_admins ); ?>
+								   <?php disabled( ! $overrides_pro_active ); ?>>
 							<span class="ghl-checkbox-input <?php echo $allow_admins ? 'is-checked' : ''; ?>">
 								<span class="ghl-checkbox-inner"></span>
 							</span>
@@ -317,17 +336,23 @@ $allowed_tags = $settings['restrictions_allowed_tags'] ?? [];
 					<th scope="row">
 						<label for="restrictions_allowed_tags">
 							<?php esc_html_e( 'Additional Allowed Tags', 'ghl-crm-integration' ); ?>
+							<?php if ( ! $overrides_pro_active ) : ?>
+								<span style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; font-weight: 700;">PRO</span>
+							<?php endif; ?>
 							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Global bypass tags: Users with any of these tags can access ALL restricted content, regardless of individual page tag requirements.', 'ghl-crm-integration' ); ?>">?</span>
 						</label>
 					</th>
 					<td>
-						<select id="restrictions_allowed_tags" 
-								name="restrictions_allowed_tags[]" 
-								multiple 
-								class="ghl-tags-select"
-								style="width: 100%; max-width: 500px;"
-								data-placeholder="<?php esc_attr_e( 'Select tags that can bypass restrictions...', 'ghl-crm-integration' ); ?>">
-						</select>
+						<div <?php echo ! $overrides_pro_active ? 'style="opacity: 0.6; pointer-events: none;"' : ''; ?>>
+							<select id="restrictions_allowed_tags" 
+									name="restrictions_allowed_tags[]" 
+									multiple 
+									class="ghl-tags-select"
+									style="width: 100%; max-width: 500px;"
+									data-placeholder="<?php esc_attr_e( 'Select tags that can bypass restrictions...', 'ghl-crm-integration' ); ?>"
+									<?php disabled( ! $overrides_pro_active ); ?>>
+							</select>
+						</div>
 						<p class="description" style="margin-top: 8px;">
 							<?php esc_html_e( 'Users with any of these tags can view all restricted content, regardless of individual page restrictions.', 'ghl-crm-integration' ); ?>
 						</p>

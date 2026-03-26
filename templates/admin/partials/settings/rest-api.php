@@ -23,6 +23,7 @@ $rest_api_ip_whitelist = $settings['rest_api_ip_whitelist'] ?? '';
 $rest_api_rate_limit = $settings['rest_api_rate_limit'] ?? true;
 $rest_api_endpoints = $settings['rest_api_endpoints'] ?? [ 'contacts', 'sync', 'status' ];
 $rest_api_requests_per_minute = $settings['rest_api_requests_per_minute'] ?? 60;
+$is_pro_active = apply_filters( 'ghl_crm_public_rest_api_enabled', false );
 
 // Generate API key if not exists
 if ( empty( $rest_api_key ) ) {
@@ -32,6 +33,219 @@ if ( empty( $rest_api_key ) ) {
 
 <div class="ghl-settings-wrapper">
 	<?php wp_nonce_field( 'ghl_crm_settings_nonce', 'ghl_crm_nonce' ); ?>
+	
+	<?php if ( ! $is_pro_active ) : ?>
+	<!-- Upgrade CTA Banner -->
+	<div style="background: linear-gradient(135deg, #eef2ff, #e0e7ff); border: 2px solid #c7d2fe; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 24px; position: relative; overflow: hidden;">
+		<div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 50%; opacity: 0.1;"></div>
+		<span class="dashicons dashicons-rest-api" style="font-size: 48px; width: 48px; height: 48px; color: #6366f1; margin-bottom: 16px;"></span>
+		<h3 style="margin: 0 0 8px; font-size: 20px; font-weight: 700; color: #1e293b;">
+			<?php esc_html_e( 'Public REST API is a Pro Feature', 'ghl-crm-integration' ); ?>
+			<span style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 12px; padding: 3px 8px; border-radius: 4px; margin-left: 8px; font-weight: 700; vertical-align: middle;">PRO</span>
+		</h3>
+		<p style="margin: 0 0 20px; color: #64748b; font-size: 14px; max-width: 520px; margin-left: auto; margin-right: auto;">
+			<?php esc_html_e( 'Expose authenticated REST API endpoints for contacts, sync, status, and webhooks with bearer token auth, IP whitelisting, and rate limiting.', 'ghl-crm-integration' ); ?>
+		</p>
+		<a href="<?php echo esc_url( apply_filters( 'ghl_crm_upgrade_url', 'https://highlevelsync.com/upgrade-to-pro' ) ); ?>" target="_blank" class="ghl-button ghl-button-primary" style="text-decoration: none; background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; font-size: 14px; padding: 10px 24px;">
+			<?php esc_html_e( 'Upgrade to Pro', 'ghl-crm-integration' ); ?>
+		</a>
+	</div>
+
+	<!-- Greyed-out Preview -->
+	<div style="position: relative; pointer-events: none; user-select: none;">
+		<div style="position: absolute; inset: 0; background: rgba(255,255,255,0.55); z-index: 5; border-radius: 12px;"></div>
+
+		<div style="opacity: 0.65;">
+
+			<!-- Master Toggle -->
+			<div class="ghl-settings-section ghl-settings-card">
+				<div class="ghl-settings-header">
+					<h2>
+						<span class="dashicons dashicons-rest-api"></span>
+						<?php esc_html_e( 'REST API Access', 'ghl-crm-integration' ); ?>
+					</h2>
+					<p class="description">
+						<?php esc_html_e( 'Enable external services to interact with your plugin through REST API endpoints.', 'ghl-crm-integration' ); ?>
+					</p>
+				</div>
+				<hr>
+				<div class="ghl-form-builder">
+					<div class="ghl-form">
+						<div class="ghl-form-item">
+							<div class="ghl-form-item-content">
+								<label class="ghl-checkbox is-checked">
+									<input type="checkbox" class="ghl-checkbox-original" checked disabled>
+									<span class="ghl-checkbox-input is-checked">
+										<span class="ghl-checkbox-inner"></span>
+									</span>
+									<span class="ghl-checkbox-label">
+										<?php esc_html_e( 'Enable REST API endpoints', 'ghl-crm-integration' ); ?>
+										<span class="ghl-tooltip-icon">?</span>
+									</span>
+								</label>
+							</div>
+							<p class="description" style="margin-left: 54px;">
+								<?php esc_html_e( 'When enabled, external services can use REST API to create/update contacts and trigger syncs.', 'ghl-crm-integration' ); ?>
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Authentication Settings -->
+			<div class="ghl-settings-section ghl-settings-card">
+				<h2><?php esc_html_e( 'Authentication', 'ghl-crm-integration' ); ?></h2>
+				<p><?php esc_html_e( 'Manage API keys for secure access to REST endpoints.', 'ghl-crm-integration' ); ?></p>
+				<hr>
+				<table class="form-table" role="presentation">
+					<tbody>
+						<tr>
+							<th scope="row">
+								<label><?php esc_html_e( 'API Key', 'ghl-crm-integration' ); ?></label>
+							</th>
+							<td>
+								<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+									<input type="text" value="ghl_sk_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6" class="regular-text code" readonly disabled style="font-family: monospace; background: #f0f0f1;" />
+									<button type="button" class="ghl-button ghl-button-secondary" disabled>
+										<span class="dashicons dashicons-update" style="vertical-align: middle;"></span>
+										<span><?php esc_html_e( 'Regenerate', 'ghl-crm-integration' ); ?></span>
+									</button>
+									<button type="button" class="button button-secondary" disabled>
+										<span class="dashicons dashicons-clipboard" style="vertical-align: middle;"></span>
+									</button>
+								</div>
+								<p class="description">
+									<?php esc_html_e( 'Use this key in Authorization header: ', 'ghl-crm-integration' ); ?>
+									<code>Authorization: Bearer YOUR_API_KEY</code>
+								</p>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<!-- Security Settings -->
+			<div class="ghl-settings-section ghl-settings-card">
+				<h2><?php esc_html_e( 'Security Settings', 'ghl-crm-integration' ); ?></h2>
+				<p><?php esc_html_e( 'Configure IP restrictions and rate limiting for enhanced security.', 'ghl-crm-integration' ); ?></p>
+				<hr>
+				<table class="form-table" role="presentation">
+					<tbody>
+						<tr>
+							<th scope="row">
+								<label><?php esc_html_e( 'IP Whitelist', 'ghl-crm-integration' ); ?> <span class="ghl-tooltip-icon">?</span></label>
+							</th>
+							<td>
+								<textarea rows="5" class="large-text code" disabled style="font-family: monospace;">203.0.113.50
+10.0.0.0/8
+192.168.1.100</textarea>
+								<p class="description">
+									<?php esc_html_e( 'One IP address or CIDR per line. Leave empty to allow all IPs.', 'ghl-crm-integration' ); ?>
+								</p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<?php esc_html_e( 'Rate Limiting', 'ghl-crm-integration' ); ?>
+								<span class="ghl-tooltip-icon">?</span>
+							</th>
+							<td>
+								<label class="ghl-checkbox is-checked" style="display: inline-flex; align-items: center;">
+									<input type="checkbox" class="ghl-checkbox-original" checked disabled>
+									<span class="ghl-checkbox-input is-checked">
+										<span class="ghl-checkbox-inner"></span>
+									</span>
+									<span class="ghl-checkbox-label">
+										<?php esc_html_e( 'Enable rate limiting', 'ghl-crm-integration' ); ?>
+									</span>
+								</label>
+								<div style="margin-top: 10px;">
+									<label style="display: inline-block; margin-right: 10px;">
+										<?php esc_html_e( 'Max requests per minute:', 'ghl-crm-integration' ); ?>
+									</label>
+									<input type="number" value="60" min="10" max="1000" style="width: 80px;" disabled>
+								</div>
+								<p class="description">
+									<?php esc_html_e( 'Limit API requests per IP address to prevent abuse.', 'ghl-crm-integration' ); ?>
+								</p>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<!-- Endpoint Configuration -->
+			<div class="ghl-settings-section ghl-settings-card">
+				<h2><?php esc_html_e( 'Allowed Endpoints', 'ghl-crm-integration' ); ?> <span class="ghl-tooltip-icon">?</span></h2>
+				<p><?php esc_html_e( 'Choose which REST API endpoints are available for external access.', 'ghl-crm-integration' ); ?></p>
+				<hr>
+				<div class="ghl-form-builder">
+					<div class="ghl-form">
+						<div class="ghl-form-item">
+							<div class="ghl-form-item-content">
+								<fieldset>
+									<label class="ghl-checkbox is-checked" style="display: block; margin-bottom: 15px;">
+										<input type="checkbox" class="ghl-checkbox-original" checked disabled>
+										<span class="ghl-checkbox-input is-checked"><span class="ghl-checkbox-inner"></span></span>
+										<span class="ghl-checkbox-label">
+											<code style="background: #f0f0f1; padding: 2px 6px; border-radius: 3px;">/ghl-crm/v1/contacts</code> - Create/Update Contacts
+										</span>
+									</label>
+									<label class="ghl-checkbox is-checked" style="display: block; margin-bottom: 15px;">
+										<input type="checkbox" class="ghl-checkbox-original" checked disabled>
+										<span class="ghl-checkbox-input is-checked"><span class="ghl-checkbox-inner"></span></span>
+										<span class="ghl-checkbox-label">
+											<code style="background: #f0f0f1; padding: 2px 6px; border-radius: 3px;">/ghl-crm/v1/sync</code> - Trigger Manual Sync
+										</span>
+									</label>
+									<label class="ghl-checkbox is-checked" style="display: block; margin-bottom: 15px;">
+										<input type="checkbox" class="ghl-checkbox-original" checked disabled>
+										<span class="ghl-checkbox-input is-checked"><span class="ghl-checkbox-inner"></span></span>
+										<span class="ghl-checkbox-label">
+											<code style="background: #f0f0f1; padding: 2px 6px; border-radius: 3px;">/ghl-crm/v1/status</code> - Get Sync Status
+										</span>
+									</label>
+									<label class="ghl-checkbox" style="display: block; margin-bottom: 15px;">
+										<input type="checkbox" class="ghl-checkbox-original" disabled>
+										<span class="ghl-checkbox-input"><span class="ghl-checkbox-inner"></span></span>
+										<span class="ghl-checkbox-label">
+											<code style="background: #f0f0f1; padding: 2px 6px; border-radius: 3px;">/ghl-crm/v1/webhooks</code> - Receive Webhook Events
+										</span>
+									</label>
+								</fieldset>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Save Button (disabled) -->
+			<button type="button" class="ghl-button ghl-button-primary ghl-save-settings-btn" disabled>
+				<span class="ghl-button-text"><?php esc_html_e( 'Save REST API Settings', 'ghl-crm-integration' ); ?></span>
+			</button>
+
+			<!-- Help Section -->
+			<div class="ghl-help-box" style="margin-top: 30px;">
+				<h3>
+					<span class="dashicons dashicons-shield"></span>
+					<?php esc_html_e( 'Security Best Practices', 'ghl-crm-integration' ); ?>
+				</h3>
+				<div class="ghl-help-content">
+					<ul style="list-style: disc; margin-left: 20px;">
+						<li><?php esc_html_e( 'Always use HTTPS when making API requests', 'ghl-crm-integration' ); ?></li>
+						<li><?php esc_html_e( 'Store API keys securely and never commit them to version control', 'ghl-crm-integration' ); ?></li>
+						<li><?php esc_html_e( 'Use IP whitelisting to restrict access to known servers', 'ghl-crm-integration' ); ?></li>
+						<li><?php esc_html_e( 'Enable rate limiting to prevent abuse', 'ghl-crm-integration' ); ?></li>
+						<li><?php esc_html_e( 'Regenerate API keys regularly and after any security incident', 'ghl-crm-integration' ); ?></li>
+						<li><?php esc_html_e( 'Monitor API usage through the sync logs', 'ghl-crm-integration' ); ?></li>
+					</ul>
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+	<?php else : ?>
 	
 	<!-- Master Toggle -->
 	<div class="ghl-settings-section ghl-settings-card">
@@ -396,3 +610,4 @@ jQuery(document).ready(function($) {
 	});
 });
 </script>
+<?php endif; ?>

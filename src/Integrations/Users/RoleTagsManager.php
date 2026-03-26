@@ -298,6 +298,11 @@ class RoleTagsManager {
 	 * @return array
 	 */
 	private function get_location_global_tags_config(): array {
+		// Global tags require Pro
+		if ( ! apply_filters( 'ghl_crm_global_tags_enabled', false ) ) {
+			return [];
+		}
+
 		$global_tags = $this->settings_manager->get_location_global_tags();
 
 		if ( empty( $global_tags ) ) {

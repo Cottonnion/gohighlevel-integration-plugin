@@ -88,7 +88,7 @@ class SettingsManager {
 		add_action( 'wp_ajax_ghl_crm_get_settings', [ $this, 'get_settings' ] );
 		add_action( 'wp_ajax_ghl_crm_test_connection', [ $this, 'test_connection' ] );
 		add_action( 'wp_ajax_ghl_crm_save_field_mapping', [ $this, 'save_field_mapping' ] );
-		add_action( 'wp_ajax_ghl_crm_preview_user_sync', [ $this, 'preview_user_sync' ] );
+		add_action( 'wp_ajax_ghl_crm_preview_user_sync', [ $this, 'preview_user_sync' ] ); // Pro-gated in handler
 		add_action( 'wp_ajax_ghl_crm_oauth_reconnect', [ $this, 'oauth_reconnect' ] );
 		add_action( 'wp_ajax_ghl_crm_refresh_access_token', [ $this, 'ajax_refresh_access_token' ] );
 		add_action( 'wp_ajax_ghl_crm_save_wizard_settings', [ $this, 'handle_save_wizard_settings' ] );
@@ -973,32 +973,27 @@ class SettingsManager {
 			wp_send_json_error( [ 'message' => __( 'User not found.', 'ghl-crm-integration' ) ] );
 		}
 
-		try {
-			$sync_preview = \GHL_CRM\Sync\SyncPreview::get_instance();
-			$preview_data = $sync_preview->preview_user_sync( $user->ID );
+		/**
+		 * Delegate sync preview to Pro add-on.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param array|null $preview_data Null by default; Pro returns preview data array.
+		 * @param int        $user_id      WordPress user ID to preview.
+		 */
+		$preview_data = apply_filters( 'ghl_crm_preview_user_sync_result', null, $user->ID );
 
+		if ( null !== $preview_data ) {
+			if ( isset( $preview_data['error'] ) ) {
+				wp_send_json_error( [ 'message' => $preview_data['error'] ] );
+			}
 			wp_send_json_success( $preview_data );
-		} catch ( \Exception $e ) {
-			wp_send_json_error(
-				[
-					'message' => sprintf(
-						/* translators: %s: error message */
-						__( 'Preview failed: %s', 'ghl-crm-integration' ),
-						$e->getMessage()
-					),
-				]
-			);
-		} catch ( \Error $t ) {
-			wp_send_json_error(
-				[
-					'message' => sprintf(
-						/* translators: %s: error message */
-						__( 'An unexpected error occurred: %s', 'ghl-crm-integration' ),
-						$t->getMessage()
-					),
-				]
-			);
 		}
+
+		wp_send_json_error(
+			[ 'message' => __( 'Sync Preview is available with the Pro add-on.', 'ghl-crm-integration' ) ],
+			403
+		);
 	}
 
 	/**
