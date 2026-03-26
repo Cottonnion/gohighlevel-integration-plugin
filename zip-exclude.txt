@@ -11,6 +11,10 @@ ghl-crm-integration/fix
 ghl-crm-integration/.phpcs-cache
 ghl-crm-integration/docs/*
 ghl-crm-integration/zip-exclude.txt
+ghl-crm-integration/PRODUCTION-BUILD.md
+ghl-crm-integration/DEV_CHANGELOG.md
+ghl-crm-integration/TODO.md
+ghl-crm-integration/FEATURES-AND-BENEFITS.md
 ghl-crm-integration/vendor/bin/*
 ghl-crm-integration/vendor/matthiasmullie/*
 ghl-crm-integration/vendor/squizlabs/*
