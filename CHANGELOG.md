@@ -2,6 +2,33 @@
 
 All notable changes to GoHighLevel CRM Integration will be documented in this file.
 
+## [1.2.0] - 2026-03-26
+
+### Changed — Free / Pro Feature Separation
+
+- **AI Field Suggestions** — Moved to Pro; free plugin delegates via `ghl_crm_field_suggestions_result` filter.
+- **Sync Preview / Dry Run** — Moved to Pro; free plugin delegates via `ghl_crm_preview_user_sync_result` filter.
+- **Public REST API Endpoints** — Moved to Pro; free plugin fires `ghl_crm_register_public_rest_routes` action for Pro to register endpoints (contacts, sync, status, webhooks).
+- **Elementor Widget Conditions** — Moved to Pro; free plugin fires `ghl_crm_init_elementor_conditions` action.
+- **Archive & REST API Protection** — Moved to Pro; free plugin fires `ghl_crm_register_advanced_restriction_hooks` action.
+- **Restriction Override Settings** — Admin bypass and allowed-tag overrides gated behind `ghl_crm_restriction_overrides_enabled` filter (Pro).
+- **Global Tags** — Gated behind `ghl_crm_global_tags_enabled` filter (Pro).
+- **Analytics Dashboard** — Chart visualizations moved to Pro via `ghl_crm_render_analytics_tab` action; free shows upgrade CTA.
+
+### Added
+
+- **Family Relationships Settings Tab** — New teaser page with greyed-out preview and upgrade CTA for the Pro family accounts feature.
+- **PRO Badges** — Settings sidebar tabs, field mapping auto-suggest button, restriction settings, role tag global settings, sync preview, and REST API page now show PRO badges when Pro is not active.
+- **Upgrade CTAs** — Sync Preview, REST API, Analytics, and Family Relationships pages show full upgrade banners with greyed-out feature previews.
+
+### Fixed
+
+- **Telemetry Fatal Error Filter** — `capture_fatal_error()` now only logs errors originating from `ghl-crm-integration` or `ghl-crm-integration-pro` directories, preventing unrelated theme/plugin errors from being sent.
+
+### Improved
+
+- **FEATURES-AND-BENEFITS.md** — Updated to accurately reflect the Free vs Pro feature split.
+
 ## [1.1.3] - 2026-03-22
 
 ### Fixed

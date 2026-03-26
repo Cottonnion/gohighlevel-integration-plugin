@@ -4,6 +4,65 @@ Internal changelog with full technical details. **Not included in release zips.*
 
 ---
 
+## [1.2.0] - 2026-03-26
+
+### Free / Pro Separation — Hook-Based Architecture
+
+Replaced direct class references with WordPress action/filter hooks so the free plugin
+has zero hard dependencies on Pro code. Pro registers handlers for each hook.
+
+**Files modified:**
+
+- `src/API/RestAPIController.php` — Removed 60+ lines of public endpoint registration.
+  Replaced with `do_action('ghl_crm_register_public_rest_routes', $this)`. Pro hooks in
+  to register contacts, sync, status, webhooks endpoints with its own settings checks.
+
+- `src/Core/Settings/AjaxHandler.php` — `get_field_suggestions()` no longer instantiates
+  `FieldMatcher`. Uses `apply_filters('ghl_crm_field_suggestions_result', null, $wp_fields, $ghl_fields)`.
+  Returns 403 with Pro upsell message if filter returns null.
+
+- `src/Core/SettingsManager.php` — `preview_user_sync()` no longer instantiates
+  `SyncPreview`. Uses `apply_filters('ghl_crm_preview_user_sync_result', null, $user_id)`.
+  Returns 403 if null.
+
+- `src/Integrations/Elementor/ElementorIntegration.php` — Removed direct
+  `ElementorConditions::init()` call. Uses `do_action('ghl_crm_init_elementor_conditions')`.
+
+- `src/Membership/Restrictions.php` — Archive/REST hiding hooks extracted to
+  `do_action('ghl_crm_register_advanced_restriction_hooks', $this, $settings_manager)`.
+  Admin bypass / allowed-tag override gated behind `ghl_crm_restriction_overrides_enabled`.
+
+- `src/Integrations/Users/RoleTagsManager.php` — `get_location_global_tags_config()`
+  returns `[]` unless `ghl_crm_global_tags_enabled` filter returns true (Pro).
+
+- `src/Core/MenuManager.php` — Added `family-relationships` to valid settings tabs list
+  in both `get_valid_settings_tabs()` occurrences.
+
+### Telemetry Fix
+
+- `src/Core/Reporting/ReportingManager.php` — `capture_fatal_error()` now checks
+  `strpos($file, WP_CONTENT_DIR . '/plugins/ghl-crm-integration')` and the pro dir.
+  Only logs fatal errors from either plugin directory.
+
+### Template / UI Changes
+
+- `templates/admin/dashboard.php` — Analytics tab checks `has_action('ghl_crm_render_analytics_tab')`;
+  shows upgrade CTA with greyed preview if no handler.
+- `templates/admin/field-mapping.php` — Auto-Suggest button disabled + PRO badge via
+  `ghl_crm_field_suggestions_enabled` filter.
+- `templates/admin/settings.php` — REST API, Family Relationships, Sync Preview tabs get
+  `pro` and `pro_filter` metadata. Sidebar renders PRO badge when filter returns false.
+- `templates/admin/partials/settings/rest-api.php` — Full upgrade CTA + greyed-out preview
+  when `ghl_crm_public_rest_api_enabled` is false.
+- `templates/admin/partials/settings/sync-preview.php` — Upgrade CTA + mock table preview.
+- `templates/admin/partials/settings/restrictions-manager.php` — Archive/REST checkboxes
+  and override section disabled with PRO badges.
+- `templates/admin/partials/settings/role-tags.php` — Global tags field disabled + PRO badge.
+- `templates/admin/partials/settings/family-relationships.php` — New file. Full teaser
+  template with hardcoded demo data showing family accounts feature preview.
+
+---
+
 ## [1.1.2] - 2026-03-21
 
 ### What Changed

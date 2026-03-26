@@ -4,7 +4,7 @@ Tags: gohighlevel, crm, woocommerce, buddyboss, learndash, membership, webhooks,
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.0.1
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -32,6 +32,51 @@ This plugin combines the power of WP Fusion, Memberium, and custom development �
 
 > Features marked **(Free)** are included in the free plugin.
 > Features marked **(Pro)** require the GoHighLevel CRM Integration Pro add-on.
+>
+> The free plugin exposes **WordPress filters and actions** at every Pro extension point.
+> Pro hooks in via `FreePluginHooks` — no code patching or overrides, just `add_filter` / `add_action`.
+> When Pro is not active, the free plugin shows **PRO badges** and **upgrade CTAs** on gated features.
+
+### Quick Comparison
+
+| Feature | Free | Pro |
+|---------|:----:|:---:|
+| OAuth2 Authentication & Token Refresh | ✅ | ✅ |
+| API Scope Detection | ✅ | ✅ |
+| Field Mapping (manual) | ✅ | ✅ |
+| AI-Assisted Field Suggestions | — | ✅ |
+| User Sync (register, profile update, delete, login) | ✅ | ✅ |
+| Sync Preview / Dry Run | — | ✅ |
+| Role-Based Tags (per-role, registration, bulk) | ✅ | ✅ |
+| Global Tags (location-scoped) | — | ✅ |
+| Tag-Based Content Restrictions (page/post/CPT) | ✅ | ✅ |
+| Restriction Overrides (admin bypass, allowed tags) | — | ✅ |
+| Archive & REST API Protection | — | ✅ |
+| Elementor Widget Conditions | — | ✅ |
+| Gutenberg Restricted Content Block | ✅ | ✅ |
+| `[ghl_restrict]` Shortcode | ✅ | ✅ |
+| GHL Form Embedding (shortcode, Gutenberg, Elementor) | ✅ | ✅ |
+| Per-Form Submission Limits | — | ✅ |
+| Contact Form 7 Integration | ✅ | ✅ |
+| Webhook Inbound Sync (GHL → WP) | ✅ | ✅ |
+| Bulk Import (GHL → WP) | ✅ | ✅ |
+| BuddyBoss Group → Custom Object Sync | ✅ | ✅ |
+| WooCommerce Settings & Tags | ✅ | ✅ |
+| WooCommerce Deep Integration (abandoned cart, per-product tags, opportunities) | — | ✅ |
+| LearnDash Integration (courses, quizzes, groups, progress) | — | ✅ |
+| Custom Objects (post type → GHL object) | — | ✅ |
+| Family Relationships & Tag Inheritance | — | ✅ |
+| Conditional Navigation Menus | — | ✅ |
+| Extended Field Mapping (XProfile, WC, LearnDash) | — | ✅ |
+| Public REST API Endpoints | — | ✅ |
+| Analytics Dashboard (charts, CSV export) | — | ✅ |
+| Enhanced Sync Logs (detail modal) | — | ✅ |
+| Sync Queue & Engine (Action Scheduler) | ✅ | ✅ |
+| Email Notifications | ✅ | ✅ |
+| Auto-Login Links | ✅ | ✅ |
+| White-Label Domain Support | ✅ | ✅ |
+| WordPress Multisite | ✅ | ✅ |
+| Security (encryption, nonce, rate limiting) | ✅ | ✅ |
 
 ---
 
@@ -52,10 +97,12 @@ This plugin combines the power of WP Fusion, Memberium, and custom development �
 
 ### Advanced Field Mapping
 - Visual field mapping interface with bi-directional sync control (To GHL, From GHL, Both Ways)
-- AI-assisted field suggestions using Levenshtein distance and semantic synonym matching
 - Supports core WordPress user fields and user meta → GHL standard and custom fields
 - Real-time field list refresh from GHL API
 - Computed/virtual field resolution via `ghl_crm_resolve_field_value` filter
+
+#### Pro Field Mapping Add-ons (Pro)
+- AI-assisted field suggestions using Levenshtein distance and semantic synonym matching (via `ghl_crm_field_suggestions_result` filter). Free plugin shows a PRO badge on the auto-suggest button.
 
 ### WordPress User Synchronization
 - Automatic contact creation on user registration (hooks `user_register`, `edit_user_created_user`, `wpmu_new_user`, `wpmu_activate_user`, `add_user_to_blog`)
@@ -65,8 +112,10 @@ This plugin combines the power of WP Fusion, Memberium, and custom development �
 - Ping-pong prevention between inbound webhooks and outbound sync via transient guards
 - Configurable default tags on registration
 - Bulk user sync from WordPress Users list (bulk action "Sync to GoHighLevel")
-- Sync preview / dry run — shows action (create/update), field-by-field comparison, tag changes, conflicts, and estimated API calls before syncing
 - Duplicate contact auto-recovery: converts POST→PUT on duplicate detection, handles deleted/merged contacts via email re-lookup
+
+#### Pro User Sync Add-ons (Pro)
+- Sync preview / dry run — shows action (create/update), field-by-field comparison, tag changes, conflicts, and estimated API calls before syncing (via `ghl_crm_preview_user_sync_result` filter). Free plugin shows a PRO badge and upgrade CTA on the sync preview page.
 
 ---
 
@@ -75,10 +124,12 @@ This plugin combines the power of WP Fusion, Memberium, and custom development �
 ### Role-Based Tagging System
 - Per-role tag configuration with `auto_apply` and `remove_on_change` options
 - Hooks into WordPress role assignment, addition, and removal events
-- Global tags applied to every synced contact (location-scoped)
 - Registration tags applied on user creation
 - Bulk tag operations — add or remove tags for all users in a role via AJAX
 - Queue-based reliable processing through Action Scheduler
+
+#### Pro Tag Add-ons (Pro)
+- **Global tags** — apply location-scoped tags to every synced contact (gated behind `ghl_crm_global_tags_enabled` filter)
 
 ### Tag API
 - Cached GHL tag retrieval per-location with site transients
@@ -93,16 +144,21 @@ This plugin combines the power of WP Fusion, Memberium, and custom development �
 - Three restriction types: Has ANY of tags, Has ALL of tags, Does NOT have tags
 - Lock pages, posts, products, courses, and any public custom post type (filterable via `ghl_crm_restriction_post_types`)
 - Configurable enforcement: redirect to URL or display custom access-denied message with login link
-- Archive and search result protection — optionally hides restricted posts from queries and REST API
-- Admin bypass capability
 - Case-insensitive tag matching
 - Pro family tag inheritance support via `ghl_user_effective_tags` filter
+
+#### Pro Restriction Add-ons (Pro)
+- **Admin bypass capability** — skip restriction checks for admins (gated behind `ghl_crm_restriction_overrides_enabled` filter)
+- **Allowed-tag overrides** — extra tag-based access rules (gated behind `ghl_crm_restriction_overrides_enabled` filter)
+- **Archive & search result protection** — optionally hides restricted posts from queries and REST API (via `ghl_crm_register_advanced_restriction_hooks` action)
 
 ### Restriction Tools
 - **Post/Page Metabox** — Side panel on all public post types with Select2 tag selector, restriction type dropdown, and redirect URL input
 - **`[ghl_restrict]` Shortcode** — Inline content restriction with rule types: `any`, `all`, `not`
 - **Gutenberg Block** — `ghl-crm/restricted-content` block with tag selection, fallback content, customizable colors and padding
-- **Elementor Widget Conditions** — "GoHighLevel Restrictions" section added to Advanced tab of all Elementor widgets with 5 restriction types: `has_any_tag`, `has_all_tags`, `not_has_tags`, `logged_in`, `logged_out`
+
+#### Pro Restriction Tools (Pro)
+- **Elementor Widget Conditions** — "GoHighLevel Restrictions" section added to Advanced tab of all Elementor widgets with 5 restriction types: `has_any_tag`, `has_all_tags`, `not_has_tags`, `logged_in`, `logged_out` (via `ghl_crm_init_elementor_conditions` action)
 
 ---
 
@@ -246,6 +302,8 @@ This plugin combines the power of WP Fusion, Memberium, and custom development �
 
 ## Family Relationship System (Pro)
 
+The free plugin includes a **Family Relationships settings tab** with a greyed-out feature preview and upgrade CTA. Full functionality requires Pro.
+
 ### Parent-Child Account Management
 - Custom database table (`ghl_family_relationships`) with parent_user_id, child_user_id, family_group_id, status (active/pending), location_id, site_id
 - **Invitation system** — search by email/username, create new WP user + send HTML invitation email, invite existing users. Token-based acceptance (64-character hex token, 7-day expiry).
@@ -346,12 +404,14 @@ This plugin combines the power of WP Fusion, Memberium, and custom development �
 - `/ghl-crm/v1/tags` — tag listing
 - Requires `edit_posts` capability
 
-### Public Endpoints (conditional — requires `rest_api_enabled` setting)
+### Public Endpoints (Pro)
+Registered by Pro via `ghl_crm_register_public_rest_routes` action. Free plugin shows a PRO badge and upgrade CTA on the REST API settings page.
 - `/ghl-crm/v1/contacts` (POST) — create/update contacts
 - `/ghl-crm/v1/sync` (POST) — trigger sync operations
 - `/ghl-crm/v1/status` (GET) — sync status
 - `/ghl-crm/v1/webhooks` (GET/POST) — webhook management
 - Bearer token authentication, IP whitelist, rate limiting
+- Requires `rest_api_enabled` setting
 
 ---
 
@@ -366,11 +426,15 @@ This plugin combines the power of WP Fusion, Memberium, and custom development �
 
 ### Dashboard & Analytics
 - Contact metrics: total GHL contacts, total WP users, synced, pending, failed, sync rate
-- Sync activity trends (24h / 7d / 30d)
 - Integration status overview
-- System health indicators
 - Recent activity feed
-- Chart.js visualizations
+
+#### Pro Analytics (Pro)
+Rendered by Pro via `ghl_crm_render_analytics_tab` action. Free plugin shows an upgrade CTA with a greyed-out feature preview.
+- Sync activity trends (24h / 7d / 30d)
+- System health indicators
+- Chart.js visualizations (daily activity, sync type breakdown, hourly activity, success/failure rates)
+- CSV export
 
 ### Setup Wizard
 - First-activation redirect to guided setup
@@ -463,9 +527,26 @@ This plugin combines the power of WP Fusion, Memberium, and custom development �
 - `ghl_crm_restriction_post_types` — control which post types show restriction metabox
 - `ghl_crm_progress_debounce_seconds` — customize LearnDash progress debounce window
 
+#### Pro Extension Filters (added in 1.2.0)
+- `ghl_crm_field_suggestions_result` — return AI-assisted field mapping suggestions
+- `ghl_crm_preview_user_sync_result` — return sync preview / dry-run data
+- `ghl_crm_sync_preview_enabled` — enable sync preview UI (Pro returns `true`)
+- `ghl_crm_field_suggestions_enabled` — enable AI suggest button (Pro returns `true`)
+- `ghl_crm_archive_protection_enabled` — enable archive/REST protection settings (Pro returns `true`)
+- `ghl_crm_public_rest_api_enabled` — enable public REST API settings (Pro returns `true`)
+- `ghl_crm_family_relationships_enabled` — enable family settings tab (Pro returns `true`)
+- `ghl_crm_restriction_overrides_enabled` — enable admin bypass & allowed-tag overrides (Pro returns `true`)
+- `ghl_crm_global_tags_enabled` — enable global tag configuration (Pro returns `true`)
+
 ### Actions
 - `ghl_crm_connection_status_changed` — fired when connection status changes
 - `ghl_crm_loader_components` — register additional components (Pro registers 22 components)
+
+#### Pro Extension Actions (added in 1.2.0)
+- `ghl_crm_init_elementor_conditions` — initialize Elementor widget restriction conditions
+- `ghl_crm_register_advanced_restriction_hooks` — register archive & REST API protection hooks
+- `ghl_crm_register_public_rest_routes` — register public REST API endpoints (contacts, sync, status, webhooks)
+- `ghl_crm_render_analytics_tab` — render analytics dashboard charts & CSV export
 
 ### Architecture
 - Clean MVC architecture with PSR-4 autoloading
@@ -490,7 +571,7 @@ This plugin combines the power of WP Fusion, Memberium, and custom development �
 
 - Opt-in telemetry: batches events locally, dispatches to `highlevelsync.com`
 - Batch size 50, 15-minute dispatch interval
-- Captures fatal errors on shutdown
+- Captures fatal errors on shutdown — **filtered to only log errors from `ghl-crm-integration` or `ghl-crm-integration-pro` directories** (prevents unrelated theme/plugin errors)
 - Action Scheduler or WP-Cron fallback
 
 ---
@@ -518,9 +599,10 @@ This plugin combines the power of WP Fusion, Memberium, and custom development �
 
 ### For Membership Sites
 - Restrict content by GHL tags with ANY/ALL/NONE logic (Free)
-- Elementor widget-level restrictions (Free)
 - Gutenberg block-level restrictions (Free)
 - Shortcode content restrictions (Free)
+- Elementor widget-level restrictions (Pro)
+- Archive & search result protection (Pro)
 - Conditional navigation menus based on GHL tags (Pro)
 - Family relationship management with tag inheritance (Pro)
 
