@@ -103,11 +103,11 @@ class TagManager {
 
 		return self::$instance;
 	}
-	
+
 	// =========================================================================
 	// Tag Retrieval & Cache
 	// =========================================================================
-	
+
 	/**
 	 * Append the current location ID to a base meta key.
 	 *
@@ -615,8 +615,8 @@ class TagManager {
 	 * Safety: Filters out raw hashed IDs (16+ alphanumeric chars) that
 	 * would cause unintended tag creation on the GHL side.
 	 *
-	 * @param array<int, string>                             $tag_ids        Tag IDs to resolve.
-	 * @param array<int, array{id: string, name: string}>    $fallback_pairs Optional ID/name pairs for IDs not in cache.
+	 * @param array<int, string>                          $tag_ids        Tag IDs to resolve.
+	 * @param array<int, array{id: string, name: string}> $fallback_pairs Optional ID/name pairs for IDs not in cache.
 	 * @return array<int, string> Deduplicated array of resolved tag names.
 	 */
 	public function prepare_tags_for_payload( array $tag_ids, array $fallback_pairs = [] ): array {

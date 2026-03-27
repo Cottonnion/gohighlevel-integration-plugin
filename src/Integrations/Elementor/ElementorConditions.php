@@ -308,19 +308,19 @@ class ElementorConditions {
 		}
 
 		// Evaluate primary condition
-		$required_tags    = $this->normalize_tags_setting( $settings['ghl_required_tags'] ?? '' );
-		$primary_result   = $this->evaluate_condition( $restriction_type, $required_tags, $user_tags, $is_logged_in );
+		$required_tags  = $this->normalize_tags_setting( $settings['ghl_required_tags'] ?? '' );
+		$primary_result = $this->evaluate_condition( $restriction_type, $required_tags, $user_tags, $is_logged_in );
 
 		// Check for additional condition groups (repeater)
-		$tag_conditions   = $settings['ghl_tag_conditions'] ?? [];
-		$condition_logic  = $settings['ghl_condition_logic'] ?? 'and';
+		$tag_conditions  = $settings['ghl_tag_conditions'] ?? [];
+		$condition_logic = $settings['ghl_condition_logic'] ?? 'and';
 
 		if ( ! empty( $tag_conditions ) && is_array( $tag_conditions ) ) {
 			// Evaluate each additional condition group
 			$group_results = [ $primary_result ];
 
 			foreach ( $tag_conditions as $condition ) {
-				$match_type    = $condition['match_type'] ?? 'has_any';
+				$match_type     = $condition['match_type'] ?? 'has_any';
 				$condition_tags = $this->normalize_tags_setting( $condition['tags'] ?? [] );
 
 				if ( empty( $condition_tags ) ) {
@@ -328,7 +328,7 @@ class ElementorConditions {
 				}
 
 				// Map repeater match_type to restriction_type format
-				$mapped_type = $this->map_match_type( $match_type );
+				$mapped_type     = $this->map_match_type( $match_type );
 				$group_results[] = $this->evaluate_condition( $mapped_type, $condition_tags, $user_tags, $is_logged_in );
 			}
 

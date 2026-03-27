@@ -242,14 +242,14 @@ class SettingsManager {
 				$response_settings = $this->get_settings_array();
 				$location_id       = $response_settings['location_id'] ?? $response_settings['oauth_location_id'] ?? '';
 
-				if ( ! empty( $location_id ) ) {
-					// Preserve only location-scoped tag keys in the response
-					$response_settings[ "role_tags_{$location_id}" ]          = $this->get_location_role_tags( $location_id );
-					$response_settings[ "global_tags_{$location_id}" ]        = $this->get_location_global_tags( $location_id );
-					$response_settings[ "user_register_tags_{$location_id}" ] = $this->get_location_register_tags( $location_id );
+			if ( ! empty( $location_id ) ) {
+				// Preserve only location-scoped tag keys in the response
+				$response_settings[ "role_tags_{$location_id}" ]          = $this->get_location_role_tags( $location_id );
+				$response_settings[ "global_tags_{$location_id}" ]        = $this->get_location_global_tags( $location_id );
+				$response_settings[ "user_register_tags_{$location_id}" ] = $this->get_location_register_tags( $location_id );
 
-					unset( $response_settings['role_tags'], $response_settings['global_tags'], $response_settings['user_register_tags'] );
-				}
+				unset( $response_settings['role_tags'], $response_settings['global_tags'], $response_settings['user_register_tags'] );
+			}
 
 				$response_data = [
 					'message'  => __( 'Settings saved successfully!', 'ghl-crm-integration' ),
@@ -408,13 +408,15 @@ class SettingsManager {
 			$result  = $client->refresh_access_token();
 			$expires = isset( $result['expires_in'] ) ? human_time_diff( time(), time() + (int) $result['expires_in'] ) : '24 hours';
 
-			wp_send_json_success( [
-				'message' => sprintf(
-					/* translators: %s: token validity duration */
-					__( 'Access token refreshed successfully. Valid for %s.', 'ghl-crm-integration' ),
-					$expires
-				),
-			] );
+			wp_send_json_success(
+				[
+					'message' => sprintf(
+						/* translators: %s: token validity duration */
+						__( 'Access token refreshed successfully. Valid for %s.', 'ghl-crm-integration' ),
+						$expires
+					),
+				]
+			);
 		} catch ( \Exception $e ) {
 			wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
 		}

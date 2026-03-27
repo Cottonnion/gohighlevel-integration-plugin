@@ -352,10 +352,15 @@ class NotificationManager {
 			esc_html__( 'View Queue Status', 'ghl-crm-integration' )
 		);
 
-		return $this->send( 'daily_limit', $subject, $message, [
-			'daily_count' => $daily_count,
-			'pending'     => $pending,
-		] );
+		return $this->send(
+			'daily_limit',
+			$subject,
+			$message,
+			[
+				'daily_count' => $daily_count,
+				'pending'     => $pending,
+			]
+		);
 	}
 
 	/**

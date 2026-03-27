@@ -666,15 +666,15 @@ class Client implements ClientInterface {
 				$this->log_oauth_event(
 					'401/403 token error — about to attempt refresh',
 					[
-						'url'                    => $url,
-						'response_code'          => $response_code,
-						'error_message'          => $error_message,
-						'has_refresh_token'      => ! empty( $this->refresh_token ),
-						'location_id'            => $this->location_id ?? '(none)',
-						'access_token_expires_at'=> $this->access_token_expires_at ?? 0,
-						'now'                    => time(),
-						'last_refresh_ts'        => self::$last_refresh_attempt_ts,
-						'last_refresh_error'     => self::$last_refresh_error,
+						'url'                     => $url,
+						'response_code'           => $response_code,
+						'error_message'           => $error_message,
+						'has_refresh_token'       => ! empty( $this->refresh_token ),
+						'location_id'             => $this->location_id ?? '(none)',
+						'access_token_expires_at' => $this->access_token_expires_at ?? 0,
+						'now'                     => time(),
+						'last_refresh_ts'         => self::$last_refresh_attempt_ts,
+						'last_refresh_error'      => self::$last_refresh_error,
 					],
 					'warning'
 				);
@@ -1801,7 +1801,7 @@ class Client implements ClientInterface {
 					$this->last_response_headers = $headers->getAll();
 				}
 			} catch ( ApiException $e ) {
-				$this->is_retrying_after_refresh = false;
+				$this->is_retrying_after_refresh   = false;
 				$this->refresh_failed_this_request = true;
 
 				// Refresh failed — reload settings to check if another process saved valid tokens

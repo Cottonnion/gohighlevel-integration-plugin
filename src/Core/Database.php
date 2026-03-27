@@ -255,7 +255,7 @@ class Database {
 
 		// // Remove enhanced logging columns if they exist (cleanup from reverted feature)
 		// if ( version_compare( $from_version, '1.7.0', '>=' ) ) {
-		// 	$this->remove_enhanced_logging_columns();
+		// $this->remove_enhanced_logging_columns();
 		// }
 
 		// Add location_id column to family relationships table for version 1.11.0

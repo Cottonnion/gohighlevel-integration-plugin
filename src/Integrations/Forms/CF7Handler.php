@@ -282,7 +282,6 @@ class CF7Handler {
 		// Map CF7 fields to GHL fields
 		$contact_data = $this->map_submission_data( $posted_data, $config['field_mapping'] );
 
-
 		// Validate email (required)
 		if ( empty( $contact_data['email'] ) ) {
 			// Form submission missing email - log for debugging but don't throw error
@@ -328,7 +327,6 @@ class CF7Handler {
 				(int) $queue_id
 			);
 		}
-
 	}
 
 	/**

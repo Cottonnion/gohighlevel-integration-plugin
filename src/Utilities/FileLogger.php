@@ -184,7 +184,7 @@ class FileLogger {
 
 		// Prune old entries to prevent unbounded memory growth.
 		if ( count( $this->dedup_cache ) > 200 ) {
-			$cutoff = $now - self::DEDUP_WINDOW;
+			$cutoff            = $now - self::DEDUP_WINDOW;
 			$this->dedup_cache = array_filter(
 				$this->dedup_cache,
 				static function ( $entry ) use ( $cutoff ) {

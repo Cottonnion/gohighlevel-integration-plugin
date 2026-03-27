@@ -69,9 +69,12 @@ class ElementorIntegration {
 		 *
 		 * @since 1.2.0
 		 */
-		add_action( 'ghl_crm_loaded', static function () {
-			do_action( 'ghl_crm_init_elementor_conditions' );
-		} );
+		add_action(
+			'ghl_crm_loaded',
+			static function () {
+				do_action( 'ghl_crm_init_elementor_conditions' );
+			}
+		);
 	}
 
 	/**

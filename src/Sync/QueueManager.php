@@ -111,8 +111,6 @@ class QueueManager {
 
 		// Schedule recurring action AFTER Action Scheduler is ready
 		add_action( 'init', [ $this, 'schedule_queue_processor' ], 999 );
-
-
 	}
 
 	/**

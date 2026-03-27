@@ -142,8 +142,8 @@ class MaintenanceHandler {
 			);
 		}
 
-		$settings_manager  = SettingsManager::get_instance();
-		$current_settings  = $settings_manager->get_settings_array();
+		$settings_manager = SettingsManager::get_instance();
+		$current_settings = $settings_manager->get_settings_array();
 
 		// Preserve ALL connection-related settings (OAuth + Manual API).
 		$preserved_credentials = [

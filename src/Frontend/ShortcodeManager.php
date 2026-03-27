@@ -298,10 +298,10 @@ class ShortcodeManager {
 		$has_parent_tag = false;
 		$parent_tag_id  = $settings_manager->get_setting( 'family_parent_tag' );
 		if ( ! empty( $parent_tag_id ) ) {
-					$tag_manager     = TagManager::get_instance();
-			$parent_map      = $tag_manager->map_ids_to_names( [ (string) $parent_tag_id ] );
-			$parent_tag_name = $parent_map[ (string) $parent_tag_id ] ?? '';
-			$user_tag_names  = $tag_manager->get_user_tag_names( $user_id );
+					$tag_manager = TagManager::get_instance();
+			$parent_map          = $tag_manager->map_ids_to_names( [ (string) $parent_tag_id ] );
+			$parent_tag_name     = $parent_map[ (string) $parent_tag_id ] ?? '';
+			$user_tag_names      = $tag_manager->get_user_tag_names( $user_id );
 
 			if ( '' !== $parent_tag_name && in_array( $parent_tag_name, $user_tag_names, true ) ) {
 				$has_parent_tag = true;

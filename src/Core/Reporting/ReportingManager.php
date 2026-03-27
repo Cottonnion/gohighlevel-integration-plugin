@@ -167,7 +167,7 @@ class ReportingManager {
 			WP_CONTENT_DIR . '/plugins/ghl-crm-integration',
 			WP_CONTENT_DIR . '/plugins/ghl-crm-integration-pro',
 		];
-		$in_plugin = false;
+		$in_plugin   = false;
 		foreach ( $plugin_dirs as $dir ) {
 			if ( strpos( $file, $dir ) !== false ) {
 				$in_plugin = true;

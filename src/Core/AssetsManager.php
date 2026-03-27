@@ -440,7 +440,7 @@ class AssetsManager {
 				'toplevel_page_ghl-crm-settings',           // Legacy main tabbed page
 				'toplevel_page_ghl-crm-admin',              // New SPA page
 				'ghl-crm_page_ghl-crm-sync-logs',
-				'toplevel_page_wpcf7'
+				'toplevel_page_wpcf7',
 			],
 			'globals.css',
 			[],
