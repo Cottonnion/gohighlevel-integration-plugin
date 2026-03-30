@@ -528,19 +528,6 @@ class Client implements ClientInterface {
 										++$updated_count;
 									}
 
-									// Log the auto-recovery
-									// if ( $updated_count > 0 ) {
-									// error_log(
-									// sprintf(
-									// 'GHL Auto-Recovery (MERGED): Contact %s was merged into %s (email: %s). Updated %d user(s).',
-									// $old_contact_id,
-									// $new_contact_id,
-									// $email,
-									// $updated_count
-									// )
-									// );
-									// }
-
 									// Retry request with new contact ID
 									$new_url = str_replace(
 										"contacts/{$old_contact_id}",
