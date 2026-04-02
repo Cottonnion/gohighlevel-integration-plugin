@@ -34,7 +34,6 @@
 				title: message
 			});
 		} else {
-			// Fallback to console if SweetAlert2 is not available
 			console.log(type + ': ' + message);
 		}
 	}
