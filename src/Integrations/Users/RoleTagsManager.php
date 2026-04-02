@@ -588,13 +588,6 @@ class RoleTagsManager {
 		$role_tags = $this->get_user_role_tags( $user_id );
 
 		if ( ! empty( $role_tags ) ) {
-			error_log(
-				sprintf(
-					'[GHL RoleTags] User %d — protecting role tags: [%s]',
-					$user_id,
-					implode( ', ', $role_tags )
-				)
-			);
 			$protected = array_merge( $protected, $role_tags );
 		}
 
