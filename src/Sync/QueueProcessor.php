@@ -362,23 +362,30 @@ class QueueProcessor {
 		switch ( $action ) {
 			case 'user_register':
 			case 'profile_update':
-				return $this->handle_user_register_update( $client, $contact_resource, $payload );
+				$result = $this->handle_user_register_update( $client, $contact_resource, $payload );
+				break;
 
 			case 'delete_user':
-				return $this->handle_user_delete( $client, $contact_resource, $payload );
+				$result = $this->handle_user_delete( $client, $contact_resource, $payload );
+				break;
 
 			case 'user_login':
-				return $this->handle_user_login( $client, $contact_resource, $payload );
+				$result = $this->handle_user_login( $client, $contact_resource, $payload );
+				break;
 
 			case 'add_tags':
-				return $this->handle_add_tags( $contact_resource, $payload );
+				$result = $this->handle_add_tags( $contact_resource, $payload );
+				break;
 
 			case 'remove_tags':
-				return $this->handle_remove_tags( $contact_resource, $payload );
+				$result = $this->handle_remove_tags( $contact_resource, $payload );
+				break;
 
 			default:
 				throw new \Exception( esc_html( 'Unknown user action: ' . $action ) );
 		}
+
+		return $result;
 	}
 
 	/**

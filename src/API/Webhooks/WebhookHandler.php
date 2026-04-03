@@ -506,6 +506,29 @@ class WebhookHandler {
 			return true;
 		}
 
+		// Skip if an external caller flagged this email before pushing the contact
+		// to GHL. Set this transient before your GHL upsert call to prevent the
+		// echo ContactCreate webhook from creating a WordPress user:
+		//   set_transient( 'ghl_skip_inbound_create_' . md5( strtolower( $email ) ), 1, 120 );
+		if ( ! empty( $contact_data['email'] ) ) {
+			$guard_key = 'ghl_skip_inbound_create_' . md5( strtolower( trim( $contact_data['email'] ) ) );
+			if ( get_transient( $guard_key ) ) {
+				delete_transient( $guard_key );
+				$this->logger->log(
+					'webhook',
+					0,
+					'ghl_to_wp',
+					'info',
+					'ContactCreate webhook skipped: contact-only mode guard active for this email',
+					[
+						'email'      => $contact_data['email'],
+						'contact_id' => $contact_data['id'],
+					]
+				);
+				return true;
+			}
+		}
+
 		// Process synchronously instead of queueing for immediate feedback; pass webhook payload to avoid refetch
 		$result = $this->ghl_sync->sync_contact_to_wordpress( $contact_data['id'], $contact_data );
 
