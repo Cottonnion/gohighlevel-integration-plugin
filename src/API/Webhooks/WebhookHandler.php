@@ -509,7 +509,7 @@ class WebhookHandler {
 		// Skip if an external caller flagged this email before pushing the contact
 		// to GHL. Set this transient before your GHL upsert call to prevent the
 		// echo ContactCreate webhook from creating a WordPress user:
-		//   set_transient( 'ghl_skip_inbound_create_' . md5( strtolower( $email ) ), 1, 120 );
+		// set_transient( 'ghl_skip_inbound_create_' . md5( strtolower( $email ) ), 1, 120 );
 		if ( ! empty( $contact_data['email'] ) ) {
 			$guard_key = 'ghl_skip_inbound_create_' . md5( strtolower( trim( $contact_data['email'] ) ) );
 			if ( get_transient( $guard_key ) ) {

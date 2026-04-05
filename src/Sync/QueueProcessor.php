@@ -711,10 +711,10 @@ class QueueProcessor {
 		$update_data = [ 'email' => $email ];
 
 		// Append last_login / login_count custom fields when field IDs are configured.
-		$settings               = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
-		$last_login_field_id    = $settings['login_last_login_field_id'] ?? '';
-		$login_count_field_id   = $settings['login_count_field_id'] ?? '';
-		$custom_fields          = [];
+		$settings             = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
+		$last_login_field_id  = $settings['login_last_login_field_id'] ?? '';
+		$login_count_field_id = $settings['login_count_field_id'] ?? '';
+		$custom_fields        = [];
 
 		if ( ! empty( $last_login_field_id ) && ! empty( $payload['last_login'] ) ) {
 			$custom_fields[] = [
@@ -739,11 +739,11 @@ class QueueProcessor {
 
 			if ( ! empty( $result ) ) {
 				return [
-					'success'      => true,
-					'updated'      => true,
-					'contact_id'   => $contact['id'],
-					'action'       => 'user_login',
-					'email'        => $email,
+					'success'       => true,
+					'updated'       => true,
+					'contact_id'    => $contact['id'],
+					'action'        => 'user_login',
+					'email'         => $email,
 					'fields_synced' => array_column( $custom_fields, 'id' ),
 				];
 			}

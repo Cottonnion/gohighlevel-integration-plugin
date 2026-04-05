@@ -208,7 +208,12 @@ class UserHooks {
 		// Queue for async processing
 		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
 
-		$queue_id = $queue_manager->add_to_queue( 'user', $user_id, 'user_register', $contact_data );
+		$queue_id = $queue_manager->add_to_queue(
+			'user',
+			$user_id,
+			'user_register',
+			$contact_data
+		);
 
 		// Mark as synced
 		if ( $queue_id ) {
@@ -346,7 +351,7 @@ class UserHooks {
 			$tag_ids                = array_filter(
 				$sanitized_profile_tags,
 				static function ( $tag ): bool {
-					return $tag !== '';
+					return '' !== $tag;
 				}
 			);
 			$existing_tags          = $tag_manager->convert_ids_to_names( $tag_ids );
@@ -403,7 +408,12 @@ class UserHooks {
 		}
 
 		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
-		$queue_id      = $queue_manager->add_to_queue( 'user', $user_id, 'profile_update', $contact_data );
+		$queue_id      = $queue_manager->add_to_queue(
+			'user',
+			$user_id,
+			'profile_update',
+			$contact_data
+		);
 
 		// If this user is a parent, sync new tags to all children (PRO feature)
 		if ( class_exists( 'GHL_CRM_Pro\Database\FamilyRelationshipsRepository' ) ) {
@@ -468,7 +478,12 @@ class UserHooks {
 			'delete'     => ! empty( $settings['delete_contact_on_user_delete'] ),
 		];
 		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
-		$queue_manager->add_to_queue( 'user', $user_id, 'delete_user', $data );
+		$queue_manager->add_to_queue(
+			'user',
+			$user_id,
+			'delete_user',
+			$data
+		);
 	}
 
 	/**
@@ -508,7 +523,12 @@ class UserHooks {
 		];
 
 		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
-		$queue_manager->add_to_queue( 'user', $user_id, 'delete_user', $data );
+		$queue_manager->add_to_queue(
+			'user',
+			$user_id,
+			'delete_user',
+			$data
+		);
 	}
 	/**
 	 * Handle user login
@@ -555,7 +575,12 @@ class UserHooks {
 			'login_count' => $count,
 		];
 		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
-		$queue_manager->add_to_queue( 'user', $user->ID, 'user_login', $data );
+		$queue_manager->add_to_queue(
+			'user',
+			$user->ID,
+			'user_login',
+			$data
+		);
 	}
 	/**
 	 * Prepare contact data from WP User
