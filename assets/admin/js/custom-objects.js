@@ -752,7 +752,7 @@
 			});
 			
 		} else {
-			console.log('No fields array found or fields array is empty');
+			// Fail sillently
 		}
 		
 		updateGHLFieldDropdowns();
