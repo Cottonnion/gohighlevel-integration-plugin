@@ -672,7 +672,6 @@ class QueueProcessor {
 		$email = $payload['email'] ?? '';
 
 		if ( empty( $email ) ) {
-			// Return success but indicate no action was taken
 			return [
 				'success' => true,
 				'skipped' => true,
@@ -684,15 +683,12 @@ class QueueProcessor {
 
 		if ( ! $contact ) {
 			try {
-				// Use same format as handle_user_register_update for consistency
 				$existing = $client->get( 'contacts/', [ 'query' => $email ] );
 				if ( ! empty( $existing['contacts'][0] ) ) {
 					$contact = $existing['contacts'][0];
 					$this->contact_cache->set( $email, $contact );
 				}
 			} catch ( \Exception $e ) {
-				// Contact might not exist in GHL yet - this is not an error
-				// Return success with skipped flag
 				return [
 					'success' => true,
 					'skipped' => true,
@@ -702,7 +698,6 @@ class QueueProcessor {
 			}
 		}
 
-		// Contact still not found after lookup
 		if ( ! $contact ) {
 			return [
 				'success' => true,
@@ -712,35 +707,54 @@ class QueueProcessor {
 			];
 		}
 
+		// Build update data — always include email to trigger GHL automations.
+		$update_data = [ 'email' => $email ];
+
+		// Append last_login / login_count custom fields when field IDs are configured.
+		$settings               = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
+		$last_login_field_id    = $settings['login_last_login_field_id'] ?? '';
+		$login_count_field_id   = $settings['login_count_field_id'] ?? '';
+		$custom_fields          = [];
+
+		if ( ! empty( $last_login_field_id ) && ! empty( $payload['last_login'] ) ) {
+			$custom_fields[] = [
+				'id'    => $last_login_field_id,
+				'value' => $payload['last_login'],
+			];
+		}
+
+		if ( ! empty( $login_count_field_id ) && isset( $payload['login_count'] ) ) {
+			$custom_fields[] = [
+				'id'    => $login_count_field_id,
+				'value' => (string) $payload['login_count'],
+			];
+		}
+
+		if ( ! empty( $custom_fields ) ) {
+			$update_data['customFields'] = $custom_fields;
+		}
+
 		try {
-			// Just update email to trigger GHL automations on login
-			// Don't send customFields to avoid "customFields must be an array" error
-			$result = $contact_resource->update(
-				$contact['id'],
-				[
-					'email' => $payload['email'],
-				]
-			);
+			$result = $contact_resource->update( $contact['id'], $update_data );
 
 			if ( ! empty( $result ) ) {
 				return [
-					'success'    => true,
-					'updated'    => true,
-					'contact_id' => $contact['id'],
-					'action'     => 'user_login',
-					'email'      => $email,
-				];
-			} else {
-				// Update returned empty result
-				return [
-					'success' => true,
-					'skipped' => true,
-					'reason'  => 'Empty result from GHL API',
-					'email'   => $email,
+					'success'      => true,
+					'updated'      => true,
+					'contact_id'   => $contact['id'],
+					'action'       => 'user_login',
+					'email'        => $email,
+					'fields_synced' => array_column( $custom_fields, 'id' ),
 				];
 			}
+
+			return [
+				'success' => true,
+				'skipped' => true,
+				'reason'  => 'Empty result from GHL API',
+				'email'   => $email,
+			];
 		} catch ( \Exception $e ) {
-			// Log error but don't fail the sync (login tracking is not critical)
 			do_action(
 				'ghl_crm_sync_error',
 				'user_login_sync_update',

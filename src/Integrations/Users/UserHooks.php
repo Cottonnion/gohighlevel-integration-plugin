@@ -512,7 +512,7 @@ class UserHooks {
 	}
 	/**
 	 * Handle user login
-	 * Updates last_login custom field instead of adding notes (less API spam)
+	 * Updates last_login + login_count custom fields in GHL (less API spam via 1-hour throttle).
 	 *
 	 * @param string   $user_login Username.
 	 * @param \WP_User $user       User object.
@@ -523,17 +523,36 @@ class UserHooks {
 			return; // Ignore malformed login events (e.g., Local auto-login without user object)
 		}
 
-		// Throttle: Only update once per hour to avoid API spam
+		// Always persist login meta on every login (used by pro inactivity check + conditional tags).
+		$now   = time();
+		$count = (int) get_user_meta( $user->ID, '_ghl_login_count', true );
+		++$count;
+		update_user_meta( $user->ID, '_ghl_last_login', $now );
+		update_user_meta( $user->ID, '_ghl_login_count', $count );
+
+		/**
+		 * Fires immediately after login meta is updated.
+		 * Pro features (conditional tagging, redirect) hook here.
+		 *
+		 * @param \WP_User $user        WordPress user.
+		 * @param int      $login_count Total logins recorded so far.
+		 * @param int      $timestamp   Unix timestamp of this login.
+		 */
+		do_action( 'ghl_crm_user_login_meta_updated', $user, $count, $now );
+
+		// Throttle GHL API sync: Once per hour to avoid spam.
 		$last_login_key = "ghl_last_login_{$user->ID}";
 		$last_sync      = get_transient( $last_login_key );
 		if ( $last_sync ) {
-			return; // Already synced within the hour
+			return;
 		}
-		set_transient( $last_login_key, time(), HOUR_IN_SECONDS );
-		// Queue login tracking (will update custom field, not add note)
+		set_transient( $last_login_key, $now, HOUR_IN_SECONDS );
+
+		// Queue login tracking (updates last_login + login_count custom fields in GHL).
 		$data          = [
-			'email'      => $user->user_email,
-			'last_login' => current_time( 'mysql' ),
+			'email'       => $user->user_email,
+			'last_login'  => current_time( 'mysql' ),
+			'login_count' => $count,
 		];
 		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
 		$queue_manager->add_to_queue( 'user', $user->ID, 'user_login', $data );
