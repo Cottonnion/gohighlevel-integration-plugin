@@ -42,24 +42,24 @@ $api_connected = $is_oauth_connected || ! empty( $settings['api_token'] );
 $location_id   = $oauth_status['location_id'] ?? '';
 
 // Fallback: Check if location_id exists (means was connected before, even if tokens expired)
-$has_location = ! empty( $location_id );
+$has_location    = ! empty( $location_id );
 $needs_reconnect = $has_location && ! $api_connected;
 
 // Get rate limiter stats
-$rate_limiter = \GHL_CRM\Sync\RateLimiter::get_instance();
+$rate_limiter      = \GHL_CRM\Sync\RateLimiter::get_instance();
 $rate_limit_status = $rate_limiter->get_status( $location_id );
 
 // Burst limit (100 requests per 10 seconds)
-$burst_limit = $rate_limit_status['burst']['limit'] ?? 'NaN';
-$burst_used = $rate_limit_status['burst']['used'] ?? 0;
+$burst_limit     = $rate_limit_status['burst']['limit'] ?? 'NaN';
+$burst_used      = $rate_limit_status['burst']['used'] ?? 0;
 $burst_remaining = $rate_limit_status['burst']['remaining'] ?? 'NaN';
-$burst_percent = $rate_limit_status['burst']['percent'] ?? 0;
+$burst_percent   = $rate_limit_status['burst']['percent'] ?? 0;
 
 // Daily limit (200,000 requests per day)
-$daily_limit = $rate_limit_status['daily']['limit'] ?? 'NaN';
-$daily_used = $rate_limit_status['daily']['used'] ?? 0;
+$daily_limit     = $rate_limit_status['daily']['limit'] ?? 'NaN';
+$daily_used      = $rate_limit_status['daily']['used'] ?? 0;
 $daily_remaining = $rate_limit_status['daily']['remaining'] ?? 'NaN';
-$daily_percent = $rate_limit_status['daily']['percent'] ?? 0;
+$daily_percent   = $rate_limit_status['daily']['percent'] ?? 0;
 $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 ?>
 
@@ -247,11 +247,11 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 				<div style="margin-top: 20px; padding: 15px; background: #fff; border: 1px solid #ddd; border-radius: 4px;">
 					<strong><?php esc_html_e( 'Daily Limit Resets:', 'ghl-crm-integration' ); ?></strong>
 					<?php
-					$reset_timestamp = strtotime( $daily_resets_at );
+					$reset_timestamp  = strtotime( $daily_resets_at );
 					$time_until_reset = $reset_timestamp - current_time( 'timestamp' );
 					if ( $time_until_reset > 0 ) {
 						echo esc_html( human_time_diff( current_time( 'timestamp' ), $reset_timestamp ) );
-						$hours = floor( $time_until_reset / 3600 );
+						$hours   = floor( $time_until_reset / 3600 );
 						$minutes = floor( ( $time_until_reset % 3600 ) / 60 );
 						echo ' (' . esc_html( sprintf( '%02d:%02d', $hours, $minutes ) ) . ')';
 					} else {
@@ -303,7 +303,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 						<?php endif; ?>
 					</td>
 				</tr>				<?php if ( $api_connected ) : ?>
-				<?php if ( $is_oauth_connected ) : ?>
+					<?php if ( $is_oauth_connected ) : ?>
 				<tr>
 					<th scope="row">
 						<?php esc_html_e( 'Connected Since', 'ghl-crm-integration' ); ?>
@@ -349,7 +349,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 				</tr>
 				<?php endif; ?>
 				
-				<?php if ( $location_id ) : ?>
+					<?php if ( $location_id ) : ?>
 				<tr>
 					<th scope="row">
 						<?php esc_html_e( 'Location ID', 'ghl-crm-integration' ); ?>
@@ -362,7 +362,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 				</tr>
 				<?php endif; ?>
 				
-				<?php if ( $api_connected && ! empty( $oauth_status['location_name'] ) ) : ?>
+					<?php if ( $api_connected && ! empty( $oauth_status['location_name'] ) ) : ?>
 				<tr>
 					<th scope="row">
 						<?php esc_html_e( 'Location Name', 'ghl-crm-integration' ); ?>

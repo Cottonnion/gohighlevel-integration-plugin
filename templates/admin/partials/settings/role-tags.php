@@ -10,16 +10,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
-$settings = $settings_manager->get_settings_array();
+$settings         = $settings_manager->get_settings_array();
 
 // Get all WordPress roles
 $wp_roles = wp_roles()->get_names();
 
 // Load saved role tag mappings (location-specific)
-$role_tags = $settings_manager->get_location_role_tags();
+$role_tags       = $settings_manager->get_location_role_tags();
 $global_tags_raw = $settings_manager->get_location_global_tags();
 // Convert array to comma-separated string for display, or keep as is if string
-$global_tags = is_array( $global_tags_raw ) ? implode( ',', $global_tags_raw ) : $global_tags_raw;
+$global_tags            = is_array( $global_tags_raw ) ? implode( ',', $global_tags_raw ) : $global_tags_raw;
 $global_tags_pro_active = apply_filters( 'ghl_crm_global_tags_enabled', false );
 ?>
 
@@ -68,14 +68,15 @@ $global_tags_pro_active = apply_filters( 'ghl_crm_global_tags_enabled', false );
 					</tr>
 				</thead>
 				<tbody>
-					<?php foreach ( $wp_roles as $role_key => $role_name ) : 
+					<?php
+					foreach ( $wp_roles as $role_key => $role_name ) :
 						$role_data = $role_tags[ $role_key ] ?? [];
-						$tags_raw = $role_data['tags'] ?? '';
+						$tags_raw  = $role_data['tags'] ?? '';
 						// Convert to string if array for compatibility
-						$tags_value = is_array( $tags_raw ) ? implode( ',', $tags_raw ) : $tags_raw;
-						$auto_apply = $role_data['auto_apply'] ?? true;
+						$tags_value       = is_array( $tags_raw ) ? implode( ',', $tags_raw ) : $tags_raw;
+						$auto_apply       = $role_data['auto_apply'] ?? true;
 						$remove_on_change = $role_data['remove_on_change'] ?? false;
-					?>
+						?>
 						<tr>
 							<td>
 								<strong><?php echo esc_html( $role_name ); ?></strong>
@@ -87,10 +88,12 @@ $global_tags_pro_active = apply_filters( 'ghl_crm_global_tags_enabled', false );
 								multiple
 								class="ghl-role-tags-select"
 								style="width: 100%;"
-								data-placeholder="<?php 
+								data-placeholder="
+								<?php
 									/* translators: %s: user role name (e.g., administrator, editor) */
-									printf( esc_attr__( 'e.g., %s, member, active', 'ghl-crm-integration' ), esc_attr( strtolower( $role_name ) ) ); 
-								?>">
+									printf( esc_attr__( 'e.g., %s, member, active', 'ghl-crm-integration' ), esc_attr( strtolower( $role_name ) ) );
+								?>
+								">
 								<?php
 								if ( ! empty( $tags_value ) ) {
 									$tags_array = array_map( 'trim', explode( ',', $tags_value ) );

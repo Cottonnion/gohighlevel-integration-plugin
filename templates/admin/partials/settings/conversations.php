@@ -183,12 +183,12 @@ $form_plugins = [
 				<?php elseif ( $is_installed ) : ?>
 					<label class="ghl-checkbox <?php echo $is_enabled ? 'is-checked' : ''; ?>">
 						<input type="checkbox"
-							   class="ghl-checkbox-original ghl-conversations-toggle"
-							   name="conversations_enabled_plugins[]"
-							   value="<?php echo esc_attr( $plugin_key ); ?>"
-							   data-plugin="<?php echo esc_attr( $plugin_key ); ?>"
-							   <?php checked( $is_enabled ); ?>
-							   >
+								class="ghl-checkbox-original ghl-conversations-toggle"
+								name="conversations_enabled_plugins[]"
+								value="<?php echo esc_attr( $plugin_key ); ?>"
+								data-plugin="<?php echo esc_attr( $plugin_key ); ?>"
+								<?php checked( $is_enabled ); ?>
+								>
 						<span class="ghl-checkbox-input <?php echo $is_enabled ? 'is-checked' : ''; ?>">
 							<span class="ghl-checkbox-inner"></span>
 						</span>

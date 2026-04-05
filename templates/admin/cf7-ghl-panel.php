@@ -26,12 +26,12 @@ defined( 'ABSPATH' ) || exit;
 			<div class="ghl-form-item-content">
 				<label class="ghl-checkbox <?php echo $config['enabled'] ? 'is-checked' : ''; ?>">
 					<input type="checkbox" 
-						   class="ghl-checkbox-original"
-						   id="ghl_crm_enabled" 
-						   name="ghl_crm_enabled" 
-						   value="1" 
-						   <?php checked( $config['enabled'], true ); ?>
-						   >
+							class="ghl-checkbox-original"
+							id="ghl_crm_enabled" 
+							name="ghl_crm_enabled" 
+							value="1" 
+							<?php checked( $config['enabled'], true ); ?>
+							>
 					<span class="ghl-checkbox-input <?php echo $config['enabled'] ? 'is-checked' : ''; ?>">
 						<span class="ghl-checkbox-inner"></span>
 					</span>
@@ -127,12 +127,12 @@ defined( 'ABSPATH' ) || exit;
 				<div class="ghl-form-item-content">
 					<label class="ghl-checkbox <?php echo $config['update_exists'] ? 'is-checked' : ''; ?>">
 						<input type="checkbox" 
-							   class="ghl-checkbox-original"
-						   id="ghl_crm_update_exists" 
-						   name="ghl_crm_update_exists" 
-						   value="1" 
-						   <?php checked( $config['update_exists'], true ); ?>
-						   >
+								class="ghl-checkbox-original"
+							id="ghl_crm_update_exists" 
+							name="ghl_crm_update_exists" 
+							value="1" 
+							<?php checked( $config['update_exists'], true ); ?>
+							>
 						<span class="ghl-checkbox-input <?php echo $config['update_exists'] ? 'is-checked' : ''; ?>">
 							<span class="ghl-checkbox-inner"></span>
 						</span>

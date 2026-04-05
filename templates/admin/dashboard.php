@@ -14,7 +14,7 @@ $oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
 $oauth_status  = $oauth_handler->get_connection_status();
 $settings      = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
 
-$is_connected = $oauth_status['connected'] || ! empty( $settings['api_token'] );
+$is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 $has_analytics = has_action( 'ghl_crm_render_analytics_tab' );
 ?>
 <div class="ghl-crm-dashboard">

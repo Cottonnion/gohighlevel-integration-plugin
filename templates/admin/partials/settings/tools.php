@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
-$settings = $settings_manager->get_settings_array();
+$settings         = $settings_manager->get_settings_array();
 ?>
 
 <div class="ghl-settings-wrapper">

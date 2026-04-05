@@ -30,16 +30,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<?php if ( ! empty( $logs ) ) : ?>
 				<?php foreach ( $logs as $log ) : ?>
 					<?php
-					$details_json = wp_json_encode( [
-						'sync_type'      => $log['sync_type'] ?? '',
-						'item_id'        => $log['item_id'] ?? '',
-						'action'         => $log['action'] ?? '',
-						'status'         => $log['status'] ?? '',
-						'message'        => $log['message'] ?? '',
-						'ghl_id'         => $log['ghl_id'] ?? '',
-						'metadata'       => $log['metadata'] ?? null,
-						'created_at'     => $log['created_at'] ?? '',
-					], JSON_PRETTY_PRINT );
+					$details_json = wp_json_encode(
+						[
+							'sync_type'  => $log['sync_type'] ?? '',
+							'item_id'    => $log['item_id'] ?? '',
+							'action'     => $log['action'] ?? '',
+							'status'     => $log['status'] ?? '',
+							'message'    => $log['message'] ?? '',
+							'ghl_id'     => $log['ghl_id'] ?? '',
+							'metadata'   => $log['metadata'] ?? null,
+							'created_at' => $log['created_at'] ?? '',
+						],
+						JSON_PRETTY_PRINT
+					);
 					?>
 					<tr>
 						<td>
@@ -47,9 +50,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 						</td>
 						<td>
 							<span class="ghl-log-type">
-								<?php 
+								<?php
 								$sync_type = $log['sync_type'] ?? 'unknown';
-								$icon = 'admin-users';
+								$icon      = 'admin-users';
 								if ( 'wc_customer' === $sync_type || 'order' === $sync_type ) {
 									$icon = 'cart';
 								} elseif ( 'contact' === $sync_type ) {
@@ -76,13 +79,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 								<?php
 								/**
 								 * Filter to allow PRO plugin to render detailed view button
-								 * 
+								 *
 								 * @param string $button_html Default button HTML
 								 * @param array  $log         Log entry data
 								 * @param string $details_json JSON encoded details
 								 */
 								$details_button = apply_filters( 'ghl_crm_sync_log_details_button', '', $log, $details_json );
-								
+
 								if ( ! empty( $details_button ) ) {
 									echo $details_button; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Filtered content
 								} else {
@@ -140,9 +143,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<div class="ghl-pagination-links">
 				<?php
 				$current_page = $page;
-				$range = 2;
-				$start_page = max( 1, $current_page - $range );
-				$end_page = min( $total_pages, $current_page + $range );
+				$range        = 2;
+				$start_page   = max( 1, $current_page - $range );
+				$end_page     = min( $total_pages, $current_page + $range );
 
 				// Previous button
 				if ( $current_page > 1 ) {

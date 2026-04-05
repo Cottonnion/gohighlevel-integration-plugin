@@ -3,11 +3,11 @@
  * Template: Settings Page with Side Menu
  *
  * This template provides extensible settings tabs for developers.
- * 
+ *
  * @package GHL_CRM_Integration
- * 
+ *
  * @example Adding a custom settings tab:
- * 
+ *
  * // Method 1: Using a callback function
  * add_filter( 'ghl_crm_settings_tabs', function( $tabs ) {
  *     $tabs['my_custom_tab'] = [
@@ -19,12 +19,12 @@
  *     ];
  *     return $tabs;
  * });
- * 
+ *
  * function my_custom_tab_callback( $current_tab, $tab_data, $settings ) {
  *     echo '<h2>My Custom Settings</h2>';
  *     echo '<p>Custom content here...</p>';
  * }
- * 
+ *
  * // Method 2: Using a custom file
  * add_filter( 'ghl_crm_settings_tabs', function( $tabs ) {
  *     $tabs['my_file_tab'] = [
@@ -34,7 +34,7 @@
  *     ];
  *     return $tabs;
  * });
- * 
+ *
  * @hook ghl_crm_settings_tabs         Filter to add custom settings tabs
  * @hook ghl_crm_before_settings_tab_content  Action fired before tab content
  * @hook ghl_crm_after_settings_tab_content   Action fired after tab content
@@ -67,7 +67,7 @@ $is_connected     = $oauth_status['connected'] || ! empty( $settings['api_token'
 
 // Define available settings tabs
 $settings_tabs = [
-	'general' => [
+	'general'              => [
 		'label' => __( 'General', 'ghl-crm-integration' ),
 		'icon'  => 'dashicons-admin-generic',
 	],
@@ -75,25 +75,25 @@ $settings_tabs = [
 		'label' => __( 'Restrictions Manager', 'ghl-crm-integration' ),
 		'icon'  => 'dashicons-lock',
 	],
-	'rest-api' => [
+	'rest-api'             => [
 		'label'      => __( 'REST API', 'ghl-crm-integration' ),
 		'icon'       => 'dashicons-editor-code',
 		'pro'        => true,
 		'pro_filter' => 'ghl_crm_public_rest_api_enabled',
 	],
-	'webhooks' => [
+	'webhooks'             => [
 		'label' => __( 'Webhooks', 'ghl-crm-integration' ),
 		'icon'  => 'dashicons-admin-links',
 	],
-	'notifications' => [
+	'notifications'        => [
 		'label' => __( 'Email Notifications', 'ghl-crm-integration' ),
 		'icon'  => 'dashicons-email',
 	],
 	// 'sync-options' => [
-	// 	'label' => __( 'Sync Options', 'ghl-crm-integration' ),
-	// 	'icon'  => 'dashicons-update',
+	// 'label' => __( 'Sync Options', 'ghl-crm-integration' ),
+	// 'icon'  => 'dashicons-update',
 	// ],
-	'role-tags' => [
+	'role-tags'            => [
 		'label' => __( 'Role-Based Tags', 'ghl-crm-integration' ),
 		'icon'  => 'dashicons-tag',
 	],
@@ -103,25 +103,25 @@ $settings_tabs = [
 		'pro'        => true,
 		'pro_filter' => 'ghl_crm_family_relationships_enabled',
 	],
-	'sync-preview' => [
+	'sync-preview'         => [
 		'label'      => __( 'Sync Preview', 'ghl-crm-integration' ),
 		'icon'       => 'dashicons-visibility',
 		'pro'        => true,
 		'pro_filter' => 'ghl_crm_sync_preview_enabled',
 	],
 	// 'conversations' => [
-	// 	'label' => __( 'Conversations', 'ghl-crm-integration' ),
-	// 	'icon'  => 'dashicons-format-chat',
+	// 'label' => __( 'Conversations', 'ghl-crm-integration' ),
+	// 'icon'  => 'dashicons-format-chat',
 	// ],
-	'advanced' => [
+	'advanced'             => [
 		'label' => __( 'Advanced', 'ghl-crm-integration' ),
 		'icon'  => 'dashicons-admin-tools',
 	],
-	'tools' => [
+	'tools'                => [
 		'label' => __( 'Tools', 'ghl-crm-integration' ),
 		'icon'  => 'dashicons-admin-settings',
 	],
-	'stats' => [
+	'stats'                => [
 		'label' => __( 'System Status', 'ghl-crm-integration' ),
 		'icon'  => 'dashicons-info',
 	],
@@ -129,12 +129,12 @@ $settings_tabs = [
 
 /**
  * Allow developers to add custom settings tabs
- * 
+ *
  * @since 1.0.0
  * @param array $settings_tabs Array of settings tabs
  * @param bool  $is_connected  Whether the plugin is connected to GoHighLevel
  * @param array $settings      Current plugin settings
- * 
+ *
  * @example
  * add_filter( 'ghl_crm_settings_tabs', function( $tabs, $is_connected, $settings ) {
  *     $tabs['my_custom_tab'] = [
@@ -188,22 +188,22 @@ $settings_tabs = apply_filters( 'ghl_crm_settings_tabs', $settings_tabs, $is_con
 		<nav class="ghl-settings-nav" id="ghl-settings-nav">
 			<ul>
 				<?php foreach ( $settings_tabs as $tab_key => $tab_data ) : ?>
-					<?php 
+					<?php
 					// Check if tab requires connection (default: true for non-general tabs)
 					$requires_connection = $tab_data['requires_connection'] ?? ( 'general' !== $tab_key );
-					
+
 					// Check if user has required capability (default: manage_options)
 					$required_capability = $tab_data['capability'] ?? 'manage_options';
-					$has_capability = current_user_can( $required_capability );
-					
+					$has_capability      = current_user_can( $required_capability );
+
 					// Disable tab if connection required but not connected, or user lacks capability
 					$is_disabled = ( $requires_connection && ! $is_connected ) || ! $has_capability;
-					
+
 					$li_class = $current_tab === $tab_key ? 'active' : '';
 					if ( $is_disabled ) {
 						$li_class .= ' disabled';
 					}
-					
+
 					$disabled_title = '';
 					if ( ! $has_capability ) {
 						$disabled_title = __( 'Insufficient permissions', 'ghl-crm-integration' );
@@ -238,7 +238,7 @@ $settings_tabs = apply_filters( 'ghl_crm_settings_tabs', $settings_tabs, $is_con
 				echo '<div class="notice notice-error"><p>' . esc_html__( 'Settings tab not found.', 'ghl-crm-integration' ) . '</p></div>';
 			} else {
 				$tab_data = $settings_tabs[ $current_tab ];
-				
+
 				// Check if user has required capability
 				$required_capability = $tab_data['capability'] ?? 'manage_options';
 				if ( ! current_user_can( $required_capability ) ) {
@@ -246,7 +246,7 @@ $settings_tabs = apply_filters( 'ghl_crm_settings_tabs', $settings_tabs, $is_con
 				} else {
 					// Fire action before rendering tab content
 					do_action( 'ghl_crm_before_settings_tab_content', $current_tab, $tab_data, $settings );
-					
+
 					// Check if tab has a custom callback
 					if ( isset( $tab_data['callback'] ) && is_callable( $tab_data['callback'] ) ) {
 						// Call custom callback function
@@ -263,7 +263,7 @@ $settings_tabs = apply_filters( 'ghl_crm_settings_tabs', $settings_tabs, $is_con
 							echo '<div class="notice notice-error"><p>' . esc_html__( 'Settings tab content not found.', 'ghl-crm-integration' ) . '</p></div>';
 						}
 					}
-					
+
 					// Fire action after rendering tab content
 					do_action( 'ghl_crm_after_settings_tab_content', $current_tab, $tab_data, $settings );
 				}

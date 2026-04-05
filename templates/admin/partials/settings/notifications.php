@@ -13,18 +13,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
-$settings = $settings_manager->get_settings_array();
+$settings         = $settings_manager->get_settings_array();
 
 // Get notification settings with defaults
-$notification_email = $settings['notification_email'] ?? $settings_manager->get_option( 'admin_email' );
-$notify_connection_lost = $settings['notify_connection_lost'] ?? true;
-$notify_sync_errors = $settings['notify_sync_errors'] ?? true;
-$notify_queue_backlog = $settings['notify_queue_backlog'] ?? true;
-$notify_rate_limit = $settings['notify_rate_limit'] ?? false;
+$notification_email      = $settings['notification_email'] ?? $settings_manager->get_option( 'admin_email' );
+$notify_connection_lost  = $settings['notify_connection_lost'] ?? true;
+$notify_sync_errors      = $settings['notify_sync_errors'] ?? true;
+$notify_queue_backlog    = $settings['notify_queue_backlog'] ?? true;
+$notify_rate_limit       = $settings['notify_rate_limit'] ?? false;
 $notify_webhook_failures = $settings['notify_webhook_failures'] ?? true;
-$notify_daily_summary = $settings['notify_daily_summary'] ?? false;
-$daily_summary_time = $settings['daily_summary_time'] ?? '09:00';
-$notification_throttle = $settings['notification_throttle'] ?? '3600';
+$notify_daily_summary    = $settings['notify_daily_summary'] ?? false;
+$daily_summary_time      = $settings['daily_summary_time'] ?? '09:00';
+$notification_throttle   = $settings['notification_throttle'] ?? '3600';
 ?>
 
 <div class="ghl-settings-wrapper">
@@ -91,11 +91,11 @@ $notification_throttle = $settings['notification_throttle'] ?? '3600';
 					<div class="ghl-form-item-content">
 						<label class="ghl-checkbox <?php echo $notify_connection_lost ? 'is-checked' : ''; ?>">
 							<input type="checkbox" 
-								   class="ghl-checkbox-original"
-								   id="notify_connection_lost" 
-								   name="notify_connection_lost" 
-								   value="1" 
-								   <?php checked( $notify_connection_lost ); ?>>
+									class="ghl-checkbox-original"
+									id="notify_connection_lost" 
+									name="notify_connection_lost" 
+									value="1" 
+									<?php checked( $notify_connection_lost ); ?>>
 							<span class="ghl-checkbox-input <?php echo $notify_connection_lost ? 'is-checked' : ''; ?>">
 								<span class="ghl-checkbox-inner"></span>
 							</span>
@@ -114,11 +114,11 @@ $notification_throttle = $settings['notification_throttle'] ?? '3600';
 					<div class="ghl-form-item-content">
 						<label class="ghl-checkbox <?php echo $notify_sync_errors ? 'is-checked' : ''; ?>">
 							<input type="checkbox" 
-								   class="ghl-checkbox-original"
-								   id="notify_sync_errors" 
-								   name="notify_sync_errors" 
-								   value="1" 
-								   <?php checked( $notify_sync_errors ); ?>>
+									class="ghl-checkbox-original"
+									id="notify_sync_errors" 
+									name="notify_sync_errors" 
+									value="1" 
+									<?php checked( $notify_sync_errors ); ?>>
 							<span class="ghl-checkbox-input <?php echo $notify_sync_errors ? 'is-checked' : ''; ?>">
 								<span class="ghl-checkbox-inner"></span>
 							</span>
@@ -137,11 +137,11 @@ $notification_throttle = $settings['notification_throttle'] ?? '3600';
 					<div class="ghl-form-item-content">
 						<label class="ghl-checkbox <?php echo $notify_queue_backlog ? 'is-checked' : ''; ?>">
 							<input type="checkbox" 
-								   class="ghl-checkbox-original"
-								   id="notify_queue_backlog" 
-								   name="notify_queue_backlog" 
-								   value="1" 
-								   <?php checked( $notify_queue_backlog ); ?>>
+									class="ghl-checkbox-original"
+									id="notify_queue_backlog" 
+									name="notify_queue_backlog" 
+									value="1" 
+									<?php checked( $notify_queue_backlog ); ?>>
 							<span class="ghl-checkbox-input <?php echo $notify_queue_backlog ? 'is-checked' : ''; ?>">
 								<span class="ghl-checkbox-inner"></span>
 							</span>
@@ -160,11 +160,11 @@ $notification_throttle = $settings['notification_throttle'] ?? '3600';
 					<div class="ghl-form-item-content">
 						<label class="ghl-checkbox <?php echo $notify_webhook_failures ? 'is-checked' : ''; ?>">
 							<input type="checkbox" 
-								   class="ghl-checkbox-original"
-								   id="notify_webhook_failures" 
-								   name="notify_webhook_failures" 
-								   value="1" 
-								   <?php checked( $notify_webhook_failures ); ?>>
+									class="ghl-checkbox-original"
+									id="notify_webhook_failures" 
+									name="notify_webhook_failures" 
+									value="1" 
+									<?php checked( $notify_webhook_failures ); ?>>
 							<span class="ghl-checkbox-input <?php echo $notify_webhook_failures ? 'is-checked' : ''; ?>">
 								<span class="ghl-checkbox-inner"></span>
 							</span>
@@ -183,11 +183,11 @@ $notification_throttle = $settings['notification_throttle'] ?? '3600';
 					<div class="ghl-form-item-content">
 						<label class="ghl-checkbox <?php echo $notify_rate_limit ? 'is-checked' : ''; ?>">
 							<input type="checkbox" 
-								   class="ghl-checkbox-original"
-								   id="notify_rate_limit" 
-								   name="notify_rate_limit" 
-								   value="1" 
-								   <?php checked( $notify_rate_limit ); ?>>
+									class="ghl-checkbox-original"
+									id="notify_rate_limit" 
+									name="notify_rate_limit" 
+									value="1" 
+									<?php checked( $notify_rate_limit ); ?>>
 							<span class="ghl-checkbox-input <?php echo $notify_rate_limit ? 'is-checked' : ''; ?>">
 								<span class="ghl-checkbox-inner"></span>
 							</span>
@@ -227,11 +227,11 @@ $notification_throttle = $settings['notification_throttle'] ?? '3600';
 					<div class="ghl-form-item-content">
 						<label class="ghl-checkbox <?php echo $notify_daily_summary ? 'is-checked' : ''; ?>">
 							<input type="checkbox" 
-								   class="ghl-checkbox-original"
-								   id="notify_daily_summary" 
-								   name="notify_daily_summary" 
-								   value="1" 
-								   <?php checked( $notify_daily_summary ); ?>>
+									class="ghl-checkbox-original"
+									id="notify_daily_summary" 
+									name="notify_daily_summary" 
+									value="1" 
+									<?php checked( $notify_daily_summary ); ?>>
 							<span class="ghl-checkbox-input <?php echo $notify_daily_summary ? 'is-checked' : ''; ?>">
 								<span class="ghl-checkbox-inner"></span>
 							</span>
@@ -312,14 +312,14 @@ $notification_throttle = $settings['notification_throttle'] ?? '3600';
 						<select id="notification_throttle" name="notification_throttle" class="regular-text">
 							<?php
 							$throttle_options = array(
-								'0'      => __( 'No throttling (send every alert)', 'ghl-crm-integration' ),
-								'900'    => __( '15 minutes', 'ghl-crm-integration' ),
-								'1800'   => __( '30 minutes', 'ghl-crm-integration' ),
-								'3600'   => __( '1 hour (recommended)', 'ghl-crm-integration' ),
-								'7200'   => __( '2 hours', 'ghl-crm-integration' ),
-								'14400'  => __( '4 hours', 'ghl-crm-integration' ),
-								'28800'  => __( '8 hours', 'ghl-crm-integration' ),
-								'86400'  => __( '24 hours', 'ghl-crm-integration' ),
+								'0'     => __( 'No throttling (send every alert)', 'ghl-crm-integration' ),
+								'900'   => __( '15 minutes', 'ghl-crm-integration' ),
+								'1800'  => __( '30 minutes', 'ghl-crm-integration' ),
+								'3600'  => __( '1 hour (recommended)', 'ghl-crm-integration' ),
+								'7200'  => __( '2 hours', 'ghl-crm-integration' ),
+								'14400' => __( '4 hours', 'ghl-crm-integration' ),
+								'28800' => __( '8 hours', 'ghl-crm-integration' ),
+								'86400' => __( '24 hours', 'ghl-crm-integration' ),
 							);
 							foreach ( $throttle_options as $value => $label ) {
 								printf(

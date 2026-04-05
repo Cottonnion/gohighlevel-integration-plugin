@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$analytics_data = \GHL_CRM\Core\Dashboard\StatsProvider::get_instance()->get_analytics_data();
+$analytics_data     = \GHL_CRM\Core\Dashboard\StatsProvider::get_instance()->get_analytics_data();
 $is_logging_enabled = \GHL_CRM\Core\SettingsManager::is_sync_logging_enabled();
 ?>
 
@@ -51,8 +51,8 @@ $is_logging_enabled = \GHL_CRM\Core\SettingsManager::is_sync_logging_enabled();
 						<?php esc_html_e( 'Analytics data requires sync logging to be enabled. Without logging, the charts below will not display any data. Enable sync logging to start tracking your integration performance.', 'ghl-crm-integration' ); ?>
 					</p>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin#advanced' ) ); ?>" 
-					   class="ghl-button ghl-button-secondary" 
-					   style="display: inline-flex; align-items: center; gap: 6px; background: white; border: 1px solid #f59e0b; color: #92400e; padding: 8px 16px; text-decoration: none;">
+						class="ghl-button ghl-button-secondary" 
+						style="display: inline-flex; align-items: center; gap: 6px; background: white; border: 1px solid #f59e0b; color: #92400e; padding: 8px 16px; text-decoration: none;">
 						<span class="dashicons dashicons-admin-settings" style="font-size: 16px;"></span>
 						<?php esc_html_e( 'Enable in Advanced Settings', 'ghl-crm-integration' ); ?>
 					</a>

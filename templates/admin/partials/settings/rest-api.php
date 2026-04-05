@@ -14,16 +14,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
-$settings = $settings_manager->get_settings_array();
+$settings         = $settings_manager->get_settings_array();
 
 // REST API settings with defaults
-$rest_api_enabled = $settings['rest_api_enabled'] ?? false;
-$rest_api_key = $settings['rest_api_key'] ?? '';
-$rest_api_ip_whitelist = $settings['rest_api_ip_whitelist'] ?? '';
-$rest_api_rate_limit = $settings['rest_api_rate_limit'] ?? true;
-$rest_api_endpoints = $settings['rest_api_endpoints'] ?? [ 'contacts', 'sync', 'status' ];
+$rest_api_enabled             = $settings['rest_api_enabled'] ?? false;
+$rest_api_key                 = $settings['rest_api_key'] ?? '';
+$rest_api_ip_whitelist        = $settings['rest_api_ip_whitelist'] ?? '';
+$rest_api_rate_limit          = $settings['rest_api_rate_limit'] ?? true;
+$rest_api_endpoints           = $settings['rest_api_endpoints'] ?? [ 'contacts', 'sync', 'status' ];
 $rest_api_requests_per_minute = $settings['rest_api_requests_per_minute'] ?? 60;
-$is_pro_active = apply_filters( 'ghl_crm_public_rest_api_enabled', false );
+$is_pro_active                = apply_filters( 'ghl_crm_public_rest_api_enabled', false );
 
 // Generate API key if not exists
 if ( empty( $rest_api_key ) ) {
@@ -267,11 +267,11 @@ if ( empty( $rest_api_key ) ) {
 					<div class="ghl-form-item-content">
 						<label class="ghl-checkbox <?php echo $rest_api_enabled ? 'is-checked' : ''; ?>">
 							<input type="checkbox" 
-								   class="ghl-checkbox-original"
-								   id="rest_api_enabled" 
-								   name="rest_api_enabled" 
-								   value="1" 
-								   <?php checked( $rest_api_enabled ); ?>>
+									class="ghl-checkbox-original"
+									id="rest_api_enabled" 
+									name="rest_api_enabled" 
+									value="1" 
+									<?php checked( $rest_api_enabled ); ?>>
 							<span class="ghl-checkbox-input <?php echo $rest_api_enabled ? 'is-checked' : ''; ?>">
 								<span class="ghl-checkbox-inner"></span>
 							</span>
@@ -371,11 +371,11 @@ if ( empty( $rest_api_key ) ) {
 					<td>
 						<label class="ghl-checkbox <?php echo $rest_api_rate_limit ? 'is-checked' : ''; ?>" style="display: inline-flex; align-items: center;">
 							<input type="checkbox" 
-								   class="ghl-checkbox-original"
-								   id="rest_api_rate_limit" 
-								   name="rest_api_rate_limit" 
-								   value="1" 
-								   <?php checked( $rest_api_rate_limit ); ?>>
+									class="ghl-checkbox-original"
+									id="rest_api_rate_limit" 
+									name="rest_api_rate_limit" 
+									value="1" 
+									<?php checked( $rest_api_rate_limit ); ?>>
 							<span class="ghl-checkbox-input <?php echo $rest_api_rate_limit ? 'is-checked' : ''; ?>">
 								<span class="ghl-checkbox-inner"></span>
 							</span>
@@ -388,12 +388,12 @@ if ( empty( $rest_api_key ) ) {
 								<?php esc_html_e( 'Max requests per minute:', 'ghl-crm-integration' ); ?>
 							</label>
 							<input type="number" 
-								   id="rest_api_requests_per_minute" 
-								   name="rest_api_requests_per_minute" 
-								   value="<?php echo esc_attr( $rest_api_requests_per_minute ); ?>" 
-								   min="10"
-								   max="1000"
-								   style="width: 80px;">
+									id="rest_api_requests_per_minute" 
+									name="rest_api_requests_per_minute" 
+									value="<?php echo esc_attr( $rest_api_requests_per_minute ); ?>" 
+									min="10"
+									max="1000"
+									style="width: 80px;">
 						</div>
 						<p class="description">
 							<?php esc_html_e( 'Limit API requests per IP address to prevent abuse.', 'ghl-crm-integration' ); ?>
@@ -419,10 +419,10 @@ if ( empty( $rest_api_key ) ) {
 						<fieldset>
 							<label class="ghl-checkbox <?php echo in_array( 'contacts', $rest_api_endpoints, true ) ? 'is-checked' : ''; ?>" style="display: block; margin-bottom: 15px;">
 								<input type="checkbox" 
-									   class="ghl-checkbox-original"
-									   name="rest_api_endpoints[]" 
-									   value="contacts" 
-									   <?php checked( in_array( 'contacts', $rest_api_endpoints, true ) ); ?>>
+										class="ghl-checkbox-original"
+										name="rest_api_endpoints[]" 
+										value="contacts" 
+										<?php checked( in_array( 'contacts', $rest_api_endpoints, true ) ); ?>>
 								<span class="ghl-checkbox-input <?php echo in_array( 'contacts', $rest_api_endpoints, true ) ? 'is-checked' : ''; ?>">
 									<span class="ghl-checkbox-inner"></span>
 								</span>
@@ -433,10 +433,10 @@ if ( empty( $rest_api_key ) ) {
 
 							<label class="ghl-checkbox <?php echo in_array( 'sync', $rest_api_endpoints, true ) ? 'is-checked' : ''; ?>" style="display: block; margin-bottom: 15px;">
 								<input type="checkbox" 
-									   class="ghl-checkbox-original"
-									   name="rest_api_endpoints[]" 
-									   value="sync" 
-									   <?php checked( in_array( 'sync', $rest_api_endpoints, true ) ); ?>>
+										class="ghl-checkbox-original"
+										name="rest_api_endpoints[]" 
+										value="sync" 
+										<?php checked( in_array( 'sync', $rest_api_endpoints, true ) ); ?>>
 								<span class="ghl-checkbox-input <?php echo in_array( 'sync', $rest_api_endpoints, true ) ? 'is-checked' : ''; ?>">
 									<span class="ghl-checkbox-inner"></span>
 								</span>
@@ -447,10 +447,10 @@ if ( empty( $rest_api_key ) ) {
 
 							<label class="ghl-checkbox <?php echo in_array( 'status', $rest_api_endpoints, true ) ? 'is-checked' : ''; ?>" style="display: block; margin-bottom: 15px;">
 								<input type="checkbox" 
-									   class="ghl-checkbox-original"
-									   name="rest_api_endpoints[]" 
-									   value="status" 
-									   <?php checked( in_array( 'status', $rest_api_endpoints, true ) ); ?>>
+										class="ghl-checkbox-original"
+										name="rest_api_endpoints[]" 
+										value="status" 
+										<?php checked( in_array( 'status', $rest_api_endpoints, true ) ); ?>>
 								<span class="ghl-checkbox-input <?php echo in_array( 'status', $rest_api_endpoints, true ) ? 'is-checked' : ''; ?>">
 									<span class="ghl-checkbox-inner"></span>
 								</span>
@@ -461,10 +461,10 @@ if ( empty( $rest_api_key ) ) {
 
 							<label class="ghl-checkbox <?php echo in_array( 'webhooks', $rest_api_endpoints, true ) ? 'is-checked' : ''; ?>" style="display: block; margin-bottom: 15px;">
 								<input type="checkbox" 
-									   class="ghl-checkbox-original"
-									   name="rest_api_endpoints[]" 
-									   value="webhooks" 
-									   <?php checked( in_array( 'webhooks', $rest_api_endpoints, true ) ); ?>>
+										class="ghl-checkbox-original"
+										name="rest_api_endpoints[]" 
+										value="webhooks" 
+										<?php checked( in_array( 'webhooks', $rest_api_endpoints, true ) ); ?>>
 								<span class="ghl-checkbox-input <?php echo in_array( 'webhooks', $rest_api_endpoints, true ) ? 'is-checked' : ''; ?>">
 									<span class="ghl-checkbox-inner"></span>
 								</span>

@@ -30,17 +30,23 @@ define( 'GHL_CRM_URL', plugin_dir_url( __FILE__ ) );
 define( 'GHL_CRM_BASENAME', plugin_basename( __FILE__ ) );
 define( 'GHL_CRM_TEXTDOMAIN', 'ghl-crm-integration' );
 
-add_action( 'init', function() {
-	load_plugin_textdomain( 'ghl-crm-integration', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
-}, 1 );
+add_action(
+	'init',
+	function () {
+		load_plugin_textdomain( 'ghl-crm-integration', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+	},
+	1
+);
 
 // Require Composer autoloader
 if ( file_exists( GHL_CRM_PATH . 'vendor/autoload.php' ) ) {
 	require_once GHL_CRM_PATH . 'vendor/autoload.php';
 } else {
 	// Show admin notice if autoloader is missing
-	add_action( 'admin_notices', function() {
-		?>
+	add_action(
+		'admin_notices',
+		function () {
+			?>
 		<div class="notice notice-error">
 			<p>
 				<?php
@@ -51,8 +57,9 @@ if ( file_exists( GHL_CRM_PATH . 'vendor/autoload.php' ) ) {
 				?>
 			</p>
 		</div>
-		<?php
-	} );
+			<?php
+		}
+	);
 	return;
 }
 
@@ -69,4 +76,4 @@ function ghl_crm_init() {
 // Start the plugin
 ghl_crm_init();
 
-include_once GHL_CRM_PATH . 'functions.php';
+require_once GHL_CRM_PATH . 'functions.php';

@@ -12,15 +12,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+$settings_manager       = \GHL_CRM\Core\SettingsManager::get_instance();
 $sync_preview_available = apply_filters( 'ghl_crm_sync_preview_enabled', false );
 
 // Get all WordPress users for the dropdown
-$users = get_users( array(
-	'orderby' => 'display_name',
-	'order'   => 'ASC',
-	'number'  => 9999, // Limit to 500 users for performance
-) );
+$users = get_users(
+	array(
+		'orderby' => 'display_name',
+		'order'   => 'ASC',
+		'number'  => 9999, // Limit to 500 users for performance
+	)
+);
 ?>
 
 <div class="ghl-settings-wrapper">

@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
-$settings = $settings_manager->get_settings_array();
+$settings         = $settings_manager->get_settings_array();
 ?>
 
 <div class="ghl-settings-wrapper">
@@ -46,12 +46,12 @@ $settings = $settings_manager->get_settings_array();
 					</th>
 					<td>
 						<input type="number" 
-							   id="cache_duration" 
-							   name="cache_duration" 
-							   value="<?php echo esc_attr( $settings['cache_duration'] ?? 3600 ); ?>" 
-							   min="0"
-							   max="86400"
-							   class="small-text">
+								id="cache_duration" 
+								name="cache_duration" 
+								value="<?php echo esc_attr( $settings['cache_duration'] ?? 3600 ); ?>" 
+								min="0"
+								max="86400"
+								class="small-text">
 						<span><?php esc_html_e( 'seconds', 'ghl-crm-integration' ); ?></span>
 						<p class="description">
 							<?php esc_html_e( 'How long to cache API responses. Set to 0 to disable caching.', 'ghl-crm-integration' ); ?>
@@ -68,12 +68,12 @@ $settings = $settings_manager->get_settings_array();
 					</th>
 					<td>
 						<input type="number" 
-							   id="batch_size" 
-							   name="batch_size" 
-							   value="<?php echo esc_attr( $settings['batch_size'] ?? 50 ); ?>" 
-							   min="1"
-							   max="500"
-							   class="small-text">
+								id="batch_size" 
+								name="batch_size" 
+								value="<?php echo esc_attr( $settings['batch_size'] ?? 50 ); ?>" 
+								min="1"
+								max="500"
+								class="small-text">
 						<span><?php esc_html_e( 'items', 'ghl-crm-integration' ); ?></span>
 						<p class="description">
 							<?php esc_html_e( 'Number of items to process in each batch during sync.', 'ghl-crm-integration' ); ?>
@@ -90,12 +90,12 @@ $settings = $settings_manager->get_settings_array();
 					</th>
 					<td>
 						<input type="number" 
-							   id="log_retention_days" 
-							   name="log_retention_days" 
-							   value="<?php echo esc_attr( $settings['log_retention_days'] ?? 30 ); ?>" 
-							   min="1"
-							   max="365"
-							   class="small-text">
+								id="log_retention_days" 
+								name="log_retention_days" 
+								value="<?php echo esc_attr( $settings['log_retention_days'] ?? 30 ); ?>" 
+								min="1"
+								max="365"
+								class="small-text">
 						<span><?php esc_html_e( 'days', 'ghl-crm-integration' ); ?></span>
 						<p class="description">
 							<?php esc_html_e( 'Number of days to keep sync logs and completed queue items before automatic cleanup.', 'ghl-crm-integration' ); ?>

@@ -5,7 +5,7 @@
  * Reusable template for displaying PRO feature upgrade notices
  *
  * @package GHL_CRM_Integration
- * 
+ *
  * Available variables:
  * @var string $title Feature title
  * @var string $description Feature description

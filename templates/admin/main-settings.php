@@ -44,7 +44,15 @@ if ( isset( $_GET['oauth'] ) ) {
 // Handle OAuth disconnect
 if ( isset( $_POST['ghl_disconnect_oauth'] ) && check_admin_referer( 'ghl_disconnect_oauth', 'ghl_disconnect_nonce' ) ) {
 	$oauth_handler->disconnect();
-	wp_safe_redirect( add_query_arg( array( 'page' => 'ghl-crm-settings', 'oauth' => 'disconnected' ), admin_url( 'admin.php' ) ) );
+	wp_safe_redirect(
+		add_query_arg(
+			array(
+				'page'  => 'ghl-crm-settings',
+				'oauth' => 'disconnected',
+			),
+			admin_url( 'admin.php' )
+		)
+	);
 	exit;
 }
 
@@ -52,8 +60,8 @@ if ( isset( $_POST['ghl_disconnect_oauth'] ) && check_admin_referer( 'ghl_discon
 if ( isset( $_GET['oauth'] ) && 'disconnected' === $_GET['oauth'] ) {
 	$oauth_message = __( 'Successfully disconnected from GoHighLevel.', 'ghl-crm-integration' );
 	// Refresh connection status
-	$oauth_status  = $oauth_handler->get_connection_status();
-	$is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
+	$oauth_status = $oauth_handler->get_connection_status();
+	$is_connected = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 }
 
 ?>
@@ -80,7 +88,7 @@ if ( isset( $_GET['oauth'] ) && 'disconnected' === $_GET['oauth'] ) {
 	 * Action hook: Display admin notices on settings page
 	 *
 	 * Use this hook to display custom notices from anywhere in the plugin.
-	 * 
+	 *
 	 * Example usage:
 	 * add_action( 'ghl_crm_settings_notices', function() {
 	 *     echo '<div class="notice notice-error is-dismissible"><p>Error message here</p></div>';
@@ -114,8 +122,20 @@ if ( isset( $_GET['oauth'] ) && 'disconnected' === $_GET['oauth'] ) {
 	<!-- Tab Navigation -->
 	<nav class="nav-tab-wrapper wp-clearfix" style="margin-bottom: 20px;">
 		<?php foreach ( $tabs as $tab_key => $tab_label ) : ?>
-			<a href="<?php echo esc_url( add_query_arg( array( 'page' => 'ghl-crm-settings', 'tab' => $tab_key ), admin_url( 'admin.php' ) ) ); ?>" 
-			   class="nav-tab <?php echo $current_tab === $tab_key ? 'nav-tab-active' : ''; ?>">
+			<a href="
+			<?php
+			echo esc_url(
+				add_query_arg(
+					array(
+						'page' => 'ghl-crm-settings',
+						'tab'  => $tab_key,
+					),
+					admin_url( 'admin.php' )
+				)
+			);
+			?>
+						" 
+				class="nav-tab <?php echo $current_tab === $tab_key ? 'nav-tab-active' : ''; ?>">
 				<?php echo esc_html( $tab_label ); ?>
 			</a>
 		<?php endforeach; ?>
@@ -133,17 +153,17 @@ if ( isset( $_GET['oauth'] ) && 'disconnected' === $_GET['oauth'] ) {
 				// Include just the content part of settings template
 				include GHL_CRM_PATH . 'templates/admin/settings.php';
 				break;
-			
+
 			case 'integrations':
 				// Include integrations tab
 				include GHL_CRM_PATH . 'templates/admin/integrations.php';
 				break;
-			
+
 			case 'field-mapping':
 				// Include just the content part of field-mapping template
 				include GHL_CRM_PATH . 'templates/admin/field-mapping.php';
 				break;
-			
+
 			default:
 				include GHL_CRM_PATH . 'templates/admin/settings.php';
 				break;

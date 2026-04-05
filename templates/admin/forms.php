@@ -19,7 +19,7 @@ $white_label_domain = $settings['ghl_white_label_domain'] ?? '';
 	$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
 	$oauth_status  = $oauth_handler->get_connection_status();
 	$is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
-	
+
 	if ( ! $is_connected ) :
 		?>
 		<div class="notice notice-warning">
@@ -44,7 +44,7 @@ $white_label_domain = $settings['ghl_white_label_domain'] ?? '';
 
 	// Check scope access for Forms
 	\GHL_CRM\API\ScopeChecker::render_scope_notice( 'forms' );
-	
+
 	// Helpful Information Notice
 	?>
 	<div class="notice notice-info" style="margin: 20px 0; padding: 15px; border-left-color: #2271b1;">
@@ -79,7 +79,7 @@ $white_label_domain = $settings['ghl_white_label_domain'] ?? '';
 		</p>
 	</div>
 	<?php
-	
+
 	// White Label Domain Notice
 	if ( empty( $white_label_domain ) ) :
 		?>

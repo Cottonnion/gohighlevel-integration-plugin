@@ -36,7 +36,7 @@ $is_connected = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 				<?php
 				$location_name = $settings['location_name'] ?? 'GoHighLevel';
 				if ( ! empty( $location_name ) && $location_name !== 'GoHighLevel' ) :
-				?>
+					?>
 					<div style="font-size: 13px; color: #15803d; margin-bottom: 4px;">
 						<strong><?php echo esc_html( $location_name ); ?></strong>
 					</div>

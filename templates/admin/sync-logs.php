@@ -21,7 +21,7 @@ $is_logging_enabled = \GHL_CRM\Core\SettingsManager::is_sync_logging_enabled();
 
 // Get per-page preference from user meta (default 20)
 $current_user_id = get_current_user_id();
-$per_page = (int) get_user_meta( $current_user_id, 'ghl_sync_logs_per_page', true );
+$per_page        = (int) get_user_meta( $current_user_id, 'ghl_sync_logs_per_page', true );
 if ( ! $per_page || $per_page < 1 ) {
 	$per_page = 20;
 }
@@ -29,15 +29,17 @@ if ( ! $per_page || $per_page < 1 ) {
 // Get current page from request (pagination only affects view state)
 $raw_page     = filter_input( INPUT_GET, 'paged', FILTER_SANITIZE_NUMBER_INT );
 $current_page = $raw_page ? max( 1, (int) $raw_page ) : 1;
-$offset = ( $current_page - 1 ) * $per_page;
+$offset       = ( $current_page - 1 ) * $per_page;
 
 // Get logs for site ID 1
 $sync_logger = \GHL_CRM\Sync\SyncLogger::get_instance();
-$logs = $sync_logger->get_logs( [
-	'limit'   => $per_page,
-	'offset'  => $offset,
-	'site_id' => get_current_blog_id(),
-] );
+$logs        = $sync_logger->get_logs(
+	[
+		'limit'   => $per_page,
+		'offset'  => $offset,
+		'site_id' => get_current_blog_id(),
+	]
+);
 // Count pending queue and total logs
 global $wpdb;
 $site_id = get_current_blog_id();
@@ -50,7 +52,7 @@ $queue_count = $wpdb->get_var(
 	)
 );
 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Counts rely on custom plugin tables and are safe without additional caching.
-$log_count = $wpdb->get_var(
+$log_count   = $wpdb->get_var(
 	$wpdb->prepare(
 		"SELECT COUNT(*) FROM {$wpdb->prefix}ghl_sync_log WHERE site_id = %d",
 		$site_id
@@ -173,17 +175,20 @@ $total_pages = ceil( $log_count / $per_page );
 							if ( is_string( $metadata ) ) {
 								$metadata = json_decode( $metadata, true );
 							}
-							
-							$details_json = wp_json_encode( [
-								'sync_type'      => $log['sync_type'] ?? '',
-								'item_id'        => $log['item_id'] ?? '',
-								'action'         => $log['action'] ?? '',
-								'status'         => $log['status'] ?? '',
-								'message'        => $log['message'] ?? '',
-								'ghl_id'         => $log['ghl_id'] ?? '',
-								'metadata'       => $metadata,
-								'created_at'     => $log['created_at'] ?? '',
-							], JSON_PRETTY_PRINT );
+
+							$details_json = wp_json_encode(
+								[
+									'sync_type'  => $log['sync_type'] ?? '',
+									'item_id'    => $log['item_id'] ?? '',
+									'action'     => $log['action'] ?? '',
+									'status'     => $log['status'] ?? '',
+									'message'    => $log['message'] ?? '',
+									'ghl_id'     => $log['ghl_id'] ?? '',
+									'metadata'   => $metadata,
+									'created_at' => $log['created_at'] ?? '',
+								],
+								JSON_PRETTY_PRINT
+							);
 							?>
 							<tr>
 								<td>
@@ -191,9 +196,9 @@ $total_pages = ceil( $log_count / $per_page );
 								</td>
 								<td>
 									<span class="ghl-log-type">
-										<?php 
+										<?php
 										$sync_type = $log['sync_type'] ?? 'unknown';
-										$icon = 'admin-users';
+										$icon      = 'admin-users';
 										if ( 'wc_customer' === $sync_type || 'order' === $sync_type ) {
 											$icon = 'cart';
 										} elseif ( 'contact' === $sync_type ) {
@@ -256,9 +261,9 @@ $total_pages = ceil( $log_count / $per_page );
 					</div>
 					<div class="ghl-pagination-links">
 						<?php
-						$range = 2;
+						$range      = 2;
 						$start_page = max( 1, $current_page - $range );
-						$end_page = min( $total_pages, $current_page + $range );
+						$end_page   = min( $total_pages, $current_page + $range );
 
 						// Previous button
 						if ( $current_page > 1 ) {

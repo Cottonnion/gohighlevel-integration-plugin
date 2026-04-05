@@ -83,68 +83,76 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 	<!-- Success/Error Messages -->
 	<div id="ghl-integrations-messages"></div>
 
-	   <!-- Tabs Navigation -->
-	   <div class="ghl-tabs-nav">
-		   <?php
-		   $default_tabs = [
-			   [
-				   'id'    => 'buddyboss',
-				   'icon'  => 'groups',
-				   'label' => __( 'BuddyBoss', 'ghl-crm-integration' ),
-				   'active' => true,
-				   'order'  => 10,
-			   ],
-		   ];
-		   $integration_tabs = apply_filters( 'ghl_crm_integration_tabs', $default_tabs );
-		   // Sort by 'order' if present
-		   usort($integration_tabs, function($a, $b) {
-			   return ($a['order'] ?? 100) <=> ($b['order'] ?? 100);
-		   });
-		   foreach ( $integration_tabs as $tab ) :
-			   $active_class = ! empty( $tab['active'] ) ? 'active' : '';
-			   ?>
-			   <button class="ghl-tab-button <?php echo esc_attr( $active_class ); ?>" data-tab="<?php echo esc_attr( $tab['id'] ); ?>">
-				   <span class="dashicons dashicons-<?php echo esc_attr( $tab['icon'] ); ?>"></span>
-				   <?php echo esc_html( $tab['label'] ); ?>
-			   </button>
-		   <?php endforeach; ?>
-	   </div>
+		<!-- Tabs Navigation -->
+		<div class="ghl-tabs-nav">
+			<?php
+			$default_tabs     = [
+				[
+					'id'     => 'buddyboss',
+					'icon'   => 'groups',
+					'label'  => __( 'BuddyBoss', 'ghl-crm-integration' ),
+					'active' => true,
+					'order'  => 10,
+				],
+			];
+			$integration_tabs = apply_filters( 'ghl_crm_integration_tabs', $default_tabs );
+			// Sort by 'order' if present
+			usort(
+				$integration_tabs,
+				function ( $a, $b ) {
+					return ( $a['order'] ?? 100 ) <=> ( $b['order'] ?? 100 );
+				}
+			);
+			foreach ( $integration_tabs as $tab ) :
+				$active_class = ! empty( $tab['active'] ) ? 'active' : '';
+				?>
+				<button class="ghl-tab-button <?php echo esc_attr( $active_class ); ?>" data-tab="<?php echo esc_attr( $tab['id'] ); ?>">
+					<span class="dashicons dashicons-<?php echo esc_attr( $tab['icon'] ); ?>"></span>
+					<?php echo esc_html( $tab['label'] ); ?>
+				</button>
+			<?php endforeach; ?>
+		</div>
 
-	   <!-- Tabs Content -->
-	   <div class="ghl-tabs-content">
-		   <?php
-		   $default_panels = [
-			   [
-				   'id'      => 'buddyboss',
-				   'active'  => true,
-				   'order'   => 10,
-				   'content' => function() {
-					   $buddyboss_template = GHL_CRM_PATH . 'templates/admin/partials/integrations/buddyboss-groups.php';
-					   if ( file_exists( $buddyboss_template ) ) {
-						   include $buddyboss_template;
-					   } else {
-						   echo '<div class="notice notice-error"><p>' . esc_html__( 'BuddyBoss settings template not found.', 'ghl-crm-integration' ) . '</p></div>';
-					   }
-				   },
-			   ],
-		   ];
-		   $integration_panels = apply_filters( 'ghl_crm_integration_panels', $default_panels );
-		   // Sort by 'order' if present
-		   usort($integration_panels, function($a, $b) {
-			   return ($a['order'] ?? 100) <=> ($b['order'] ?? 100);
-		   });
-		   foreach ( $integration_panels as $panel ) :
-			   $active_class = ! empty( $panel['active'] ) ? 'active' : '';
-			   ?>
-			   <div class="ghl-tab-panel <?php echo esc_attr( $active_class ); ?>" data-tab="<?php echo esc_attr( $panel['id'] ); ?>">
-				   <?php if ( is_callable( $panel['content'] ) ) {
-					   call_user_func( $panel['content'] );
-				   } else {
-					   echo $panel['content'];
-				   } ?>
-			   </div>
-		   <?php endforeach; ?>
-	   </div>
+		<!-- Tabs Content -->
+		<div class="ghl-tabs-content">
+			<?php
+			$default_panels     = [
+				[
+					'id'      => 'buddyboss',
+					'active'  => true,
+					'order'   => 10,
+					'content' => function () {
+						$buddyboss_template = GHL_CRM_PATH . 'templates/admin/partials/integrations/buddyboss-groups.php';
+						if ( file_exists( $buddyboss_template ) ) {
+							include $buddyboss_template;
+						} else {
+							echo '<div class="notice notice-error"><p>' . esc_html__( 'BuddyBoss settings template not found.', 'ghl-crm-integration' ) . '</p></div>';
+						}
+					},
+				],
+			];
+			$integration_panels = apply_filters( 'ghl_crm_integration_panels', $default_panels );
+			// Sort by 'order' if present
+			usort(
+				$integration_panels,
+				function ( $a, $b ) {
+					return ( $a['order'] ?? 100 ) <=> ( $b['order'] ?? 100 );
+				}
+			);
+			foreach ( $integration_panels as $panel ) :
+				$active_class = ! empty( $panel['active'] ) ? 'active' : '';
+				?>
+				<div class="ghl-tab-panel <?php echo esc_attr( $active_class ); ?>" data-tab="<?php echo esc_attr( $panel['id'] ); ?>">
+					<?php
+					if ( is_callable( $panel['content'] ) ) {
+						call_user_func( $panel['content'] );
+					} else {
+						echo $panel['content'];
+					}
+					?>
+				</div>
+			<?php endforeach; ?>
+		</div>
 
 	<!-- Save Button -->
 	<div class="ghl-form-actions">

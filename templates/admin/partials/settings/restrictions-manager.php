@@ -14,22 +14,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
-$settings = $settings_manager->get_settings_array();
+$settings         = $settings_manager->get_settings_array();
 
 // Get restriction settings with defaults
-$restrictions_enabled = $settings['restrictions_enabled'] ?? true;
-$default_redirect_url = $settings['restrictions_default_redirect'] ?? '';
-$access_denied_title = $settings['restrictions_denied_title'] ?? __( 'Access Restricted', 'ghl-crm-integration' );
-$access_denied_message = $settings['restrictions_denied_message'] ?? __( 'You do not have permission to view this content.', 'ghl-crm-integration' );
-$login_message = $settings['restrictions_login_message'] ?? __( 'Please log in to access this content.', 'ghl-crm-integration' );
-$archive_message = $settings['restrictions_archive_message'] ?? __( 'This content is restricted.', 'ghl-crm-integration' );
-$show_login_link = $settings['restrictions_show_login_link'] ?? true;
-$allow_admins = $settings['restrictions_allow_admins'] ?? true;
+$restrictions_enabled     = $settings['restrictions_enabled'] ?? true;
+$default_redirect_url     = $settings['restrictions_default_redirect'] ?? '';
+$access_denied_title      = $settings['restrictions_denied_title'] ?? __( 'Access Restricted', 'ghl-crm-integration' );
+$access_denied_message    = $settings['restrictions_denied_message'] ?? __( 'You do not have permission to view this content.', 'ghl-crm-integration' );
+$login_message            = $settings['restrictions_login_message'] ?? __( 'Please log in to access this content.', 'ghl-crm-integration' );
+$archive_message          = $settings['restrictions_archive_message'] ?? __( 'This content is restricted.', 'ghl-crm-integration' );
+$show_login_link          = $settings['restrictions_show_login_link'] ?? true;
+$allow_admins             = $settings['restrictions_allow_admins'] ?? true;
 $hide_restricted_archives = $settings['restrictions_hide_archives'] ?? false;
-$hide_from_rest_api = $settings['restrictions_hide_rest_api'] ?? false;
-$allowed_tags = $settings['restrictions_allowed_tags'] ?? [];
-$is_pro_active = apply_filters( 'ghl_crm_archive_protection_enabled', false );
-$overrides_pro_active = apply_filters( 'ghl_crm_restriction_overrides_enabled', false );
+$hide_from_rest_api       = $settings['restrictions_hide_rest_api'] ?? false;
+$allowed_tags             = $settings['restrictions_allowed_tags'] ?? [];
+$is_pro_active            = apply_filters( 'ghl_crm_archive_protection_enabled', false );
+$overrides_pro_active     = apply_filters( 'ghl_crm_restriction_overrides_enabled', false );
 ?>
 
 <div class="ghl-settings-wrapper">
@@ -56,11 +56,11 @@ $overrides_pro_active = apply_filters( 'ghl_crm_restriction_overrides_enabled', 
 					<div class="ghl-form-item-content">
 						<label class="ghl-checkbox <?php echo $restrictions_enabled ? 'is-checked' : ''; ?>">
 							<input type="checkbox" 
-								   class="ghl-checkbox-original"
-								   id="restrictions_enabled" 
-								   name="restrictions_enabled" 
-								   value="1" 
-								   <?php checked( $restrictions_enabled ); ?>>
+									class="ghl-checkbox-original"
+									id="restrictions_enabled" 
+									name="restrictions_enabled" 
+									value="1" 
+									<?php checked( $restrictions_enabled ); ?>>
 							<span class="ghl-checkbox-input <?php echo $restrictions_enabled ? 'is-checked' : ''; ?>">
 								<span class="ghl-checkbox-inner"></span>
 							</span>
@@ -92,10 +92,10 @@ $overrides_pro_active = apply_filters( 'ghl_crm_restriction_overrides_enabled', 
 					</th>
 					<td>
 						<input type="url" 
-							   id="restrictions_default_redirect" 
-							   name="restrictions_default_redirect" 
-							   value="<?php echo esc_url( $default_redirect_url ); ?>" 
-							   class="regular-text"
+								id="restrictions_default_redirect" 
+								name="restrictions_default_redirect" 
+								value="<?php echo esc_url( $default_redirect_url ); ?>" 
+								class="regular-text"
 						>
 						<p class="description">
 							<?php esc_html_e( 'Default URL to redirect users who don\'t have access. Can be overridden per page/post. Leave empty to show access denied message instead.', 'ghl-crm-integration' ); ?>
@@ -120,10 +120,10 @@ $overrides_pro_active = apply_filters( 'ghl_crm_restriction_overrides_enabled', 
 					</th>
 					<td>
 						<input type="text" 
-							   id="restrictions_denied_title" 
-							   name="restrictions_denied_title" 
-							   value="<?php echo esc_attr( $access_denied_title ); ?>" 
-							   class="regular-text">
+								id="restrictions_denied_title" 
+								name="restrictions_denied_title" 
+								value="<?php echo esc_attr( $access_denied_title ); ?>" 
+								class="regular-text">
 						<p class="description">
 							<?php esc_html_e( 'Page title shown when access is denied (no redirect set).', 'ghl-crm-integration' ); ?>
 						</p>
@@ -167,9 +167,9 @@ $overrides_pro_active = apply_filters( 'ghl_crm_restriction_overrides_enabled', 
 					</th>
 					<td>
 						<textarea id="restrictions_login_message" 
-								  name="restrictions_login_message" 
-								  rows="3" 
-								  class="large-text"><?php echo esc_textarea( $login_message ); ?></textarea>
+									name="restrictions_login_message" 
+									rows="3" 
+									class="large-text"><?php echo esc_textarea( $login_message ); ?></textarea>
 						<p class="description">
 							<?php esc_html_e( 'Message shown to logged-out users.', 'ghl-crm-integration' ); ?>
 						</p>
@@ -183,11 +183,11 @@ $overrides_pro_active = apply_filters( 'ghl_crm_restriction_overrides_enabled', 
 					<td>
 						<label class="ghl-checkbox <?php echo $show_login_link ? 'is-checked' : ''; ?>">
 							<input type="checkbox" 
-								   class="ghl-checkbox-original"
-								   id="restrictions_show_login_link" 
-								   name="restrictions_show_login_link" 
-								   value="1" 
-								   <?php checked( $show_login_link ); ?>>
+									class="ghl-checkbox-original"
+									id="restrictions_show_login_link" 
+									name="restrictions_show_login_link" 
+									value="1" 
+									<?php checked( $show_login_link ); ?>>
 							<span class="ghl-checkbox-input <?php echo $show_login_link ? 'is-checked' : ''; ?>">
 								<span class="ghl-checkbox-inner"></span>
 							</span>
@@ -219,10 +219,10 @@ $overrides_pro_active = apply_filters( 'ghl_crm_restriction_overrides_enabled', 
 					</th>
 					<td>
 						<input type="text" 
-							   id="restrictions_archive_message" 
-							   name="restrictions_archive_message" 
-							   value="<?php echo esc_attr( $archive_message ); ?>" 
-							   class="regular-text">
+								id="restrictions_archive_message" 
+								name="restrictions_archive_message" 
+								value="<?php echo esc_attr( $archive_message ); ?>" 
+								class="regular-text">
 						<p class="description">
 							<?php esc_html_e( 'Short message shown in place of content on archive pages and excerpts.', 'ghl-crm-integration' ); ?>
 						</p>
@@ -239,12 +239,12 @@ $overrides_pro_active = apply_filters( 'ghl_crm_restriction_overrides_enabled', 
 					<td>
 						<label class="ghl-checkbox <?php echo $hide_restricted_archives ? 'is-checked' : ''; ?>" <?php echo ! $is_pro_active ? 'style="opacity: 0.6; pointer-events: none;"' : ''; ?>>
 							<input type="checkbox" 
-								   class="ghl-checkbox-original"
-								   id="restrictions_hide_archives" 
-								   name="restrictions_hide_archives" 
-								   value="1" 
-								   <?php checked( $hide_restricted_archives ); ?>
-								   <?php disabled( ! $is_pro_active ); ?>>
+									class="ghl-checkbox-original"
+									id="restrictions_hide_archives" 
+									name="restrictions_hide_archives" 
+									value="1" 
+									<?php checked( $hide_restricted_archives ); ?>
+									<?php disabled( ! $is_pro_active ); ?>>
 							<span class="ghl-checkbox-input <?php echo $hide_restricted_archives ? 'is-checked' : ''; ?>">
 								<span class="ghl-checkbox-inner"></span>
 							</span>
@@ -269,12 +269,12 @@ $overrides_pro_active = apply_filters( 'ghl_crm_restriction_overrides_enabled', 
 					<td>
 						<label class="ghl-checkbox <?php echo $hide_from_rest_api ? 'is-checked' : ''; ?>" <?php echo ! $is_pro_active ? 'style="opacity: 0.6; pointer-events: none;"' : ''; ?>>
 							<input type="checkbox" 
-								   class="ghl-checkbox-original"
-								   id="restrictions_hide_rest_api" 
-								   name="restrictions_hide_rest_api" 
-								   value="1" 
-								   <?php checked( $hide_from_rest_api ); ?>
-								   <?php disabled( ! $is_pro_active ); ?>>
+									class="ghl-checkbox-original"
+									id="restrictions_hide_rest_api" 
+									name="restrictions_hide_rest_api" 
+									value="1" 
+									<?php checked( $hide_from_rest_api ); ?>
+									<?php disabled( ! $is_pro_active ); ?>>
 							<span class="ghl-checkbox-input <?php echo $hide_from_rest_api ? 'is-checked' : ''; ?>">
 								<span class="ghl-checkbox-inner"></span>
 							</span>
@@ -312,12 +312,12 @@ $overrides_pro_active = apply_filters( 'ghl_crm_restriction_overrides_enabled', 
 					<td>
 						<label class="ghl-checkbox <?php echo $allow_admins ? 'is-checked' : ''; ?>" <?php echo ! $overrides_pro_active ? 'style="opacity: 0.6; pointer-events: none;"' : ''; ?>>
 							<input type="checkbox" 
-								   class="ghl-checkbox-original"
-								   id="restrictions_allow_admins" 
-								   name="restrictions_allow_admins" 
-								   value="1" 
-								   <?php checked( $allow_admins ); ?>
-								   <?php disabled( ! $overrides_pro_active ); ?>>
+									class="ghl-checkbox-original"
+									id="restrictions_allow_admins" 
+									name="restrictions_allow_admins" 
+									value="1" 
+									<?php checked( $allow_admins ); ?>
+									<?php disabled( ! $overrides_pro_active ); ?>>
 							<span class="ghl-checkbox-input <?php echo $allow_admins ? 'is-checked' : ''; ?>">
 								<span class="ghl-checkbox-inner"></span>
 							</span>

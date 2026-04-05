@@ -10,14 +10,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Hardcoded data for now - will be replaced with real data later
-$report_data          = \GHL_CRM\Core\Dashboard\StatsProvider::get_instance()->get_report_data();
-$oauth_handler        = new \GHL_CRM\API\OAuth\OAuthHandler();
-$oauth_status         = $oauth_handler->get_connection_status();
-$is_oauth_connected   = ! empty( $oauth_status['connected'] );
-$oauth_reconnect_url  = admin_url( 'admin.php?page=ghl-crm-oauth-connect' );
-$ghl_settings      = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
-$ghl_white_label   = $ghl_settings['ghl_white_label_domain'] ?? '';
-$ghl_base_domain   = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/' ) : 'https://app.gohighlevel.com';
+$report_data         = \GHL_CRM\Core\Dashboard\StatsProvider::get_instance()->get_report_data();
+$oauth_handler       = new \GHL_CRM\API\OAuth\OAuthHandler();
+$oauth_status        = $oauth_handler->get_connection_status();
+$is_oauth_connected  = ! empty( $oauth_status['connected'] );
+$oauth_reconnect_url = admin_url( 'admin.php?page=ghl-crm-oauth-connect' );
+$ghl_settings        = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
+$ghl_white_label     = $ghl_settings['ghl_white_label_domain'] ?? '';
+$ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/' ) : 'https://app.gohighlevel.com';
 ?>
 
 <div class="ghl-reports-dashboard">
@@ -85,7 +85,10 @@ $ghl_base_domain   = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/' 
 	<div class="ghl-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px;">
 		<!-- Total GHL Contacts -->
 		<?php
-		$contacts_link  = $report_data['links']['contacts'] ?? [ 'url' => '', 'available' => false ];
+		$contacts_link  = $report_data['links']['contacts'] ?? [
+			'url'       => '',
+			'available' => false,
+		];
 		$contacts_href  = $contacts_link['available'] ? esc_url( $contacts_link['url'] ) : '#';
 		$contacts_attrs = $contacts_link['available'] ? ' target="_blank" rel="noopener"' : '';
 		?>
@@ -190,8 +193,8 @@ $ghl_base_domain   = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/' 
 				
 				<div style="display: flex; flex-direction: column; gap: 16px;">
 					<?php
-					$integrations       = $report_data['integrations'];
-					$integration_icons  = [
+					$integrations      = $report_data['integrations'];
+					$integration_icons = [
 						'woocommerce' => 'dashicons-cart',
 						'buddyboss'   => 'dashicons-groups',
 					];
@@ -202,14 +205,15 @@ $ghl_base_domain   = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/' 
 							<?php esc_html_e( 'No integrations detected yet. Visit the Integrations screen to configure available modules.', 'ghl-crm-integration' ); ?>
 						</p>
 					<?php else : ?>
-						<?php foreach ( $integrations as $integration ) :
+						<?php
+						foreach ( $integrations as $integration ) :
 							$slug         = $integration['key'] ?? '';
 							$icon         = $integration_icons[ $slug ] ?? 'dashicons-admin-generic';
 							$is_enabled   = ! empty( $integration['enabled'] );
 							$status_text  = $is_enabled ? esc_html__( 'Active', 'ghl-crm-integration' ) : esc_html__( 'Inactive', 'ghl-crm-integration' );
 							$status_style = $is_enabled ? 'background: #dcfce7; color: #166534;' : 'background: #f1f5f9; color: #475569;';
 							$border_color = $is_enabled ? '#10b981' : '#e2e8f0';
-						?>
+							?>
 						<div style="padding: 16px; background: #f8fafc; border-radius: 8px; border-left: 4px solid <?php echo esc_attr( $border_color ); ?>; border: 1px solid #f1f5f9;">
 							<div style="display: flex; align-items: center; justify-content: space-between;">
 								<div style="display: flex; align-items: center; gap: 8px;">
@@ -234,7 +238,7 @@ $ghl_base_domain   = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/' 
 			<!-- Connection Status Widget -->
 			<?php
 			// Pass connection data to widget
-			include plugin_dir_path( __FILE__ ) . 'connection-status.php';
+			require plugin_dir_path( __FILE__ ) . 'connection-status.php';
 			?>
 			
 			<!-- Quick Links -->
@@ -273,11 +277,11 @@ $ghl_base_domain   = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/' 
 
 			<!-- GoHighLevel Quick Links -->
 			<?php
-			$ghl_settings      = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
-			$ghl_white_label   = $ghl_settings['ghl_white_label_domain'] ?? '';
-			$ghl_base_domain   = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/' ) : 'https://app.gohighlevel.com';
-			$ghl_location_id   = $ghl_settings['location_id'] ?? ( $ghl_settings['oauth_location_id'] ?? '' );
-			$ghl_loc_path      = $ghl_location_id ? '/v2/location/' . $ghl_location_id : '';
+			$ghl_settings    = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
+			$ghl_white_label = $ghl_settings['ghl_white_label_domain'] ?? '';
+			$ghl_base_domain = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/' ) : 'https://app.gohighlevel.com';
+			$ghl_location_id = $ghl_settings['location_id'] ?? ( $ghl_settings['oauth_location_id'] ?? '' );
+			$ghl_loc_path    = $ghl_location_id ? '/v2/location/' . $ghl_location_id : '';
 			?>
 			<div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;">
 				<h3 style="margin: 0 0 16px; font-size: 16px; font-weight: 600; color: #1e293b; display: flex; align-items: center; gap: 8px;">

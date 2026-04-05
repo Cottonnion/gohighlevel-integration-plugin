@@ -49,11 +49,11 @@ $excluded_meta_keys = array(
 	'show_admin_bar_front',
 	'show_welcome_panel',
 	'locale',
-	
+
 	// WordPress capabilities and permissions
 	'wp_capabilities',
 	'wp_user_level',
-	
+
 	// WordPress admin UI state
 	'dismissed_wp_pointers',
 	'closedpostboxes_dashboard',
@@ -61,14 +61,14 @@ $excluded_meta_keys = array(
 	'wp_dashboard_quick_press_last_post_id',
 	'wp_metaboxhidden_nav-menus',
 	'wp_persisted_preferences',
-	
+
 	// Security/session data
 	'session_tokens',
-	
+
 	// BuddyPress/BuddyBoss internal fields
 	'bp_xprofile_visibility_levels',
 	'last_activity',
-	
+
 	// Other internal fields
 	'community-invites-sent',
 	'wp_user-settings',
@@ -96,7 +96,7 @@ $learndash_fields   = array();
 
 /**
  * Filter: Allow PRO plugin to add custom user meta fields
- * 
+ *
  * @param array $custom_user_fields Custom user meta fields (key => label)
  * @param array $all_meta_keys All meta keys from database
  * @param array $default_user_meta Default WordPress user meta fields
@@ -106,7 +106,7 @@ $custom_user_fields = apply_filters( 'ghl_crm_field_mapping_custom_fields', $cus
 
 /**
  * Filter: Allow PRO plugin to add WooCommerce fields
- * 
+ *
  * @param array $woocommerce_fields WooCommerce billing/shipping fields (key => label)
  * @param array $all_meta_keys All meta keys from database
  */
@@ -114,7 +114,7 @@ $woocommerce_fields = apply_filters( 'ghl_crm_field_mapping_woocommerce_fields',
 
 /**
  * Filter: Allow PRO plugin to add BuddyBoss/BuddyPress XProfile fields
- * 
+ *
  * @param array $buddyboss_fields BuddyBoss XProfile fields (key => label)
  */
 $buddyboss_fields = apply_filters( 'ghl_crm_field_mapping_buddyboss_fields', $buddyboss_fields );
@@ -257,7 +257,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 		<div class="ghl-field-section-header">
 			<h3><?php esc_html_e( 'Default WordPress Fields', 'ghl-crm-integration' ); ?></h3>
 			<p class="description">
-				<?php 
+				<?php
 				printf(
 					/* translators: %d: number of default fields */
 					esc_html__( 'Standard WordPress user fields (%d fields).', 'ghl-crm-integration' ),
@@ -276,16 +276,16 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 				</tr>
 			</thead>
 			<tbody>
-				<?php 
-				foreach ( $default_wp_fields as $key => $label ) : 
+				<?php
+				foreach ( $default_wp_fields as $key => $label ) :
 					// Set default mapping only for required email field
 					$default_mappings = [
-						'user_email'  => 'email',
+						'user_email' => 'email',
 					];
-					
+
 					// Check if this field has been explicitly saved by user
 					$is_explicitly_saved = isset( $saved_mappings[ $key ] );
-					
+
 					// Use saved value if exists, otherwise use default mapping if available
 					if ( isset( $saved_mappings[ $key ]['ghl_field'] ) ) {
 						$saved_ghl_field = $saved_mappings[ $key ]['ghl_field'];
@@ -294,17 +294,17 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 					} else {
 						$saved_ghl_field = '';
 					}
-					
+
 					// Email field direction should always be 'both' (locked)
 					if ( $key === 'user_email' ) {
 						$saved_direction = 'both';
 					} else {
 						$saved_direction = isset( $saved_mappings[ $key ]['direction'] ) ? $saved_mappings[ $key ]['direction'] : 'both';
 					}
-					
+
 					// Email field should be disabled (required by GHL)
 					$is_email_field = ( $key === 'user_email' );
-				?>
+					?>
 					<tr class="ghl-field-row<?php echo $is_email_field ? ' ghl-required-field' : ''; ?>" data-section="default" data-key="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( wp_strip_all_tags( $label ) ); ?>" data-search="<?php echo esc_attr( strtolower( wp_strip_all_tags( $label ) . ' ' . $key ) ); ?>" data-explicitly-saved="<?php echo $is_explicitly_saved ? '1' : '0'; ?>">
 						<td>
 							<strong><?php echo esc_html( $label ); ?></strong>
@@ -350,7 +350,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 			<div class="ghl-field-section-header">
 				<h3><?php esc_html_e( 'BuddyBoss Profile Fields', 'ghl-crm-integration' ); ?></h3>
 				<p class="description">
-					<?php 
+					<?php
 					printf(
 						/* translators: %d: number of BuddyBoss fields found */
 						esc_html__( 'Custom profile fields from BuddyBoss (%d fields found).', 'ghl-crm-integration' ),
@@ -369,11 +369,12 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 					</tr>
 				</thead>
 				<tbody>
-					<?php foreach ( $buddyboss_fields as $key => $label ) : 
+					<?php
+					foreach ( $buddyboss_fields as $key => $label ) :
 						$is_explicitly_saved = isset( $saved_mappings[ $key ] );
-						$saved_ghl_field = isset( $saved_mappings[ $key ]['ghl_field'] ) ? $saved_mappings[ $key ]['ghl_field'] : '';
-						$saved_direction = isset( $saved_mappings[ $key ]['direction'] ) ? $saved_mappings[ $key ]['direction'] : 'both';
-					?>
+						$saved_ghl_field     = isset( $saved_mappings[ $key ]['ghl_field'] ) ? $saved_mappings[ $key ]['ghl_field'] : '';
+						$saved_direction     = isset( $saved_mappings[ $key ]['direction'] ) ? $saved_mappings[ $key ]['direction'] : 'both';
+						?>
 						<tr class="ghl-field-row" data-section="buddyboss" data-key="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( wp_strip_all_tags( $label ) ); ?>" data-search="<?php echo esc_attr( strtolower( wp_strip_all_tags( $label ) . ' ' . $key ) ); ?>" data-explicitly-saved="<?php echo $is_explicitly_saved ? '1' : '0'; ?>">
 							<td>
 								<strong><?php echo esc_html( $label ); ?></strong>
@@ -405,7 +406,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 			<div class="ghl-field-section-header">
 				<h3><?php esc_html_e( 'WooCommerce Customer Fields', 'ghl-crm-integration' ); ?></h3>
 				<p class="description">
-					<?php 
+					<?php
 					printf(
 						/* translators: %d: number of WooCommerce fields found */
 						esc_html__( 'Billing and shipping fields from WooCommerce (%d fields found).', 'ghl-crm-integration' ),
@@ -424,11 +425,12 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 					</tr>
 				</thead>
 				<tbody>
-					<?php foreach ( $woocommerce_fields as $key => $label ) : 
+					<?php
+					foreach ( $woocommerce_fields as $key => $label ) :
 						$is_explicitly_saved = isset( $saved_mappings[ $key ] );
-						$saved_ghl_field = isset( $saved_mappings[ $key ]['ghl_field'] ) ? $saved_mappings[ $key ]['ghl_field'] : '';
-						$saved_direction = isset( $saved_mappings[ $key ]['direction'] ) ? $saved_mappings[ $key ]['direction'] : 'both';
-					?>
+						$saved_ghl_field     = isset( $saved_mappings[ $key ]['ghl_field'] ) ? $saved_mappings[ $key ]['ghl_field'] : '';
+						$saved_direction     = isset( $saved_mappings[ $key ]['direction'] ) ? $saved_mappings[ $key ]['direction'] : 'both';
+						?>
 						<tr class="ghl-field-row" data-section="woocommerce" data-key="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( wp_strip_all_tags( $label ) ); ?>" data-search="<?php echo esc_attr( strtolower( wp_strip_all_tags( $label ) . ' ' . $key ) ); ?>" data-explicitly-saved="<?php echo $is_explicitly_saved ? '1' : '0'; ?>">
 							<td>
 								<strong><?php echo esc_html( $label ); ?></strong>
@@ -473,11 +475,12 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 					</tr>
 				</thead>
 				<tbody>
-					<?php foreach ( $learndash_fields as $key => $label ) :
+					<?php
+					foreach ( $learndash_fields as $key => $label ) :
 						$is_explicitly_saved = isset( $saved_mappings[ $key ] );
-						$saved_ghl_field = isset( $saved_mappings[ $key ]['ghl_field'] ) ? $saved_mappings[ $key ]['ghl_field'] : '';
-						$saved_direction = isset( $saved_mappings[ $key ]['direction'] ) ? $saved_mappings[ $key ]['direction'] : 'to_ghl';
-					?>
+						$saved_ghl_field     = isset( $saved_mappings[ $key ]['ghl_field'] ) ? $saved_mappings[ $key ]['ghl_field'] : '';
+						$saved_direction     = isset( $saved_mappings[ $key ]['direction'] ) ? $saved_mappings[ $key ]['direction'] : 'to_ghl';
+						?>
 						<tr class="ghl-field-row" data-section="learndash" data-key="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( wp_strip_all_tags( $label ) ); ?>" data-search="<?php echo esc_attr( strtolower( wp_strip_all_tags( $label ) . ' ' . $key ) ); ?>" data-explicitly-saved="<?php echo $is_explicitly_saved ? '1' : '0'; ?>">
 							<td>
 								<strong><?php echo esc_html( $label ); ?></strong>
@@ -509,7 +512,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 			<div class="ghl-field-section-header">
 				<h3><?php esc_html_e( 'Custom & Plugin Fields', 'ghl-crm-integration' ); ?></h3>
 				<p class="description">
-					<?php 
+					<?php
 					printf(
 						/* translators: %d: number of custom fields found */
 						esc_html__( 'Custom user meta fields and fields added by other plugins or themes (%d fields found).', 'ghl-crm-integration' ),
@@ -533,10 +536,11 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 					</tr>
 				</thead>
 				<tbody>
-					<?php foreach ( $custom_user_fields as $key => $label ) : 
+					<?php
+					foreach ( $custom_user_fields as $key => $label ) :
 						$saved_ghl_field = isset( $saved_mappings[ $key ]['ghl_field'] ) ? $saved_mappings[ $key ]['ghl_field'] : '';
 						$saved_direction = isset( $saved_mappings[ $key ]['direction'] ) ? $saved_mappings[ $key ]['direction'] : 'both';
-					?>
+						?>
 						<tr class="ghl-field-row" data-section="custom" data-key="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( wp_strip_all_tags( $label ) ); ?>" data-search="<?php echo esc_attr( strtolower( wp_strip_all_tags( $label ) . ' ' . $key ) ); ?>">
 							<td>
 								<strong><?php echo esc_html( $label ); ?></strong>
@@ -565,7 +569,8 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 		<?php endif; ?>
 
 		<!-- PRO Feature Upgrade Notice -->
-		<?php if ( ! defined( 'GHL_CRM_PRO_VERSION' ) && empty( $buddyboss_fields ) && empty( $custom_user_fields ) && empty( $woocommerce_fields ) ) : 
+		<?php
+		if ( ! defined( 'GHL_CRM_PRO_VERSION' ) && empty( $buddyboss_fields ) && empty( $custom_user_fields ) && empty( $woocommerce_fields ) ) :
 			// Set up upgrade notice variables
 			$title       = __( 'Advanced Field Mapping', 'ghl-crm-integration' );
 			$description = __( 'The FREE version only supports standard WordPress fields. Upgrade to PRO to unlock advanced field mapping capabilities.', 'ghl-crm-integration' );
@@ -577,9 +582,10 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 			);
 			$cta_text    = __( 'Upgrade to PRO', 'ghl-crm-integration' );
 			$style       = 'box';
-			
+
 			include GHL_CRM_PATH . 'templates/admin/partials/pro-upgrade-notice.php';
-		endif; ?>
+		endif;
+		?>
 
 			<p class="submit">
 				<button type="submit" name="submit" id="submit" class="ghl-button ghl-button-primary">

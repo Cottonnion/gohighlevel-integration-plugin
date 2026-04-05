@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Get current settings
-$settings = $settings ?? \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
+$settings            = $settings ?? \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
 $is_buddyboss_active = function_exists( 'bp_is_active' ) && bp_is_active( 'groups' );
 ?>
 

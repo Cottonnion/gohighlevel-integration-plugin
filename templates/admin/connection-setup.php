@@ -70,30 +70,30 @@ $oauth_handler = $oauth_handler ?? new \GHL_CRM\API\OAuth\OAuthHandler();
 				<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;">
 					<?php
 					$required_scopes = array(
-						'contacts.readonly'    => __( 'View Contacts', 'ghl-crm-integration' ),
-						'contacts.write'       => __( 'Edit Contacts', 'ghl-crm-integration' ),
-						'contacts/tags.readonly' => __( 'View Tags', 'ghl-crm-integration' ),
-						'contacts/tags.write'  => __( 'Edit Tags', 'ghl-crm-integration' ),
-						'locations.readonly'   => __( 'View Locations', 'ghl-crm-integration' ),
+						'contacts.readonly'               => __( 'View Contacts', 'ghl-crm-integration' ),
+						'contacts.write'                  => __( 'Edit Contacts', 'ghl-crm-integration' ),
+						'contacts/tags.readonly'          => __( 'View Tags', 'ghl-crm-integration' ),
+						'contacts/tags.write'             => __( 'Edit Tags', 'ghl-crm-integration' ),
+						'locations.readonly'              => __( 'View Locations', 'ghl-crm-integration' ),
 						'locations/customFields.readonly' => __( 'View Custom Fields', 'ghl-crm-integration' ),
-						'locations/customFields.write' => __( 'Edit Custom Fields', 'ghl-crm-integration' ),
-						'objects/schema.readonly' => __( 'View Objects Schema', 'ghl-crm-integration' ),
-						'objects/schema.write' => __( 'Edit Objects Schema', 'ghl-crm-integration' ),
-						'objects/records.readonly' => __( 'View Objects Record', 'ghl-crm-integration' ),
-						'objects/records.write' => __( 'Edit Objects Record', 'ghl-crm-integration' ),
-						'associations.readonly' => __( 'View Associations', 'ghl-crm-integration' ),
-						'associations.write'   => __( 'Write Associations', 'ghl-crm-integration' ),
+						'locations/customFields.write'    => __( 'Edit Custom Fields', 'ghl-crm-integration' ),
+						'objects/schema.readonly'         => __( 'View Objects Schema', 'ghl-crm-integration' ),
+						'objects/schema.write'            => __( 'Edit Objects Schema', 'ghl-crm-integration' ),
+						'objects/records.readonly'        => __( 'View Objects Record', 'ghl-crm-integration' ),
+						'objects/records.write'           => __( 'Edit Objects Record', 'ghl-crm-integration' ),
+						'associations.readonly'           => __( 'View Associations', 'ghl-crm-integration' ),
+						'associations.write'              => __( 'Write Associations', 'ghl-crm-integration' ),
 						'associations/relations.readonly' => __( 'View Associations Relation', 'ghl-crm-integration' ),
-						'associations/relations.write' => __( 'Write Associations Relation', 'ghl-crm-integration' ),
-						'forms.readonly'       => __( 'View Forms', 'ghl-crm-integration' ),
-						'conversations.readonly' => __( 'View Conversations', 'ghl-crm-integration' ),
-						'conversations.write'  => __( 'Create/Update Conversations', 'ghl-crm-integration' ),
-						'conversations/message.readonly' => __( 'View Messages', 'ghl-crm-integration' ),
-						'conversations/message.write' => __( 'Send Messages', 'ghl-crm-integration' ),
+						'associations/relations.write'    => __( 'Write Associations Relation', 'ghl-crm-integration' ),
+						'forms.readonly'                  => __( 'View Forms', 'ghl-crm-integration' ),
+						'conversations.readonly'          => __( 'View Conversations', 'ghl-crm-integration' ),
+						'conversations.write'             => __( 'Create/Update Conversations', 'ghl-crm-integration' ),
+						'conversations/message.readonly'  => __( 'View Messages', 'ghl-crm-integration' ),
+						'conversations/message.write'     => __( 'Send Messages', 'ghl-crm-integration' ),
 					);
 
 					foreach ( $required_scopes as $scope => $label ) :
-					?>
+						?>
 						<div style="display: inline-flex; align-items: center; background: #fafafc; border: 1px solid #e0e0e6; border-radius: 4px; padding: 6px 12px; font-size: 14px; color: #344054;">
 							<span><?php echo esc_html( $label ); ?></span>
 						</div>
@@ -157,30 +157,30 @@ $oauth_handler = $oauth_handler ?? new \GHL_CRM\API\OAuth\OAuthHandler();
 				<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;">
 					<?php
 					$required_scopes = array(
-						'contacts.readonly'    => __( 'View Contacts', 'ghl-crm-integration' ),
-						'contacts.write'       => __( 'Edit Contacts', 'ghl-crm-integration' ),
-						'contacts/tags.readonly' => __( 'View Tags', 'ghl-crm-integration' ),
-						'contacts/tags.write'  => __( 'Edit Tags', 'ghl-crm-integration' ),
-						'locations.readonly'   => __( 'View Locations', 'ghl-crm-integration' ),
+						'contacts.readonly'               => __( 'View Contacts', 'ghl-crm-integration' ),
+						'contacts.write'                  => __( 'Edit Contacts', 'ghl-crm-integration' ),
+						'contacts/tags.readonly'          => __( 'View Tags', 'ghl-crm-integration' ),
+						'contacts/tags.write'             => __( 'Edit Tags', 'ghl-crm-integration' ),
+						'locations.readonly'              => __( 'View Locations', 'ghl-crm-integration' ),
 						'locations/customFields.readonly' => __( 'View Custom Fields', 'ghl-crm-integration' ),
-						'locations/customFields.write' => __( 'Edit Custom Fields', 'ghl-crm-integration' ),
-						'objects/schema.readonly' => __( 'View Objects Schema', 'ghl-crm-integration' ),
-						'objects/schema.write' => __( 'Edit Objects Schema', 'ghl-crm-integration' ),
-						'objects/records.readonly' => __( 'View Objects Record', 'ghl-crm-integration' ),
-						'objects/records.write' => __( 'Edit Objects Record', 'ghl-crm-integration' ),
-						'associations.readonly' => __( 'View Associations', 'ghl-crm-integration' ),
-						'associations.write'   => __( 'Write Associations', 'ghl-crm-integration' ),
+						'locations/customFields.write'    => __( 'Edit Custom Fields', 'ghl-crm-integration' ),
+						'objects/schema.readonly'         => __( 'View Objects Schema', 'ghl-crm-integration' ),
+						'objects/schema.write'            => __( 'Edit Objects Schema', 'ghl-crm-integration' ),
+						'objects/records.readonly'        => __( 'View Objects Record', 'ghl-crm-integration' ),
+						'objects/records.write'           => __( 'Edit Objects Record', 'ghl-crm-integration' ),
+						'associations.readonly'           => __( 'View Associations', 'ghl-crm-integration' ),
+						'associations.write'              => __( 'Write Associations', 'ghl-crm-integration' ),
 						'associations/relations.readonly' => __( 'View Associations Relation', 'ghl-crm-integration' ),
-						'associations/relations.write' => __( 'Write Associations Relation', 'ghl-crm-integration' ),
-						'forms.readonly'       => __( 'View Forms', 'ghl-crm-integration' ),
-						'conversations.readonly' => __( 'View Conversations', 'ghl-crm-integration' ),
-						'conversations.write'  => __( 'Create/Update Conversations', 'ghl-crm-integration' ),
-						'conversations/message.readonly' => __( 'View Messages', 'ghl-crm-integration' ),
-						'conversations/message.write' => __( 'Send Messages', 'ghl-crm-integration' ),
+						'associations/relations.write'    => __( 'Write Associations Relation', 'ghl-crm-integration' ),
+						'forms.readonly'                  => __( 'View Forms', 'ghl-crm-integration' ),
+						'conversations.readonly'          => __( 'View Conversations', 'ghl-crm-integration' ),
+						'conversations.write'             => __( 'Create/Update Conversations', 'ghl-crm-integration' ),
+						'conversations/message.readonly'  => __( 'View Messages', 'ghl-crm-integration' ),
+						'conversations/message.write'     => __( 'Send Messages', 'ghl-crm-integration' ),
 					);
 
 					foreach ( $required_scopes as $scope => $label ) :
-					?>
+						?>
 						<div style="display: inline-flex; align-items: center; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 4px; padding: 6px 12px; font-size: 14px; color: #78350f;">
 							<span><?php echo esc_html( $label ); ?></span>
 						</div>
