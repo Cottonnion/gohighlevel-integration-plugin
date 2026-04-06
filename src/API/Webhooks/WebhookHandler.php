@@ -293,6 +293,17 @@ class WebhookHandler {
 			set_transient( 'ghl_inbound_webhook_' . $contact_id, time(), 30 ); // short-lived guard
 		}
 
+		// Skip contact events that have no email — these are social-media-only
+		// contacts (e.g. Instagram DM leads) that cannot be matched to a
+		// WordPress user. Logging them just pollutes the sync log with item_id 0.
+		$event_type = $normalized['type'] ?? '';
+		if (
+			in_array( $event_type, [ 'ContactCreate', 'ContactUpdate' ], true ) &&
+			empty( $normalized['data']['email'] )
+		) {
+			return;
+		}
+
 		// Log webhook receipt
 		$this->logger->log(
 			'webhook',
