@@ -114,7 +114,7 @@ class ReportingManager {
 
 		$table = $wpdb->prefix . 'ghl_reporting_events';
 
-		$sanitized_message = wp_strip_all_tags( $message );
+		$sanitized_message = $this->scrub_string( wp_strip_all_tags( $message ) );
 		$sanitized_context = $this->sanitize_context( $context );
 		$now               = current_time( 'mysql' );
 
@@ -183,8 +183,17 @@ class ReportingManager {
 			return;
 		}
 
+		// Make path relative to the plugin root so the server path is never leaked.
+		$relative_file = $file;
+		foreach ( $plugin_dirs as $dir ) {
+			if ( str_starts_with( $file, $dir ) ) {
+				$relative_file = ltrim( str_replace( $dir, '', $file ), '/' );
+				break;
+			}
+		}
+
 		$context = [
-			'file'    => $file,
+			'file'    => $relative_file,
 			'line'    => isset( $last_error['line'] ) ? (int) $last_error['line'] : 0,
 			'plugin'  => 'ghl-crm-integration',
 			'php'     => PHP_VERSION,
@@ -336,7 +345,27 @@ class ReportingManager {
 	}
 
 	/**
-	 * Sanitize context array recursively.
+	 * Keys whose values must never leave the site.
+	 *
+	 * @var string[]
+	 */
+	private const SENSITIVE_KEYS = [
+		'authorization',
+		'access_token',
+		'oauth_access_token',
+		'oauth_refresh_token',
+		'refresh_token',
+		'api_token',
+		'token',
+		'secret',
+		'client_secret',
+		'password',
+		'cookie',
+	];
+
+	/**
+	 * Sanitize context array recursively — strips HTML, redacts secrets,
+	 * and scrubs bearer-style tokens from string values.
 	 *
 	 * @param array $context Context data.
 	 * @return array
@@ -345,19 +374,50 @@ class ReportingManager {
 		$sanitized = [];
 
 		foreach ( $context as $key => $value ) {
-			$clean_key = sanitize_text_field( (string) $key );
+			$clean_key      = sanitize_text_field( (string) $key );
+			$normalized_key = strtolower( $clean_key );
 
-			if ( is_scalar( $value ) || null === $value ) {
-				$sanitized[ $clean_key ] = is_string( $value ) ? sanitize_text_field( $value ) : $value;
+			// Redact any key that matches the sensitive list.
+			if ( in_array( $normalized_key, self::SENSITIVE_KEYS, true ) ) {
+				$sanitized[ $clean_key ] = '[REDACTED]';
 				continue;
 			}
 
 			if ( is_array( $value ) ) {
 				$sanitized[ $clean_key ] = $this->sanitize_context( $value );
+				continue;
+			}
+
+			if ( is_scalar( $value ) || null === $value ) {
+				$sanitized[ $clean_key ] = is_string( $value )
+					? $this->scrub_string( sanitize_text_field( $value ) )
+					: $value;
 			}
 		}
 
 		return $sanitized;
+	}
+
+	/**
+	 * Scrub inline secrets from a free-text string.
+	 *
+	 * Catches patterns like "Bearer eyJ…", full JWT tokens,
+	 * and e-mail addresses that may appear in error messages.
+	 *
+	 * @param string $text Text to scrub.
+	 * @return string
+	 */
+	private function scrub_string( string $text ): string {
+		// Bearer / token header values.
+		$text = (string) preg_replace( '/Bearer\s+[A-Za-z0-9\-._~+\/]+=*/i', 'Bearer [REDACTED]', $text );
+
+		// Standalone JWT-like tokens (three base-64 segments separated by dots).
+		$text = (string) preg_replace( '/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/', '[REDACTED_TOKEN]', $text );
+
+		// E-mail addresses.
+		$text = (string) preg_replace( '/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/', '[REDACTED_EMAIL]', $text );
+
+		return $text;
 	}
 
 	/**
