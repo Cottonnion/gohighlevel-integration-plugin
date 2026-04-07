@@ -380,18 +380,6 @@ class WebhookHandler {
 			);
 			return;
 		}
-
-		do_action(
-			'ghl_crm_log_event',
-			'webhook_processed',
-			'Webhook processed successfully',
-			[
-				'type'       => $normalized['type'] ?? 'unknown',
-				'locationId' => $normalized['locationId'] ?? '',
-				'site_id'    => get_current_blog_id(),
-			],
-			'info'
-		);
 	}
 
 	/**

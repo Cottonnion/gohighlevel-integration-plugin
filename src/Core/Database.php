@@ -178,18 +178,6 @@ class Database {
 			$this->migrate_database( $installed_version );
 			$settings_manager->update_option( 'ghl_crm_db_version', self::DB_VERSION );
 
-			do_action(
-				'ghl_crm_log_event',
-				'database_update',
-				'GHL CRM database updated successfully.',
-				[
-					'from_version' => $installed_version,
-					'to_version'   => self::DB_VERSION,
-					'site_id'      => get_current_blog_id(),
-				],
-				'info'
-			);
-
 			wp_send_json_success( __( 'Database updated successfully', 'ghl-crm-integration' ) );
 		} catch ( Exception $e ) {
 			do_action(

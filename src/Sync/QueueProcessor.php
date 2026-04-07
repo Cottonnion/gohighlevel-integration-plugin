@@ -198,19 +198,6 @@ class QueueProcessor {
 				$context + array( 'result' => $result )
 			);
 
-			do_action(
-				'ghl_crm_log_event',
-				'queue_processor_completed',
-				'Queue processor completed item',
-				[
-					'item_type' => $item_type,
-					'action'    => $action,
-					'item_id'   => $item_id,
-					'site_id'   => get_current_blog_id(),
-				],
-				'info'
-			);
-
 			return $result;
 		} catch ( \Exception $e ) {
 			$this->dispatch_event(
