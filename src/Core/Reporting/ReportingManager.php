@@ -105,6 +105,11 @@ class ReportingManager {
 			return false;
 		}
 
+		// Attach truncated backtrace for error/critical events.
+		if ( in_array( $severity, [ 'error', 'critical' ], true ) && empty( $context['backtrace'] ) ) {
+			$context['backtrace'] = $this->get_truncated_backtrace();
+		}
+
 		global $wpdb;
 
 		$table = $wpdb->prefix . 'ghl_reporting_events';
@@ -224,6 +229,9 @@ class ReportingManager {
 			'wp_version'     => get_bloginfo( 'version' ),
 			'php_version'    => PHP_VERSION,
 			'multisite'      => is_multisite(),
+			'environment'    => $this->get_environment_snapshot(),
+			'active_plugins' => $this->get_active_plugin_slugs(),
+			'features'       => $this->get_feature_flags(),
 			'events'         => array_map( [ $this, 'transform_event_for_payload' ], $pending_events ),
 		];
 
@@ -350,6 +358,119 @@ class ReportingManager {
 		}
 
 		return $sanitized;
+	}
+
+	/**
+	 * Get a snapshot of the server environment.
+	 *
+	 * @return array
+	 */
+	private function get_environment_snapshot(): array {
+		return [
+			'memory_limit'       => defined( 'WP_MEMORY_LIMIT' ) ? WP_MEMORY_LIMIT : ini_get( 'memory_limit' ),
+			'max_execution_time' => (int) ini_get( 'max_execution_time' ),
+			'server_software'    => isset( $_SERVER['SERVER_SOFTWARE'] ) ? sanitize_text_field( wp_unslash( $_SERVER['SERVER_SOFTWARE'] ) ) : 'unknown',
+			'is_ssl'             => is_ssl(),
+			'locale'             => get_locale(),
+			'timezone'           => wp_timezone_string(),
+		];
+	}
+
+	/**
+	 * Get active plugin slugs (directory names only, no paths).
+	 *
+	 * @return array<int, string>
+	 */
+	private function get_active_plugin_slugs(): array {
+		$active = get_option( 'active_plugins', [] );
+
+		return array_values(
+			array_unique(
+				array_map(
+					function ( string $plugin ): string {
+						return dirname( $plugin );
+					},
+					$active
+				)
+			)
+		);
+	}
+
+	/**
+	 * Get anonymized feature usage flags.
+	 *
+	 * @return array
+	 */
+	private function get_feature_flags(): array {
+		$settings = $this->settings_manager->get_settings_array();
+
+		$field_map_count = 0;
+		if ( ! empty( $settings['user_field_mapping'] ) && is_array( $settings['user_field_mapping'] ) ) {
+			$field_map_count = count( $settings['user_field_mapping'] );
+		}
+
+		return [
+			'user_sync'          => ! empty( $settings['enable_user_sync'] ),
+			'sync_logging'       => ! empty( $settings['enable_sync_logging'] ),
+			'woocommerce'        => ! empty( $settings['wc_enabled'] ),
+			'wc_abandoned_cart'  => ! empty( $settings['wc_abandoned_cart_enabled'] ),
+			'wc_opportunities'   => ! empty( $settings['wc_opportunities_enabled'] ),
+			'learndash'          => ! empty( $settings['learndash_enabled'] ),
+			'buddyboss_groups'   => ! empty( $settings['buddyboss_groups_enabled'] ),
+			'family_accounts'    => ! empty( $settings['enable_family_accounts'] ),
+			'field_mapping_count' => $field_map_count,
+			'queue_processor'    => class_exists( 'ActionScheduler' ) ? 'action_scheduler' : 'wp_cron',
+			'pro_active'         => defined( 'GHL_CRM_PRO_VERSION' ),
+		];
+	}
+
+	/**
+	 * Get a truncated backtrace for error context.
+	 *
+	 * Returns the last 5 frames from this plugin only, with paths relative to the plugin root.
+	 *
+	 * @return array<int, array{file: string, line: int, function: string}>
+	 */
+	private function get_truncated_backtrace(): array {
+		$raw_trace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 15 ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace
+
+		$plugin_dirs = [
+			WP_CONTENT_DIR . '/plugins/ghl-crm-integration/',
+			WP_CONTENT_DIR . '/plugins/ghl-crm-integration-pro/',
+		];
+
+		$frames = [];
+
+		foreach ( $raw_trace as $frame ) {
+			if ( empty( $frame['file'] ) ) {
+				continue;
+			}
+
+			$in_plugin = false;
+			foreach ( $plugin_dirs as $dir ) {
+				if ( str_starts_with( $frame['file'], $dir ) ) {
+					$frame['file'] = str_replace( $dir, '', $frame['file'] );
+					$in_plugin     = true;
+					break;
+				}
+			}
+
+			if ( ! $in_plugin ) {
+				continue;
+			}
+
+			$frames[] = [
+				'file'     => $frame['file'],
+				'line'     => (int) ( $frame['line'] ?? 0 ),
+				'function' => $frame['function'] ?? '',
+			];
+
+			if ( count( $frames ) >= 5 ) {
+				break;
+			}
+		}
+
+		return $frames;
 	}
 
 	/**
