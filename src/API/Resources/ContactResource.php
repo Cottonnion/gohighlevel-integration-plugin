@@ -67,7 +67,8 @@ class ContactResource extends AbstractResource {
 	public function add_tags( string $contact_id, array $tags ): array {
 		return $this->client->post(
 			$this->build_endpoint( "{$contact_id}/tags" ),
-			[ 'tags' => $tags ]
+			[ 'tags' => $tags ],
+			false // GHL tags endpoint rejects locationId in the body.
 		);
 	}
 
