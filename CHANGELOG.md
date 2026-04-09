@@ -2,6 +2,24 @@
 
 All notable changes to GoHighLevel CRM Integration will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- **WooCommerce product tags — `locationId` rejection** — `add_tags()` was injecting `locationId` into the POST body sent to `contacts/{id}/tags`, which GHL rejects with `"property locationId should not exist"`. Fixed by suppressing body injection for that endpoint.
+
+### Added
+
+- **Login field sync** — User login now updates `last_login` and `login_count` custom fields in GHL on each login.
+
+### Improved
+
+- **Error event logging** — Errors now capture a PHP backtrace and environment details for easier remote debugging.
+- **Log sanitization** — Context passed to the file logger now has sensitive keys redacted and inline secrets scrubbed before storage.
+- **Queue processor** — Streamlined user action routing; dead-end sync log entries for social-media-only contacts with no email are suppressed.
+
+---
+
 ## [1.2.0] - 2026-03-26
 
 ### Changed — Free / Pro Feature Separation
