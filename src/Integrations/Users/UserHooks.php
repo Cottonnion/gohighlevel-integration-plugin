@@ -220,6 +220,31 @@ class UserHooks {
 			update_user_meta( $user_id, '_ghl_synced_on_register', time() );
 		}
 	}
+
+	/**
+	 * Build the contact payload for a user_register sync job.
+	 *
+	 * Public so the QueueProcessor can call it when a login reveals the user
+	 * has no GHL contact yet and needs to be created on the fly.
+	 *
+	 * @param \WP_User $user WordPress user object.
+	 * @return array Contact payload ready to pass to add_to_queue().
+	 */
+	public function build_register_payload( \WP_User $user ): array {
+		$contact_data = $this->prepare_contact_data( $user );
+
+		$register_tags     = $this->settings_manager->get_location_register_tags();
+		$role_tags_manager = RoleTagsManager::get_instance();
+		$role_based_tags   = $role_tags_manager->get_user_role_tags( $user->ID );
+
+		$all_tags = array_values( array_unique( array_merge( $register_tags, $role_based_tags ) ) );
+		if ( ! empty( $all_tags ) ) {
+			$contact_data['tags'] = $all_tags;
+		}
+
+		return $contact_data;
+	}
+
 	/**
 	 * Handle multisite user activation (user-only signup)
 	 * Fires when a user activates their account via email
@@ -570,6 +595,7 @@ class UserHooks {
 
 		// Queue login tracking (updates last_login + login_count custom fields in GHL).
 		$data          = [
+			'user_id'     => $user->ID,
 			'email'       => $user->user_email,
 			'last_login'  => current_time( 'mysql' ),
 			'login_count' => $count,

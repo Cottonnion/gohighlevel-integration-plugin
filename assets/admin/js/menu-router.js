@@ -104,6 +104,7 @@
               "notifications",
               "sync-options",
               "role-tags",
+              "login-sync",
               "conversations",
               "advanced",
               "stats",

@@ -203,8 +203,6 @@ $user_register_tags            = $settings_manager->get_location_register_tags()
 			</button>
 		</div>
 	</div>
-	
-	<?php require GHL_CRM_PATH . 'templates/admin/partials/settings/login-sync.php'; ?>
 
 	<!-- Save Button -->
 	<button type="button" id="save-general-settings" class="ghl-button ghl-button-primary ghl-save-settings-btn">
