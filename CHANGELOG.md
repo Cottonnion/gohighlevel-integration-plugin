@@ -4,13 +4,21 @@ All notable changes to GoHighLevel CRM Integration will be documented in this fi
 
 ## [Unreleased]
 
-### Fixed
+---
 
-- **WooCommerce product tags — `locationId` rejection** — `add_tags()` was injecting `locationId` into the POST body sent to `contacts/{id}/tags`, which GHL rejects with `"property locationId should not exist"`. Fixed by suppressing body injection for that endpoint.
+## [1.2.1] - 2026-04-10
 
 ### Added
 
+- **Login Sync settings tab** — Full SPA-routed settings page with custom field mapping (select2), conditional tag assignment (first-login / every-login), inactivity tag removal, and tag-based redirect rules with CPT URL picker.
+- **Auto-create GHL contact on login** — When a logged-in user has no GHL contact, the queue processor now falls back to `user_register` to create the contact automatically.
+- **`ghl_crm_login_register_payload` filter** — New filter hook allows Pro (or third-party code) to enrich the register payload with login-specific custom fields and tags in a single API call.
 - **Login field sync** — User login now updates `last_login` and `login_count` custom fields in GHL on each login.
+
+### Fixed
+
+- **WooCommerce product tags — `locationId` rejection** — `add_tags()` was injecting `locationId` into the POST body sent to `contacts/{id}/tags`, which GHL rejects with `"property locationId should not exist"`. Fixed by suppressing body injection for that endpoint.
+- **MetadataService `refresh_metadata`** — Custom fields transient was never saved during metadata refresh; only tags were persisted. Now saves both.
 
 ### Improved
 
