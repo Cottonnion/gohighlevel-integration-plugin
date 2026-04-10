@@ -686,6 +686,41 @@ class QueueProcessor {
 		}
 
 		if ( ! $contact ) {
+			// Contact doesn't exist in GHL — queue a create so they get synced.
+			$user_id = (int) ( $payload['user_id'] ?? 0 );
+			if ( $user_id > 0 ) {
+				$user = get_userdata( $user_id );
+				if ( $user ) {
+					$user_hooks      = \GHL_CRM\Integrations\Users\UserHooks::get_instance();
+					$contact_payload = $user_hooks->build_register_payload( $user );
+
+					/**
+					 * Filters the user_register payload queued when a login finds
+					 * no existing GHL contact.  Extensions can merge additional
+					 * tags, custom fields, etc. into the creation call so the
+					 * contact is created with everything in a single API request.
+					 *
+					 * @since 1.2.1
+					 * @param array    $contact_payload Base contact data.
+					 * @param \WP_User $user            WordPress user.
+					 * @param array    $payload         Original user_login payload.
+					 */
+					$contact_payload = apply_filters( 'ghl_crm_login_register_payload', $contact_payload, $user, $payload );
+
+					\GHL_CRM\Sync\QueueManager::get_instance()->add_to_queue(
+						'user',
+						$user_id,
+						'user_register',
+						$contact_payload
+					);
+					return [
+						'success'        => true,
+						'queued_create'  => true,
+						'reason'         => 'Contact not found in GHL — queued user_register',
+						'email'          => $email,
+					];
+				}
+			}
 			return [
 				'success' => true,
 				'skipped' => true,
