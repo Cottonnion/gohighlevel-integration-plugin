@@ -471,7 +471,7 @@ class QueueManager {
 				"UPDATE {$table_name} 
 				SET status = 'pending', 
 					updated_at = %s 
-				WHERE status = 'pending' 
+				WHERE status = 'processing' 
 				AND site_id = %d
 				AND updated_at < %s 
 				AND attempts > 0 

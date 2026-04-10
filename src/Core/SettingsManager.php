@@ -151,6 +151,12 @@ class SettingsManager {
 					continue;
 				}
 
+				// Sanitize the key itself — reject malformed or unexpected keys.
+				$key = sanitize_key( $key );
+				if ( '' === $key ) {
+					continue;
+				}
+
 				// Convert empty array marker before type checks so location-scoped tag keys are handled correctly
 				if ( '__EMPTY_ARRAY__' === $value ) {
 					$value = [];

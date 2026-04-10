@@ -355,19 +355,8 @@ class UserHooks {
 			}
 		}
 
-		if ( $contact_id ) {
-			try {
-				$client  = \GHL_CRM\API\Client\Client::get_instance();
-				$contact = $client->get( "contacts/{$contact_id}" );
-
-				if ( ! empty( $contact['contact']['tags'] ) && is_array( $contact['contact']['tags'] ) ) {
-					$existing_tags = $contact['contact']['tags'];
-				}
-			} catch ( \Exception $e ) {
-				unset( $e );
-			}
-		}
-
+		// Use locally-cached tags instead of a synchronous API call
+		// that would block the profile-save request.
 		$profile_tags = \GHL_CRM\Sync\TagManager::get_instance()->get_user_tag_ids( $user_id );
 		if ( is_array( $profile_tags ) ) {
 			// Profile tags are now stored as IDs - convert to names for payload

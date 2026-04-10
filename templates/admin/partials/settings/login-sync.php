@@ -326,7 +326,8 @@ foreach ( $public_post_types as $pt ) {
 	// Falls back to server-side tags if ghl_crm_settings_js_data isn't available.
 	var ghlLoginTags = (typeof ghl_crm_settings_js_data !== 'undefined' && ghl_crm_settings_js_data.tags)
 		? ghl_crm_settings_js_data.tags
-		: <?php
+		: 
+		<?php
 		echo wp_json_encode(
 			array_map(
 				static function ( array $t ): array {
@@ -338,7 +339,8 @@ foreach ( $public_post_types as $pt ) {
 				$ghl_tags
 			)
 		);
-		?>;
+		?>
+		;
 
 	/**
 	 * Build an <option> string list from ghlLoginTags using tag NAMES as values
