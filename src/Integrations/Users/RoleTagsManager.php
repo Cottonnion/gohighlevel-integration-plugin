@@ -358,7 +358,7 @@ class RoleTagsManager {
 				]
 			);
 		} catch ( \Exception $e ) {
-
+			do_action( 'ghl_crm_log_event', 'queue_tag_addition_failed', $e->getMessage(), [ 'user_id' => $user_id ], 'error' );
 		}
 	}
 
@@ -383,7 +383,7 @@ class RoleTagsManager {
 				]
 			);
 		} catch ( \Exception $e ) {
-
+			do_action( 'ghl_crm_log_event', 'queue_tag_removal_failed', $e->getMessage(), [ 'user_id' => $user_id ], 'error' );
 		}
 	}
 

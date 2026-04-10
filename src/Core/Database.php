@@ -179,7 +179,7 @@ class Database {
 			$settings_manager->update_option( 'ghl_crm_db_version', self::DB_VERSION );
 
 			wp_send_json_success( __( 'Database updated successfully', 'ghl-crm-integration' ) );
-		} catch ( Exception $e ) {
+		} catch ( \Exception $e ) {
 			do_action(
 				'ghl_crm_log_event',
 				'database_update_failed',

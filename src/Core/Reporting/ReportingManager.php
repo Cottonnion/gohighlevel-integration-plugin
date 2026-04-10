@@ -470,17 +470,17 @@ class ReportingManager {
 		}
 
 		return [
-			'user_sync'          => ! empty( $settings['enable_user_sync'] ),
-			'sync_logging'       => ! empty( $settings['enable_sync_logging'] ),
-			'woocommerce'        => ! empty( $settings['wc_enabled'] ),
-			'wc_abandoned_cart'  => ! empty( $settings['wc_abandoned_cart_enabled'] ),
-			'wc_opportunities'   => ! empty( $settings['wc_opportunities_enabled'] ),
-			'learndash'          => ! empty( $settings['learndash_enabled'] ),
-			'buddyboss_groups'   => ! empty( $settings['buddyboss_groups_enabled'] ),
-			'family_accounts'    => ! empty( $settings['enable_family_accounts'] ),
+			'user_sync'           => ! empty( $settings['enable_user_sync'] ),
+			'sync_logging'        => ! empty( $settings['enable_sync_logging'] ),
+			'woocommerce'         => ! empty( $settings['wc_enabled'] ),
+			'wc_abandoned_cart'   => ! empty( $settings['wc_abandoned_cart_enabled'] ),
+			'wc_opportunities'    => ! empty( $settings['wc_opportunities_enabled'] ),
+			'learndash'           => ! empty( $settings['learndash_enabled'] ),
+			'buddyboss_groups'    => ! empty( $settings['buddyboss_groups_enabled'] ),
+			'family_accounts'     => ! empty( $settings['enable_family_accounts'] ),
 			'field_mapping_count' => $field_map_count,
-			'queue_processor'    => class_exists( 'ActionScheduler' ) ? 'action_scheduler' : 'wp_cron',
-			'pro_active'         => defined( 'GHL_CRM_PRO_VERSION' ),
+			'queue_processor'     => class_exists( 'ActionScheduler' ) ? 'action_scheduler' : 'wp_cron',
+			'pro_active'          => defined( 'GHL_CRM_PRO_VERSION' ),
 		];
 	}
 

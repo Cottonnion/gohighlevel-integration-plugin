@@ -714,10 +714,10 @@ class QueueProcessor {
 						$contact_payload
 					);
 					return [
-						'success'        => true,
-						'queued_create'  => true,
-						'reason'         => 'Contact not found in GHL — queued user_register',
-						'email'          => $email,
+						'success'       => true,
+						'queued_create' => true,
+						'reason'        => 'Contact not found in GHL — queued user_register',
+						'email'         => $email,
 					];
 				}
 			}

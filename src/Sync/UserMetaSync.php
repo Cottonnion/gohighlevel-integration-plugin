@@ -352,7 +352,7 @@ class UserMetaSync {
 				}
 			}
 		} catch ( \Throwable $e ) {
-			// Silently fail — don't break queue processing.
+			do_action( 'ghl_crm_log_event', 'user_meta_sync_failed', $e->getMessage(), [ 'user_id' => $user_id ?? 0 ], 'error' );
 		}
 	}
 }
