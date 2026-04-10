@@ -281,16 +281,33 @@ class MetadataService {
 				? $fields_response['customFields']
 				: [];
 
-			$all_fields = $this->get_standard_ghl_fields();
+			$all_fields  = $this->get_standard_ghl_fields();
+			$field_types = [];
 
 			foreach ( $custom_fields_raw as $field ) {
 				$field_id   = $field['id'] ?? '';
 				$field_name = $field['name'] ?? '';
+				$data_type  = $field['dataType'] ?? '';
 
 				if ( $field_id && $field_name ) {
 					$all_fields[ 'custom.' . $field_id ] = $field_name . ' (Custom)';
+					if ( $data_type ) {
+						$field_types[ 'custom.' . $field_id ] = strtolower( $data_type );
+					}
 				}
 			}
+
+			// Save the fields transient so subsequent page loads (e.g. Login Sync tab) pick up the refreshed data.
+			$fields_transient_key = 'ghl_fields_' . $location_id . '_site_' . $site_id;
+			set_transient(
+				$fields_transient_key,
+				[
+					'fields'     => $all_fields,
+					'fieldTypes' => $field_types,
+					'count'      => count( $custom_fields_raw ),
+				],
+				$cache_seconds
+			);
 
 			wp_send_json_success(
 				[
