@@ -1051,14 +1051,6 @@ class QueueManager {
 		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 		$location_id      = $settings_manager->get_setting( 'location_id' );
 
-		// Fallback: Try to get from OAuth tokens if available
-		if ( empty( $location_id ) ) {
-			$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
-			if ( method_exists( $oauth_handler, 'get_location_id' ) ) {
-				$location_id = $oauth_handler->get_location_id();
-			}
-		}
-
 		return ! empty( $location_id ) ? (string) $location_id : null;
 	}
 
