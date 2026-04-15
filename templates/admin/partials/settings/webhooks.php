@@ -132,7 +132,7 @@ $settings           = \GHL_CRM\Core\SettingsManager::get_instance()->get_setting
 				<?php esc_html_e( 'If you suspect unwanted traffic or need to rotate credentials, regenerate the token and update your GoHighLevel automation immediately.', 'ghl-crm-integration' ); ?>
 			</p>
 			<p>
-				<button type="button" class="button" id="regenerate-webhook-secret">
+				<button type="button" class="ghl-button ghl-button-secondary" id="regenerate-webhook-secret">
 					<span class="dashicons dashicons-update"></span>
 					<?php esc_html_e( 'Regenerate Token', 'ghl-crm-integration' ); ?>
 				</button>
@@ -151,70 +151,23 @@ $settings           = \GHL_CRM\Core\SettingsManager::get_instance()->get_setting
 				<li><?php esc_html_e( 'Log into your GoHighLevel account', 'ghl-crm-integration' ); ?></li>
 				<li><?php esc_html_e( 'Go to Automation → Workflows', 'ghl-crm-integration' ); ?></li>
 				<li><?php esc_html_e( 'Create a new workflow (or edit existing)', 'ghl-crm-integration' ); ?></li>
-				<li><?php esc_html_e( 'Set trigger: Contact Created, Contact Updated, or Contact Deleted', 'ghl-crm-integration' ); ?></li>
+				<li><?php esc_html_e( 'Set trigger: Contact Created, Contact Updated, Contact Deleted, or Contact Tag Updated (for tags added/changed/removed)', 'ghl-crm-integration' ); ?></li>
 				<li><?php esc_html_e( 'Add action: Outbound Webhook', 'ghl-crm-integration' ); ?></li>
 				<li><?php esc_html_e( 'Paste the webhook URL from step 1', 'ghl-crm-integration' ); ?></li>
 				<li><?php printf( /* translators: %s header name */ esc_html__( 'Keep method as POST and add header %s with the token above.', 'ghl-crm-integration' ), esc_html( $webhook_header ) ); ?></li>
-				<li><?php esc_html_e( 'Use the JSON templates below for the body', 'ghl-crm-integration' ); ?></li>
 				<li><?php esc_html_e( 'Save and activate the workflow', 'ghl-crm-integration' ); ?></li>
 			</ol>
-		</div>
-
-		<!-- Step 3: JSON Templates -->
-		<div class="ghl-setup-step" style="margin: 15px 0; padding: 15px; background: #fff; border: 1px solid #ddd;">
-			<h4 style="margin-top: 0;">
-				<span class="ghl-step-number" style="background: #7e3bd0; color: white; padding: 5px 10px; border-radius: 50%; margin-right: 10px;">4</span>
-				<?php esc_html_e( 'JSON Body Templates', 'ghl-crm-integration' ); ?>
-			</h4>
-			
-			<p><?php esc_html_e( 'Use these templates for the webhook body in your GoHighLevel automation:', 'ghl-crm-integration' ); ?></p>
-			<p class="description" style="font-size: 12px; color: #666;">
-				<?php esc_html_e( 'We accept GoHighLevel’s native flat payloads and the templated JSON below. If a sub-account uses a different payload shape, match it to these templates so the plugin can normalize it.', 'ghl-crm-integration' ); ?>
-			</p>
-			
-			<!-- Contact Created/Updated Template -->
-			<div style="margin: 15px 0;">
-				<h5 style="margin-bottom: 5px;">
-					<?php esc_html_e( 'For Contact Created/Updated:', 'ghl-crm-integration' ); ?>
-					<button type="button" class="ghl-button button-small" onclick="copyJsonTemplate('contact-create')">
-						<span class="dashicons dashicons-clipboard"></span> <?php esc_html_e( 'Copy', 'ghl-crm-integration' ); ?>
-					</button>
-				</h5>
-				<textarea 
-					id="contact-create-template" 
-					readonly 
-					style="width: 100%; height: 200px; font-family: monospace; font-size: 12px; background: #f9f9f9; border: 1px solid #ddd; padding: 10px;"
-				><?php echo esc_textarea( json_encode( $setup_instructions['payload_examples']['contact_created'], JSON_PRETTY_PRINT ) ); ?></textarea>
-				<p class="description" style="font-size: 12px; color: #666;">
-					<?php esc_html_e( 'Change "ContactCreate" to "ContactUpdate" for update events.', 'ghl-crm-integration' ); ?>
-				</p>
-			</div>
-
-			<!-- Contact Deleted Template -->
-			<div style="margin: 15px 0;">
-				<h5 style="margin-bottom: 5px;">
-					<?php esc_html_e( 'For Contact Deleted:', 'ghl-crm-integration' ); ?>
-					<button type="button" class="button button-small" onclick="copyJsonTemplate('contact-delete')">
-						<span class="dashicons dashicons-clipboard"></span> <?php esc_html_e( 'Copy', 'ghl-crm-integration' ); ?>
-					</button>
-				</h5>
-				<textarea 
-					id="contact-delete-template" 
-					readonly 
-					style="width: 100%; height: 120px; font-family: monospace; font-size: 12px; background: #f9f9f9; border: 1px solid #ddd; padding: 10px;"
-				><?php echo esc_textarea( json_encode( $setup_instructions['payload_examples']['contact_deleted'], JSON_PRETTY_PRINT ) ); ?></textarea>
-			</div>
 		</div>
 
 		<!-- Step 4: Test & Verify -->
 		<div class="ghl-setup-step" style="margin: 15px 0; padding: 15px; background: #fff; border: 1px solid #ddd;">
 			<h4 style="margin-top: 0;">
-				<span class="ghl-step-number" style="background: #7e3bd0; color: white; padding: 5px 10px; border-radius: 50%; margin-right: 10px;">5</span>
+				<span class="ghl-step-number" style="background: #7e3bd0; color: white; padding: 5px 10px; border-radius: 50%; margin-right: 10px;">4</span>
 				<?php esc_html_e( 'Test and Verify', 'ghl-crm-integration' ); ?>
 			</h4>
 			<p><?php esc_html_e( 'Open your GoHighLevel workflow, click “Test Workflow” (top right), send a test, then confirm it appears in Sync Logs.', 'ghl-crm-integration' ); ?></p>
 			<p class="description" style="font-size: 12px; color: #666;">
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-settings&tab=sync-logs' ) ); ?>" class="button button-secondary"><?php esc_html_e( 'Open Sync Logs', 'ghl-crm-integration' ); ?></a>
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin#/sync-logs' ) ); ?>" class="ghl-button ghl-button-secondary"><?php esc_html_e( 'Open Sync Logs', 'ghl-crm-integration' ); ?></a>
 			</p>
 		</div>
 	</div>
@@ -264,19 +217,29 @@ $settings           = \GHL_CRM\Core\SettingsManager::get_instance()->get_setting
 
 				<tr>
 					<th scope="row">
-						<label for="allow_user_deletion">
-							<?php esc_html_e( 'Allow User Deletion', 'ghl-crm-integration' ); ?>
-						</label>
+						<?php esc_html_e( 'Allow User Deletion', 'ghl-crm-integration' ); ?>
 					</th>
 					<td>
-						<label>
-							<input type="checkbox" id="allow_user_deletion" name="allow_user_deletion" value="1" 
-								<?php checked( $settings['allow_user_deletion'] ?? false ); ?> />
-							<?php esc_html_e( 'Delete WordPress users when contacts are deleted in GoHighLevel', 'ghl-crm-integration' ); ?>
-						</label>
-						<p class="description">
-							<?php esc_html_e( 'If disabled, users will be unlinked from GHL contacts but not deleted.', 'ghl-crm-integration' ); ?>
-						</p>
+						<div class="ghl-form-item">
+							<div class="ghl-form-item-content">
+								<label class="ghl-checkbox <?php echo ! empty( $settings['allow_user_deletion'] ) ? 'is-checked' : ''; ?>">
+									<input type="checkbox"
+											class="ghl-checkbox-original"
+											id="allow_user_deletion"
+											name="allow_user_deletion"
+											value="1"
+											<?php checked( $settings['allow_user_deletion'] ?? false ); ?>
+											>
+									<span class="ghl-checkbox-input <?php echo ! empty( $settings['allow_user_deletion'] ) ? 'is-checked' : ''; ?>">
+										<span class="ghl-checkbox-inner"></span>
+									</span>
+									<span class="ghl-checkbox-label">
+										<?php esc_html_e( 'Delete WordPress users when contacts are deleted in GoHighLevel', 'ghl-crm-integration' ); ?>
+										<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'If disabled, users will be unlinked from GHL contacts but not deleted.', 'ghl-crm-integration' ); ?>">?</span>
+									</span>
+								</label>
+							</div>
+						</div>
 					</td>
 				</tr>
 			</tbody>
