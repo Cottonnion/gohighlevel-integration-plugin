@@ -174,7 +174,7 @@ $settings           = \GHL_CRM\Core\SettingsManager::get_instance()->get_setting
 
 	<!-- Webhook Settings Form -->
 	<form id="ghl-webhooks-settings-form" method="post">
-		<?php wp_nonce_field( 'ghl_webhooks_settings', 'ghl_webhooks_nonce' ); ?>
+		<?php wp_nonce_field( 'ghl_crm_settings_nonce', 'ghl_crm_nonce' ); ?>
 
 		<h3><?php esc_html_e( 'Webhook Processing Settings', 'ghl-crm-integration' ); ?></h3>
 
