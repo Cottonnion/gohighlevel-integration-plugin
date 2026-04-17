@@ -609,7 +609,8 @@ class QueueManager {
 			);
 
 			// Execute sync using QueueProcessor helper
-			$result = $this->processor->execute_sync( $item->item_type, $item->action, (int) $item->item_id, $payload );
+			$result          = $this->processor->execute_sync( $item->item_type, $item->action, (int) $item->item_id, $payload );
+			$last_php_error  = error_get_last(); // Capture immediately — may reveal silent handler failures
 
 			// Track API request using RateLimiter helper
 			if ( $location_id ) {
@@ -725,6 +726,15 @@ class QueueManager {
 					$error_message .= ': ' . $result['error'];
 				} elseif ( empty( $result ) ) {
 					$error_message .= ': Empty result returned from sync processor';
+					if ( ! empty( $last_php_error ) ) {
+						$error_message .= sprintf(
+							' | Last PHP error: [type %d] %s in %s:%d',
+							$last_php_error['type'],
+							$last_php_error['message'],
+							basename( $last_php_error['file'] ),
+							$last_php_error['line']
+						);
+					}
 				} else {
 					$error_message .= ': ' . print_r( $result, true );
 				}
