@@ -856,15 +856,14 @@ class QueueManager {
 				'ghl_crm_log_event',
 				'queue_item_error',
 				'Queue item processing failed',
-				[
-					'queue_id'  => $item->id,
-					'item_type' => $item->item_type,
-					'action'    => $item->action,
-					'item_id'   => $item->item_id,
-					'error'     => $e->getMessage(),
-					'status'    => $status,
-					'site_id'   => get_current_blog_id(),
-				],
+				array_merge(
+					$error_context ?? [],
+					[
+						'error'   => $e->getMessage(),
+						'status'  => $status,
+						'site_id' => get_current_blog_id(),
+					]
+				),
 				'error'
 			);
 		}
