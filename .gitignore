@@ -37,9 +37,6 @@ debug.log
 # Reference files from other plugins
 /refrence-classes/
 
-# tests
-/tests/
-
 # Ignore all dotfiles/dotfolders except .github
 .*
 !.github/
