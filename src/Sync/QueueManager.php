@@ -609,7 +609,8 @@ class QueueManager {
 			);
 
 			// Execute sync using QueueProcessor helper
-			$result = $this->processor->execute_sync( $item->item_type, $item->action, (int) $item->item_id, $payload );
+			$result          = $this->processor->execute_sync( $item->item_type, $item->action, (int) $item->item_id, $payload );
+			$last_php_error  = error_get_last(); // Capture immediately — may reveal silent handler failures
 
 			// Track API request using RateLimiter helper
 			if ( $location_id ) {
@@ -725,6 +726,15 @@ class QueueManager {
 					$error_message .= ': ' . $result['error'];
 				} elseif ( empty( $result ) ) {
 					$error_message .= ': Empty result returned from sync processor';
+					if ( ! empty( $last_php_error ) ) {
+						$error_message .= sprintf(
+							' | Last PHP error: [type %d] %s in %s:%d',
+							$last_php_error['type'],
+							$last_php_error['message'],
+							basename( $last_php_error['file'] ),
+							$last_php_error['line']
+						);
+					}
 				} else {
 					$error_message .= ': ' . print_r( $result, true );
 				}
@@ -846,15 +856,14 @@ class QueueManager {
 				'ghl_crm_log_event',
 				'queue_item_error',
 				'Queue item processing failed',
-				[
-					'queue_id'  => $item->id,
-					'item_type' => $item->item_type,
-					'action'    => $item->action,
-					'item_id'   => $item->item_id,
-					'error'     => $e->getMessage(),
-					'status'    => $status,
-					'site_id'   => get_current_blog_id(),
-				],
+				array_merge(
+					$error_context ?? [],
+					[
+						'error'   => $e->getMessage(),
+						'status'  => $status,
+						'site_id' => get_current_blog_id(),
+					]
+				),
 				'error'
 			);
 		}
@@ -1050,14 +1059,6 @@ class QueueManager {
 		// Get from settings manager
 		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 		$location_id      = $settings_manager->get_setting( 'location_id' );
-
-		// Fallback: Try to get from OAuth tokens if available
-		if ( empty( $location_id ) ) {
-			$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
-			if ( method_exists( $oauth_handler, 'get_location_id' ) ) {
-				$location_id = $oauth_handler->get_location_id();
-			}
-		}
 
 		return ! empty( $location_id ) ? (string) $location_id : null;
 	}
