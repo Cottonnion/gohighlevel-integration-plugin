@@ -8,8 +8,8 @@
  * Run only benchmarks:
  *   vendor/bin/phpunit --testsuite Performance
  *
- * This reveals whether **your PHP/DB code** or **the GHL API** is the bottleneck.
- * In production the answer is almost always the API, but if your code is slow
+ * This reveals whether **the PHP/DB code** or **the GHL API** is the bottleneck.
+ * In production the answer is almost always the API, but if the PHP/DB code is slow
  * the queue will fall behind even before hitting rate limits.
  *
  * Results table printed to stdout at the end of each test.
