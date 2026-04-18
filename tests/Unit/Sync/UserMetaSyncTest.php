@@ -71,6 +71,8 @@ class UserMetaSyncTest extends TestCase {
 		$this->tag_manager_mock->shouldReceive( 'prepare_tags_for_payload' )->andReturnUsing( function ( $ids ) {
 			return $ids;
 		})->byDefault();
+		$this->tag_manager_mock->shouldReceive( 'get_pending_tags_meta_key' )->andReturn( '_ghl_pending_tags' )->byDefault();
+		$this->tag_manager_mock->shouldReceive( 'get_pending_family_tags_meta_key' )->andReturn( '_ghl_pending_family_tags' )->byDefault();
 
 		$this->queue_manager_mock = Mockery::mock( 'GHL_CRM\\Sync\\QueueManager' );
 		$this->queue_manager_mock->shouldReceive( 'add_to_queue' )->byDefault();

@@ -51,3 +51,14 @@ if ( ! class_exists( 'WooCommerce' ) ) {
 	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedClassFound
 	class WooCommerce {}
 }
+
+// Stub ActionScheduler so class_exists( 'ActionScheduler' ) and
+// ActionScheduler::is_initialized() work without the real library.
+if ( ! class_exists( 'ActionScheduler' ) ) {
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedClassFound
+	class ActionScheduler {
+		public static function is_initialized(): bool {
+			return true;
+		}
+	}
+}
