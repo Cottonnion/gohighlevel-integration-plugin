@@ -18,11 +18,6 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 $has_analytics = has_action( 'ghl_crm_render_analytics_tab' );
 ?>
 <div class="ghl-crm-dashboard">
-	<div style="background: #6366f1; color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 16px; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 10px;">
-		<span style="font-size: 18px;">🚀</span>
-		<?php esc_html_e( 'Auto-deployed via GitHub Actions — CD pipeline is working!', 'ghl-crm-integration' ); ?>
-		<span style="margin-left: auto; opacity: 0.8; font-weight: 400; font-size: 12px;"><?php echo esc_html( gmdate( 'Y-m-d H:i' ) . ' UTC' ); ?></span>
-	</div>
 	<?php if ( $is_connected ) : ?>
 		<!-- Tab Navigation -->
 		<div class="ghl-dashboard-tabs" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px 12px 0 0; padding: 0; margin-bottom: -1px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);">
