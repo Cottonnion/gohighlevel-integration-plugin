@@ -18,9 +18,6 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 $has_analytics = has_action( 'ghl_crm_render_analytics_tab' );
 ?>
 <div class="ghl-crm-dashboard">
-	<div style="background: #10b981; color: white; padding: 10px 20px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; font-weight: 600;">
-		✅ <?php esc_html_e( 'v1.0.1 — shipped via tag-based CD', 'ghl-crm-integration' ); ?>
-	</div>
 	<?php if ( $is_connected ) : ?>
 		<!-- Tab Navigation -->
 		<div class="ghl-dashboard-tabs" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px 12px 0 0; padding: 0; margin-bottom: -1px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);">
