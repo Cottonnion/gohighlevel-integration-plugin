@@ -21,8 +21,8 @@ jobs:
           tools: composer
           coverage: none
 
-      - name: Install production dependencies
-        run: composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
       - name: Build production zip
         run: php build-minify.php
