@@ -609,8 +609,8 @@ class QueueManager {
 			);
 
 			// Execute sync using QueueProcessor helper
-			$result          = $this->processor->execute_sync( $item->item_type, $item->action, (int) $item->item_id, $payload );
-			$last_php_error  = error_get_last(); // Capture immediately — may reveal silent handler failures
+			$result         = $this->processor->execute_sync( $item->item_type, $item->action, (int) $item->item_id, $payload );
+			$last_php_error = error_get_last(); // Capture immediately — may reveal silent handler failures
 
 			// Track API request using RateLimiter helper
 			if ( $location_id ) {
