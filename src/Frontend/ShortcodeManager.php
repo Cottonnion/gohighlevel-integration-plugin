@@ -54,6 +54,7 @@ class ShortcodeManager {
 		add_shortcode( 'ghl_form', array( $this, 'render_form_shortcode' ) );
 		add_shortcode( 'ghl_family_manager', array( $this, 'render_family_manager_shortcode' ) );
 		add_shortcode( 'ghl_restrict', array( $this, 'render_restrict_shortcode' ) );
+		add_shortcode( 'ghl_user_meta', array( $this, 'render_user_meta_shortcode' ) );
 	}
 
 	/**
@@ -354,7 +355,6 @@ class ShortcodeManager {
 	 * @return string HTML output or empty string if access denied
 	 */
 	public function render_restrict_shortcode( $atts, $content = null ): string {
-		// Non-logged-in users have no tags
 		if ( ! is_user_logged_in() ) {
 			return '';
 		}
@@ -419,6 +419,114 @@ class ShortcodeManager {
 		}
 
 		// Access denied - return empty string
+		return '';
+	}
+
+	/**
+	 * Render user meta shortcode — displays CRM field data for the current user.
+	 *
+	 * Usage:
+	 *   [ghl_user_meta field="first_name"]
+	 *   [ghl_user_meta field="exam_date" default="Not set"]
+	 *   [ghl_user_meta field="advisor_name" sync_if_empty="true"]
+	 *
+	 * @param array|string $atts Shortcode attributes.
+	 * @return string Field value, default, or empty string.
+	 */
+	public function render_user_meta_shortcode( $atts ): string {
+		if ( ! is_user_logged_in() ) {
+			return '';
+		}
+
+		$atts = shortcode_atts(
+			[
+				'field'         => '',
+				'default'       => '',
+				'sync_if_empty' => 'false',
+			],
+			$atts,
+			'ghl_user_meta'
+		);
+
+		$field = sanitize_key( $atts['field'] );
+
+		if ( empty( $field ) ) {
+			return '';
+		}
+
+		$user_id = get_current_user_id();
+		$value   = get_user_meta( $user_id, $field, true );
+
+		// Fallback: check core WP user object fields (user_url, user_email, display_name, etc.)
+		if ( empty( $value ) ) {
+			$user_obj = get_userdata( $user_id );
+			if ( $user_obj && isset( $user_obj->$field ) ) {
+				$value = $user_obj->$field;
+			}
+		}
+
+		// Pull from GHL once if empty and sync_if_empty="true"
+		if ( empty( $value ) && 'true' === strtolower( $atts['sync_if_empty'] ) ) {
+			$value = $this->maybe_pull_field_from_ghl( $user_id, $field );
+		}
+
+		if ( empty( $value ) ) {
+			return esc_html( $atts['default'] );
+		}
+
+		// Handle array values (e.g. multi-select fields)
+		if ( is_array( $value ) ) {
+			$value = implode( ', ', array_map( 'sanitize_text_field', $value ) );
+		}
+
+		return esc_html( (string) $value );
+	}
+
+	/**
+	 * Pull a single field from GHL for a user and store it in user meta.
+	 * Throttled to once per hour per user/field via transient.
+	 *
+	 * @param int    $user_id WordPress user ID.
+	 * @param string $field   User meta key / GHL field key.
+	 * @return string The fetched value or empty string on failure.
+	 */
+	private function maybe_pull_field_from_ghl( int $user_id, string $field ): string {
+		$transient_key = 'ghl_pull_' . $user_id;
+		if ( get_transient( $transient_key ) ) {
+			return '';
+		}
+
+		try {
+			$tag_manager    = \GHL_CRM\Sync\TagManager::get_instance();
+			$contact_id_key = $tag_manager->get_user_contact_id_meta_key();
+			$contact_id     = get_user_meta( $user_id, $contact_id_key, true );
+
+			if ( empty( $contact_id ) ) {
+				return '';
+			}
+
+			// Use existing sync infrastructure — handles API response unwrapping and full field mapping.
+			$sync   = \GHL_CRM\Sync\GHLToWordPressSync::get_instance();
+			$result = $sync->sync_contact_to_wordpress( $contact_id );
+
+			if ( is_wp_error( $result ) ) {
+				return '';
+			}
+
+			// Throttle further syncs for this user for 1 hour.
+			set_transient( $transient_key, 1, HOUR_IN_SECONDS );
+
+			// Re-read the requested field now that sync has populated user meta.
+			$value = get_user_meta( $user_id, $field, true );
+			if ( is_array( $value ) ) {
+				return implode( ', ', array_map( 'sanitize_text_field', $value ) );
+			}
+			return sanitize_text_field( (string) $value );
+
+		} catch ( \Exception $e ) {
+			// Fail silently — don't break the page.
+		}
+
 		return '';
 	}
 }
