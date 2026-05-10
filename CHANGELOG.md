@@ -6,6 +6,15 @@ All notable changes to GoHighLevel CRM Integration will be documented in this fi
 
 ---
 
+## [1.3.3] - 2026-05-10
+
+### Changed
+
+- **Personalization safe mode only** — Removed `ghl_cid` auto-login behavior from runtime handling.
+- **Personalization settings UI** — Removed the "Auto-Login Matched User" option from the free plugin settings.
+
+---
+
 ## [1.3.2] - 2026-05-10
 
 ### Changed

@@ -14,10 +14,8 @@ defined( 'ABSPATH' ) || exit;
  * Handles the ?ghl_cid= URL parameter sent via GoHighLevel email campaigns.
  * When a contact clicks a link containing their GHL contact ID, this class:
  *  - Reads and validates the contact ID from the URL
- *  - Optionally auto-logs in the matched WordPress user (if enabled + token valid)
- *  - Persists the contact ID in a short-lived session so [ghl_user_meta] can
+ *  - Persists the contact ID in a signed short-lived cookie so [ghl_user_meta] can
  *    personalize the page for non-logged-in visitors
- *
  * @package    GHL_CRM_Integration
  * @subpackage GHL_CRM_Integration/Frontend
  */
@@ -88,7 +86,6 @@ class ContactIdHandler {
 	 */
 	public function handle_contact_id_param(): void {
 		$settings_manager = SettingsManager::get_instance();
-		$autologin_feature_active = (bool) apply_filters( 'ghl_crm_cid_autologin_enabled', false );
 
 		// Feature must be enabled by the admin.
 		if ( empty( $settings_manager->get_setting( 'enable_ghl_cid' ) ) ) {
@@ -115,15 +112,6 @@ class ContactIdHandler {
 
 		$token_valid = $this->has_valid_signed_token( $contact_id, $settings_manager );
 
-		// --- Auto-login path ---
-		if (
-			! is_user_logged_in()
-			&& $autologin_feature_active
-			&& ! empty( $settings_manager->get_setting( 'enable_ghl_cid_autologin' ) )
-		) {
-			$this->maybe_autologin( $contact_id, $token_valid );
-		}
-
 		// --- Guest personalization path (always runs if not already logged in) ---
 		if ( ! is_user_logged_in() ) {
 			$require_signed_cid = ! empty( $settings_manager->get_setting( 'require_ghl_cid_token' ) );
@@ -139,48 +127,6 @@ class ContactIdHandler {
 		}
 
 		$this->maybe_strip_sensitive_query_args();
-	}
-
-	/**
-	 * Attempt to auto-login the WordPress user matched to the given GHL contact ID.
-	 * Requires a valid HMAC-SHA256 token passed as ?ghl_token= to prevent unauthorized logins.
-	 *
-	 * @param string $contact_id  GHL contact ID from URL.
-	 * @param bool   $token_valid Whether the signed token is valid.
-	 * @return void
-	 */
-	private function maybe_autologin( string $contact_id, bool $token_valid ): void {
-		if ( ! $token_valid ) {
-			return;
-		}
-
-		// Find the WP user linked to this contact ID.
-		$user_id = self::find_wp_user_by_contact_id( $contact_id );
-		if ( ! $user_id ) {
-			return;
-		}
-
-		// Prevent privilege escalation — do not auto-login admins.
-		if ( user_can( $user_id, 'manage_options' ) ) {
-			return;
-		}
-
-		// Log the user in.
-		wp_set_current_user( $user_id );
-		wp_set_auth_cookie( $user_id, true );
-
-		/**
-		 * Fires after a user is auto-logged in via ?ghl_cid= parameter.
-		 *
-		 * @param int    $user_id    WordPress user ID.
-		 * @param string $contact_id GHL contact ID.
-		 */
-		do_action( 'ghl_crm_after_cid_autologin', $user_id, $contact_id );
-
-		// Remove the token from the URL and redirect to keep the address bar clean.
-		$clean_url = remove_query_arg( [ 'ghl_token', 'ghl_cid' ] );
-		wp_safe_redirect( $clean_url );
-		exit;
 	}
 
 	/**

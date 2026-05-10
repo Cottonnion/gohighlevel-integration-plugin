@@ -14,7 +14,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 $settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
-$cid_autologin_pro_active      = apply_filters( 'ghl_crm_cid_autologin_enabled', false );
 ?>
 
 <div class="ghl-settings-wrapper">
@@ -90,47 +89,6 @@ $cid_autologin_pro_active      = apply_filters( 'ghl_crm_cid_autologin_enabled',
 										<?php esc_html_e( 'Personalize pages for visitors from GHL email links', 'ghl-crm-integration' ); ?>
 									</span>
 								</label>
-							</td>
-						</tr>
-
-						<tr>
-							<th scope="row">
-								<label for="enable_ghl_cid_autologin">
-									<?php esc_html_e( 'Auto-Login Matched User', 'ghl-crm-integration' ); ?>
-									<?php if ( ! $cid_autologin_pro_active ) : ?>
-										<span style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; font-weight: 700;">PRO</span>
-									<?php endif; ?>
-									<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'If enabled, visitors arriving with a valid signed token (?ghl_token=) will be automatically logged in to their WordPress account. Requires the Secret Key below to be set. Do NOT enable without a secret key — it is a security risk.', 'ghl-crm-integration' ); ?>">?</span>
-								</label>
-							</th>
-							<td>
-								<div <?php echo ! $cid_autologin_pro_active ? 'style="opacity: 0.6; pointer-events: none;"' : ''; ?>>
-									<label class="ghl-checkbox ghl-advanced-checkbox-label <?php echo ! empty( $settings['enable_ghl_cid_autologin'] ) ? 'is-checked' : ''; ?>">
-										<input
-											type="checkbox"
-											class="ghl-checkbox-original"
-											id="enable_ghl_cid_autologin"
-											name="enable_ghl_cid_autologin"
-											value="1"
-											<?php checked( ! empty( $settings['enable_ghl_cid_autologin'] ), true ); ?>
-											<?php disabled( ! $cid_autologin_pro_active ); ?>
-										>
-										<span class="ghl-checkbox-input <?php echo ! empty( $settings['enable_ghl_cid_autologin'] ) ? 'is-checked' : ''; ?>">
-											<span class="ghl-checkbox-inner"></span>
-										</span>
-										<span class="ghl-checkbox-label">
-											<?php esc_html_e( 'Automatically log in the matched WordPress user (requires signed token)', 'ghl-crm-integration' ); ?>
-										</span>
-									</label>
-								</div>
-								<p class="description ghl-description-spacing">
-									<?php esc_html_e( 'The link must include ?ghl_token=HMAC_SHA256(secret, contact_id). Admins are never auto-logged in regardless of token.', 'ghl-crm-integration' ); ?>
-								</p>
-								<?php if ( ! $cid_autologin_pro_active ) : ?>
-									<p class="description" style="margin-top: 6px; color: #6b7280; font-weight: 600;">
-										<?php esc_html_e( 'This is a PRO feature.', 'ghl-crm-integration' ); ?>
-									</p>
-								<?php endif; ?>
 							</td>
 						</tr>
 
