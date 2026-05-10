@@ -110,20 +110,9 @@ class ContactIdHandler {
 			return;
 		}
 
-		$token_valid = $this->has_valid_signed_token( $contact_id, $settings_manager );
-
 		// --- Guest personalization path (always runs if not already logged in) ---
 		if ( ! is_user_logged_in() ) {
-			$require_signed_cid = ! empty( $settings_manager->get_setting( 'require_ghl_cid_token' ) );
-			$require_signed_cid = (bool) apply_filters( 'ghl_crm_require_signed_cid_for_guest', $require_signed_cid );
-			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-			error_log( '[GHL CID] Guest mode check. require_signed_token=' . ( $require_signed_cid ? '1' : '0' ) . ', token_valid=' . ( $token_valid ? '1' : '0' ) );
-			if ( ! $require_signed_cid || $token_valid ) {
-				$this->persist_guest_contact( $contact_id );
-			} else {
-				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-				error_log( '[GHL CID] Guest contact NOT persisted due to missing/invalid token.' );
-			}
+			$this->persist_guest_contact( $contact_id );
 		}
 
 		$this->maybe_strip_sensitive_query_args();

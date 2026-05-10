@@ -32,21 +32,7 @@ $settings         = $settings_manager->get_settings_array();
 				<?php
 				echo wp_kses(
 					sprintf(
-						__( '<strong>Default (easy mode):</strong> <code>https://%s/page?ghl_cid={{contact.id}}</code>', 'ghl-crm-integration' ),
-						esc_html( home_url() )
-					),
-					[
-						'strong' => [],
-						'code'   => [],
-					]
-				);
-				?>
-			</p>
-			<p class="description" style="margin-top: 6px;">
-				<?php
-				echo wp_kses(
-					sprintf(
-						__( '<strong>Strict mode:</strong> <code>https://%s/page?ghl_cid={{contact.id}}&amp;ghl_token={{custom_values.ghl_token}}</code>', 'ghl-crm-integration' ),
+						__( '<strong>Simple personalization:</strong> <code>https://%s/page?ghl_cid={{contact.id}}</code>', 'ghl-crm-integration' ),
 						esc_html( home_url() )
 					),
 					[
@@ -94,80 +80,6 @@ $settings         = $settings_manager->get_settings_array();
 
 						<tr>
 							<th scope="row">
-								<label for="require_ghl_cid_token">
-									<?php esc_html_e( 'Strict Mode (Require Signed Token)', 'ghl-crm-integration' ); ?>
-									<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'When enabled, personalization only works if the URL includes a valid signed token (?ghl_token=). Keep this disabled for the simplest admin experience.', 'ghl-crm-integration' ); ?>">?</span>
-								</label>
-							</th>
-							<td>
-								<label class="ghl-checkbox ghl-advanced-checkbox-label <?php echo ! empty( $settings['require_ghl_cid_token'] ) ? 'is-checked' : ''; ?>">
-									<input
-										type="checkbox"
-										class="ghl-checkbox-original"
-										id="require_ghl_cid_token"
-										name="require_ghl_cid_token"
-										value="1"
-										<?php checked( ! empty( $settings['require_ghl_cid_token'] ), true ); ?>
-									>
-									<span class="ghl-checkbox-input <?php echo ! empty( $settings['require_ghl_cid_token'] ) ? 'is-checked' : ''; ?>">
-										<span class="ghl-checkbox-inner"></span>
-									</span>
-									<span class="ghl-checkbox-label">
-										<?php esc_html_e( 'Require signed token for all personalization links', 'ghl-crm-integration' ); ?>
-									</span>
-								</label>
-							</td>
-						</tr>
-
-						<tr>
-							<th scope="row">
-								<label for="ghl_cid_secret_key">
-									<?php esc_html_e( 'HMAC Secret Key', 'ghl-crm-integration' ); ?>
-									<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'A secret string used to verify the signed token. Generate a long random string and store the same value in your GHL workflow that generates tokens. Required for auto-login.', 'ghl-crm-integration' ); ?>">?</span>
-								</label>
-							</th>
-							<td>
-								<input
-									type="password"
-									id="ghl_cid_secret_key"
-									name="ghl_cid_secret_key"
-									value="<?php echo esc_attr( $settings['ghl_cid_secret_key'] ?? '' ); ?>"
-									class="regular-text"
-									autocomplete="new-password"
-									placeholder="<?php esc_attr_e( 'Paste or generate a secret key…', 'ghl-crm-integration' ); ?>"
-								>
-								<button type="button" class="ghl-button ghl-button-secondary" id="ghl-generate-cid-secret" style="margin-left: 8px; vertical-align: middle;">
-									<?php esc_html_e( 'Generate', 'ghl-crm-integration' ); ?>
-								</button>
-								<p class="description ghl-description-spacing">
-									<?php esc_html_e( 'Only required if Auto-Login is enabled. Keep this value private.', 'ghl-crm-integration' ); ?>
-								</p>
-
-								<script>
-								(function() {
-									var button = document.getElementById('ghl-generate-cid-secret');
-									var input = document.getElementById('ghl_cid_secret_key');
-
-									if (!button || !input || !window.crypto || !window.crypto.getRandomValues) {
-										return;
-									}
-
-									button.addEventListener('click', function() {
-										var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-										var key = '';
-										var arr = new Uint8Array(48);
-										window.crypto.getRandomValues(arr);
-										arr.forEach(function(b) { key += chars[b % chars.length]; });
-										input.value = key;
-										input.type = 'text';
-									});
-								})();
-								</script>
-							</td>
-						</tr>
-
-						<tr>
-							<th scope="row">
 								<label for="ghl-cid-link-template">
 									<?php esc_html_e( 'Copy Link Template', 'ghl-crm-integration' ); ?>
 								</label>
@@ -184,7 +96,7 @@ $settings         = $settings_manager->get_settings_array();
 									<?php esc_html_e( 'Copy', 'ghl-crm-integration' ); ?>
 								</button>
 								<p class="description ghl-description-spacing">
-									<?php esc_html_e( 'Use this in GHL emails for easy mode. For strict mode, append &ghl_token={{custom_values.ghl_token}}.', 'ghl-crm-integration' ); ?>
+										<?php esc_html_e( 'Copy this template and use it in your GHL email campaigns.', 'ghl-crm-integration' ); ?>
 								</p>
 							</td>
 						</tr>

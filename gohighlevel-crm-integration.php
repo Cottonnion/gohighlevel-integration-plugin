@@ -3,7 +3,7 @@
  * Plugin Name:       GoHighLevel CRM Integration
  * Plugin URI:        https://labgenz.com/
  * Description:       Integrate WordPress + WooCommerce + BuddyBoss + LearnDash with GoHighLevel CRM for seamless two-way sync
- * Version:           1.3.3
+ * Version:           1.3.4
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Yahya Eddaqqaq

@@ -6,6 +6,14 @@ All notable changes to GoHighLevel CRM Integration will be documented in this fi
 
 ---
 
+## [1.3.4] - 2026-05-10
+
+### Removed
+
+- **Personalization strict mode** — Removed "Strict Mode (Require Signed Token)" option and HMAC secret key from settings. Personalization now works with `?ghl_cid={{contact.id}}` alone, without token requirement.
+
+---
+
 ## [1.3.3] - 2026-05-10
 
 ### Changed
