@@ -105,6 +105,7 @@
               "sync-options",
               "role-tags",
               "login-sync",
+              "personalization",
               "conversations",
               "advanced",
               "stats",
