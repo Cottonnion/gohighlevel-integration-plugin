@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace GHL_CRM\Frontend;
 
-use GHL_CRM\API\Resources\FormsResource;
 use GHL_CRM\Core\SettingsManager;
 use GHL_CRM\Integrations\Forms\FormSettings;
 use GHL_CRM\Sync\TagManager;
@@ -130,7 +129,7 @@ class ShortcodeManager {
 			</div>
 			<iframe 
 				src="<?php echo esc_url( $embed_url ); ?>" 
-				style="width: 100%; <?php echo 'auto' === $height ? 'height: 800px;' : 'height: ' . esc_attr( $height ) . ';'; ?> border: none; display: none;"
+				style="width: 100%; <?php echo 'auto' === $height ? 'height: ' . esc_attr( (string) apply_filters( 'ghl_crm_form_default_height', 800 ) ) . 'px;' : 'height: ' . esc_attr( $height ) . ';'; ?> border: none; display: none;"
 				scrolling="yes"
 				id="<?php echo esc_attr( $wrapper_id ); ?>-iframe"
 				data-form-id="<?php echo esc_attr( $form_id ); ?>"
@@ -167,18 +166,13 @@ class ShortcodeManager {
 				if ( ! empty( $parsed['host'] ) ) {
 					$host_parts = explode( '.', $parsed['host'] );
 
-					// Check if already using link subdomain
-					if ( isset( $host_parts[0] ) && 'link' === strtolower( $host_parts[0] ) ) {
-						// Already correct
-						$base_url = 'https://' . implode( '.', $host_parts );
-					} elseif ( count( $host_parts ) >= 3 ) {
-						// Has subdomain (e.g., crm.jorgediaz.online) - replace it
-						$host_parts[0] = 'link';
-						$base_url      = 'https://' . implode( '.', $host_parts );
-					} elseif ( count( $host_parts ) === 2 ) {
-						// No subdomain (e.g., jorgediaz.online) - prepend link
-						array_unshift( $host_parts, 'link' );
-						$base_url = 'https://' . implode( '.', $host_parts );
+					// Strip all subdomains down to the apex (last 2 parts) then prepend 'link'.
+					// e.g. crm.sub.domain.com → link.domain.com
+					//      crm.domain.com      → link.domain.com
+					//      link.domain.com     → link.domain.com
+					if ( count( $host_parts ) >= 2 ) {
+						$apex     = array_slice( $host_parts, -2 );
+						$base_url = 'https://link.' . implode( '.', $apex );
 					} else {
 						$base_url = 'https://link.gohighlevel.com';
 					}
@@ -356,7 +350,15 @@ class ShortcodeManager {
 	 */
 	public function render_restrict_shortcode( $atts, $content = null ): string {
 		if ( ! is_user_logged_in() ) {
-			return '';
+			/**
+			 * Fires when a non-logged-in user hits a restricted block.
+			 * Hook here to redirect or show a login prompt.
+			 *
+			 * @param array  $atts    Shortcode attributes.
+			 * @param string $content Shortcode inner content.
+			 */
+			do_action( 'ghl_crm_restrict_guest_access', $atts, $content );
+			return apply_filters( 'ghl_crm_restrict_guest_output', '', $atts, $content );
 		}
 
 		// Parse attributes
@@ -434,8 +436,19 @@ class ShortcodeManager {
 	 * @return string Field value, default, or empty string.
 	 */
 	public function render_user_meta_shortcode( $atts ): string {
-		if ( ! is_user_logged_in() ) {
-			return '';
+		$is_logged_in    = is_user_logged_in();
+		$guest_contact_id = null;
+
+		if ( ! $is_logged_in ) {
+			// Allow guest personalization via ?ghl_cid= if the feature is enabled.
+			$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+			if ( ! empty( $settings_manager->get_setting( 'enable_ghl_cid' ) ) ) {
+				$guest_contact_id = ContactIdHandler::get_guest_contact_id();
+			}
+
+			if ( null === $guest_contact_id ) {
+				return '';
+			}
 		}
 
 		$atts = shortcode_atts(
@@ -448,26 +461,57 @@ class ShortcodeManager {
 			'ghl_user_meta'
 		);
 
-		$field = sanitize_key( $atts['field'] );
+		$field      = sanitize_text_field( (string) $atts['field'] );
+		$meta_field = sanitize_key( $field );
 
 		if ( empty( $field ) ) {
 			return '';
 		}
 
+		// --- Guest visitor path ---
+		if ( null !== $guest_contact_id ) {
+			// Prefer reading WP user meta directly if this contact has a WP account.
+			$tag_manager   = \GHL_CRM\Sync\TagManager::get_instance();
+			$guest_user_id = $tag_manager->find_user_by_contact_id( $guest_contact_id );
+
+			if ( $guest_user_id ) {
+				$value = get_user_meta( $guest_user_id, $meta_field, true );
+				if ( empty( $value ) ) {
+					$user_obj = get_userdata( $guest_user_id );
+					if ( $user_obj && isset( $user_obj->$meta_field ) ) {
+						$value = $user_obj->$meta_field;
+					}
+				}
+			} else {
+				// No WP account — fall back to raw GHL API data.
+				$contact_data = ContactIdHandler::get_guest_contact_data( $guest_contact_id );
+				$value        = $this->resolve_guest_contact_field_value( $contact_data, $field, $meta_field );
+			}
+
+			if ( empty( $value ) ) {
+				return esc_html( $atts['default'] );
+			}
+			if ( is_array( $value ) ) {
+				$value = implode( ', ', array_map( 'sanitize_text_field', $value ) );
+			}
+			return esc_html( (string) $value );
+		}
+
+		// --- Logged-in user path ---
 		$user_id = get_current_user_id();
-		$value   = get_user_meta( $user_id, $field, true );
+		$value   = get_user_meta( $user_id, $meta_field, true );
 
 		// Fallback: check core WP user object fields (user_url, user_email, display_name, etc.)
 		if ( empty( $value ) ) {
 			$user_obj = get_userdata( $user_id );
-			if ( $user_obj && isset( $user_obj->$field ) ) {
-				$value = $user_obj->$field;
+			if ( $user_obj && isset( $user_obj->$meta_field ) ) {
+				$value = $user_obj->$meta_field;
 			}
 		}
 
 		// Pull from GHL once if empty and sync_if_empty="true"
 		if ( empty( $value ) && 'true' === strtolower( $atts['sync_if_empty'] ) ) {
-			$value = $this->maybe_pull_field_from_ghl( $user_id, $field );
+			$value = $this->maybe_pull_field_from_ghl( $user_id, $meta_field );
 		}
 
 		if ( empty( $value ) ) {
@@ -483,6 +527,41 @@ class ShortcodeManager {
 	}
 
 	/**
+	 * Resolve a field value from guest contact payload.
+	 *
+	 * @param array  $contact_data Guest contact payload.
+	 * @param string $field        Original field name from shortcode.
+	 * @param string $meta_field   Sanitized field name.
+	 * @return mixed
+	 */
+	private function resolve_guest_contact_field_value( array $contact_data, string $field, string $meta_field ) {
+		if ( isset( $contact_data[ $field ] ) ) {
+			return $contact_data[ $field ];
+		}
+
+		if ( '' !== $meta_field && isset( $contact_data[ $meta_field ] ) ) {
+			return $contact_data[ $meta_field ];
+		}
+
+		if ( ! empty( $contact_data['customFields'] ) && is_array( $contact_data['customFields'] ) ) {
+			foreach ( $contact_data['customFields'] as $custom_field ) {
+				if ( ! is_array( $custom_field ) ) {
+					continue;
+				}
+
+				$custom_id  = isset( $custom_field['id'] ) ? (string) $custom_field['id'] : '';
+				$custom_key = isset( $custom_field['key'] ) ? (string) $custom_field['key'] : '';
+
+				if ( $custom_id === $field || $custom_id === $meta_field || $custom_key === $field || $custom_key === $meta_field ) {
+					return $custom_field['value'] ?? '';
+				}
+			}
+		}
+
+		return '';
+	}
+
+	/**
 	 * Pull a single field from GHL for a user and store it in user meta.
 	 * Throttled to once per hour per user/field via transient.
 	 *
@@ -491,7 +570,7 @@ class ShortcodeManager {
 	 * @return string The fetched value or empty string on failure.
 	 */
 	private function maybe_pull_field_from_ghl( int $user_id, string $field ): string {
-		$transient_key = 'ghl_pull_' . $user_id;
+		$transient_key = 'ghl_pull_' . $user_id . '_' . $field;
 		if ( get_transient( $transient_key ) ) {
 			return '';
 		}
@@ -513,8 +592,8 @@ class ShortcodeManager {
 				return '';
 			}
 
-			// Throttle further syncs for this user for 1 hour.
-			set_transient( $transient_key, 1, HOUR_IN_SECONDS );
+			// Throttle further syncs for this user (default: 1 hour).
+			set_transient( $transient_key, 1, (int) apply_filters( 'ghl_crm_sync_throttle_ttl', HOUR_IN_SECONDS ) );
 
 			// Re-read the requested field now that sync has populated user meta.
 			$value = get_user_meta( $user_id, $field, true );
