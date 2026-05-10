@@ -52,10 +52,6 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 				<span class="dashicons dashicons-external" style="font-size: 16px;"></span>
 				Go To GoHlighLevel
 			</a>
-			<a href="<?php echo esc_url( 'https://highlevelsync.com/documentation/' ); ?>" class="ghl-button ghl-button-secondary" style="display: flex; align-items: center; gap: 6px; text-decoration: none;" target="_blank" rel="noopener noreferrer">
-				<span class="dashicons dashicons-book" style="font-size: 16px;"></span>
-				Documentation
-			</a>
 		</div>
 	</div>
 
@@ -306,6 +302,15 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 					<div style="padding: 12px; background: #fffbeb; border-left: 3px solid #f59e0b; border-radius: 6px;">
 						<div style="font-size: 13px; font-weight: 600; color: #92400e; margin-bottom: 4px;">Missing data in GHL?</div>
 						<div style="font-size: 12px; color: #78350f;">Review sync logs to see what errors occurred and retry failed items.</div>
+					</div>
+					<div style="padding: 12px; background: #fffbeb; border-left: 3px solid #f59e0b; border-radius: 6px;">
+						<div style="font-size: 13px; font-weight: 600; color: #92400e; margin-bottom: 4px;">Need an implementation example?</div>
+						<div style="font-size: 12px; color: #78350f;">
+							See documentation examples:
+							<a href="<?php echo esc_url( 'https://highlevelsync.com/documentation/' ); ?>" target="_blank" rel="noopener noreferrer" style="color: #92400e; font-weight: 600; text-decoration: underline;">
+								highlevelsync.com/documentation
+							</a>
+						</div>
 					</div>
 				</div>
 			</div>
