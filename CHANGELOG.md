@@ -6,6 +6,15 @@ All notable changes to GoHighLevel CRM Integration will be documented in this fi
 
 ---
 
+## [1.3.2] - 2026-05-10
+
+### Changed
+
+- **Personalization (Free)** — Removed live guest contact fetch from the free plugin when a `ghl_cid` contact does not map to a WordPress user.
+- **Personalization settings UI** — Removed the "Live GHL Fetch (No WP User)" section from the free settings screen.
+
+---
+
 ## [1.3.1] - 2026-05-10
 
 ### Added

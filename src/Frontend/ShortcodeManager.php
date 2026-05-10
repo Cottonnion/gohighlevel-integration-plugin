@@ -483,14 +483,6 @@ class ShortcodeManager {
 						$value = $user_obj->$meta_field;
 					}
 				}
-			} else {
-				$allow_guest_live_fetch = (bool) apply_filters( 'ghl_crm_cid_guest_live_fetch_enabled', false );
-
-				// No WP account — Pro can resolve from live GHL API data.
-				if ( $allow_guest_live_fetch ) {
-					$contact_data = ContactIdHandler::get_guest_contact_data( $guest_contact_id );
-					$value        = $this->resolve_guest_contact_field_value( $contact_data, $field, $meta_field );
-				}
 			}
 
 			if ( empty( $value ) ) {

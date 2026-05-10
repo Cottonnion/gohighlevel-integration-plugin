@@ -15,7 +15,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 $settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
 $cid_autologin_pro_active      = apply_filters( 'ghl_crm_cid_autologin_enabled', false );
-$cid_live_fetch_pro_active     = apply_filters( 'ghl_crm_cid_guest_live_fetch_enabled', false );
 ?>
 
 <div class="ghl-settings-wrapper">
@@ -128,40 +127,6 @@ $cid_live_fetch_pro_active     = apply_filters( 'ghl_crm_cid_guest_live_fetch_en
 									<?php esc_html_e( 'The link must include ?ghl_token=HMAC_SHA256(secret, contact_id). Admins are never auto-logged in regardless of token.', 'ghl-crm-integration' ); ?>
 								</p>
 								<?php if ( ! $cid_autologin_pro_active ) : ?>
-									<p class="description" style="margin-top: 6px; color: #6b7280; font-weight: 600;">
-										<?php esc_html_e( 'This is a PRO feature.', 'ghl-crm-integration' ); ?>
-									</p>
-								<?php endif; ?>
-							</td>
-						</tr>
-
-						<tr>
-							<th scope="row">
-								<label>
-									<?php esc_html_e( 'Live GHL Fetch (No WP User)', 'ghl-crm-integration' ); ?>
-									<?php if ( ! $cid_live_fetch_pro_active ) : ?>
-										<span style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; font-weight: 700;">PRO</span>
-									<?php endif; ?>
-								</label>
-							</th>
-							<td>
-								<div <?php echo ! $cid_live_fetch_pro_active ? 'style="opacity: 0.6; pointer-events: none;"' : ''; ?>>
-									<label class="ghl-checkbox ghl-advanced-checkbox-label <?php echo $cid_live_fetch_pro_active ? 'is-checked' : ''; ?>">
-										<input
-											type="checkbox"
-											class="ghl-checkbox-original"
-											checked
-											disabled
-										>
-										<span class="ghl-checkbox-input <?php echo $cid_live_fetch_pro_active ? 'is-checked' : ''; ?>">
-											<span class="ghl-checkbox-inner"></span>
-										</span>
-										<span class="ghl-checkbox-label">
-											<?php esc_html_e( 'Resolve shortcode values from live GHL API for contacts that do not have a WordPress account yet', 'ghl-crm-integration' ); ?>
-										</span>
-									</label>
-								</div>
-								<?php if ( ! $cid_live_fetch_pro_active ) : ?>
 									<p class="description" style="margin-top: 6px; color: #6b7280; font-weight: 600;">
 										<?php esc_html_e( 'This is a PRO feature.', 'ghl-crm-integration' ); ?>
 									</p>
