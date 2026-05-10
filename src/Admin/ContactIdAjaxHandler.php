@@ -99,6 +99,7 @@ class ContactIdAjaxHandler {
 
 		// Get tag manager and try to find WP user
 		$tag_manager = TagManager::get_instance();
+		$settings_manager = SettingsManager::get_instance();
 		$wp_user_id  = $tag_manager->find_user_by_contact_id( $contact_id );
 
 		$fields = array();
@@ -107,22 +108,42 @@ class ContactIdAjaxHandler {
 			// Get all user meta for this contact
 			$user_data = get_userdata( $wp_user_id );
 			if ( $user_data ) {
-				// Build fields from user object
-				$fields['first_name'] = (string) get_user_meta( $wp_user_id, 'first_name', true );
-				$fields['last_name']  = (string) get_user_meta( $wp_user_id, 'last_name', true );
-				$fields['email']      = $user_data->user_email;
-				$fields['phone']      = (string) get_user_meta( $wp_user_id, 'phone', true );
-				$fields['company']    = (string) get_user_meta( $wp_user_id, 'company', true );
-				$fields['street']     = (string) get_user_meta( $wp_user_id, 'street', true );
-				$fields['city']       = (string) get_user_meta( $wp_user_id, 'city', true );
-				$fields['state']      = (string) get_user_meta( $wp_user_id, 'state', true );
-				$fields['postal_code'] = (string) get_user_meta( $wp_user_id, 'postal_code', true );
-				$fields['country']    = (string) get_user_meta( $wp_user_id, 'country', true );
+				// Get field mappings from settings to know which WP fields to read
+				$field_mappings = $settings_manager->get_setting( 'user_field_mapping', array() );
+				
+				// Read all mapped WP fields from user meta
+				foreach ( $field_mappings as $wp_field => $mapping_data ) {
+					if ( ! is_array( $mapping_data ) ) {
+						continue;
+					}
+					
+					$direction = $mapping_data['direction'] ?? 'both';
+					$direction_map = [
+						'from_ghl' => 'ghl_to_wp',
+						'to_ghl'   => 'wp_to_ghl',
+						'both'     => 'both',
+					];
+					$direction = $direction_map[ $direction ] ?? $direction;
+					
+					// Only include if synced from GHL to WP
+					if ( 'ghl_to_wp' !== $direction && 'both' !== $direction ) {
+						continue;
+					}
+					
+					// Read the actual value from user meta
+					$value = (string) get_user_meta( $wp_user_id, $wp_field, true );
+					
+					// Fallback to user object fields
+					if ( empty( $value ) && isset( $user_data->$wp_field ) ) {
+						$value = (string) $user_data->$wp_field;
+					}
+					
+					$fields[ $wp_field ] = $value;
+				}
 			}
 		}
 
-		// Get allowed fields setting
-		$settings_manager = SettingsManager::get_instance();
+		// Get hidden fields setting
 		$hidden_fields_json = $settings_manager->get_setting( 'ghl_cid_hidden_fields', '' );
 		$hidden_fields = ! empty( $hidden_fields_json ) ? (array) json_decode( $hidden_fields_json, true ) : array();
 
@@ -135,12 +156,17 @@ class ContactIdAjaxHandler {
 			ARRAY_FILTER_USE_KEY
 		);
 
+		// Get field mapping configuration to show admin what's mapped vs unmapped
+		$field_mappings = $settings_manager->get_setting( 'user_field_mapping', [] );
+		$mapped_wp_fields = array_keys( $field_mappings );
+
 		wp_send_json_success(
 			array(
-				'contact_id'   => $contact_id,
-				'wp_user_id'   => $wp_user_id ? (int) $wp_user_id : null,
-				'wp_user_login' => $wp_user_id ? (string) get_userdata( $wp_user_id )->user_login : null,
-				'fields'       => $fields,
+				'contact_id'      => $contact_id,
+				'wp_user_id'      => $wp_user_id ? (int) $wp_user_id : null,
+				'wp_user_login'   => $wp_user_id ? (string) get_userdata( $wp_user_id )->user_login : null,
+				'fields'          => $fields,
+				'mapped_fields'   => $mapped_wp_fields,
 			)
 		);
 	}

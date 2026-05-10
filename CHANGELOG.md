@@ -6,6 +6,14 @@ All notable changes to GoHighLevel CRM Integration will be documented in this fi
 
 ---
 
+## [1.3.8] - 2026-05-10
+
+### Fixed
+
+- **Test Link Debugger** — Now reads actual field mappings from settings instead of hardcoded field names. If phone is mapped to `billing_phone`, the tool will correctly read that field.
+
+---
+
 ## [1.3.7] - 2026-05-10
 
 ### Changed
