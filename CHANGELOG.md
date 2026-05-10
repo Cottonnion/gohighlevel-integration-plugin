@@ -6,6 +6,14 @@ All notable changes to GoHighLevel CRM Integration will be documented in this fi
 
 ---
 
+## [1.3.7] - 2026-05-10
+
+### Changed
+
+- **Test Link Debugger** — Removed GHL API fallback. Test tool now reads exclusively from WordPress user meta. All contact fields must be synced to WP user profile first.
+
+---
+
 ## [1.3.6] - 2026-05-10
 
 ### Fixed
