@@ -6,6 +6,19 @@ All notable changes to GoHighLevel CRM Integration will be documented in this fi
 
 ---
 
+## [1.3.0] - 2026-05-10
+
+### Added
+
+- **Email campaign personalization** — New `ContactIdHandler` class handles `?ghl_cid=CONTACT_ID` URL parameters from email campaigns. Guest visitors get their contact ID persisted in a signed HttpOnly cookie for shortcode personalization across page loads.
+- **`[ghl_user_meta]` guest support** — Shortcodes now resolve field values for non-logged-in visitors. If the contact maps to a WP user, WP user meta is read directly (same keys as logged-in). For contacts with no WP account, data is fetched from the GHL API and cached as a transient.
+- **Personalization settings tab** — New dedicated "Personalization" tab in the plugin settings with: enable toggle, auto-login toggle, HMAC secret key input with generator, strict token mode toggle, and copy link template helper.
+- **`TagManager::find_user_by_contact_id()`** — New method to look up a WP user by their linked GHL contact ID, with location-scoped and legacy key fallback.
+- **Strict mode** — Optional `require_ghl_cid_token` setting. When enabled, requires a valid `HMAC_SHA256(secret, contact_id)` token in the URL before persisting guest data.
+- **Auto-login via signed link** — When enabled and a valid signed token is present, automatically logs in the matched WP user.
+
+---
+
 ## [1.2.1] - 2026-04-10
 
 ### Added
