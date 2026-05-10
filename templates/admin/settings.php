@@ -115,6 +115,10 @@ $settings_tabs = [
 		'pro'        => true,
 		'pro_filter' => 'ghl_crm_login_sync_enabled',
 	],
+	'personalization'      => [
+		'label' => __( 'Personalization', 'ghl-crm-integration' ),
+		'icon'  => 'dashicons-email-alt',
+	],
 	// 'conversations' => [
 	// 'label' => __( 'Conversations', 'ghl-crm-integration' ),
 	// 'icon'  => 'dashicons-format-chat',
