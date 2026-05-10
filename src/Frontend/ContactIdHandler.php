@@ -88,6 +88,7 @@ class ContactIdHandler {
 	 */
 	public function handle_contact_id_param(): void {
 		$settings_manager = SettingsManager::get_instance();
+		$autologin_feature_active = (bool) apply_filters( 'ghl_crm_cid_autologin_enabled', false );
 
 		// Feature must be enabled by the admin.
 		if ( empty( $settings_manager->get_setting( 'enable_ghl_cid' ) ) ) {
@@ -117,6 +118,7 @@ class ContactIdHandler {
 		// --- Auto-login path ---
 		if (
 			! is_user_logged_in()
+			&& $autologin_feature_active
 			&& ! empty( $settings_manager->get_setting( 'enable_ghl_cid_autologin' ) )
 		) {
 			$this->maybe_autologin( $contact_id, $token_valid );

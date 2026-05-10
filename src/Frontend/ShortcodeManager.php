@@ -470,6 +470,7 @@ class ShortcodeManager {
 
 		// --- Guest visitor path ---
 		if ( null !== $guest_contact_id ) {
+			$value = '';
 			// Prefer reading WP user meta directly if this contact has a WP account.
 			$tag_manager   = \GHL_CRM\Sync\TagManager::get_instance();
 			$guest_user_id = $tag_manager->find_user_by_contact_id( $guest_contact_id );
@@ -483,9 +484,13 @@ class ShortcodeManager {
 					}
 				}
 			} else {
-				// No WP account — fall back to raw GHL API data.
-				$contact_data = ContactIdHandler::get_guest_contact_data( $guest_contact_id );
-				$value        = $this->resolve_guest_contact_field_value( $contact_data, $field, $meta_field );
+				$allow_guest_live_fetch = (bool) apply_filters( 'ghl_crm_cid_guest_live_fetch_enabled', false );
+
+				// No WP account — Pro can resolve from live GHL API data.
+				if ( $allow_guest_live_fetch ) {
+					$contact_data = ContactIdHandler::get_guest_contact_data( $guest_contact_id );
+					$value        = $this->resolve_guest_contact_field_value( $contact_data, $field, $meta_field );
+				}
 			}
 
 			if ( empty( $value ) ) {

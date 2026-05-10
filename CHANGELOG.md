@@ -6,6 +6,23 @@ All notable changes to GoHighLevel CRM Integration will be documented in this fi
 
 ---
 
+## [1.3.1] - 2026-05-10
+
+### Added
+
+- **Dashboard documentation shortcut** — Added a direct "Documentation" quick action link in the main plugin dashboard to `https://highlevelsync.com/documentation/`.
+
+### Changed
+
+- **Personalization free/pro split** — `?ghl_cid` guest personalization remains available in Free for contacts mapped to WordPress users, while advanced behaviors are now Pro-gated.
+- **Personalization settings UI** — Pro-only controls remain visible in Free but are locked with clear "This is a PRO feature" messaging, matching the existing lock pattern used in other settings tabs.
+
+### Pro Integration
+
+- **New Pro unlock flags** — Added `ghl_crm_cid_autologin_enabled` and `ghl_crm_cid_guest_live_fetch_enabled` hooks so Pro can unlock auto-login and live guest contact fetching.
+
+---
+
 ## [1.3.0] - 2026-05-10
 
 ### Added
