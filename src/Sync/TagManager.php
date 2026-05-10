@@ -801,6 +801,48 @@ class TagManager {
 		delete_user_meta( $user_id, self::LEGACY_CONTACT_META_KEY );
 	}
 
+	/**
+	 * Find a WordPress user ID by their linked GHL contact ID.
+	 *
+	 * Checks the location-scoped meta key first, then falls back to the legacy key.
+	 *
+	 * @param string      $contact_id  GHL contact ID.
+	 * @param string|null $location_id GHL location ID. Defaults to the current configured location.
+	 * @return int|null WordPress user ID or null if not found.
+	 */
+	public function find_user_by_contact_id( string $contact_id, ?string $location_id = null ): ?int {
+		$meta_key = $this->get_user_contact_id_meta_key( $location_id );
+
+		$users = get_users(
+			[
+				'meta_key'   => $meta_key,
+				'meta_value' => $contact_id,
+				'number'     => 1,
+				'fields'     => 'ID',
+			]
+		);
+
+		if ( ! empty( $users ) ) {
+			return (int) $users[0];
+		}
+
+		if ( $meta_key === self::LEGACY_CONTACT_META_KEY ) {
+			return null;
+		}
+
+		// Fallback to legacy meta key.
+		$users = get_users(
+			[
+				'meta_key'   => self::LEGACY_CONTACT_META_KEY,
+				'meta_value' => $contact_id,
+				'number'     => 1,
+				'fields'     => 'ID',
+			]
+		);
+
+		return ! empty( $users ) ? (int) $users[0] : null;
+	}
+
 	// =========================================================================
 	// User Meta — Tags (Location-Scoped)
 	// =========================================================================
