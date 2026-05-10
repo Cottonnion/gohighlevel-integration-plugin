@@ -82,6 +82,7 @@ class Loader {
 			'core.notices'                         => \GHL_CRM\Core\AdminNotices::class,
 			'core.autologin'                       => \GHL_CRM\Auth\AutoLoginManager::class,
 			'core.shortcodes'                      => \GHL_CRM\Frontend\ShortcodeManager::class,
+			'core.contact_id_handler'              => \GHL_CRM\Frontend\ContactIdHandler::class,
 			'core.notifications'                   => \GHL_CRM\Admin\NotificationManager::class,
 			'core.form_settings'                   => \GHL_CRM\Integrations\Forms\FormSettings::class,
 			'core.reporting'                       => \GHL_CRM\Core\Reporting\ReportingManager::class,
