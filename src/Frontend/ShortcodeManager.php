@@ -470,6 +470,16 @@ class ShortcodeManager {
 
 		// --- Guest visitor path ---
 		if ( null !== $guest_contact_id ) {
+			// Check if field is in hidden list for guests
+			$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+			$hidden_fields_json = $settings_manager->get_setting( 'ghl_cid_hidden_fields', '' );
+			$hidden_fields = ! empty( $hidden_fields_json ) ? (array) json_decode( $hidden_fields_json, true ) : array();
+
+			// If field is in hidden list, deny access
+			if ( in_array( $meta_field, $hidden_fields, true ) ) {
+				return esc_html( $atts['default'] );
+			}
+
 			$value = '';
 			// Prefer reading WP user meta directly if this contact has a WP account.
 			$tag_manager   = \GHL_CRM\Sync\TagManager::get_instance();

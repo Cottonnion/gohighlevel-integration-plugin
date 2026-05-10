@@ -6,6 +6,19 @@ All notable changes to GoHighLevel CRM Integration will be documented in this fi
 
 ---
 
+## [1.3.5] - 2026-05-10
+
+### Added
+
+- **Field Privacy** — New "Hide Fields From Guests" setting in Personalization tab. Admin selects which contact fields to hide from campaign visitors (defaults to showing all).
+- **Test Link Debugger** — New tool in Personalization settings to test campaign URLs. Admin pastes a `?ghl_cid=` link and sees exactly what contact data and fields would resolve.
+
+### Changed
+
+- **Personalization UX** — Simplified field visibility logic from allowlist to denylist (hide specific fields instead of allow specific fields).
+
+---
+
 ## [1.3.4] - 2026-05-10
 
 ### Removed

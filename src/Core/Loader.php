@@ -84,6 +84,7 @@ class Loader {
 			'core.shortcodes'                      => \GHL_CRM\Frontend\ShortcodeManager::class,
 			'core.contact_id_handler'              => \GHL_CRM\Frontend\ContactIdHandler::class,
 			'core.notifications'                   => \GHL_CRM\Admin\NotificationManager::class,
+			'core.contact_id_ajax'                 => \GHL_CRM\Admin\ContactIdAjaxHandler::class,
 			'core.form_settings'                   => \GHL_CRM\Integrations\Forms\FormSettings::class,
 			'core.reporting'                       => \GHL_CRM\Core\Reporting\ReportingManager::class,
 
