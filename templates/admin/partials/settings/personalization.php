@@ -343,10 +343,8 @@ $settings         = $settings_manager->get_settings_array();
 						html += '<div style="margin-left: 16px; margin-top: 8px;">';
 						for (var key in data.data.fields) {
 							var value = data.data.fields[key];
-							if (!value || value === '') {
-								value = '<span style="color: #999;">(empty)</span>';
-							}
-							html += '<div>' + escapeHtml(key) + ': ' + escapeHtml(String(value)) + '</div>';
+							var displayValue = value && value !== '' ? escapeHtml(String(value)) : '(empty)';
+							html += '<div>' + escapeHtml(key) + ': ' + displayValue + '</div>';
 						}
 						html += '</div>';
 					} else {

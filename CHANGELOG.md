@@ -6,6 +6,14 @@ All notable changes to GoHighLevel CRM Integration will be documented in this fi
 
 ---
 
+## [1.3.6] - 2026-05-10
+
+### Fixed
+
+- **Test Link Debugger** — Empty fields now display as plain text `(empty)` instead of HTML markup.
+
+---
+
 ## [1.3.5] - 2026-05-10
 
 ### Added
