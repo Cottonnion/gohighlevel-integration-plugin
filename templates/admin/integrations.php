@@ -103,12 +103,12 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 					return ( $a['order'] ?? 100 ) <=> ( $b['order'] ?? 100 );
 				}
 			);
-			foreach ( $integration_tabs as $tab ) :
-				$active_class = ! empty( $tab['active'] ) ? 'active' : '';
+			foreach ( $integration_tabs as $tab_data ) :
+				$active_class = ! empty( $tab_data['active'] ) ? 'active' : '';
 				?>
-				<button class="ghl-tab-button <?php echo esc_attr( $active_class ); ?>" data-tab="<?php echo esc_attr( $tab['id'] ); ?>">
-					<span class="dashicons dashicons-<?php echo esc_attr( $tab['icon'] ); ?>"></span>
-					<?php echo esc_html( $tab['label'] ); ?>
+				<button class="ghl-tab-button <?php echo esc_attr( $active_class ); ?>" data-tab="<?php echo esc_attr( $tab_data['id'] ); ?>">
+					<span class="dashicons dashicons-<?php echo esc_attr( $tab_data['icon'] ); ?>"></span>
+					<?php echo esc_html( $tab_data['label'] ); ?>
 				</button>
 			<?php endforeach; ?>
 		</div>
@@ -147,7 +147,7 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 					if ( is_callable( $panel['content'] ) ) {
 						call_user_func( $panel['content'] );
 					} else {
-						echo $panel['content'];
+						echo wp_kses_post( $panel['content'] );
 					}
 					?>
 				</div>

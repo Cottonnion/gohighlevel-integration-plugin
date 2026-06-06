@@ -13,7 +13,7 @@ $settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
 
 // Get all WordPress roles
-$wp_roles = wp_roles()->get_names();
+$wp_roles_list = wp_roles()->get_names();
 
 // Load saved role tag mappings (location-specific)
 $role_tags       = $settings_manager->get_location_role_tags();
@@ -69,7 +69,7 @@ $global_tags_pro_active = apply_filters( 'ghl_crm_global_tags_enabled', false );
 				</thead>
 				<tbody>
 					<?php
-					foreach ( $wp_roles as $role_key => $role_name ) :
+					foreach ( $wp_roles_list as $role_key => $role_name ) :
 						$role_data = $role_tags[ $role_key ] ?? [];
 						$tags_raw  = $role_data['tags'] ?? '';
 						// Convert to string if array for compatibility
@@ -97,11 +97,11 @@ $global_tags_pro_active = apply_filters( 'ghl_crm_global_tags_enabled', false );
 								<?php
 								if ( ! empty( $tags_value ) ) {
 									$tags_array = array_map( 'trim', explode( ',', $tags_value ) );
-									foreach ( $tags_array as $tag ) {
-										if ( ! empty( $tag ) ) {
+									foreach ( $tags_array as $tag_name ) {
+										if ( ! empty( $tag_name ) ) {
 											?>
-											<option value="<?php echo esc_attr( $tag ); ?>" selected="selected">
-												<?php echo esc_html( $tag ); ?>
+											<option value="<?php echo esc_attr( $tag_name ); ?>" selected="selected">
+												<?php echo esc_html( $tag_name ); ?>
 											</option>
 											<?php
 										}
@@ -166,11 +166,11 @@ $global_tags_pro_active = apply_filters( 'ghl_crm_global_tags_enabled', false );
 								<?php
 								if ( ! empty( $global_tags ) ) {
 									$global_tags_array = array_map( 'trim', explode( ',', $global_tags ) );
-									foreach ( $global_tags_array as $tag ) {
-										if ( ! empty( $tag ) ) {
+									foreach ( $global_tags_array as $tag_name ) {
+										if ( ! empty( $tag_name ) ) {
 											?>
-											<option value="<?php echo esc_attr( $tag ); ?>" selected="selected">
-												<?php echo esc_html( $tag ); ?>
+											<option value="<?php echo esc_attr( $tag_name ); ?>" selected="selected">
+												<?php echo esc_html( $tag_name ); ?>
 											</option>
 											<?php
 										}
@@ -207,7 +207,7 @@ $global_tags_pro_active = apply_filters( 'ghl_crm_global_tags_enabled', false );
 					<td>
 						<select id="bulk_role_select" class="regular-text ghl-select">
 							<option value=""><?php esc_html_e( '-- Select a Role --', 'ghl-crm-integration' ); ?></option>
-							<?php foreach ( $wp_roles as $role_key => $role_name ) : ?>
+							<?php foreach ( $wp_roles_list as $role_key => $role_name ) : ?>
 								<option value="<?php echo esc_attr( $role_key ); ?>">
 									<?php echo esc_html( $role_name ); ?>
 								</option>

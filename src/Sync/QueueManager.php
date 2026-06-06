@@ -144,11 +144,9 @@ class QueueManager {
 			if ( false === $next_scheduled ) {
 				as_schedule_recurring_action( time(), self::PROCESSING_INTERVAL, 'ghl_crm_process_queue', [], 'ghl-crm' );
 			}
-		} else {
-			// Fallback to WP-Cron if Action Scheduler not available or not yet initialized
-			if ( ! wp_next_scheduled( 'ghl_crm_process_queue' ) ) {
-				wp_schedule_event( time(), 'every_minute', 'ghl_crm_process_queue' );
-			}
+		} elseif ( ! wp_next_scheduled( 'ghl_crm_process_queue' ) ) {
+			// Fallback to WP-Cron if Action Scheduler not available or not yet initialized.
+			wp_schedule_event( time(), 'every_minute', 'ghl_crm_process_queue' );
 		}
 	}
 

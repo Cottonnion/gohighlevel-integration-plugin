@@ -39,7 +39,7 @@
     "check-file": "phpcs --file-list=-",
     "fix-file": "phpcbf --file-list=-",
     "standards": "phpcs -i",
-    "test": "phpunit",
+    "test": "phpunit --configuration tests/phpunit-config.xml",
     "build": "php build-minify.php"
   },
   "require-dev": {

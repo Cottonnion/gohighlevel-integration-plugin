@@ -59,7 +59,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			$nav_tabs = apply_filters( 'ghl_crm_admin_nav_tabs', $nav_tabs );
 
 			// Render navigation tabs
-			foreach ( $nav_tabs as $route => $tab ) {
+			foreach ( $nav_tabs as $route => $tab_data ) {
 				$href = ( $route === 'dashboard' ) ? '#/' : '#/' . esc_attr( $route );
 				printf(
 					'<a href="%s" class="ghl-nav-tab" data-route="%s">
@@ -68,8 +68,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 					</a>',
 					esc_url( $href ),
 					esc_attr( $route ),
-					esc_attr( $tab['icon'] ),
-					esc_html( $tab['label'] )
+					esc_attr( $tab_data['icon'] ),
+					esc_html( $tab_data['label'] )
 				);
 			}
 			?>

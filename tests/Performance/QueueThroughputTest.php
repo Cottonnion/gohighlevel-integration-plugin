@@ -26,6 +26,8 @@ use GHL_CRM\Tests\TestCase;
 use Brain\Monkey\Functions;
 use Mockery;
 
+// phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- Benchmark tests intentionally stream progress to STDERR.
+
 class QueueThroughputTest extends TestCase {
 
 	private QueueManager $qm;
@@ -768,3 +770,5 @@ class QueueThroughputTest extends TestCase {
 		fwrite( STDERR, "╚══════════════════════════════════════════════════════════════════════════════════════════╝\n\n" );
 	}
 }
+
+// phpcs:enable WordPress.WP.AlternativeFunctions.file_system_operations_fwrite

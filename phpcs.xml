@@ -4,7 +4,7 @@
 
     <!-- Check all PHP files in these directories -->
     <file>./src</file>
-    <file>./gohighlevel-crm-integration.php</file>
+    <file>./ghl-crm-integration.php</file>
     <file>./templates</file>
 
     <!-- Exclude vendor and other third-party directories -->
@@ -79,6 +79,9 @@
 
         <!-- NonceVerification.Recommended is a warning for $_GET/$_REQUEST reads — nonce checked upstream -->
         <exclude name="WordPress.Security.NonceVerification.Recommended"/>
+
+        <!-- ExceptionNotEscaped targets thrown exception payloads/messages, not browser output -->
+        <exclude name="WordPress.Security.EscapeOutput.ExceptionNotEscaped"/>
     </rule>
 
     <!-- Set minimum PHP version -->

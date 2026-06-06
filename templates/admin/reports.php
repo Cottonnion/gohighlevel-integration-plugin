@@ -72,7 +72,7 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 			</div>
 			<div style="padding: 16px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px;">
 				<div style="font-size: 12px; color: #92400e; font-weight: 600; margin-bottom: 4px;">PENDING JOBS</div>
-				<div style="font-size: 14px; color: #b45309; font-weight: 500;">⚠ <?php echo $report_data['system_health']['pending_jobs']; ?> jobs in queue</div>
+				<div style="font-size: 14px; color: #b45309; font-weight: 500;">⚠ <?php echo esc_html( (string) absint( $report_data['system_health']['pending_jobs'] ) ); ?> jobs in queue</div>
 			</div>
 			<div style="padding: 16px; background: #f0fdf4; border-left: 4px solid #10b981; border-radius: 8px;">
 				<div style="font-size: 12px; color: #166534; font-weight: 600; margin-bottom: 4px;">LAST SYNC</div>
@@ -111,7 +111,7 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 		<div class="ghl-stat-card" style="background: white; border: 1px solid #e2e8f0; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);">
 			<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
 				<span class="dashicons dashicons-yes-alt" style="font-size: 32px; color: #10b981;"></span>
-				<span style="font-size: 11px; color: #166534; background: #dcfce7; padding: 4px 8px; border-radius: 4px; font-weight: 600;"><?php echo $report_data['contacts']['sync_rate']; ?>%</span>
+				<span style="font-size: 11px; color: #166534; background: #dcfce7; padding: 4px 8px; border-radius: 4px; font-weight: 600;"><?php echo esc_html( (string) absint( $report_data['contacts']['sync_rate'] ) ); ?>%</span>
 			</div>
 			<div style="font-size: 32px; font-weight: 700; margin-bottom: 4px; color: #1e293b;"><?php echo number_format( $report_data['contacts']['synced'] ); ?></div>
 			<div style="font-size: 14px; color: #64748b; margin-bottom: 8px;">Synced Contacts</div>
@@ -134,12 +134,12 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 		<div class="ghl-stat-card" style="background: white; border: 1px solid #e2e8f0; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);">
 			<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
 				<span class="dashicons dashicons-warning" style="font-size: 32px; color: <?php echo esc_attr( $icon_color ); ?>;"></span>
-				<span style="font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight: 600; <?php echo esc_attr( $badge_style ); ?>"><?php echo $badge_text; ?></span>
+				<span style="font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight: 600; <?php echo esc_attr( $badge_style ); ?>"><?php echo esc_html( $badge_text ); ?></span>
 			</div>
 			<div style="font-size: 32px; font-weight: 700; margin-bottom: 4px; color: #1e293b;"><?php echo number_format( $pending_total ); ?></div>
 			<div style="font-size: 14px; color: #64748b; margin-bottom: 8px;"><?php echo esc_html__( 'Failed + Pending', 'ghl-crm-integration' ); ?></div>
 			<a href="<?php echo esc_url( $link_url ); ?>" style="font-size: 12px; color: <?php echo esc_attr( $link_color ); ?>; text-decoration: none; font-weight: 500;">
-				<?php echo $link_text; ?>
+				<?php echo esc_html( $link_text ); ?>
 			</a>
 		</div>
 	</div>
@@ -223,7 +223,7 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 									</strong>
 								</div>
 								<span class="ghl-badge" style="padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; <?php echo esc_attr( $status_style ); ?>">
-									<?php echo $status_text; ?>
+									<?php echo esc_html( $status_text ); ?>
 								</span>
 							</div>
 						</div>

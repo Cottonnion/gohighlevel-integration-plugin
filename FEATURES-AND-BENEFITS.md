@@ -1,10 +1,10 @@
-=== GoHighLevel CRM Integration ===
+=== GHL Sync Bridge ===
 Contributors: cottonnion
 Tags: gohighlevel, crm, woocommerce, buddyboss, learndash, membership, webhooks, automation, oauth2, forms
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.3.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ The most powerful GoHighLevel integration for WordPress. Deep WooCommerce, Buddy
 
 == Description ==
 
-# GoHighLevel CRM Integration — The Complete WordPress Automation Solution
+# GHL Sync Bridge — The Complete WordPress Automation Solution
 
 Transform your WordPress site into a fully automated CRM powerhouse with the most comprehensive GoHighLevel integration available. While other plugins offer basic contact sync, this plugin delivers enterprise-level automation with deep integrations across your entire WordPress ecosystem.
 

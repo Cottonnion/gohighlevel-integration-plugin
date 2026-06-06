@@ -133,6 +133,7 @@ class ShortcodeManager {
 				scrolling="yes"
 				id="<?php echo esc_attr( $wrapper_id ); ?>-iframe"
 				data-form-id="<?php echo esc_attr( $form_id ); ?>"
+				<?php /* translators: %s: GoHighLevel form identifier. */ ?>
 				title="<?php echo esc_attr( sprintf( __( 'GoHighLevel Form %s', 'ghl-crm-integration' ), $atts['id'] ) ); ?>"
 				onload="this.style.display='block'; this.parentElement.setAttribute('data-loading', 'false');"
 			></iframe>
@@ -436,7 +437,7 @@ class ShortcodeManager {
 	 * @return string Field value, default, or empty string.
 	 */
 	public function render_user_meta_shortcode( $atts ): string {
-		$is_logged_in    = is_user_logged_in();
+		$is_logged_in     = is_user_logged_in();
 		$guest_contact_id = null;
 
 		if ( ! $is_logged_in ) {
@@ -471,9 +472,9 @@ class ShortcodeManager {
 		// --- Guest visitor path ---
 		if ( null !== $guest_contact_id ) {
 			// Check if field is in hidden list for guests
-			$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+			$settings_manager   = \GHL_CRM\Core\SettingsManager::get_instance();
 			$hidden_fields_json = $settings_manager->get_setting( 'ghl_cid_hidden_fields', '' );
-			$hidden_fields = ! empty( $hidden_fields_json ) ? (array) json_decode( $hidden_fields_json, true ) : array();
+			$hidden_fields      = ! empty( $hidden_fields_json ) ? (array) json_decode( $hidden_fields_json, true ) : array();
 
 			// If field is in hidden list, deny access
 			if ( in_array( $meta_field, $hidden_fields, true ) ) {

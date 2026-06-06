@@ -266,7 +266,7 @@ $notification_throttle   = $settings['notification_throttle'] ?? '3600';
 							<?php
 							for ( $hour = 0; $hour < 24; $hour++ ) {
 								$time_value = sprintf( '%02d:00', $hour );
-								$time_label = date( 'g:00 A', strtotime( $time_value ) );
+									$time_label = gmdate( 'g:00 A', strtotime( $time_value ) );
 								printf(
 									'<option value="%s" %s>%s</option>',
 									esc_attr( $time_value ),

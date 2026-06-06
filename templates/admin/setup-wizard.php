@@ -58,9 +58,12 @@ $enable_role_tags              = ! empty( $settings['role_tags'] ) && is_array( 
 	<meta charset="<?php bloginfo( 'charset' ); ?>">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title><?php esc_html_e( 'GoHighLevel CRM Setup', 'ghl-crm-integration' ); ?></title>
-	<?php do_action( 'admin_print_styles' ); ?>
-	<?php do_action( 'admin_print_scripts' ); ?>
-	<?php do_action( 'admin_head' ); ?>
+		<?php // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WordPress admin hook. ?>
+		<?php do_action( 'admin_print_styles' ); ?>
+		<?php // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WordPress admin hook. ?>
+		<?php do_action( 'admin_print_scripts' ); ?>
+		<?php // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WordPress admin hook. ?>
+		<?php do_action( 'admin_head' ); ?>
 </head>
 <body class="ghl-setup-wizard-body">
 <div class="ghl-setup-wizard">
@@ -567,7 +570,9 @@ $enable_role_tags              = ! empty( $settings['role_tags'] ) && is_array( 
 		</div>
 	</div>
 </div>
+<?php // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WordPress admin hook. ?>
 <?php do_action( 'admin_footer' ); ?>
+<?php // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WordPress admin hook. ?>
 <?php do_action( 'admin_print_footer_scripts' ); ?>
 </body>
 </html>

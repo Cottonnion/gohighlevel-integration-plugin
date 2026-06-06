@@ -1,12 +1,12 @@
 <?php
 /**
- * Plugin Name:       GoHighLevel CRM Integration
- * Plugin URI:        https://labgenz.com/
- * Description:       Integrate WordPress + WooCommerce + BuddyBoss + LearnDash with GoHighLevel CRM for seamless two-way sync
- * Version:           1.3.8
+ * Plugin Name:       GHL Sync Bridge
+ * Plugin URI:        https://highlevelsync.com/
+ * Description:       The complete GoHighLevel WordPress integration — connect WordPress, WooCommerce, BuddyBoss, and LearnDash with real-time two-way sync and automation.
+ * Version:           1.3.9
  * Requires at least: 5.8
  * Requires PHP:      7.4
- * Author:            Yahya Eddaqqaq
+ * Author:            LabGenz Team
  * Author URI:        https://labgenz.com
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
@@ -24,19 +24,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'GHL_CRM_VERSION', '1.3.8' );
+define( 'GHL_CRM_VERSION', '1.3.9' );
 define( 'GHL_CRM_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GHL_CRM_URL', plugin_dir_url( __FILE__ ) );
 define( 'GHL_CRM_BASENAME', plugin_basename( __FILE__ ) );
 define( 'GHL_CRM_TEXTDOMAIN', 'ghl-crm-integration' );
-
-add_action(
-	'init',
-	function () {
-		load_plugin_textdomain( 'ghl-crm-integration', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
-	},
-	1
-);
 
 // Require Composer autoloader
 if ( file_exists( GHL_CRM_PATH . 'vendor/autoload.php' ) ) {

@@ -208,6 +208,7 @@ class NotificationManager {
 			<p><strong>%s:</strong> %s</p>
 			%s
 			<p><a href="%s" style="display: inline-block; padding: 10px 20px; background: #0073aa; color: white; text-decoration: none; border-radius: 3px;">%s</a></p>',
+			/* translators: %s: Sync type label. */
 			esc_html( sprintf( __( '%s Sync Failed', 'ghl-crm-integration' ), $sync_type ) ),
 			esc_html__( 'A sync operation failed. The data will be retried automatically.', 'ghl-crm-integration' ),
 			esc_html__( 'Sync Type', 'ghl-crm-integration' ),
@@ -384,6 +385,7 @@ class NotificationManager {
 			<p><strong>%s:</strong> %s</p>
 			<p>%s</p>
 			<p><a href="%s" style="display: inline-block; padding: 10px 20px; background: #0073aa; color: white; text-decoration: none; border-radius: 3px;">%s</a></p>',
+			/* translators: %s: Webhook type label. */
 			esc_html( sprintf( __( '%s Webhook Failed', 'ghl-crm-integration' ), $webhook_type ) ),
 			esc_html__( 'A webhook from GoHighLevel failed to process. Updates from GHL may not be reflected on your site.', 'ghl-crm-integration' ),
 			esc_html__( 'Webhook Type', 'ghl-crm-integration' ),
@@ -480,6 +482,7 @@ class NotificationManager {
 			
 			<p style="margin-top: 20px;"><a href="%s" style="display: inline-block; padding: 10px 20px; background: #0073aa; color: white; text-decoration: none; border-radius: 3px;">%s</a></p>',
 			esc_html__( 'Daily Summary Report', 'ghl-crm-integration' ),
+			/* translators: %s: Local time when the summary period ends. */
 			esc_html( sprintf( __( 'Here\'s what happened with your GoHighLevel integration in the last 24 hours (ending %s).', 'ghl-crm-integration' ), wp_date( 'g:i A' ) ) ),
 			esc_html__( 'Sync Statistics', 'ghl-crm-integration' ),
 			esc_html__( 'Total Syncs', 'ghl-crm-integration' ),
@@ -561,7 +564,8 @@ class NotificationManager {
 
 		$orders_synced = (int) $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM {$table_name} WHERE sync_type LIKE 'woocommerce%%' AND created_at >= %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				"SELECT COUNT(*) FROM {$table_name} WHERE sync_type LIKE %s AND created_at >= %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				'woocommerce%',
 				$yesterday
 			)
 		);
@@ -576,7 +580,8 @@ class NotificationManager {
 
 		$buddyboss_synced = (int) $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM {$table_name} WHERE sync_type LIKE 'buddyboss%%' AND created_at >= %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				"SELECT COUNT(*) FROM {$table_name} WHERE sync_type LIKE %s AND created_at >= %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				'buddyboss%',
 				$yesterday
 			)
 		);
@@ -827,11 +832,9 @@ class NotificationManager {
 			if ( ! as_next_scheduled_action( 'ghl_crm_daily_summary' ) ) {
 				as_schedule_recurring_action( $next_run, DAY_IN_SECONDS, 'ghl_crm_daily_summary', [], 'ghl-crm' );
 			}
-		} else {
-			// Fallback to WP-Cron
-			if ( ! wp_next_scheduled( 'ghl_crm_daily_summary' ) ) {
-				wp_schedule_event( $next_run, 'daily', 'ghl_crm_daily_summary' );
-			}
+		} elseif ( ! wp_next_scheduled( 'ghl_crm_daily_summary' ) ) {
+			// Fallback to WP-Cron.
+			wp_schedule_event( $next_run, 'daily', 'ghl_crm_daily_summary' );
 		}
 	}
 

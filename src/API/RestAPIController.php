@@ -603,16 +603,12 @@ class RestAPIController {
 		$allowed_ips = array_filter( array_map( 'trim', explode( "\n", $whitelist ) ) );
 
 		foreach ( $allowed_ips as $allowed ) {
-			// Check for CIDR notation
-			if ( strpos( $allowed, '/' ) !== false ) {
-				if ( $this->ip_in_cidr( $ip, $allowed ) ) {
-					return true;
-				}
-			} else {
-				// Direct IP match
-				if ( $ip === $allowed ) {
-					return true;
-				}
+			// Check for CIDR notation.
+			if ( strpos( $allowed, '/' ) !== false && $this->ip_in_cidr( $ip, $allowed ) ) {
+				return true;
+			} elseif ( $ip === $allowed ) {
+				// Direct IP match.
+				return true;
 			}
 		}
 

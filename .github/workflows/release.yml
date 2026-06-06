@@ -9,6 +9,8 @@ jobs:
   build-release:
     name: Build & Publish Release
     runs-on: ubuntu-latest
+    env:
+      PLUGIN_SLUG: ghl-crm-integration
     permissions:
       contents: write
     steps:
@@ -21,28 +23,26 @@ jobs:
           tools: composer
           coverage: none
 
-      - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+      - name: Install production dependencies
+        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-      - name: Minify assets
-        run: php build-minify.php
-
-      - name: Package release zip
+      - name: Validate release exclusions
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          ZIP_FILE="ghl-crm-integration-${VERSION}.zip"
-          zip -r "$ZIP_FILE" . \
-            -x ".git/*" \
-               ".github/*" \
-               "tests/*" \
-               "*.md" \
-               "phpcs.xml" \
-               "phpunit.xml.dist" \
-               "build-minify.php" \
-               ".phpunit.result.cache"
+          grep -q "${PLUGIN_SLUG}/tests/\*" zip-exclude.txt
+          grep -q "${PLUGIN_SLUG}/build-minify.php" zip-exclude.txt
+
+      - name: Build production zip
+        run: |
+          mkdir -p build/${PLUGIN_SLUG} dist
+          rsync -a --delete --exclude '.git/' ./ build/${PLUGIN_SLUG}/
+          cd build
+          zip -r ../dist/${PLUGIN_SLUG}-${GITHUB_REF_NAME}.zip ${PLUGIN_SLUG} \
+            -x@../zip-exclude.txt \
+            -x "${PLUGIN_SLUG}/tests/*" \
+            -x "${PLUGIN_SLUG}/build-minify.php"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: '*.zip'
+          files: 'dist/*.zip'
           generate_release_notes: true

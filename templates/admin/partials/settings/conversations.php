@@ -86,11 +86,11 @@ $form_plugins = [
 
 	<!-- Form Plugins Grid -->
 	<div class="ghl-conversations-plugins" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 20px; margin: 20px 0;">
-		<?php foreach ( $form_plugins as $plugin_key => $plugin ) : ?>
+		<?php foreach ( $form_plugins as $plugin_key => $plugin_data ) : ?>
 			<?php
-			$is_installed = $plugin['detect'];
+			$is_installed = $plugin_data['detect'];
 			$is_enabled   = in_array( $plugin_key, $enabled_plugins, true );
-			$is_pro       = ! empty( $plugin['pro'] );
+			$is_pro       = ! empty( $plugin_data['pro'] );
 			$card_class   = 'ghl-plugin-card';
 			if ( ! $is_pro && $is_enabled && $is_installed ) {
 				$card_class .= ' ghl-plugin-active';
@@ -158,20 +158,20 @@ $form_plugins = [
 
 				<!-- Plugin Header -->
 				<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-					<span class="dashicons <?php echo esc_attr( $plugin['icon'] ); ?>" style="
+					<span class="dashicons <?php echo esc_attr( $plugin_data['icon'] ); ?>" style="
 						font-size: 28px;
 						width: 28px;
 						height: 28px;
 						color: <?php echo $is_pro ? '#9b59b6' : ( $is_installed ? '#2271b1' : '#a7aaad' ); ?>;
 					"></span>
 					<h3 style="margin: 0; font-size: 16px; color: <?php echo $is_pro ? '#5b2d8e' : ( $is_installed ? '#1d2327' : '#a7aaad' ); ?>;">
-						<?php echo esc_html( $plugin['name'] ); ?>
+						<?php echo esc_html( $plugin_data['name'] ); ?>
 					</h3>
 				</div>
 
 				<!-- Description -->
 				<p style="color: #50575e; font-size: 13px; margin: 0 0 16px 0; line-height: 1.5;">
-					<?php echo esc_html( $plugin['description'] ); ?>
+					<?php echo esc_html( $plugin_data['description'] ); ?>
 				</p>
 
 				<!-- Toggle / Pro Notice -->

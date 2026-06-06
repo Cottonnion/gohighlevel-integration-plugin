@@ -102,7 +102,8 @@ class AccessControl {
 			$tags           = $family_manager->get_inherited_tags( $user_id, $tags );
 		}
 
-		$tags = apply_filters( 'ghl_user_effective_tags', $tags, $user_id );
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward-compatible public hook.
+			$tags = apply_filters( 'ghl_user_effective_tags', $tags, $user_id );
 
 		return array_map( 'strtolower', array_unique( array_filter( $tags ) ) );
 	}

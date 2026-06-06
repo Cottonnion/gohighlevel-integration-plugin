@@ -61,7 +61,7 @@ foreach ( $public_post_types as $pt ) {
 		continue;
 	}
 
-	$posts = get_posts(
+	$redirect_posts = get_posts(
 		[
 			'post_type'      => $pt->name,
 			'post_status'    => 'publish',
@@ -72,7 +72,7 @@ foreach ( $public_post_types as $pt ) {
 		]
 	);
 
-	foreach ( $posts as $p ) {
+	foreach ( $redirect_posts as $p ) {
 		$redirect_url_options[] = [
 			'url'   => get_permalink( $p ),
 			'title' => $p->post_title,

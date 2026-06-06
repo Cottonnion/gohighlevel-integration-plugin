@@ -6,6 +6,18 @@ All notable changes to GoHighLevel CRM Integration will be documented in this fi
 
 ---
 
+## [1.3.9] - 2026-06-06
+
+### Changed
+
+- **WordPress.org readiness** — Updated plugin metadata, plugin-check compliance, and release packaging safeguards for production zip artifacts.
+
+### Fixed
+
+- **Plugin Check errors** — Resolved i18n translator comments, prepared SQL usage, direct file access checks, review link policy, and release metadata mismatches.
+
+---
+
 ## [1.3.8] - 2026-05-10
 
 ### Fixed

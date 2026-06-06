@@ -32,7 +32,8 @@ $default_user_meta = array(
 	'description' => __( 'Biographical Info', 'ghl-crm-integration' ),
 );
 
-// Get contact methods (phone, address, etc. from plugins/themes)
+// Get contact methods (phone, address, etc. from plugins/themes).
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WordPress hook.
 $contact_methods = apply_filters( 'user_contactmethods', array() );
 
 // Combine base fields and default meta for "Default WordPress Fields" section
@@ -572,7 +573,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 		<?php
 		if ( ! defined( 'GHL_CRM_PRO_VERSION' ) && empty( $buddyboss_fields ) && empty( $custom_user_fields ) && empty( $woocommerce_fields ) ) :
 			// Set up upgrade notice variables
-			$title       = __( 'Advanced Field Mapping', 'ghl-crm-integration' );
+			$notice_title = __( 'Advanced Field Mapping', 'ghl-crm-integration' );
 			$description = __( 'The FREE version only supports standard WordPress fields. Upgrade to PRO to unlock advanced field mapping capabilities.', 'ghl-crm-integration' );
 			$features    = array(
 				__( 'Custom User Meta Fields - Map any custom field from plugins or themes', 'ghl-crm-integration' ),

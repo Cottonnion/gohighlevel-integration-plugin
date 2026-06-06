@@ -901,6 +901,7 @@ class Client implements ClientInterface {
 		if ( is_wp_error( $response ) ) {
 			self::$last_refresh_error = $response->get_error_message();
 			$this->log_oauth_event( 'Exchange token WP_Error', [ 'error' => $response->get_error_message() ] );
+			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception message is not rendered directly in browser output.
 			throw new ApiException(
 				sprintf(
 					/* translators: %s: Error message */
@@ -1060,7 +1061,7 @@ class Client implements ClientInterface {
 
 		// Refresh 30 minutes before expiry to account for gaps between requests
 		// (e.g. tag cache is 1 hour, so a 60s buffer would miss the window entirely)
-		$refresh_threshold = $this->access_token_expires_at - self::PROACTIVE_REFRESH_BUFFER;
+		$refresh_threshold = $this->access_token_expires_at - ( 30 * MINUTE_IN_SECONDS );
 		if ( time() >= $refresh_threshold ) {
 			try {
 				$this->log_oauth_event( 'Proactive refresh before expiry', [ 'expires_at' => $this->access_token_expires_at ] );
@@ -1191,7 +1192,7 @@ class Client implements ClientInterface {
 				$this->reset_circuit_breaker();
 			}
 			$this->log_oauth_event( 'Refresh aborted: no refresh token stored' );
-			throw new ApiException( esc_html__( 'No refresh token available. Please connect your GoHighLevel account.', 'ghl-crm-integration' ) );
+			throw new ApiException( esc_html__( 'No refresh token available. Please reconnect your GoHighLevel account.', 'ghl-crm-integration' ) );
 		}
 
 		// Check circuit breaker (prevents hammering failing proxy)
@@ -1223,8 +1224,8 @@ class Client implements ClientInterface {
 			throw new ApiException(
 				sprintf(
 					/* translators: %d: cooldown minutes */
-					esc_html__( 'Token refresh temporarily disabled due to repeated failures. Please try again in %d minutes or reconnect your account.', 'ghl-crm-integration' ),
-					self::CIRCUIT_BREAKER_COOLDOWN
+					esc_html__( 'Token refresh temporarily disabled due to repeated failures. Please try again in %d minutes or reconnect your GoHighLevel account.', 'ghl-crm-integration' ),
+					absint( self::CIRCUIT_BREAKER_COOLDOWN )
 				)
 			);
 		}
@@ -1232,6 +1233,7 @@ class Client implements ClientInterface {
 		// Throttle repeated attempts within 60 seconds to avoid hammering
 		$now = time();
 		if ( self::$last_refresh_attempt_ts && ( $now - self::$last_refresh_attempt_ts ) < 60 ) {
+			/* translators: %s: Last token refresh error. */
 			$throttle_message = self::$last_refresh_error
 				? sprintf( esc_html__( 'Recent refresh attempt failed: %s', 'ghl-crm-integration' ), self::$last_refresh_error )
 				: esc_html__( 'Recent refresh attempt in progress or just failed. Reconnect required.', 'ghl-crm-integration' );
@@ -1242,6 +1244,7 @@ class Client implements ClientInterface {
 					'last_error'         => self::$last_refresh_error,
 				]
 			);
+			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception message is handled by upstream error handling.
 			throw new ApiException( $throttle_message );
 		}
 
@@ -1393,10 +1396,10 @@ class Client implements ClientInterface {
 			if ( isset( $decoded_array['error'] ) && 'invalid_grant' === $decoded_array['error'] ) {
 				$this->log_oauth_event( 'Refresh token marked invalid by provider; clearing stored tokens', $decoded_array );
 				$this->clear_oauth_tokens();
+				// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Third argument is machine-readable context, not HTML output.
 				throw new ApiException(
 					esc_html__( 'Refresh token is invalid. Please reconnect your GoHighLevel account.', 'ghl-crm-integration' ),
-					(int) $status_code,
-					$decoded_array
+					(int) $status_code
 				);
 			}
 
@@ -1423,6 +1426,7 @@ class Client implements ClientInterface {
 						]
 					);
 					// If reconnect also fails, bubble original refresh error with context
+					// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Third argument is machine-readable context, not HTML output.
 					throw new ApiException(
 						sprintf(
 							/* translators: 1: refresh error, 2: reconnect error */
@@ -1430,17 +1434,16 @@ class Client implements ClientInterface {
 							esc_html( $decoded_array['message'] ?? 'unknown' ),
 							esc_html( $reconnect_error->getMessage() )
 						),
-						(int) $status_code,
-						$decoded_array
+						(int) $status_code
 					);
 				}
 			}
 
 			self::$last_refresh_error = $decoded_array['message'] ?? 'Failed to refresh access token';
+			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Message is sanitized and consumed by error handlers.
 			throw new ApiException(
-				sanitize_text_field( self::$last_refresh_error ),
-				(int) $status_code,
-				$decoded_array // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- sanitized via sanitize_response_payload()
+				esc_html( sanitize_text_field( self::$last_refresh_error ) ),
+				(int) $status_code
 			);
 		}
 

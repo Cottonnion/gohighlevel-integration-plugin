@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 $current_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'settings';
 
 // Define tabs
-$tabs = array(
+$settings_tabs = array(
 	'settings'      => __( 'General Settings', 'ghl-crm-integration' ),
 	'integrations'  => __( 'Integrations', 'ghl-crm-integration' ),
 	'field-mapping' => __( 'Field Mapping', 'ghl-crm-integration' ),

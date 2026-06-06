@@ -32,6 +32,7 @@ $settings         = $settings_manager->get_settings_array();
 				<?php
 				echo wp_kses(
 					sprintf(
+						/* translators: %s: Site home URL for personalization link example. */
 						__( '<strong>Simple personalization:</strong> <code>https://%s/page?ghl_cid={{contact.id}}</code>', 'ghl-crm-integration' ),
 						esc_html( home_url() )
 					),
@@ -118,16 +119,16 @@ $settings         = $settings_manager->get_settings_array();
 								>
 									<?php
 									$available_fields = array(
-										'first_name'   => __( 'First Name', 'ghl-crm-integration' ),
-										'last_name'    => __( 'Last Name', 'ghl-crm-integration' ),
-										'email'        => __( 'Email Address', 'ghl-crm-integration' ),
-										'phone'        => __( 'Phone Number', 'ghl-crm-integration' ),
-										'company'      => __( 'Company Name', 'ghl-crm-integration' ),
-										'street'       => __( 'Street Address', 'ghl-crm-integration' ),
-										'city'         => __( 'City', 'ghl-crm-integration' ),
-										'state'        => __( 'State/Province', 'ghl-crm-integration' ),
-										'postal_code'  => __( 'Postal Code', 'ghl-crm-integration' ),
-										'country'      => __( 'Country', 'ghl-crm-integration' ),
+										'first_name'  => __( 'First Name', 'ghl-crm-integration' ),
+										'last_name'   => __( 'Last Name', 'ghl-crm-integration' ),
+										'email'       => __( 'Email Address', 'ghl-crm-integration' ),
+										'phone'       => __( 'Phone Number', 'ghl-crm-integration' ),
+										'company'     => __( 'Company Name', 'ghl-crm-integration' ),
+										'street'      => __( 'Street Address', 'ghl-crm-integration' ),
+										'city'        => __( 'City', 'ghl-crm-integration' ),
+										'state'       => __( 'State/Province', 'ghl-crm-integration' ),
+										'postal_code' => __( 'Postal Code', 'ghl-crm-integration' ),
+										'country'     => __( 'Country', 'ghl-crm-integration' ),
 									);
 
 									$hidden_fields = isset( $settings['ghl_cid_hidden_fields'] ) ? (array) json_decode( $settings['ghl_cid_hidden_fields'], true ) : array();

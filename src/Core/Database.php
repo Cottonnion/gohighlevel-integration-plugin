@@ -631,11 +631,9 @@ class Database {
 			if ( false === as_next_scheduled_action( 'ghl_crm_cleanup_database' ) ) {
 				as_schedule_recurring_action( strtotime( 'tomorrow midnight' ), DAY_IN_SECONDS, 'ghl_crm_cleanup_database', [], 'ghl-crm' );
 			}
-		} else {
-			// Fallback to WP-Cron (AS not available or not yet initialized, e.g. during activation)
-			if ( ! wp_next_scheduled( 'ghl_crm_cleanup_database' ) ) {
-				wp_schedule_event( strtotime( 'tomorrow midnight' ), 'daily', 'ghl_crm_cleanup_database' );
-			}
+		} elseif ( ! wp_next_scheduled( 'ghl_crm_cleanup_database' ) ) {
+			// Fallback to WP-Cron (AS not available or not yet initialized, e.g. during activation).
+			wp_schedule_event( strtotime( 'tomorrow midnight' ), 'daily', 'ghl_crm_cleanup_database' );
 		}
 	}
 }

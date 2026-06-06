@@ -73,8 +73,8 @@ git tag v1.2.3 && git push origin v1.2.3
 **Triggers:** Push of a version tag matching `v*.*.*` (runs in parallel with `deploy.yml`)
 
 **What it does:**
-- Sets up PHP 8.1 with all dependencies (including dev, needed for build script)
-- Runs `php build-minify.php` to minify CSS/JS and build the distributable zip
+- Sets up PHP 8.1 and installs production Composer dependencies (`--no-dev`)
+- Builds the distributable zip with the `ghl-crm-integration` plugin slug
 - Creates a GitHub Release with the zip attached and auto-generated changelog
 
 **Purpose:** Produces a downloadable `ghl-crm-integration-vX.X.X.zip` that can be installed manually on any WordPress site. Also serves as the artifact for future WordPress.org distribution.

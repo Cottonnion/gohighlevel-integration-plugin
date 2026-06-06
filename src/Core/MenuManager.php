@@ -242,10 +242,10 @@ class MenuManager {
 		// Check if we're on one of our plugin pages
 		if ( isset( $current_screen->id ) && strpos( $current_screen->id, 'ghl-crm' ) !== false ) {
 			$footer_text = sprintf(
-				/* translators: 1: Plugin name with link, 2: Star rating HTML */
-				esc_html__( 'Thank you for using %1$s! If you find it helpful, please consider leaving a %2$s rating.', 'ghl-crm-integration' ),
+				/* translators: 1: Plugin name highlighted in strong text, 2: Review link HTML. */
+				esc_html__( 'Thank you for using %1$s! If you find it helpful, please %2$s on WordPress.org.', 'ghl-crm-integration' ),
 				'<strong>' . esc_html__( 'GoHighLevel CRM Integration', 'ghl-crm-integration' ) . '</strong>',
-				'<a href="https://wordpress.org/support/plugin/ghl-crm-integration/reviews/?filter=5#new-post" target="_blank" rel="noopener noreferrer">&#9733;&#9733;&#9733;&#9733;&#9733;</a>'
+				'<a href="https://wordpress.org/support/plugin/ghl-crm-integration/reviews/#new-post" target="_blank" rel="noopener noreferrer">' . esc_html__( 'leave a review', 'ghl-crm-integration' ) . '</a>'
 			);
 		}
 
@@ -962,6 +962,7 @@ class MenuManager {
 	 */
 	private function load_template( string $template_name, array $args = [] ): void {
 		if ( ! empty( $args ) ) {
+			// phpcs:ignore WordPress.PHP.DontExtract.extract_extract -- Template partials rely on scoped variables from caller-provided args.
 			extract( $args, EXTR_SKIP );
 		}
 

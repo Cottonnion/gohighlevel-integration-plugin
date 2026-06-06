@@ -8,6 +8,12 @@
  * @package GHL_CRM_Integration
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	if ( 'cli' !== php_sapi_name() ) {
+		exit;
+	}
+}
+
 require_once __DIR__ . '/vendor/autoload.php';
 
 use MatthiasMullie\Minify\CSS;
@@ -59,8 +65,10 @@ foreach ( $dirs as $dir ) {
 		++$counts[ $ext ];
 
 		$savings = round( ( 1 - filesize( $min_file ) / filesize( $file ) ) * 100 );
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- CLI build script output.
 		echo "  ✓ {$basename} → " . basename( $min_file ) . " ({$savings}% smaller)\n";
 	}
 }
 
+// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- CLI build script output.
 echo "\nDone — minified {$counts['css']} CSS + {$counts['js']} JS files (skipped {$counts['skipped']} already-minified).\n";

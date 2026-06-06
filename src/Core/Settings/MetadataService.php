@@ -65,6 +65,7 @@ class MetadataService {
 		$request_data = $_POST;
 
 		if ( empty( $request_data ) ) {
+			// phpcs:ignore Generic.PHP.ForbiddenFunctions.FoundWithAlternative -- Reading raw JSON body from php://input is required for non-form AJAX payloads.
 			$raw_body = file_get_contents( 'php://input' );
 			if ( ! empty( $raw_body ) ) {
 				$decoded = json_decode( $raw_body, true );

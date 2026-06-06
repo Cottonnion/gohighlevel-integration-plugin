@@ -474,7 +474,7 @@ class UserProfileFields {
 			</div>
 
 			<!-- Auto Login Section (Admin Only) -->
-			<?php if ( current_user_can( 'administrator' ) && $user->ID !== get_current_user_id() ) : ?>
+			<?php if ( current_user_can( 'manage_options' ) && $user->ID !== get_current_user_id() ) : ?>
 				<div class="ghl-autologin-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e5e5;">
 					<h3 style="margin-top:0px;"><?php esc_html_e( 'Admin Tools', 'ghl-crm-integration' ); ?></h3>
 					<p class="description">
@@ -864,7 +864,7 @@ class UserProfileFields {
 		check_ajax_referer( 'ghl_user_profile', 'nonce' );
 
 		// Check permissions - only administrators.
-		if ( ! current_user_can( 'administrator' ) ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ] );
 		}
 

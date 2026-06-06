@@ -457,7 +457,7 @@ class AjaxHandler {
 
 			$where_sql = implode( ' AND ', $where_clauses );
 			$sql       = "SELECT COUNT(*) FROM {$wpdb->prefix}ghl_sync_log WHERE {$where_sql}"; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			$prepared  = call_user_func_array( [ $wpdb, 'prepare' ], array_merge( [ $sql ], $where_values ) );
+			$prepared  = $wpdb->prepare( $sql, ...$where_values );
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Counting log rows for pagination against plugin-managed table.
 			$log_count = (int) $wpdb->get_var( $prepared );
 

@@ -199,6 +199,7 @@ class AutoLoginManager {
 		// Log user in.
 		wp_set_current_user( $user_id );
 		wp_set_auth_cookie( $user_id, false );
+				// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WordPress login hook.
 		do_action( 'wp_login', $user->user_login, $user );
 
 		return [

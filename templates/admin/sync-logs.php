@@ -21,21 +21,21 @@ $is_logging_enabled = \GHL_CRM\Core\SettingsManager::is_sync_logging_enabled();
 
 // Get per-page preference from user meta (default 20)
 $current_user_id = get_current_user_id();
-$per_page        = (int) get_user_meta( $current_user_id, 'ghl_sync_logs_per_page', true );
-if ( ! $per_page || $per_page < 1 ) {
-	$per_page = 20;
+$logs_per_page   = (int) get_user_meta( $current_user_id, 'ghl_sync_logs_per_page', true );
+if ( ! $logs_per_page || $logs_per_page < 1 ) {
+	$logs_per_page = 20;
 }
 
 // Get current page from request (pagination only affects view state)
 $raw_page     = filter_input( INPUT_GET, 'paged', FILTER_SANITIZE_NUMBER_INT );
 $current_page = $raw_page ? max( 1, (int) $raw_page ) : 1;
-$offset       = ( $current_page - 1 ) * $per_page;
+$offset       = ( $current_page - 1 ) * $logs_per_page;
 
 // Get logs for site ID 1
 $sync_logger = \GHL_CRM\Sync\SyncLogger::get_instance();
 $logs        = $sync_logger->get_logs(
 	[
-		'limit'   => $per_page,
+		'limit'   => $logs_per_page,
 		'offset'  => $offset,
 		'site_id' => get_current_blog_id(),
 	]
@@ -58,7 +58,7 @@ $log_count   = $wpdb->get_var(
 		$site_id
 	)
 );
-$total_pages = ceil( $log_count / $per_page );
+$total_pages = ceil( $log_count / $logs_per_page );
 ?>
 
 <div class="wrap ghl-crm-sync-logs">
@@ -127,11 +127,11 @@ $total_pages = ceil( $log_count / $per_page );
 			<div class="ghl-filter-group">
 				<label for="ghl-per-page"><?php esc_html_e( 'Per Page', 'ghl-crm-integration' ); ?></label>
 				<select id="ghl-per-page">
-					<option value="10" <?php selected( $per_page, 10 ); ?>>10</option>
-					<option value="20" <?php selected( $per_page, 20 ); ?>>20</option>
-					<option value="50" <?php selected( $per_page, 50 ); ?>>50</option>
-					<option value="100" <?php selected( $per_page, 100 ); ?>>100</option>
-					<option value="200" <?php selected( $per_page, 200 ); ?>>200</option>
+					<option value="10" <?php selected( $logs_per_page, 10 ); ?>>10</option>
+					<option value="20" <?php selected( $logs_per_page, 20 ); ?>>20</option>
+					<option value="50" <?php selected( $logs_per_page, 50 ); ?>>50</option>
+					<option value="100" <?php selected( $logs_per_page, 100 ); ?>>100</option>
+					<option value="200" <?php selected( $logs_per_page, 200 ); ?>>200</option>
 				</select>
 			</div>
 

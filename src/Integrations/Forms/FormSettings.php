@@ -338,7 +338,7 @@ class FormSettings {
 			$value = $this->replace_variables( $param['value'] );
 
 			// Only add if value is not empty after replacement
-			if ( ! empty( $value ) && $value !== $param['value'] || ! str_contains( $param['value'], '{' ) ) {
+			if ( ( ! empty( $value ) && $value !== $param['value'] ) || ! str_contains( $param['value'], '{' ) ) {
 				$resolved[ $key ] = $value;
 			}
 		}
