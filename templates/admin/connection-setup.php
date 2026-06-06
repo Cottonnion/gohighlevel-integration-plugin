@@ -22,10 +22,12 @@ $oauth_handler = $oauth_handler ?? new \GHL_CRM\API\OAuth\OAuthHandler();
 			<span class="dashicons dashicons-cloud"></span>
 			<?php esc_html_e( 'OAuth Connection (Recommended)', 'ghl-crm-integration' ); ?>
 		</button>
+		<?php if( false): ?> 
 		<button type="button" class="ghl-tab-button" data-tab="manual">
 			<span class="dashicons dashicons-admin-network"></span>
 			<?php esc_html_e( 'API Key', 'ghl-crm-integration' ); ?>
 		</button>
+		<?php endif; ?>
 	</div>
 
 	<!-- OAuth Tab (Recommended) -->
@@ -113,6 +115,7 @@ $oauth_handler = $oauth_handler ?? new \GHL_CRM\API\OAuth\OAuthHandler();
 		</div>
 	</div>
 
+	<?php if ( false ): ?>
 	<!-- Manual API Key Tab -->
 	<div class="ghl-tab-content" id="manual-tab">
 		<div class="ghl-tab-inner">
@@ -244,6 +247,8 @@ $oauth_handler = $oauth_handler ?? new \GHL_CRM\API\OAuth\OAuthHandler();
 			</p>
 		</form>
 	</div>
+	</div>
+	<?php endif; ?>
 </div>
 
 </div>

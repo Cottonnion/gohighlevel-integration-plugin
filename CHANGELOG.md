@@ -6,6 +6,14 @@ All notable changes to GoHighLevel CRM Integration will be documented in this fi
 
 ---
 
+## [1.3.12] - 2026-06-06
+
+### Changed
+
+- **API Key connection method** — Hidden API Key tab in connection setup. OAuth is now the only available connection method for enhanced security and maintainability.
+
+---
+
 ## [1.3.11] - 2026-06-06
 
 ### Fixed
