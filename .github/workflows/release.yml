@@ -30,17 +30,24 @@ jobs:
 
       - name: Build production zip
         run: |
+          set -euo pipefail
           mkdir -p build/${PLUGIN_SLUG} dist
           rsync -a --delete --exclude '.git/' ./ build/${PLUGIN_SLUG}/
 
-          cd build/${PLUGIN_SLUG}
-          composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+          (
+            cd build/${PLUGIN_SLUG}
+            composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+          )
 
-          cd build
-          zip -r ../dist/${PLUGIN_SLUG}-${GITHUB_REF_NAME}.zip ${PLUGIN_SLUG} \
+          (
+            cd build
+            zip -r ../dist/${PLUGIN_SLUG}-${GITHUB_REF_NAME}.zip ${PLUGIN_SLUG} \
             -x@../zip-exclude.txt \
             -x "${PLUGIN_SLUG}/tests/*" \
             -x "${PLUGIN_SLUG}/build-minify.php"
+          )
+
+          ls -lah dist/
 
       - name: Validate release artifact
         run: |

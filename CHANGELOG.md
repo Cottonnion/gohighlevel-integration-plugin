@@ -6,6 +6,14 @@ All notable changes to GoHighLevel CRM Integration will be documented in this fi
 
 ---
 
+## [1.3.11] - 2026-06-06
+
+### Fixed
+
+- **Release workflow artifact path** — Corrected build directory navigation so GitHub Actions reliably generates and validates the release zip.
+
+---
+
 ## [1.3.10] - 2026-06-06
 
 ### Fixed
