@@ -1235,7 +1235,11 @@ class Client implements ClientInterface {
 		if ( self::$last_refresh_attempt_ts && ( $now - self::$last_refresh_attempt_ts ) < 60 ) {
 			/* translators: %s: Last token refresh error. */
 			$throttle_message = self::$last_refresh_error
-				? sprintf( esc_html__( 'Recent refresh attempt failed: %s', 'ghl-crm-integration' ), self::$last_refresh_error )
+				? sprintf(
+					/* translators: %s: Error details from the last OAuth token refresh attempt. */
+					esc_html__( 'Recent refresh attempt failed: %s', 'ghl-crm-integration' ),
+					self::$last_refresh_error
+				)
 				: esc_html__( 'Recent refresh attempt in progress or just failed. Reconnect required.', 'ghl-crm-integration' );
 			$this->log_oauth_event(
 				'Refresh skipped: throttled',
@@ -1332,7 +1336,7 @@ class Client implements ClientInterface {
 
 		// If the first attempt timed out, retry once with a longer timeout (25s).
 		// Some shared hosts need more time to reach the proxy, especially under load.
-		if ( is_wp_error( $response ) && str_contains( $response->get_error_message(), 'cURL error 28' ) && $timeout < 25 ) {
+		if ( is_wp_error( $response ) && false !== strpos( $response->get_error_message(), 'cURL error 28' ) && $timeout < 25 ) {
 			$this->log_oauth_event( 'Proxy timed out, retrying with 25s timeout', [ 'original_timeout' => $timeout ] );
 			$args['timeout'] = 25;
 			$response        = wp_remote_request( $proxy_url, $args );

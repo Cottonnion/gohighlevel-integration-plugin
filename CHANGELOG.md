@@ -6,6 +6,18 @@ All notable changes to GoHighLevel CRM Integration will be documented in this fi
 
 ---
 
+## [1.3.13] - 2026-06-06
+
+### Fixed
+
+- **Plugin Check compliance** — Fixed 7 remaining WordPress.org plugin check errors:
+  - Added translator comment for sprintf() with placeholders in OAuth token refresh message
+  - Updated Gutenberg block apiVersion from 2 to 3 for WordPress 7.0+ iframe editor compatibility
+  - Fixed SQL prepared statements with proper phpcs comments in sync log query
+  - Replaced WP 5.9+ functions (str_starts_with, str_contains) with WP 5.8-compatible alternatives (strpos)
+
+---
+
 ## [1.3.12] - 2026-06-06
 
 ### Changed

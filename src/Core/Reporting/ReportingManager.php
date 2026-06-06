@@ -186,7 +186,7 @@ class ReportingManager {
 		// Make path relative to the plugin root so the server path is never leaked.
 		$relative_file = $file;
 		foreach ( $plugin_dirs as $dir ) {
-			if ( str_starts_with( $file, $dir ) ) {
+			if ( 0 === strpos( $file, $dir ) ) {
 				$relative_file = ltrim( str_replace( $dir, '', $file ), '/' );
 				break;
 			}
@@ -508,7 +508,7 @@ class ReportingManager {
 
 			$in_plugin = false;
 			foreach ( $plugin_dirs as $dir ) {
-				if ( str_starts_with( $frame['file'], $dir ) ) {
+				if ( 0 === strpos( $frame['file'], $dir ) ) {
 					$frame['file'] = str_replace( $dir, '', $frame['file'] );
 					$in_plugin     = true;
 					break;

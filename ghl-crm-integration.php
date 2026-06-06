@@ -3,7 +3,7 @@
  * Plugin Name:       GHL Sync Bridge
  * Plugin URI:        https://highlevelsync.com/
  * Description:       The complete GoHighLevel WordPress integration — connect WordPress, WooCommerce, BuddyBoss, and LearnDash with real-time two-way sync and automation.
- * Version:           1.3.12
+ * Version:           1.3.13
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            LabGenz Team
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'GHL_CRM_VERSION', '1.3.12' );
+define( 'GHL_CRM_VERSION', '1.3.13' );
 define( 'GHL_CRM_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GHL_CRM_URL', plugin_dir_url( __FILE__ ) );
 define( 'GHL_CRM_BASENAME', plugin_basename( __FILE__ ) );
