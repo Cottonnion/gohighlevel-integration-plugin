@@ -24,8 +24,22 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
-      - name: Build production zip
+      - name: Minify assets
         run: php build-minify.php
+
+      - name: Package release zip
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          ZIP_FILE="ghl-crm-integration-${VERSION}.zip"
+          zip -r "$ZIP_FILE" . \
+            -x ".git/*" \
+               ".github/*" \
+               "tests/*" \
+               "*.md" \
+               "phpcs.xml" \
+               "phpunit.xml.dist" \
+               "build-minify.php" \
+               ".phpunit.result.cache"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
