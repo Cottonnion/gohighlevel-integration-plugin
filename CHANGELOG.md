@@ -6,6 +6,14 @@ All notable changes to GoHighLevel CRM Integration will be documented in this fi
 
 ---
 
+## [1.3.10] - 2026-06-06
+
+### Fixed
+
+- **GitHub release artifact reliability** — Release workflow now installs Composer production dependencies inside the packaged build directory and validates that vendor/autoload.php exists in the final zip.
+
+---
+
 ## [1.3.9] - 2026-06-06
 
 ### Changed

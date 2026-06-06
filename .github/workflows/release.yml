@@ -23,9 +23,6 @@ jobs:
           tools: composer
           coverage: none
 
-      - name: Install production dependencies
-        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
-
       - name: Validate release exclusions
         run: |
           grep -q "${PLUGIN_SLUG}/tests/\*" zip-exclude.txt
@@ -35,11 +32,19 @@ jobs:
         run: |
           mkdir -p build/${PLUGIN_SLUG} dist
           rsync -a --delete --exclude '.git/' ./ build/${PLUGIN_SLUG}/
+
+          cd build/${PLUGIN_SLUG}
+          composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
           cd build
           zip -r ../dist/${PLUGIN_SLUG}-${GITHUB_REF_NAME}.zip ${PLUGIN_SLUG} \
             -x@../zip-exclude.txt \
             -x "${PLUGIN_SLUG}/tests/*" \
             -x "${PLUGIN_SLUG}/build-minify.php"
+
+      - name: Validate release artifact
+        run: |
+          unzip -l dist/${PLUGIN_SLUG}-${GITHUB_REF_NAME}.zip | grep -q "${PLUGIN_SLUG}/vendor/autoload.php"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
