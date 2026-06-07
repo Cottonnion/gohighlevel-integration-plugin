@@ -198,25 +198,27 @@
       $reconnectBtn.on("click", function (event) {
         event.preventDefault();
         handleQuickAction(jQuery(this), {
-          action: "ghl_crm_refresh_access_token",
+          action: "ghl_crm_oauth_reconnect",
           data: {
-            action: "ghl_crm_refresh_access_token",
+            action: "ghl_crm_oauth_reconnect",
             nonce: ghl_crm_dashboard_js_data.settingsNonce,
           },
           loadingText: "Reconnecting...",
           successMessage: function (response) {
-            // Reload page after short delay so the user sees fresh token state
-            setTimeout(function () {
-              window.location.reload();
-            }, 1500);
             return (
-              response?.data?.message || "Account reconnected successfully!"
+              response?.data?.message || "Redirecting to reconnect your account..."
             );
           },
           errorMessage: function (response) {
             return (
               response?.data?.message || "Failed to reconnect account."
             );
+          },
+          onSuccess: function (response) {
+            const redirectUrl = response?.data?.redirect_url;
+            if (redirectUrl) {
+              window.location.href = redirectUrl;
+            }
           },
           ajaxUrl: ajaxEndpoint,
         });

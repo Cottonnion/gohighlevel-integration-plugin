@@ -6,6 +6,16 @@ All notable changes to GoHighLevel CRM Integration will be documented in this fi
 
 ---
 
+## [1.3.14] - 2026-06-07
+
+### Fixed
+
+- **OAuth reconnect flow** — Rewired the dashboard reconnect button to start the real OAuth reauthorization flow instead of only attempting a silent token refresh.
+- **OAuth recovery consistency** — Aligned emergency reconnect token exchange with the primary OAuth callback redirect URI to avoid intermittent reconnect failures.
+- **Release packaging** — Excluded hidden repository files like `.github` and `.gitignore` from GitHub release artifacts and added workflow checks to enforce it.
+
+---
+
 ## [1.3.13] - 2026-06-06
 
 ### Fixed

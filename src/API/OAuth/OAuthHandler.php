@@ -425,9 +425,14 @@ class OAuthHandler {
 	 */
 	public function is_connected(): bool {
 		$settings = $this->settings_manager->get_settings_array();
+		$expires  = isset( $settings['oauth_expires_at'] ) ? (int) $settings['oauth_expires_at'] : 0;
 
-		return ! empty( $settings['oauth_access_token'] ) &&
-				! empty( $settings['oauth_refresh_token'] );
+		$has_access_token  = ! empty( $settings['oauth_access_token'] );
+		$has_refresh_token = ! empty( $settings['oauth_refresh_token'] );
+		$has_location_id   = ! empty( $settings['location_id'] );
+		$token_is_current  = $expires > time();
+
+		return $has_location_id && $has_access_token && ( $token_is_current || $has_refresh_token );
 	}
 
 	/**
@@ -437,11 +442,14 @@ class OAuthHandler {
 	 */
 	public function get_connection_status(): array {
 		$settings = $this->settings_manager->get_settings_array();
+		$expires  = isset( $settings['oauth_expires_at'] ) ? (int) $settings['oauth_expires_at'] : 0;
 
 		return [
 			'connected'     => $this->is_connected(),
 			'connected_at'  => $settings['oauth_connected_at'] ?? '',
-			'expires_at'    => $settings['oauth_expires_at'] ?? '',
+			'expires_at'    => $expires,
+			'is_expired'    => $expires > 0 && $expires <= time(),
+			'can_refresh'   => ! empty( $settings['oauth_refresh_token'] ),
 			'location_id'   => $settings['location_id'] ?? '',
 			'location_name' => $settings['location_name'] ?? '',
 		];

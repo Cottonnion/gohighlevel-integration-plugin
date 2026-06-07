@@ -1,4 +1,8 @@
 ghl-crm-integration/.git/*
+ghl-crm-integration/.github/*
+ghl-crm-integration/.gitignore
+ghl-crm-integration/build/*
+ghl-crm-integration/dist/*
 ghl-crm-integration/node_modules/*
 ghl-crm-integration/composer.json
 ghl-crm-integration/composer.lock

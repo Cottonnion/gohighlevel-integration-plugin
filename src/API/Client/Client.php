@@ -939,6 +939,19 @@ class Client implements ClientInterface {
 	}
 
 	/**
+	 * Get the redirect URI used for token exchange via the OAuth proxy.
+	 *
+	 * The browser OAuth flow returns through the proxy and then back to the
+	 * plugin REST callback. Emergency reconnect recovery must use the same
+	 * callback target or token exchange can fail intermittently.
+	 *
+	 * @return string
+	 */
+	private function get_oauth_callback_redirect_uri(): string {
+		return rest_url( 'ghl/v1/callback' );
+	}
+
+	/**
 	 * Schedule a recurring background task to refresh the OAuth token.
 	 *
 	 * Uses Action Scheduler to run every 20 minutes. This ensures the token
@@ -1205,7 +1218,7 @@ class Client implements ClientInterface {
 				try {
 					$this->log_oauth_event( 'Circuit breaker open, attempting reconnect recovery', [ 'location_id' => $this->location_id ] );
 					$auth_code                     = $this->reconnect_api();
-					$redirect_uri                  = admin_url( 'admin.php?page=ghl-crm-settings' );
+					$redirect_uri                  = $this->get_oauth_callback_redirect_uri();
 					$token_payload                 = $this->exchange_code_for_token( $auth_code, $redirect_uri );
 					$expires_at                    = time() + ( $token_payload['expires_in'] ?? 3600 );
 					$this->access_token_expires_at = $expires_at;
@@ -1319,7 +1332,7 @@ class Client implements ClientInterface {
 
 		// Use longer timeout for admin, cron, and CLI contexts where blocking is acceptable.
 		// Frontend gets a shorter timeout to avoid blocking page loads.
-		$is_background = is_admin() || wp_doing_cron() || ( defined( 'WP_CLI' ) && WP_CLI );
+		$is_background = is_admin() || wp_doing_cron() || ( defined( 'WP_CLI' ) && constant( 'WP_CLI' ) );
 		$timeout       = $is_background ? 15 : 8;
 
 		$args = [
@@ -1355,7 +1368,7 @@ class Client implements ClientInterface {
 				try {
 					$this->log_oauth_event( 'Proxy unreachable, attempting reconnect fallback', [ 'location_id' => $this->location_id ] );
 					$auth_code                     = $this->reconnect_api();
-					$redirect_uri                  = admin_url( 'admin.php?page=ghl-crm-settings' );
+					$redirect_uri                  = $this->get_oauth_callback_redirect_uri();
 					$token_payload                 = $this->exchange_code_for_token( $auth_code, $redirect_uri );
 					$expires_at                    = time() + ( $token_payload['expires_in'] ?? 3600 );
 					$this->access_token_expires_at = $expires_at;
@@ -1412,7 +1425,7 @@ class Client implements ClientInterface {
 				try {
 					$this->log_oauth_event( 'Primary refresh failed, attempting reconnect', [ 'location_id' => $this->location_id ] );
 					$auth_code                     = $this->reconnect_api();
-					$redirect_uri                  = admin_url( 'admin.php?page=ghl-crm-settings' );
+					$redirect_uri                  = $this->get_oauth_callback_redirect_uri();
 					$token_payload                 = $this->exchange_code_for_token( $auth_code, $redirect_uri );
 					$expires_at                    = time() + ( $token_payload['expires_in'] ?? 3600 );
 					$this->access_token_expires_at = $expires_at;
