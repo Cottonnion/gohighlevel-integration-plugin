@@ -6,6 +6,15 @@ All notable changes to GoHighLevel CRM Integration will be documented in this fi
 
 ---
 
+## [1.3.15] - 2026-06-07
+
+### Fixed
+
+- **GitHub release build** — Moved staging and zipping into the runner temp directory so release artifacts are built from a clean copy instead of inside the repository tree.
+- **Release artifact hygiene** — Prevented self-inclusion of generated `build/` and `dist/` folders in downloadable release zips.
+
+---
+
 ## [1.3.14] - 2026-06-07
 
 ### Fixed

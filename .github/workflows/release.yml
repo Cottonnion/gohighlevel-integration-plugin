@@ -35,22 +35,29 @@ jobs:
       - name: Build production zip
         run: |
           set -euo pipefail
-          mkdir -p build/${PLUGIN_SLUG} dist
-          rsync -a --delete --exclude '.git/' ./ build/${PLUGIN_SLUG}/
+          STAGING_ROOT="${RUNNER_TEMP}/ghl-crm-release"
+          STAGING_DIR="${STAGING_ROOT}/${PLUGIN_SLUG}"
+          ARTIFACT_DIR="${RUNNER_TEMP}/ghl-crm-dist"
+
+          rm -rf "${STAGING_ROOT}" "${ARTIFACT_DIR}"
+          mkdir -p "${STAGING_DIR}" "${ARTIFACT_DIR}"
+          rsync -a --delete --exclude '.git/' ./ "${STAGING_DIR}/"
 
           (
-            cd build/${PLUGIN_SLUG}
+            cd "${STAGING_DIR}"
             composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
           )
 
           (
-            cd build
-            zip -r ../dist/${PLUGIN_SLUG}-${GITHUB_REF_NAME}.zip ${PLUGIN_SLUG} \
-            -x@../zip-exclude.txt \
+            cd "${STAGING_ROOT}"
+            zip -r "${ARTIFACT_DIR}/${PLUGIN_SLUG}-${GITHUB_REF_NAME}.zip" ${PLUGIN_SLUG} \
+            -x@"${GITHUB_WORKSPACE}/zip-exclude.txt" \
             -x "${PLUGIN_SLUG}/tests/*" \
             -x "${PLUGIN_SLUG}/build-minify.php"
           )
 
+          mkdir -p dist
+          cp "${ARTIFACT_DIR}/${PLUGIN_SLUG}-${GITHUB_REF_NAME}.zip" dist/
           ls -lah dist/
 
       - name: Validate release artifact
