@@ -99,7 +99,26 @@ class AdminNotices {
 			'timestamp'   => time(),
 		];
 
-		$notices   = $this->get_stored_notices();
+		$notices = $this->get_stored_notices();
+
+		foreach ( $notices as &$stored_notice ) {
+			if ( ! is_array( $stored_notice ) ) {
+				continue;
+			}
+
+			if (
+				( $stored_notice['message'] ?? '' ) === $message
+				&& ( $stored_notice['type'] ?? 'info' ) === $type
+				&& ! empty( $stored_notice['dismissible'] ) === $dismissible
+				&& ! empty( $stored_notice['global'] ) === $global
+			) {
+				$stored_notice['timestamp'] = $notice['timestamp'];
+				set_site_transient( self::TRANSIENT_PREFIX . get_current_user_id(), $notices, HOUR_IN_SECONDS );
+				return;
+			}
+		}
+		unset( $stored_notice );
+
 		$notices[] = $notice;
 
 		// Use site transient for multisite compatibility
@@ -160,7 +179,38 @@ class AdminNotices {
 	 */
 	private function get_stored_notices(): array {
 		$notices = get_site_transient( self::TRANSIENT_PREFIX . get_current_user_id() );
-		return is_array( $notices ) ? $notices : [];
+		if ( ! is_array( $notices ) ) {
+			return [];
+		}
+
+		$normalized = [];
+		foreach ( $notices as $notice ) {
+			if ( ! is_array( $notice ) || empty( $notice['message'] ) ) {
+				continue;
+			}
+
+			$signature = md5(
+				implode(
+					'|',
+					[
+						(string) $notice['message'],
+						(string) ( $notice['type'] ?? 'info' ),
+						! empty( $notice['dismissible'] ) ? '1' : '0',
+						! empty( $notice['global'] ) ? '1' : '0',
+					]
+				)
+			);
+
+			$normalized[ $signature ] = [
+				'message'     => (string) $notice['message'],
+				'type'        => (string) ( $notice['type'] ?? 'info' ),
+				'dismissible' => ! empty( $notice['dismissible'] ),
+				'global'      => ! empty( $notice['global'] ),
+				'timestamp'   => (int) ( $notice['timestamp'] ?? time() ),
+			];
+		}
+
+		return array_values( $normalized );
 	}
 
 	/**
