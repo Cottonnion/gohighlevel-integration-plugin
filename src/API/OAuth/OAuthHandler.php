@@ -452,6 +452,9 @@ class OAuthHandler {
 			'can_refresh'   => ! empty( $settings['oauth_refresh_token'] ),
 			'location_id'   => $settings['location_id'] ?? '',
 			'location_name' => $settings['location_name'] ?? '',
+			'health_status' => $settings['oauth_health_status'] ?? 'unknown',
+			'health_message' => $settings['oauth_health_message'] ?? '',
+			'health_checked_at' => $settings['oauth_health_checked_at'] ?? '',
 		];
 	}
 

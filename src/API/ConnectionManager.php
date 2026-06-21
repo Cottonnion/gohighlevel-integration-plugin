@@ -264,6 +264,9 @@ class ConnectionManager {
 			'location_id'     => $settings['location_id'] ?? '',
 			'api_version'     => $settings['api_version'] ?? '2021-07-28',
 			'updated_at'      => $settings['updated_at'] ?? '',
+			'oauth_health_status' => $settings['oauth_health_status'] ?? 'unknown',
+			'oauth_health_message' => $settings['oauth_health_message'] ?? '',
+			'oauth_health_checked_at' => $settings['oauth_health_checked_at'] ?? '',
 		];
 	}
 

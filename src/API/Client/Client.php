@@ -155,6 +155,13 @@ class Client implements ClientInterface {
 	private const CIRCUIT_BREAKER_KEY = 'ghl_crm_refresh_circuit_breaker';
 
 	/**
+	 * Transient key for throttling global OAuth admin notices.
+	 *
+	 * @var string
+	 */
+	private const OAUTH_NOTICE_THROTTLE_KEY = 'ghl_crm_oauth_notice_throttle';
+
+	/**
 	 * Minutes to wait after hitting the failure threshold before retrying.
 	 *
 	 * @var int
@@ -645,6 +652,8 @@ class Client implements ClientInterface {
 			}
 
 			if ( $is_token_error ) {
+				$this->update_oauth_health( 'token_rejected', $error_message );
+
 				// If refresh already failed this request, don't attempt again from this filter
 				if ( $this->refresh_failed_this_request ) {
 					return $response;
@@ -691,16 +700,8 @@ class Client implements ClientInterface {
 					return $response;
 
 				} catch ( \Exception $e ) {
-					// Token refresh failed - show admin notice
-					$notices = \GHL_CRM\Core\AdminNotices::get_instance();
-					$notices->error(
-						sprintf(
-							/* translators: %s: Error message */
-							__( 'GoHighLevel token refresh failed: %s. Please reconnect your account.', 'ghl-crm-integration' ),
-							$e->getMessage()
-						),
-						true // Show on all admin pages
-					);
+					$this->update_oauth_health( 'refresh_failed', $e->getMessage() );
+					$this->queue_oauth_health_notice( $e->getMessage() );
 
 					// Log failure context for debugging
 					$this->log_oauth_event(
@@ -1100,6 +1101,65 @@ class Client implements ClientInterface {
 	}
 
 	/**
+	 * Persist lightweight OAuth health state for admin/status UI consumers.
+	 *
+	 * @param string $status  Health status slug.
+	 * @param string $message Human-readable health message.
+	 * @return void
+	 */
+	private function update_oauth_health( string $status, string $message = '' ): void {
+		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings_manager->update_setting( 'oauth_health_status', $status );
+		$settings_manager->update_setting( 'oauth_health_message', sanitize_text_field( $message ) );
+		$settings_manager->update_setting( 'oauth_health_checked_at', current_time( 'mysql' ) );
+	}
+
+	/**
+	 * Mark the stored OAuth connection as healthy after successful token recovery.
+	 *
+	 * @return void
+	 */
+	private function mark_oauth_healthy(): void {
+		$this->update_oauth_health( 'healthy', '' );
+
+		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings_manager->update_option(
+			'ghl_crm_connection_verified',
+			[
+				'verified'    => true,
+				'verified_at' => current_time( 'mysql' ),
+				'method'      => 'oauth2',
+			]
+		);
+	}
+
+	/**
+	 * Queue one stable admin notice for OAuth health issues.
+	 *
+	 * @param string $error_message Detailed error message for logs.
+	 * @return void
+	 */
+	private function queue_oauth_health_notice( string $error_message ): void {
+		if ( ! is_admin() ) {
+			return;
+		}
+
+		$transient_key = self::OAUTH_NOTICE_THROTTLE_KEY . '_' . get_current_user_id();
+		if ( get_transient( $transient_key ) ) {
+			return;
+		}
+
+		set_transient( $transient_key, true, self::CIRCUIT_BREAKER_COOLDOWN * MINUTE_IN_SECONDS );
+
+		\GHL_CRM\Core\AdminNotices::get_instance()->error(
+			__( 'GoHighLevel OAuth refresh is temporarily unhealthy. The plugin will retry automatically; reconnect your account if this persists.', 'ghl-crm-integration' ),
+			true
+		);
+
+		$this->log_oauth_event( 'Queued OAuth health admin notice', [ 'error' => $error_message ], 'warning' );
+	}
+
+	/**
 	 * Check if circuit breaker is open (too many recent failures).
 	 *
 	 * @return bool True if circuit is open and refresh should not be attempted.
@@ -1211,28 +1271,7 @@ class Client implements ClientInterface {
 		// Check circuit breaker (prevents hammering failing proxy)
 		if ( $this->is_circuit_breaker_open() ) {
 			$this->log_oauth_event( 'Refresh blocked: circuit breaker open (too many recent failures)' );
-
-			// Circuit breaker blocks refresh, but still attempt reconnect API as recovery path
-			// Reconnect uses a different GHL endpoint and may work even when refresh proxy is failing
-			if ( ! empty( $this->location_id ) ) {
-				try {
-					$this->log_oauth_event( 'Circuit breaker open, attempting reconnect recovery', [ 'location_id' => $this->location_id ] );
-					$auth_code                     = $this->reconnect_api();
-					$redirect_uri                  = $this->get_oauth_callback_redirect_uri();
-					$token_payload                 = $this->exchange_code_for_token( $auth_code, $redirect_uri );
-					$expires_at                    = time() + ( $token_payload['expires_in'] ?? 3600 );
-					$this->access_token_expires_at = $expires_at;
-					$this->save_oauth_tokens( $expires_at );
-					$this->reset_circuit_breaker();
-					self::$last_refresh_attempt_ts = 0;
-					$this->log_oauth_event( 'Reconnect recovered from circuit breaker state', [ 'expires_at' => $expires_at ] );
-
-					return $token_payload;
-				} catch ( \Exception $reconnect_error ) {
-					$this->log_oauth_event( 'Reconnect also failed during circuit breaker', [ 'error' => $reconnect_error->getMessage() ] );
-					// Fall through to circuit breaker error
-				}
-			}
+			$this->update_oauth_health( 'cooldown', __( 'Token refresh is paused after repeated failures.', 'ghl-crm-integration' ) );
 
 			throw new ApiException(
 				sprintf(
@@ -1307,6 +1346,8 @@ class Client implements ClientInterface {
 
 		// Acquire the refresh lock for this process
 		set_transient( self::REFRESH_LOCK_KEY, getmypid(), self::REFRESH_LOCK_TTL );
+
+		try {
 
 		// Handle edge case where refresh token might be corrupted (not a string)
 		if ( ! is_string( $this->refresh_token ) ) {
@@ -1408,6 +1449,14 @@ class Client implements ClientInterface {
 			$error_message            = $decoded_array['message'] ?? ( is_string( $body ) ? $body : 'unknown' );
 			self::$last_refresh_error = sprintf( 'Refresh HTTP %d: %s', $status_code, sanitize_text_field( (string) $error_message ) );
 			$this->record_refresh_failure();
+			$this->update_oauth_health( 429 === $status_code ? 'rate_limited' : 'refresh_failed', self::$last_refresh_error );
+
+			if ( 429 === $status_code ) {
+				throw new ApiException(
+					esc_html__( 'Token refresh is rate limited. The plugin will retry after the cooldown period.', 'ghl-crm-integration' ),
+					(int) $status_code
+				);
+			}
 
 			// If refresh token is invalid, clear tokens and force reconnect to avoid loops
 			if ( isset( $decoded_array['error'] ) && 'invalid_grant' === $decoded_array['error'] ) {
@@ -1478,6 +1527,7 @@ class Client implements ClientInterface {
 
 		// Reset circuit breaker on successful refresh
 		$this->reset_circuit_breaker();
+		$this->mark_oauth_healthy();
 
 		// Release the refresh lock
 		delete_transient( self::REFRESH_LOCK_KEY );
@@ -1485,6 +1535,9 @@ class Client implements ClientInterface {
 		$this->log_oauth_event( 'Token refresh succeeded', [ 'expires_at' => $expires_at ] );
 
 		return $decoded;
+		} finally {
+			delete_transient( self::REFRESH_LOCK_KEY );
+		}
 	}
 
 	/**
@@ -1874,6 +1927,8 @@ class Client implements ClientInterface {
 			$this->access_token_expires_at = $expires_at;
 			$settings_manager->update_setting( 'oauth_expires_at', $expires_at );
 		}
+
+		$this->mark_oauth_healthy();
 	}
 
 	/**
@@ -1899,9 +1954,15 @@ class Client implements ClientInterface {
 		$settings_manager->delete_setting( 'oauth_access_token' );
 		$settings_manager->delete_setting( 'oauth_refresh_token' );
 		$settings_manager->delete_setting( 'oauth_expires_at' );
+		$settings_manager->update_setting( 'oauth_health_status', 'reconnect_required' );
+		$settings_manager->update_setting( 'oauth_health_message', __( 'OAuth tokens were cleared and the account must be reconnected.', 'ghl-crm-integration' ) );
+		$settings_manager->update_setting( 'oauth_health_checked_at', current_time( 'mysql' ) );
+		$settings_manager->update_option( 'ghl_crm_connection_verified', false );
 
 		// Clear circuit breaker when disconnecting to avoid confusing errors
 		$this->reset_circuit_breaker();
+
+		do_action( 'ghl_crm_connection_status_changed', false, 'oauth_tokens_cleared' );
 
 		// Unschedule background refresh since we no longer have tokens
 		self::unschedule_background_refresh();
