@@ -415,27 +415,12 @@ class FileLogger {
 	/**
 	 * Check whether file-based debug logging is enabled.
 	 *
-	 * Enabled when either:
-	 *  - The plugin setting `enable_debug_logging` is truthy, OR
-	 *  - WP_DEBUG is true (developer environments).
+	 * Enabled when the bootstrap constant GHLBRIDGE_LOG is truthy.
 	 *
 	 * @return bool
 	 */
 	private function is_logging_enabled(): bool {
-		// Plugin-level setting takes priority.
-		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
-		$settings         = $settings_manager->get_settings_array();
-
-		if ( ! empty( $settings['enable_debug_logging'] ) ) {
-			return true;
-		}
-
-		// Fallback: enable when WP_DEBUG is on (dev environments).
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			return true;
-		}
-
-		return false;
+		return defined( 'GHLBRIDGE_LOG' ) && GHLBRIDGE_LOG;
 	}
 
 	/**

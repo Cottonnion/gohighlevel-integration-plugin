@@ -30,6 +30,10 @@ define( 'GHL_CRM_URL', plugin_dir_url( __FILE__ ) );
 define( 'GHL_CRM_BASENAME', plugin_basename( __FILE__ ) );
 define( 'GHL_CRM_TEXTDOMAIN', 'ghl-crm-integration' );
 
+if ( ! defined( 'GHLBRIDGE_LOG' ) ) {
+	define( 'GHLBRIDGE_LOG', true );
+}
+
 // Require Composer autoloader
 if ( file_exists( GHL_CRM_PATH . 'vendor/autoload.php' ) ) {
 	require_once GHL_CRM_PATH . 'vendor/autoload.php';
