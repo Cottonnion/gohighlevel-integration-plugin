@@ -15,6 +15,8 @@
    * @param {Object} analyticsData - Analytics data from PHP
    */
   function initAnalytics(analyticsData) {
+    analyticsData = analyticsData || window.ghlAnalyticsData;
+
     if (!analyticsData) {
       console.error("Analytics data not provided");
       return;

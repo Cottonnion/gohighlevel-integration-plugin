@@ -96,15 +96,15 @@ class UserColumns {
 
 			// Add GHL columns after email column
 			if ( 'email' === $key ) {
-				$new_columns['ghl_contact_id']  = __( 'GHL Contact ID', 'ghl-crm-integration' );
-				$new_columns['ghl_sync_status'] = __( 'GHL Sync Status', 'ghl-crm-integration' );
+				$new_columns['ghl_contact_id']  = __( 'GHL Contact ID', 'syncly' );
+				$new_columns['ghl_sync_status'] = __( 'GHL Sync Status', 'syncly' );
 			}
 		}
 
 		// If email column doesn't exist, add at the end
 		if ( ! isset( $columns['email'] ) ) {
-			$new_columns['ghl_contact_id']  = __( 'GHL Contact ID', 'ghl-crm-integration' );
-			$new_columns['ghl_sync_status'] = __( 'GHL Sync Status', 'ghl-crm-integration' );
+			$new_columns['ghl_contact_id']  = __( 'GHL Contact ID', 'syncly' );
+			$new_columns['ghl_sync_status'] = __( 'GHL Sync Status', 'syncly' );
 		}
 
 		return $new_columns;
@@ -169,7 +169,7 @@ class UserColumns {
 					<span class="dashicons dashicons-external" style="font-size: 12px; vertical-align: middle;"></span>
 				</a>',
 				esc_url( $ghl_url ),
-				esc_attr__( 'View in GoHighLevel', 'ghl-crm-integration' ),
+				esc_attr__( 'View in GoHighLevel', 'syncly' ),
 				esc_html( substr( $contact_id, 0, 8 ) . '...' )
 			);
 		}
@@ -190,9 +190,9 @@ class UserColumns {
 
 		if ( empty( $contact_id ) ) {
 			// Not synced yet
-			return '<span class="ghl-sync-status ghl-sync-never" title="' . esc_attr__( 'Never synced to GoHighLevel', 'ghl-crm-integration' ) . '">
+			return '<span class="ghl-sync-status ghl-sync-never" title="' . esc_attr__( 'Never synced to GoHighLevel', 'syncly' ) . '">
 				<span class="dashicons dashicons-warning" style="color: #dba617;"></span> ' .
-				esc_html__( 'Not Synced', 'ghl-crm-integration' ) .
+				esc_html__( 'Not Synced', 'syncly' ) .
 				'</span>';
 		}
 
@@ -209,14 +209,14 @@ class UserColumns {
 				esc_attr(
 					sprintf(
 					/* translators: %s: Time difference */
-						__( 'Last synced: %s ago', 'ghl-crm-integration' ),
+						__( 'Last synced: %s ago', 'syncly' ),
 						$time_diff
 					)
 				),
 				esc_html(
 					sprintf(
 					/* translators: %s: Time difference */
-						__( '%s ago', 'ghl-crm-integration' ),
+						__( '%s ago', 'syncly' ),
 						$time_diff
 					)
 				)
@@ -225,7 +225,7 @@ class UserColumns {
 
 		return '<span class="ghl-sync-status ghl-sync-success">
 			<span class="dashicons dashicons-yes-alt" style="color: #46b450;"></span> ' .
-			esc_html__( 'Synced', 'ghl-crm-integration' ) .
+			esc_html__( 'Synced', 'syncly' ) .
 			'</span>';
 	}
 
@@ -275,8 +275,11 @@ class UserColumns {
 	 * @return void
 	 */
 	public function add_column_styles(): void {
-		?>
-		<style>
+		wp_register_style( 'syncly-user-columns-inline', false, [], GHL_CRM_VERSION );
+		wp_enqueue_style( 'syncly-user-columns-inline' );
+		wp_add_inline_style(
+			'syncly-user-columns-inline',
+			'
 			.column-ghl_contact_id {
 				width: 120px;
 			}
@@ -303,8 +306,8 @@ class UserColumns {
 			.ghl-column-empty {
 				color: #a0a5aa;
 			}
-		</style>
-		<?php
+			'
+		);
 	}
 
 	/**

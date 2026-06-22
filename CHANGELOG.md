@@ -197,8 +197,8 @@ All notable changes to GoHighLevel CRM Integration will be documented in this fi
 - **Public REST API Endpoints** — Moved to Pro; free plugin fires `ghl_crm_register_public_rest_routes` action for Pro to register endpoints (contacts, sync, status, webhooks).
 - **Elementor Widget Conditions** — Moved to Pro; free plugin fires `ghl_crm_init_elementor_conditions` action.
 - **Archive & REST API Protection** — Moved to Pro; free plugin fires `ghl_crm_register_advanced_restriction_hooks` action.
-- **Restriction Override Settings** — Admin bypass and allowed-tag overrides gated behind `ghl_crm_restriction_overrides_enabled` filter (Pro).
-- **Global Tags** — Gated behind `ghl_crm_global_tags_enabled` filter (Pro).
+- **Restriction Override Settings** — Admin bypass and allowed-tag overrides are available in the free plugin.
+- **Global Tags** — Global role tag configuration is available in the free plugin.
 - **Analytics Dashboard** — Chart visualizations moved to Pro via `ghl_crm_render_analytics_tab` action; free shows upgrade CTA.
 
 ### Added
@@ -209,7 +209,7 @@ All notable changes to GoHighLevel CRM Integration will be documented in this fi
 
 ### Fixed
 
-- **Telemetry Fatal Error Filter** — `capture_fatal_error()` now only logs errors originating from `ghl-crm-integration` or `ghl-crm-integration-pro` directories, preventing unrelated theme/plugin errors from being sent.
+- **Telemetry Fatal Error Filter** — `capture_fatal_error()` now only logs errors originating from `syncly` or `syncly-pro` directories, preventing unrelated theme/plugin errors from being sent.
 
 ### Improved
 

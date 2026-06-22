@@ -99,7 +99,7 @@ class ElementorIntegration {
 		$elements_manager->add_category(
 			'ghl-crm',
 			[
-				'title' => __( 'GoHighLevel CRM', 'ghl-crm-integration' ),
+				'title' => __( 'GoHighLevel CRM', 'syncly' ),
 				'icon'  => 'fa fa-plug',
 			]
 		);

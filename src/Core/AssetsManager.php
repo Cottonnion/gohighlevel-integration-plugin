@@ -245,25 +245,25 @@ class AssetsManager {
 				'manualQueueNonce'   => wp_create_nonce( 'ghl_crm_manual_queue' ),
 				'settingsNonce'      => wp_create_nonce( 'ghl_crm_settings_nonce' ),
 				'i18n'               => [
-					'connecting'                => __( 'Connecting...', 'ghl-crm-integration' ),
-					'connectionFailed'          => __( 'Connection failed', 'ghl-crm-integration' ),
-					'connectionError'           => __( 'An error occurred while connecting', 'ghl-crm-integration' ),
-					'disconnectConfirm'         => __( 'Are you sure you want to disconnect your GoHighLevel account?', 'ghl-crm-integration' ),
-					'disconnecting'             => __( 'Disconnecting...', 'ghl-crm-integration' ),
-					'disconnectFailed'          => __( 'Failed to disconnect', 'ghl-crm-integration' ),
-					'disconnectError'           => __( 'An error occurred while disconnecting', 'ghl-crm-integration' ),
-					'manualSyncProcessing'      => __( 'Running manual sync...', 'ghl-crm-integration' ),
-					'manualSyncSuccess'         => __( 'Manual sync completed successfully.', 'ghl-crm-integration' ),
-					'manualSyncFailed'          => __( 'Manual sync failed.', 'ghl-crm-integration' ),
-					'clearCacheProcessing'      => __( 'Clearing cache...', 'ghl-crm-integration' ),
-					'clearCacheSuccess'         => __( 'Cache cleared successfully!', 'ghl-crm-integration' ),
-					'clearCacheFailed'          => __( 'Failed to clear cache.', 'ghl-crm-integration' ),
-					'testConnectionProcessing'  => __( 'Testing connection...', 'ghl-crm-integration' ),
-					'testConnectionSuccess'     => __( 'Connection test completed successfully.', 'ghl-crm-integration' ),
-					'testConnectionFailed'      => __( 'Connection test failed.', 'ghl-crm-integration' ),
-					'refreshMetadataProcessing' => __( 'Refreshing tags and fields...', 'ghl-crm-integration' ),
-					'refreshMetadataSuccess'    => __( 'Tags and fields refreshed successfully.', 'ghl-crm-integration' ),
-					'refreshMetadataFailed'     => __( 'Failed to refresh tags and fields.', 'ghl-crm-integration' ),
+					'connecting'                => __( 'Connecting...', 'syncly' ),
+					'connectionFailed'          => __( 'Connection failed', 'syncly' ),
+					'connectionError'           => __( 'An error occurred while connecting', 'syncly' ),
+					'disconnectConfirm'         => __( 'Are you sure you want to disconnect your GoHighLevel account?', 'syncly' ),
+					'disconnecting'             => __( 'Disconnecting...', 'syncly' ),
+					'disconnectFailed'          => __( 'Failed to disconnect', 'syncly' ),
+					'disconnectError'           => __( 'An error occurred while disconnecting', 'syncly' ),
+					'manualSyncProcessing'      => __( 'Running manual sync...', 'syncly' ),
+					'manualSyncSuccess'         => __( 'Manual sync completed successfully.', 'syncly' ),
+					'manualSyncFailed'          => __( 'Manual sync failed.', 'syncly' ),
+					'clearCacheProcessing'      => __( 'Clearing cache...', 'syncly' ),
+					'clearCacheSuccess'         => __( 'Cache cleared successfully!', 'syncly' ),
+					'clearCacheFailed'          => __( 'Failed to clear cache.', 'syncly' ),
+					'testConnectionProcessing'  => __( 'Testing connection...', 'syncly' ),
+					'testConnectionSuccess'     => __( 'Connection test completed successfully.', 'syncly' ),
+					'testConnectionFailed'      => __( 'Connection test failed.', 'syncly' ),
+					'refreshMetadataProcessing' => __( 'Refreshing tags and fields...', 'syncly' ),
+					'refreshMetadataSuccess'    => __( 'Tags and fields refreshed successfully.', 'syncly' ),
+					'refreshMetadataFailed'     => __( 'Failed to refresh tags and fields.', 'syncly' ),
 				],
 			],
 			GHL_CRM_VERSION,
@@ -304,7 +304,7 @@ class AssetsManager {
 
 		// Integrations assets (need to load on SPA page)
 		$this->add_admin_asset(
-			'ghl-crm-integrations-css',
+			'synclys-css',
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'integrations.css',
 			[],
@@ -313,7 +313,7 @@ class AssetsManager {
 		);
 
 		$this->add_admin_asset(
-			'ghl-crm-integrations-js',
+			'synclys-js',
 			[ 'toplevel_page_ghl-crm-admin' ],
 			'integrations.js',
 			[ 'jquery', 'ghl-sweetalert2' ],
@@ -397,36 +397,36 @@ class AssetsManager {
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
 				'i18n'    => [
-					'searchPlaceholder'  => __( 'Search for a user...', 'ghl-crm-integration' ),
-					'missingInfo'        => __( 'Missing Information', 'ghl-crm-integration' ),
-					'selectUser'         => __( 'Please select a user from the dropdown', 'ghl-crm-integration' ),
-					'validatingUser'     => __( 'Validating User...', 'ghl-crm-integration' ),
-					'lookingUpUser'      => __( 'Looking up WordPress user...', 'ghl-crm-integration' ),
-					'connectingGHL'      => __( 'Connecting to GoHighLevel...', 'ghl-crm-integration' ),
-					'establishingAPI'    => __( 'Establishing API connection...', 'ghl-crm-integration' ),
-					'analyzingFields'    => __( 'Analyzing Field Mappings...', 'ghl-crm-integration' ),
-					'comparingData'      => __( 'Comparing WordPress and GHL data...', 'ghl-crm-integration' ),
-					'previewFailed'      => __( 'Preview Failed', 'ghl-crm-integration' ),
-					'unknownError'       => __( 'Unknown error occurred', 'ghl-crm-integration' ),
-					'requestFailed'      => __( 'Request Failed', 'ghl-crm-integration' ),
-					'connectionError'    => __( 'Could not connect to server. Please check your connection and try again.', 'ghl-crm-integration' ),
-					'totalFields'        => __( 'Total Fields', 'ghl-crm-integration' ),
-					'willChange'         => __( 'Will Change', 'ghl-crm-integration' ),
-					'alreadySynced'      => __( 'Already Synced', 'ghl-crm-integration' ),
-					'tagsWillApply'      => __( 'tags will be applied', 'ghl-crm-integration' ),
-					'updatingExisting'   => __( 'Updating existing contact:', 'ghl-crm-integration' ),
-					'conflictsDetected'  => __( 'Conflicts Detected', 'ghl-crm-integration' ),
-					'validationWarnings' => __( 'Validation Warnings', 'ghl-crm-integration' ),
-					'fieldMapping'       => __( 'Field Mapping Comparison', 'ghl-crm-integration' ),
-					'ghlField'           => __( 'GHL Field', 'ghl-crm-integration' ),
-					'currentGHL'         => __( 'Current in GHL', 'ghl-crm-integration' ),
-					'wpValue'            => __( 'WordPress Value', 'ghl-crm-integration' ),
-					'status'             => __( 'Status', 'ghl-crm-integration' ),
-					'willUpdate'         => __( 'WILL UPDATE', 'ghl-crm-integration' ),
-					'inSync'             => __( 'IN SYNC', 'ghl-crm-integration' ),
-					'tagsToApply'        => __( 'Tags to Apply', 'ghl-crm-integration' ),
-					'syncPreview'        => __( 'Sync Preview', 'ghl-crm-integration' ),
-					'gotIt'              => __( 'Got it!', 'ghl-crm-integration' ),
+					'searchPlaceholder'  => __( 'Search for a user...', 'syncly' ),
+					'missingInfo'        => __( 'Missing Information', 'syncly' ),
+					'selectUser'         => __( 'Please select a user from the dropdown', 'syncly' ),
+					'validatingUser'     => __( 'Validating User...', 'syncly' ),
+					'lookingUpUser'      => __( 'Looking up WordPress user...', 'syncly' ),
+					'connectingGHL'      => __( 'Connecting to GoHighLevel...', 'syncly' ),
+					'establishingAPI'    => __( 'Establishing API connection...', 'syncly' ),
+					'analyzingFields'    => __( 'Analyzing Field Mappings...', 'syncly' ),
+					'comparingData'      => __( 'Comparing WordPress and GHL data...', 'syncly' ),
+					'previewFailed'      => __( 'Preview Failed', 'syncly' ),
+					'unknownError'       => __( 'Unknown error occurred', 'syncly' ),
+					'requestFailed'      => __( 'Request Failed', 'syncly' ),
+					'connectionError'    => __( 'Could not connect to server. Please check your connection and try again.', 'syncly' ),
+					'totalFields'        => __( 'Total Fields', 'syncly' ),
+					'willChange'         => __( 'Will Change', 'syncly' ),
+					'alreadySynced'      => __( 'Already Synced', 'syncly' ),
+					'tagsWillApply'      => __( 'tags will be applied', 'syncly' ),
+					'updatingExisting'   => __( 'Updating existing contact:', 'syncly' ),
+					'conflictsDetected'  => __( 'Conflicts Detected', 'syncly' ),
+					'validationWarnings' => __( 'Validation Warnings', 'syncly' ),
+					'fieldMapping'       => __( 'Field Mapping Comparison', 'syncly' ),
+					'ghlField'           => __( 'GHL Field', 'syncly' ),
+					'currentGHL'         => __( 'Current in GHL', 'syncly' ),
+					'wpValue'            => __( 'WordPress Value', 'syncly' ),
+					'status'             => __( 'Status', 'syncly' ),
+					'willUpdate'         => __( 'WILL UPDATE', 'syncly' ),
+					'inSync'             => __( 'IN SYNC', 'syncly' ),
+					'tagsToApply'        => __( 'Tags to Apply', 'syncly' ),
+					'syncPreview'        => __( 'Sync Preview', 'syncly' ),
+					'gotIt'              => __( 'Got it!', 'syncly' ),
 				],
 			],
 			GHL_CRM_VERSION,
@@ -511,7 +511,7 @@ class AssetsManager {
 		);
 		// Integrations CSS (loads on main-settings page for integrations tab)
 		$this->add_admin_asset(
-			'ghl-crm-integrations-css',
+			'synclys-css',
 			[ 'toplevel_page_ghl-crm-settings' ],
 			'integrations.css',
 			[ 'ghl-crm-globals-css' ],
@@ -521,7 +521,7 @@ class AssetsManager {
 
 		// Integrations JS (loads on main-settings page for integrations tab)
 		$this->add_admin_asset(
-			'ghl-crm-integrations-js',
+			'synclys-js',
 			[ 'toplevel_page_ghl-crm-settings' ],
 			'integrations.js',
 			[ 'jquery', 'ghl-sweetalert2' ],
@@ -550,8 +550,9 @@ class AssetsManager {
 			'sync-logs.js',
 			[ 'jquery', 'ghl-sweetalert2' ],
 			[
-				'nonce'   => wp_create_nonce( 'ghl_sync_logs_nonce' ),
-				'ajaxurl' => admin_url( 'admin-ajax.php' ),
+				'nonce'      => wp_create_nonce( 'ghl_sync_logs_nonce' ),
+				'ajaxurl'    => admin_url( 'admin-ajax.php' ),
+				'upgradeUrl' => apply_filters( 'ghl_crm_upgrade_url', 'https://highlevelsync.com/' ),
 			],
 			GHL_CRM_VERSION,
 			true
@@ -567,6 +568,9 @@ class AssetsManager {
 			GHL_CRM_VERSION
 		);
 
+		$is_pro_active = (bool) apply_filters( 'ghl_crm_is_pro_active', false );
+		$upgrade_url   = apply_filters( 'ghl_crm_upgrade_url', 'https://highlevelsync.com/' );
+
 		$this->add_admin_asset(
 			'ghl-crm-forms-js',
 			[ 'toplevel_page_ghl-crm-admin' ],
@@ -577,27 +581,28 @@ class AssetsManager {
 				'nonce'            => wp_create_nonce( 'ghl_crm_forms_nonce' ),
 				'whiteLabelDomain' => $white_label_domain,
 				'formSettings'     => $this->get_all_form_settings(),
-				'isPro'            => \GHL_CRM\Integrations\Forms\FormSettings::is_pro_active(),
-				'upgradeUrl'       => apply_filters( 'ghl_crm_upgrade_url', 'https://highlevelsync.com/upgrade-to-pro' ),
+				'isPro'            => $is_pro_active,
+				'upgradeUrl'       => $upgrade_url,
+				'proFormsMockup'   => $is_pro_active ? '' : $this->get_forms_addon_mockup_html( $upgrade_url ),
 				'strings'          => [
-					'errorLoad'        => __( 'Failed to load forms', 'ghl-crm-integration' ),
-					'ajaxError'        => __( 'AJAX error: ', 'ghl-crm-integration' ),
-					'noForms'          => __( 'No Forms Found', 'ghl-crm-integration' ),
-					'noFormsDesc'      => __( 'Create forms in your GoHighLevel account to display them here.', 'ghl-crm-integration' ),
-					'untitledForm'     => __( 'Untitled Form', 'ghl-crm-integration' ),
-					'formName'         => __( 'Form Name', 'ghl-crm-integration' ),
-					'formId'           => __( 'Form ID', 'ghl-crm-integration' ),
-					'submissions'      => __( 'Submissions', 'ghl-crm-integration' ),
-					'shortcode'        => __( 'Shortcode', 'ghl-crm-integration' ),
-					'actions'          => __( 'Actions', 'ghl-crm-integration' ),
-					'clickToCopy'      => __( 'Click to copy shortcode', 'ghl-crm-integration' ),
-					'preview'          => __( 'Preview', 'ghl-crm-integration' ),
-					'copy'             => __( 'Copy', 'ghl-crm-integration' ),
-					'whiteLabelNotice' => __( 'Using white label domain', 'ghl-crm-integration' ),
-					'proBadge'         => __( 'PRO', 'ghl-crm-integration' ),
-					'upgradeNow'       => __( 'Upgrade Now', 'ghl-crm-integration' ),
-					'proFeature'       => __( 'This is a Pro feature', 'ghl-crm-integration' ),
-					'unlockFeature'    => __( 'Upgrade to Pro to unlock this feature', 'ghl-crm-integration' ),
+					'errorLoad'        => __( 'Failed to load forms', 'syncly' ),
+					'ajaxError'        => __( 'AJAX error: ', 'syncly' ),
+					'noForms'          => __( 'No Forms Found', 'syncly' ),
+					'noFormsDesc'      => __( 'Create forms in your GoHighLevel account to display them here.', 'syncly' ),
+					'untitledForm'     => __( 'Untitled Form', 'syncly' ),
+					'formName'         => __( 'Form Name', 'syncly' ),
+					'formId'           => __( 'Form ID', 'syncly' ),
+					'submissions'      => __( 'Submissions', 'syncly' ),
+					'shortcode'        => __( 'Shortcode', 'syncly' ),
+					'actions'          => __( 'Actions', 'syncly' ),
+					'clickToCopy'      => __( 'Click to copy shortcode', 'syncly' ),
+					'preview'          => __( 'Preview', 'syncly' ),
+					'copy'             => __( 'Copy', 'syncly' ),
+					'whiteLabelNotice' => __( 'Using white label domain', 'syncly' ),
+					'proBadge'         => __( 'PRO', 'syncly' ),
+					'upgradeNow'       => __( 'Learn More', 'syncly' ),
+					'proFeature'       => __( 'Available in the companion add-on', 'syncly' ),
+					'unlockFeature'    => __( 'Learn more about the companion add-on.', 'syncly' ),
 				],
 			],
 			GHL_CRM_VERSION,
@@ -641,7 +646,7 @@ class AssetsManager {
 		$delete_contact_on_user_delete = $settings['delete_contact_on_user_delete'] ?? false;
 		$enable_sync_logging           = $settings['enable_sync_logging'] ?? false;
 		$role_tags_config              = $settings_manager->get_location_role_tags( $location_id );
-		if ( empty( $role_tags_config ) && ! empty( $settings['role_tags'] ) && is_array( $settings[] ) ) {
+		if ( empty( $role_tags_config ) && ! empty( $settings['role_tags'] ) && is_array( $settings['role_tags'] ) ) {
 			$role_tags_config = $settings['role_tags'];
 		}
 		$enable_role_tags = ! empty( $role_tags_config );
@@ -939,14 +944,25 @@ class AssetsManager {
 		// );
 
 		// GHL Form Auto-fill (experimental - tests URL parameter pre-filling)
-		$user_data             = $this->get_current_user_data_for_autofill();
-		$form_settings_manager = \GHL_CRM\Integrations\Forms\FormSettings::get_instance();
-		$all_form_settings     = $form_settings_manager->get_all_settings();
+		$user_data         = $this->get_current_user_data_for_autofill();
+		$all_form_settings = \GHL_CRM\Integrations\Forms\FormSettings::get_instance()->get_all_settings();
 
-		// Resolve custom parameters for each form
+		$is_pro_active = \GHL_CRM\Integrations\Forms\FormSettings::is_pro_active();
+
+		// Resolve custom parameters for each form when the companion add-on enables them.
 		foreach ( $all_form_settings as $form_id => $form_config ) {
-			if ( isset( $form_config['custom_params'] ) && is_array( $form_config['custom_params'] ) ) {
-				$all_form_settings[ $form_id ]['resolved_params'] = $form_settings_manager->resolve_custom_params( $form_config['custom_params'] );
+			if ( ! $is_pro_active ) {
+				$all_form_settings[ $form_id ]['submission_limit']  = 'unlimited';
+				$all_form_settings[ $form_id ]['submitted_message'] = '';
+				unset( $all_form_settings[ $form_id ]['custom_params'], $all_form_settings[ $form_id ]['resolved_params'] );
+				continue;
+			}
+
+			$resolved_params = apply_filters( 'ghl_crm_form_custom_params', [], (string) $form_id );
+			if ( ! empty( $resolved_params ) && is_array( $resolved_params ) ) {
+				$all_form_settings[ $form_id ]['resolved_params'] = $resolved_params;
+			} else {
+				unset( $all_form_settings[ $form_id ]['resolved_params'] );
 			}
 		}
 
@@ -1212,6 +1228,55 @@ class AssetsManager {
 	private function get_all_form_settings(): array {
 		$form_settings = \GHL_CRM\Integrations\Forms\FormSettings::get_instance();
 		return $form_settings->get_all_settings();
+	}
+
+	/**
+	 * Get the free-plugin forms add-on preview markup.
+	 *
+	 * @param string $upgrade_url Companion add-on URL.
+	 * @return string Preview markup.
+	 */
+	private function get_forms_addon_mockup_html( string $upgrade_url ): string {
+		ob_start();
+		?>
+		<div class="ghl-settings-group ghl-pro-preview-card">
+			<div class="ghl-pro-preview-header">
+				<h3>
+					<span class="dashicons dashicons-lock"></span>
+					<?php esc_html_e( 'Advanced Form Controls', 'syncly' ); ?>
+					<span class="ghl-pro-badge-small"><?php esc_html_e( 'Add-on', 'syncly' ); ?></span>
+				</h3>
+				<a href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank" rel="noopener noreferrer" class="ghl-button ghl-button-secondary">
+					<span class="dashicons dashicons-unlock"></span>
+					<?php esc_html_e( 'Learn More', 'syncly' ); ?>
+				</a>
+			</div>
+			<div class="ghl-pro-preview-surface" aria-hidden="true">
+				<div class="ghl-pro-preview-section">
+					<div class="ghl-pro-preview-title-row">
+						<span class="ghl-pro-preview-title"><?php esc_html_e( 'Auto-fill Form Data', 'syncly' ); ?></span>
+						<span class="ghl-pro-preview-toggle is-on"></span>
+					</div>
+					<p class="ghl-pro-preview-copy"><?php esc_html_e( 'Pass logged-in user data into embedded forms.', 'syncly' ); ?></p>
+				</div>
+				<div class="ghl-pro-preview-section">
+					<div class="ghl-pro-preview-title-row">
+						<span class="ghl-pro-preview-title"><?php esc_html_e( 'Submission Controls', 'syncly' ); ?></span>
+						<span class="ghl-pro-preview-pill"><?php esc_html_e( 'Once per user', 'syncly' ); ?></span>
+					</div>
+					<div class="ghl-pro-preview-message"><?php esc_html_e( 'Thank you. You have already submitted this form.', 'syncly' ); ?></div>
+				</div>
+				<div class="ghl-pro-preview-section">
+					<div class="ghl-pro-preview-title-row">
+						<span class="ghl-pro-preview-title"><?php esc_html_e( 'Custom URL Parameters', 'syncly' ); ?></span>
+						<span class="ghl-pro-preview-pill"><?php esc_html_e( 'Dynamic', 'syncly' ); ?></span>
+					</div>
+					<div class="ghl-pro-preview-param"><code>{user_email}</code><span>=</span><code>email</code></div>
+				</div>
+			</div>
+		</div>
+		<?php
+		return (string) ob_get_clean();
 	}
 
 	/**

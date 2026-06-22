@@ -94,6 +94,8 @@
 				action: 'ghl_crm_save_settings',
 				nonce: $('input[name*="nonce"]').first().val() || $('#ghl_crm_nonce').val(),
 			};
+
+			syncPersonalizationHiddenFields($settingsWrapper);
 			
 			// First, identify all checkbox array names to initialize them as empty arrays
 			const checkboxArrays = new Set();
@@ -396,12 +398,7 @@
 		const originalHtml = $button.html();
 		
 		// Disable button and show loading state
-		$button.prop('disabled', true).html('<span class="dashicons dashicons-update-alt" style="animation: rotation 1s infinite linear;"></span> Running Diagnostics...');
-		
-		// Add CSS animation for spinner
-		if (!$('#health-check-spinner-style').length) {
-			$('<style id="health-check-spinner-style">@keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(359deg); } }</style>').appendTo('head');
-		}
+		$button.prop('disabled', true).html('<span class="dashicons dashicons-update-alt ghl-health-check-spinner"></span> Running Diagnostics...');
 		
 		$.ajax({
 			url: ajaxurl,
@@ -671,6 +668,7 @@
 	function cleanupSettings() {
 		$(document).off('.ghlSettings');
 		$(document).off('change.ghlCheckbox', '.ghl-checkbox-original');
+		$(document).off('change.ghlPersonalizationFields', '.ghl-field-select2');
 		$(document).off('click.ghlClearCache', '#clear-cache-btn');
 		$(document).off('click.ghlResetSettings', '#reset-settings-btn');
 		$(document).off('click.ghlExportSettings', '#export-settings-btn');
@@ -678,6 +676,52 @@
 		$(document).off('change.ghlImportFile', '#import-settings-file');
 		$('#ghl-test-connection').off('click.ghlSettings');
 		window.ghlSettingsInitialized = false;
+	}
+
+	/**
+	 * Keep personalization field selections in sync with the JSON setting value.
+	 */
+	function syncPersonalizationHiddenFields($context) {
+		const $fieldSelect = ($context && $context.length ? $context : $(document)).find('.ghl-field-select2');
+		const $jsonField = ($context && $context.length ? $context : $(document)).find('#ghl_cid_hidden_fields_json');
+
+		if ($fieldSelect.length === 0 || $jsonField.length === 0) {
+			return;
+		}
+
+		$jsonField.val(JSON.stringify($fieldSelect.val() || []));
+	}
+
+	/**
+	 * Initialize personalization controls after AJAX-loaded settings tabs render.
+	 */
+	function initPersonalizationSettings() {
+		const $fieldSelect = $('.ghl-field-select2');
+
+		if ($fieldSelect.length === 0) {
+			return;
+		}
+
+		if (typeof $.fn.select2 !== 'undefined') {
+			$fieldSelect.each(function() {
+				const $select = $(this);
+
+				if (! $select.hasClass('select2-hidden-accessible')) {
+					$select.select2({
+						placeholder: 'Select fields to hide...',
+						allowClear: true,
+						width: '100%'
+					});
+				}
+			});
+		}
+
+		syncPersonalizationHiddenFields($('.ghl-settings-wrapper'));
+
+		$(document).off('change.ghlPersonalizationFields', '.ghl-field-select2')
+			.on('change.ghlPersonalizationFields', '.ghl-field-select2', function() {
+				syncPersonalizationHiddenFields($(this).closest('.ghl-settings-wrapper'));
+			});
 	}
 
 	/**
@@ -1257,6 +1301,7 @@
 	window.initRestrictionsTagsSelect = initRestrictionsTagsSelect;
 	window.initRoleTags = initRoleTags;
 	window.initFamilyAccounts = initFamilyAccounts;
+	window.initPersonalizationSettings = initPersonalizationSettings;
 
 	// Initialize on document ready (for non-SPA page loads)
 	$(document).ready(function() {
@@ -1264,6 +1309,7 @@
 		initRestrictionsTagsSelect();
 		initRoleTags();
 		initFamilyAccounts();
+		initPersonalizationSettings();
 		initSettings();
 	});
 

@@ -1,3 +1,17 @@
+.ghl-health-check-spinner {
+	animation: ghl-rotation 1s infinite linear;
+}
+
+@keyframes ghl-rotation {
+	from {
+		transform: rotate(0deg);
+	}
+
+	to {
+		transform: rotate(359deg);
+	}
+}
+
 /**
  * Settings Page Specific Styles
  * 

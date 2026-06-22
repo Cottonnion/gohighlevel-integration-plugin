@@ -65,7 +65,7 @@ class MaintenanceHandler {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to clear cache.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to clear cache.', 'syncly' ),
 				],
 				403
 			);
@@ -118,7 +118,7 @@ class MaintenanceHandler {
 
 		wp_send_json_success(
 			[
-				'message' => __( 'Cache cleared successfully!', 'ghl-crm-integration' ),
+				'message' => __( 'Cache cleared successfully!', 'syncly' ),
 			]
 		);
 	}
@@ -136,7 +136,7 @@ class MaintenanceHandler {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to reset settings.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to reset settings.', 'syncly' ),
 				],
 				403
 			);
@@ -191,14 +191,14 @@ class MaintenanceHandler {
 		if ( $saved ) {
 			wp_send_json_success(
 				[
-					'message'  => __( 'Settings reset to defaults successfully! Your API connection has been preserved.', 'ghl-crm-integration' ),
+					'message'  => __( 'Settings reset to defaults successfully! Your API connection has been preserved.', 'syncly' ),
 					'settings' => $settings,
 				]
 			);
 		} else {
 			wp_send_json_error(
 				[
-					'message' => __( 'Failed to reset settings. Please try again.', 'ghl-crm-integration' ),
+					'message' => __( 'Failed to reset settings. Please try again.', 'syncly' ),
 				],
 				500
 			);
@@ -216,7 +216,7 @@ class MaintenanceHandler {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to perform this action.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to perform this action.', 'syncly' ),
 				],
 				403
 			);
@@ -253,7 +253,7 @@ class MaintenanceHandler {
 				[
 					'message'   => sprintf(
 						/* translators: %d: number of items processed */
-						__( 'Queue processed successfully. Processed %d items.', 'ghl-crm-integration' ),
+						__( 'Queue processed successfully. Processed %d items.', 'syncly' ),
 						$processed
 					),
 					'processed' => $processed,
@@ -267,7 +267,7 @@ class MaintenanceHandler {
 				[
 					'message' => sprintf(
 						/* translators: %s: error message */
-						__( 'Failed to process queue: %s', 'ghl-crm-integration' ),
+						__( 'Failed to process queue: %s', 'syncly' ),
 						$e->getMessage()
 					),
 				],
@@ -278,7 +278,7 @@ class MaintenanceHandler {
 				[
 					'message' => sprintf(
 						/* translators: %s: error message */
-						__( 'A fatal error occurred while processing the queue: %s', 'ghl-crm-integration' ),
+						__( 'A fatal error occurred while processing the queue: %s', 'syncly' ),
 						$err->getMessage()
 					),
 				],
@@ -289,7 +289,7 @@ class MaintenanceHandler {
 				[
 					'message' => sprintf(
 						/* translators: %s: error message */
-						__( 'An unexpected error occurred while processing the queue: %s', 'ghl-crm-integration' ),
+						__( 'An unexpected error occurred while processing the queue: %s', 'syncly' ),
 						$throwable->getMessage()
 					),
 				],

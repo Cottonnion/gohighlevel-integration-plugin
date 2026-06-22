@@ -160,11 +160,20 @@ class OAuthHandler {
 	 */
 	public function handle_admin_oauth_callback(): void {
 		// Check if this is an OAuth callback - look for 'code' parameter on ghl-crm-admin page
-		if ( ! isset( $_GET['page'] ) || 'ghl-crm-admin' !== $_GET['page'] ) {
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+
+		if ( 'ghl-crm-admin' !== $page ) {
 			return;
 		}
 
-		$this->log_oauth_event( 'oauth_callback_admin_enter', [ 'raw_get' => $_GET ] );
+		$sanitized_get = array_map(
+			static function ( $value ) {
+				return is_scalar( $value ) ? sanitize_text_field( wp_unslash( (string) $value ) ) : '';
+			},
+			$_GET
+		);
+
+		$this->log_oauth_event( 'oauth_callback_admin_enter', [ 'query_args' => $sanitized_get ] );
 
 		if ( ! isset( $_GET['code'] ) ) {
 			return;
@@ -173,7 +182,7 @@ class OAuthHandler {
 		// We have a code, process the OAuth callback with state verification
 		$code = sanitize_text_field( wp_unslash( $_GET['code'] ) );
 
-		$state = isset( $_GET['state'] ) ? (string) wp_unslash( $_GET['state'] ) : '';
+		$state = isset( $_GET['state'] ) ? sanitize_text_field( wp_unslash( $_GET['state'] ) ) : '';
 
 		// Fallback: proxy returns to admin URL with ghl_state instead of state; rebuild encoded state
 		if ( empty( $state ) && isset( $_GET['ghl_state'] ) ) {
@@ -201,7 +210,7 @@ class OAuthHandler {
 				add_query_arg(
 					[
 						'oauth'   => 'error',
-						'message' => urlencode( __( 'Missing state parameter. OAuth cancelled for security.', 'ghl-crm-integration' ) ),
+						'message' => urlencode( __( 'Missing state parameter. OAuth cancelled for security.', 'syncly' ) ),
 					],
 					admin_url( 'admin.php?page=ghl-crm-admin' )
 				)
@@ -287,7 +296,7 @@ class OAuthHandler {
 	private function process_oauth_callback( string $code, string $state ) {
 		if ( empty( $state ) ) {
 			$this->log_oauth_event( 'oauth_state_missing', [] );
-			return new \WP_Error( 'missing_state', __( 'Missing state parameter. Please restart the OAuth flow.', 'ghl-crm-integration' ) );
+			return new \WP_Error( 'missing_state', __( 'Missing state parameter. Please restart the OAuth flow.', 'syncly' ) );
 		}
 
 		$decoded_state = rawurldecode( $state );
@@ -309,14 +318,14 @@ class OAuthHandler {
 
 		if ( empty( $state_nonce ) ) {
 			$this->log_oauth_event( 'oauth_state_nonce_missing', [] );
-			return new \WP_Error( 'invalid_state', __( 'OAuth state missing nonce. Please try again.', 'ghl-crm-integration' ) );
+			return new \WP_Error( 'invalid_state', __( 'OAuth state missing nonce. Please try again.', 'syncly' ) );
 		}
 
 		$stored_state = get_transient( 'ghl_oauth_state_' . $state_nonce );
 
 		if ( empty( $stored_state ) ) {
 			$this->log_oauth_event( 'oauth_state_expired', [] );
-			return new \WP_Error( 'invalid_state', __( 'OAuth state expired. Please try again.', 'ghl-crm-integration' ) );
+			return new \WP_Error( 'invalid_state', __( 'OAuth state expired. Please try again.', 'syncly' ) );
 		}
 
 		// Clean up state transient

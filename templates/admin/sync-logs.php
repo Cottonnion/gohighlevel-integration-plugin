@@ -18,6 +18,7 @@ $is_connected     = $oauth_status['connected'] || ! empty( $settings['api_token'
 
 // Check if logging is enabled
 $is_logging_enabled = \GHL_CRM\Core\SettingsManager::is_sync_logging_enabled();
+$is_pro_active      = (bool) apply_filters( 'ghl_crm_is_pro_active', false );
 
 // Get per-page preference from user meta (default 20)
 $current_user_id = get_current_user_id();
@@ -67,15 +68,15 @@ $total_pages = ceil( $log_count / $logs_per_page );
 	<?php if ( ! $is_connected ) : ?>
 		<div class="notice notice-warning">
 			<p>
-				<strong><?php esc_html_e( 'Not Connected', 'ghl-crm-integration' ); ?></strong><br>
+				<strong><?php esc_html_e( 'Not Connected', 'syncly' ); ?></strong><br>
 				<?php
 				printf(
 					/* translators: %s: Link to dashboard page */
-					esc_html__( 'Please connect to GoHighLevel in %s first.', 'ghl-crm-integration' ),
+					esc_html__( 'Please connect to GoHighLevel in %s first.', 'syncly' ),
 					sprintf(
 						'<a href="%s">%s</a>',
 						esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ),
-						esc_html__( 'Dashboard', 'ghl-crm-integration' )
+						esc_html__( 'Dashboard', 'syncly' )
 					)
 				);
 				?>
@@ -86,26 +87,26 @@ $total_pages = ceil( $log_count / $logs_per_page );
 
 	<!-- Status Info -->
 	<div style="margin-bottom: 20px; padding: 12px 16px; background: #f0f0f1; border-left: 4px solid <?php echo $is_logging_enabled ? '#46b450' : '#dc3232'; ?>; font-size: 13px;">
-		<strong><?php esc_html_e( 'Logging:', 'ghl-crm-integration' ); ?></strong> 
+		<strong><?php esc_html_e( 'Logging:', 'syncly' ); ?></strong> 
 		<?php if ( $is_logging_enabled ) : ?>
-			<span style="color: #46b450;"><?php esc_html_e( 'Enabled', 'ghl-crm-integration' ); ?></span>
+			<span style="color: #46b450;"><?php esc_html_e( 'Enabled', 'syncly' ); ?></span>
 		<?php else : ?>
-			<span style="color: #dc3232;"><?php esc_html_e( 'Disabled', 'ghl-crm-integration' ); ?></span>
+			<span style="color: #dc3232;"><?php esc_html_e( 'Disabled', 'syncly' ); ?></span>
 			<span style="color: #666;"> — 
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin&tab=advanced#advanced' ) ); ?>"><?php esc_html_e( 'Enable in Settings', 'ghl-crm-integration' ); ?></a>
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin&tab=advanced#advanced' ) ); ?>"><?php esc_html_e( 'Enable in Settings', 'syncly' ); ?></a>
 			</span>
 		<?php endif; ?>
 		<span style="margin-left: 20px; color: #666;">
 			<?php
 			/* translators: %s: formatted number of log entries */
-			printf( esc_html__( 'Total Logs: %s', 'ghl-crm-integration' ), '<strong>' . number_format( $log_count ) . '</strong>' );
+			printf( esc_html__( 'Total Logs: %s', 'syncly' ), '<strong>' . number_format( $log_count ) . '</strong>' );
 			?>
 		</span>
 		<?php if ( $queue_count > 0 ) : ?>
 			<span style="margin-left: 20px; color: #f0b849;">
 				<?php
 				/* translators: %s: formatted number of queue items */
-				printf( esc_html__( 'Queue: %s pending', 'ghl-crm-integration' ), '<strong>' . number_format( $queue_count ) . '</strong>' );
+				printf( esc_html__( 'Queue: %s pending', 'syncly' ), '<strong>' . number_format( $queue_count ) . '</strong>' );
 				?>
 			</span>
 		<?php endif; ?>
@@ -115,17 +116,17 @@ $total_pages = ceil( $log_count / $logs_per_page );
 	<div class="ghl-logs-filters">
 		<div class="ghl-filters-row">
 			<div class="ghl-filter-group">
-				<label for="ghl-filter-status"><?php esc_html_e( 'Filter by Status', 'ghl-crm-integration' ); ?></label>
+				<label for="ghl-filter-status"><?php esc_html_e( 'Filter by Status', 'syncly' ); ?></label>
 				<select id="ghl-filter-status">
-					<option value=""><?php esc_html_e( 'All Statuses', 'ghl-crm-integration' ); ?></option>
-					<option value="success"><?php esc_html_e( 'Success', 'ghl-crm-integration' ); ?></option>
-					<option value="failed"><?php esc_html_e( 'Error', 'ghl-crm-integration' ); ?></option>
-					<option value="pending"><?php esc_html_e( 'Pending', 'ghl-crm-integration' ); ?></option>
+					<option value=""><?php esc_html_e( 'All Statuses', 'syncly' ); ?></option>
+					<option value="success"><?php esc_html_e( 'Success', 'syncly' ); ?></option>
+					<option value="failed"><?php esc_html_e( 'Error', 'syncly' ); ?></option>
+					<option value="pending"><?php esc_html_e( 'Pending', 'syncly' ); ?></option>
 				</select>
 			</div>
 
 			<div class="ghl-filter-group">
-				<label for="ghl-per-page"><?php esc_html_e( 'Per Page', 'ghl-crm-integration' ); ?></label>
+				<label for="ghl-per-page"><?php esc_html_e( 'Per Page', 'syncly' ); ?></label>
 				<select id="ghl-per-page">
 					<option value="10" <?php selected( $logs_per_page, 10 ); ?>>10</option>
 					<option value="20" <?php selected( $logs_per_page, 20 ); ?>>20</option>
@@ -136,17 +137,17 @@ $total_pages = ceil( $log_count / $logs_per_page );
 			</div>
 
 			<div class="ghl-filter-group">
-				<label for="ghl-search-logs"><?php esc_html_e( 'Search Logs', 'ghl-crm-integration' ); ?></label>
-				<input type="text" id="ghl-search-logs" placeholder="<?php esc_attr_e( 'Search by action, message...', 'ghl-crm-integration' ); ?>">
+				<label for="ghl-search-logs"><?php esc_html_e( 'Search Logs', 'syncly' ); ?></label>
+				<input type="text" id="ghl-search-logs" placeholder="<?php esc_attr_e( 'Search by action, message...', 'syncly' ); ?>">
 			</div>
 			<div class="ghl-actions-group">
 				<button type="button" id="ghl-delete-logs" class="ghl-button ghl-button-secondary">
 					<span class="dashicons dashicons-trash"></span>
-					<span class="ghl-button-text"><?php esc_html_e( 'Delete Old Logs', 'ghl-crm-integration' ); ?></span>
+					<span class="ghl-button-text"><?php esc_html_e( 'Delete Old Logs', 'syncly' ); ?></span>
 				</button>
 				<button type="button" id="ghl-clear-all-logs" class="ghl-button ghl-button-danger">
 					<span class="dashicons dashicons-warning"></span>
-					<span class="ghl-button-text"><?php esc_html_e( 'Clear All', 'ghl-crm-integration' ); ?></span>
+					<span class="ghl-button-text"><?php esc_html_e( 'Clear All', 'syncly' ); ?></span>
 				</button>
 			</div>
 		</div>
@@ -158,12 +159,12 @@ $total_pages = ceil( $log_count / $logs_per_page );
 			<table class="ghl-logs-table">
 				<thead>
 					<tr>
-						<th style="width: 180px;"><?php esc_html_e( 'Date', 'ghl-crm-integration' ); ?></th>
-						<th style="width: 100px;"><?php esc_html_e( 'Type', 'ghl-crm-integration' ); ?></th>
-						<th style="width: 80px;"><?php esc_html_e( 'Item ID', 'ghl-crm-integration' ); ?></th>
-						<th><?php esc_html_e( 'Action', 'ghl-crm-integration' ); ?></th>
-						<th style="width: 100px;"><?php esc_html_e( 'Status', 'ghl-crm-integration' ); ?></th>
-						<th style="width: 120px;"><?php esc_html_e( 'Details', 'ghl-crm-integration' ); ?></th>
+						<th style="width: 180px;"><?php esc_html_e( 'Date', 'syncly' ); ?></th>
+						<th style="width: 100px;"><?php esc_html_e( 'Type', 'syncly' ); ?></th>
+						<th style="width: 80px;"><?php esc_html_e( 'Item ID', 'syncly' ); ?></th>
+						<th><?php esc_html_e( 'Action', 'syncly' ); ?></th>
+						<th style="width: 100px;"><?php esc_html_e( 'Status', 'syncly' ); ?></th>
+						<th style="width: 120px;"><?php esc_html_e( 'Details', 'syncly' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -221,10 +222,20 @@ $total_pages = ceil( $log_count / $logs_per_page );
 									</span>
 								</td>
 								<td>
-									<button type="button" class="ghl-button ghl-button-small ghl-button-secondary ghl-view-details" data-details="<?php echo esc_attr( $details_json ); ?>">
-										<span class="dashicons dashicons-visibility"></span>
-										<?php esc_html_e( 'View', 'ghl-crm-integration' ); ?>
-									</button>
+									<?php
+									$details_button = apply_filters( 'ghl_crm_sync_log_details_button', '', $log, $details_json );
+
+									if ( $is_pro_active && ! empty( $details_button ) ) {
+										echo wp_kses_post( $details_button );
+									} else {
+										?>
+										<button type="button" class="ghl-button ghl-button-small ghl-button-secondary ghl-view-details ghl-preview-mode">
+											<span class="dashicons dashicons-lock"></span>
+											<?php esc_html_e( 'Learn More', 'syncly' ); ?>
+										</button>
+										<?php
+									}
+									?>
 								</td>
 							</tr>
 						<?php endforeach; ?>
@@ -235,8 +246,8 @@ $total_pages = ceil( $log_count / $logs_per_page );
 									<div class="ghl-logs-empty-icon">
 										<span class="dashicons dashicons-database-view"></span>
 									</div>
-									<h3 class="ghl-logs-empty-title"><?php esc_html_e( 'No Logs Found', 'ghl-crm-integration' ); ?></h3>
-									<p class="ghl-logs-empty-text"><?php esc_html_e( 'Sync events will appear here once your integration starts processing data.', 'ghl-crm-integration' ); ?></p>
+									<h3 class="ghl-logs-empty-title"><?php esc_html_e( 'No Logs Found', 'syncly' ); ?></h3>
+									<p class="ghl-logs-empty-text"><?php esc_html_e( 'Sync events will appear here once your integration starts processing data.', 'syncly' ); ?></p>
 								</div>
 							</td>
 						</tr>
@@ -249,10 +260,10 @@ $total_pages = ceil( $log_count / $logs_per_page );
 					<div class="ghl-pagination-info">
 						<?php
 						$start = $offset + 1;
-						$end   = min( $offset + $per_page, $log_count );
+						$end   = min( $offset + $logs_per_page, $log_count );
 						printf(
 							/* translators: 1: Start number, 2: End number, 3: Total count */
-							esc_html__( 'Showing %1$d-%2$d of %3$d logs', 'ghl-crm-integration' ),
+							esc_html__( 'Showing %1$d-%2$d of %3$d logs', 'syncly' ),
 							absint( $start ),
 							absint( $end ),
 							absint( $log_count )
@@ -312,54 +323,21 @@ $total_pages = ceil( $log_count / $logs_per_page );
 		<div class="ghl-modal-header">
 			<h2 class="ghl-modal-title">
 				<span class="dashicons dashicons-info"></span>
-				<?php esc_html_e( 'Sync Log Details', 'ghl-crm-integration' ); ?>
-				<?php if ( ! defined( 'GHL_CRM_PRO_VERSION' ) ) : ?>
-					<span class="ghl-pro-badge">PRO</span>
-				<?php endif; ?>
+				<?php esc_html_e( 'Sync Log Details', 'syncly' ); ?>
 			</h2>
-			<button type="button" id="ghl-close-modal" class="ghl-modal-close" aria-label="<?php esc_attr_e( 'Close', 'ghl-crm-integration' ); ?>">
+			<button type="button" id="ghl-close-modal" class="ghl-modal-close" aria-label="<?php esc_attr_e( 'Close', 'syncly' ); ?>">
 				&times;
 			</button>
 		</div>
 		<div class="ghl-modal-body">
-			<?php if ( ! defined( 'GHL_CRM_PRO_VERSION' ) ) : ?>
-				<!-- Free version with blurred content and upsell -->
-				<div class="ghl-modal-details-blur">
-					<pre id="ghl-details-content" class="ghl-modal-details ghl-blurred"></pre>
-					<div class="ghl-modal-upsell">
-						<div class="ghl-upsell-icon">
-							<span class="dashicons dashicons-lock"></span>
-						</div>
-						<h3><?php esc_html_e( 'Unlock Detailed Log View', 'ghl-crm-integration' ); ?></h3>
-						<p><?php esc_html_e( 'Get access to complete sync log details, metadata, and advanced troubleshooting information with GHL CRM Pro.', 'ghl-crm-integration' ); ?></p>
-						<ul class="ghl-upsell-features">
-							<li><span class="dashicons dashicons-yes"></span> <?php esc_html_e( 'Complete log metadata', 'ghl-crm-integration' ); ?></li>
-							<li><span class="dashicons dashicons-yes"></span> <?php esc_html_e( 'Advanced error details', 'ghl-crm-integration' ); ?></li>
-							<li><span class="dashicons dashicons-yes"></span> <?php esc_html_e( 'Field mapping insights', 'ghl-crm-integration' ); ?></li>
-							<li><span class="dashicons dashicons-yes"></span> <?php esc_html_e( 'API request/response data', 'ghl-crm-integration' ); ?></li>
-						</ul>
-						<div class="ghl-upsell-actions">
-							<a href="https://highlevelsync.com/upgrade-to-pro" target="_blank" class="ghl-button ghl-button-primary">
-								<?php esc_html_e( 'Upgrade to Pro', 'ghl-crm-integration' ); ?>
-								<span class="dashicons dashicons-external"></span>
-							</a>
-							<button type="button" class="ghl-button ghl-button-secondary" onclick="document.getElementById('ghl-details-modal').style.display='none'">
-								<?php esc_html_e( 'Maybe Later', 'ghl-crm-integration' ); ?>
-							</button>
-						</div>
-					</div>
-				</div>
-			<?php else : ?>
-				<!-- PRO version with clear content -->
-				<pre id="ghl-details-content" class="ghl-modal-details"></pre>
-			<?php endif; ?>
+			<div id="ghl-details-content" class="ghl-modal-details"></div>
 		</div>
 	</div>
 </div>
 
 <?php
 /**
- * Allow PRO plugin to render additional modal content or override
+ * Allow extensions to render additional modal content or override
  * Hook: ghl_crm_sync_logs_after_content
  */
 do_action( 'ghl_crm_sync_logs_after_content' );

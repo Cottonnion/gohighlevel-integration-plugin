@@ -1,3 +1,26 @@
+(function($) {
+  'use strict';
+
+  $(document).on('click', '.ghl-dashboard-tab', function() {
+    const tab = $(this).data('tab');
+
+    $('.ghl-dashboard-tab').removeClass('active');
+    $(this).addClass('active');
+
+    $('.ghl-tab-content').hide();
+    $('#ghl-tab-' + tab).show();
+
+    localStorage.setItem('ghl_active_dashboard_tab', tab);
+  });
+
+  $(function() {
+    const lastTab = localStorage.getItem('ghl_active_dashboard_tab');
+    if (lastTab && lastTab === 'analytics') {
+      $('.ghl-dashboard-tab[data-tab="analytics"]').trigger('click');
+    }
+  });
+})(jQuery);
+
 /**
  * Dashboard JavaScript
  *

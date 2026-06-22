@@ -1,4 +1,4 @@
-=== GHL Sync Bridge ===
+=== Syncly for GoHighLevel ===
 Contributors: cottonnion
 Tags: gohighlevel, crm, woocommerce, buddyboss, learndash, membership, webhooks
 Requires at least: 5.8
@@ -12,7 +12,7 @@ A powerful WordPress plugin that seamlessly integrates GoHighLevel CRM with Word
 
 == Description ==
 
-# GHL Sync Bridge
+# Syncly for GoHighLevel
 
 A powerful WordPress plugin that seamlessly integrates GoHighLevel CRM with WordPress, WooCommerce, BuddyBoss, and LearnDash. Features OAuth2 authentication, intelligent field mapping, automatic contact synchronization, role-based tagging, membership restrictions, webhook automation, custom objects, and comprehensive queue management.
 
@@ -24,19 +24,19 @@ A powerful WordPress plugin that seamlessly integrates GoHighLevel CRM with Word
 
 ## 🎯 Overview
 
-This plugin bridges the gap between your WordPress ecosystem and GoHighLevel CRM, offering features that competitive plugins lack—including **OAuth2 authentication**, **BuddyBoss integration**, **full multisite support**, and **intelligent field mapping with duplicate prevention**.
+This plugin bridges the gap between your WordPress ecosystem and GoHighLevel CRM, offering comprehensive integration capabilities across your entire WordPress setup.
 
-### What Makes This Plugin Different?
+### Key Capabilities
 
 - ✅ **OAuth2 Authentication** - One-click secure connection to your GoHighLevel account
 - ✅ **Automatic Token Refresh** - Seamless token management with fallback reconnection
 - ✅ **Role-Based Tagging** - Automatically assign/remove tags based on WordPress roles
 - ✅ **Membership & Access Control** - Restrict content based on GoHighLevel tags
-- ✅ **BuddyBoss Integration** - The ONLY plugin that syncs BuddyBoss XProfile fields with GHL
+- ✅ **BuddyBoss Integration** - Sync BuddyBoss XProfile fields with GoHighLevel
 - ✅ **Smart Field Mapping** - Visual interface with duplicate field prevention
 - ✅ **Bi-directional Sync** - Choose sync direction per field (→ To GHL, ← From GHL, ↔ Both Ways)
 - ✅ **Webhook Automation** - Real-time bidirectional sync with GoHighLevel webhooks
-- ✅ **Custom Objects Support** - Map and sync GHL custom objects (forms, surveys, etc.)
+- ✅ **Custom Objects Support** - Map and sync GoHighLevel custom objects (forms, surveys, etc.)
 - ✅ **User Profile Login Links** - Generate secure auto-login links for users
 - ✅ **Queue Management** - Reliable background processing with Action Scheduler
 - ✅ **Rate Limiting** - Automatic API rate limit compliance (100/10s, 200k/day)
@@ -656,8 +656,7 @@ add_action('ghl_crm_user_synced', function($user_id, $contact_id, $is_new) {
 ### Local Development Setup
 
 ```bash
-# Clone the repository
-git clone https://github.com/Cottonnion/gohighlevel-integration-plugin.git
+# Clone or copy the plugin source into your local WordPress plugins directory
 
 # Navigate to your WordPress plugins directory
 cd wp-content/plugins/

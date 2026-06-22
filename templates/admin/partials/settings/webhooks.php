@@ -19,26 +19,26 @@ $settings           = \GHL_CRM\Core\SettingsManager::get_instance()->get_setting
 ?>
 
 <div class="ghl-settings-webhooks">
-	<h2><?php esc_html_e( 'Webhook Setup', 'ghl-crm-integration' ); ?></h2>
+	<h2><?php esc_html_e( 'Webhook Setup', 'syncly' ); ?></h2>
 	<p class="description">
-		<?php esc_html_e( 'Set up webhooks manually in your GoHighLevel account to receive real-time contact updates in WordPress.', 'ghl-crm-integration' ); ?>
+		<?php esc_html_e( 'Set up webhooks manually in your GoHighLevel account to receive real-time contact updates in WordPress.', 'syncly' ); ?>
 	</p>
 
 	<!-- Webhook Status Card -->
 	<div class="ghl-card" style="margin: 20px 0; padding: 20px; background: #f9f9f9; border-left: 4px solid <?php echo $webhook_status['status'] === 'active' ? '#46b450' : '#dba617'; ?>;">
-		<h3><?php esc_html_e( 'Current Status', 'ghl-crm-integration' ); ?></h3>
+		<h3><?php esc_html_e( 'Current Status', 'syncly' ); ?></h3>
 		
 		<div id="webhook-status-display">
 			<?php if ( $webhook_status['status'] === 'active' ) : ?>
 				<p>
 					<span class="dashicons dashicons-yes-alt" style="color: #46b450;"></span>
-					<strong style="color: #46b450;"><?php esc_html_e( 'Active', 'ghl-crm-integration' ); ?></strong>
+					<strong style="color: #46b450;"><?php esc_html_e( 'Active', 'syncly' ); ?></strong>
 				</p>
 				<p class="description">
 				<?php
 				printf(
 					/* translators: %d: Number of webhooks received in the last 24 hours */
-					esc_html__( 'Webhook is receiving data. %d webhooks processed in the last 24 hours.', 'ghl-crm-integration' ),
+					esc_html__( 'Webhook is receiving data. %d webhooks processed in the last 24 hours.', 'syncly' ),
 					esc_html( $webhook_status['recent_webhooks_24h'] )
 				);
 				?>
@@ -48,7 +48,7 @@ $settings           = \GHL_CRM\Core\SettingsManager::get_instance()->get_setting
 					<?php
 					printf(
 						/* translators: %s: Date and time of last webhook received */
-						esc_html__( 'Last webhook received: %s', 'ghl-crm-integration' ),
+						esc_html__( 'Last webhook received: %s', 'syncly' ),
 						esc_html( $webhook_status['last_webhook_received'] )
 					);
 					?>
@@ -57,34 +57,34 @@ $settings           = \GHL_CRM\Core\SettingsManager::get_instance()->get_setting
 			<?php else : ?>
 				<p>
 					<span class="dashicons dashicons-warning" style="color: #dba617;"></span>
-					<strong style="color: #dba617;"><?php esc_html_e( 'Not Configured', 'ghl-crm-integration' ); ?></strong>
+					<strong style="color: #dba617;"><?php esc_html_e( 'Not Configured', 'syncly' ); ?></strong>
 				</p>
 				<p class="description">
-					<?php esc_html_e( 'No webhooks have been received recently. Follow the setup instructions below to configure webhooks in your GoHighLevel account.', 'ghl-crm-integration' ); ?>
+					<?php esc_html_e( 'No webhooks have been received recently. Follow the setup instructions below to configure webhooks in your GoHighLevel account.', 'syncly' ); ?>
 				</p>
 			<?php endif; ?>
 
 			<p>
 				<button type="button" class="ghl-button ghl-button-secondary" id="ghl-test-webhook">
 					<span class="dashicons dashicons-admin-tools"></span>
-					<?php esc_html_e( 'Test Webhook Endpoint', 'ghl-crm-integration' ); ?>
+					<?php esc_html_e( 'Test Webhook Endpoint', 'syncly' ); ?>
 				</button>
-				<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Sends a test request to verify your webhook endpoint is working correctly. This checks that your WordPress site can receive webhook data from GoHighLevel.', 'ghl-crm-integration' ); ?>">?</span>
+				<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Sends a test request to verify your webhook endpoint is working correctly. This checks that your WordPress site can receive webhook data from GoHighLevel.', 'syncly' ); ?>">?</span>
 			</p>
 		</div>
 	</div>
 
 	<!-- Setup Instructions -->
 	<div class="ghl-webhook-setup" style="margin: 20px 0;">
-		<h3><?php esc_html_e( 'Setup Instructions', 'ghl-crm-integration' ); ?></h3>
+		<h3><?php esc_html_e( 'Setup Instructions', 'syncly' ); ?></h3>
 		
 		<!-- Step 1: Copy URL -->
 		<div class="ghl-setup-step" style="margin: 15px 0; padding: 15px; background: #fff; border: 1px solid #ddd;">
 			<h4 style="margin-top: 0;">
 				<span class="ghl-step-number" style="background: #7e3bd0; color: white; padding: 5px 10px; border-radius: 50%; margin-right: 10px;">1</span>
-				<?php esc_html_e( 'Copy Your Webhook URL', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Copy Your Webhook URL', 'syncly' ); ?>
 			</h4>
-			<p><?php esc_html_e( 'Copy this URL to use in your GoHighLevel automation:', 'ghl-crm-integration' ); ?></p>
+			<p><?php esc_html_e( 'Copy this URL to use in your GoHighLevel automation:', 'syncly' ); ?></p>
 			
 			<div style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
 				<input 
@@ -97,7 +97,7 @@ $settings           = \GHL_CRM\Core\SettingsManager::get_instance()->get_setting
 				/>
 				<button type="button" class="ghl-button ghl-button-secondary" id="copy-webhook-url">
 					<span class="dashicons dashicons-clipboard"></span>
-					<?php esc_html_e( 'Copy', 'ghl-crm-integration' ); ?>
+					<?php esc_html_e( 'Copy', 'syncly' ); ?>
 				</button>
 			</div>
 		</div>
@@ -106,13 +106,13 @@ $settings           = \GHL_CRM\Core\SettingsManager::get_instance()->get_setting
 		<div class="ghl-setup-step" style="margin: 15px 0; padding: 15px; background: #fff; border: 1px solid #ddd;">
 			<h4 style="margin-top: 0;">
 				<span class="ghl-step-number" style="background: #7e3bd0; color: white; padding: 5px 10px; border-radius: 50%; margin-right: 10px;">2</span>
-				<?php esc_html_e( 'Add the Security Header', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Add the Security Header', 'syncly' ); ?>
 			</h4>
-			<p><?php esc_html_e( 'Paste this header into your GoHighLevel outbound webhook action. Webhooks without this token will be rejected.', 'ghl-crm-integration' ); ?></p>
+			<p><?php esc_html_e( 'Paste this header into your GoHighLevel outbound webhook action. Webhooks without this token will be rejected.', 'syncly' ); ?></p>
 
 			<div style="display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; margin: 10px 0;">
 				<label style="margin: 0;">
-					<strong><?php esc_html_e( 'Header', 'ghl-crm-integration' ); ?>:</strong> <span id="webhook-secret-header-text"><?php echo esc_html( $webhook_header ); ?></span>
+					<strong><?php esc_html_e( 'Header', 'syncly' ); ?>:</strong> <span id="webhook-secret-header-text"><?php echo esc_html( $webhook_header ); ?></span>
 				</label>
 				<input
 					type="text"
@@ -124,17 +124,17 @@ $settings           = \GHL_CRM\Core\SettingsManager::get_instance()->get_setting
 				/>
 				<button type="button" class="ghl-button ghl-button-secondary" id="copy-webhook-secret">
 					<span class="dashicons dashicons-clipboard"></span>
-					<?php esc_html_e( 'Copy Token', 'ghl-crm-integration' ); ?>
+					<?php esc_html_e( 'Copy Token', 'syncly' ); ?>
 				</button>
 			</div>
 
 			<p class="description" style="margin: 10px 0;">
-				<?php esc_html_e( 'If you suspect unwanted traffic or need to rotate credentials, regenerate the token and update your GoHighLevel automation immediately.', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'If you suspect unwanted traffic or need to rotate credentials, regenerate the token and update your GoHighLevel automation immediately.', 'syncly' ); ?>
 			</p>
 			<p>
 				<button type="button" class="ghl-button ghl-button-secondary" id="regenerate-webhook-secret">
 					<span class="dashicons dashicons-update"></span>
-					<?php esc_html_e( 'Regenerate Token', 'ghl-crm-integration' ); ?>
+					<?php esc_html_e( 'Regenerate Token', 'syncly' ); ?>
 				</button>
 			</p>
 		</div>
@@ -143,19 +143,19 @@ $settings           = \GHL_CRM\Core\SettingsManager::get_instance()->get_setting
 		<div class="ghl-setup-step" style="margin: 15px 0; padding: 15px; background: #fff; border: 1px solid #ddd;">
 			<h4 style="margin-top: 0;">
 				<span class="ghl-step-number" style="background: #7e3bd0; color: white; padding: 5px 10px; border-radius: 50%; margin-right: 10px;">3</span>
-				<?php esc_html_e( 'Create Automation in GoHighLevel', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Create Automation in GoHighLevel', 'syncly' ); ?>
 			</h4>
 			
-			<p><?php esc_html_e( 'Follow these steps in your GoHighLevel account:', 'ghl-crm-integration' ); ?></p>
+			<p><?php esc_html_e( 'Follow these steps in your GoHighLevel account:', 'syncly' ); ?></p>
 			<ol style="margin-left: 20px;">
-				<li><?php esc_html_e( 'Log into your GoHighLevel account', 'ghl-crm-integration' ); ?></li>
-				<li><?php esc_html_e( 'Go to Automation → Workflows', 'ghl-crm-integration' ); ?></li>
-				<li><?php esc_html_e( 'Create a new workflow (or edit existing)', 'ghl-crm-integration' ); ?></li>
-				<li><?php esc_html_e( 'Set trigger: Contact Created, Contact Updated, Contact Deleted, or Contact Tag Updated (for tags added/changed/removed)', 'ghl-crm-integration' ); ?></li>
-				<li><?php esc_html_e( 'Add action: Outbound Webhook', 'ghl-crm-integration' ); ?></li>
-				<li><?php esc_html_e( 'Paste the webhook URL from step 1', 'ghl-crm-integration' ); ?></li>
-				<li><?php printf( /* translators: %s header name */ esc_html__( 'Keep method as POST and add header %s with the token above.', 'ghl-crm-integration' ), esc_html( $webhook_header ) ); ?></li>
-				<li><?php esc_html_e( 'Save and activate the workflow', 'ghl-crm-integration' ); ?></li>
+				<li><?php esc_html_e( 'Log into your GoHighLevel account', 'syncly' ); ?></li>
+				<li><?php esc_html_e( 'Go to Automation → Workflows', 'syncly' ); ?></li>
+				<li><?php esc_html_e( 'Create a new workflow (or edit existing)', 'syncly' ); ?></li>
+				<li><?php esc_html_e( 'Set trigger: Contact Created, Contact Updated, Contact Deleted, or Contact Tag Updated (for tags added/changed/removed)', 'syncly' ); ?></li>
+				<li><?php esc_html_e( 'Add action: Outbound Webhook', 'syncly' ); ?></li>
+				<li><?php esc_html_e( 'Paste the webhook URL from step 1', 'syncly' ); ?></li>
+				<li><?php printf( /* translators: %s header name */ esc_html__( 'Keep method as POST and add header %s with the token above.', 'syncly' ), esc_html( $webhook_header ) ); ?></li>
+				<li><?php esc_html_e( 'Save and activate the workflow', 'syncly' ); ?></li>
 			</ol>
 		</div>
 
@@ -163,11 +163,11 @@ $settings           = \GHL_CRM\Core\SettingsManager::get_instance()->get_setting
 		<div class="ghl-setup-step" style="margin: 15px 0; padding: 15px; background: #fff; border: 1px solid #ddd;">
 			<h4 style="margin-top: 0;">
 				<span class="ghl-step-number" style="background: #7e3bd0; color: white; padding: 5px 10px; border-radius: 50%; margin-right: 10px;">4</span>
-				<?php esc_html_e( 'Test and Verify', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Test and Verify', 'syncly' ); ?>
 			</h4>
-			<p><?php esc_html_e( 'Open your GoHighLevel workflow, click “Test Workflow” (top right), send a test, then confirm it appears in Sync Logs.', 'ghl-crm-integration' ); ?></p>
+			<p><?php esc_html_e( 'Open your GoHighLevel workflow, click “Test Workflow” (top right), send a test, then confirm it appears in Sync Logs.', 'syncly' ); ?></p>
 			<p class="description" style="font-size: 12px; color: #666;">
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin#/sync-logs' ) ); ?>" class="ghl-button ghl-button-secondary"><?php esc_html_e( 'Open Sync Logs', 'ghl-crm-integration' ); ?></a>
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin#/sync-logs' ) ); ?>" class="ghl-button ghl-button-secondary"><?php esc_html_e( 'Open Sync Logs', 'syncly' ); ?></a>
 			</p>
 		</div>
 	</div>
@@ -176,21 +176,21 @@ $settings           = \GHL_CRM\Core\SettingsManager::get_instance()->get_setting
 	<form id="ghl-webhooks-settings-form" method="post">
 		<?php wp_nonce_field( 'ghl_crm_settings_nonce', 'ghl_crm_nonce' ); ?>
 
-		<h3><?php esc_html_e( 'Webhook Processing Settings', 'ghl-crm-integration' ); ?></h3>
+		<h3><?php esc_html_e( 'Webhook Processing Settings', 'syncly' ); ?></h3>
 
 		<table class="form-table" role="presentation">
 			<tbody>
 				<tr>
 					<th scope="row">
-						<?php esc_html_e( 'Webhook Sync', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Webhook Sync', 'syncly' ); ?>
 					</th>
 					<td>
 						<p>
 							<span class="dashicons dashicons-yes-alt" style="color: #46b450;"></span>
-							<strong><?php esc_html_e( 'GoHighLevel → WordPress', 'ghl-crm-integration' ); ?></strong>
+							<strong><?php esc_html_e( 'GoHighLevel → WordPress', 'syncly' ); ?></strong>
 						</p>
 						<p class="description">
-							<?php esc_html_e( 'Webhooks sync contact data from GoHighLevel to WordPress automatically when contacts are created, updated, or deleted in GoHighLevel.', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'Webhooks sync contact data from GoHighLevel to WordPress automatically when contacts are created, updated, or deleted in GoHighLevel.', 'syncly' ); ?>
 						</p>
 						<input type="hidden" name="sync_direction" value="ghl_to_wp" />
 					</td>
@@ -198,7 +198,7 @@ $settings           = \GHL_CRM\Core\SettingsManager::get_instance()->get_setting
 
 				<tr>
 					<th scope="row">
-						<?php esc_html_e( 'Supported Events', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Supported Events', 'syncly' ); ?>
 					</th>
 					<td>
 						<ul style="margin: 0; list-style: none;">
@@ -210,14 +210,14 @@ $settings           = \GHL_CRM\Core\SettingsManager::get_instance()->get_setting
 							<?php endforeach; ?>
 						</ul>
 						<p class="description">
-							<?php esc_html_e( 'These are the contact events that the webhook endpoint can process.', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'These are the contact events that the webhook endpoint can process.', 'syncly' ); ?>
 						</p>
 					</td>
 				</tr>
 
 				<tr>
 					<th scope="row">
-						<?php esc_html_e( 'Allow User Deletion', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Allow User Deletion', 'syncly' ); ?>
 					</th>
 					<td>
 						<div class="ghl-form-item">
@@ -234,8 +234,8 @@ $settings           = \GHL_CRM\Core\SettingsManager::get_instance()->get_setting
 										<span class="ghl-checkbox-inner"></span>
 									</span>
 									<span class="ghl-checkbox-label">
-										<?php esc_html_e( 'Delete WordPress users when contacts are deleted in GoHighLevel', 'ghl-crm-integration' ); ?>
-										<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'If disabled, users will be unlinked from GHL contacts but not deleted.', 'ghl-crm-integration' ); ?>">?</span>
+										<?php esc_html_e( 'Delete WordPress users when contacts are deleted in GoHighLevel', 'syncly' ); ?>
+										<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'If disabled, users will be unlinked from GHL contacts but not deleted.', 'syncly' ); ?>">?</span>
 									</span>
 								</label>
 							</div>
@@ -247,7 +247,7 @@ $settings           = \GHL_CRM\Core\SettingsManager::get_instance()->get_setting
 
 		<p class="submit">
 			<button type="submit" class="ghl-button ghl-button-primary ghl-save-settings-btn">
-				<?php esc_html_e( 'Save Webhook Settings', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Save Webhook Settings', 'syncly' ); ?>
 			</button>
 		</p>
 	</form>
@@ -256,49 +256,55 @@ $settings           = \GHL_CRM\Core\SettingsManager::get_instance()->get_setting
 
 <script>
 jQuery(document).ready(function($) {
-	// Copy webhook URL
+
 	$('#copy-webhook-url').on('click', function() {
 		const urlField = document.getElementById('webhook_url');
-		urlField.select();
-		urlField.setSelectionRange(0, 99999); // For mobile devices
-		
+
 		try {
-			document.execCommand('copy');
-			$(this).html('<span class="dashicons dashicons-yes"></span> <?php esc_html_e( 'Copied!', 'ghl-crm-integration' ); ?>');
-			setTimeout(() => {
-				$(this).html('<span class="dashicons dashicons-clipboard"></span> <?php esc_html_e( 'Copy', 'ghl-crm-integration' ); ?>');
+			navigator.clipboard.writeText(urlField.value);
+
+			const $btn = $(this);
+			$btn.html('<span class="dashicons dashicons-yes"></span> <?php esc_html_e( 'Copied!', 'syncly' ); ?>');
+
+			setTimeout(function() {
+				$btn.html('<span class="dashicons dashicons-clipboard"></span> <?php esc_html_e( 'Copy', 'syncly' ); ?>');
 			}, 2000);
+
 		} catch (err) {
-			alert('<?php esc_html_e( 'Could not copy URL. Please copy manually.', 'ghl-crm-integration' ); ?>');
+			alert('<?php esc_html_e( 'Could not copy URL. Please copy manually.', 'syncly' ); ?>');
 		}
 	});
 
-	// Copy webhook secret
 	$('#copy-webhook-secret').on('click', function() {
 		const secretField = document.getElementById('webhook-secret-field');
-		secretField.select();
-		secretField.setSelectionRange(0, 99999);
 
 		try {
-			document.execCommand('copy');
-			$(this).html('<span class="dashicons dashicons-yes"></span> <?php esc_html_e( 'Copied!', 'ghl-crm-integration' ); ?>');
-			setTimeout(() => {
-				$(this).html('<span class="dashicons dashicons-clipboard"></span> <?php esc_html_e( 'Copy Token', 'ghl-crm-integration' ); ?>');
+			navigator.clipboard.writeText(secretField.value);
+
+			const $btn = $(this);
+			$btn.html('<span class="dashicons dashicons-yes"></span> <?php esc_html_e( 'Copied!', 'syncly' ); ?>');
+
+			setTimeout(function() {
+				$btn.html('<span class="dashicons dashicons-clipboard"></span> <?php esc_html_e( 'Copy Token', 'syncly' ); ?>');
 			}, 2000);
+
 		} catch (err) {
-			alert('<?php esc_html_e( 'Could not copy token. Please copy manually.', 'ghl-crm-integration' ); ?>');
+			alert('<?php esc_html_e( 'Could not copy token. Please copy manually.', 'syncly' ); ?>');
 		}
 	});
 
-	// Regenerate webhook secret
 	$('#regenerate-webhook-secret').on('click', function() {
-		if ( !confirm('<?php esc_html_e( 'Regenerate the token? You must update your GoHighLevel automation immediately after rotating it.', 'ghl-crm-integration' ); ?>') ) {
+
+		if (!confirm('<?php esc_html_e( 'Regenerate the token? You must update your GoHighLevel automation immediately after rotating it.', 'syncly' ); ?>')) {
 			return;
 		}
 
 		const $btn = $(this);
 		const originalText = $btn.html();
-		$btn.prop('disabled', true).html('<span class="dashicons dashicons-update ghl-spin"></span> <?php esc_html_e( 'Rotating...', 'ghl-crm-integration' ); ?>');
+
+		$btn.prop('disabled', true).html(
+			'<span class="dashicons dashicons-update ghl-spin"></span> <?php esc_html_e( 'Rotating...', 'syncly' ); ?>'
+		);
 
 		$.ajax({
 			url: ajaxurl,
@@ -308,74 +314,109 @@ jQuery(document).ready(function($) {
 				nonce: '<?php echo esc_js( wp_create_nonce( 'ghl_crm_admin' ) ); ?>'
 			},
 			success: function(response) {
+
 				if (response.success && response.data) {
+
 					$('#webhook-secret-field').val(response.data.webhook_secret);
-					$('#webhook-secret-header-text').text(response.data.header || '<?php echo esc_js( $webhook_header ); ?>');
-					alert('✓ ' + (response.data.message || '<?php esc_html_e( 'Token regenerated. Update your GoHighLevel automation.', 'ghl-crm-integration' ); ?>'));
+
+					if (response.data.header) {
+						$('#webhook-secret-header-text').text(response.data.header);
+					}
+
+					alert(
+						'✓ ' +
+						(response.data.message || '<?php esc_html_e( 'Token regenerated. Update your GoHighLevel automation.', 'syncly' ); ?>')
+					);
+
 				} else {
-					alert('✗ ' + (response.data && response.data.message ? response.data.message : '<?php esc_html_e( 'Could not regenerate token.', 'ghl-crm-integration' ); ?>'));
+
+					alert(
+						'✗ ' +
+						(
+							response.data &&
+							response.data.message
+								? response.data.message
+								: '<?php esc_html_e( 'Could not regenerate token.', 'syncly' ); ?>'
+						)
+					);
 				}
+
 				$btn.prop('disabled', false).html(originalText);
 			},
-			error: function(xhr, status, error) {
-				alert('✗ <?php esc_html_e( 'Token regeneration failed. Please try again.', 'ghl-crm-integration' ); ?>');
+			error: function() {
+				alert('✗ <?php esc_html_e( 'Token regeneration failed. Please try again.', 'syncly' ); ?>');
 				$btn.prop('disabled', false).html(originalText);
 			}
 		});
 	});
 
-	// Test webhook endpoint
 	$('#ghl-test-webhook').on('click', function() {
+
 		const $btn = $(this);
 		const originalText = $btn.html();
-		
-		const requestData = {
-			action: 'ghl_crm_test_webhook',
-			nonce: '<?php echo esc_js( wp_create_nonce( 'ghl_crm_admin' ) ); ?>'
-		};
-		
-		$btn.prop('disabled', true).html('<span class="dashicons dashicons-update ghl-spin"></span> <?php esc_html_e( 'Testing...', 'ghl-crm-integration' ); ?>');
-		
+
+		$btn.prop('disabled', true).html(
+			'<span class="dashicons dashicons-update ghl-spin"></span> <?php esc_html_e( 'Testing...', 'syncly' ); ?>'
+		);
+
 		$.ajax({
 			url: ajaxurl,
 			type: 'POST',
-			data: requestData,
+			data: {
+				action: 'ghl_crm_test_webhook',
+				nonce: '<?php echo esc_js( wp_create_nonce( 'ghl_crm_admin' ) ); ?>'
+			},
 			success: function(response) {
+
 				if (response.success) {
-					alert('✓ <?php esc_html_e( 'Test successful! Webhook endpoint is working correctly.', 'ghl-crm-integration' ); ?>');
+
+					alert(
+						'✓ <?php esc_html_e( 'Test successful! Webhook endpoint is working correctly.', 'syncly' ); ?>'
+					);
+
 				} else {
-					alert('✗ <?php esc_html_e( 'Test failed:', 'ghl-crm-integration' ); ?> ' + (response.data ? response.data.message : 'Unknown error'));
+
+					alert(
+						'✗ <?php esc_html_e( 'Test failed:', 'syncly' ); ?> ' +
+						(response.data ? response.data.message : 'Unknown error')
+					);
 				}
+
 				$btn.prop('disabled', false).html(originalText);
 			},
 			error: function(xhr, status, error) {
-				alert('✗ <?php esc_html_e( 'Test failed. Please check your server configuration.', 'ghl-crm-integration' ); ?>\n\nError: ' + error + '\nResponse: ' + xhr.responseText);
+
+				alert(
+					'✗ <?php esc_html_e( 'Test failed. Please check your server configuration.', 'syncly' ); ?>\n\n' +
+					error
+				);
+
 				$btn.prop('disabled', false).html(originalText);
 			}
 		});
 	});
+
 });
 
-// Copy JSON template function
-function copyJsonTemplate(templateId) {
+function copyJsonTemplate(templateId, event) {
+
 	const textarea = document.getElementById(templateId + '-template');
-	textarea.select();
-	textarea.setSelectionRange(0, 99999); // For mobile devices
-	
-	try {
-		document.execCommand('copy');
-		
-		// Find the button and update text
-		const button = event.target.closest('button');
-		const originalText = button.innerHTML;
-		button.innerHTML = '<span class="dashicons dashicons-yes"></span> <?php esc_html_e( 'Copied!', 'ghl-crm-integration' ); ?>';
-		
-		setTimeout(() => {
-			button.innerHTML = originalText;
-		}, 2000);
-	} catch (err) {
-		alert('<?php esc_html_e( 'Could not copy template. Please copy manually.', 'ghl-crm-integration' ); ?>');
+
+	if (!textarea) {
+		return;
 	}
+
+	navigator.clipboard.writeText(textarea.value);
+
+	const button = event.currentTarget;
+	const originalText = button.innerHTML;
+
+	button.innerHTML =
+		'<span class="dashicons dashicons-yes"></span> <?php esc_html_e( 'Copied!', 'syncly' ); ?>';
+
+	setTimeout(function() {
+		button.innerHTML = originalText;
+	}, 2000);
 }
 </script>
 
@@ -383,9 +424,14 @@ function copyJsonTemplate(templateId) {
 .ghl-spin {
 	animation: ghl-spin 1s linear infinite;
 }
+
 @keyframes ghl-spin {
-	from { transform: rotate(0deg); }
-	to { transform: rotate(360deg); }
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 .ghl-step-number {
@@ -404,11 +450,11 @@ function copyJsonTemplate(templateId) {
 }
 
 .ghl-setup-step:hover {
-	box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .ghl-card {
 	border-radius: 5px;
-	box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 </style>

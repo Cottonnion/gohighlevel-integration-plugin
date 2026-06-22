@@ -12,18 +12,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Variables passed from AJAX handler: $logs, $page, $per_page, $offset, $log_count, $total_pages
+$logs          = isset( $logs ) && is_array( $logs ) ? $logs : [];
+$page          = isset( $page ) ? max( 1, (int) $page ) : 1;
+$per_page      = isset( $per_page ) ? max( 1, (int) $per_page ) : 20;
+$offset        = isset( $offset ) ? max( 0, (int) $offset ) : 0;
+$log_count     = isset( $log_count ) ? max( 0, (int) $log_count ) : count( $logs );
+$total_pages   = isset( $total_pages ) ? max( 1, (int) $total_pages ) : 1;
+$is_pro_active = (bool) apply_filters( 'ghl_crm_is_pro_active', false );
 ?>
 
 <div class="ghl-logs-table-wrapper">
 	<table class="ghl-logs-table">
 		<thead>
 			<tr>
-				<th style="width: 180px;"><?php esc_html_e( 'Date', 'ghl-crm-integration' ); ?></th>
-				<th style="width: 100px;"><?php esc_html_e( 'Type', 'ghl-crm-integration' ); ?></th>
-				<th style="width: 80px;"><?php esc_html_e( 'Item ID', 'ghl-crm-integration' ); ?></th>
-				<th><?php esc_html_e( 'Action', 'ghl-crm-integration' ); ?></th>
-				<th style="width: 100px;"><?php esc_html_e( 'Status', 'ghl-crm-integration' ); ?></th>
-				<th style="width: 120px;"><?php esc_html_e( 'Details', 'ghl-crm-integration' ); ?></th>
+				<th style="width: 180px;"><?php esc_html_e( 'Date', 'syncly' ); ?></th>
+				<th style="width: 100px;"><?php esc_html_e( 'Type', 'syncly' ); ?></th>
+				<th style="width: 80px;"><?php esc_html_e( 'Item ID', 'syncly' ); ?></th>
+				<th><?php esc_html_e( 'Action', 'syncly' ); ?></th>
+				<th style="width: 100px;"><?php esc_html_e( 'Status', 'syncly' ); ?></th>
+				<th style="width: 120px;"><?php esc_html_e( 'Details', 'syncly' ); ?></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -75,37 +82,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 							</span>
 						</td>
 						<td>
-							<?php if ( defined( 'GHL_CRM_PRO_VERSION' ) ) : ?>
-								<?php
-								/**
-								 * Filter to allow PRO plugin to render detailed view button
-								 *
-								 * @param string $button_html Default button HTML
-								 * @param array  $log         Log entry data
-								 * @param string $details_json JSON encoded details
-								 */
-								$details_button = apply_filters( 'ghl_crm_sync_log_details_button', '', $log, $details_json );
+							<?php
+							$details_button = apply_filters( 'ghl_crm_sync_log_details_button', '', $log, $details_json );
 
-								if ( ! empty( $details_button ) ) {
-									echo $details_button; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Filtered content
-								} else {
-									// Fallback PRO button
-									?>
-									<button type="button" class="ghl-button ghl-button-small ghl-button-secondary ghl-view-details" data-details="<?php echo esc_attr( $details_json ); ?>">
-										<span class="dashicons dashicons-visibility"></span>
-										<?php esc_html_e( 'View Details', 'ghl-crm-integration' ); ?>
-									</button>
-									<?php
-								}
+							if ( $is_pro_active && ! empty( $details_button ) ) {
+								echo wp_kses_post( $details_button );
+							} else {
 								?>
-							<?php else : ?>
-								<!-- Free version - show blurred preview button -->
-								<button type="button" class="ghl-button ghl-button-small ghl-button-secondary ghl-view-details ghl-preview-mode" data-details="<?php echo esc_attr( $details_json ); ?>">
-									<span class="dashicons dashicons-visibility"></span>
-									<?php esc_html_e( 'Preview', 'ghl-crm-integration' ); ?>
-									<span class="ghl-pro-badge-small">PRO</span>
+								<button type="button" class="ghl-button ghl-button-small ghl-button-secondary ghl-view-details ghl-preview-mode">
+									<span class="dashicons dashicons-lock"></span>
+									<?php esc_html_e( 'Learn More', 'syncly' ); ?>
 								</button>
-							<?php endif; ?>
+								<?php
+							}
+							?>
 						</td>
 					</tr>
 				<?php endforeach; ?>
@@ -116,8 +106,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 							<div class="ghl-logs-empty-icon">
 								<span class="dashicons dashicons-database-view"></span>
 							</div>
-							<h3 class="ghl-logs-empty-title"><?php esc_html_e( 'No Logs Found', 'ghl-crm-integration' ); ?></h3>
-							<p class="ghl-logs-empty-text"><?php esc_html_e( 'No logs match your current filters.', 'ghl-crm-integration' ); ?></p>
+							<h3 class="ghl-logs-empty-title"><?php esc_html_e( 'No Logs Found', 'syncly' ); ?></h3>
+							<p class="ghl-logs-empty-text"><?php esc_html_e( 'No logs match your current filters.', 'syncly' ); ?></p>
 						</div>
 					</td>
 				</tr>
@@ -133,7 +123,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				$end   = min( $offset + $per_page, $log_count );
 				printf(
 					/* translators: 1: Start number, 2: End number, 3: Total count */
-					esc_html__( 'Showing %1$d-%2$d of %3$d logs', 'ghl-crm-integration' ),
+					esc_html__( 'Showing %1$d-%2$d of %3$d logs', 'syncly' ),
 					absint( $start ),
 					absint( $end ),
 					absint( $log_count )

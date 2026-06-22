@@ -201,6 +201,11 @@
 					if (typeof window.initFamilyAccounts === 'function') {
 						window.initFamilyAccounts();
 					}
+
+					// Re-initialize personalization functionality (for personalization tab)
+					if (typeof window.initPersonalizationSettings === 'function') {
+						window.initPersonalizationSettings();
+					}
 					
 					// Re-initialize sync preview functionality (for sync-preview tab)
 					if (typeof window.ghlSyncPreview.init === 'function') {

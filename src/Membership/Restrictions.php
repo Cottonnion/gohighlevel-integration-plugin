@@ -133,11 +133,6 @@ class Restrictions {
 			return false;
 		}
 
-		// Override settings require Pro
-		if ( ! apply_filters( 'ghl_crm_restriction_overrides_enabled', false ) ) {
-			return false;
-		}
-
 		// Check admin override
 		$allow_admins = $this->settings_manager->get_setting( 'restrictions_allow_admins', true );
 		if ( $allow_admins && current_user_can( 'manage_options' ) ) {
@@ -251,7 +246,7 @@ class Restrictions {
 		if ( 'not_logged_in' === $reason ) {
 			$message = $this->settings_manager->get_setting(
 				'restrictions_login_message',
-				__( 'Please log in to access this content.', 'ghl-crm-integration' )
+				__( 'Please log in to access this content.', 'syncly' )
 			);
 
 			// Add login link if enabled
@@ -260,14 +255,14 @@ class Restrictions {
 				$login_url = wp_login_url( get_permalink( $post_id ) );
 				$message  .= '<p>' . sprintf(
 					/* translators: %s: Login URL */
-					__( '<a href="%s">Click here to log in</a>', 'ghl-crm-integration' ),
+					__( '<a href="%s">Click here to log in</a>', 'syncly' ),
 					esc_url( $login_url )
 				) . '</p>';
 			}
 		} else {
 			$message = $this->settings_manager->get_setting(
 				'restrictions_denied_message',
-				__( 'You do not have permission to view this content.', 'ghl-crm-integration' )
+				__( 'You do not have permission to view this content.', 'syncly' )
 			);
 		}
 
@@ -277,7 +272,7 @@ class Restrictions {
 		// Get title from settings
 		$title = $this->settings_manager->get_setting(
 			'restrictions_denied_title',
-			__( 'Access Restricted', 'ghl-crm-integration' )
+			__( 'Access Restricted', 'syncly' )
 		);
 
 		// Output and exit
@@ -345,7 +340,7 @@ class Restrictions {
 		// Get archive message from settings
 		$archive_msg = $this->settings_manager->get_setting(
 			'restrictions_archive_message',
-			__( 'This content is restricted.', 'ghl-crm-integration' )
+			__( 'This content is restricted.', 'syncly' )
 		);
 
 		$message  = '<div class="ghl-restricted-content">';
@@ -360,7 +355,7 @@ class Restrictions {
 				$message  .= '<p>';
 				$message  .= sprintf(
 					/* translators: %s: Login URL */
-					__( '<a href="%s">Log in</a> to view this content.', 'ghl-crm-integration' ),
+					__( '<a href="%s">Log in</a> to view this content.', 'syncly' ),
 					esc_url( $login_url )
 				);
 				$message .= '</p>';
@@ -369,7 +364,7 @@ class Restrictions {
 
 		$message .= '</div>';
 
-		return apply_filters( 'ghl_crm_restricted_content_message', $message, $post_id, $reason );
+		return wp_kses_post( apply_filters( 'ghl_crm_restricted_content_message', $message, $post_id, $reason ) );
 	}
 
 	/**

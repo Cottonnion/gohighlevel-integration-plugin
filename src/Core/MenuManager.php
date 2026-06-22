@@ -75,18 +75,10 @@ class MenuManager {
 			return;
 		}
 
-		// Update the existing viewport meta tag so the toolbar uses full width on mobile.
-		?>
-		<script>
-		(function () {
-			var meta = document.querySelector('meta[name="viewport"]');
-			if (!meta) {
-				return;
-			}
-			meta.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
-		})();
-		</script>
-		<?php
+		wp_add_inline_script(
+			'jquery-core',
+			"(function(){var meta=document.querySelector('meta[name=\"viewport\"]');if(meta){meta.setAttribute('content','width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');}})();"
+		);
 	}
 
 	/**
@@ -121,21 +113,21 @@ class MenuManager {
 		$icon_svg = $this->get_menu_icon();
 
 		$page_hook = add_menu_page(
-			__( 'HighLevelSync', 'ghl-crm-integration' ),
-			__( 'HighLevelSync', 'ghl-crm-integration' ),
+			__( 'Syncly', 'syncly' ),
+			__( 'Syncly', 'syncly' ),
 			'manage_options',
 			'ghl-crm-admin',
 			[ $this, 'render_spa_app' ],
 			'dashicons-randomize',
-			10
+			81
 		);
 
 		remove_submenu_page( 'ghl-crm-admin', 'ghl-crm-admin' );
 
 		add_submenu_page(
 			'ghl-crm-admin',
-			__( 'Dashboard', 'ghl-crm-integration' ),
-			__( 'Dashboard', 'ghl-crm-integration' ),
+			__( 'Dashboard', 'syncly' ),
+			__( 'Dashboard', 'syncly' ),
 			'manage_options',
 			'ghl-crm-admin',
 			[ $this, 'render_spa_app' ]
@@ -143,8 +135,8 @@ class MenuManager {
 
 		add_submenu_page(
 			'ghl-crm-admin',
-			__( 'Settings', 'ghl-crm-integration' ),
-			__( 'Settings', 'ghl-crm-integration' ),
+			__( 'Settings', 'syncly' ),
+			__( 'Settings', 'syncly' ),
 			'manage_options',
 			'ghl-crm-admin#/settings',
 			'__return_false'
@@ -152,8 +144,8 @@ class MenuManager {
 
 		add_submenu_page(
 			'ghl-crm-admin',
-			__( 'Integrations', 'ghl-crm-integration' ),
-			__( 'Integrations', 'ghl-crm-integration' ),
+			__( 'Integrations', 'syncly' ),
+			__( 'Integrations', 'syncly' ),
 			'manage_options',
 			'ghl-crm-admin#/integrations',
 			'__return_false'
@@ -161,8 +153,8 @@ class MenuManager {
 
 		add_submenu_page(
 			'ghl-crm-admin',
-			__( 'Field Mapping', 'ghl-crm-integration' ),
-			__( 'Field Mapping', 'ghl-crm-integration' ),
+			__( 'Field Mapping', 'syncly' ),
+			__( 'Field Mapping', 'syncly' ),
 			'manage_options',
 			'ghl-crm-admin#/field-mapping',
 			'__return_false'
@@ -170,8 +162,8 @@ class MenuManager {
 
 		add_submenu_page(
 			'ghl-crm-admin',
-			__( 'Sync Logs', 'ghl-crm-integration' ),
-			__( 'Sync Logs', 'ghl-crm-integration' ),
+			__( 'Sync Logs', 'syncly' ),
+			__( 'Sync Logs', 'syncly' ),
 			'manage_options',
 			'ghl-crm-admin#/sync-logs',
 			'__return_false'
@@ -179,8 +171,8 @@ class MenuManager {
 
 		add_submenu_page(
 			'ghl-crm-admin',
-			__( 'Forms', 'ghl-crm-integration' ),
-			__( 'Forms', 'ghl-crm-integration' ),
+			__( 'Forms', 'syncly' ),
+			__( 'Forms', 'syncly' ),
 			'manage_options',
 			'ghl-crm-admin#/forms',
 			'__return_false'
@@ -188,8 +180,8 @@ class MenuManager {
 
 		add_submenu_page(
 			null, // Hidden from menu
-			__( 'Setup Wizard', 'ghl-crm-integration' ),
-			__( 'Setup Wizard', 'ghl-crm-integration' ),
+			__( 'Setup Wizard', 'syncly' ),
+			__( 'Setup Wizard', 'syncly' ),
 			'manage_options',
 			'ghl-crm-setup-wizard',
 			[ $this, 'render_setup_wizard' ]
@@ -209,20 +201,10 @@ class MenuManager {
 		$settings_link = sprintf(
 			'<a href="%s">%s</a>',
 			esc_url( admin_url( 'admin.php?page=ghl-crm-admin#/settings' ) ),
-			esc_html__( 'Settings', 'ghl-crm-integration' )
+			esc_html__( 'Settings', 'syncly' )
 		);
 
 		array_unshift( $links, $settings_link );
-
-		// Add upgrade link if Pro is not active
-		if ( ! defined( 'GHL_CRM_PRO_VERSION' ) ) {
-			$upgrade_link = sprintf(
-				'<a href="%s" target="_blank" rel="noopener noreferrer" style="color: #00a32a; font-weight: 600;">%s</a>',
-				esc_url( 'https://highlevelsync.com/upgrade-to-pro' ),
-				esc_html__( 'Upgrade to Pro', 'ghl-crm-integration' )
-			);
-			$links[]      = $upgrade_link;
-		}
 
 		return $links;
 	}
@@ -243,9 +225,9 @@ class MenuManager {
 		if ( isset( $current_screen->id ) && strpos( $current_screen->id, 'ghl-crm' ) !== false ) {
 			$footer_text = sprintf(
 				/* translators: 1: Plugin name highlighted in strong text, 2: Review link HTML. */
-				esc_html__( 'Thank you for using %1$s! If you find it helpful, please %2$s on WordPress.org.', 'ghl-crm-integration' ),
-				'<strong>' . esc_html__( 'GoHighLevel CRM Integration', 'ghl-crm-integration' ) . '</strong>',
-				'<a href="https://wordpress.org/support/plugin/ghl-crm-integration/reviews/#new-post" target="_blank" rel="noopener noreferrer">' . esc_html__( 'leave a review', 'ghl-crm-integration' ) . '</a>'
+				esc_html__( 'Thank you for using %1$s! If you find it helpful, please %2$s on WordPress.org.', 'syncly' ),
+				'<strong>' . esc_html__( 'GoHighLevel CRM Integration', 'syncly' ) . '</strong>',
+				'<a href="https://wordpress.org/support/plugin/syncly/reviews/#new-post" target="_blank" rel="noopener noreferrer">' . esc_html__( 'leave a review', 'syncly' ) . '</a>'
 			);
 		}
 
@@ -262,7 +244,7 @@ class MenuManager {
 	 */
 	public function render_main_settings_page(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'ghl-crm-integration' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'syncly' ) );
 		}
 
 		$this->load_template( 'admin/main-settings' );
@@ -289,7 +271,7 @@ class MenuManager {
 	 */
 	public function render_sync_logs_page(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'ghl-crm-integration' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'syncly' ) );
 		}
 
 		$this->load_template( 'admin/sync-logs' );
@@ -332,7 +314,7 @@ class MenuManager {
 	 */
 	public function render_spa_app(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'ghl-crm-integration' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'syncly' ) );
 		}
 
 		$this->load_template( 'admin/spa-app' );
@@ -345,7 +327,7 @@ class MenuManager {
 	*/
 	public function render_setup_wizard(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'ghl-crm-integration' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'syncly' ) );
 		}
 		$this->load_template( 'admin/setup-wizard' );
 	}
@@ -367,7 +349,7 @@ class MenuManager {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to access this view.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to access this view.', 'syncly' ),
 				],
 				403
 			);
@@ -408,7 +390,7 @@ class MenuManager {
 					break;          default:
 					wp_send_json_error(
 						[
-							'message' => __( 'Invalid view requested.', 'ghl-crm-integration' ),
+							'message' => __( 'Invalid view requested.', 'syncly' ),
 						],
 						404
 					);
@@ -416,14 +398,14 @@ class MenuManager {
 		} catch ( \Exception $e ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'An error occurred while processing the request: ', 'ghl-crm-integration' ) . $e->getMessage(),
+					'message' => __( 'An error occurred while processing the request: ', 'syncly' ) . $e->getMessage(),
 				],
 				500
 			);
 		} catch ( \Error $err ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'A fatal error occurred while processing the request: ', 'ghl-crm-integration' ) . $err->getMessage(),
+					'message' => __( 'A fatal error occurred while processing the request: ', 'syncly' ) . $err->getMessage(),
 				],
 				500
 			);
@@ -441,7 +423,7 @@ class MenuManager {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to disconnect OAuth.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to disconnect OAuth.', 'syncly' ),
 				],
 				403
 			);
@@ -454,13 +436,13 @@ class MenuManager {
 			if ( $result ) {
 				wp_send_json_success(
 					[
-						'message' => __( 'Successfully disconnected from GoHighLevel.', 'ghl-crm-integration' ),
+						'message' => __( 'Successfully disconnected from GoHighLevel.', 'syncly' ),
 					]
 				);
 			} else {
 				wp_send_json_error(
 					[
-						'message' => __( 'Failed to disconnect. Please try again.', 'ghl-crm-integration' ),
+						'message' => __( 'Failed to disconnect. Please try again.', 'syncly' ),
 					]
 				);
 			}
@@ -469,7 +451,7 @@ class MenuManager {
 				[
 					'message' => sprintf(
 						/* translators: 1: error message, 2: file path, 3: line number */
-						__( 'Disconnect error: %1$s in %2$s:%3$d', 'ghl-crm-integration' ),
+						__( 'Disconnect error: %1$s in %2$s:%3$d', 'syncly' ),
 						$e->getMessage(),
 						$e->getFile(),
 						$e->getLine()
@@ -494,7 +476,7 @@ class MenuManager {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to manage connections.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to manage connections.', 'syncly' ),
 				],
 				403
 			);
@@ -507,7 +489,7 @@ class MenuManager {
 		if ( empty( $api_token ) || empty( $location_id ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'API Key and Location ID are required.', 'ghl-crm-integration' ),
+					'message' => __( 'API Key and Location ID are required.', 'syncly' ),
 				],
 				400
 			);
@@ -579,7 +561,7 @@ class MenuManager {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to disconnect.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to disconnect.', 'syncly' ),
 				],
 				403
 			);
@@ -602,7 +584,7 @@ class MenuManager {
 		if ( ! $save_result['success'] ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'Failed to disconnect. Please try again.', 'ghl-crm-integration' ),
+					'message' => __( 'Failed to disconnect. Please try again.', 'syncly' ),
 				],
 				500
 			);
@@ -611,7 +593,7 @@ class MenuManager {
 		// Success!
 		wp_send_json_success(
 			[
-				'message' => __( 'Successfully disconnected from GoHighLevel.', 'ghl-crm-integration' ),
+				'message' => __( 'Successfully disconnected from GoHighLevel.', 'syncly' ),
 			]
 		);
 	}
@@ -817,20 +799,20 @@ class MenuManager {
 
 		// Build settings tabs array (same structure as in settings.php)
 		$settings_tabs = [
-			'general'              => [ 'label' => __( 'General', 'ghl-crm-integration' ) ],
-			'restrictions-manager' => [ 'label' => __( 'Restrictions Manager', 'ghl-crm-integration' ) ],
-			'rest-api'             => [ 'label' => __( 'REST API', 'ghl-crm-integration' ) ],
-			'webhooks'             => [ 'label' => __( 'Webhooks', 'ghl-crm-integration' ) ],
-			'notifications'        => [ 'label' => __( 'Email Notifications', 'ghl-crm-integration' ) ],
-			'role-tags'            => [ 'label' => __( 'Role-Based Tags', 'ghl-crm-integration' ) ],
-			'family-relationships' => [ 'label' => __( 'Family Relationships', 'ghl-crm-integration' ) ],
-			'sync-preview'         => [ 'label' => __( 'Sync Preview', 'ghl-crm-integration' ) ],
-			'login-sync'           => [ 'label' => __( 'Login Sync', 'ghl-crm-integration' ) ],
-			'personalization'      => [ 'label' => __( 'Personalization', 'ghl-crm-integration' ) ],
-			// 'conversations'        => [ 'label' => __( 'Conversations', 'ghl-crm-integration' ) ],
-			'advanced'             => [ 'label' => __( 'Advanced', 'ghl-crm-integration' ) ],
-			'tools'                => [ 'label' => __( 'Tools', 'ghl-crm-integration' ) ],
-			'stats'                => [ 'label' => __( 'System Status', 'ghl-crm-integration' ) ],
+			'general'              => [ 'label' => __( 'General', 'syncly' ) ],
+			'restrictions-manager' => [ 'label' => __( 'Restrictions Manager', 'syncly' ) ],
+			'rest-api'             => [ 'label' => __( 'REST API', 'syncly' ) ],
+			'webhooks'             => [ 'label' => __( 'Webhooks', 'syncly' ) ],
+			'notifications'        => [ 'label' => __( 'Email Notifications', 'syncly' ) ],
+			'role-tags'            => [ 'label' => __( 'Role-Based Tags', 'syncly' ) ],
+			'family-relationships' => [ 'label' => __( 'Family Relationships', 'syncly' ) ],
+			'sync-preview'         => [ 'label' => __( 'Sync Preview', 'syncly' ) ],
+			'login-sync'           => [ 'label' => __( 'Login Sync', 'syncly' ) ],
+			'personalization'      => [ 'label' => __( 'Personalization', 'syncly' ) ],
+			// 'conversations'        => [ 'label' => __( 'Conversations', 'syncly' ) ],
+			'advanced'             => [ 'label' => __( 'Advanced', 'syncly' ) ],
+			'tools'                => [ 'label' => __( 'Tools', 'syncly' ) ],
+			'stats'                => [ 'label' => __( 'System Status', 'syncly' ) ],
 		];
 
 		/**
@@ -858,7 +840,7 @@ class MenuManager {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to access this page.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to access this page.', 'syncly' ),
 				],
 				403
 			);
@@ -872,7 +854,7 @@ class MenuManager {
 		if ( ! in_array( $tab, $valid_tabs, true ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'Invalid settings tab.', 'ghl-crm-integration' ),
+					'message' => __( 'Invalid settings tab.', 'syncly' ),
 				],
 				400
 			);
@@ -887,20 +869,20 @@ class MenuManager {
 
 		// Build full settings tabs array to get file path
 		$settings_tabs = [
-			'general'              => [ 'label' => __( 'General', 'ghl-crm-integration' ) ],
-			'restrictions-manager' => [ 'label' => __( 'Restrictions Manager', 'ghl-crm-integration' ) ],
-			'rest-api'             => [ 'label' => __( 'REST API', 'ghl-crm-integration' ) ],
-			'webhooks'             => [ 'label' => __( 'Webhooks', 'ghl-crm-integration' ) ],
-			'notifications'        => [ 'label' => __( 'Email Notifications', 'ghl-crm-integration' ) ],
-			'role-tags'            => [ 'label' => __( 'Role-Based Tags', 'ghl-crm-integration' ) ],
-			'family-relationships' => [ 'label' => __( 'Family Relationships', 'ghl-crm-integration' ) ],
-			'sync-preview'         => [ 'label' => __( 'Sync Preview', 'ghl-crm-integration' ) ],
-			'login-sync'           => [ 'label' => __( 'Login Sync', 'ghl-crm-integration' ) ],
-			'personalization'      => [ 'label' => __( 'Personalization', 'ghl-crm-integration' ) ],
-			// 'conversations'        => [ 'label' => __( 'Conversations', 'ghl-crm-integration' ) ],
-			'advanced'             => [ 'label' => __( 'Advanced', 'ghl-crm-integration' ) ],
-			'tools'                => [ 'label' => __( 'Tools', 'ghl-crm-integration' ) ],
-			'stats'                => [ 'label' => __( 'System Status', 'ghl-crm-integration' ) ],
+			'general'              => [ 'label' => __( 'General', 'syncly' ) ],
+			'restrictions-manager' => [ 'label' => __( 'Restrictions Manager', 'syncly' ) ],
+			'rest-api'             => [ 'label' => __( 'REST API', 'syncly' ) ],
+			'webhooks'             => [ 'label' => __( 'Webhooks', 'syncly' ) ],
+			'notifications'        => [ 'label' => __( 'Email Notifications', 'syncly' ) ],
+			'role-tags'            => [ 'label' => __( 'Role-Based Tags', 'syncly' ) ],
+			'family-relationships' => [ 'label' => __( 'Family Relationships', 'syncly' ) ],
+			'sync-preview'         => [ 'label' => __( 'Sync Preview', 'syncly' ) ],
+			'login-sync'           => [ 'label' => __( 'Login Sync', 'syncly' ) ],
+			'personalization'      => [ 'label' => __( 'Personalization', 'syncly' ) ],
+			// 'conversations'        => [ 'label' => __( 'Conversations', 'syncly' ) ],
+			'advanced'             => [ 'label' => __( 'Advanced', 'syncly' ) ],
+			'tools'                => [ 'label' => __( 'Tools', 'syncly' ) ],
+			'stats'                => [ 'label' => __( 'System Status', 'syncly' ) ],
 		];
 
 		// Apply the same filter as settings.php
@@ -922,7 +904,7 @@ class MenuManager {
 		if ( ! file_exists( $partial_file ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'Settings tab template not found.', 'ghl-crm-integration' ),
+					'message' => __( 'Settings tab template not found.', 'syncly' ),
 					'debug'   => WP_DEBUG ? $partial_file : null,
 				],
 				404
@@ -990,11 +972,11 @@ class MenuManager {
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
 			<div class="notice notice-error">
 				<p>
-					<strong><?php esc_html_e( 'Template Error:', 'ghl-crm-integration' ); ?></strong>
+					<strong><?php esc_html_e( 'Template Error:', 'syncly' ); ?></strong>
 					<?php
 					printf(
 						/* translators: %s: Template name */
-						esc_html__( 'The template file "%s.php" could not be found.', 'ghl-crm-integration' ),
+						esc_html__( 'The template file "%s.php" could not be found.', 'syncly' ),
 						esc_html( $template_name )
 					);
 					?>
@@ -1003,7 +985,7 @@ class MenuManager {
 					<?php
 					printf(
 						/* translators: %s: Template path */
-						esc_html__( 'Expected location: %s', 'ghl-crm-integration' ),
+						esc_html__( 'Expected location: %s', 'syncly' ),
 						'<code>' . esc_html( GHL_CRM_PATH . 'templates/' . $template_name . '.php' ) . '</code>'
 					);
 					?>

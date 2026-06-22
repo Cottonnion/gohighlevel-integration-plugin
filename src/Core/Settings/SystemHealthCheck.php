@@ -62,7 +62,7 @@ class SystemHealthCheck {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to run system diagnostics.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to run system diagnostics.', 'syncly' ),
 				],
 				403
 			);
@@ -97,10 +97,10 @@ class SystemHealthCheck {
 				'checks'         => $checks,
 				'timestamp'      => current_time( 'mysql' ),
 				'message'        => $overall_status === 'success'
-					? __( 'All system checks passed!', 'ghl-crm-integration' )
+					? __( 'All system checks passed!', 'syncly' )
 					: ( $overall_status === 'warning'
-						? __( 'System checks passed with warnings.', 'ghl-crm-integration' )
-						: __( 'Some system checks failed. Please review the details.', 'ghl-crm-integration' ) ),
+						? __( 'System checks passed with warnings.', 'syncly' )
+						: __( 'Some system checks failed. Please review the details.', 'syncly' ) ),
 			]
 		);
 	}
@@ -113,22 +113,22 @@ class SystemHealthCheck {
 	 */
 	private function check_wordpress_environment( array &$checks ): void {
 		$checks['wordpress'] = [
-			'label'  => __( 'WordPress Environment', 'ghl-crm-integration' ),
+			'label'  => __( 'WordPress Environment', 'syncly' ),
 			'status' => 'success',
 			'items'  => [
 				[
-					'label'  => __( 'WordPress Version', 'ghl-crm-integration' ),
+					'label'  => __( 'WordPress Version', 'syncly' ),
 					'value'  => get_bloginfo( 'version' ),
 					'status' => version_compare( get_bloginfo( 'version' ), '5.8', '>=' ) ? 'success' : 'warning',
 				],
 				[
-					'label'  => __( 'PHP Version', 'ghl-crm-integration' ),
+					'label'  => __( 'PHP Version', 'syncly' ),
 					'value'  => PHP_VERSION,
 					'status' => version_compare( PHP_VERSION, '7.4', '>=' ) ? 'success' : 'error',
 				],
 				[
-					'label'  => __( 'Multisite', 'ghl-crm-integration' ),
-					'value'  => is_multisite() ? __( 'Yes', 'ghl-crm-integration' ) : __( 'No', 'ghl-crm-integration' ),
+					'label'  => __( 'Multisite', 'syncly' ),
+					'value'  => is_multisite() ? __( 'Yes', 'syncly' ) : __( 'No', 'syncly' ),
 					'status' => 'success',
 				],
 			],
@@ -155,7 +155,7 @@ class SystemHealthCheck {
 
 			$tables_status[] = [
 				'label'  => $table_name,
-				'value'  => $table_exists ? __( 'Exists', 'ghl-crm-integration' ) : __( 'Missing', 'ghl-crm-integration' ),
+				'value'  => $table_exists ? __( 'Exists', 'syncly' ) : __( 'Missing', 'syncly' ),
 				'status' => $table_exists ? 'success' : 'error',
 			];
 
@@ -165,7 +165,7 @@ class SystemHealthCheck {
 		}
 
 		$checks['database'] = [
-			'label'  => __( 'Database Tables', 'ghl-crm-integration' ),
+			'label'  => __( 'Database Tables', 'syncly' ),
 			'status' => $tables_all_exist ? 'success' : 'error',
 			'items'  => $tables_status,
 		];
@@ -186,22 +186,22 @@ class SystemHealthCheck {
 		$is_verified        = $settings_manager->is_connection_verified();
 
 		$checks['api_connection'] = [
-			'label'  => __( 'API Connection', 'ghl-crm-integration' ),
+			'label'  => __( 'API Connection', 'syncly' ),
 			'status' => $has_any_connection ? ( $is_verified ? 'success' : 'warning' ) : 'error',
 			'items'  => [
 				[
-					'label'  => __( 'Connection Type', 'ghl-crm-integration' ),
-					'value'  => $has_oauth ? __( 'OAuth', 'ghl-crm-integration' ) : ( $has_manual_api ? __( 'Manual API', 'ghl-crm-integration' ) : __( 'Not Connected', 'ghl-crm-integration' ) ),
+					'label'  => __( 'Connection Type', 'syncly' ),
+					'value'  => $has_oauth ? __( 'OAuth', 'syncly' ) : ( $has_manual_api ? __( 'Manual API', 'syncly' ) : __( 'Not Connected', 'syncly' ) ),
 					'status' => $has_any_connection ? 'success' : 'error',
 				],
 				[
-					'label'  => __( 'Connection Verified', 'ghl-crm-integration' ),
-					'value'  => $is_verified ? __( 'Yes', 'ghl-crm-integration' ) : __( 'No', 'ghl-crm-integration' ),
+					'label'  => __( 'Connection Verified', 'syncly' ),
+					'value'  => $is_verified ? __( 'Yes', 'syncly' ) : __( 'No', 'syncly' ),
 					'status' => $is_verified ? 'success' : 'warning',
 				],
 				[
-					'label'  => __( 'Location ID', 'ghl-crm-integration' ),
-					'value'  => ! empty( $settings['location_id'] ) ? substr( $settings['location_id'], 0, 10 ) . '...' : __( 'Not Set', 'ghl-crm-integration' ),
+					'label'  => __( 'Location ID', 'syncly' ),
+					'value'  => ! empty( $settings['location_id'] ) ? substr( $settings['location_id'], 0, 10 ) . '...' : __( 'Not Set', 'syncly' ),
 					'status' => ! empty( $settings['location_id'] ) ? 'success' : 'error',
 				],
 			],
@@ -216,9 +216,9 @@ class SystemHealthCheck {
 	 */
 	private function check_php_extensions( array &$checks ): void {
 		$required_extensions = [
-			'curl'     => __( 'cURL', 'ghl-crm-integration' ),
-			'json'     => __( 'JSON', 'ghl-crm-integration' ),
-			'mbstring' => __( 'Multibyte String', 'ghl-crm-integration' ),
+			'curl'     => __( 'cURL', 'syncly' ),
+			'json'     => __( 'JSON', 'syncly' ),
+			'mbstring' => __( 'Multibyte String', 'syncly' ),
 		];
 		$extensions_status   = [];
 		$all_extensions_ok   = true;
@@ -227,7 +227,7 @@ class SystemHealthCheck {
 			$loaded              = extension_loaded( $ext );
 			$extensions_status[] = [
 				'label'  => $label,
-				'value'  => $loaded ? __( 'Loaded', 'ghl-crm-integration' ) : __( 'Missing', 'ghl-crm-integration' ),
+				'value'  => $loaded ? __( 'Loaded', 'syncly' ) : __( 'Missing', 'syncly' ),
 				'status' => $loaded ? 'success' : 'error',
 			];
 
@@ -237,7 +237,7 @@ class SystemHealthCheck {
 		}
 
 		$checks['php_extensions'] = [
-			'label'  => __( 'PHP Extensions', 'ghl-crm-integration' ),
+			'label'  => __( 'PHP Extensions', 'syncly' ),
 			'status' => $all_extensions_ok ? 'success' : 'error',
 			'items'  => $extensions_status,
 		];
@@ -279,21 +279,21 @@ class SystemHealthCheck {
 		);
 
 		$checks['sync_queue'] = [
-			'label'  => __( 'Sync Queue', 'ghl-crm-integration' ),
+			'label'  => __( 'Sync Queue', 'syncly' ),
 			'status' => $failed_count > 10 ? 'warning' : 'success',
 			'items'  => [
 				[
-					'label'  => __( 'Pending Items', 'ghl-crm-integration' ),
+					'label'  => __( 'Pending Items', 'syncly' ),
 					'value'  => $pending_count,
 					'status' => 'success',
 				],
 				[
-					'label'  => __( 'Processing Items', 'ghl-crm-integration' ),
+					'label'  => __( 'Processing Items', 'syncly' ),
 					'value'  => $processing_count,
 					'status' => $processing_count > 0 ? 'success' : 'info',
 				],
 				[
-					'label'  => __( 'Failed Items', 'ghl-crm-integration' ),
+					'label'  => __( 'Failed Items', 'syncly' ),
 					'value'  => $failed_count,
 					'status' => $failed_count > 10 ? 'warning' : ( $failed_count > 0 ? 'info' : 'success' ),
 				],
@@ -314,17 +314,17 @@ class SystemHealthCheck {
 		$plugin_readable = is_readable( $plugin_dir );
 
 		$checks['file_permissions'] = [
-			'label'  => __( 'File Permissions', 'ghl-crm-integration' ),
+			'label'  => __( 'File Permissions', 'syncly' ),
 			'status' => ( $upload_writable && $plugin_readable ) ? 'success' : 'warning',
 			'items'  => [
 				[
-					'label'  => __( 'Upload Directory', 'ghl-crm-integration' ),
-					'value'  => $upload_writable ? __( 'Writable', 'ghl-crm-integration' ) : __( 'Not Writable', 'ghl-crm-integration' ),
+					'label'  => __( 'Upload Directory', 'syncly' ),
+					'value'  => $upload_writable ? __( 'Writable', 'syncly' ) : __( 'Not Writable', 'syncly' ),
 					'status' => $upload_writable ? 'success' : 'error',
 				],
 				[
-					'label'  => __( 'Plugin Directory', 'ghl-crm-integration' ),
-					'value'  => $plugin_readable ? __( 'Readable', 'ghl-crm-integration' ) : __( 'Not Readable', 'ghl-crm-integration' ),
+					'label'  => __( 'Plugin Directory', 'syncly' ),
+					'value'  => $plugin_readable ? __( 'Readable', 'syncly' ) : __( 'Not Readable', 'syncly' ),
 					'status' => $plugin_readable ? 'success' : 'error',
 				],
 			],
@@ -343,26 +343,26 @@ class SystemHealthCheck {
 		$max_execution_time = ini_get( 'max_execution_time' );
 
 		$checks['performance'] = [
-			'label'  => __( 'Performance Settings', 'ghl-crm-integration' ),
+			'label'  => __( 'Performance Settings', 'syncly' ),
 			'status' => 'success',
 			'items'  => [
 				[
-					'label'  => __( 'PHP Memory Limit', 'ghl-crm-integration' ),
+					'label'  => __( 'PHP Memory Limit', 'syncly' ),
 					'value'  => $memory_limit,
 					'status' => 'info',
 				],
 				[
-					'label'  => __( 'Max Execution Time', 'ghl-crm-integration' ),
+					'label'  => __( 'Max Execution Time', 'syncly' ),
 					'value'  => $max_execution_time . 's',
 					'status' => 'info',
 				],
 				[
-					'label'  => __( 'Cache Duration', 'ghl-crm-integration' ),
+					'label'  => __( 'Cache Duration', 'syncly' ),
 					'value'  => $settings['cache_duration'] . 's',
 					'status' => 'info',
 				],
 				[
-					'label'  => __( 'Batch Size', 'ghl-crm-integration' ),
+					'label'  => __( 'Batch Size', 'syncly' ),
 					'value'  => $settings['batch_size'],
 					'status' => 'info',
 				],

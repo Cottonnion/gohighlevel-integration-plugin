@@ -53,7 +53,7 @@ The project includes a `phpcs.xml` configuration file with:
 <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
 
 <!-- Plugin-specific text domain -->
-<property name="text_domain" value="ghl-crm-integration"/>
+<property name="text_domain" value="syncly"/>
 
 <!-- Plugin-specific prefixes -->
 <property name="prefixes" value="ghl_crm,GHL_CRM"/>

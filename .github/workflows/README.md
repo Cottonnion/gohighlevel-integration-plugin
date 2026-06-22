@@ -74,12 +74,20 @@ git tag v1.2.3 && git push origin v1.2.3
 
 **What it does:**
 - Sets up PHP 8.1 and installs production Composer dependencies (`--no-dev`)
-- Builds the distributable zip with the `ghl-crm-integration` plugin slug
+- Builds the distributable zip with the `syncly` plugin slug
 - Creates a GitHub Release with the zip attached and auto-generated changelog
 
-**Purpose:** Produces a downloadable `ghl-crm-integration-vX.X.X.zip` that can be installed manually on any WordPress site. Also serves as the artifact for future WordPress.org distribution.
+**Purpose:** Produces a downloadable `syncly-vX.X.X.zip` that can be installed manually on any WordPress site. After the zip is validated, the `deploy-wporg` job automatically pushes to WordPress.org SVN trunk and creates a version tag.
 
-**Required GitHub Permissions:** `contents: write` (set in the workflow, no secrets needed)
+**Required GitHub Permissions:** `contents: write`
+
+**Required GitHub Secrets (WordPress.org deploy):**
+| Secret | Description |
+|---|---|
+| `WPORG_USERNAME` | WordPress.org account username |
+| `WPORG_PASSWORD` | WordPress.org application password (generate at wordpress.org → Profile → Application Passwords) |
+
+**WordPress.org assets** (banner, icon, screenshots) should be placed in a `.wordpress-org/` folder at the repo root. The deploy action reads from `ASSETS_DIR: .wordpress-org`.
 
 ---
 
@@ -99,13 +107,13 @@ git tag v1.2.3 && git push origin v1.2.3
 
 Plugin version is defined in two places — both must match the git tag:
 
-- `gohighlevel-crm-integration.php` header: `* Version: 1.2.3`
-- `gohighlevel-crm-integration.php` constant: `define( 'GHL_CRM_VERSION', '1.2.3' )`
+- `ghl-crm-integration.php` header: `* Version: 1.2.3`
+- `ghl-crm-integration.php` constant: `define( 'GHL_CRM_VERSION', '1.2.3' )`
 
 The version is used as the cache-busting string for all enqueued CSS/JS assets.
 
 **Steps to ship a release:**
-1. Update version in `gohighlevel-crm-integration.php` (both places)
+1. Update version in `ghl-crm-integration.php` (both places)
 2. Commit: `git commit -m "chore: bump version to 1.2.3"`
 3. Push: `git push origin main`
 4. Tag and deploy: `git tag v1.2.3 && git push origin v1.2.3`
@@ -115,6 +123,6 @@ The version is used as the cache-busting string for all enqueued CSS/JS assets.
 ## Server Info
 
 - **Host:** highlevelsync.com
-- **Plugin path:** `/home/highlevelsync/public_html/wp-content/plugins/ghl-crm-integration`
+- **Plugin path:** `/home/highlevelsync/public_html/wp-content/plugins/syncly`
 - **Setup:** Full `git clone` of this repo, SSH key in `~/.ssh/authorized_keys`
 - **Deploy method:** `appleboy/ssh-action` — SSHes in, runs `git pull` + `composer install`

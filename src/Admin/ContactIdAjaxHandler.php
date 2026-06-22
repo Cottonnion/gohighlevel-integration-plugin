@@ -64,7 +64,7 @@ class ContactIdAjaxHandler {
 		if ( ! wp_verify_nonce( $nonce, 'ghl_crm_settings_nonce' ) ) {
 			wp_send_json_error(
 				array(
-					'message' => __( 'Security check failed', 'ghl-crm-integration' ),
+					'message' => __( 'Security check failed', 'syncly' ),
 				)
 			);
 		}
@@ -73,7 +73,7 @@ class ContactIdAjaxHandler {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				array(
-					'message' => __( 'Insufficient permissions', 'ghl-crm-integration' ),
+					'message' => __( 'Insufficient permissions', 'syncly' ),
 				)
 			);
 		}
@@ -83,7 +83,7 @@ class ContactIdAjaxHandler {
 		if ( empty( $contact_id ) ) {
 			wp_send_json_error(
 				array(
-					'message' => __( 'Contact ID is required', 'ghl-crm-integration' ),
+					'message' => __( 'Contact ID is required', 'syncly' ),
 				)
 			);
 		}
@@ -92,7 +92,7 @@ class ContactIdAjaxHandler {
 		if ( ! preg_match( '/^[a-zA-Z0-9_-]+$/', $contact_id ) ) {
 			wp_send_json_error(
 				array(
-					'message' => __( 'Invalid contact ID format', 'ghl-crm-integration' ),
+					'message' => __( 'Invalid contact ID format', 'syncly' ),
 				)
 			);
 		}

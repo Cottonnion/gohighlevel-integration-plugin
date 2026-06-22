@@ -35,10 +35,10 @@ $notification_throttle   = $settings['notification_throttle'] ?? '3600';
 		<div class="ghl-settings-header">
 			<h2>
 				<span class="dashicons dashicons-email"></span>
-				<?php esc_html_e( 'Email Configuration', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Email Configuration', 'syncly' ); ?>
 			</h2>
 			<p class="description">
-				<?php esc_html_e( 'Configure where sync notifications and alerts should be sent', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Configure where sync notifications and alerts should be sent', 'syncly' ); ?>
 			</p>
 		</div>
 		
@@ -49,8 +49,8 @@ $notification_throttle   = $settings['notification_throttle'] ?? '3600';
 				<div class="ghl-form-item">
 					<div class="ghl-form-item-content ghl-form-item-content--column">
 						<label for="notification_email" class="ghl-form-label">
-							<?php esc_html_e( 'Notification Email Address', 'ghl-crm-integration' ); ?>
-							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'All plugin notifications will be sent to this email. Make sure it\'s monitored regularly for critical alerts.', 'ghl-crm-integration' ); ?>">?</span>
+							<?php esc_html_e( 'Notification Email Address', 'syncly' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'All plugin notifications will be sent to this email. Make sure it\'s monitored regularly for critical alerts.', 'syncly' ); ?>">?</span>
 						</label>
 						<input 
 							type="email" 
@@ -62,7 +62,7 @@ $notification_throttle   = $settings['notification_throttle'] ?? '3600';
 							required
 						>
 						<p class="description ghl-form-description">
-							<?php esc_html_e( 'Default: WordPress admin email. Change this if you want notifications sent elsewhere.', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'Default: WordPress admin email. Change this if you want notifications sent elsewhere.', 'syncly' ); ?>
 						</p>
 					</div>
 				</div>
@@ -75,10 +75,10 @@ $notification_throttle   = $settings['notification_throttle'] ?? '3600';
 		<div class="ghl-settings-header">
 			<h2>
 				<span class="dashicons dashicons-warning"></span>
-				<?php esc_html_e( 'Critical Alerts', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Critical Alerts', 'syncly' ); ?>
 			</h2>
 			<p class="description">
-				<?php esc_html_e( 'Receive instant email notifications for urgent issues that require immediate attention', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Receive instant email notifications for urgent issues that require immediate attention', 'syncly' ); ?>
 			</p>
 		</div>
 		
@@ -100,13 +100,13 @@ $notification_throttle   = $settings['notification_throttle'] ?? '3600';
 								<span class="ghl-checkbox-inner"></span>
 							</span>
 							<span class="ghl-checkbox-label">
-								<?php esc_html_e( 'Connection Lost', 'ghl-crm-integration' ); ?>
-								<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Get notified immediately when OAuth token expires or API key becomes invalid. This means ALL syncing has stopped.', 'ghl-crm-integration' ); ?>">?</span>
+								<?php esc_html_e( 'Connection Lost', 'syncly' ); ?>
+								<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Get notified immediately when OAuth token expires or API key becomes invalid. This means ALL syncing has stopped.', 'syncly' ); ?>">?</span>
 							</span>
 						</label>
 					</div>
 					<p class="description" style="margin-left: 54px;">
-						<?php esc_html_e( 'Alert when OAuth/API connection fails (HIGH PRIORITY)', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Alert when OAuth/API connection fails (HIGH PRIORITY)', 'syncly' ); ?>
 					</p>
 				</div>
 
@@ -123,13 +123,13 @@ $notification_throttle   = $settings['notification_throttle'] ?? '3600';
 								<span class="ghl-checkbox-inner"></span>
 							</span>
 							<span class="ghl-checkbox-label">
-								<?php esc_html_e( 'Sync Failures', 'ghl-crm-integration' ); ?>
-								<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Get alerted when users, orders, or other data fails to sync to GoHighLevel. Prevents data loss.', 'ghl-crm-integration' ); ?>">?</span>
+								<?php esc_html_e( 'Sync Failures', 'syncly' ); ?>
+								<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Get alerted when users, orders, or other data fails to sync to GoHighLevel. Prevents data loss.', 'syncly' ); ?>">?</span>
 							</span>
 						</label>
 					</div>
 					<p class="description" style="margin-left: 54px;">
-						<?php esc_html_e( 'Notify when sync operations fail with errors', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Notify when sync operations fail with errors', 'syncly' ); ?>
 					</p>
 				</div>
 
@@ -146,13 +146,13 @@ $notification_throttle   = $settings['notification_throttle'] ?? '3600';
 								<span class="ghl-checkbox-inner"></span>
 							</span>
 							<span class="ghl-checkbox-label">
-								<?php esc_html_e( 'Queue Backlog Warning', 'ghl-crm-integration' ); ?>
-								<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Alert when more than 1,000 items are waiting in the sync queue. Indicates processing issues or heavy load.', 'ghl-crm-integration' ); ?>">?</span>
+								<?php esc_html_e( 'Queue Backlog Warning', 'syncly' ); ?>
+								<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Alert when more than 1,000 items are waiting in the sync queue. Indicates processing issues or heavy load.', 'syncly' ); ?>">?</span>
 							</span>
 						</label>
 					</div>
 					<p class="description" style="margin-left: 54px;">
-						<?php esc_html_e( 'Alert when sync queue exceeds 1,000 pending items', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Alert when sync queue exceeds 1,000 pending items', 'syncly' ); ?>
 					</p>
 				</div>
 
@@ -169,13 +169,13 @@ $notification_throttle   = $settings['notification_throttle'] ?? '3600';
 								<span class="ghl-checkbox-inner"></span>
 							</span>
 							<span class="ghl-checkbox-label">
-								<?php esc_html_e( 'Webhook Failures', 'ghl-crm-integration' ); ?>
-								<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Get notified when your webhook endpoint is down or failing verification. GHL updates won\'t reach your site.', 'ghl-crm-integration' ); ?>">?</span>
+								<?php esc_html_e( 'Webhook Failures', 'syncly' ); ?>
+								<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Get notified when your webhook endpoint is down or failing verification. GHL updates won\'t reach your site.', 'syncly' ); ?>">?</span>
 							</span>
 						</label>
 					</div>
 					<p class="description" style="margin-left: 54px;">
-						<?php esc_html_e( 'Alert when webhooks fail or verification errors occur', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Alert when webhooks fail or verification errors occur', 'syncly' ); ?>
 					</p>
 				</div>
 
@@ -192,13 +192,13 @@ $notification_throttle   = $settings['notification_throttle'] ?? '3600';
 								<span class="ghl-checkbox-inner"></span>
 							</span>
 							<span class="ghl-checkbox-label">
-								<?php esc_html_e( 'API Rate Limit Exceeded', 'ghl-crm-integration' ); ?>
-								<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Get alerted when hitting GoHighLevel API rate limits frequently. May indicate need to adjust sync intervals.', 'ghl-crm-integration' ); ?>">?</span>
+								<?php esc_html_e( 'API Rate Limit Exceeded', 'syncly' ); ?>
+								<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Get alerted when hitting GoHighLevel API rate limits frequently. May indicate need to adjust sync intervals.', 'syncly' ); ?>">?</span>
 							</span>
 						</label>
 					</div>
 					<p class="description" style="margin-left: 54px;">
-						<?php esc_html_e( 'Notify when GoHighLevel API rate limits are hit', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Notify when GoHighLevel API rate limits are hit', 'syncly' ); ?>
 					</p>
 				</div>
 				
@@ -211,10 +211,10 @@ $notification_throttle   = $settings['notification_throttle'] ?? '3600';
 		<div class="ghl-settings-header">
 			<h2>
 				<span class="dashicons dashicons-chart-line"></span>
-				<?php esc_html_e( 'Daily Activity Summary', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Daily Activity Summary', 'syncly' ); ?>
 			</h2>
 			<p class="description">
-				<?php esc_html_e( 'Get a comprehensive email report every 24 hours with sync statistics and activity overview', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Get a comprehensive email report every 24 hours with sync statistics and activity overview', 'syncly' ); ?>
 			</p>
 		</div>
 		
@@ -236,13 +236,13 @@ $notification_throttle   = $settings['notification_throttle'] ?? '3600';
 								<span class="ghl-checkbox-inner"></span>
 							</span>
 							<span class="ghl-checkbox-label">
-								<?php esc_html_e( 'Enable Daily Summary Email', 'ghl-crm-integration' ); ?>
-								<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Receive a daily email with: total syncs, success rate, failed operations, queue status, webhook activity, and error summary.', 'ghl-crm-integration' ); ?>">?</span>
+								<?php esc_html_e( 'Enable Daily Summary Email', 'syncly' ); ?>
+								<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Receive a daily email with: total syncs, success rate, failed operations, queue status, webhook activity, and error summary.', 'syncly' ); ?>">?</span>
 							</span>
 						</label>
 					</div>
 					<p class="description" style="margin-left: 54px;">
-						<?php esc_html_e( 'Includes: users synced, orders processed, webhooks received, errors, queue status', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Includes: users synced, orders processed, webhooks received, errors, queue status', 'syncly' ); ?>
 					</p>
 				</div>
 
@@ -251,14 +251,14 @@ $notification_throttle   = $settings['notification_throttle'] ?? '3600';
 
 		<hr>
 
-		<h3><?php esc_html_e( 'Summary Delivery Settings', 'ghl-crm-integration' ); ?></h3>
+		<h3><?php esc_html_e( 'Summary Delivery Settings', 'syncly' ); ?></h3>
 		<table class="form-table" role="presentation">
 			<tbody>
 				<tr>
 					<th scope="row">
 						<label for="daily_summary_time">
-							<?php esc_html_e( 'Delivery Time', 'ghl-crm-integration' ); ?>
-							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'What time of day should the summary email be sent? Uses your server\'s timezone.', 'ghl-crm-integration' ); ?>">?</span>
+							<?php esc_html_e( 'Delivery Time', 'syncly' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'What time of day should the summary email be sent? Uses your server\'s timezone.', 'syncly' ); ?>">?</span>
 						</label>
 					</th>
 					<td>
@@ -277,7 +277,7 @@ $notification_throttle   = $settings['notification_throttle'] ?? '3600';
 							?>
 						</select>
 						<p class="description">
-							<?php esc_html_e( 'Time of day to send the daily summary (server timezone).', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'Time of day to send the daily summary (server timezone).', 'syncly' ); ?>
 						</p>
 					</td>
 				</tr>
@@ -290,10 +290,10 @@ $notification_throttle   = $settings['notification_throttle'] ?? '3600';
 		<div class="ghl-settings-header">
 			<h2>
 				<span class="dashicons dashicons-shield"></span>
-				<?php esc_html_e( 'Notification Throttling', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Notification Throttling', 'syncly' ); ?>
 			</h2>
 			<p class="description">
-				<?php esc_html_e( 'Prevent email spam by limiting how often you receive alerts for the same issue', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Prevent email spam by limiting how often you receive alerts for the same issue', 'syncly' ); ?>
 			</p>
 		</div>
 		
@@ -304,22 +304,22 @@ $notification_throttle   = $settings['notification_throttle'] ?? '3600';
 				<tr>
 					<th scope="row">
 						<label for="notification_throttle">
-							<?php esc_html_e( 'Minimum Time Between Alerts', 'ghl-crm-integration' ); ?>
-							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'If the same error happens multiple times, you\'ll only get one email within this timeframe. Prevents inbox spam.', 'ghl-crm-integration' ); ?>">?</span>
+							<?php esc_html_e( 'Minimum Time Between Alerts', 'syncly' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'If the same error happens multiple times, you\'ll only get one email within this timeframe. Prevents inbox spam.', 'syncly' ); ?>">?</span>
 						</label>
 					</th>
 					<td>
 						<select id="notification_throttle" name="notification_throttle" class="regular-text">
 							<?php
 							$throttle_options = array(
-								'0'     => __( 'No throttling (send every alert)', 'ghl-crm-integration' ),
-								'900'   => __( '15 minutes', 'ghl-crm-integration' ),
-								'1800'  => __( '30 minutes', 'ghl-crm-integration' ),
-								'3600'  => __( '1 hour (recommended)', 'ghl-crm-integration' ),
-								'7200'  => __( '2 hours', 'ghl-crm-integration' ),
-								'14400' => __( '4 hours', 'ghl-crm-integration' ),
-								'28800' => __( '8 hours', 'ghl-crm-integration' ),
-								'86400' => __( '24 hours', 'ghl-crm-integration' ),
+								'0'     => __( 'No throttling (send every alert)', 'syncly' ),
+								'900'   => __( '15 minutes', 'syncly' ),
+								'1800'  => __( '30 minutes', 'syncly' ),
+								'3600'  => __( '1 hour (recommended)', 'syncly' ),
+								'7200'  => __( '2 hours', 'syncly' ),
+								'14400' => __( '4 hours', 'syncly' ),
+								'28800' => __( '8 hours', 'syncly' ),
+								'86400' => __( '24 hours', 'syncly' ),
 							);
 							foreach ( $throttle_options as $value => $label ) {
 								printf(
@@ -332,7 +332,7 @@ $notification_throttle   = $settings['notification_throttle'] ?? '3600';
 							?>
 						</select>
 						<p class="description">
-							<?php esc_html_e( 'Prevent duplicate alerts for the same error type within this timeframe.', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'Prevent duplicate alerts for the same error type within this timeframe.', 'syncly' ); ?>
 						</p>
 					</td>
 				</tr>
@@ -345,10 +345,10 @@ $notification_throttle   = $settings['notification_throttle'] ?? '3600';
 		<div class="ghl-settings-header">
 			<h2>
 				<span class="dashicons dashicons-admin-tools"></span>
-				<?php esc_html_e( 'Test Email Delivery', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Test Email Delivery', 'syncly' ); ?>
 			</h2>
 			<p class="description">
-				<?php esc_html_e( 'Verify your email configuration is working correctly before relying on critical alerts', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Verify your email configuration is working correctly before relying on critical alerts', 'syncly' ); ?>
 			</p>
 		</div>
 		
@@ -356,41 +356,41 @@ $notification_throttle   = $settings['notification_throttle'] ?? '3600';
 		
 		<button type="button" id="send-test-notification" class="ghl-button ghl-button-secondary">
 			<span class="dashicons dashicons-email-alt"></span>
-			<?php esc_html_e( 'Send Test Notification', 'ghl-crm-integration' ); ?>
+			<?php esc_html_e( 'Send Test Notification', 'syncly' ); ?>
 		</button>
 		<p class="description" style="margin-top: 10px;">
-			<?php esc_html_e( 'Sends a test email to verify notifications are working. Check your spam folder if you don\'t receive it.', 'ghl-crm-integration' ); ?>
+			<?php esc_html_e( 'Sends a test email to verify notifications are working. Check your spam folder if you don\'t receive it.', 'syncly' ); ?>
 		</p>
 	</div>
 
 	<!-- Save Button -->
 	<button type="button" class="ghl-button ghl-button-primary ghl-save-settings-btn">
-		<span class="ghl-button-text"><?php esc_html_e( 'Save Notification Settings', 'ghl-crm-integration' ); ?></span>
+		<span class="ghl-button-text"><?php esc_html_e( 'Save Notification Settings', 'syncly' ); ?></span>
 	</button>
 
 	<!-- Help Section -->
 	<div class="ghl-help-box ghl-help-box--spaced">
 		<h3>
 			<span class="dashicons dashicons-info"></span>
-			<?php esc_html_e( 'How Notifications Work', 'ghl-crm-integration' ); ?>
+			<?php esc_html_e( 'How Notifications Work', 'syncly' ); ?>
 		</h3>
 		<div class="ghl-help-content">
 			<ul>
 				<li>
-					<strong><?php esc_html_e( 'Critical Alerts:', 'ghl-crm-integration' ); ?></strong>
-					<?php esc_html_e( 'Sent immediately when issues occur. These are time-sensitive and should be enabled for production sites.', 'ghl-crm-integration' ); ?>
+					<strong><?php esc_html_e( 'Critical Alerts:', 'syncly' ); ?></strong>
+					<?php esc_html_e( 'Sent immediately when issues occur. These are time-sensitive and should be enabled for production sites.', 'syncly' ); ?>
 				</li>
 				<li>
-					<strong><?php esc_html_e( 'Daily Summary:', 'ghl-crm-integration' ); ?></strong>
-					<?php esc_html_e( 'One email per day with complete stats: syncs processed, success rate, errors, queue status, and webhook activity.', 'ghl-crm-integration' ); ?>
+					<strong><?php esc_html_e( 'Daily Summary:', 'syncly' ); ?></strong>
+					<?php esc_html_e( 'One email per day with complete stats: syncs processed, success rate, errors, queue status, and webhook activity.', 'syncly' ); ?>
 				</li>
 				<li>
-					<strong><?php esc_html_e( 'Throttling:', 'ghl-crm-integration' ); ?></strong>
-					<?php esc_html_e( 'Prevents email spam. If the same error happens 50 times in 10 minutes, you\'ll only get 1 email (per your throttle setting).', 'ghl-crm-integration' ); ?>
+					<strong><?php esc_html_e( 'Throttling:', 'syncly' ); ?></strong>
+					<?php esc_html_e( 'Prevents email spam. If the same error happens 50 times in 10 minutes, you\'ll only get 1 email (per your throttle setting).', 'syncly' ); ?>
 				</li>
 				<li>
-					<strong><?php esc_html_e( 'Test First:', 'ghl-crm-integration' ); ?></strong>
-					<?php esc_html_e( 'Always send a test notification to verify email delivery before enabling critical alerts.', 'ghl-crm-integration' ); ?>
+					<strong><?php esc_html_e( 'Test First:', 'syncly' ); ?></strong>
+					<?php esc_html_e( 'Always send a test notification to verify email delivery before enabling critical alerts.', 'syncly' ); ?>
 				</li>
 			</ul>
 		</div>

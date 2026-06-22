@@ -119,12 +119,12 @@ class StatsProvider {
 		$integrations = [
 			[
 				'key'     => 'woocommerce',
-				'label'   => __( 'WooCommerce', 'ghl-crm-integration' ),
+				'label'   => __( 'WooCommerce', 'syncly' ),
 				'enabled' => $this->is_integration_enabled( 'woocommerce' ),
 			],
 			[
 				'key'     => 'buddyboss',
-				'label'   => __( 'BuddyBoss Groups', 'ghl-crm-integration' ),
+				'label'   => __( 'BuddyBoss Groups', 'syncly' ),
 				'enabled' => $this->is_integration_enabled( 'buddyboss' ),
 			],
 		];
@@ -461,7 +461,7 @@ class StatsProvider {
 		$last  = $stats['last_event_at'] ?? '';
 
 		if ( empty( $last ) ) {
-			return __( 'No sync activity yet', 'ghl-crm-integration' );
+			return __( 'No sync activity yet', 'syncly' );
 		}
 
 		return $this->human_time_diff_from( $last );
@@ -476,7 +476,7 @@ class StatsProvider {
 
 		return sprintf(
 			/* translators: %s: human-readable time difference */
-			__( '%s ago', 'ghl-crm-integration' ),
+			__( '%s ago', 'syncly' ),
 			human_time_diff( $timestamp, current_time( 'timestamp' ) )
 		);
 	}

@@ -59,7 +59,7 @@ class AutoLoginManager {
 		// Verify user exists.
 		$user = get_userdata( $user_id );
 		if ( ! $user ) {
-			throw new \Exception( esc_html__( 'User not found', 'ghl-crm-integration' ) );
+			throw new \Exception( esc_html__( 'User not found', 'syncly' ) );
 		}
 
 		// Generate cryptographically secure random token.
@@ -129,7 +129,7 @@ class AutoLoginManager {
 			// Show error message.
 			wp_die(
 				esc_html( $result['message'] ),
-				esc_html__( 'Login Failed', 'ghl-crm-integration' ),
+				esc_html__( 'Login Failed', 'syncly' ),
 				[ 'response' => 403 ]
 			);
 		}
@@ -152,7 +152,7 @@ class AutoLoginManager {
 
 			return [
 				'success' => false,
-				'message' => __( 'Invalid or expired login link', 'ghl-crm-integration' ),
+				'message' => __( 'Invalid or expired login link', 'syncly' ),
 			];
 		}
 
@@ -161,7 +161,7 @@ class AutoLoginManager {
 
 			return [
 				'success' => false,
-				'message' => __( 'Invalid or expired login link', 'ghl-crm-integration' ),
+				'message' => __( 'Invalid or expired login link', 'syncly' ),
 			];
 		}
 
@@ -169,7 +169,7 @@ class AutoLoginManager {
 		if ( ! empty( $token_data['used'] ) ) {
 			return [
 				'success' => false,
-				'message' => __( 'Login link has already been used', 'ghl-crm-integration' ),
+				'message' => __( 'Login link has already been used', 'syncly' ),
 			];
 		}
 
@@ -177,7 +177,7 @@ class AutoLoginManager {
 		if ( ! isset( $token_data['expires_at'] ) || $token_data['expires_at'] < time() ) {
 			return [
 				'success' => false,
-				'message' => __( 'Login link has expired', 'ghl-crm-integration' ),
+				'message' => __( 'Login link has expired', 'syncly' ),
 			];
 		}
 
@@ -187,7 +187,7 @@ class AutoLoginManager {
 		if ( ! $user ) {
 			return [
 				'success' => false,
-				'message' => __( 'User not found', 'ghl-crm-integration' ),
+				'message' => __( 'User not found', 'syncly' ),
 			];
 		}
 
@@ -204,7 +204,7 @@ class AutoLoginManager {
 
 		return [
 			'success' => true,
-			'message' => __( 'Login successful', 'ghl-crm-integration' ),
+			'message' => __( 'Login successful', 'syncly' ),
 			'user_id' => $user_id,
 		];
 	}

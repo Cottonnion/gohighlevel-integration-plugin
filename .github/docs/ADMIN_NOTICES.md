@@ -107,14 +107,14 @@ public function connect() {
         
         $notices = \GHL_CRM\Core\AdminNotices::get_instance();
         $notices->success( 
-            __( 'Successfully connected to GoHighLevel!', 'ghl-crm-integration' ),
+            __( 'Successfully connected to GoHighLevel!', 'syncly' ),
             true // Show on all admin pages
         );
         
     } catch ( \Exception $e ) {
         $notices = \GHL_CRM\Core\AdminNotices::get_instance();
         $notices->error( 
-            __( 'Failed to connect: ', 'ghl-crm-integration' ) . $e->getMessage(),
+            __( 'Failed to connect: ', 'syncly' ) . $e->getMessage(),
             true
         );
     }
@@ -136,7 +136,7 @@ public function sync_users() {
     if ( $errors > 0 ) {
         $notices->warning(
             sprintf(
-                __( 'Synced %d users, but %d errors occurred.', 'ghl-crm-integration' ),
+                __( 'Synced %d users, but %d errors occurred.', 'syncly' ),
                 $synced,
                 $errors
             )
@@ -144,7 +144,7 @@ public function sync_users() {
     } else {
         $notices->success(
             sprintf(
-                __( 'Successfully synced %d users.', 'ghl-crm-integration' ),
+                __( 'Successfully synced %d users.', 'syncly' ),
                 $synced
             )
         );
@@ -163,10 +163,10 @@ add_action( 'ghl_crm_settings_notices', function() {
         ?>
         <div class="notice notice-warning is-dismissible">
             <p>
-                <strong><?php esc_html_e( 'Warning:', 'ghl-crm-integration' ); ?></strong>
+                <strong><?php esc_html_e( 'Warning:', 'syncly' ); ?></strong>
                 <?php 
                 printf(
-                    esc_html__( 'You have %d contacts pending sync.', 'ghl-crm-integration' ),
+                    esc_html__( 'You have %d contacts pending sync.', 'syncly' ),
                     $pending_syncs
                 );
                 ?>

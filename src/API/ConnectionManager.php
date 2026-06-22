@@ -78,7 +78,7 @@ class ConnectionManager {
 			if ( $is_setting_credentials && ( empty( $settings['api_token'] ) || empty( $settings['location_id'] ) ) ) {
 				return [
 					'success' => false,
-					'message' => __( 'API Token and Location ID are required.', 'ghl-crm-integration' ),
+					'message' => __( 'API Token and Location ID are required.', 'syncly' ),
 				];
 			}
 		}
@@ -94,13 +94,13 @@ class ConnectionManager {
 
 			return [
 				'success' => true,
-				'message' => __( 'Settings saved successfully!', 'ghl-crm-integration' ),
+				'message' => __( 'Settings saved successfully!', 'syncly' ),
 			];
 		}
 
 		return [
 			'success' => false,
-			'message' => __( 'Failed to save settings. Please try again.', 'ghl-crm-integration' ),
+			'message' => __( 'Failed to save settings. Please try again.', 'syncly' ),
 		];
 	}
 
@@ -119,7 +119,7 @@ class ConnectionManager {
 		if ( ! $has_oauth && ! $has_manual ) {
 			return [
 				'success' => false,
-				'message' => __( 'Please connect your GoHighLevel account first.', 'ghl-crm-integration' ),
+				'message' => __( 'Please connect your GoHighLevel account first.', 'syncly' ),
 				'code'    => 400,
 			];
 		}
@@ -133,7 +133,7 @@ class ConnectionManager {
 		if ( empty( $location_id ) ) {
 			return [
 				'success' => false,
-				'message' => __( 'Location ID not found. Please reconnect your account.', 'ghl-crm-integration' ),
+				'message' => __( 'Location ID not found. Please reconnect your account.', 'syncly' ),
 				'code'    => 400,
 			];
 		}
@@ -158,7 +158,7 @@ class ConnectionManager {
 				'success' => false,
 				'message' => sprintf(
 					/* translators: %s: Error message */
-					__( 'Connection failed: %s', 'ghl-crm-integration' ),
+					__( 'Connection failed: %s', 'syncly' ),
 					$response->get_error_message()
 				),
 				'code'    => 500,
@@ -174,7 +174,7 @@ class ConnectionManager {
 
 			return [
 				'success'     => true,
-				'message'     => __( 'Connection successful! Your API credentials are working.', 'ghl-crm-integration' ),
+				'message'     => __( 'Connection successful! Your API credentials are working.', 'syncly' ),
 				'status_code' => $status_code,
 				'code'        => 200,
 			];
@@ -186,7 +186,7 @@ class ConnectionManager {
 				'success'     => false,
 				'message'     => sprintf(
 					/* translators: %d: HTTP status code */
-					__( 'Connection failed with status code: %d', 'ghl-crm-integration' ),
+					__( 'Connection failed with status code: %d', 'syncly' ),
 					$status_code
 				),
 				'details'     => $body,
@@ -317,16 +317,16 @@ class ConnectionManager {
 
 		// Validate API token format
 		if ( empty( $api_token ) ) {
-			$errors[] = __( 'API Token is required.', 'ghl-crm-integration' );
+			$errors[] = __( 'API Token is required.', 'syncly' );
 		} elseif ( strlen( $api_token ) < 20 ) {
-			$errors[] = __( 'API Token appears to be too short.', 'ghl-crm-integration' );
+			$errors[] = __( 'API Token appears to be too short.', 'syncly' );
 		}
 
 		// Validate Location ID format
 		if ( empty( $location_id ) ) {
-			$errors[] = __( 'Location ID is required.', 'ghl-crm-integration' );
+			$errors[] = __( 'Location ID is required.', 'syncly' );
 		} elseif ( strlen( $location_id ) < 10 ) {
-			$errors[] = __( 'Location ID appears to be too short.', 'ghl-crm-integration' );
+			$errors[] = __( 'Location ID appears to be too short.', 'syncly' );
 		}
 
 		if ( ! empty( $errors ) ) {
@@ -339,7 +339,7 @@ class ConnectionManager {
 
 		return [
 			'valid'   => true,
-			'message' => __( 'Credentials format is valid.', 'ghl-crm-integration' ),
+			'message' => __( 'Credentials format is valid.', 'syncly' ),
 		];
 	}
 }

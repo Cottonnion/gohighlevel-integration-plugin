@@ -138,7 +138,7 @@ class GHLToWordPressSync {
 
 		// Validate contact data
 		if ( empty( $contact_data['email'] ) ) {
-			return new \WP_Error( 'missing_email', __( 'Contact email is required', 'ghl-crm-integration' ) );
+			return new \WP_Error( 'missing_email', __( 'Contact email is required', 'syncly' ) );
 		}
 
 		// Check if user exists by email or GHL ID
@@ -196,7 +196,7 @@ class GHLToWordPressSync {
 		$user_data = [
 			'user_email' => sanitize_email( $contact_data['email'] ),
 			'user_login' => $this->generate_username( $contact_data ),
-			'role'       => $this->settings_manager->get_setting( 'default_user_role', 'subscriber' ),
+			'role'       => 'subscriber',
 		];
 
 		// Map GHL fields to WordPress fields
@@ -385,7 +385,7 @@ class GHLToWordPressSync {
 		// phpcs:enable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 
 		if ( empty( $users ) ) {
-			return new \WP_Error( 'user_not_found', __( 'WordPress user not found', 'ghl-crm-integration' ) );
+			return new \WP_Error( 'user_not_found', __( 'WordPress user not found', 'syncly' ) );
 		}
 
 		$user_id = $users[0]->ID;
@@ -430,7 +430,7 @@ class GHLToWordPressSync {
 			return true;
 		}
 
-		return new \WP_Error( 'delete_failed', __( 'Failed to delete WordPress user', 'ghl-crm-integration' ) );
+		return new \WP_Error( 'delete_failed', __( 'Failed to delete WordPress user', 'syncly' ) );
 	}
 
 	/**

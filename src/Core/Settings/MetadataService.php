@@ -62,7 +62,7 @@ class MetadataService {
 	 * @return void
 	 */
 	public function get_tags(): void {
-		$request_data = $_POST;
+		$request_data = map_deep( wp_unslash( $_POST ), 'sanitize_text_field' );
 
 		if ( empty( $request_data ) ) {
 			// phpcs:ignore Generic.PHP.ForbiddenFunctions.FoundWithAlternative -- Reading raw JSON body from php://input is required for non-form AJAX payloads.
@@ -70,12 +70,12 @@ class MetadataService {
 			if ( ! empty( $raw_body ) ) {
 				$decoded = json_decode( $raw_body, true );
 				if ( json_last_error() === JSON_ERROR_NONE && is_array( $decoded ) ) {
-					$request_data = $decoded;
+					$request_data = map_deep( $decoded, 'sanitize_text_field' );
 				}
 			}
 		}
 
-		$nonce = $request_data['nonce'] ?? '';
+		$nonce = isset( $request_data['nonce'] ) ? sanitize_text_field( wp_unslash( (string) $request_data['nonce'] ) ) : '';
 
 		if (
 			! wp_verify_nonce( $nonce, 'ghl_crm_settings_nonce' ) &&
@@ -90,7 +90,7 @@ class MetadataService {
 		if ( ! current_user_can( 'manage_options' ) && ! current_user_can( 'edit_users' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to access tags.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to access tags.', 'syncly' ),
 				],
 				403
 			);
@@ -101,7 +101,7 @@ class MetadataService {
 			$force       = ! empty( $request_data['force_refresh'] );
 			$tags        = $tag_manager->get_tags( $force );
 
-			$search_term = isset( $request_data['search'] ) ? sanitize_text_field( wp_unslash( $request_data['search'] ) ) : '';
+			$search_term = isset( $request_data['search'] ) ? sanitize_text_field( (string) $request_data['search'] ) : '';
 			if ( '' !== $search_term ) {
 				$tags = $tag_manager->search_tags( $search_term );
 			}
@@ -119,7 +119,7 @@ class MetadataService {
 			wp_send_json_success(
 				[
 					'tags'    => $normalized_tags,
-					'message' => __( 'Tags loaded successfully.', 'ghl-crm-integration' ),
+					'message' => __( 'Tags loaded successfully.', 'syncly' ),
 					'cached'  => $tag_manager->last_fetch_was_cached(),
 				]
 			);
@@ -128,7 +128,7 @@ class MetadataService {
 				[
 					'message' => sprintf(
 						/* translators: %s: error message */
-						__( 'Failed to fetch tags: %s', 'ghl-crm-integration' ),
+						__( 'Failed to fetch tags: %s', 'syncly' ),
 						$e->getMessage()
 					),
 				],
@@ -218,7 +218,7 @@ class MetadataService {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to access this data.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to access this data.', 'syncly' ),
 				],
 				403
 			);
@@ -240,7 +240,7 @@ class MetadataService {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to perform this action.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to perform this action.', 'syncly' ),
 				],
 				403
 			);
@@ -254,7 +254,7 @@ class MetadataService {
 			if ( empty( $location_id ) ) {
 				wp_send_json_error(
 					[
-						'message' => __( 'Location ID not configured. Please connect to GoHighLevel first.', 'ghl-crm-integration' ),
+						'message' => __( 'Location ID not configured. Please connect to GoHighLevel first.', 'syncly' ),
 					],
 					400
 				);
@@ -312,7 +312,7 @@ class MetadataService {
 
 			wp_send_json_success(
 				[
-					'message'             => __( 'Tags and fields refreshed successfully.', 'ghl-crm-integration' ),
+					'message'             => __( 'Tags and fields refreshed successfully.', 'syncly' ),
 					'tags_count'          => count( $tags ),
 					'custom_fields_count' => count( $custom_fields_raw ),
 					'has_custom_fields'   => ! empty( $custom_fields_raw ),
@@ -324,7 +324,7 @@ class MetadataService {
 				[
 					'message' => sprintf(
 						/* translators: %s: error message */
-						__( 'Failed to refresh metadata: %s', 'ghl-crm-integration' ),
+						__( 'Failed to refresh metadata: %s', 'syncly' ),
 						$e->getMessage()
 					),
 				],
@@ -335,7 +335,7 @@ class MetadataService {
 				[
 					'message' => sprintf(
 						/* translators: %s: error message */
-						__( 'A fatal error occurred while refreshing metadata: %s', 'ghl-crm-integration' ),
+						__( 'A fatal error occurred while refreshing metadata: %s', 'syncly' ),
 						$err->getMessage()
 					),
 				],
@@ -346,7 +346,7 @@ class MetadataService {
 				[
 					'message' => sprintf(
 						/* translators: %s: error message */
-						__( 'An unexpected error occurred while refreshing metadata: %s', 'ghl-crm-integration' ),
+						__( 'An unexpected error occurred while refreshing metadata: %s', 'syncly' ),
 						$throwable->getMessage()
 					),
 				],
@@ -362,22 +362,22 @@ class MetadataService {
 	 */
 	public function get_standard_ghl_fields(): array {
 		return [
-			''            => __( '— Do Not Sync —', 'ghl-crm-integration' ),
-			'firstName'   => __( 'First Name', 'ghl-crm-integration' ),
-			'lastName'    => __( 'Last Name', 'ghl-crm-integration' ),
-			'name'        => __( 'Full Name', 'ghl-crm-integration' ),
-			'email'       => __( 'Email', 'ghl-crm-integration' ),
-			'phone'       => __( 'Phone', 'ghl-crm-integration' ),
-			'address1'    => __( 'Address Line 1', 'ghl-crm-integration' ),
-			'city'        => __( 'City', 'ghl-crm-integration' ),
-			'state'       => __( 'State', 'ghl-crm-integration' ),
-			'country'     => __( 'Country', 'ghl-crm-integration' ),
-			'postalCode'  => __( 'Postal Code', 'ghl-crm-integration' ),
-			'website'     => __( 'Website', 'ghl-crm-integration' ),
-			'timezone'    => __( 'Timezone', 'ghl-crm-integration' ),
-			'companyName' => __( 'Company Name', 'ghl-crm-integration' ),
-			'source'      => __( 'Source', 'ghl-crm-integration' ),
-			'dateOfBirth' => __( 'Date of Birth', 'ghl-crm-integration' ),
+			''            => __( '— Do Not Sync —', 'syncly' ),
+			'firstName'   => __( 'First Name', 'syncly' ),
+			'lastName'    => __( 'Last Name', 'syncly' ),
+			'name'        => __( 'Full Name', 'syncly' ),
+			'email'       => __( 'Email', 'syncly' ),
+			'phone'       => __( 'Phone', 'syncly' ),
+			'address1'    => __( 'Address Line 1', 'syncly' ),
+			'city'        => __( 'City', 'syncly' ),
+			'state'       => __( 'State', 'syncly' ),
+			'country'     => __( 'Country', 'syncly' ),
+			'postalCode'  => __( 'Postal Code', 'syncly' ),
+			'website'     => __( 'Website', 'syncly' ),
+			'timezone'    => __( 'Timezone', 'syncly' ),
+			'companyName' => __( 'Company Name', 'syncly' ),
+			'source'      => __( 'Source', 'syncly' ),
+			'dateOfBirth' => __( 'Date of Birth', 'syncly' ),
 		];
 	}
 

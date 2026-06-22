@@ -125,7 +125,7 @@ class CF7Handler {
 	 */
 	public function add_ghl_panel( array $panels ): array {
 		$panels['ghl-crm-panel'] = [
-			'title'    => __( 'GHL CRM', 'ghl-crm-integration' ),
+			'title'    => __( 'GHL CRM', 'syncly' ),
 			'callback' => [ $this, 'render_panel' ],
 		];
 

@@ -58,7 +58,7 @@ $this->add_public_asset(
 
 ## Screen IDs for Admin Pages
 
-- Settings: `toplevel_page_ghl-crm-integration`
+- Settings: `toplevel_page_syncly`
 - Sync Logs: `ghl-crm_page_ghl-crm-sync-logs`
 - Field Mapping: `ghl-crm_page_ghl-crm-field-mapping`
 

@@ -719,7 +719,7 @@ class Client implements ClientInterface {
 						'token_refresh_failed',
 						sprintf(
 							/* translators: %s: Error message */
-							__( 'Error refreshing access token: %s', 'ghl-crm-integration' ),
+							__( 'Error refreshing access token: %s', 'syncly' ),
 							$e->getMessage()
 						)
 					);
@@ -906,7 +906,7 @@ class Client implements ClientInterface {
 			throw new ApiException(
 				sprintf(
 					/* translators: %s: Error message */
-					esc_html__( 'Token exchange failed: %s', 'ghl-crm-integration' ),
+					esc_html__( 'Token exchange failed: %s', 'syncly' ),
 					esc_html( $response->get_error_message() )
 				)
 			);
@@ -926,7 +926,7 @@ class Client implements ClientInterface {
 		if ( $status_code !== 200 || empty( $decoded['access_token'] ) ) {
 			$decoded_array = $this->sanitize_response_payload( $decoded );
 			throw new ApiException(
-				esc_html__( 'Failed to obtain access token from GoHighLevel', 'ghl-crm-integration' ),
+				esc_html__( 'Failed to obtain access token from GoHighLevel', 'syncly' ),
 				(int) $status_code,
 				$decoded_array // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- sanitized via sanitize_response_payload(
 			);
@@ -1152,7 +1152,7 @@ class Client implements ClientInterface {
 		set_transient( $transient_key, true, self::CIRCUIT_BREAKER_COOLDOWN * MINUTE_IN_SECONDS );
 
 		\GHL_CRM\Core\AdminNotices::get_instance()->error(
-			__( 'GoHighLevel OAuth refresh is temporarily unhealthy. The plugin will retry automatically; reconnect your account if this persists.', 'ghl-crm-integration' ),
+			__( 'GoHighLevel OAuth refresh is temporarily unhealthy. The plugin will retry automatically; reconnect your account if this persists.', 'syncly' ),
 			true
 		);
 
@@ -1265,18 +1265,18 @@ class Client implements ClientInterface {
 				$this->reset_circuit_breaker();
 			}
 			$this->log_oauth_event( 'Refresh aborted: no refresh token stored' );
-			throw new ApiException( esc_html__( 'No refresh token available. Please reconnect your GoHighLevel account.', 'ghl-crm-integration' ) );
+			throw new ApiException( esc_html__( 'No refresh token available. Please reconnect your GoHighLevel account.', 'syncly' ) );
 		}
 
 		// Check circuit breaker (prevents hammering failing proxy)
 		if ( $this->is_circuit_breaker_open() ) {
 			$this->log_oauth_event( 'Refresh blocked: circuit breaker open (too many recent failures)' );
-			$this->update_oauth_health( 'cooldown', __( 'Token refresh is paused after repeated failures.', 'ghl-crm-integration' ) );
+			$this->update_oauth_health( 'cooldown', __( 'Token refresh is paused after repeated failures.', 'syncly' ) );
 
 			throw new ApiException(
 				sprintf(
 					/* translators: %d: cooldown minutes */
-					esc_html__( 'Token refresh temporarily disabled due to repeated failures. Please try again in %d minutes or reconnect your GoHighLevel account.', 'ghl-crm-integration' ),
+					esc_html__( 'Token refresh temporarily disabled due to repeated failures. Please try again in %d minutes or reconnect your GoHighLevel account.', 'syncly' ),
 					absint( self::CIRCUIT_BREAKER_COOLDOWN )
 				)
 			);
@@ -1289,10 +1289,10 @@ class Client implements ClientInterface {
 			$throttle_message = self::$last_refresh_error
 				? sprintf(
 					/* translators: %s: Error details from the last OAuth token refresh attempt. */
-					esc_html__( 'Recent refresh attempt failed: %s', 'ghl-crm-integration' ),
+					esc_html__( 'Recent refresh attempt failed: %s', 'syncly' ),
 					self::$last_refresh_error
 				)
-				: esc_html__( 'Recent refresh attempt in progress or just failed. Reconnect required.', 'ghl-crm-integration' );
+				: esc_html__( 'Recent refresh attempt in progress or just failed. Reconnect required.', 'syncly' );
 			$this->log_oauth_event(
 				'Refresh skipped: throttled',
 				[
@@ -1360,7 +1360,7 @@ class Client implements ClientInterface {
 			} catch ( ApiException $e ) {
 				$this->log_oauth_event( 'Refresh token corrupted and reconnect failed', [ 'error' => $e->getMessage() ] );
 				throw new ApiException(
-					esc_html__( 'Refresh token is invalid and reconnect failed', 'ghl-crm-integration' )
+					esc_html__( 'Refresh token is invalid and reconnect failed', 'syncly' )
 				);
 			}
 		}
@@ -1427,7 +1427,7 @@ class Client implements ClientInterface {
 			throw new ApiException(
 				sprintf(
 					/* translators: %s: Error message */
-					esc_html__( 'Token refresh failed: %s', 'ghl-crm-integration' ),
+					esc_html__( 'Token refresh failed: %s', 'syncly' ),
 					esc_html( $response->get_error_message() )
 				)
 			);
@@ -1453,7 +1453,7 @@ class Client implements ClientInterface {
 
 			if ( 429 === $status_code ) {
 				throw new ApiException(
-					esc_html__( 'Token refresh is rate limited. The plugin will retry after the cooldown period.', 'ghl-crm-integration' ),
+					esc_html__( 'Token refresh is rate limited. The plugin will retry after the cooldown period.', 'syncly' ),
 					(int) $status_code
 				);
 			}
@@ -1464,7 +1464,7 @@ class Client implements ClientInterface {
 				$this->clear_oauth_tokens();
 				// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Third argument is machine-readable context, not HTML output.
 				throw new ApiException(
-					esc_html__( 'Refresh token is invalid. Please reconnect your GoHighLevel account.', 'ghl-crm-integration' ),
+					esc_html__( 'Refresh token is invalid. Please reconnect your GoHighLevel account.', 'syncly' ),
 					(int) $status_code
 				);
 			}
@@ -1496,7 +1496,7 @@ class Client implements ClientInterface {
 					throw new ApiException(
 						sprintf(
 							/* translators: 1: refresh error, 2: reconnect error */
-							esc_html__( 'Failed to refresh access token (%1$s) and reconnect failed (%2$s)', 'ghl-crm-integration' ),
+							esc_html__( 'Failed to refresh access token (%1$s) and reconnect failed (%2$s)', 'syncly' ),
 							esc_html( $decoded_array['message'] ?? 'unknown' ),
 							esc_html( $reconnect_error->getMessage() )
 						),
@@ -1569,12 +1569,12 @@ class Client implements ClientInterface {
 	 */
 	public function reconnect_api(): string {
 		if ( empty( $this->location_id ) ) {
-			throw new ApiException( esc_html__( 'Missing location ID for HighLevel reconnect', 'ghl-crm-integration' ) );
+			throw new ApiException( esc_html__( 'Missing location ID for HighLevel reconnect', 'syncly' ) );
 		}
 
 		// Throttle reconnect attempts (2-minute cooldown)
 		if ( get_transient( self::RECONNECT_THROTTLE_KEY ) ) {
-			throw new ApiException( esc_html__( 'Reconnect attempt throttled. Please wait before retrying.', 'ghl-crm-integration' ) );
+			throw new ApiException( esc_html__( 'Reconnect attempt throttled. Please wait before retrying.', 'syncly' ) );
 		}
 		set_transient( self::RECONNECT_THROTTLE_KEY, true, 2 * MINUTE_IN_SECONDS );
 
@@ -1598,7 +1598,7 @@ class Client implements ClientInterface {
 			throw new ApiException(
 				sprintf(
 					/* translators: %s: Error message */
-					esc_html__( 'Reconnect API failed: %s', 'ghl-crm-integration' ),
+					esc_html__( 'Reconnect API failed: %s', 'syncly' ),
 					esc_html( $response->get_error_message() )
 				)
 			);
@@ -1611,7 +1611,7 @@ class Client implements ClientInterface {
 		if ( $status_code !== 200 || empty( $decoded['authorizationCode'] ) ) {
 			$decoded_array = $this->sanitize_response_payload( $decoded );
 			throw new ApiException(
-				esc_html__( 'Failed to get authorization code from HighLevel reconnect', 'ghl-crm-integration' ),
+				esc_html__( 'Failed to get authorization code from HighLevel reconnect', 'syncly' ),
 				(int) $status_code,
 				$decoded_array // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- sanitized via sanitize_response_payload(
 			);
@@ -1788,7 +1788,7 @@ class Client implements ClientInterface {
 		} elseif ( ! empty( $this->token ) ) {
 			$auth_token = $this->token;
 		} else {
-			throw new AuthenticationException( esc_html__( 'No authentication method configured. Please connect your GoHighLevel account.', 'ghl-crm-integration' ) );
+			throw new AuthenticationException( esc_html__( 'No authentication method configured. Please connect your GoHighLevel account.', 'syncly' ) );
 		}
 
 		// Build request arguments
@@ -1891,7 +1891,7 @@ class Client implements ClientInterface {
 			}
 
 			throw new ApiException(
-				esc_html__( 'Invalid JSON response from API', 'ghl-crm-integration' ),
+				esc_html__( 'Invalid JSON response from API', 'syncly' ),
 				(int) $status_code,
 				[ 'raw_body' => $this->sanitize_response_scalar( (string) $body ) ] // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- sanitized via sanitize_response_scalar()
 			);
@@ -1955,7 +1955,7 @@ class Client implements ClientInterface {
 		$settings_manager->delete_setting( 'oauth_refresh_token' );
 		$settings_manager->delete_setting( 'oauth_expires_at' );
 		$settings_manager->update_setting( 'oauth_health_status', 'reconnect_required' );
-		$settings_manager->update_setting( 'oauth_health_message', __( 'OAuth tokens were cleared and the account must be reconnected.', 'ghl-crm-integration' ) );
+		$settings_manager->update_setting( 'oauth_health_message', __( 'OAuth tokens were cleared and the account must be reconnected.', 'syncly' ) );
 		$settings_manager->update_setting( 'oauth_health_checked_at', current_time( 'mysql' ) );
 		$settings_manager->update_option( 'ghl_crm_connection_verified', false );
 
@@ -1992,7 +1992,7 @@ class Client implements ClientInterface {
 		if ( empty( $api_token ) || empty( $location_id ) ) {
 			return [
 				'success' => false,
-				'message' => __( 'API Token and Location ID are required.', 'ghl-crm-integration' ),
+				'message' => __( 'API Token and Location ID are required.', 'syncly' ),
 			];
 		}
 
@@ -2000,7 +2000,7 @@ class Client implements ClientInterface {
 		if ( strpos( $api_token, 'eyJ' ) === 0 ) {
 			return [
 				'success' => false,
-				'message' => __( 'Invalid API Key Format: You appear to have entered a JWT token (temporary) instead of a Location API Key (permanent). Please get your Location API Key from: Settings → Private Integrations → API Key in your GoHighLevel location.', 'ghl-crm-integration' ),
+				'message' => __( 'Invalid API Key Format: You appear to have entered a JWT token (temporary) instead of a Location API Key (permanent). Please get your Location API Key from: Settings → Private Integrations → API Key in your GoHighLevel location.', 'syncly' ),
 			];
 		}
 
@@ -2024,7 +2024,7 @@ class Client implements ClientInterface {
 				'success' => false,
 				'message' => sprintf(
 					/* translators: %s: Error message */
-					__( 'Connection failed: %s', 'ghl-crm-integration' ),
+					__( 'Connection failed: %s', 'syncly' ),
 					$response->get_error_message()
 				),
 			];
@@ -2036,7 +2036,7 @@ class Client implements ClientInterface {
 		if ( $status_code === 200 ) {
 			return [
 				'success' => true,
-				'message' => __( 'Successfully connected to GoHighLevel!', 'ghl-crm-integration' ),
+				'message' => __( 'Successfully connected to GoHighLevel!', 'syncly' ),
 				'data'    => [
 					'status_code' => $status_code,
 					'preview'     => substr( $body, 0, 200 ),
@@ -2048,14 +2048,14 @@ class Client implements ClientInterface {
 		if ( $status_code === 401 ) {
 			return [
 				'success' => false,
-				'message' => __( 'Authentication failed. Please verify your API key is correct and has not expired.', 'ghl-crm-integration' ),
+				'message' => __( 'Authentication failed. Please verify your API key is correct and has not expired.', 'syncly' ),
 			];
 		}
 
 		if ( $status_code === 403 ) {
 			return [
 				'success' => false,
-				'message' => __( 'Access denied. Please verify your API key has access to this location.', 'ghl-crm-integration' ),
+				'message' => __( 'Access denied. Please verify your API key has access to this location.', 'syncly' ),
 			];
 		}
 
@@ -2064,7 +2064,7 @@ class Client implements ClientInterface {
 			'success' => false,
 			'message' => sprintf(
 				/* translators: %d: HTTP status code */
-				__( 'Connection failed with status code: %d', 'ghl-crm-integration' ),
+				__( 'Connection failed with status code: %d', 'syncly' ),
 				$status_code
 			),
 		];
@@ -2098,7 +2098,7 @@ class Client implements ClientInterface {
 		$sanitized_response = $this->sanitize_response_payload( $response );
 
 		// Extract error message - handle both string and array formats
-		$error_raw = isset( $response['message'] ) ? $response['message'] : ( isset( $response['error'] ) ? $response['error'] : esc_html__( 'Unknown API error', 'ghl-crm-integration' ) );
+		$error_raw = isset( $response['message'] ) ? $response['message'] : ( isset( $response['error'] ) ? $response['error'] : esc_html__( 'Unknown API error', 'syncly' ) );
 
 		if ( is_array( $error_raw ) ) {
 			// Convert array to readable string
@@ -2123,7 +2123,7 @@ class Client implements ClientInterface {
 			throw new RateLimitException(
 				sprintf(
 				/* translators: %d: Seconds until retry */
-					esc_html__( 'Rate limit exceeded. Retry after %d seconds.', 'ghl-crm-integration' ),
+					esc_html__( 'Rate limit exceeded. Retry after %d seconds.', 'syncly' ),
 					(int) $retry_after
 				),
 				(int) $retry_after,

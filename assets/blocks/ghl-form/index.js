@@ -25,8 +25,8 @@
 
 	blocks.registerBlockType('ghl-crm/form', {
 		apiVersion: 2,
-		title: __('GoHighLevel Form', 'ghl-crm-integration'),
-		description: __('Embed a GoHighLevel form to capture leads directly on your site. Form settings can be configured in the Forms sub menu', 'ghl-crm-integration'),
+		title: __('GoHighLevel Form', 'syncly'),
+		description: __('Embed a GoHighLevel form to capture leads directly on your site. Form settings can be configured in the Forms sub menu', 'syncly'),
 		icon: 'forms',
 		category: 'ghl-crm',
 		example: {
@@ -65,7 +65,7 @@
 			var Spinner = components.Spinner;
 			var blockProps = useBlockProps ? useBlockProps() : {};
 
-			var formsState = useState([{ label: __('Select a form...', 'ghl-crm-integration'), value: '' }]);
+			var formsState = useState([{ label: __('Select a form...', 'syncly'), value: '' }]);
 			var forms = formsState[0];
 			var setForms = formsState[1];
 
@@ -84,7 +84,7 @@
 					path: '/ghl-crm/v1/forms',
 				}).then(function (response) {
 					var formOptions = [
-						{ label: __('Select a form...', 'ghl-crm-integration'), value: '' }
+						{ label: __('Select a form...', 'syncly'), value: '' }
 					];
 
 					if (response.forms && response.forms.length > 0) {
@@ -99,7 +99,7 @@
 					setForms(formOptions);
 					setLoading(false);
 				}).catch(function () {
-					setForms([{ label: __('Select a form...', 'ghl-crm-integration'), value: '' }]);
+					setForms([{ label: __('Select a form...', 'syncly'), value: '' }]);
 					setLoading(false);
 				});
 			}
@@ -125,13 +125,13 @@
 			if (!connected) {
 				return el(Placeholder, {
 					icon: 'forms',
-					label: __('GoHighLevel Form', 'ghl-crm-integration'),
-					instructions: __('Please connect to GoHighLevel in plugin settings to use forms.', 'ghl-crm-integration')
+					label: __('GoHighLevel Form', 'syncly'),
+					instructions: __('Please connect to GoHighLevel in plugin settings to use forms.', 'syncly')
 				},
 					el('a', {
 						href: '/wp-admin/admin.php?page=ghl-crm-settings',
 						className: 'button button-primary'
-					}, __('Go to Settings', 'ghl-crm-integration'))
+					}, __('Go to Settings', 'syncly'))
 				);
 			}
 
@@ -139,29 +139,29 @@
 			if (loading) {
 				return el(Placeholder, {
 					icon: 'forms',
-					label: __('GoHighLevel Form', 'ghl-crm-integration')
+					label: __('GoHighLevel Form', 'syncly')
 				}, el(Spinner));
 			}
 
 			var inspector = el(InspectorControls, null,
-				el(PanelBody, { title: __('Form Settings', 'ghl-crm-integration'), initialOpen: true },
+				el(PanelBody, { title: __('Form Settings', 'syncly'), initialOpen: true },
 					el(SelectControl, {
-						label: __('Select Form', 'ghl-crm-integration'),
+						label: __('Select Form', 'syncly'),
 						value: attrs.formId,
 						options: forms,
 						onChange: function (v) { setAttrs({ formId: v }); }
 					}),
 					el(TextControl, {
-						label: __('Width', 'ghl-crm-integration'),
+						label: __('Width', 'syncly'),
 						value: attrs.width,
 						onChange: function (v) { setAttrs({ width: v }); },
-						help: __('e.g., 100%, 600px', 'ghl-crm-integration')
+						help: __('e.g., 100%, 600px', 'syncly')
 					}),
 					el(TextControl, {
-						label: __('Height', 'ghl-crm-integration'),
+						label: __('Height', 'syncly'),
 						value: attrs.height,
 						onChange: function (v) { setAttrs({ height: v }); },
-						help: __('e.g., auto, 800px', 'ghl-crm-integration')
+						help: __('e.g., auto, 800px', 'syncly')
 					})
 				)
 			);
@@ -172,8 +172,8 @@
 					inspector,
 					el(Placeholder, {
 						icon: 'forms',
-						label: __('GoHighLevel Form', 'ghl-crm-integration'),
-						instructions: __('Select a form from the sidebar to get started.', 'ghl-crm-integration')
+						label: __('GoHighLevel Form', 'syncly'),
+						instructions: __('Select a form from the sidebar to get started.', 'syncly')
 					})
 				);
 			}
@@ -226,7 +226,7 @@
 							padding: '4px 8px',
 							borderRadius: '3px'
 						}
-					}, __('LIVE PREVIEW', 'ghl-crm-integration'))
+					}, __('LIVE PREVIEW', 'syncly'))
 				),
 				// Form iframe wrapper with click overlay
 				formUrl ? el('div', {
@@ -271,8 +271,8 @@
 						minHeight: '200px'
 					}
 				},
-					el('p', null, __('Form preview will be displayed here', 'ghl-crm-integration')),
-					el('small', null, __('The actual form will load on the frontend', 'ghl-crm-integration'))
+					el('p', null, __('Form preview will be displayed here', 'syncly')),
+					el('small', null, __('The actual form will load on the frontend', 'syncly'))
 				)
 			);
 

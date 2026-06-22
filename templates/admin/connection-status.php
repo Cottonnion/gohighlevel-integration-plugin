@@ -52,11 +52,11 @@ $is_connected = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 						$time_left = sprintf( '%02d:%02d:%02d', $hours, $minutes, $seconds );
 						printf(
 							/* translators: %s: Time remaining in HH:MM:SS format */
-							esc_html__( 'Token expires in %s', 'ghl-crm-integration' ),
+							esc_html__( 'Token expires in %s', 'syncly' ),
 							esc_html( $time_left )
 						);
 					} else {
-						esc_html_e( 'Token expired (auto-refresh)', 'ghl-crm-integration' );
+						esc_html_e( 'Token expired (auto-refresh)', 'syncly' );
 					}
 					?>
 				</div>
@@ -80,7 +80,7 @@ $is_connected = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 
 			<button type="button" class="ghl-button ghl-button-secondary" id="ghl-disconnect-btn" style="width: 100%; justify-content: center; text-align: center; font-size: 13px;">
 				<span class="dashicons dashicons-dismiss" style="font-size: 14px; margin-top: 3px;"></span>
-				<?php esc_html_e( 'Disconnect', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Disconnect', 'syncly' ); ?>
 			</button>
 
 		<?php else : ?>
@@ -91,7 +91,7 @@ $is_connected = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 					<strong style="color: #166534; font-size: 14px;">Connected (API Key)</strong>
 				</div>
 				<div style="font-size: 12px; color: #166534;">
-					<?php esc_html_e( 'Using manual API key', 'ghl-crm-integration' ); ?>
+					<?php esc_html_e( 'Using manual API key', 'syncly' ); ?>
 				</div>
 			</div>
 
@@ -112,10 +112,10 @@ $is_connected = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 			<div style="display: flex; flex-direction: column; gap: 8px;">
 				<button type="button" class="ghl-button ghl-button-secondary" id="ghl-disconnect-api-btn" style="width: 100%; justify-content: center; text-align: center; font-size: 13px;">
 					<span class="dashicons dashicons-dismiss" style="font-size: 14px; margin-top: 3px;"></span>
-					<?php esc_html_e( 'Disconnect', 'ghl-crm-integration' ); ?>
+					<?php esc_html_e( 'Disconnect', 'syncly' ); ?>
 				</button>
 				<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin#/settings' ) ); ?>" class="ghl-button" style=" text-align: center; font-size: 12px; text-decoration: none;">
-					<?php esc_html_e( 'Update Settings', 'ghl-crm-integration' ); ?>
+					<?php esc_html_e( 'Update Settings', 'syncly' ); ?>
 				</a>
 			</div>
 		<?php endif; ?>
@@ -127,13 +127,13 @@ $is_connected = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 				<strong style="color: #92400e; font-size: 14px;">Not Connected</strong>
 			</div>
 			<div style="font-size: 12px; color: #92400e; line-height: 1.5;">
-				<?php esc_html_e( 'Connect to GoHighLevel to start syncing data.', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Connect to GoHighLevel to start syncing data.', 'syncly' ); ?>
 			</div>
 		</div>
 		
 		<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-dashboard' ) ); ?>" class="ghl-button ghl-button-primary" style="width: 100%; justify-content: center; text-align: center; font-size: 13px;">
 			<span class="dashicons dashicons-admin-site" style="font-size: 14px; margin-top: 3px;"></span>
-			<?php esc_html_e( 'Setup Connection', 'ghl-crm-integration' ); ?>
+			<?php esc_html_e( 'Setup Connection', 'syncly' ); ?>
 		</a>
 	<?php endif; ?>
 </div>

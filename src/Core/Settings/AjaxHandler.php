@@ -33,7 +33,7 @@ class AjaxHandler {
 		if ( ! wp_verify_nonce( $nonce, 'ghl_crm_admin' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'Security check failed. Please reload the page and try again.', 'ghl-crm-integration' ),
+					'message' => __( 'Security check failed. Please reload the page and try again.', 'syncly' ),
 				],
 				403
 			);
@@ -51,7 +51,7 @@ class AjaxHandler {
 		if ( ! wp_verify_nonce( $nonce, 'ghl_crm_field_mapping_nonce' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'Security check failed. Please reload the page and try again.', 'ghl-crm-integration' ),
+					'message' => __( 'Security check failed. Please reload the page and try again.', 'syncly' ),
 				],
 				403
 			);
@@ -243,20 +243,19 @@ class AjaxHandler {
 			);
 
 			// Save settings
-			$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
-			$saved      = $repository->save_site_settings( $settings );
+			$saved = $settings_manager->save_site_settings( $settings );
 
 			if ( $saved ) {
 				wp_send_json_success(
 					[
-						'message'  => __( 'Integration settings saved successfully!', 'ghl-crm-integration' ),
+						'message'  => __( 'Integration settings saved successfully!', 'syncly' ),
 						'settings' => $integration_settings,
 					]
 				);
 			} else {
 				wp_send_json_error(
 					[
-						'message' => __( 'Failed to save integration settings. Please try again.', 'ghl-crm-integration' ),
+						'message' => __( 'Failed to save integration settings. Please try again.', 'syncly' ),
 					],
 					500
 				);
@@ -266,7 +265,7 @@ class AjaxHandler {
 				[
 					'message' => sprintf(
 						/* translators: %s: error message */
-						__( 'An error occurred while saving integration settings: %s', 'ghl-crm-integration' ),
+						__( 'An error occurred while saving integration settings: %s', 'syncly' ),
 						$e->getMessage()
 					),
 				],
@@ -277,7 +276,7 @@ class AjaxHandler {
 				[
 					'message' => sprintf(
 						/* translators: %s: error message */
-						__( 'A fatal error occurred while saving integration settings: %s', 'ghl-crm-integration' ),
+						__( 'A fatal error occurred while saving integration settings: %s', 'syncly' ),
 						$err->getMessage()
 					),
 				],
@@ -300,7 +299,7 @@ class AjaxHandler {
 			$location_id      = $settings['location_id'] ?? '';
 
 			if ( empty( $location_id ) ) {
-				wp_send_json_error( [ 'message' => __( 'Location ID not configured', 'ghl-crm-integration' ) ], 400 );
+				wp_send_json_error( [ 'message' => __( 'Location ID not configured', 'syncly' ) ], 400 );
 				return;
 			}
 
@@ -311,7 +310,7 @@ class AjaxHandler {
 			if ( ! empty( $response['pipelines'] ) ) {
 				wp_send_json_success( [ 'pipelines' => $response['pipelines'] ] );
 			} else {
-				wp_send_json_error( [ 'message' => __( 'No pipelines found', 'ghl-crm-integration' ) ], 404 );
+				wp_send_json_error( [ 'message' => __( 'No pipelines found', 'syncly' ) ], 404 );
 			}
 		} catch ( \Exception $e ) {
 			wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
@@ -330,7 +329,7 @@ class AjaxHandler {
 			$pipeline_id = isset( $_POST['pipeline_id'] ) ? sanitize_text_field( wp_unslash( $_POST['pipeline_id'] ) ) : '';
 
 			if ( empty( $pipeline_id ) ) {
-				wp_send_json_error( [ 'message' => __( 'Pipeline ID required', 'ghl-crm-integration' ) ], 400 );
+				wp_send_json_error( [ 'message' => __( 'Pipeline ID required', 'syncly' ) ], 400 );
 				return;
 			}
 
@@ -341,7 +340,7 @@ class AjaxHandler {
 			if ( ! empty( $response['stages'] ) ) {
 				wp_send_json_success( [ 'stages' => $response['stages'] ] );
 			} else {
-				wp_send_json_error( [ 'message' => __( 'No stages found for this pipeline', 'ghl-crm-integration' ) ], 404 );
+				wp_send_json_error( [ 'message' => __( 'No stages found for this pipeline', 'syncly' ) ], 404 );
 			}
 		} catch ( \Exception $e ) {
 			wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
@@ -358,7 +357,7 @@ class AjaxHandler {
 
 		try {
 			if ( ! class_exists( 'WooCommerce' ) ) {
-				wp_send_json_error( [ 'message' => __( 'WooCommerce not active', 'ghl-crm-integration' ) ], 400 );
+				wp_send_json_error( [ 'message' => __( 'WooCommerce not active', 'syncly' ) ], 400 );
 				return;
 			}
 
@@ -405,7 +404,7 @@ class AjaxHandler {
 			check_ajax_referer( 'ghl_sync_logs_nonce', 'nonce' );
 
 			if ( ! current_user_can( 'manage_options' ) ) {
-				wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ], 403 );
+				wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
 				return;
 			}
 
@@ -494,7 +493,7 @@ class AjaxHandler {
 			check_ajax_referer( 'ghl_sync_logs_nonce', 'nonce' );
 
 			if ( ! current_user_can( 'manage_options' ) ) {
-				wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ], 403 );
+				wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
 				return;
 			}
 
@@ -515,7 +514,7 @@ class AjaxHandler {
 				[
 					'message' => sprintf(
 						/* translators: %d: Number of logs deleted */
-						__( 'Deleted %d old log entries', 'ghl-crm-integration' ),
+						__( 'Deleted %d old log entries', 'syncly' ),
 						$deleted
 					),
 					'deleted' => $deleted,
@@ -536,7 +535,7 @@ class AjaxHandler {
 			check_ajax_referer( 'ghl_sync_logs_nonce', 'nonce' );
 
 			if ( ! current_user_can( 'manage_options' ) ) {
-				wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ], 403 );
+				wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
 				return;
 			}
 
@@ -555,7 +554,7 @@ class AjaxHandler {
 				[
 					'message' => sprintf(
 						/* translators: %d: Number of logs deleted */
-						__( 'Cleared %d log entries', 'ghl-crm-integration' ),
+						__( 'Cleared %d log entries', 'syncly' ),
 						$deleted
 					),
 					'deleted' => $deleted,
@@ -576,14 +575,14 @@ class AjaxHandler {
 
 		try {
 			if ( ! current_user_can( 'manage_options' ) ) {
-				wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ], 403 );
+				wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
 				return;
 			}
 
 			// Get unmapped WP fields from request.
 			$wp_fields_raw = isset( $_POST['wp_fields'] ) ? wp_unslash( $_POST['wp_fields'] ) : array();
 			if ( ! is_array( $wp_fields_raw ) ) {
-				wp_send_json_error( [ 'message' => __( 'Invalid field data', 'ghl-crm-integration' ) ], 400 );
+				wp_send_json_error( [ 'message' => __( 'Invalid field data', 'syncly' ) ], 400 );
 				return;
 			}
 
@@ -592,7 +591,7 @@ class AjaxHandler {
 			// Get GHL fields from request.
 			$ghl_fields_raw = isset( $_POST['ghl_fields'] ) ? wp_unslash( $_POST['ghl_fields'] ) : array();
 			if ( ! is_array( $ghl_fields_raw ) ) {
-				wp_send_json_error( [ 'message' => __( 'Invalid GHL field data', 'ghl-crm-integration' ) ], 400 );
+				wp_send_json_error( [ 'message' => __( 'Invalid GHL field data', 'syncly' ) ], 400 );
 				return;
 			}
 
@@ -615,7 +614,7 @@ class AjaxHandler {
 			}
 
 			wp_send_json_error(
-				[ 'message' => __( 'AI-assisted field suggestions is available with the Pro add-on.', 'ghl-crm-integration' ) ],
+				[ 'message' => __( 'AI-assisted field suggestions are unavailable in this plugin.', 'syncly' ) ],
 				403
 			);
 
@@ -638,7 +637,7 @@ class AjaxHandler {
 		if ( ! $nonce_check ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'Security check failed. Please reload the page and try again.', 'ghl-crm-integration' ),
+					'message' => __( 'Security check failed. Please reload the page and try again.', 'syncly' ),
 				],
 				403
 			);
@@ -647,7 +646,7 @@ class AjaxHandler {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to save settings.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to save settings.', 'syncly' ),
 				],
 				403
 			);
@@ -734,12 +733,11 @@ class AjaxHandler {
 			// Mark wizard as completed
 			$current_settings['setup_wizard_completed'] = true;
 
-			// Save all settings directly using repository (not the AJAX handler which sends its own response)
-			$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
-			$saved      = $repository->save_site_settings( $current_settings );
+			// Save all settings directly using SettingsManager (not the AJAX handler which sends its own response)
+			$saved = $settings_manager->save_site_settings( $current_settings );
 
 			if ( ! $saved ) {
-				throw new \Exception( __( 'Failed to save settings. Please try again.', 'ghl-crm-integration' ) );
+				throw new \Exception( __( 'Failed to save settings. Please try again.', 'syncly' ) );
 			}
 
 			// Set option to prevent wizard redirect on future activations
@@ -789,7 +787,7 @@ class AjaxHandler {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to perform this action.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to perform this action.', 'syncly' ),
 				],
 				403
 			);
@@ -871,7 +869,7 @@ class AjaxHandler {
 					'last_sync'  => ! $has_more ? current_time( 'mysql' ) : null,
 					'message'    => sprintf(
 						/* translators: 1: processed count, 2: total count */
-						__( 'Processed %1$d of %2$d users...', 'ghl-crm-integration' ),
+						__( 'Processed %1$d of %2$d users...', 'syncly' ),
 						$processed,
 						$total
 					),
@@ -899,7 +897,7 @@ class AjaxHandler {
 		if ( ! wp_verify_nonce( $nonce, 'ghl_sync_logs_nonce' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'Security check failed.', 'ghl-crm-integration' ),
+					'message' => __( 'Security check failed.', 'syncly' ),
 				],
 				403
 			);
@@ -909,7 +907,7 @@ class AjaxHandler {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to update settings.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to update settings.', 'syncly' ),
 				],
 				403
 			);
@@ -930,7 +928,7 @@ class AjaxHandler {
 
 		wp_send_json_success(
 			[
-				'message'  => __( 'Per-page preference saved.', 'ghl-crm-integration' ),
+				'message'  => __( 'Per-page preference saved.', 'syncly' ),
 				'per_page' => $per_page,
 			]
 		);
@@ -952,7 +950,7 @@ class AjaxHandler {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to perform this action.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to perform this action.', 'syncly' ),
 				],
 				403
 			);
@@ -1055,7 +1053,7 @@ class AjaxHandler {
 					'last_import'             => ! $result['has_more'] ? current_time( 'mysql' ) : null,
 					'message'                 => sprintf(
 						/* translators: 1: processed count, 2: total contacts */
-						__( '%1$d of %2$d contacts processed…', 'ghl-crm-integration' ),
+						__( '%1$d of %2$d contacts processed…', 'syncly' ),
 						$grand_total,
 						$progress['total_contacts'] ?? 0
 					),

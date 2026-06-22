@@ -73,7 +73,7 @@ class SyncPreview {
 		if ( ! $user ) {
 			return [
 				'success' => false,
-				'error'   => __( 'User not found', 'ghl-crm-integration' ),
+				'error'   => __( 'User not found', 'syncly' ),
 			];
 		}
 
@@ -119,7 +119,7 @@ class SyncPreview {
 				'type'    => 'api_error',
 				'message' => sprintf(
 					/* translators: %s: error message */
-					__( 'Could not check GHL: %s', 'ghl-crm-integration' ),
+					__( 'Could not check GHL: %s', 'syncly' ),
 					$e->getMessage()
 				),
 			];
@@ -131,7 +131,7 @@ class SyncPreview {
 			$preview['validations'][] = [
 				'field'   => 'email',
 				'status'  => 'error',
-				'message' => __( 'Invalid or missing email address', 'ghl-crm-integration' ),
+				'message' => __( 'Invalid or missing email address', 'syncly' ),
 			];
 			return $preview;
 		}
@@ -157,7 +157,7 @@ class SyncPreview {
 		// Step 7: Ensure all required fields have values (prevent "no data" errors)
 		$preview['user_name'] = $user->display_name ?: ( $user->first_name . ' ' . $user->last_name );
 		if ( empty( trim( $preview['user_name'] ) ) ) {
-			$preview['user_name'] = $user->user_login ?: __( 'Unknown User', 'ghl-crm-integration' );
+			$preview['user_name'] = $user->user_login ?: __( 'Unknown User', 'syncly' );
 		}
 
 		// Step 8: Warn if no changes will occur
@@ -165,7 +165,7 @@ class SyncPreview {
 			$preview['validations'][] = [
 				'field'   => 'general',
 				'status'  => 'info',
-				'message' => __( 'No changes detected - contact is already in sync', 'ghl-crm-integration' ),
+				'message' => __( 'No changes detected - contact is already in sync', 'syncly' ),
 			];
 		}
 
@@ -174,7 +174,7 @@ class SyncPreview {
 			$preview['validations'][] = [
 				'field'   => 'general',
 				'status'  => 'warning',
-				'message' => __( 'No fields are mapped for sync', 'ghl-crm-integration' ),
+				'message' => __( 'No fields are mapped for sync', 'syncly' ),
 			];
 		}
 
@@ -320,10 +320,10 @@ class SyncPreview {
 		if ( in_array( $field_name, [ 'email', 'user_email' ], true ) ) {
 			if ( empty( $value ) ) {
 				$validation['status']  = 'error';
-				$validation['message'] = __( 'Email is required', 'ghl-crm-integration' );
+				$validation['message'] = __( 'Email is required', 'syncly' );
 			} elseif ( ! is_email( $value ) ) {
 				$validation['status']  = 'error';
-				$validation['message'] = __( 'Invalid email format', 'ghl-crm-integration' );
+				$validation['message'] = __( 'Invalid email format', 'syncly' );
 			}
 		}
 
@@ -331,7 +331,7 @@ class SyncPreview {
 		if ( in_array( $field_name, [ 'phone', 'phone_number' ], true ) ) {
 			if ( ! empty( $value ) && ! preg_match( '/^[\d\s\-\+\(\)]+$/', $value ) ) {
 				$validation['status']  = 'warning';
-				$validation['message'] = __( 'Phone format may be invalid', 'ghl-crm-integration' );
+				$validation['message'] = __( 'Phone format may be invalid', 'syncly' );
 			}
 		}
 

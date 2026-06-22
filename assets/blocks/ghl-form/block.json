@@ -30,7 +30,7 @@
 			"default": "auto"
 		}
 	},
-	"textdomain": "ghl-crm-integration",
+	"textdomain": "syncly",
 	"editorScript": "file:./index.js",
 	"editorStyle": "file:./editor.css"
 }

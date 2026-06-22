@@ -74,7 +74,7 @@ class AdminNotices {
 		// Display notices on all admin pages (for global notices)
 		add_action( 'admin_notices', [ $this, 'display_global_notices' ] );
 
-		// AJAX handler for dismissing upgrade notice
+		// AJAX handler for dismissing optional notices.
 		add_action( 'wp_ajax_ghl_crm_dismiss_upgrade_notice', [ $this, 'ajax_dismiss_upgrade_notice' ] );
 	}
 
@@ -348,38 +348,12 @@ class AdminNotices {
 	}
 
 	/**
-	 * Render the upgrade notice banner
-	 * Similar to BuddyBoss upgrade notice
+	 * Render optional notice banner.
 	 *
 	 * @return void
 	 */
 	public function render_upgrade_notice(): void {
-		if ( ! $this->should_display_upgrade_notice() ) {
-			return;
-		}
-
-		$upgrade_url = apply_filters( 'ghl_crm_upgrade_url', 'https://highlevelsync.com/upgrade-to-pro' );
-		$nonce       = wp_create_nonce( 'ghl_crm_dismiss_upgrade_notice' );
-		?>
-		<div class="ghl-upgrade-notice ghl-is-dismissible" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-			<span class="ghl-upgrade-point">
-				<i class="dashicons dashicons-star-filled ghl-upgrade-icon"></i>
-				<?php
-				printf(
-					/* translators: %s: upgrade link */
-					wp_kses_post( __( 'Access GoHighLevel Pro for advanced custom objects, precise field mapping, and streamlined automation. %s', 'ghl-crm-integration' ) ),
-					'<a href="' . esc_url( $upgrade_url ) . '" class="ghl-upgrade-notice__link" target="_blank">' . esc_html__( 'Explore Pro', 'ghl-crm-integration' ) . '</a>'
-				);
-				?>
-			</span>
-			<button type="button" class="ghl-dismiss-upgrade-notice" aria-label="<?php esc_attr_e( 'Dismiss this notice', 'ghl-crm-integration' ); ?>">
-				<span class="dashicons dashicons-dismiss"></span>
-				<span class="screen-reader-text">
-					<?php esc_html_e( 'Dismiss this notice.', 'ghl-crm-integration' ); ?>
-				</span>
-			</button>
-		</div>
-		<?php
+		return;
 	}
 
 	/**
@@ -390,19 +364,19 @@ class AdminNotices {
 	public function ajax_dismiss_upgrade_notice(): void {
 		// Verify nonce
 		if ( ! check_ajax_referer( 'ghl_crm_dismiss_upgrade_notice', 'nonce', false ) ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid security token.', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid security token.', 'syncly' ) ] );
 		}
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'syncly' ) ] );
 		}
 
 		// Save dismissed state
 		$user_id = get_current_user_id();
 		update_user_meta( $user_id, self::UPGRADE_NOTICE_DISMISSED_KEY, true );
 
-		wp_send_json_success( [ 'message' => __( 'Notice dismissed.', 'ghl-crm-integration' ) ] );
+		wp_send_json_success( [ 'message' => __( 'Notice dismissed.', 'syncly' ) ] );
 	}
 
 	/**

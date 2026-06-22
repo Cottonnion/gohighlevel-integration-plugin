@@ -1,4 +1,4 @@
-=== GHL Sync Bridge ===
+=== Syncly for GoHighLevel ===
 Contributors: cottonnion
 Tags: gohighlevel, crm, woocommerce, buddyboss, learndash, membership, webhooks, automation, oauth2, forms
 Requires at least: 5.8
@@ -12,7 +12,7 @@ The most powerful GoHighLevel integration for WordPress. Deep WooCommerce, Buddy
 
 == Description ==
 
-# GHL Sync Bridge — The Complete WordPress Automation Solution
+# Syncly for GoHighLevel - WordPress CRM Automation
 
 Transform your WordPress site into a fully automated CRM powerhouse with the most comprehensive GoHighLevel integration available. While other plugins offer basic contact sync, this plugin delivers enterprise-level automation with deep integrations across your entire WordPress ecosystem.
 
@@ -567,11 +567,11 @@ Rendered by Pro via `ghl_crm_render_analytics_tab` action. Free plugin shows an 
 
 ---
 
-## Telemetry & Reporting (Free, Opt-in)
+## Telemetry & Reporting (Pro, Opt-in)
 
-- Opt-in telemetry: batches events locally, dispatches to `highlevelsync.com`
+- Opt-in telemetry: Pro batches events locally, dispatches to `highlevelsync.com`
 - Batch size 50, 15-minute dispatch interval
-- Captures fatal errors on shutdown — **filtered to only log errors from `ghl-crm-integration` or `ghl-crm-integration-pro` directories** (prevents unrelated theme/plugin errors)
+- Captures fatal errors on shutdown — filtered to only log errors from `syncly` or `syncly-pro` directories
 - Action Scheduler or WP-Cron fallback
 
 ---
@@ -664,8 +664,8 @@ Rendered by Pro via `ghl_crm_render_analytics_tab` action. Free plugin shows an 
 ## Why Choose This Plugin
 
 - **Most comprehensive** GHL integration available for WordPress
-- **Only plugin** with BuddyBoss Group → GHL Custom Object sync
-- **Only plugin** with family relationship management and tag inheritance
+- BuddyBoss Group to CRM custom object sync
+- Family relationship management and tag inheritance
 - **Deep integrations** — not just basic contact sync
 - **OAuth2 security** — encrypted credentials, automatic token refresh, circuit-breaker protection
 - **Real-time sync** — webhook automation with ping-pong prevention

@@ -71,10 +71,10 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 		<div class="ghl-settings-header">
 			<h2>
 				<span class="dashicons dashicons-admin-plugins"></span>
-				<?php esc_html_e( 'Plugin Status', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Plugin Status', 'syncly' ); ?>
 			</h2>
 			<p class="description">
-				<?php esc_html_e( 'Current operational status of the GoHighLevel CRM Integration plugin.', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Current operational status of the GoHighLevel CRM Integration plugin.', 'syncly' ); ?>
 			</p>
 		</div>
 		
@@ -85,31 +85,31 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 				<tbody>
 					<tr>
 						<th scope="row">
-							<?php esc_html_e( 'Plugin Status', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'Plugin Status', 'syncly' ); ?>
 						</th>
 						<td>
 							<span style="display: inline-flex; align-items: center; gap: 8px; color: #00a32a; font-weight: 600;">
 								<span class="dashicons dashicons-yes-alt"></span>
-								<?php esc_html_e( 'Active', 'ghl-crm-integration' ); ?>
+								<?php esc_html_e( 'Active', 'syncly' ); ?>
 							</span>
 						</td>
 					</tr>
 					
 					<tr>
 						<th scope="row">
-							<?php esc_html_e( 'WordPress Users', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'WordPress Users', 'syncly' ); ?>
 						</th>
 						<td>
 							<strong style="font-size: 18px;"><?php echo esc_html( number_format( $total_users ) ); ?></strong>
 							<span style="color: #646970; margin-left: 8px;">
-								<?php esc_html_e( 'registered users on this site', 'ghl-crm-integration' ); ?>
+								<?php esc_html_e( 'registered users on this site', 'syncly' ); ?>
 							</span>
 						</td>
 					</tr>
 					
 					<tr>
 						<th scope="row">
-							<?php esc_html_e( 'User Sync', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'User Sync', 'syncly' ); ?>
 						</th>
 						<td>
 							<?php
@@ -117,12 +117,12 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 							if ( $user_sync_enabled ) {
 								echo '<span style="display: inline-flex; align-items: center; gap: 8px; color: #00a32a;">';
 								echo '<span class="dashicons dashicons-yes-alt"></span>';
-								echo esc_html__( 'Enabled', 'ghl-crm-integration' );
+								echo esc_html__( 'Enabled', 'syncly' );
 								echo '</span>';
 							} else {
 								echo '<span style="display: inline-flex; align-items: center; gap: 8px; color: #646970;">';
 								echo '<span class="dashicons dashicons-minus"></span>';
-								echo esc_html__( 'Disabled', 'ghl-crm-integration' );
+								echo esc_html__( 'Disabled', 'syncly' );
 								echo '</span>';
 							}
 							?>
@@ -131,7 +131,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 					
 					<tr>
 						<th scope="row">
-							<?php esc_html_e( 'Content Restrictions', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'Content Restrictions', 'syncly' ); ?>
 						</th>
 						<td>
 							<?php
@@ -139,12 +139,12 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 							if ( $restrictions_enabled ) {
 								echo '<span style="display: inline-flex; align-items: center; gap: 8px; color: #00a32a;">';
 								echo '<span class="dashicons dashicons-yes-alt"></span>';
-								echo esc_html__( 'Enabled', 'ghl-crm-integration' );
+								echo esc_html__( 'Enabled', 'syncly' );
 								echo '</span>';
 							} else {
 								echo '<span style="display: inline-flex; align-items: center; gap: 8px; color: #646970;">';
 								echo '<span class="dashicons dashicons-minus"></span>';
-								echo esc_html__( 'Disabled', 'ghl-crm-integration' );
+								echo esc_html__( 'Disabled', 'syncly' );
 								echo '</span>';
 							}
 							?>
@@ -160,11 +160,11 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 		<div class="ghl-settings-header">
 			<h2>
 				<span class="dashicons dashicons-performance"></span>
-				<?php esc_html_e( 'API Rate Limits', 'ghl-crm-integration' ); ?>
-				<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'GoHighLevel enforces two rate limits: 100 requests per 10 seconds (burst) and 200,000 requests per day. Exceeding these will temporarily block API calls. Monitor usage here to avoid hitting limits.', 'ghl-crm-integration' ); ?>">?</span>
+				<?php esc_html_e( 'API Rate Limits', 'syncly' ); ?>
+				<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'GoHighLevel enforces two rate limits: 100 requests per 10 seconds (burst) and 200,000 requests per day. Exceeding these will temporarily block API calls. Monitor usage here to avoid hitting limits.', 'syncly' ); ?>">?</span>
 			</h2>
 			<p class="description">
-				<?php esc_html_e( 'Current API request usage for burst and daily limits.', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Current API request usage for burst and daily limits.', 'syncly' ); ?>
 			</p>
 		</div>
 		
@@ -174,7 +174,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 		<div style="margin-top: 20px;">
 			<h3 style="margin-bottom: 15px;">
 				<span class="dashicons dashicons-clock" style="color: #2271b1;"></span>
-				<?php esc_html_e( 'Burst Limit (10 seconds)', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Burst Limit (10 seconds)', 'syncly' ); ?>
 			</h3>
 			
 			<div class="ghl-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
@@ -184,7 +184,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 						<?php echo esc_html( number_format( $burst_remaining ) ); ?> / <?php echo esc_html( number_format( $burst_limit ) ); ?>
 					</div>
 					<div class="stat-label" style="color: #646970; margin-top: 5px;">
-						<?php esc_html_e( 'Requests Remaining', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Requests Remaining', 'syncly' ); ?>
 					</div>
 				</div>
 				
@@ -196,11 +196,11 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 					<div style="background: #e0e0e0; height: 30px; border-radius: 4px; overflow: hidden; position: relative;">
 						<div style="background: <?php echo esc_attr( $burst_bar_color ); ?>; height: 100%; width: <?php echo esc_attr( $burst_percent ); ?>%; transition: width 0.3s ease;"></div>
 						<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 600; color: #1d2327; text-shadow: 0 0 3px rgba(255,255,255,0.8);">
-							<?php echo esc_html( number_format( $burst_percent, 1 ) ); ?>% <?php esc_html_e( 'Used', 'ghl-crm-integration' ); ?>
+							<?php echo esc_html( number_format( $burst_percent, 1 ) ); ?>% <?php esc_html_e( 'Used', 'syncly' ); ?>
 						</div>
 					</div>
 					<div class="stat-label" style="color: #646970; margin-top: 10px; text-align: center;">
-						<?php echo esc_html( number_format( $burst_used ) ); ?> <?php esc_html_e( 'requests used', 'ghl-crm-integration' ); ?>
+						<?php echo esc_html( number_format( $burst_used ) ); ?> <?php esc_html_e( 'requests used', 'syncly' ); ?>
 					</div>
 				</div>
 			</div>
@@ -212,7 +212,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 		<div>
 			<h3 style="margin-bottom: 15px;">
 				<span class="dashicons dashicons-calendar" style="color: #00a32a;"></span>
-				<?php esc_html_e( 'Daily Limit (24 hours)', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Daily Limit (24 hours)', 'syncly' ); ?>
 			</h3>
 			
 			<div class="ghl-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
@@ -222,7 +222,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 						<?php echo esc_html( number_format( $daily_remaining ) ); ?> / <?php echo esc_html( number_format( $daily_limit ) ); ?>
 					</div>
 					<div class="stat-label" style="color: #646970; margin-top: 5px;">
-						<?php esc_html_e( 'Requests Remaining Today', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Requests Remaining Today', 'syncly' ); ?>
 					</div>
 				</div>
 				
@@ -234,18 +234,18 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 					<div style="background: #e0e0e0; height: 30px; border-radius: 4px; overflow: hidden; position: relative;">
 						<div style="background: <?php echo esc_attr( $daily_bar_color ); ?>; height: 100%; width: <?php echo esc_attr( $daily_percent ); ?>%; transition: width 0.3s ease;"></div>
 						<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 600; color: #1d2327; text-shadow: 0 0 3px rgba(255,255,255,0.8);">
-							<?php echo esc_html( number_format( $daily_percent, 1 ) ); ?>% <?php esc_html_e( 'Used', 'ghl-crm-integration' ); ?>
+							<?php echo esc_html( number_format( $daily_percent, 1 ) ); ?>% <?php esc_html_e( 'Used', 'syncly' ); ?>
 						</div>
 					</div>
 					<div class="stat-label" style="color: #646970; margin-top: 10px; text-align: center;">
-						<?php echo esc_html( number_format( $daily_used ) ); ?> <?php esc_html_e( 'requests used today', 'ghl-crm-integration' ); ?>
+						<?php echo esc_html( number_format( $daily_used ) ); ?> <?php esc_html_e( 'requests used today', 'syncly' ); ?>
 					</div>
 				</div>
 			</div>
 			
 			<?php if ( $daily_resets_at ) : ?>
 				<div style="margin-top: 20px; padding: 15px; background: #fff; border: 1px solid #ddd; border-radius: 4px;">
-					<strong><?php esc_html_e( 'Daily Limit Resets:', 'ghl-crm-integration' ); ?></strong>
+					<strong><?php esc_html_e( 'Daily Limit Resets:', 'syncly' ); ?></strong>
 					<?php
 					$reset_timestamp  = strtotime( $daily_resets_at );
 					$time_until_reset = $reset_timestamp - current_time( 'timestamp' );
@@ -255,7 +255,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 						$minutes = floor( ( $time_until_reset % 3600 ) / 60 );
 						echo ' (' . esc_html( sprintf( '%02d:%02d', $hours, $minutes ) ) . ')';
 					} else {
-						echo esc_html__( 'Now', 'ghl-crm-integration' );
+						echo esc_html__( 'Now', 'syncly' );
 					}
 					?>
 				</div>
@@ -268,10 +268,10 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 		<div class="ghl-settings-header">
 			<h2>
 				<span class="dashicons dashicons-cloud"></span>
-				<?php esc_html_e( 'API Connection Status', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'API Connection Status', 'syncly' ); ?>
 			</h2>
 			<p class="description">
-				<?php esc_html_e( 'Current status of your GoHighLevel API connection.', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Current status of your GoHighLevel API connection.', 'syncly' ); ?>
 			</p>
 		</div>
 		
@@ -282,23 +282,23 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 				<tbody>
 				<tr>
 					<th scope="row">
-						<?php esc_html_e( 'Connection Status', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Connection Status', 'syncly' ); ?>
 					</th>
 					<td>
 						<?php if ( $api_connected ) : ?>
 							<span style="display: inline-flex; align-items: center; gap: 8px; color: #00a32a; font-weight: 600;">
 								<span class="dashicons dashicons-yes-alt"></span>
-								<?php esc_html_e( 'Connected', 'ghl-crm-integration' ); ?>
+								<?php esc_html_e( 'Connected', 'syncly' ); ?>
 							</span>
 						<?php elseif ( $needs_reconnect ) : ?>
 							<span style="display: inline-flex; align-items: center; gap: 8px; color: #dba617; font-weight: 600;">
 								<span class="dashicons dashicons-warning"></span>
-								<?php esc_html_e( 'Token Expired - Reconnect Required', 'ghl-crm-integration' ); ?>
+								<?php esc_html_e( 'Token Expired - Reconnect Required', 'syncly' ); ?>
 							</span>
 						<?php else : ?>
 							<span style="display: inline-flex; align-items: center; gap: 8px; color: #d63638; font-weight: 600;">
 								<span class="dashicons dashicons-dismiss"></span>
-								<?php esc_html_e( 'Not Connected', 'ghl-crm-integration' ); ?>
+								<?php esc_html_e( 'Not Connected', 'syncly' ); ?>
 							</span>
 						<?php endif; ?>
 					</td>
@@ -306,13 +306,13 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 					<?php if ( $is_oauth_connected ) : ?>
 				<tr>
 					<th scope="row">
-						<?php esc_html_e( 'Connected Since', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Connected Since', 'syncly' ); ?>
 					</th>
 					<td>
 						<?php
 						if ( ! empty( $connected_at_raw ) ) {
 							echo esc_html( human_time_diff( strtotime( $connected_at_raw ), current_time( 'timestamp' ) ) );
-							echo ' ' . esc_html__( 'ago', 'ghl-crm-integration' );
+							echo ' ' . esc_html__( 'ago', 'syncly' );
 						} else {
 							echo '—';
 						}
@@ -322,7 +322,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 
 				<tr>
 					<th scope="row">
-						<?php esc_html_e( 'Token Expires', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Token Expires', 'syncly' ); ?>
 					</th>
 					<td>
 						<?php
@@ -331,18 +331,18 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 
 							if ( $time_until_expiry > 0 ) {
 								echo '<span style="color: #00a32a;">';
-								echo esc_html__( 'In ', 'ghl-crm-integration' );
+								echo esc_html__( 'In ', 'syncly' );
 								echo esc_html( human_time_diff( current_time( 'timestamp' ), $expires_timestamp ) );
 								echo '</span>';
 							} else {
 								echo '<span style="color: #d63638;">';
-								echo esc_html__( 'Expired ', 'ghl-crm-integration' );
+								echo esc_html__( 'Expired ', 'syncly' );
 								echo esc_html( human_time_diff( $expires_timestamp, current_time( 'timestamp' ) ) );
-								echo ' ' . esc_html__( 'ago', 'ghl-crm-integration' );
+								echo ' ' . esc_html__( 'ago', 'syncly' );
 								echo '</span>';
 							}
 						} else {
-							echo esc_html__( 'Not available (manual token or missing expiry)', 'ghl-crm-integration' );
+							echo esc_html__( 'Not available (manual token or missing expiry)', 'syncly' );
 						}
 						?>
 					</td>
@@ -352,7 +352,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 					<?php if ( $location_id ) : ?>
 				<tr>
 					<th scope="row">
-						<?php esc_html_e( 'Location ID', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Location ID', 'syncly' ); ?>
 					</th>
 					<td>
 						<code style="background: #f0f0f1; padding: 4px 8px; border-radius: 3px;">
@@ -365,7 +365,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 					<?php if ( $api_connected && ! empty( $oauth_status['location_name'] ) ) : ?>
 				<tr>
 					<th scope="row">
-						<?php esc_html_e( 'Location Name', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Location Name', 'syncly' ); ?>
 					</th>
 					<td>
 						<strong><?php echo esc_html( $oauth_status['location_name'] ); ?></strong>
@@ -376,7 +376,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 
 				<tr>
 						<th scope="row">
-							<?php esc_html_e( 'Rate Limiting', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'Rate Limiting', 'syncly' ); ?>
 						</th>
 						<td>
 							<?php
@@ -386,12 +386,12 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 								echo '<span style="color: #00a32a;">';
 								printf(
 									/* translators: %d: number of requests per minute */
-									esc_html__( 'Enabled (%d requests/minute)', 'ghl-crm-integration' ),
+									esc_html__( 'Enabled (%d requests/minute)', 'syncly' ),
 									esc_html( $requests_per_minute )
 								);
 								echo '</span>';
 							} else {
-								echo '<span style="color: #d63638;">' . esc_html__( 'Disabled', 'ghl-crm-integration' ) . '</span>';
+								echo '<span style="color: #d63638;">' . esc_html__( 'Disabled', 'syncly' ) . '</span>';
 							}
 							?>
 						</td>
@@ -399,7 +399,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 					
 					<tr>
 						<!-- <th scope="row">
-							<?php esc_html_e( 'Webhook Status', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'Webhook Status', 'syncly' ); ?>
 						</th>
 						<td>
 							<?php
@@ -407,12 +407,12 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 							if ( $webhooks_enabled ) {
 								echo '<span style="display: inline-flex; align-items: center; gap: 8px; color: #00a32a;">';
 								echo '<span class="dashicons dashicons-yes-alt"></span>';
-								echo esc_html__( 'Enabled', 'ghl-crm-integration' );
+								echo esc_html__( 'Enabled', 'syncly' );
 								echo '</span>';
 							} else {
 								echo '<span style="display: inline-flex; align-items: center; gap: 8px; color: #646970;">';
 								echo '<span class="dashicons dashicons-minus"></span>';
-								echo esc_html__( 'Disabled', 'ghl-crm-integration' );
+								echo esc_html__( 'Disabled', 'syncly' );
 								echo '</span>';
 							}
 							?>
@@ -425,15 +425,15 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 		<?php if ( $api_connected ) : ?>
 			<div style="margin-top: 20px; padding: 15px; background: #e7f5fe; border-left: 4px solid #2271b1; border-radius: 4px;">
 				<p style="margin: 0;">
-					<strong><?php esc_html_e( 'API Health:', 'ghl-crm-integration' ); ?></strong>
-					<?php esc_html_e( 'Your connection to GoHighLevel is active and operational.', 'ghl-crm-integration' ); ?>
+					<strong><?php esc_html_e( 'API Health:', 'syncly' ); ?></strong>
+					<?php esc_html_e( 'Your connection to GoHighLevel is active and operational.', 'syncly' ); ?>
 				</p>
 			</div>
 		<?php else : ?>
 			<div style="margin-top: 20px; padding: 15px; background: #fcf0f1; border-left: 4px solid #d63638; border-radius: 4px;">
 				<p style="margin: 0;">
-					<strong><?php esc_html_e( 'Action Required:', 'ghl-crm-integration' ); ?></strong>
-					<?php esc_html_e( 'Please connect to GoHighLevel in the Dashboard to start syncing data.', 'ghl-crm-integration' ); ?>
+					<strong><?php esc_html_e( 'Action Required:', 'syncly' ); ?></strong>
+					<?php esc_html_e( 'Please connect to GoHighLevel in the Dashboard to start syncing data.', 'syncly' ); ?>
 				</p>
 			</div>
 		<?php endif; ?>
@@ -444,10 +444,10 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 		<div class="ghl-settings-header">
 			<h2>
 				<span class="dashicons dashicons-admin-tools"></span>
-				<?php esc_html_e( 'System Information', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'System Information', 'syncly' ); ?>
 			</h2>
 			<p class="description">
-				<?php esc_html_e( 'Technical details about your WordPress environment.', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Technical details about your WordPress environment.', 'syncly' ); ?>
 			</p>
 		</div>
 		
@@ -458,7 +458,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 				<tbody>
 					<tr>
 						<th scope="row">
-							<?php esc_html_e( 'Plugin Version', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'Plugin Version', 'syncly' ); ?>
 						</th>
 						<td>
 							<code><?php echo esc_html( GHL_CRM_VERSION ?? '1.0.0' ); ?></code>
@@ -467,7 +467,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 					
 					<tr>
 						<th scope="row">
-							<?php esc_html_e( 'WordPress Version', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'WordPress Version', 'syncly' ); ?>
 						</th>
 						<td>
 							<code><?php echo esc_html( get_bloginfo( 'version' ) ); ?></code>
@@ -476,7 +476,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 					
 					<tr>
 						<th scope="row">
-							<?php esc_html_e( 'PHP Version', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'PHP Version', 'syncly' ); ?>
 						</th>
 						<td>
 							<code><?php echo esc_html( phpversion() ); ?></code>
@@ -485,7 +485,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 					
 					<tr>
 						<th scope="row">
-							<?php esc_html_e( 'Database Prefix', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'Database Prefix', 'syncly' ); ?>
 						</th>
 						<td>
 							<code><?php echo esc_html( $wpdb->prefix ); ?></code>
@@ -494,10 +494,10 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 					
 					<tr>
 						<th scope="row">
-							<?php esc_html_e( 'Multisite', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'Multisite', 'syncly' ); ?>
 						</th>
 						<td>
-							<?php echo is_multisite() ? '<span style="color: #00a32a;">' . esc_html__( 'Yes', 'ghl-crm-integration' ) . '</span>' : esc_html__( 'No', 'ghl-crm-integration' ); ?>
+							<?php echo is_multisite() ? '<span style="color: #00a32a;">' . esc_html__( 'Yes', 'syncly' ) . '</span>' : esc_html__( 'No', 'syncly' ); ?>
 						</td>
 					</tr>
 				</tbody>

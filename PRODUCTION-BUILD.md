@@ -16,7 +16,7 @@ How to prepare **GHL CRM Integration** (free) and **GHL CRM Integration Pro** fo
 
 ## 1. Bump Version Numbers
 
-### Free Plugin (`ghl-crm-integration/`)
+### Free Plugin (`syncly/`)
 
 Update the version in **three** places:
 
@@ -26,14 +26,14 @@ Update the version in **three** places:
 | `gohighlevel-crm-integration.php` | `define( 'GHL_CRM_VERSION', '...' );` |
 | `README.md` | `Stable tag:` and badge URL |
 
-### Pro Plugin (`ghl-crm-integration-pro/`)
+### Pro Plugin (`syncly-pro/`)
 
 Update the version in **two** places:
 
 | File | Location |
 |------|----------|
-| `ghl-crm-integration-pro.php` | Plugin header `Version:` line |
-| `ghl-crm-integration-pro.php` | `define( 'GHL_CRM_PRO_VERSION', '...' );` |
+| `syncly-pro.php` | Plugin header `Version:` line |
+| `syncly-pro.php` | `define( 'GHL_CRM_PRO_VERSION', '...' );` |
 
 ---
 
@@ -41,10 +41,10 @@ Update the version in **two** places:
 
 Update **four** changelog files:
 
-- `ghl-crm-integration/CHANGELOG.md`
-- `ghl-crm-integration/DEV_CHANGELOG.md`
-- `ghl-crm-integration-pro/CHANGELOG.md`
-- `ghl-crm-integration-pro/DEV_CHANGELOG.md`
+- `syncly/CHANGELOG.md`
+- `syncly/DEV_CHANGELOG.md`
+- `syncly-pro/CHANGELOG.md`
+- `syncly-pro/DEV_CHANGELOG.md`
 
 Add a new section at the top with the version, date, and categorised changes (Added, Changed, Fixed, Improved).
 
@@ -56,12 +56,12 @@ Both plugins use `matthiasmullie/minify` (a dev dependency) via a `build-minify.
 
 ```bash
 # Free plugin
-cd ghl-crm-integration
+cd syncly
 composer install          # installs dev deps (needed for minify)
 composer build            # runs: php build-minify.php
 
 # Pro plugin
-cd ../ghl-crm-integration-pro
+cd ../syncly-pro
 composer install
 composer build
 ```
@@ -74,11 +74,11 @@ The build script minifies all `.css` and `.js` files that don't already have a `
 
 ```bash
 # Free plugin
-cd ghl-crm-integration
+cd syncly
 composer install --no-dev --optimize-autoloader
 
 # Pro plugin
-cd ../ghl-crm-integration-pro
+cd ../syncly-pro
 composer install --no-dev --optimize-autoloader
 ```
 
@@ -94,8 +94,8 @@ From the `plugins/` directory:
 
 ```bash
 cd /path/to/wp-content/plugins
-zip -r ~/Desktop/ghl-crm-integration.zip ghl-crm-integration/ \
-  -x@ghl-crm-integration/zip-exclude.txt
+zip -r ~/Desktop/syncly.zip syncly/ \
+  -x@syncly/zip-exclude.txt
 ```
 
 The `zip-exclude.txt` file lists all dev-only files/folders to exclude (`.git`, `tests/`, `composer.json`, `build-minify.php`, dev vendor packages, `PRODUCTION-BUILD.md`, `DEV_CHANGELOG.md`, `TODO.md`, `FEATURES-AND-BENEFITS.md`, etc.).
@@ -103,18 +103,18 @@ The `zip-exclude.txt` file lists all dev-only files/folders to exclude (`.git`, 
 ### Pro Plugin
 
 ```bash
-zip -r ~/Desktop/ghl-crm-integration-pro.zip ghl-crm-integration-pro/ \
-  -x "ghl-crm-integration-pro/.git/*" \
-  -x "ghl-crm-integration-pro/.gitignore" \
-  -x "ghl-crm-integration-pro/.phpunit.result.cache" \
-  -x "ghl-crm-integration-pro/composer.json" \
-  -x "ghl-crm-integration-pro/composer.lock" \
-  -x "ghl-crm-integration-pro/phpunit.xml.dist" \
-  -x "ghl-crm-integration-pro/build-minify.php" \
-  -x "ghl-crm-integration-pro/DEV_CHANGELOG.md" \
-  -x "ghl-crm-integration-pro/PRODUCTION-BUILD.md" \
-  -x "ghl-crm-integration-pro/tests/*" \
-  -x "ghl-crm-integration-pro/vendor/bin/*" \
+zip -r ~/Desktop/syncly-pro.zip syncly-pro/ \
+  -x "syncly-pro/.git/*" \
+  -x "syncly-pro/.gitignore" \
+  -x "syncly-pro/.phpunit.result.cache" \
+  -x "syncly-pro/composer.json" \
+  -x "syncly-pro/composer.lock" \
+  -x "syncly-pro/phpunit.xml.dist" \
+  -x "syncly-pro/build-minify.php" \
+  -x "syncly-pro/DEV_CHANGELOG.md" \
+  -x "syncly-pro/PRODUCTION-BUILD.md" \
+  -x "syncly-pro/tests/*" \
+  -x "syncly-pro/vendor/bin/*" \
   -x "*.DS_Store"
 ```
 
@@ -125,8 +125,8 @@ zip -r ~/Desktop/ghl-crm-integration-pro.zip ghl-crm-integration-pro/ \
 After zipping, re-install dev dependencies so you can continue development:
 
 ```bash
-cd ghl-crm-integration && composer install
-cd ../ghl-crm-integration-pro && composer install
+cd syncly && composer install
+cd ../syncly-pro && composer install
 ```
 
 ---
@@ -138,35 +138,35 @@ cd ../ghl-crm-integration-pro && composer install
 cd /path/to/wp-content/plugins
 
 # --- Free Plugin ---
-cd ghl-crm-integration
+cd syncly
 composer install
 composer build
 composer install --no-dev --optimize-autoloader
 cd ..
-zip -r ~/Desktop/ghl-crm-integration.zip ghl-crm-integration/ \
-  -x@ghl-crm-integration/zip-exclude.txt
+zip -r ~/Desktop/syncly.zip syncly/ \
+  -x@syncly/zip-exclude.txt
 
 # --- Pro Plugin ---
-cd ghl-crm-integration-pro
+cd syncly-pro
 composer install
 composer build
 composer install --no-dev --optimize-autoloader
 cd ..
-zip -r ~/Desktop/ghl-crm-integration-pro.zip ghl-crm-integration-pro/ \
-  -x "ghl-crm-integration-pro/.git/*" \
-  -x "ghl-crm-integration-pro/.gitignore" \
-  -x "ghl-crm-integration-pro/.phpunit.result.cache" \
-  -x "ghl-crm-integration-pro/composer.json" \
-  -x "ghl-crm-integration-pro/composer.lock" \
-  -x "ghl-crm-integration-pro/phpunit.xml.dist" \
-  -x "ghl-crm-integration-pro/build-minify.php" \
-  -x "ghl-crm-integration-pro/DEV_CHANGELOG.md" \
-  -x "ghl-crm-integration-pro/PRODUCTION-BUILD.md" \
-  -x "ghl-crm-integration-pro/tests/*" \
-  -x "ghl-crm-integration-pro/vendor/bin/*" \
+zip -r ~/Desktop/syncly-pro.zip syncly-pro/ \
+  -x "syncly-pro/.git/*" \
+  -x "syncly-pro/.gitignore" \
+  -x "syncly-pro/.phpunit.result.cache" \
+  -x "syncly-pro/composer.json" \
+  -x "syncly-pro/composer.lock" \
+  -x "syncly-pro/phpunit.xml.dist" \
+  -x "syncly-pro/build-minify.php" \
+  -x "syncly-pro/DEV_CHANGELOG.md" \
+  -x "syncly-pro/PRODUCTION-BUILD.md" \
+  -x "syncly-pro/tests/*" \
+  -x "syncly-pro/vendor/bin/*" \
   -x "*.DS_Store"
 
 # --- Restore dev deps ---
-cd ghl-crm-integration && composer install
-cd ../ghl-crm-integration-pro && composer install
+cd syncly && composer install
+cd ../syncly-pro && composer install
 ```

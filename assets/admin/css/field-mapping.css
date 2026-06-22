@@ -223,6 +223,108 @@
 	display: none;
 }
 
+.ghl-field-mapping-pro-preview {
+	margin: 14px 0 22px;
+	padding: 18px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.ghl-field-mapping-pro-preview__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 14px;
+}
+
+.ghl-field-mapping-pro-preview__header h4 {
+	margin: 2px 0 0;
+	font-size: 16px;
+	line-height: 1.3;
+}
+
+.ghl-field-mapping-pro-preview__eyebrow {
+	display: inline-flex;
+	align-items: center;
+	padding: 2px 8px;
+	background: #eef2ff;
+	border: 1px solid #c7d2fe;
+	border-radius: 999px;
+	color: #3730a3;
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+
+.ghl-field-mapping-pro-preview__table {
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	overflow: hidden;
+}
+
+.ghl-field-mapping-pro-preview__row {
+	display: grid;
+	grid-template-columns: 30% 35% 35%;
+	align-items: center;
+	min-height: 48px;
+	background: #fff;
+	border-top: 1px solid #eef0f2;
+}
+
+.ghl-field-mapping-pro-preview__row:first-child {
+	border-top: 0;
+}
+
+.ghl-field-mapping-pro-preview__row > span {
+	padding: 10px 12px;
+	min-width: 0;
+	box-sizing: border-box;
+}
+
+.ghl-field-mapping-pro-preview__row--head {
+	min-height: 40px;
+	background: #f6f7f7;
+	color: #1d2327;
+	font-size: 12px;
+	font-weight: 700;
+}
+
+.ghl-field-mapping-pro-preview__row small {
+	display: inline-block;
+	margin-left: 8px;
+	padding: 2px 7px;
+	border-radius: 999px;
+	background: #f0f0f1;
+	color: #50575e;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+.ghl-field-mapping-pro-preview__select {
+	display: inline-flex;
+	align-items: center;
+	justify-content: space-between;
+	width: calc(100% - 24px);
+	max-width: 360px;
+	min-height: 34px;
+	padding: 0 9px;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	background: #f8fafc;
+	color: #1d2327;
+	font-size: 13px;
+}
+
+.ghl-field-mapping-pro-preview__select::after {
+	content: "\25BE";
+	margin-left: auto;
+	color: #646970;
+	font-size: 12px;
+}
+
 /* ========================================
    MOBILE RESPONSIVE STYLES
    ======================================== */

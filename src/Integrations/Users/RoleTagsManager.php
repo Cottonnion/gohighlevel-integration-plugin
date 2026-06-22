@@ -298,11 +298,6 @@ class RoleTagsManager {
 	 * @return array
 	 */
 	private function get_location_global_tags_config(): array {
-		// Global tags require Pro
-		if ( ! apply_filters( 'ghl_crm_global_tags_enabled', false ) ) {
-			return [];
-		}
-
 		$global_tags = $this->settings_manager->get_location_global_tags();
 
 		if ( empty( $global_tags ) ) {
@@ -399,7 +394,7 @@ class RoleTagsManager {
 
 			// Check permissions
 			if ( ! current_user_can( 'manage_options' ) ) {
-				wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ] );
+				wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ] );
 				return;
 			}
 
@@ -407,14 +402,14 @@ class RoleTagsManager {
 			$tags_string = isset( $_POST['tags'] ) ? sanitize_text_field( wp_unslash( $_POST['tags'] ) ) : '';
 
 			if ( empty( $role ) || empty( $tags_string ) ) {
-				wp_send_json_error( [ 'message' => __( 'Role and tags are required', 'ghl-crm-integration' ) ] );
+				wp_send_json_error( [ 'message' => __( 'Role and tags are required', 'syncly' ) ] );
 				return;
 			}
 
 			$tags = $this->parse_tags( $tags_string );
 
 			if ( empty( $tags ) ) {
-				wp_send_json_error( [ 'message' => __( 'No valid tags provided', 'ghl-crm-integration' ) ] );
+				wp_send_json_error( [ 'message' => __( 'No valid tags provided', 'syncly' ) ] );
 				return;
 			}
 
@@ -422,7 +417,7 @@ class RoleTagsManager {
 			$users = get_users( [ 'role' => $role ] );
 
 			if ( empty( $users ) ) {
-				wp_send_json_error( [ 'message' => __( 'No users found with this role', 'ghl-crm-integration' ) ] );
+				wp_send_json_error( [ 'message' => __( 'No users found with this role', 'syncly' ) ] );
 				return;
 			}
 
@@ -446,7 +441,7 @@ class RoleTagsManager {
 				[
 					'message' => sprintf(
 						/* translators: %d: Number of users queued */
-						__( '%d users queued for tag addition.', 'ghl-crm-integration' ),
+						__( '%d users queued for tag addition.', 'syncly' ),
 						$queued
 					),
 					'queued'  => $queued,
@@ -460,7 +455,7 @@ class RoleTagsManager {
 				[
 					'message'       => sprintf(
 						/* translators: %s: Error message */
-						__( 'Error: %s', 'ghl-crm-integration' ),
+						__( 'Error: %s', 'syncly' ),
 						$e->getMessage()
 					),
 					'error_details' => $e->getMessage(),
@@ -473,7 +468,7 @@ class RoleTagsManager {
 				[
 					'message'       => sprintf(
 						/* translators: %s: Error message */
-						__( 'Error: %s', 'ghl-crm-integration' ),
+						__( 'Error: %s', 'syncly' ),
 						$e->getMessage()
 					),
 					'error_details' => $e->getMessage(),
@@ -495,7 +490,7 @@ class RoleTagsManager {
 
 			// Check permissions
 			if ( ! current_user_can( 'manage_options' ) ) {
-				wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ] );
+				wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ] );
 				return;
 			}
 
@@ -503,14 +498,14 @@ class RoleTagsManager {
 			$tags_string = isset( $_POST['tags'] ) ? sanitize_text_field( wp_unslash( $_POST['tags'] ) ) : '';
 
 			if ( empty( $role ) || empty( $tags_string ) ) {
-				wp_send_json_error( [ 'message' => __( 'Role and tags are required', 'ghl-crm-integration' ) ] );
+				wp_send_json_error( [ 'message' => __( 'Role and tags are required', 'syncly' ) ] );
 				return;
 			}
 
 			$tags = $this->parse_tags( $tags_string );
 
 			if ( empty( $tags ) ) {
-				wp_send_json_error( [ 'message' => __( 'No valid tags provided', 'ghl-crm-integration' ) ] );
+				wp_send_json_error( [ 'message' => __( 'No valid tags provided', 'syncly' ) ] );
 				return;
 			}
 
@@ -518,7 +513,7 @@ class RoleTagsManager {
 			$users = get_users( [ 'role' => $role ] );
 
 			if ( empty( $users ) ) {
-				wp_send_json_error( [ 'message' => __( 'No users found with this role', 'ghl-crm-integration' ) ] );
+				wp_send_json_error( [ 'message' => __( 'No users found with this role', 'syncly' ) ] );
 				return;
 			}
 
@@ -542,7 +537,7 @@ class RoleTagsManager {
 				[
 					'message' => sprintf(
 						/* translators: %d: Number of users queued */
-						__( '%d users queued for tag removal.', 'ghl-crm-integration' ),
+						__( '%d users queued for tag removal.', 'syncly' ),
 						$queued
 					),
 					'queued'  => $queued,
@@ -556,7 +551,7 @@ class RoleTagsManager {
 				[
 					'message'       => sprintf(
 						/* translators: %s: Error message */
-						__( 'Error: %s', 'ghl-crm-integration' ),
+						__( 'Error: %s', 'syncly' ),
 						$e->getMessage()
 					),
 					'error_details' => $e->getMessage(),

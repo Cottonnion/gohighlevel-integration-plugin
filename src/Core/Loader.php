@@ -86,7 +86,6 @@ class Loader {
 			'core.notifications'                   => \GHL_CRM\Admin\NotificationManager::class,
 			'core.contact_id_ajax'                 => \GHL_CRM\Admin\ContactIdAjaxHandler::class,
 			'core.form_settings'                   => \GHL_CRM\Integrations\Forms\FormSettings::class,
-			'core.reporting'                       => \GHL_CRM\Core\Reporting\ReportingManager::class,
 
 			// Admin UI components
 			'admin.ui'                             => \GHL_CRM\Admin\AdminUI::class,
@@ -193,8 +192,8 @@ class Loader {
 		if ( version_compare( PHP_VERSION, '7.4', '<' ) ) {
 			deactivate_plugins( GHL_CRM_BASENAME );
 			wp_die(
-				esc_html__( 'GoHighLevel CRM Integration requires PHP 7.4 or higher.', 'ghl-crm-integration' ),
-				esc_html__( 'Plugin Activation Error', 'ghl-crm-integration' ),
+				esc_html__( 'GoHighLevel CRM Integration requires PHP 7.4 or higher.', 'syncly' ),
+				esc_html__( 'Plugin Activation Error', 'syncly' ),
 				array( 'back_link' => true )
 			);
 		}
@@ -240,7 +239,11 @@ class Loader {
 	public static function deactivate(): void {
 		// Unschedule all Action Scheduler actions
 		\GHL_CRM\Sync\QueueManager::unschedule_actions();
-		\GHL_CRM\Core\Reporting\ReportingManager::get_instance()->unschedule_dispatch();
+		if ( function_exists( 'as_unschedule_all_actions' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {
+			as_unschedule_all_actions( 'ghl_crm_send_reporting_events', array(), 'ghl-crm' );
+		} else {
+			wp_clear_scheduled_hook( 'ghl_crm_send_reporting_events' );
+		}
 		\GHL_CRM\API\Client\Client::unschedule_background_refresh();
 
 		// Unschedule cleanup (Action Scheduler)

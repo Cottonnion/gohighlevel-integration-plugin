@@ -25,56 +25,56 @@ if ( ! is_array( $enabled_plugins ) ) {
 // Define supported form plugins with detection.
 $form_plugins = [
 	'cf7'           => [
-		'name'        => __( 'Contact Form 7', 'ghl-crm-integration' ),
+		'name'        => __( 'Contact Form 7', 'syncly' ),
 		'slug'        => 'contact-form-7/wp-contact-form-7.php',
 		'detect'      => function_exists( 'wpcf7' ),
 		'icon'        => 'dashicons-email',
-		'description' => __( 'Sync Contact Form 7 submissions to GHL conversations. Each form submission creates a message thread with the matched contact.', 'ghl-crm-integration' ),
+		'description' => __( 'Sync Contact Form 7 submissions to GHL conversations. Each form submission creates a message thread with the matched contact.', 'syncly' ),
 		'docs_url'    => 'https://contactform7.com/',
 		'pro'         => false,
 	],
 	'gravity_forms' => [
-		'name'        => __( 'Gravity Forms', 'ghl-crm-integration' ),
+		'name'        => __( 'Gravity Forms', 'syncly' ),
 		'slug'        => 'gravityforms/gravityforms.php',
 		'detect'      => class_exists( 'GFForms' ),
 		'icon'        => 'dashicons-feedback',
-		'description' => __( 'Sync Gravity Forms entries to GHL conversations. Advanced form data including conditional logic fields are captured.', 'ghl-crm-integration' ),
+		'description' => __( 'Sync Gravity Forms entries to GHL conversations. Advanced form data including conditional logic fields are captured.', 'syncly' ),
 		'docs_url'    => 'https://www.gravityforms.com/',
 		'pro'         => true,
 	],
 	'wpforms'       => [
-		'name'        => __( 'WPForms', 'ghl-crm-integration' ),
+		'name'        => __( 'WPForms', 'syncly' ),
 		'slug'        => 'wpforms-lite/wpforms.php',
 		'detect'      => function_exists( 'wpforms' ),
 		'icon'        => 'dashicons-list-view',
-		'description' => __( 'Sync WPForms submissions to GHL conversations. Works with both Lite and Pro versions.', 'ghl-crm-integration' ),
+		'description' => __( 'Sync WPForms submissions to GHL conversations. Works with both Lite and Pro versions.', 'syncly' ),
 		'docs_url'    => 'https://wpforms.com/',
 		'pro'         => true,
 	],
 	'ninja_forms'   => [
-		'name'        => __( 'Ninja Forms', 'ghl-crm-integration' ),
+		'name'        => __( 'Ninja Forms', 'syncly' ),
 		'slug'        => 'ninja-forms/ninja-forms.php',
 		'detect'      => class_exists( 'Ninja_Forms' ),
 		'icon'        => 'dashicons-forms',
-		'description' => __( 'Sync Ninja Forms submissions to GHL conversations. Supports multi-step forms and calculated fields.', 'ghl-crm-integration' ),
+		'description' => __( 'Sync Ninja Forms submissions to GHL conversations. Supports multi-step forms and calculated fields.', 'syncly' ),
 		'docs_url'    => 'https://ninjaforms.com/',
 		'pro'         => true,
 	],
 	'elementor'     => [
-		'name'        => __( 'Elementor Forms', 'ghl-crm-integration' ),
+		'name'        => __( 'Elementor Forms', 'syncly' ),
 		'slug'        => 'elementor-pro/elementor-pro.php',
 		'detect'      => defined( 'ELEMENTOR_PRO_VERSION' ),
 		'icon'        => 'dashicons-welcome-widgets-menus',
-		'description' => __( 'Sync Elementor Pro form submissions to GHL conversations. Requires Elementor Pro with the Forms widget.', 'ghl-crm-integration' ),
+		'description' => __( 'Sync Elementor Pro form submissions to GHL conversations. Requires Elementor Pro with the Forms widget.', 'syncly' ),
 		'docs_url'    => 'https://elementor.com/',
 		'pro'         => true,
 	],
 	'fluent_forms'  => [
-		'name'        => __( 'Fluent Forms', 'ghl-crm-integration' ),
+		'name'        => __( 'Fluent Forms', 'syncly' ),
 		'slug'        => 'fluentform/fluentform.php',
 		'detect'      => defined( 'FLUENTFORM' ),
 		'icon'        => 'dashicons-editor-table',
-		'description' => __( 'Sync Fluent Forms submissions to GHL conversations. Lightweight and fast form processing.', 'ghl-crm-integration' ),
+		'description' => __( 'Sync Fluent Forms submissions to GHL conversations. Lightweight and fast form processing.', 'syncly' ),
 		'docs_url'    => 'https://fluentforms.com/',
 		'pro'         => true,
 	],
@@ -124,7 +124,7 @@ $form_plugins = [
 						font-size: 11px;
 						font-weight: 600;
 					">
-						<?php esc_html_e( 'Pro Only', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Add-on', 'syncly' ); ?>
 					</span>
 				<?php elseif ( ! $is_installed ) : ?>
 					<span style="
@@ -138,7 +138,7 @@ $form_plugins = [
 						font-size: 11px;
 						font-weight: 600;
 					">
-						<?php esc_html_e( 'Not Installed', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Not Installed', 'syncly' ); ?>
 					</span>
 				<?php elseif ( $is_enabled ) : ?>
 					<span style="
@@ -152,7 +152,7 @@ $form_plugins = [
 						font-size: 11px;
 						font-weight: 600;
 					">
-						<?php esc_html_e( 'Active', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Active', 'syncly' ); ?>
 					</span>
 				<?php endif; ?>
 
@@ -178,7 +178,7 @@ $form_plugins = [
 				<?php if ( $is_pro ) : ?>
 					<p style="color: #7e3bd0; font-size: 12px; font-weight: 500; margin: 0;">
 						<span class="dashicons dashicons-lock" style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle;"></span>
-						<?php esc_html_e( 'Available in Pro version. Upgrade to unlock all form integrations.', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Available in Pro version. Upgrade to unlock all form integrations.', 'syncly' ); ?>
 					</p>
 				<?php elseif ( $is_installed ) : ?>
 					<label class="ghl-checkbox <?php echo $is_enabled ? 'is-checked' : ''; ?>">
@@ -193,7 +193,7 @@ $form_plugins = [
 							<span class="ghl-checkbox-inner"></span>
 						</span>
 						<span class="ghl-checkbox-label">
-							<?php esc_html_e( 'Enable conversation sync', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'Enable conversation sync', 'syncly' ); ?>
 						</span>
 					</label>
 				<?php else : ?>
@@ -201,11 +201,11 @@ $form_plugins = [
 						<?php
 						printf(
 							/* translators: %s: Plugin documentation URL */
-							esc_html__( 'Install and activate this plugin to enable sync. %s', 'ghl-crm-integration' ),
+							esc_html__( 'Install and activate this plugin to enable sync. %s', 'syncly' ),
 							sprintf(
 								'<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
 								esc_url( $plugin['docs_url'] ),
-								esc_html__( 'Learn more →', 'ghl-crm-integration' )
+								esc_html__( 'Learn more →', 'syncly' )
 							)
 						);
 						?>
@@ -217,7 +217,7 @@ $form_plugins = [
 
 	<!-- Save Button -->
 	<button type="button" id="save-conversations-settings" class="ghl-button ghl-button-primary ghl-save-settings-btn">
-		<span class="ghl-button-text"><?php esc_html_e( 'Save Conversations Settings', 'ghl-crm-integration' ); ?></span>
+		<span class="ghl-button-text"><?php esc_html_e( 'Save Conversations Settings', 'syncly' ); ?></span>
 	</button>
 </div>
 

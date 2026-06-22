@@ -429,18 +429,8 @@ class UserHooks {
 			$contact_data
 		);
 
-		// If this user is a parent, sync new tags to all children (PRO feature)
-		if ( class_exists( 'GHL_CRM_Pro\Database\FamilyRelationshipsRepository' ) ) {
-			$family_repo = \GHL_CRM_Pro\Database\FamilyRelationshipsRepository::get_instance();
-			$children    = $family_repo->get_children( $user_id );
 
-			if ( ! empty( $children ) && class_exists( 'GHL_CRM_Pro\FamilyManager' ) ) {
-				$family_manager = \GHL_CRM_Pro\FamilyManager::get_instance();
-				foreach ( $children as $child_id ) {
-					$family_manager->sync_parent_tags_to_child( $user_id, $child_id );
-				}
-			}
-		}
+		do_action( 'ghl_crm_sync_parent_tags_to_children', $user_id );
 
 		return false !== $queue_id;
 	}

@@ -4,7 +4,7 @@
 
     <!-- Check all PHP files in these directories -->
     <file>./src</file>
-    <file>./ghl-crm-integration.php</file>
+    <file>./syncly.php</file>
     <file>./templates</file>
 
     <!-- Exclude vendor and other third-party directories -->
@@ -109,7 +109,7 @@
     <rule ref="WordPress.WP.I18n">
         <properties>
             <property name="text_domain" type="array">
-                <element value="ghl-crm-integration"/>
+                <element value="syncly"/>
             </property>
         </properties>
     </rule>

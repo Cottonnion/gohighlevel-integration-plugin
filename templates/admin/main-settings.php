@@ -12,13 +12,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Get current tab
-$current_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'settings';
+$current_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'settings';
 
 // Define tabs
 $settings_tabs = array(
-	'settings'      => __( 'General Settings', 'ghl-crm-integration' ),
-	'integrations'  => __( 'Integrations', 'ghl-crm-integration' ),
-	'field-mapping' => __( 'Field Mapping', 'ghl-crm-integration' ),
+	'settings'      => __( 'General Settings', 'syncly' ),
+	'integrations'  => __( 'Integrations', 'syncly' ),
+	'field-mapping' => __( 'Field Mapping', 'syncly' ),
 );
 
 // Get settings manager instance
@@ -34,9 +34,10 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 $oauth_message = '';
 $oauth_error   = '';
 if ( isset( $_GET['oauth'] ) ) {
-	if ( 'success' === $_GET['oauth'] ) {
-		$oauth_message = __( 'Successfully connected to GoHighLevel!', 'ghl-crm-integration' );
-	} elseif ( 'error' === $_GET['oauth'] && isset( $_GET['message'] ) ) {
+	$oauth_status_arg = sanitize_key( wp_unslash( $_GET['oauth'] ) );
+	if ( 'success' === $oauth_status_arg ) {
+		$oauth_message = __( 'Successfully connected to GoHighLevel!', 'syncly' );
+	} elseif ( 'error' === $oauth_status_arg && isset( $_GET['message'] ) ) {
 		$oauth_error = sanitize_text_field( wp_unslash( $_GET['message'] ) );
 	}
 }
@@ -57,8 +58,8 @@ if ( isset( $_POST['ghl_disconnect_oauth'] ) && check_admin_referer( 'ghl_discon
 }
 
 // Check for disconnect success message
-if ( isset( $_GET['oauth'] ) && 'disconnected' === $_GET['oauth'] ) {
-	$oauth_message = __( 'Successfully disconnected from GoHighLevel.', 'ghl-crm-integration' );
+if ( isset( $_GET['oauth'] ) && 'disconnected' === sanitize_key( wp_unslash( $_GET['oauth'] ) ) ) {
+	$oauth_message = __( 'Successfully disconnected from GoHighLevel.', 'syncly' );
 	// Refresh connection status
 	$oauth_status = $oauth_handler->get_connection_status();
 	$is_connected = $oauth_status['connected'] || ! empty( $settings['api_token'] );
@@ -102,15 +103,15 @@ if ( isset( $_GET['oauth'] ) && 'disconnected' === $_GET['oauth'] ) {
 	<?php if ( ! $is_connected && 'settings' !== $current_tab ) : ?>
 		<div class="notice notice-warning">
 			<p>
-				<strong><?php esc_html_e( 'Not Connected', 'ghl-crm-integration' ); ?></strong><br>
+				<strong><?php esc_html_e( 'Not Connected', 'syncly' ); ?></strong><br>
 				<?php
 				printf(
 					/* translators: %s: Link to dashboard page */
-					esc_html__( 'Please connect to GoHighLevel in %s first.', 'ghl-crm-integration' ),
+					esc_html__( 'Please connect to GoHighLevel in %s first.', 'syncly' ),
 					sprintf(
 						'<a href="%s">%s</a>',
 						esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ),
-						esc_html__( 'Dashboard', 'ghl-crm-integration' )
+						esc_html__( 'Dashboard', 'syncly' )
 					)
 				);
 				?>
@@ -121,7 +122,7 @@ if ( isset( $_GET['oauth'] ) && 'disconnected' === $_GET['oauth'] ) {
 
 	<!-- Tab Navigation -->
 	<nav class="nav-tab-wrapper wp-clearfix" style="margin-bottom: 20px;">
-		<?php foreach ( $tabs as $tab_key => $tab_label ) : ?>
+		<?php foreach ( $settings_tabs as $tab_key => $tab_label ) : ?>
 			<a href="
 			<?php
 			echo esc_url(

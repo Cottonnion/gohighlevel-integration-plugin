@@ -14,6 +14,8 @@
 	const ajaxUrl = formsData.ajaxUrl || '';
 	const nonce = formsData.nonce || '';
 	const formSettings = formsData.formSettings || {};
+	const isPro = formsData.isPro === true || formsData.isPro === '1' || formsData.isPro === 1 || formsData.isPro === 'true';
+	const proFormsMockup = formsData.proFormsMockup || '';
 
 	const FormsManager = {
 		initialized: false,
@@ -233,18 +235,13 @@
 
 			const autofillEnabled = existingSettings.autofill_enabled !== false; // Default to true
 			const loggedOnly = existingSettings.logged_only === true; // Default to false
-			const customParams = existingSettings.custom_params || [];
-			const submissionLimit = existingSettings.submission_limit || 'unlimited';
-			const submittedMessage = existingSettings.submitted_message || '';
+			const proExtension = this.getProFormsExtension();
+			let proFormsPanel = '';
 
-			// Build custom params HTML
-			let customParamsHtml = '';
-			if (customParams.length > 0) {
-				customParams.forEach((param, index) => {
-					customParamsHtml += this.buildCustomParamRow(index, param.key, param.value);
-				});
-			} else {
-				customParamsHtml = this.buildCustomParamRow(0, '', '');
+			if (isPro && proExtension && typeof proExtension.renderSettings === 'function') {
+				proFormsPanel = proExtension.renderSettings({ formId, existingSettings, strings, manager: this });
+			} else if (!isPro) {
+				proFormsPanel = proFormsMockup;
 			}
 
 			// Create settings panel HTML
@@ -314,81 +311,7 @@
 										</div>
 									</div>
 									
-									<!-- Submission Limit Settings -->
-									<div class="ghl-settings-group">
-										<h3>
-											<span class="dashicons dashicons-forms"></span>
-											Submission Controls
-											${!ghl_crm_forms_js_data.isPro ? `<span class="dashicons dashicons-lock ghl-pro-lock-icon" data-ghl-tooltip="Upgrade to Pro to unlock submission controls"></span>` : ''}
-										</h3>
-										<p class="description">Control how many times users can submit this form</p>
-										
-										<div class="ghl-form-item">
-											<label for="ghl-form-submission-limit-${formId}">
-												Submission Limit
-												<span class="ghl-tooltip-icon" data-ghl-tooltip="Choose whether users can submit this form multiple times or only once.">?</span>
-											</label>
-											<select id="ghl-form-submission-limit-${formId}" name="submission_limit" class="ghl-select" ${!ghl_crm_forms_js_data.isPro ? 'disabled' : ''}>
-												<option value="unlimited" ${submissionLimit === 'unlimited' ? 'selected' : ''}>Unlimited - Allow multiple submissions</option>
-												<option value="once" ${submissionLimit === 'once' ? 'selected' : ''}>Once - One submission per user</option>
-											</select>
-										</div>
-										
-										<div class="ghl-form-item" id="ghl-submitted-message-wrapper-${formId}" style="${submissionLimit === 'once' ? '' : 'display:none;'}">
-											<label for="ghl-form-submitted-message-${formId}">
-												Submitted Message
-												<span class="ghl-tooltip-icon" data-ghl-tooltip="Message to show after user submits. Leave empty to hide the form completely without showing any message.">?</span>
-											</label>
-											<textarea 
-												id="ghl-form-submitted-message-${formId}" 
-												name="submitted_message" 
-												class="ghl-textarea" 
-												rows="3" 
-												placeholder="Thank you! You have already submitted this form."
-												${!ghl_crm_forms_js_data.isPro ? 'disabled' : ''}
-											>${this.escapeHtml(submittedMessage)}</textarea>
-											<p class="description" style="margin-top: 5px; color: #666;">Leave empty to hide form completely without showing any message.</p>
-										</div>
-									</div>
-									
-									<!-- Custom URL Parameters -->
-									<div class="ghl-settings-group">
-										<h3>
-											<span class="dashicons dashicons-admin-settings"></span>
-											Custom URL Parameters
-											${!ghl_crm_forms_js_data.isPro ? `<span class="dashicons dashicons-lock ghl-pro-lock-icon" data-ghl-tooltip="Upgrade to Pro to unlock custom URL parameters"></span>` : ''}
-										</h3>
-										<p class="description">Add custom parameters to the form URL using dynamic variables</p>
-										
-										<div class="ghl-custom-params-container" id="ghl-custom-params-${formId}">
-											${customParamsHtml}
-										</div>
-										<div class="ghl-form-item">
-											<button type="button" class="ghl-button ghl-button-secondary ghl-add-custom-param" ${!ghl_crm_forms_js_data.isPro ? 'disabled' : ''}>
-												<span class="dashicons dashicons-plus-alt"></span>
-												Add Parameter
-											</button>
-										</div>
-										<div class="ghl-form-item">
-											<div class="ghl-available-variables">
-												<h4>Available Variables:</h4>
-												<ul>
-													<li><code class="ghl-copy-variable" data-variable="{user_email}">{user_email}</code> - User's email address</li>
-													<li><code class="ghl-copy-variable" data-variable="{user_first_name}">{user_first_name}</code> - User's first name</li>
-													<li><code class="ghl-copy-variable" data-variable="{user_last_name}">{user_last_name}</code> - User's last name</li>
-													<li><code class="ghl-copy-variable" data-variable="{user_display_name}">{user_display_name}</code> - User's display name</li>
-													<li><code class="ghl-copy-variable" data-variable="{user_login}">{user_login}</code> - User's login username</li>
-													<li><code class="ghl-copy-variable" data-variable="{user_id}">{user_id}</code> - User's ID</li>
-													<li><code class="ghl-copy-variable" data-variable="{user_role}">{user_role}</code> - User's role</li>
-													<li><code class="ghl-copy-variable" data-variable="{site_url}">{site_url}</code> - Site URL</li>
-													<li><code class="ghl-copy-variable" data-variable="{site_name}">{site_name}</code> - Site name</li>
-													<li><code class="ghl-copy-variable" data-variable="{current_url}">{current_url}</code> - Current page URL</li>
-													<li><code class="ghl-copy-variable" data-variable="{current_title}">{current_title}</code> - Current page title</li>
-													<li><code class="ghl-copy-variable" data-variable="{meta:field_name}">{meta:field_name}</code> - User meta field value</li>
-												</ul>
-											</div>
-										</div>
-									</div>
+									${proFormsPanel}
 								</div>
 							</div>
 						</div>
@@ -443,57 +366,22 @@
 				}
 			});
 
-			// Bind submission limit dropdown
-			$(`#ghl-form-submission-limit-${formId}`).on('change', function () {
-				const value = $(this).val();
-				const $msgWrapper = $(`#ghl-submitted-message-wrapper-${formId}`);
-				if (value === 'once') {
-					$msgWrapper.slideDown(200);
-				} else {
-					$msgWrapper.slideUp(200);
-				}
-			});
-
-			// Bind add parameter button
-			$('.ghl-add-custom-param').on('click', function () {
-				const $container = $(`#ghl-custom-params-${formId}`);
-				const index = $container.find('.ghl-custom-param-row').length;
-				const rowHtml = FormsManager.buildCustomParamRow(index, '', '');
-				$container.append(rowHtml);
-				FormsManager.bindCustomParamEvents();
-			});
-
-			// Bind copy variable events
-			$('.ghl-copy-variable').on('click', function (e) {
-				e.preventDefault();
-				const variable = $(this).data('variable');
-				FormsManager.copyToClipboard(variable, $(this));
-			});
-
-			// Bind remove parameter events
-			this.bindCustomParamEvents();
+			if (isPro && proExtension && typeof proExtension.bindSettings === 'function') {
+				proExtension.bindSettings({ formId, manager: this });
+			}
 
 			// Bind save button
 			$('.ghl-save-form-settings').on('click', function () {
 				const $btn = $(this);
 
-				// Collect custom parameters
-				const custom_params = [];
-				$(`#ghl-custom-params-${formId} .ghl-custom-param-row`).each(function () {
-					const key = $(this).find('.ghl-param-key').val().trim();
-					const value = $(this).find('.ghl-param-value').val().trim();
-					if (key && value) {
-						custom_params.push({ key, value });
-					}
-				});
-
 				const settings = {
 					autofill_enabled: $(`#ghl-form-autofill-${formId}`).prop('checked'),
-					logged_only: $(`#ghl-form-logged-only-${formId}`).prop('checked'),
-					custom_params: custom_params,
-					submission_limit: $(`#ghl-form-submission-limit-${formId}`).val(),
-					submitted_message: $(`#ghl-form-submitted-message-${formId}`).val()
+					logged_only: $(`#ghl-form-logged-only-${formId}`).prop('checked')
 				};
+
+				if (isPro && proExtension && typeof proExtension.collectSettings === 'function') {
+					Object.assign(settings, proExtension.collectSettings({ formId, manager: FormsManager }));
+				}
 
 
 				// Disable button during save
@@ -530,27 +418,8 @@
 			});
 		},
 
-		buildCustomParamRow: function (index, key, value) {
-			key = key || '';
-			value = value || '';
-
-			return `
-			<div class="ghl-custom-param-row ghl-form-item">
-				<div class="ghl-param-inputs">
-					<input type="text" 
-						   class="ghl-param-key" 
-						   placeholder="Parameter name (e.g., source)" 
-						   value="${this.escapeHtml(key)}">
-					<input type="text" 
-						   class="ghl-param-value" 
-						   placeholder="Value (e.g., {user_email})" 
-						   value="${this.escapeHtml(value)}">
-					<button type="button" class="ghl-button ghl-button-danger ghl-remove-custom-param" title="Remove parameter">
-						<span class="dashicons dashicons-trash"></span>
-					</button>
-				</div>
-			</div>
-		`;
+		getProFormsExtension: function () {
+			return window.SynclyProFormsAdmin || null;
 		},
 
 		bindCustomParamEvents: function () {

@@ -17,19 +17,19 @@ $is_connected     = $oauth_status['connected'] || ! empty( $settings['api_token'
 
 // WordPress base user fields (stored in wp_users table)
 $base_user_fields = array(
-	'user_login'      => __( 'Username', 'ghl-crm-integration' ),
-	'user_email'      => __( 'Email', 'ghl-crm-integration' ),
-	'display_name'    => __( 'Display Name', 'ghl-crm-integration' ),
-	'user_url'        => __( 'Website', 'ghl-crm-integration' ),
-	'user_registered' => __( 'Registration Date', 'ghl-crm-integration' ),
+	'user_login'      => __( 'Username', 'syncly' ),
+	'user_email'      => __( 'Email', 'syncly' ),
+	'display_name'    => __( 'Display Name', 'syncly' ),
+	'user_url'        => __( 'Website', 'syncly' ),
+	'user_registered' => __( 'Registration Date', 'syncly' ),
 );
 
 // WordPress default user meta fields (standard across all WP installs)
 $default_user_meta = array(
-	'first_name'  => __( 'First Name', 'ghl-crm-integration' ),
-	'last_name'   => __( 'Last Name', 'ghl-crm-integration' ),
-	'nickname'    => __( 'Nickname', 'ghl-crm-integration' ),
-	'description' => __( 'Biographical Info', 'ghl-crm-integration' ),
+	'first_name'  => __( 'First Name', 'syncly' ),
+	'last_name'   => __( 'Last Name', 'syncly' ),
+	'nickname'    => __( 'Nickname', 'syncly' ),
+	'description' => __( 'Biographical Info', 'syncly' ),
 );
 
 // Get contact methods (phone, address, etc. from plugins/themes).
@@ -94,6 +94,7 @@ $custom_user_fields = array();
 $woocommerce_fields = array();
 $buddyboss_fields   = array();
 $learndash_fields   = array();
+$is_pro_active      = (bool) apply_filters( 'ghl_crm_is_pro_active', false );
 
 /**
  * Filter: Allow PRO plugin to add custom user meta fields
@@ -134,7 +135,9 @@ asort( $woocommerce_fields );
 
 // Handle refresh_fields query param — force-refresh the transient cache.
 // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only cache refresh, no state change.
-if ( isset( $_GET['refresh_fields'] ) && $_GET['refresh_fields'] === '1' ) {
+$refresh_fields = isset( $_GET['refresh_fields'] ) && '1' === sanitize_key( wp_unslash( $_GET['refresh_fields'] ) );
+
+if ( $refresh_fields ) {
 	$ghl_data = $settings_manager->get_ghl_fields_cached( true );
 } else {
 	$ghl_data = $settings_manager->get_ghl_fields_cached();
@@ -162,15 +165,15 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 	<?php if ( ! $is_connected ) : ?>
 		<div class="notice notice-warning">
 			<p>
-				<strong><?php esc_html_e( 'Not Connected', 'ghl-crm-integration' ); ?></strong><br>
+				<strong><?php esc_html_e( 'Not Connected', 'syncly' ); ?></strong><br>
 				<?php
 				printf(
 					/* translators: %s: Link to dashboard page */
-					esc_html__( 'Please connect to GoHighLevel in %s first.', 'ghl-crm-integration' ),
+					esc_html__( 'Please connect to GoHighLevel in %s first.', 'syncly' ),
 					sprintf(
 						'<a href="%s">%s</a>',
 						esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ),
-						esc_html__( 'Dashboard', 'ghl-crm-integration' )
+						esc_html__( 'Dashboard', 'syncly' )
 					)
 				);
 				?>
@@ -189,32 +192,32 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 	<div class="notice notice-info" style="margin: 20px 0; padding: 15px; border-left-color: #2271b1;">
 		<h3 style="margin-top: 0;">
 			<span class="dashicons dashicons-info" style="color: #2271b1;"></span>
-			<?php esc_html_e( 'About Field Mapping', 'ghl-crm-integration' ); ?>
+			<?php esc_html_e( 'About Field Mapping', 'syncly' ); ?>
 		</h3>
 		<p>
-			<?php esc_html_e( 'Field mapping connects WordPress user data with GoHighLevel contact fields. When users are created, updated, or synced, data flows between the systems based on your mappings.', 'ghl-crm-integration' ); ?>
+			<?php esc_html_e( 'Field mapping connects WordPress user data with GoHighLevel contact fields. When users are created, updated, or synced, data flows between the systems based on your mappings.', 'syncly' ); ?>
 		</p>
 		<ul style="list-style: disc; margin-left: 20px;">
 			<li>
-				<strong><?php esc_html_e( 'WordPress Field:', 'ghl-crm-integration' ); ?></strong> 
-				<?php esc_html_e( 'The source field from WordPress (user profile, WooCommerce, BuddyBoss, etc.)', 'ghl-crm-integration' ); ?>
+				<strong><?php esc_html_e( 'WordPress Field:', 'syncly' ); ?></strong> 
+				<?php esc_html_e( 'The source field from WordPress (user profile, WooCommerce, BuddyBoss, etc.)', 'syncly' ); ?>
 			</li>
 			<li>
-				<strong><?php esc_html_e( 'GoHighLevel Field:', 'ghl-crm-integration' ); ?></strong> 
-				<?php esc_html_e( 'The destination field in your GHL contact record. Select "— Do Not Sync —" to skip syncing this field.', 'ghl-crm-integration' ); ?>
+				<strong><?php esc_html_e( 'GoHighLevel Field:', 'syncly' ); ?></strong> 
+				<?php esc_html_e( 'The destination field in your GHL contact record. Select "— Do Not Sync —" to skip syncing this field.', 'syncly' ); ?>
 			</li>
 			<li>
-				<strong><?php esc_html_e( 'Sync Direction:', 'ghl-crm-integration' ); ?></strong>
+				<strong><?php esc_html_e( 'Sync Direction:', 'syncly' ); ?></strong>
 				<ul style="list-style: circle; margin-left: 20px; margin-top: 5px;">
-					<li><strong>↔ Both Ways:</strong> <?php esc_html_e( 'Data syncs in both directions (WordPress ⇄ GHL)', 'ghl-crm-integration' ); ?></li>
-					<li><strong>→ To GoHighLevel Only:</strong> <?php esc_html_e( 'Data only flows from WordPress to GHL', 'ghl-crm-integration' ); ?></li>
-					<li><strong>← From GoHighLevel Only:</strong> <?php esc_html_e( 'Data only flows from GHL to WordPress', 'ghl-crm-integration' ); ?></li>
+					<li><strong>↔ Both Ways:</strong> <?php esc_html_e( 'Data syncs in both directions (WordPress ⇄ GHL)', 'syncly' ); ?></li>
+					<li><strong>→ To GoHighLevel Only:</strong> <?php esc_html_e( 'Data only flows from WordPress to GHL', 'syncly' ); ?></li>
+					<li><strong>← From GoHighLevel Only:</strong> <?php esc_html_e( 'Data only flows from GHL to WordPress', 'syncly' ); ?></li>
 				</ul>
 			</li>
 		</ul>
 		<p style="margin-bottom: 0;">
-			<strong><?php esc_html_e( 'Tip:', 'ghl-crm-integration' ); ?></strong> 
-			<?php esc_html_e( 'Use "— Do Not Sync —" for fields you want to keep separate between systems, or for sensitive data that shouldn\'t be shared.', 'ghl-crm-integration' ); ?>
+			<strong><?php esc_html_e( 'Tip:', 'syncly' ); ?></strong> 
+			<?php esc_html_e( 'Use "— Do Not Sync —" for fields you want to keep separate between systems, or for sensitive data that shouldn\'t be shared.', 'syncly' ); ?>
 		</p>
 	</div>
 
@@ -226,24 +229,21 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 		?>
 		<a href="<?php echo esc_url( $reload_url ); ?>" class="ghl-button ghl-button-primary" style="text-decoration: none;">
 			<span class="dashicons dashicons-update" style="margin-top: 3px;"></span>
-			<?php esc_html_e( 'Reload Fields from GoHighLevel', 'ghl-crm-integration' ); ?>
+			<?php esc_html_e( 'Reload Fields from GoHighLevel', 'syncly' ); ?>
 		</a>
 		<button type="button" id="ghl-auto-suggest-mappings" class="ghl-button ghl-button-secondary" <?php echo ! apply_filters( 'ghl_crm_field_suggestions_enabled', false ) ? 'disabled style="opacity: 0.7; cursor: not-allowed;"' : ''; ?>>
 			<span class="dashicons dashicons-lightbulb" style="margin-top: 3px;"></span>
-			<?php esc_html_e( 'Auto-Suggest Mappings', 'ghl-crm-integration' ); ?>
-			<?php if ( ! apply_filters( 'ghl_crm_field_suggestions_enabled', false ) ) : ?>
-				<span style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; font-weight: 700;">PRO</span>
-			<?php endif; ?>
+			<?php esc_html_e( 'Auto-Suggest Mappings', 'syncly' ); ?>
 		</button>
 	</div>
 
-	<?php if ( isset( $_GET['refresh_fields'] ) && $_GET['refresh_fields'] === '1' ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+	<?php if ( $refresh_fields ) : ?>
 		<div class="notice notice-success is-dismissible" style="margin: 0 0 15px;">
 			<p>
 				<?php
 				printf(
 					/* translators: %d: number of custom fields loaded */
-					esc_html__( 'Fields refreshed from GoHighLevel. %d custom fields loaded.', 'ghl-crm-integration' ),
+					esc_html__( 'Fields refreshed from GoHighLevel. %d custom fields loaded.', 'syncly' ),
 					(int) $ghl_data['count']
 				);
 				?>
@@ -256,12 +256,12 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 		
 		<!-- Default WordPress Fields -->
 		<div class="ghl-field-section-header">
-			<h3><?php esc_html_e( 'Default WordPress Fields', 'ghl-crm-integration' ); ?></h3>
+			<h3><?php esc_html_e( 'Default WordPress Fields', 'syncly' ); ?></h3>
 			<p class="description">
 				<?php
 				printf(
 					/* translators: %d: number of default fields */
-					esc_html__( 'Standard WordPress user fields (%d fields).', 'ghl-crm-integration' ),
+					esc_html__( 'Standard WordPress user fields (%d fields).', 'syncly' ),
 					count( $default_wp_fields )
 				);
 				?>
@@ -271,9 +271,9 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 		<table class="ghl-table" role="presentation">
 			<thead>
 				<tr>
-					<th style="width: 30%;"><?php esc_html_e( 'WordPress Field', 'ghl-crm-integration' ); ?></th>
-					<th style="width: 35%;"><?php esc_html_e( 'GoHighLevel Field', 'ghl-crm-integration' ); ?></th>
-					<th style="width: 35%;"><?php esc_html_e( 'Sync Direction', 'ghl-crm-integration' ); ?></th>
+					<th style="width: 30%;"><?php esc_html_e( 'WordPress Field', 'syncly' ); ?></th>
+					<th style="width: 35%;"><?php esc_html_e( 'GoHighLevel Field', 'syncly' ); ?></th>
+					<th style="width: 35%;"><?php esc_html_e( 'Sync Direction', 'syncly' ); ?></th>
 				</tr>
 			</thead>
 			<tbody>
@@ -309,10 +309,10 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 					<tr class="ghl-field-row<?php echo $is_email_field ? ' ghl-required-field' : ''; ?>" data-section="default" data-key="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( wp_strip_all_tags( $label ) ); ?>" data-search="<?php echo esc_attr( strtolower( wp_strip_all_tags( $label ) . ' ' . $key ) ); ?>" data-explicitly-saved="<?php echo $is_explicitly_saved ? '1' : '0'; ?>">
 						<td>
 							<strong><?php echo esc_html( $label ); ?></strong>
-							<span class="ghl-field-badge ghl-field-badge--default"><?php esc_html_e( 'Core', 'ghl-crm-integration' ); ?></span><br>
+							<span class="ghl-field-badge ghl-field-badge--default"><?php esc_html_e( 'Core', 'syncly' ); ?></span><br>
 							<code><?php echo esc_html( $key ); ?></code>
 							<?php if ( $is_email_field ) : ?>
-								<br><span class="ghl-required-indicator"><?php esc_html_e( '* Required field', 'ghl-crm-integration' ); ?></span>
+								<br><span class="ghl-required-indicator"><?php esc_html_e( '* Required field', 'syncly' ); ?></span>
 							<?php endif; ?>
 						</td>
 						<td>
@@ -332,9 +332,9 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 						</td>
 						<td>
 							<select name="sync_direction_<?php echo esc_attr( $key ); ?>" class="ghl-select" <?php echo $is_email_field ? 'disabled' : ''; ?>>
-								<option value="both" <?php selected( $saved_direction, 'both' ); ?>><?php esc_html_e( '↔ Both Ways', 'ghl-crm-integration' ); ?></option>
-								<option value="to_ghl" <?php selected( $saved_direction, 'to_ghl' ); ?>><?php esc_html_e( '→ To GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
-								<option value="from_ghl" <?php selected( $saved_direction, 'from_ghl' ); ?>><?php esc_html_e( '← From GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
+								<option value="both" <?php selected( $saved_direction, 'both' ); ?>><?php esc_html_e( '↔ Both Ways', 'syncly' ); ?></option>
+								<option value="to_ghl" <?php selected( $saved_direction, 'to_ghl' ); ?>><?php esc_html_e( '→ To GoHighLevel Only', 'syncly' ); ?></option>
+								<option value="from_ghl" <?php selected( $saved_direction, 'from_ghl' ); ?>><?php esc_html_e( '← From GoHighLevel Only', 'syncly' ); ?></option>
 							</select>
 							<?php if ( $is_email_field ) : ?>
 								<!-- Hidden input to ensure email sync direction is submitted as 'both' -->
@@ -349,12 +349,12 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 		<?php if ( ! empty( $buddyboss_fields ) ) : ?>
 			<!-- BuddyBoss Profile Fields -->
 			<div class="ghl-field-section-header">
-				<h3><?php esc_html_e( 'BuddyBoss Profile Fields', 'ghl-crm-integration' ); ?></h3>
+				<h3><?php esc_html_e( 'BuddyBoss Profile Fields', 'syncly' ); ?></h3>
 				<p class="description">
 					<?php
 					printf(
 						/* translators: %d: number of BuddyBoss fields found */
-						esc_html__( 'Custom profile fields from BuddyBoss (%d fields found).', 'ghl-crm-integration' ),
+						esc_html__( 'Custom profile fields from BuddyBoss (%d fields found).', 'syncly' ),
 						count( $buddyboss_fields )
 					);
 					?>
@@ -364,9 +364,9 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 			<table class="ghl-table" role="presentation">
 				<thead>
 					<tr>
-						<th style="width: 30%;"><?php esc_html_e( 'BuddyBoss Field', 'ghl-crm-integration' ); ?></th>
-						<th style="width: 35%;"><?php esc_html_e( 'GoHighLevel Field', 'ghl-crm-integration' ); ?></th>
-						<th style="width: 35%;"><?php esc_html_e( 'Sync Direction', 'ghl-crm-integration' ); ?></th>
+						<th style="width: 30%;"><?php esc_html_e( 'BuddyBoss Field', 'syncly' ); ?></th>
+						<th style="width: 35%;"><?php esc_html_e( 'GoHighLevel Field', 'syncly' ); ?></th>
+						<th style="width: 35%;"><?php esc_html_e( 'Sync Direction', 'syncly' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -379,7 +379,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 						<tr class="ghl-field-row" data-section="buddyboss" data-key="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( wp_strip_all_tags( $label ) ); ?>" data-search="<?php echo esc_attr( strtolower( wp_strip_all_tags( $label ) . ' ' . $key ) ); ?>" data-explicitly-saved="<?php echo $is_explicitly_saved ? '1' : '0'; ?>">
 							<td>
 								<strong><?php echo esc_html( $label ); ?></strong>
-								<span class="ghl-field-badge ghl-field-badge--buddyboss"><?php esc_html_e( 'BuddyBoss', 'ghl-crm-integration' ); ?></span><br>
+								<span class="ghl-field-badge ghl-field-badge--buddyboss"><?php esc_html_e( 'BuddyBoss', 'syncly' ); ?></span><br>
 								<code><?php echo esc_html( $key ); ?></code>
 							</td>
 							<td>
@@ -391,9 +391,9 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 							</td>
 							<td>
 								<select name="sync_direction_<?php echo esc_attr( $key ); ?>" class="ghl-select">
-									<option value="both" <?php selected( $saved_direction, 'both' ); ?>><?php esc_html_e( '↔ Both Ways', 'ghl-crm-integration' ); ?></option>
-									<option value="to_ghl" <?php selected( $saved_direction, 'to_ghl' ); ?>><?php esc_html_e( '→ To GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
-									<option value="from_ghl" <?php selected( $saved_direction, 'from_ghl' ); ?>><?php esc_html_e( '← From GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
+									<option value="both" <?php selected( $saved_direction, 'both' ); ?>><?php esc_html_e( '↔ Both Ways', 'syncly' ); ?></option>
+									<option value="to_ghl" <?php selected( $saved_direction, 'to_ghl' ); ?>><?php esc_html_e( '→ To GoHighLevel Only', 'syncly' ); ?></option>
+									<option value="from_ghl" <?php selected( $saved_direction, 'from_ghl' ); ?>><?php esc_html_e( '← From GoHighLevel Only', 'syncly' ); ?></option>
 								</select>
 							</td>
 						</tr>
@@ -405,12 +405,12 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 		<?php if ( ! empty( $woocommerce_fields ) ) : ?>
 			<!-- WooCommerce Fields -->
 			<div class="ghl-field-section-header">
-				<h3><?php esc_html_e( 'WooCommerce Customer Fields', 'ghl-crm-integration' ); ?></h3>
+				<h3><?php esc_html_e( 'WooCommerce Customer Fields', 'syncly' ); ?></h3>
 				<p class="description">
 					<?php
 					printf(
 						/* translators: %d: number of WooCommerce fields found */
-						esc_html__( 'Billing and shipping fields from WooCommerce (%d fields found).', 'ghl-crm-integration' ),
+						esc_html__( 'Billing and shipping fields from WooCommerce (%d fields found).', 'syncly' ),
 						count( $woocommerce_fields )
 					);
 					?>
@@ -420,9 +420,9 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 			<table class="ghl-table" role="presentation">
 				<thead>
 					<tr>
-						<th style="width: 30%;"><?php esc_html_e( 'WooCommerce Field', 'ghl-crm-integration' ); ?></th>
-						<th style="width: 35%;"><?php esc_html_e( 'GoHighLevel Field', 'ghl-crm-integration' ); ?></th>
-						<th style="width: 35%;"><?php esc_html_e( 'Sync Direction', 'ghl-crm-integration' ); ?></th>
+						<th style="width: 30%;"><?php esc_html_e( 'WooCommerce Field', 'syncly' ); ?></th>
+						<th style="width: 35%;"><?php esc_html_e( 'GoHighLevel Field', 'syncly' ); ?></th>
+						<th style="width: 35%;"><?php esc_html_e( 'Sync Direction', 'syncly' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -435,7 +435,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 						<tr class="ghl-field-row" data-section="woocommerce" data-key="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( wp_strip_all_tags( $label ) ); ?>" data-search="<?php echo esc_attr( strtolower( wp_strip_all_tags( $label ) . ' ' . $key ) ); ?>" data-explicitly-saved="<?php echo $is_explicitly_saved ? '1' : '0'; ?>">
 							<td>
 								<strong><?php echo esc_html( $label ); ?></strong>
-								<span class="ghl-field-badge ghl-field-badge--woocommerce"><?php esc_html_e( 'WooCommerce', 'ghl-crm-integration' ); ?></span><br>
+								<span class="ghl-field-badge ghl-field-badge--woocommerce"><?php esc_html_e( 'WooCommerce', 'syncly' ); ?></span><br>
 								<code><?php echo esc_html( $key ); ?></code>
 							</td>
 							<td>
@@ -447,9 +447,9 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 							</td>
 							<td>
 								<select name="sync_direction_<?php echo esc_attr( $key ); ?>" class="ghl-select">
-									<option value="both" <?php selected( $saved_direction, 'both' ); ?>><?php esc_html_e( '↔ Both Ways', 'ghl-crm-integration' ); ?></option>
-									<option value="to_ghl" <?php selected( $saved_direction, 'to_ghl' ); ?>><?php esc_html_e( '→ To GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
-									<option value="from_ghl" <?php selected( $saved_direction, 'from_ghl' ); ?>><?php esc_html_e( '← From GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
+									<option value="both" <?php selected( $saved_direction, 'both' ); ?>><?php esc_html_e( '↔ Both Ways', 'syncly' ); ?></option>
+									<option value="to_ghl" <?php selected( $saved_direction, 'to_ghl' ); ?>><?php esc_html_e( '→ To GoHighLevel Only', 'syncly' ); ?></option>
+									<option value="from_ghl" <?php selected( $saved_direction, 'from_ghl' ); ?>><?php esc_html_e( '← From GoHighLevel Only', 'syncly' ); ?></option>
 								</select>
 							</td>
 						</tr>
@@ -461,18 +461,18 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 		<?php if ( ! empty( $learndash_fields ) ) : ?>
 			<!-- LearnDash Course Progress Fields -->
 			<div class="ghl-field-section-header">
-				<h3><?php esc_html_e( 'LearnDash Course Progress', 'ghl-crm-integration' ); ?></h3>
+				<h3><?php esc_html_e( 'LearnDash Course Progress', 'syncly' ); ?></h3>
 				<p class="description">
-					<?php esc_html_e( 'Map LearnDash course progress data (percentage, status, completed steps, total steps) to GoHighLevel custom fields. These fields sync automatically on lesson, topic, and course completion.', 'ghl-crm-integration' ); ?>
+					<?php esc_html_e( 'Map LearnDash course progress data (percentage, status, completed steps, total steps) to GoHighLevel custom fields. These fields sync automatically on lesson, topic, and course completion.', 'syncly' ); ?>
 				</p>
 			</div>
 
 			<table class="ghl-table" role="presentation">
 				<thead>
 					<tr>
-						<th style="width: 30%;"><?php esc_html_e( 'LearnDash Field', 'ghl-crm-integration' ); ?></th>
-						<th style="width: 35%;"><?php esc_html_e( 'GoHighLevel Field', 'ghl-crm-integration' ); ?></th>
-						<th style="width: 35%;"><?php esc_html_e( 'Sync Direction', 'ghl-crm-integration' ); ?></th>
+						<th style="width: 30%;"><?php esc_html_e( 'LearnDash Field', 'syncly' ); ?></th>
+						<th style="width: 35%;"><?php esc_html_e( 'GoHighLevel Field', 'syncly' ); ?></th>
+						<th style="width: 35%;"><?php esc_html_e( 'Sync Direction', 'syncly' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -485,7 +485,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 						<tr class="ghl-field-row" data-section="learndash" data-key="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( wp_strip_all_tags( $label ) ); ?>" data-search="<?php echo esc_attr( strtolower( wp_strip_all_tags( $label ) . ' ' . $key ) ); ?>" data-explicitly-saved="<?php echo $is_explicitly_saved ? '1' : '0'; ?>">
 							<td>
 								<strong><?php echo esc_html( $label ); ?></strong>
-								<span class="ghl-field-badge ghl-field-badge--learndash"><?php esc_html_e( 'LearnDash', 'ghl-crm-integration' ); ?></span><br>
+								<span class="ghl-field-badge ghl-field-badge--learndash"><?php esc_html_e( 'LearnDash', 'syncly' ); ?></span><br>
 								<code><?php echo esc_html( $key ); ?></code>
 							</td>
 							<td>
@@ -497,9 +497,9 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 							</td>
 							<td>
 								<select name="sync_direction_<?php echo esc_attr( $key ); ?>" class="ghl-select">
-									<option value="both" <?php selected( $saved_direction, 'both' ); ?>><?php esc_html_e( '↔ Both Ways', 'ghl-crm-integration' ); ?></option>
-									<option value="to_ghl" <?php selected( $saved_direction, 'to_ghl' ); ?>><?php esc_html_e( '→ To GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
-									<option value="from_ghl" <?php selected( $saved_direction, 'from_ghl' ); ?>><?php esc_html_e( '← From GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
+									<option value="both" <?php selected( $saved_direction, 'both' ); ?>><?php esc_html_e( '↔ Both Ways', 'syncly' ); ?></option>
+									<option value="to_ghl" <?php selected( $saved_direction, 'to_ghl' ); ?>><?php esc_html_e( '→ To GoHighLevel Only', 'syncly' ); ?></option>
+									<option value="from_ghl" <?php selected( $saved_direction, 'from_ghl' ); ?>><?php esc_html_e( '← From GoHighLevel Only', 'syncly' ); ?></option>
 								</select>
 							</td>
 						</tr>
@@ -511,19 +511,19 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 		<?php if ( ! empty( $custom_user_fields ) ) : ?>
 			<!-- Custom Fields -->
 			<div class="ghl-field-section-header">
-				<h3><?php esc_html_e( 'Custom & Plugin Fields', 'ghl-crm-integration' ); ?></h3>
+				<h3><?php esc_html_e( 'Custom & Plugin Fields', 'syncly' ); ?></h3>
 				<p class="description">
 					<?php
 					printf(
 						/* translators: %d: number of custom fields found */
-						esc_html__( 'Custom user meta fields and fields added by other plugins or themes (%d fields found).', 'ghl-crm-integration' ),
+						esc_html__( 'Custom user meta fields and fields added by other plugins or themes (%d fields found).', 'syncly' ),
 						count( $custom_user_fields )
 					);
 					?>
 				</p>
-				<button type="button" id="ghl-toggle-custom-fields" class="ghl-toggle-button" data-target="ghl-custom-fields-wrapper" data-label-show="<?php esc_attr_e( 'Show custom fields', 'ghl-crm-integration' ); ?>" data-label-hide="<?php esc_attr_e( 'Hide custom fields', 'ghl-crm-integration' ); ?>" aria-expanded="false">
+				<button type="button" id="ghl-toggle-custom-fields" class="ghl-toggle-button" data-target="ghl-custom-fields-wrapper" data-label-show="<?php esc_attr_e( 'Show custom fields', 'syncly' ); ?>" data-label-hide="<?php esc_attr_e( 'Hide custom fields', 'syncly' ); ?>" aria-expanded="false">
 					<span class="dashicons dashicons-arrow-right"></span>
-					<span class="ghl-toggle-button__label"><?php esc_html_e( 'Show custom fields', 'ghl-crm-integration' ); ?></span>
+					<span class="ghl-toggle-button__label"><?php esc_html_e( 'Show custom fields', 'syncly' ); ?></span>
 				</button>
 			</div>
 
@@ -531,9 +531,9 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 			<table class="ghl-table" role="presentation">
 				<thead>
 					<tr>
-						<th style="width: 30%;"><?php esc_html_e( 'WordPress Field', 'ghl-crm-integration' ); ?></th>
-						<th style="width: 35%;"><?php esc_html_e( 'GoHighLevel Field', 'ghl-crm-integration' ); ?></th>
-						<th style="width: 35%;"><?php esc_html_e( 'Sync Direction', 'ghl-crm-integration' ); ?></th>
+						<th style="width: 30%;"><?php esc_html_e( 'WordPress Field', 'syncly' ); ?></th>
+						<th style="width: 35%;"><?php esc_html_e( 'GoHighLevel Field', 'syncly' ); ?></th>
+						<th style="width: 35%;"><?php esc_html_e( 'Sync Direction', 'syncly' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -545,7 +545,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 						<tr class="ghl-field-row" data-section="custom" data-key="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( wp_strip_all_tags( $label ) ); ?>" data-search="<?php echo esc_attr( strtolower( wp_strip_all_tags( $label ) . ' ' . $key ) ); ?>">
 							<td>
 								<strong><?php echo esc_html( $label ); ?></strong>
-								<span class="ghl-field-badge ghl-field-badge--custom"><?php esc_html_e( 'Custom', 'ghl-crm-integration' ); ?></span><br>
+								<span class="ghl-field-badge ghl-field-badge--custom"><?php esc_html_e( 'Custom', 'syncly' ); ?></span><br>
 								<code><?php echo esc_html( $key ); ?></code>
 							</td>
 							<td>
@@ -557,9 +557,9 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 							</td>
 							<td>
 								<select name="sync_direction_<?php echo esc_attr( $key ); ?>" class="ghl-select">
-									<option value="both" <?php selected( $saved_direction, 'both' ); ?>><?php esc_html_e( '↔ Both Ways', 'ghl-crm-integration' ); ?></option>
-									<option value="to_ghl" <?php selected( $saved_direction, 'to_ghl' ); ?>><?php esc_html_e( '→ To GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
-									<option value="from_ghl" <?php selected( $saved_direction, 'from_ghl' ); ?>><?php esc_html_e( '← From GoHighLevel Only', 'ghl-crm-integration' ); ?></option>
+									<option value="both" <?php selected( $saved_direction, 'both' ); ?>><?php esc_html_e( '↔ Both Ways', 'syncly' ); ?></option>
+									<option value="to_ghl" <?php selected( $saved_direction, 'to_ghl' ); ?>><?php esc_html_e( '→ To GoHighLevel Only', 'syncly' ); ?></option>
+									<option value="from_ghl" <?php selected( $saved_direction, 'from_ghl' ); ?>><?php esc_html_e( '← From GoHighLevel Only', 'syncly' ); ?></option>
 								</select>
 							</td>
 						</tr>
@@ -569,42 +569,68 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 			</div>
 		<?php endif; ?>
 
-		<!-- PRO Feature Upgrade Notice -->
-		<?php
-		if ( ! defined( 'GHL_CRM_PRO_VERSION' ) && empty( $buddyboss_fields ) && empty( $custom_user_fields ) && empty( $woocommerce_fields ) ) :
-			// Set up upgrade notice variables
-			$notice_title = __( 'Advanced Field Mapping', 'ghl-crm-integration' );
-			$description = __( 'The FREE version only supports standard WordPress fields. Upgrade to PRO to unlock advanced field mapping capabilities.', 'ghl-crm-integration' );
-			$features    = array(
-				__( 'Custom User Meta Fields - Map any custom field from plugins or themes', 'ghl-crm-integration' ),
-				__( 'WooCommerce Fields - Billing, shipping, and customer data synchronization', 'ghl-crm-integration' ),
-				__( 'BuddyBoss/BuddyPress XProfile Fields - Complete social profile integration', 'ghl-crm-integration' ),
-				__( 'LearnDash Fields - Course progress, quiz scores, and certificate tracking', 'ghl-crm-integration' ),
-			);
-			$cta_text    = __( 'Upgrade to PRO', 'ghl-crm-integration' );
-			$style       = 'box';
+		<?php if ( ! $is_pro_active && empty( $buddyboss_fields ) && empty( $custom_user_fields ) && empty( $woocommerce_fields ) && empty( $learndash_fields ) ) : ?>
+			<div class="ghl-field-section-header ghl-pro-preview-header">
+				<h3><?php esc_html_e( 'Extended Field Mapping', 'syncly' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'Map WooCommerce, BuddyBoss, LearnDash, and custom user fields with Syncly Pro.', 'syncly' ); ?></p>
+			</div>
 
-			include GHL_CRM_PATH . 'templates/admin/partials/pro-upgrade-notice.php';
-		endif;
-		?>
+			<div class="ghl-field-mapping-pro-preview" aria-label="<?php esc_attr_e( 'Syncly Pro field mapping preview', 'syncly' ); ?>">
+				<div class="ghl-field-mapping-pro-preview__header">
+					<div>
+						<span class="ghl-field-mapping-pro-preview__eyebrow"><?php esc_html_e( 'Syncly Pro', 'syncly' ); ?></span>
+						<h4><?php esc_html_e( 'Advanced field sources', 'syncly' ); ?></h4>
+					</div>
+					<a href="<?php echo esc_url( apply_filters( 'ghl_crm_upgrade_url', 'https://highlevelsync.com/' ) ); ?>" class="ghl-button ghl-button-secondary" target="_blank" rel="noopener noreferrer">
+						<span class="dashicons dashicons-unlock"></span>
+						<?php esc_html_e( 'Learn More', 'syncly' ); ?>
+					</a>
+				</div>
+
+				<div class="ghl-field-mapping-pro-preview__table" aria-hidden="true">
+					<div class="ghl-field-mapping-pro-preview__row ghl-field-mapping-pro-preview__row--head">
+						<span><?php esc_html_e( 'WordPress Field', 'syncly' ); ?></span>
+						<span><?php esc_html_e( 'GoHighLevel Field', 'syncly' ); ?></span>
+						<span><?php esc_html_e( 'Sync Direction', 'syncly' ); ?></span>
+					</div>
+					<div class="ghl-field-mapping-pro-preview__row">
+						<span><strong><?php esc_html_e( 'Billing Phone', 'syncly' ); ?></strong><small><?php esc_html_e( 'WooCommerce', 'syncly' ); ?></small></span>
+						<span class="ghl-field-mapping-pro-preview__select"><?php esc_html_e( 'Phone', 'syncly' ); ?></span>
+						<span class="ghl-field-mapping-pro-preview__select"><?php esc_html_e( 'Both Ways', 'syncly' ); ?></span>
+					</div>
+					<div class="ghl-field-mapping-pro-preview__row">
+						<span><strong><?php esc_html_e( 'Profile Type', 'syncly' ); ?></strong><small><?php esc_html_e( 'BuddyBoss', 'syncly' ); ?></small></span>
+						<span class="ghl-field-mapping-pro-preview__select"><?php esc_html_e( 'Contact Segment', 'syncly' ); ?></span>
+						<span class="ghl-field-mapping-pro-preview__select"><?php esc_html_e( 'To GoHighLevel', 'syncly' ); ?></span>
+					</div>
+					<div class="ghl-field-mapping-pro-preview__row">
+						<span><strong><?php esc_html_e( 'Course Progress', 'syncly' ); ?></strong><small><?php esc_html_e( 'LearnDash', 'syncly' ); ?></small></span>
+						<span class="ghl-field-mapping-pro-preview__select"><?php esc_html_e( 'Progress Score', 'syncly' ); ?></span>
+						<span class="ghl-field-mapping-pro-preview__select"><?php esc_html_e( 'To GoHighLevel', 'syncly' ); ?></span>
+					</div>
+				</div>
+			</div>
+		<?php endif; ?>
 
 			<p class="submit">
 				<button type="submit" name="submit" id="submit" class="ghl-button ghl-button-primary">
-					<?php esc_html_e( 'Save Field Mapping', 'ghl-crm-integration' ); ?>
+					<?php esc_html_e( 'Save Field Mapping', 'syncly' ); ?>
 				</button>
 			</p>
 	</form>
+	<script type="application/json" id="ghl-field-mapping-data">
+		<?php echo wp_json_encode( [ 'fields' => $ghl_fields, 'savedMappings' => $saved_mappings ] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON encoded for application/json script. ?>
+	</script>
 </div>
 
-<script>
-window.GHL_FIELDS = <?php echo wp_json_encode( $ghl_fields ); ?>;
-window.GHL_SAVED_MAPPINGS = <?php echo wp_json_encode( $saved_mappings ); ?>;
-</script>
-
-<style>
-	/* Rotation animation for loading spinner */
-	@keyframes rotation {
-		from { transform: rotate(0deg); }
-		to { transform: rotate(359deg); }
-	}
-</style>
+<?php
+wp_add_inline_script(
+	'ghl-crm-field-mapping-js',
+	'window.GHL_FIELDS = ' . wp_json_encode( $ghl_fields ) . '; window.GHL_SAVED_MAPPINGS = ' . wp_json_encode( $saved_mappings ) . ';',
+	'before'
+);
+wp_add_inline_style(
+	'ghl-crm-field-mapping-css',
+	'@keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(359deg); } }'
+);
+?>

@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 
 <div class="wrap ghl-crm-wrap">
-	<!-- <h1 class="wp-heading-inline"><?php esc_html_e( 'GoHighLevel CRM Integration', 'ghl-crm-integration' ); ?></h1> -->
+	<!-- <h1 class="wp-heading-inline"><?php esc_html_e( 'GoHighLevel CRM Integration', 'syncly' ); ?></h1> -->
 	<hr class="wp-header-end">
 
 	<!-- Horizontal Header Navigation -->
@@ -25,27 +25,27 @@ if ( ! defined( 'ABSPATH' ) ) {
 			// Define default navigation tabs
 			$nav_tabs = array(
 				'dashboard'     => array(
-					'label' => __( 'Dashboard', 'ghl-crm-integration' ),
+					'label' => __( 'Dashboard', 'syncly' ),
 					'icon'  => 'dashicons-dashboard',
 				),
 				'settings'      => array(
-					'label' => __( 'Settings', 'ghl-crm-integration' ),
+					'label' => __( 'Settings', 'syncly' ),
 					'icon'  => 'dashicons-admin-settings',
 				),
 				'integrations'  => array(
-					'label' => __( 'Integrations', 'ghl-crm-integration' ),
+					'label' => __( 'Integrations', 'syncly' ),
 					'icon'  => 'dashicons-admin-plugins',
 				),
 				'field-mapping' => array(
-					'label' => __( 'Field Mapping', 'ghl-crm-integration' ),
+					'label' => __( 'Field Mapping', 'syncly' ),
 					'icon'  => 'dashicons-admin-generic',
 				),
 				'sync-logs'     => array(
-					'label' => __( 'Sync Logs', 'ghl-crm-integration' ),
+					'label' => __( 'Sync Logs', 'syncly' ),
 					'icon'  => 'dashicons-list-view',
 				),
 				'forms'         => array(
-					'label' => __( 'Forms', 'ghl-crm-integration' ),
+					'label' => __( 'Forms', 'syncly' ),
 					'icon'  => 'dashicons-feedback',
 				),
 			);
@@ -86,30 +86,35 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<div id="ghl-crm-app" class="ghl-spa-container">
 		<div class="ghl-spa-loading">
 			<div class="ghl-loading-spinner"></div>
-			<p><?php esc_html_e( 'Loading...', 'ghl-crm-integration' ); ?></p>
+			<p><?php esc_html_e( 'Loading...', 'syncly' ); ?></p>
 		</div>
 	</div>
 </div>
 
-<!-- Pass data to JavaScript -->
-<script type="text/javascript">
-	var ghlCrmSpaConfig = {
-		ajaxUrl: <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>,
-		nonce: <?php echo wp_json_encode( wp_create_nonce( 'ghl_crm_spa_nonce' ) ); ?>,
-		strings: {
-			loading: <?php echo wp_json_encode( __( 'Loading...', 'ghl-crm-integration' ) ); ?>,
-			error: <?php echo wp_json_encode( __( 'Error loading view. Please refresh the page.', 'ghl-crm-integration' ) ); ?>,
-			notFound: <?php echo wp_json_encode( __( 'Page not found.', 'ghl-crm-integration' ) ); ?>
-		},
-		settings: {
-			tabs: <?php echo wp_json_encode( \GHL_CRM\Core\MenuManager::get_valid_settings_tabs() ); ?>,
-			routes: {
-				dashboard: 'dashboard',
-				settings: 'settings',
-				integrations: 'integrations',
-				fieldMapping: 'field-mapping',
-				syncLogs: 'sync-logs'
-			}
-		}
-	};
-</script>
+<?php
+wp_add_inline_script(
+	'ghl-crm-spa-js',
+	'var ghlCrmSpaConfig = ' . wp_json_encode(
+		[
+			'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
+			'nonce'    => wp_create_nonce( 'ghl_crm_spa_nonce' ),
+			'strings'  => [
+				'loading'  => __( 'Loading...', 'syncly' ),
+				'error'    => __( 'Error loading view. Please refresh the page.', 'syncly' ),
+				'notFound' => __( 'Page not found.', 'syncly' ),
+			],
+			'settings' => [
+				'tabs'   => \GHL_CRM\Core\MenuManager::get_valid_settings_tabs(),
+				'routes' => [
+					'dashboard'    => 'dashboard',
+					'settings'     => 'settings',
+					'integrations' => 'integrations',
+					'fieldMapping' => 'field-mapping',
+					'syncLogs'     => 'sync-logs',
+				],
+			],
+		]
+	) . ';',
+	'before'
+);
+?>

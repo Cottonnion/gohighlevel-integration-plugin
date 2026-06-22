@@ -162,7 +162,7 @@ class BlocksManager {
 			[
 				[
 					'slug'  => 'ghl-crm',
-					'title' => __( 'GoHighLevel CRM', 'ghl-crm-integration' ),
+					'title' => __( 'GoHighLevel CRM', 'syncly' ),
 					'icon'  => 'admin-links',
 				],
 			],
@@ -235,7 +235,7 @@ class BlocksManager {
 
 		// Check if user has required access (compound-aware)
 		if ( $this->check_compound_access( $rule, $tags, $condition_logic, $tag_conditions ) ) {
-			return '<div class="ghl-restricted-content ghl-access-granted">' . $content . '</div>';
+			return '<div class="ghl-restricted-content ghl-access-granted">' . wp_kses_post( $content ) . '</div>';
 		}
 
 		// User doesn't have access

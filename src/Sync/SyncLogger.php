@@ -152,7 +152,7 @@ class SyncLogger {
 	public function log_success( string $sync_type, int $item_id, string $action, string $ghl_id = '', array $metadata = [] ) {
 		$message = sprintf(
 			/* translators: 1: Sync type, 2: Action, 3: Item ID */
-			__( '%1$s %2$s completed successfully (ID: %3$d)', 'ghl-crm-integration' ),
+			__( '%1$s %2$s completed successfully (ID: %3$d)', 'syncly' ),
 			ucfirst( $sync_type ),
 			$action,
 			$item_id
@@ -174,7 +174,7 @@ class SyncLogger {
 	public function log_failure( string $sync_type, int $item_id, string $action, string $error_message, array $metadata = [] ) {
 		$message = sprintf(
 			/* translators: 1: Sync type, 2: Action, 3: Error message */
-			__( '%1$s %2$s failed: %3$s', 'ghl-crm-integration' ),
+			__( '%1$s %2$s failed: %3$s', 'syncly' ),
 			ucfirst( $sync_type ),
 			$action,
 			$error_message

@@ -228,38 +228,120 @@
         },
 
         /**
-         * Show details modal - handles both free (blurred) and PRO modes
+         * Show details modal.
          * @param {string} details - JSON string with log details
-         * @param {boolean} isPreviewMode - Whether this is free version preview
          */
         showDetailsModal: function (details, isPreviewMode = false) {
-            // Allow PRO plugin to override this method when active
+            if (isPreviewMode) {
+                this.showMockupDetailsModal();
+                return;
+            }
+
             if (typeof window.ghlCrmSyncLogsPro !== 'undefined' && !isPreviewMode) {
-                // Ensure any blur class is removed when PRO handles display
-                this.modal.find('.ghl-modal-body').removeClass('ghl-blur-locked');
+                if (this.modal && this.modal.length) {
+                    this.modal.find('.ghl-modal-body').removeClass('ghl-blur-locked');
+                }
                 window.ghlCrmSyncLogsPro.showDetailsModal(details);
                 return;
             }
 
-            // Free version: never expose real data; show dummy placeholder and blur via CSS
-            const dummyContent = '{\n' +
-                '  "sync_type": "contact",\n' +
-                '  "item_id": "12345",\n' +
-                '  "action": "update",\n' +
-                '  "status": "success",\n' +
-                '  "message": "Detailed payload available in PRO.",\n' +
-                '  "ghl_id": "ghl_xxxxxxxxx",\n' +
-                '  "metadata": {\n' +
-                '    "fields": ["first_name", "last_name", "email"],\n' +
-                '    "response": "(hidden)",\n' +
-                '    "note": "Upgrade to PRO to view full data"\n' +
-                '  },\n' +
-                '  "created_at": "2024-12-01T12:00:00Z"\n' +
-                '}';
+            if (!this.modal || !this.modal.length || !this.content || !this.content.length) {
+                this.showProUpgradeNotice();
+                return;
+            }
 
-            this.content.text(dummyContent);
-            this.modal.find('.ghl-modal-body').addClass('ghl-blur-locked');
+            this.content.text(details || '{}');
+            this.modal.find('.ghl-modal-body').removeClass('ghl-blur-locked');
             this.modal.fadeIn(200);
+        },
+
+        /**
+         * Show a static detailed-log preview in the existing modal.
+         */
+        showMockupDetailsModal: function () {
+            const data = window.ghl_crm_sync_logs_js_data || {};
+            const upgradeUrl = data.upgradeUrl || 'https://highlevelsync.com/';
+
+            if (!this.modal || !this.modal.length || !this.content || !this.content.length) {
+                this.showProUpgradeNotice();
+                return;
+            }
+
+            this.content.html(this.getMockupDetailsHtml(upgradeUrl));
+            this.modal.find('.ghl-modal-body').removeClass('ghl-blur-locked');
+            this.modal.fadeIn(200);
+        },
+
+        /**
+         * Build inert preview markup for detailed sync logs.
+         *
+         * @param {string} upgradeUrl Companion add-on URL.
+         * @returns {string}
+         */
+        getMockupDetailsHtml: function (upgradeUrl) {
+            const safeUpgradeUrl = this.escapeHtml(upgradeUrl);
+
+            return `
+                <div class="ghl-sync-log-preview">
+                    <div class="ghl-sync-log-preview__header">
+                        <div>
+                            <span class="ghl-sync-log-preview__eyebrow">Detailed Sync Logs</span>
+                            <h3>Inspect complete sync payloads</h3>
+                        </div>
+                        <a href="${safeUpgradeUrl}" target="_blank" rel="noopener noreferrer" class="ghl-button ghl-button-secondary">
+                            <span class="dashicons dashicons-unlock"></span>
+                            Learn More
+                        </a>
+                    </div>
+
+                    <div class="ghl-sync-details-grid">
+                        <div class="ghl-sync-detail-card">
+                            <span class="ghl-sync-detail-label">Sync Type</span>
+                            <div class="ghl-sync-detail-value">Contact</div>
+                        </div>
+                        <div class="ghl-sync-detail-card">
+                            <span class="ghl-sync-detail-label">Action</span>
+                            <div class="ghl-sync-detail-value">Update Contact</div>
+                        </div>
+                        <div class="ghl-sync-detail-card">
+                            <span class="ghl-sync-detail-label">Status</span>
+                            <div class="ghl-sync-detail-value">Success</div>
+                        </div>
+                        <div class="ghl-sync-detail-card">
+                            <span class="ghl-sync-detail-label">GHL ID</span>
+                            <div class="ghl-sync-detail-value">contact_8G9n2K</div>
+                        </div>
+                    </div>
+
+                    <div class="ghl-sync-detail-card">
+                        <span class="ghl-sync-detail-label">Metadata</span>
+                        <pre class="ghl-sync-details-pre">{
+  "request": {
+    "method": "PUT",
+    "endpoint": "/contacts/contact_8G9n2K",
+    "payload": {
+      "email": "customer@example.com",
+      "tags": ["member", "active"],
+      "customFields": {
+        "membership_level": "Gold",
+        "last_login": "2026-06-22 14:18:03"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "duration_ms": 482,
+    "message": "Contact updated successfully"
+  }
+}</pre>
+                    </div>
+
+                    <div class="ghl-sync-log-preview__note">
+                        <span class="dashicons dashicons-lock"></span>
+                        <span>Detailed request, response, and metadata inspection is available in the companion add-on.</span>
+                    </div>
+                </div>
+            `;
         },
 
         /**
@@ -284,25 +366,37 @@
             });
         },
 
+        escapeHtml: function (value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        },
+
         /**
-         * Show PRO upgrade notice for detailed view
+         * Show details unavailable notice.
          */
         showProUpgradeNotice: function () {
+            const data = window.ghl_crm_sync_logs_js_data || {};
+            const upgradeUrl = data.upgradeUrl || 'https://highlevelsync.com/';
+
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
-                    title: '🔒 PRO Feature',
-                    html: 'Detailed sync log viewing is available in the PRO version.<br><br>Upgrade to access:<ul style="text-align: left; margin: 15px 0;"><li>Detailed log metadata</li><li>Full sync information</li><li>Advanced troubleshooting data</li></ul>',
+                    title: 'Detailed Sync Logs',
+                    text: 'Detailed sync metadata is available in the companion add-on.',
                     icon: 'info',
-                    confirmButtonText: 'Upgrade to PRO',
                     showCancelButton: true,
-                    cancelButtonText: 'Maybe Later'
-                }).then((result) => {
+                    confirmButtonText: 'Learn More',
+                    cancelButtonText: 'Close'
+                }).then(function (result) {
                     if (result.isConfirmed) {
-                        window.open('https://highlevelsync.com/upgrade-to-pro', '_blank');
+                        window.open(upgradeUrl, '_blank', 'noopener');
                     }
                 });
             } else {
-                alert('Detailed sync log viewing is available in the PRO version. Upgrade to access detailed log metadata and troubleshooting information.');
+                window.open(upgradeUrl, '_blank', 'noopener');
             }
         },
 

@@ -124,12 +124,12 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 		<?php
 		$pending_total = (int) $report_data['contacts']['pending'] + (int) $report_data['contacts']['failed'];
 		$has_pending   = $pending_total > 0;
-		$badge_text    = $has_pending ? esc_html__( 'Action Needed', 'ghl-crm-integration' ) : esc_html__( 'All Clear', 'ghl-crm-integration' );
+		$badge_text    = $has_pending ? esc_html__( 'Action Needed', 'syncly' ) : esc_html__( 'All Clear', 'syncly' );
 		$badge_style   = $has_pending ? 'color: #92400e; background: #fef3c7;' : 'color: #15803d; background: #dcfce7;';
 		$icon_color    = $has_pending ? '#f59e0b' : '#10b981';
 		$link_url      = $has_pending ? admin_url( 'admin.php?page=ghl-crm-admin#/sync-logs/status/failed' ) : admin_url( 'admin.php?page=ghl-crm-admin#/sync-logs' );
 		$link_color    = $has_pending ? '#f59e0b' : '#10b981';
-		$link_text     = $has_pending ? esc_html__( 'Fix Issues →', 'ghl-crm-integration' ) : esc_html__( 'View Sync Logs →', 'ghl-crm-integration' );
+		$link_text     = $has_pending ? esc_html__( 'Fix Issues →', 'syncly' ) : esc_html__( 'View Sync Logs →', 'syncly' );
 		?>
 		<div class="ghl-stat-card" style="background: white; border: 1px solid #e2e8f0; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);">
 			<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
@@ -137,7 +137,7 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 				<span style="font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight: 600; <?php echo esc_attr( $badge_style ); ?>"><?php echo esc_html( $badge_text ); ?></span>
 			</div>
 			<div style="font-size: 32px; font-weight: 700; margin-bottom: 4px; color: #1e293b;"><?php echo number_format( $pending_total ); ?></div>
-			<div style="font-size: 14px; color: #64748b; margin-bottom: 8px;"><?php echo esc_html__( 'Failed + Pending', 'ghl-crm-integration' ); ?></div>
+			<div style="font-size: 14px; color: #64748b; margin-bottom: 8px;"><?php echo esc_html__( 'Failed + Pending', 'syncly' ); ?></div>
 			<a href="<?php echo esc_url( $link_url ); ?>" style="font-size: 12px; color: <?php echo esc_attr( $link_color ); ?>; text-decoration: none; font-weight: 500;">
 				<?php echo esc_html( $link_text ); ?>
 			</a>
@@ -202,7 +202,7 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 
 					<?php if ( empty( $integrations ) ) : ?>
 						<p style="margin: 0; font-size: 14px; color: #64748b;">
-							<?php esc_html_e( 'No integrations detected yet. Visit the Integrations screen to configure available modules.', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'No integrations detected yet. Visit the Integrations screen to configure available modules.', 'syncly' ); ?>
 						</p>
 					<?php else : ?>
 						<?php
@@ -210,7 +210,7 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 							$slug         = $integration['key'] ?? '';
 							$icon         = $integration_icons[ $slug ] ?? 'dashicons-admin-generic';
 							$is_enabled   = ! empty( $integration['enabled'] );
-							$status_text  = $is_enabled ? esc_html__( 'Active', 'ghl-crm-integration' ) : esc_html__( 'Inactive', 'ghl-crm-integration' );
+							$status_text  = $is_enabled ? esc_html__( 'Active', 'syncly' ) : esc_html__( 'Inactive', 'syncly' );
 							$status_style = $is_enabled ? 'background: #dcfce7; color: #166534;' : 'background: #f1f5f9; color: #475569;';
 							$border_color = $is_enabled ? '#10b981' : '#e2e8f0';
 							?>

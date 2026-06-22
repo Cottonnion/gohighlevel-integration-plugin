@@ -86,26 +86,33 @@ foreach ( $public_post_types as $pt ) {
 <?php wp_nonce_field( 'ghl_crm_settings_nonce', 'ghl_crm_nonce' ); ?>
 
 <?php if ( ! $login_sync_active ) : ?>
-<!-- Login Sync — Upgrade CTA Banner -->
-<div style="background: linear-gradient(135deg, #eef2ff, #e0e7ff); border: 2px solid #c7d2fe; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 24px; position: relative; overflow: hidden;">
-	<div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 50%; opacity: 0.1;"></div>
-	<span class="dashicons dashicons-shield-alt" style="font-size: 48px; width: 48px; height: 48px; color: #6366f1; margin-bottom: 16px;"></span>
-	<h3 style="margin: 0 0 8px; font-size: 20px; font-weight: 700; color: #1e293b;">
-		<?php esc_html_e( 'Login Sync is a Pro Feature', 'ghl-crm-integration' ); ?>
-		<span style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 12px; padding: 3px 8px; border-radius: 4px; margin-left: 8px; font-weight: 700; vertical-align: middle;">PRO</span>
-	</h3>
-	<p style="margin: 0 0 20px; color: #64748b; font-size: 14px; max-width: 520px; margin-left: auto; margin-right: auto;">
-		<?php esc_html_e( 'Sync last login date and login count to GHL custom fields, apply tags on login conditions, track inactivity, and redirect users based on their GHL tags.', 'ghl-crm-integration' ); ?>
-	</p>
-	<a href="<?php echo esc_url( apply_filters( 'ghl_crm_upgrade_url', 'https://highlevelsync.com/upgrade-to-pro' ) ); ?>" target="_blank" class="ghl-button ghl-button-primary" style="text-decoration: none; background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; font-size: 14px; padding: 10px 24px;">
-		<?php esc_html_e( 'Upgrade to Pro', 'ghl-crm-integration' ); ?>
-	</a>
-</div>
+	<div class="ghl-settings-section ghl-settings-card">
+		<div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px;">
+			<div>
+				<span style="display: inline-flex; padding: 3px 9px; border-radius: 999px; background: #eef2ff; border: 1px solid #c7d2fe; color: #3730a3; font-size: 11px; font-weight: 700; text-transform: uppercase;"><?php esc_html_e( 'Syncly Pro', 'syncly' ); ?></span>
+				<h2 style="margin: 8px 0 6px; color: #1e293b;"><span class="dashicons dashicons-shield-alt"></span> <?php esc_html_e( 'Login Sync', 'syncly' ); ?></h2>
+				<p class="description" style="max-width: 680px;"><?php esc_html_e( 'Sync login activity to GoHighLevel custom fields, apply tags based on login behavior, track inactivity, and redirect users based on their GoHighLevel tags.', 'syncly' ); ?></p>
+			</div>
+			<a href="<?php echo esc_url( apply_filters( 'ghl_crm_upgrade_url', 'https://highlevelsync.com/' ) ); ?>" class="ghl-button ghl-button-primary" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Learn More', 'syncly' ); ?></a>
+		</div>
 
-<!-- Greyed-out preview -->
-<div style="position: relative; pointer-events: none; user-select: none;">
-	<div style="position: absolute; inset: 0; background: rgba(255,255,255,0.55); z-index: 5; border-radius: 12px;"></div>
-	<div style="opacity: 0.65;">
+		<div aria-hidden="true" style="display: grid; gap: 16px; opacity: 0.88;">
+			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+				<div style="padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;"><strong><?php esc_html_e( 'Last Login Field', 'syncly' ); ?></strong><div style="margin-top: 8px; padding: 9px 10px; background: #fff; border: 1px solid #d1d5db; border-radius: 6px; color: #475569;">Last Login Date</div></div>
+				<div style="padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;"><strong><?php esc_html_e( 'Login Count Field', 'syncly' ); ?></strong><div style="margin-top: 8px; padding: 9px 10px; background: #fff; border: 1px solid #d1d5db; border-radius: 6px; color: #475569;">Login Count</div></div>
+			</div>
+			<div style="padding: 16px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;">
+				<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px;">
+					<span style="padding: 10px 12px; background: #eef2ff; border-radius: 6px; color: #3730a3; font-weight: 600;"><?php esc_html_e( 'First login tag', 'syncly' ); ?></span>
+					<span style="padding: 10px 12px; background: #ecfdf5; border-radius: 6px; color: #065f46; font-weight: 600;"><?php esc_html_e( 'Milestone tags', 'syncly' ); ?></span>
+					<span style="padding: 10px 12px; background: #fef3c7; border-radius: 6px; color: #92400e; font-weight: 600;"><?php esc_html_e( 'Inactivity tags', 'syncly' ); ?></span>
+					<span style="padding: 10px 12px; background: #f1f5f9; border-radius: 6px; color: #334155; font-weight: 600;"><?php esc_html_e( 'Tag-based redirects', 'syncly' ); ?></span>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+	<?php return; ?>
 <?php endif; ?>
 
 <!-- Login Sync Section -->
@@ -114,10 +121,10 @@ foreach ( $public_post_types as $pt ) {
 	<div class="ghl-settings-header">
 		<h2>
 			<span class="dashicons dashicons-shield-alt"></span>
-			<?php esc_html_e( 'Login Sync', 'ghl-crm-integration' ); ?>
+			<?php esc_html_e( 'Login Sync', 'syncly' ); ?>
 		</h2>
 		<p class="description">
-			<?php esc_html_e( 'Sync last login date and login count to GHL custom fields, apply tags on specific login conditions, set inactivity tags, and redirect users after login based on their GHL tags.', 'ghl-crm-integration' ); ?>
+			<?php esc_html_e( 'Sync last login date and login count to GHL custom fields, apply tags on specific login conditions, set inactivity tags, and redirect users after login based on their GHL tags.', 'syncly' ); ?>
 		</p>
 	</div>
 
@@ -129,19 +136,19 @@ foreach ( $public_post_types as $pt ) {
 			<div class="ghl-form-item">
 				<div class="ghl-form-item-content ghl-form-item-content--column">
 					<label class="ghl-form-label">
-						<?php esc_html_e( 'GHL Custom Fields', 'ghl-crm-integration' ); ?>
-						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Select which GHL custom fields should receive the last login date and login count values. Custom fields are loaded from your connected GHL location. Leave blank to skip syncing that value.', 'ghl-crm-integration' ); ?>">?</span>
+						<?php esc_html_e( 'GHL Custom Fields', 'syncly' ); ?>
+						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Select which GHL custom fields should receive the last login date and login count values. Custom fields are loaded from your connected GHL location. Leave blank to skip syncing that value.', 'syncly' ); ?>">?</span>
 					</label>
 					<div style="display:flex;gap:16px;flex-wrap:wrap;">
 						<div style="flex:1;min-width:220px;">
 							<label for="login_last_login_field_id" style="font-size:12px;color:#666;display:block;margin-bottom:4px;">
-								<?php esc_html_e( 'Last Login Field', 'ghl-crm-integration' ); ?>
+								<?php esc_html_e( 'Last Login Field', 'syncly' ); ?>
 							</label>
 							<select id="login_last_login_field_id" name="login_last_login_field_id"
 								class="ghl-input ghl-input--wide ghl-custom-field-select"
-								data-placeholder="<?php esc_attr_e( 'Select custom field…', 'ghl-crm-integration' ); ?>"
+								data-placeholder="<?php esc_attr_e( 'Select custom field…', 'syncly' ); ?>"
 								style="width:100%;">
-								<option value="">— <?php esc_html_e( 'Select custom field', 'ghl-crm-integration' ); ?> —</option>
+								<option value="">— <?php esc_html_e( 'Select custom field', 'syncly' ); ?> —</option>
 								<?php foreach ( $ghl_custom_fields as $ghl_fid => $ghl_flabel ) : ?>
 									<option value="<?php echo esc_attr( $ghl_fid ); ?>" <?php selected( $login_last_login_field_id, $ghl_fid ); ?>>
 										<?php echo esc_html( $ghl_flabel ); ?>
@@ -156,13 +163,13 @@ foreach ( $public_post_types as $pt ) {
 						</div>
 						<div style="flex:1;min-width:220px;">
 							<label for="login_count_field_id" style="font-size:12px;color:#666;display:block;margin-bottom:4px;">
-								<?php esc_html_e( 'Login Count Field', 'ghl-crm-integration' ); ?>
+								<?php esc_html_e( 'Login Count Field', 'syncly' ); ?>
 							</label>
 							<select id="login_count_field_id" name="login_count_field_id"
 								class="ghl-input ghl-input--wide ghl-custom-field-select"
-								data-placeholder="<?php esc_attr_e( 'Select custom field…', 'ghl-crm-integration' ); ?>"
+								data-placeholder="<?php esc_attr_e( 'Select custom field…', 'syncly' ); ?>"
 								style="width:100%;">
-								<option value="">— <?php esc_html_e( 'Select custom field', 'ghl-crm-integration' ); ?> —</option>
+								<option value="">— <?php esc_html_e( 'Select custom field', 'syncly' ); ?> —</option>
 								<?php foreach ( $ghl_custom_fields as $ghl_fid => $ghl_flabel ) : ?>
 									<option value="<?php echo esc_attr( $ghl_fid ); ?>" <?php selected( $login_count_field_id, $ghl_fid ); ?>>
 										<?php echo esc_html( $ghl_flabel ); ?>
@@ -179,9 +186,9 @@ foreach ( $public_post_types as $pt ) {
 					<p class="description ghl-form-description">
 						<?php
 						if ( empty( $ghl_custom_fields ) ) {
-							esc_html_e( 'No custom fields found — make sure your GHL connection is active and custom fields are created in GHL › Settings › Custom Fields.', 'ghl-crm-integration' );
+							esc_html_e( 'No custom fields found — make sure your GHL connection is active and custom fields are created in GHL › Settings › Custom Fields.', 'syncly' );
 						} else {
-							esc_html_e( 'Select the GHL custom field to receive each value. Synced on every login (once per hour per user).', 'ghl-crm-integration' );
+							esc_html_e( 'Select the GHL custom field to receive each value. Synced on every login (once per hour per user).', 'syncly' );
 						}
 						?>
 					</p>
@@ -194,14 +201,14 @@ foreach ( $public_post_types as $pt ) {
 			<div class="ghl-form-item">
 				<div class="ghl-form-item-content ghl-form-item-content--column">
 					<label for="login_first_login_tags" class="ghl-form-label">
-						<?php esc_html_e( 'First Login Tags', 'ghl-crm-integration' ); ?>
-						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'These tags are applied to the GHL contact only on the very first login (login count = 1).', 'ghl-crm-integration' ); ?>">?</span>
+						<?php esc_html_e( 'First Login Tags', 'syncly' ); ?>
+						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'These tags are applied to the GHL contact only on the very first login (login count = 1).', 'syncly' ); ?>">?</span>
 					</label>
 					<select id="login_first_login_tags" name="login_first_login_tags[]" multiple
 						class="ghl-tags-select"
 						data-saved-tags='<?php echo esc_attr( wp_json_encode( $login_first_login_tags ) ); ?>'
-						data-placeholder="<?php esc_attr_e( 'Select tags to apply on first login...', 'ghl-crm-integration' ); ?>">
-						<option value=""><?php esc_html_e( 'Loading tags...', 'ghl-crm-integration' ); ?></option>
+						data-placeholder="<?php esc_attr_e( 'Select tags to apply on first login...', 'syncly' ); ?>">
+						<option value=""><?php esc_html_e( 'Loading tags...', 'syncly' ); ?></option>
 					</select>
 				</div>
 			</div>
@@ -210,14 +217,14 @@ foreach ( $public_post_types as $pt ) {
 			<div class="ghl-form-item">
 				<div class="ghl-form-item-content ghl-form-item-content--column">
 					<label for="login_every_login_tags" class="ghl-form-label">
-						<?php esc_html_e( 'Every Login Tags', 'ghl-crm-integration' ); ?>
-						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'These tags are applied to the GHL contact on every login.', 'ghl-crm-integration' ); ?>">?</span>
+						<?php esc_html_e( 'Every Login Tags', 'syncly' ); ?>
+						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'These tags are applied to the GHL contact on every login.', 'syncly' ); ?>">?</span>
 					</label>
 					<select id="login_every_login_tags" name="login_every_login_tags[]" multiple
 						class="ghl-tags-select"
 						data-saved-tags='<?php echo esc_attr( wp_json_encode( $login_every_login_tags ) ); ?>'
-						data-placeholder="<?php esc_attr_e( 'Select tags to apply on every login...', 'ghl-crm-integration' ); ?>">
-						<option value=""><?php esc_html_e( 'Loading tags...', 'ghl-crm-integration' ); ?></option>
+						data-placeholder="<?php esc_attr_e( 'Select tags to apply on every login...', 'syncly' ); ?>">
+						<option value=""><?php esc_html_e( 'Loading tags...', 'syncly' ); ?></option>
 					</select>
 				</div>
 			</div>
@@ -228,28 +235,28 @@ foreach ( $public_post_types as $pt ) {
 			<div class="ghl-form-item">
 				<div class="ghl-form-item-content ghl-form-item-content--column">
 					<label for="login_inactivity_days" class="ghl-form-label">
-						<?php esc_html_e( 'Inactivity Threshold (days)', 'ghl-crm-integration' ); ?>
-						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Users who have not logged in for this many days are considered inactive. Set to 0 to disable inactivity detection. The check runs once per day via Action Scheduler.', 'ghl-crm-integration' ); ?>">?</span>
+						<?php esc_html_e( 'Inactivity Threshold (days)', 'syncly' ); ?>
+						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Users who have not logged in for this many days are considered inactive. Set to 0 to disable inactivity detection. The check runs once per day via Action Scheduler.', 'syncly' ); ?>">?</span>
 					</label>
 					<input type="number" id="login_inactivity_days" name="login_inactivity_days"
 						class="ghl-input" min="0" style="width:120px;"
 						value="<?php echo esc_attr( (string) $login_inactivity_days ); ?>"
 						placeholder="e.g. 30">
-					<p class="description ghl-form-description"><?php esc_html_e( 'Set to 0 to disable. Runs daily via Action Scheduler — no page-load loops.', 'ghl-crm-integration' ); ?></p>
+					<p class="description ghl-form-description"><?php esc_html_e( 'Set to 0 to disable. Runs daily via Action Scheduler — no page-load loops.', 'syncly' ); ?></p>
 				</div>
 			</div>
 
 			<div class="ghl-form-item">
 				<div class="ghl-form-item-content ghl-form-item-content--column">
 					<label for="login_inactivity_tags" class="ghl-form-label">
-						<?php esc_html_e( 'Inactivity Tags', 'ghl-crm-integration' ); ?>
-						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Tags applied when a user exceeds the inactivity threshold. Removed when they log back in.', 'ghl-crm-integration' ); ?>">?</span>
+						<?php esc_html_e( 'Inactivity Tags', 'syncly' ); ?>
+						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Tags applied when a user exceeds the inactivity threshold. Removed when they log back in.', 'syncly' ); ?>">?</span>
 					</label>
 					<select id="login_inactivity_tags" name="login_inactivity_tags[]" multiple
 						class="ghl-tags-select"
 						data-saved-tags='<?php echo esc_attr( wp_json_encode( $login_inactivity_tags ) ); ?>'
-						data-placeholder="<?php esc_attr_e( 'Select tags for inactive users...', 'ghl-crm-integration' ); ?>">
-						<option value=""><?php esc_html_e( 'Loading tags...', 'ghl-crm-integration' ); ?></option>
+						data-placeholder="<?php esc_attr_e( 'Select tags for inactive users...', 'syncly' ); ?>">
+						<option value=""><?php esc_html_e( 'Loading tags...', 'syncly' ); ?></option>
 					</select>
 				</div>
 			</div>
@@ -260,8 +267,8 @@ foreach ( $public_post_types as $pt ) {
 			<div class="ghl-form-item">
 				<div class="ghl-form-item-content ghl-form-item-content--column">
 					<label class="ghl-form-label">
-						<?php esc_html_e( 'Tag-Based Login Redirects', 'ghl-crm-integration' ); ?>
-						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'After login, the first matching tag rule redirects the user to the configured URL. Rules are checked top-to-bottom. No extra API call — uses cached tag data.', 'ghl-crm-integration' ); ?>">?</span>
+						<?php esc_html_e( 'Tag-Based Login Redirects', 'syncly' ); ?>
+						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'After login, the first matching tag rule redirects the user to the configured URL. Rules are checked top-to-bottom. No extra API call — uses cached tag data.', 'syncly' ); ?>">?</span>
 					</label>
 					<div id="ghl-login-redirects">
 						<?php
@@ -271,15 +278,15 @@ foreach ( $public_post_types as $pt ) {
 							?>
 							<div class="ghl-login-redirect-row" style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;">
 								<div style="flex:1;">
-									<label style="font-size:12px;color:#666;display:block;margin-bottom:3px;"><?php esc_html_e( 'If user has tag', 'ghl-crm-integration' ); ?></label>
+									<label style="font-size:12px;color:#666;display:block;margin-bottom:3px;"><?php esc_html_e( 'If user has tag', 'syncly' ); ?></label>
 									<select name="login_tag_redirects[<?php echo esc_attr( (string) $idx ); ?>][tag_id]" class="ghl-tags-select" style="width:100%;"
 										data-saved-tags='<?php echo esc_attr( wp_json_encode( array( $tag_id ) ) ); ?>'
-										data-placeholder="<?php esc_attr_e( 'Select tag...', 'ghl-crm-integration' ); ?>">
-										<option value=""><?php esc_html_e( 'Loading tags...', 'ghl-crm-integration' ); ?></option>
+										data-placeholder="<?php esc_attr_e( 'Select tag...', 'syncly' ); ?>">
+										<option value=""><?php esc_html_e( 'Loading tags...', 'syncly' ); ?></option>
 									</select>
 								</div>
 								<div style="flex:1;">
-									<label style="font-size:12px;color:#666;display:block;margin-bottom:3px;"><?php esc_html_e( 'Redirect to URL', 'ghl-crm-integration' ); ?></label>
+									<label style="font-size:12px;color:#666;display:block;margin-bottom:3px;"><?php esc_html_e( 'Redirect to URL', 'syncly' ); ?></label>
 									<input type="url" name="login_tag_redirects[<?php echo esc_attr( (string) $idx ); ?>][url]" value="<?php echo esc_attr( $url ); ?>" class="ghl-input ghl-input--wide" placeholder="https://example.com/dashboard">
 								</div>
 								<div style="padding-top:22px;">
@@ -289,9 +296,9 @@ foreach ( $public_post_types as $pt ) {
 						<?php endforeach; ?>
 					</div>
 					<button type="button" id="ghl-add-redirect" class="ghl-button ghl-button-secondary" style="margin-top:6px;font-size:13px;">
-						+ <?php esc_html_e( 'Add Redirect Rule', 'ghl-crm-integration' ); ?>
+						+ <?php esc_html_e( 'Add Redirect Rule', 'syncly' ); ?>
 					</button>
-					<p class="description ghl-form-description"><?php esc_html_e( 'Rules are evaluated top-to-bottom. The first matching tag wins.', 'ghl-crm-integration' ); ?></p>
+					<p class="description ghl-form-description"><?php esc_html_e( 'Rules are evaluated top-to-bottom. The first matching tag wins.', 'syncly' ); ?></p>
 				</div>
 			</div>
 
@@ -299,7 +306,7 @@ foreach ( $public_post_types as $pt ) {
 
 	<div class="ghl-form-item" style="margin-top: 24px;">
 		<button type="button" id="save-login-sync-settings" class="ghl-button ghl-button-primary ghl-save-settings-btn">
-			<span class="ghl-button-text"><?php esc_html_e( 'Save Login Sync Settings', 'ghl-crm-integration' ); ?></span>
+			<span class="ghl-button-text"><?php esc_html_e( 'Save Login Sync Settings', 'syncly' ); ?></span>
 		</button>
 	</div>
 
@@ -313,7 +320,7 @@ foreach ( $public_post_types as $pt ) {
 </div><!-- /.ghl-settings-wrapper -->
 
 <?php if ( $login_sync_active ) : ?>
-<script>
+<?php ob_start(); ?>
 (function(){
 	'use strict';
 	var redirectIdx  = <?php echo esc_js( (string) count( $login_tag_redirects ) ); ?>;
@@ -505,5 +512,5 @@ foreach ( $public_post_types as $pt ) {
 		btn.addEventListener('click', function(){ btn.closest('.ghl-login-redirect-row').remove(); });
 	});
 })();
-</script>
+<?php wp_add_inline_script( 'ghl-crm-settings-js', ob_get_clean() ); ?>
 <?php endif; ?>

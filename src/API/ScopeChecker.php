@@ -55,7 +55,7 @@ class ScopeChecker {
 		// Default result
 		$result = array(
 			'has_access' => false,
-			'message'    => __( 'Unable to verify scope access', 'ghl-crm-integration' ),
+			'message'    => __( 'Unable to verify scope access', 'syncly' ),
 			'checked_at' => current_time( 'mysql' ),
 		);
 
@@ -81,14 +81,14 @@ class ScopeChecker {
 				$response = $client->get( $endpoint['path'], $endpoint['params'] ?? array() );
 				// If we get here without an exception, access is granted
 				$has_access        = true;
-				$result['message'] = __( 'Access granted', 'ghl-crm-integration' );
+				$result['message'] = __( 'Access granted', 'syncly' );
 
 				// Debug logging for success
 				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 
 				}
 			} else {
-				$result['message'] = __( 'Invalid endpoint configuration', 'ghl-crm-integration' );
+				$result['message'] = __( 'Invalid endpoint configuration', 'syncly' );
 
 				// Debug logging for invalid endpoint
 				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
@@ -273,28 +273,28 @@ class ScopeChecker {
 
 		if ( ! $result['has_access'] ) {
 			$scopes_required = self::get_required_scopes( $feature_name );
-			$scopes_list     = $scopes_required ? implode( ', ', $scopes_required ) : __( 'Unknown', 'ghl-crm-integration' );
+			$scopes_list     = $scopes_required ? implode( ', ', $scopes_required ) : __( 'Unknown', 'syncly' );
 
 			?>
 			<div class="notice notice-error" style="border-left-color: #dc3232;">
 				<p>
-					<strong><?php esc_html_e( 'Missing Permissions', 'ghl-crm-integration' ); ?></strong><br>
+					<strong><?php esc_html_e( 'Missing Permissions', 'syncly' ); ?></strong><br>
 					<?php
 					printf(
 						/* translators: %s: Error message from API */
-						esc_html__( 'Error: %s', 'ghl-crm-integration' ),
+						esc_html__( 'Error: %s', 'syncly' ),
 						esc_html( $result['message'] )
 					);
 					?>
 				</p>
 				<p>
-					<strong><?php esc_html_e( 'Required Scopes:', 'ghl-crm-integration' ); ?></strong>
+					<strong><?php esc_html_e( 'Required Scopes:', 'syncly' ); ?></strong>
 					<code><?php echo esc_html( $scopes_list ); ?></code>
 				</p>
 				<p>
-					<?php esc_html_e( 'Please reconnect your GoHighLevel account with the required permissions, or contact your administrator to update the API key/OAuth app scopes.', 'ghl-crm-integration' ); ?>
+					<?php esc_html_e( 'Please reconnect your GoHighLevel account with the required permissions, or contact your administrator to update the API key/OAuth app scopes.', 'syncly' ); ?>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ); ?>" class="button button-small">
-						<?php esc_html_e( 'Go to Connection Settings', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Go to Connection Settings', 'syncly' ); ?>
 					</a>
 				</p>
 			</div>
@@ -317,14 +317,14 @@ class ScopeChecker {
 			?>
 			<span class="ghl-scope-badge ghl-scope-granted" style="display: inline-flex; align-items: center; background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 3px; padding: 2px 8px; font-size: 12px; margin-left: 8px;">
 				<span class="dashicons dashicons-yes-alt" style="font-size: 14px; width: 14px; height: 14px; margin-right: 4px;"></span>
-				<?php esc_html_e( 'Access Granted', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Access Granted', 'syncly' ); ?>
 			</span>
 			<?php
 		} else {
 			?>
 			<span class="ghl-scope-badge ghl-scope-denied" style="display: inline-flex; align-items: center; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 3px; padding: 2px 8px; font-size: 12px; margin-left: 8px;" title="<?php echo esc_attr( $result['message'] ); ?>">
 				<span class="dashicons dashicons-dismiss" style="font-size: 14px; width: 14px; height: 14px; margin-right: 4px;"></span>
-				<?php esc_html_e( 'No Access', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'No Access', 'syncly' ); ?>
 			</span>
 			<?php
 		}

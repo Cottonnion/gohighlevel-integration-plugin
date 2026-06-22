@@ -76,7 +76,7 @@ class ShortcodeManager {
 
 		// Validate form ID
 		if ( empty( $atts['id'] ) ) {
-			return $this->render_error( __( 'Form ID is required. Use: [ghl_form id="your-form-id"]', 'ghl-crm-integration' ) );
+			return $this->render_error( __( 'Form ID is required. Use: [ghl_form id="your-form-id"]', 'syncly' ) );
 		}
 
 		$form_id = $atts['id'];
@@ -88,10 +88,9 @@ class ShortcodeManager {
 			return '';
 		}
 
-		// Check if form should be hidden due to submission limit
-		if ( $form_settings->should_hide_form( $form_id ) ) {
-			$settings = $form_settings->get_form_settings( $form_id );
-			$message  = ! empty( $settings['submitted_message'] ) ? $settings['submitted_message'] : '';
+		// Allow extensions to hide forms for their own rules.
+		if ( apply_filters( 'ghl_crm_form_should_hide', false, $form_id ) ) {
+			$message = (string) apply_filters( 'ghl_crm_form_submitted_message', '', $form_id );
 
 			if ( ! empty( $message ) ) {
 				return '<div class="ghl-form-submitted-message" style="padding: 20px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; color: #155724; text-align: center;">' .
@@ -105,7 +104,7 @@ class ShortcodeManager {
 
 		// Get form embed URL
 		$embed_url = $this->get_form_embed_url( $form_id );     if ( ! $embed_url ) {
-			return $this->render_error( __( 'Unable to load form. Please check your GoHighLevel connection.', 'ghl-crm-integration' ) );
+			return $this->render_error( __( 'Unable to load form. Please check your GoHighLevel connection.', 'syncly' ) );
 		}
 
 		// Sanitize dimensions
@@ -115,9 +114,7 @@ class ShortcodeManager {
 		// Generate unique ID for this form instance
 		$wrapper_id = 'ghl-form-' . sanitize_key( $form_id ) . '-' . wp_rand( 1000, 9999 );
 
-		// Check if tracking is needed
-		$settings         = $form_settings->get_form_settings( $form_id );
-		$track_submission = ( 'once' === $settings['submission_limit'] && is_user_logged_in() );
+		$track_submission = (bool) apply_filters( 'ghl_crm_form_track_submission', false, $form_id );
 
 		// Build iframe HTML
 		ob_start();
@@ -125,7 +122,7 @@ class ShortcodeManager {
 		<div id="<?php echo esc_attr( $wrapper_id ); ?>" class="ghl-form-wrapper" style="width: <?php echo esc_attr( $width ); ?>; max-width: 100%;" data-loading="true" data-form-id="<?php echo esc_attr( $form_id ); ?>" data-track-submission="<?php echo $track_submission ? '1' : '0'; ?>">
 			<div class="ghl-form-loading">
 				<div class="ghl-form-spinner"></div>
-				<p><?php esc_html_e( 'Loading form...', 'ghl-crm-integration' ); ?></p>
+				<p><?php esc_html_e( 'Loading form...', 'syncly' ); ?></p>
 			</div>
 			<iframe 
 				src="<?php echo esc_url( $embed_url ); ?>" 
@@ -134,7 +131,7 @@ class ShortcodeManager {
 				id="<?php echo esc_attr( $wrapper_id ); ?>-iframe"
 				data-form-id="<?php echo esc_attr( $form_id ); ?>"
 				<?php /* translators: %s: GoHighLevel form identifier. */ ?>
-				title="<?php echo esc_attr( sprintf( __( 'GoHighLevel Form %s', 'ghl-crm-integration' ), $atts['id'] ) ); ?>"
+				title="<?php echo esc_attr( sprintf( __( 'GoHighLevel Form %s', 'syncly' ), $atts['id'] ) ); ?>"
 				onload="this.style.display='block'; this.parentElement.setAttribute('data-loading', 'false');"
 			></iframe>
 		</div>
@@ -235,7 +232,7 @@ class ShortcodeManager {
 			'<div class="ghl-form-error" style="padding: 20px; background: #fee; border: 1px solid #c33; border-radius: 4px; color: #c33;">
 				<strong>%s:</strong> %s
 			</div>',
-			esc_html__( 'GoHighLevel Form Error', 'ghl-crm-integration' ),
+			esc_html__( 'GoHighLevel Form Error', 'syncly' ),
 			esc_html( $message )
 		);
 	}
@@ -247,99 +244,25 @@ class ShortcodeManager {
 	 * @return string HTML output
 	 */
 	public function render_family_manager_shortcode( $atts ): string {
-		// Check if PRO plugin is active and has FamilyManager
-		if ( class_exists( '\\GHL_CRM_Pro\\FamilyManager' ) ) {
-			// Delegate to PRO plugin's implementation
-			return $this->render_family_manager_pro( $atts );
+		$output = apply_filters( 'ghl_crm_render_family_manager_shortcode', '', $atts );
+		if ( is_string( $output ) && '' !== $output ) {
+			return $output;
 		}
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return '';
 		}
 
-		// PRO plugin not active - show upgrade notice
-		return $this->render_family_manager_upgrade_notice();
+		return '';
 	}
 
 	/**
-	 * Render family manager from PRO plugin
-	 *
-	 * @param array|string $atts Shortcode attributes (unused, reserved for future).
-	 * @return string HTML output
-	 */
-	private function render_family_manager_pro( $atts ): string {
-		// Suppressing unused parameter warning - reserved for future use
-		unset( $atts );
-
-		// Check if user is logged in
-		if ( ! is_user_logged_in() ) {
-			return '<p>' . esc_html__( 'Please log in to manage family accounts.', 'ghl-crm-integration' ) . '</p>';
-		}
-
-		// Check if feature is enabled
-		$settings_manager = SettingsManager::get_instance();
-		if ( empty( $settings_manager->get_setting( 'enable_family_accounts' ) ) && current_user_can( 'manage_options' ) ) {
-			return '<p>' . esc_html__( 'Family accounts feature is not enabled - This is only shown to you as an administrator.', 'ghl-crm-integration' ) . '</p>';
-		}
-
-		$user_id = get_current_user_id();
-
-		// Use PRO plugin's repository
-		$family_repo = \GHL_CRM_Pro\Database\FamilyRelationshipsRepository::get_instance();
-
-		// Check if user is parent or admin
-		$is_admin  = current_user_can( 'manage_options' );
-		$is_parent = $family_repo->is_parent( $user_id );
-
-		$has_parent_tag = false;
-		$parent_tag_id  = $settings_manager->get_setting( 'family_parent_tag' );
-		if ( ! empty( $parent_tag_id ) ) {
-					$tag_manager = TagManager::get_instance();
-			$parent_map          = $tag_manager->map_ids_to_names( [ (string) $parent_tag_id ] );
-			$parent_tag_name     = $parent_map[ (string) $parent_tag_id ] ?? '';
-			$user_tag_names      = $tag_manager->get_user_tag_names( $user_id );
-
-			if ( '' !== $parent_tag_name && in_array( $parent_tag_name, $user_tag_names, true ) ) {
-				$has_parent_tag = true;
-			}
-		}
-
-		// Load template from PRO plugin
-		$pro_template = defined( 'GHL_CRM_PRO_PATH' ) ? GHL_CRM_PRO_PATH . 'pro/templates/shortcodes/family-manager.php' : '';
-
-		if ( file_exists( $pro_template ) ) {
-			ob_start();
-			include $pro_template;
-			return ob_get_clean();
-		}
-
-		return '<p>' . esc_html__( 'Family manager template not found.', 'ghl-crm-integration' ) . '</p>';
-	}
-
-	/**
-	 * Render upgrade notice for family manager shortcode
+	 * Render unavailable notice for family manager shortcode
 	 *
 	 * @return string HTML output
 	 */
 	private function render_family_manager_upgrade_notice(): string {
-		ob_start();
-
-		// Set up upgrade notice variables
-		$title       = __( 'Family Accounts', 'ghl-crm-integration' );
-		$description = __( 'Create parent-child relationships where children inherit membership access and tags from their parents. Manage invitations, family groups, and automatic BuddyBoss group creation.', 'ghl-crm-integration' );
-		$features    = array(
-			__( 'Parent-child account relationships with tag inheritance', 'ghl-crm-integration' ),
-			__( 'Email invitation system with custom templates', 'ghl-crm-integration' ),
-			__( 'Automatic BuddyBoss group creation for families', 'ghl-crm-integration' ),
-			__( 'Frontend family manager dashboard via shortcode', 'ghl-crm-integration' ),
-			__( 'Admin controls and family statistics', 'ghl-crm-integration' ),
-		);
-		$cta_text    = __( 'Upgrade to PRO', 'ghl-crm-integration' );
-		$style       = 'box';
-
-		include GHL_CRM_PATH . 'templates/admin/partials/pro-upgrade-notice.php';
-
-		return ob_get_clean();
+		return '<p>' . esc_html__( 'Family account management is not available in this plugin.', 'syncly' ) . '</p>';
 	}
 
 	/**
@@ -375,7 +298,7 @@ class ShortcodeManager {
 		// Validate tags
 		if ( empty( $atts['tags'] ) ) {
 			// No tags specified - show to all logged-in users
-			return do_shortcode( $content );
+			return wp_kses_post( do_shortcode( $content ) );
 		}
 
 		// Parse tags (comma-separated)
@@ -383,7 +306,7 @@ class ShortcodeManager {
 		$required_tags = array_filter( $required_tags );
 
 		if ( empty( $required_tags ) ) {
-			return do_shortcode( $content );
+			return wp_kses_post( do_shortcode( $content ) );
 		}
 
 		// Get user's tags
@@ -418,7 +341,7 @@ class ShortcodeManager {
 
 		// Return content if access granted
 		if ( $has_access ) {
-			return do_shortcode( $content );
+			return wp_kses_post( do_shortcode( $content ) );
 		}
 
 		// Access denied - return empty string

@@ -140,26 +140,26 @@ class WebhookHandler {
 		if ( '' === $secret ) {
 			return new \WP_Error(
 				'webhook_secret_missing',
-				__( 'Webhook secret not configured. Regenerate it in settings and add it to your GoHighLevel webhook headers.', 'ghl-crm-integration' ),
+				__( 'Webhook secret not configured. Regenerate it in settings and add it to your GoHighLevel webhook headers.', 'syncly' ),
 				[ 'status' => 401 ]
 			);
 		}
 
 		$content_type = (string) $request->get_header( 'content-type' );
 		if ( '' === $content_type || false === stripos( $content_type, 'application/json' ) ) {
-			return new \WP_Error( 'invalid_content_type', __( 'Content-Type must be application/json', 'ghl-crm-integration' ), [ 'status' => 415 ] );
+			return new \WP_Error( 'invalid_content_type', __( 'Content-Type must be application/json', 'syncly' ), [ 'status' => 415 ] );
 		}
 
 		$raw_body   = (string) $request->get_body();
 		$body_bytes = strlen( $raw_body );
 		if ( $body_bytes > self::MAX_WEBHOOK_BODY_BYTES ) {
-			return new \WP_Error( 'payload_too_large', __( 'Webhook payload exceeds the allowed size.', 'ghl-crm-integration' ), [ 'status' => 413 ] );
+			return new \WP_Error( 'payload_too_large', __( 'Webhook payload exceeds the allowed size.', 'syncly' ), [ 'status' => 413 ] );
 		}
 
 		$provided_token = trim( (string) $request->get_header( self::WEBHOOK_SECRET_HEADER ) );
 
 		if ( '' === $provided_token || ! hash_equals( $secret, $provided_token ) ) {
-			return new \WP_Error( 'invalid_webhook_signature', __( 'Invalid or missing webhook token.', 'ghl-crm-integration' ), [ 'status' => 401 ] );
+			return new \WP_Error( 'invalid_webhook_signature', __( 'Invalid or missing webhook token.', 'syncly' ), [ 'status' => 401 ] );
 		}
 
 		return true;
@@ -235,7 +235,7 @@ class WebhookHandler {
 		check_ajax_referer( 'ghl_crm_admin', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'ghl-crm-integration' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'syncly' ) ], 403 );
 		}
 
 		$secret = $this->generate_and_store_webhook_secret();
@@ -244,7 +244,7 @@ class WebhookHandler {
 			[
 				'webhook_secret' => $secret,
 				'header'         => self::WEBHOOK_SECRET_HEADER,
-				'message'        => __( 'Webhook secret regenerated. Update your GoHighLevel automation headers.', 'ghl-crm-integration' ),
+				'message'        => __( 'Webhook secret regenerated. Update your GoHighLevel automation headers.', 'syncly' ),
 			]
 		);
 	}
@@ -610,7 +610,7 @@ class WebhookHandler {
 			check_ajax_referer( 'ghl_crm_admin', 'nonce' );
 
 			if ( ! current_user_can( 'manage_options' ) ) {
-				wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ] );
+				wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ] );
 			}
 
 			$webhook_handler = self::get_instance();
@@ -626,7 +626,7 @@ class WebhookHandler {
 				[
 					'message' => sprintf(
 						/* translators: %s: Error message */
-						__( 'Failed to test webhook: %s', 'ghl-crm-integration' ),
+						__( 'Failed to test webhook: %s', 'syncly' ),
 						$e->getMessage()
 					),
 					'code'    => 'exception',

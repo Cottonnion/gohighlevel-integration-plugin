@@ -1,19 +1,19 @@
 <?php
 /**
- * Plugin Name:       GHL Sync Bridge
+ * Plugin Name:       Syncly for GoHighLevel
  * Plugin URI:        https://highlevelsync.com/
- * Description:       The complete GoHighLevel WordPress integration — connect WordPress, WooCommerce, BuddyBoss, and LearnDash with real-time two-way sync and automation.
- * Version:           1.3.17
+ * Description:       WordPress integration plugin that connects WordPress, WooCommerce, BuddyBoss, and LearnDash with GoHighLevel CRM for real-time two-way sync and automation.
+ * Version:           1.4.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            LabGenz Team
  * Author URI:        https://labgenz.com
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       ghl-crm-integration
+ * Text Domain:       syncly
  * Domain Path:       /languages
  *
- * @package GHL_CRM_Integration
+ * @package Syncly_GHL
  */
 
 declare(strict_types=1);
@@ -24,11 +24,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'GHL_CRM_VERSION', '1.3.17' );
+define( 'GHL_CRM_VERSION', '1.4.0' );
 define( 'GHL_CRM_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GHL_CRM_URL', plugin_dir_url( __FILE__ ) );
 define( 'GHL_CRM_BASENAME', plugin_basename( __FILE__ ) );
-define( 'GHL_CRM_TEXTDOMAIN', 'ghl-crm-integration' );
+define( 'GHL_CRM_TEXTDOMAIN', 'syncly' );
 
 if ( ! defined( 'GHLBRIDGE_LOG' ) ) {
 	define( 'GHLBRIDGE_LOG', true );
@@ -47,8 +47,8 @@ if ( file_exists( GHL_CRM_PATH . 'vendor/autoload.php' ) ) {
 			<p>
 				<?php
 				esc_html_e(
-					'GoHighLevel CRM Integration: Composer autoloader not found. Please run "composer install" in the plugin directory.',
-					'ghl-crm-integration'
+					'Syncly for GoHighLevel: Composer autoloader not found. Please run "composer install" in the plugin directory.',
+					'syncly'
 				);
 				?>
 			</p>
@@ -65,11 +65,11 @@ if ( file_exists( GHL_CRM_PATH . 'vendor/woocommerce/action-scheduler/action-sch
 }
 
 // Initialize the plugin
-function ghl_crm_init() {
+function syncly_init() {
 	return \GHL_CRM\Core\Loader::get_instance();
 }
 
 // Start the plugin
-ghl_crm_init();
+syncly_init();
 
 require_once GHL_CRM_PATH . 'functions.php';

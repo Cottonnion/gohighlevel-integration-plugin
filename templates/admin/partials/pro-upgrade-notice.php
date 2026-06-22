@@ -21,10 +21,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Set defaults
-$notice_title = $notice_title ?? __( 'GHL Sync Bridge PRO', 'ghl-crm-integration' );
+$notice_title = $notice_title ?? __( 'Syncly Pro', 'syncly' );
 $description = $description ?? '';
 $features    = $features ?? array();
-$cta_text    = $cta_text ?? __( 'Explore PRO', 'ghl-crm-integration' );
+$cta_text    = $cta_text ?? __( 'Explore PRO', 'syncly' );
 $cta_url     = $cta_url ?? 'https://highlevelsync.com/';
 $style       = $style ?? 'box';
 
@@ -38,7 +38,7 @@ $style       = $style ?? 'box';
 				<span class="dashicons dashicons-star-filled" style="font-size: 30px; width: 30px; height: 30px; color: #1f2937;"></span>
 			</div>
 			<div style="flex: 1;">
-				<div style="text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; color: #475569; margin-bottom: 6px; font-weight: 600;">GHL Sync Bridge</div>
+				<div style="text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; color: #475569; margin-bottom: 6px; font-weight: 600;">Syncly</div>
 				<h3 style="margin: 0 0 8px 0; font-size: 17px; font-weight: 700; color: #0f172a;">
 					<?php echo esc_html( $notice_title ); ?>
 				</h3>

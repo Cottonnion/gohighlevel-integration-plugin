@@ -1,6 +1,6 @@
 {
-  "name": "labgenz/crm-integration",
-  "description": "GoHighLevel CRM Integration for WordPress",
+  "name": "labgenz/syncly",
+  "description": "Syncly for GoHighLevel",
   "type": "wordpress-plugin",
   "license": "GPL-2.0-or-later",
   "authors": [

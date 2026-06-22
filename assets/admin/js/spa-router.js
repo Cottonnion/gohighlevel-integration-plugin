@@ -213,7 +213,7 @@
                         window.initDashboard();
                     }
 
-                    if (typeof window.initAnalytics === 'function') {
+                    if (typeof window.initAnalytics === 'function' && !document.querySelector('.ghl-analytics-upgrade-preview')) {
                         // Get analytics data from JSON script tag
                         const analyticsDataElement = document.getElementById('ghl-analytics-data');
                         if (analyticsDataElement) {
@@ -279,6 +279,10 @@
                     // Initialize family accounts functionality
                     if (typeof window.initFamilyAccounts === 'function') {
                         window.initFamilyAccounts();
+                    }
+                    // Initialize personalization fields functionality
+                    if (typeof window.initPersonalizationSettings === 'function') {
+                        window.initPersonalizationSettings();
                     }
                     // Reinitialize settings side menu to restore mobile toggle handlers and tab wiring
                     if (typeof window.cleanupSettingsMenu === 'function') {

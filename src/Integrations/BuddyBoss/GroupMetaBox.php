@@ -123,10 +123,10 @@ class GroupMetaBox {
 			array(
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'strings' => array(
-					'syncing'       => __( 'Syncing...', 'ghl-crm-integration' ),
-					'syncSuccess'   => __( 'Sync completed successfully!', 'ghl-crm-integration' ),
-					'syncError'     => __( 'Sync failed. Check logs for details.', 'ghl-crm-integration' ),
-					'membersQueued' => __( 'Members queued for sync!', 'ghl-crm-integration' ),
+					'syncing'       => __( 'Syncing...', 'syncly' ),
+					'syncSuccess'   => __( 'Sync completed successfully!', 'syncly' ),
+					'syncError'     => __( 'Sync failed. Check logs for details.', 'syncly' ),
+					'membersQueued' => __( 'Members queued for sync!', 'syncly' ),
 				),
 			),
 			GHL_CRM_VERSION
@@ -149,7 +149,7 @@ class GroupMetaBox {
 	public function add_meta_box(): void {
 		add_meta_box(
 			'ghl_buddyboss_sync',
-			__( 'GoHighLevel Sync', 'ghl-crm-integration' ),
+			__( 'GoHighLevel Sync', 'syncly' ),
 			[ $this, 'render_meta_box' ],
 			get_current_screen()->id,
 			'side',
@@ -164,7 +164,7 @@ class GroupMetaBox {
 	 */
 	public function render_meta_box( $item ): void {
 		if ( empty( $item->id ) ) {
-			echo '<p>' . esc_html__( 'Save the group first to enable sync.', 'ghl-crm-integration' ) . '</p>';
+			echo '<p>' . esc_html__( 'Save the group first to enable sync.', 'syncly' ) . '</p>';
 			return;
 		}
 
@@ -218,19 +218,19 @@ class GroupMetaBox {
 
 			<div class="ghl-sync-status">
 				<div class="ghl-sync-status-item">
-					<span class="ghl-sync-label"><?php esc_html_e( 'Sync Status:', 'ghl-crm-integration' ); ?></span>
+					<span class="ghl-sync-label"><?php esc_html_e( 'Sync Status:', 'syncly' ); ?></span>
 					<span class="ghl-sync-value">
 						<?php if ( ! empty( $record_id ) ) : ?>
-							<span class="ghl-sync-badge synced"><?php esc_html_e( 'Synced', 'ghl-crm-integration' ); ?></span>
+							<span class="ghl-sync-badge synced"><?php esc_html_e( 'Synced', 'syncly' ); ?></span>
 						<?php else : ?>
-							<span class="ghl-sync-badge not-synced"><?php esc_html_e( 'Not Synced', 'ghl-crm-integration' ); ?></span>
+							<span class="ghl-sync-badge not-synced"><?php esc_html_e( 'Not Synced', 'syncly' ); ?></span>
 						<?php endif; ?>
 					</span>
 				</div>
 
 				<?php if ( ! empty( $record_id ) ) : ?>
 					<div class="ghl-sync-status-item">
-						<span class="ghl-sync-label"><?php esc_html_e( 'GHL Record ID:', 'ghl-crm-integration' ); ?></span>
+						<span class="ghl-sync-label"><?php esc_html_e( 'GHL Record ID:', 'syncly' ); ?></span>
 						<span class="ghl-sync-value">
 							<?php if ( ! empty( $record_url ) ) : ?>
 								<a href="<?php echo esc_url( $record_url ); ?>" target="_blank" rel="noopener noreferrer">
@@ -246,7 +246,7 @@ class GroupMetaBox {
 
 				<?php if ( ! empty( $object_id ) ) : ?>
 					<div class="ghl-sync-status-item">
-						<span class="ghl-sync-label"><?php esc_html_e( 'Object ID:', 'ghl-crm-integration' ); ?></span>
+						<span class="ghl-sync-label"><?php esc_html_e( 'Object ID:', 'syncly' ); ?></span>
 						<span class="ghl-sync-value">
 							<?php if ( ! empty( $object_url ) ) : ?>
 								<a href="<?php echo esc_url( $object_url ); ?>" target="_blank" rel="noopener noreferrer">
@@ -262,7 +262,7 @@ class GroupMetaBox {
 
 				<?php if ( ! empty( $association_id ) ) : ?>
 					<div class="ghl-sync-status-item">
-						<span class="ghl-sync-label"><?php esc_html_e( 'Association ID:', 'ghl-crm-integration' ); ?></span>
+						<span class="ghl-sync-label"><?php esc_html_e( 'Association ID:', 'syncly' ); ?></span>
 						<span class="ghl-sync-value"><?php echo esc_html( $association_id ); ?></span>
 					</div>
 				<?php endif; ?>
@@ -275,7 +275,7 @@ class GroupMetaBox {
 					data-group-id="<?php echo esc_attr( $group_id ); ?>"
 					data-nonce="<?php echo esc_attr( wp_create_nonce( 'ghl_sync_group_' . $group_id ) ); ?>">
 					<span class="dashicons dashicons-update"></span>
-					<?php esc_html_e( 'Sync Group to GHL', 'ghl-crm-integration' ); ?>
+					<?php esc_html_e( 'Sync Group to GHL', 'syncly' ); ?>
 				</button>
 
 				<button type="button" 
@@ -284,7 +284,7 @@ class GroupMetaBox {
 					data-group-id="<?php echo esc_attr( $group_id ); ?>"
 					data-nonce="<?php echo esc_attr( wp_create_nonce( 'ghl_sync_members_' . $group_id ) ); ?>">
 					<span class="dashicons dashicons-groups"></span>
-					<?php esc_html_e( 'Sync All Members', 'ghl-crm-integration' ); ?>
+					<?php esc_html_e( 'Sync All Members', 'syncly' ); ?>
 				</button>
 
 				<span class="ghl-sync-spinner spinner"></span>
@@ -293,7 +293,7 @@ class GroupMetaBox {
 			<div class="ghl-sync-message"></div>
 
 			<p class="description" style="margin-top: var(--ghl-spacing-lg); padding-top: var(--ghl-spacing-lg); border-top: 1px solid var(--ghl-border-primary); color: var(--ghl-text-secondary); font-size: var(--ghl-font-size-sm);">
-				<?php esc_html_e( 'Syncs this group and its members to GoHighLevel custom objects.', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Syncs this group and its members to GoHighLevel custom objects.', 'syncly' ); ?>
 			</p>
 		</div>
 		<?php
@@ -306,19 +306,19 @@ class GroupMetaBox {
 		check_ajax_referer( 'ghl_sync_group_' . absint( $_POST['group_id'] ?? 0 ), 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ] );
 		}
 
 		$group_id  = absint( $_POST['group_id'] ?? 0 );
 		$sync_type = sanitize_text_field( $_POST['sync_type'] ?? 'group' );
 
 		if ( ! $group_id ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid group ID', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid group ID', 'syncly' ) ] );
 		}
 
 		$group = groups_get_group( $group_id );
 		if ( ! $group ) {
-			wp_send_json_error( [ 'message' => __( 'Group not found', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Group not found', 'syncly' ) ] );
 		}
 
 		if ( 'group' === $sync_type ) {
@@ -335,7 +335,7 @@ class GroupMetaBox {
 
 			wp_send_json_success(
 				[
-					'message'  => __( 'Group queued for sync', 'ghl-crm-integration' ),
+					'message'  => __( 'Group queued for sync', 'syncly' ),
 					'queue_id' => $queue_id,
 				]
 			);
@@ -350,7 +350,7 @@ class GroupMetaBox {
 			if ( empty( $record_id ) || empty( $association_id ) ) {
 				wp_send_json_error(
 					[
-						'message' => __( 'Group must be synced first', 'ghl-crm-integration' ),
+						'message' => __( 'Group must be synced first', 'syncly' ),
 					]
 				);
 			}
@@ -376,7 +376,7 @@ class GroupMetaBox {
 				[
 					'message' => sprintf(
 						/* translators: %d: number of members */
-						__( '%d members queued for sync', 'ghl-crm-integration' ),
+						__( '%d members queued for sync', 'syncly' ),
 						$queued
 					),
 					'queued'  => $queued,
@@ -384,7 +384,7 @@ class GroupMetaBox {
 			);
 		}
 
-		wp_send_json_error( [ 'message' => __( 'Invalid sync type', 'ghl-crm-integration' ) ] );
+		wp_send_json_error( [ 'message' => __( 'Invalid sync type', 'syncly' ) ] );
 	}
 
 	/**

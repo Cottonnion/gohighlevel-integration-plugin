@@ -289,15 +289,15 @@ class UserProfileFields {
 				'nonce'   => wp_create_nonce( 'ghl_user_profile' ),
 				'tags'    => \GHL_CRM\Sync\TagManager::get_instance()->get_tags_for_localization(),
 				'strings' => array(
-					'loading'        => __( 'Loading...', 'ghl-crm-integration' ),
-					'syncSuccess'    => __( 'User synced successfully!', 'ghl-crm-integration' ),
-					'syncError'      => __( 'Sync failed. Please try again.', 'ghl-crm-integration' ),
-					'confirmSync'    => __( 'Are you sure you want to sync this user now?', 'ghl-crm-integration' ),
-					'searchTags'     => __( 'Search or type to add tags...', 'ghl-crm-integration' ),
-					'refreshSuccess' => __( 'Successfully synced from GoHighLevel!', 'ghl-crm-integration' ),
-					'refreshError'   => __( 'Failed to sync from GoHighLevel. Please try again.', 'ghl-crm-integration' ),
-					'syncToSuccess'  => __( 'Successfully queued for sync to GoHighLevel!', 'ghl-crm-integration' ),
-					'syncToError'    => __( 'Failed to sync to GoHighLevel. Please try again.', 'ghl-crm-integration' ),
+					'loading'        => __( 'Loading...', 'syncly' ),
+					'syncSuccess'    => __( 'User synced successfully!', 'syncly' ),
+					'syncError'      => __( 'Sync failed. Please try again.', 'syncly' ),
+					'confirmSync'    => __( 'Are you sure you want to sync this user now?', 'syncly' ),
+					'searchTags'     => __( 'Search or type to add tags...', 'syncly' ),
+					'refreshSuccess' => __( 'Successfully synced from GoHighLevel!', 'syncly' ),
+					'refreshError'   => __( 'Failed to sync from GoHighLevel. Please try again.', 'syncly' ),
+					'syncToSuccess'  => __( 'Successfully queued for sync to GoHighLevel!', 'syncly' ),
+					'syncToError'    => __( 'Failed to sync to GoHighLevel. Please try again.', 'syncly' ),
 				),
 			),
 			GHL_CRM_VERSION
@@ -343,23 +343,23 @@ class UserProfileFields {
 		<div class="ghl-profile-section">
 			<h2>
 				<span class="dashicons dashicons-cloud"></span>
-				<?php esc_html_e( 'GoHighLevel Integration', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'GoHighLevel Integration', 'syncly' ); ?>
 			</h2>
 
 			<div class="ghl-data-grid">
 				<!-- Sync Status -->
 				<div class="ghl-data-item">
-					<label><?php esc_html_e( 'Sync Status', 'ghl-crm-integration' ); ?></label>
+					<label><?php esc_html_e( 'Sync Status', 'syncly' ); ?></label>
 					<div class="value">
 						<?php if ( $is_synced ) : ?>
 							<span class="ghl-sync-status synced">
 								<span class="dashicons dashicons-yes-alt"></span>
-								<?php esc_html_e( 'Synced', 'ghl-crm-integration' ); ?>
+								<?php esc_html_e( 'Synced', 'syncly' ); ?>
 							</span>
 						<?php else : ?>
 							<span class="ghl-sync-status not-synced">
 								<span class="dashicons dashicons-warning"></span>
-								<?php esc_html_e( 'Not Synced', 'ghl-crm-integration' ); ?>
+								<?php esc_html_e( 'Not Synced', 'syncly' ); ?>
 							</span>
 						<?php endif; ?>
 					</div>
@@ -367,7 +367,7 @@ class UserProfileFields {
 
 				<!-- Contact ID -->
 				<div class="ghl-data-item">
-					<label><?php esc_html_e( 'GHL Contact ID', 'ghl-crm-integration' ); ?></label>
+					<label><?php esc_html_e( 'GHL Contact ID', 'syncly' ); ?></label>
 					<div class="value <?php echo empty( $contact_id ) ? 'empty' : ''; ?>">
 						<?php if ( ! empty( $contact_id ) && ! empty( $location_id ) ) : ?>
 							<a href="<?php echo esc_url( sprintf( 'https://app.leadconnectorhq.com/v2/location/%s/contacts/detail/%s', $location_id, $contact_id ) ); ?>" 
@@ -379,25 +379,25 @@ class UserProfileFields {
 						<?php elseif ( ! empty( $contact_id ) ) : ?>
 							<?php echo esc_html( $contact_id ); ?>
 						<?php else : ?>
-							<?php esc_html_e( 'Not available', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'Not available', 'syncly' ); ?>
 						<?php endif; ?>
 					</div>
 				</div>
 
 				<!-- Last Sync Time -->
 				<div class="ghl-data-item">
-					<label><?php esc_html_e( 'Last Synced', 'ghl-crm-integration' ); ?></label>
+					<label><?php esc_html_e( 'Last Synced', 'syncly' ); ?></label>
 					<div class="value <?php echo empty( $sync_time ) ? 'empty' : ''; ?>">
 						<?php
 						if ( ! empty( $sync_time ) ) {
 							$time_ago = human_time_diff( (int) $sync_time, current_time( 'timestamp' ) );
 							printf(
 								/* translators: %s: Time difference */
-								esc_html__( '%s ago', 'ghl-crm-integration' ),
+								esc_html__( '%s ago', 'syncly' ),
 								esc_html( $time_ago )
 							);
 						} else {
-							esc_html_e( 'Never', 'ghl-crm-integration' );
+							esc_html_e( 'Never', 'syncly' );
 						}
 						?>
 					</div>
@@ -405,23 +405,23 @@ class UserProfileFields {
 
 				<!-- Location ID -->
 				<div class="ghl-data-item">
-					<label><?php esc_html_e( 'GHL Location', 'ghl-crm-integration' ); ?></label>
+					<label><?php esc_html_e( 'GHL Location', 'syncly' ); ?></label>
 					<div class="value <?php echo empty( $location_id ) ? 'empty' : ''; ?>">
-						<?php echo ! empty( $location_id ) ? esc_html( $location_id ) : esc_html__( 'Not configured', 'ghl-crm-integration' ); ?>
+						<?php echo ! empty( $location_id ) ? esc_html( $location_id ) : esc_html__( 'Not configured', 'syncly' ); ?>
 					</div>
 				</div>
 			</div>
 
 			<!-- Tags Section -->
 			<div class="ghl-tags-section">
-				<h3><?php esc_html_e( 'Contact Tags', 'ghl-crm-integration' ); ?></h3>
+				<h3><?php esc_html_e( 'Contact Tags', 'syncly' ); ?></h3>
 				<p class="description">
-					<?php esc_html_e( 'Manage tags for this contact in GoHighLevel. Changes will be synced when you save the profile.', 'ghl-crm-integration' ); ?>
+					<?php esc_html_e( 'Manage tags for this contact in GoHighLevel. Changes will be synced when you save the profile.', 'syncly' ); ?>
 					<br>
-					<strong><?php esc_html_e( 'Note:', 'ghl-crm-integration' ); ?></strong>
-					<?php esc_html_e( 'Updates are processed in the background and may take up to 60 seconds to appear in your GoHighLevel.', 'ghl-crm-integration' ); ?>
+					<strong><?php esc_html_e( 'Note:', 'syncly' ); ?></strong>
+					<?php esc_html_e( 'Updates are processed in the background and may take up to 60 seconds to appear in your GoHighLevel.', 'syncly' ); ?>
 					<br>
-					<?php esc_html_e( 'Click "Update User" button at the bottom of this page to resync this user to GoHighLevel.', 'ghl-crm-integration' ); ?>
+					<?php esc_html_e( 'Click "Update User" button at the bottom of this page to resync this user to GoHighLevel.', 'syncly' ); ?>
 				</p>
 				
 				<select 
@@ -448,7 +448,7 @@ class UserProfileFields {
 						data-user-id="<?php echo esc_attr( $user->ID ); ?>"
 						data-contact-id="<?php echo esc_attr( $contact_id ); ?>">
 						<span class="dashicons dashicons-download"></span>
-						<?php esc_html_e( 'Sync from GoHighLevel', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Sync from GoHighLevel', 'syncly' ); ?>
 					</button>
 					
 					<button 
@@ -456,7 +456,7 @@ class UserProfileFields {
 						class="ghl-button ghl-button-secondary ghl-sync-to-ghl-btn" 
 						data-user-id="<?php echo esc_attr( $user->ID ); ?>">
 						<span class="dashicons dashicons-upload"></span>
-						<?php esc_html_e( 'Sync to GoHighLevel', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Sync to GoHighLevel', 'syncly' ); ?>
 					</button>
 				<?php endif; ?>
 				
@@ -466,7 +466,7 @@ class UserProfileFields {
 						class="ghl-button ghl-button-secondary ghl-view-in-ghl-btn"
 						onclick="window.open('<?php echo esc_url( sprintf( '%s/v2/location/%s/contacts/detail/%s', $base_domain, $location_id, $contact_id ) ); ?>', '_blank', 'noopener,noreferrer')">
 						<span class="dashicons dashicons-external"></span>
-						<?php esc_html_e( 'View in GoHighLevel', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'View in GoHighLevel', 'syncly' ); ?>
 					</button>
 				<?php endif; ?>
 				
@@ -476,9 +476,9 @@ class UserProfileFields {
 			<!-- Auto Login Section (Admin Only) -->
 			<?php if ( current_user_can( 'manage_options' ) && $user->ID !== get_current_user_id() ) : ?>
 				<div class="ghl-autologin-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e5e5;">
-					<h3 style="margin-top:0px;"><?php esc_html_e( 'Admin Tools', 'ghl-crm-integration' ); ?></h3>
+					<h3 style="margin-top:0px;"><?php esc_html_e( 'Admin Tools', 'syncly' ); ?></h3>
 					<p class="description">
-						<?php esc_html_e( 'Generate a secure one-time login link to access this user account. Link expires in 15 minutes.', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Generate a secure one-time login link to access this user account. Link expires in 15 minutes.', 'syncly' ); ?>
 					</p>
 					
 					<div class="ghl-autologin-controls">
@@ -487,7 +487,7 @@ class UserProfileFields {
 							class="ghl-button ghl-button-secondary ghl-generate-login-link" 
 							data-user-id="<?php echo esc_attr( $user->ID ); ?>">
 							<span class="dashicons dashicons-admin-network"></span>
-							<?php esc_html_e( 'Generate Login Link', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'Generate Login Link', 'syncly' ); ?>
 						</button>
 						
 						<div class="ghl-login-link-display" style="display: none; margin-top: 10px;">
@@ -502,11 +502,11 @@ class UserProfileFields {
 								class="ghl-button ghl-button-secondary ghl-copy-login-link" 
 								style="margin-left: 5px;">
 								<span class="dashicons dashicons-clipboard"></span>
-								<?php esc_html_e( 'Copy', 'ghl-crm-integration' ); ?>
+								<?php esc_html_e( 'Copy', 'syncly' ); ?>
 							</button>
 							<p class="description" style="color: #d63638; margin-top: 10px;">
-								<strong><?php esc_html_e( 'Warning:', 'ghl-crm-integration' ); ?></strong>
-								<?php esc_html_e( 'This link grants full access to this user account. Expires in 15 minutes or after one use.', 'ghl-crm-integration' ); ?>
+								<strong><?php esc_html_e( 'Warning:', 'syncly' ); ?></strong>
+								<?php esc_html_e( 'This link grants full access to this user account. Expires in 15 minutes or after one use.', 'syncly' ); ?>
 							</p>
 						</div>
 					</div>
@@ -524,7 +524,7 @@ class UserProfileFields {
 				<div class="ghl-activity-header-wrapper" style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;" data-toggle="ghl-activity-timeline">
 					<h3 style="margin:0; display: flex; align-items: center; gap: 8px;">
 						<span class="dashicons dashicons-clock" style="color: #2271b1;"></span>
-						<?php esc_html_e( 'Activity Timeline', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Activity Timeline', 'syncly' ); ?>
 						<?php if ( $total_logs > 0 ) : ?>
 							<span class="ghl-activity-count" style="background: #2271b1; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 600;">
 								<?php echo esc_html( number_format( $total_logs ) ); ?>
@@ -536,7 +536,7 @@ class UserProfileFields {
 				
 				<div class="ghl-activity-content-wrapper" style="display: none; margin-top: 15px;">
 					<p class="description" style="margin-bottom: 15px;">
-						<?php esc_html_e( 'Sync activities and events for this user.', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Sync activities and events for this user.', 'syncly' ); ?>
 					</p>
 					
 					<?php if ( ! empty( $activity_logs ) ) : ?>
@@ -582,7 +582,7 @@ class UserProfileFields {
 															$time_ago = human_time_diff( $timestamp, current_time( 'timestamp' ) );
 															printf(
 																/* translators: %s: Time difference */
-																esc_html__( '%s ago', 'ghl-crm-integration' ),
+																esc_html__( '%s ago', 'syncly' ),
 																esc_html( $time_ago )
 															);
 														}
@@ -600,27 +600,27 @@ class UserProfileFields {
 							<div class="ghl-activity-pagination" style="margin-top: 20px; display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f6f7f7; border-radius: 4px;">
 								<button type="button" class="ghl-button ghl-button-small ghl-button-secondary ghl-activity-prev" style="display: none;">
 									<span class="dashicons dashicons-arrow-left-alt2"></span>
-									<?php esc_html_e( 'Previous', 'ghl-crm-integration' ); ?>
+									<?php esc_html_e( 'Previous', 'syncly' ); ?>
 								</button>
 								<span class="ghl-activity-page-info" style="color: #50575e; font-size: 13px;">
 									<?php
 									printf(
 										/* translators: 1: Current page, 2: Total pages */
-										esc_html__( 'Page %1$d of %2$d', 'ghl-crm-integration' ),
+										esc_html__( 'Page %1$d of %2$d', 'syncly' ),
 										'<span class="ghl-current-page">1</span>',
 										esc_html( $total_pages )
 									);
 									?>
 								</span>
 								<button type="button" class="ghl-button ghl-button-small ghl-button-secondary ghl-activity-next" data-total-pages="<?php echo esc_attr( $total_pages ); ?>">
-									<?php esc_html_e( 'Next', 'ghl-crm-integration' ); ?>
+									<?php esc_html_e( 'Next', 'syncly' ); ?>
 									<span class="dashicons dashicons-arrow-right-alt2"></span>
 								</button>
 							</div>
 						<?php endif; ?>
 					<?php else : ?>
 						<p class="description">
-							<?php esc_html_e( 'No activity recorded yet.', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'No activity recorded yet.', 'syncly' ); ?>
 						</p>
 					<?php endif; ?>
 				</div>
@@ -752,20 +752,20 @@ class UserProfileFields {
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ] );
 		}
 
 		$user_id = isset( $_POST['user_id'] ) ? (int) $_POST['user_id'] : 0;
 
 		if ( empty( $user_id ) ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid user ID', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid user ID', 'syncly' ) ] );
 		}
 
 		$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
 		$contact_id  = \GHL_CRM\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 
 		if ( empty( $contact_id ) ) {
-			wp_send_json_error( [ 'message' => __( 'User not synced to GHL', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'User not synced to GHL', 'syncly' ) ] );
 		}
 
 		try {
@@ -799,7 +799,7 @@ class UserProfileFields {
 
 				wp_send_json_success( $contact );
 			} else {
-				wp_send_json_error( [ 'message' => __( 'Contact not found', 'ghl-crm-integration' ) ] );
+				wp_send_json_error( [ 'message' => __( 'Contact not found', 'syncly' ) ] );
 			}
 		} catch ( \Exception $e ) {
 			wp_send_json_error( [ 'message' => $e->getMessage() ] );
@@ -817,19 +817,19 @@ class UserProfileFields {
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ] );
 		}
 
 		$user_id = isset( $_POST['user_id'] ) ? (int) $_POST['user_id'] : 0;
 
 		if ( empty( $user_id ) ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid user ID', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid user ID', 'syncly' ) ] );
 		}
 
 		// Get user
 		$user = get_userdata( $user_id );
 		if ( ! $user ) {
-			wp_send_json_error( [ 'message' => __( 'User not found', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'User not found', 'syncly' ) ] );
 		}
 
 		// Trigger sync via UserHooks
@@ -845,12 +845,12 @@ class UserProfileFields {
 		if ( $queue_id ) {
 			wp_send_json_success(
 				[
-					'message'  => __( 'User queued for sync successfully', 'ghl-crm-integration' ),
+					'message'  => __( 'User queued for sync successfully', 'syncly' ),
 					'queue_id' => $queue_id,
 				]
 			);
 		} else {
-			wp_send_json_error( [ 'message' => __( 'Failed to queue user for sync', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Failed to queue user for sync', 'syncly' ) ] );
 		}
 	}
 
@@ -865,24 +865,24 @@ class UserProfileFields {
 
 		// Check permissions - only administrators.
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ] );
 		}
 
 		$user_id = isset( $_POST['user_id'] ) ? (int) $_POST['user_id'] : 0;
 
 		if ( empty( $user_id ) ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid user ID', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid user ID', 'syncly' ) ] );
 		}
 
 		// Don't allow generating link for current user.
 		if ( $user_id === get_current_user_id() ) {
-			wp_send_json_error( [ 'message' => __( 'Cannot generate login link for yourself', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Cannot generate login link for yourself', 'syncly' ) ] );
 		}
 
 		// Verify user exists.
 		$user = get_userdata( $user_id );
 		if ( ! $user ) {
-			wp_send_json_error( [ 'message' => __( 'User not found', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'User not found', 'syncly' ) ] );
 		}
 
 		try {
@@ -897,7 +897,7 @@ class UserProfileFields {
 				[
 					'login_url' => $token_data['login_url'],
 					'expires'   => date_i18n( $date_format . ' ' . $time_format, $token_data['expires'] ),
-					'message'   => __( 'Login link generated successfully', 'ghl-crm-integration' ),
+					'message'   => __( 'Login link generated successfully', 'syncly' ),
 				]
 			);
 		} catch ( \Exception $e ) {
@@ -964,14 +964,14 @@ class UserProfileFields {
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ] );
 		}
 
 		$user_id    = isset( $_POST['user_id'] ) ? (int) $_POST['user_id'] : 0;
 		$contact_id = isset( $_POST['contact_id'] ) ? sanitize_text_field( wp_unslash( $_POST['contact_id'] ) ) : '';
 
 		if ( empty( $user_id ) || empty( $contact_id ) ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid user ID or contact ID', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid user ID or contact ID', 'syncly' ) ] );
 		}
 
 		try {
@@ -982,7 +982,7 @@ class UserProfileFields {
 			$response = $client->get( "contacts/{$contact_id}" );
 
 			if ( empty( $response['contact'] ) ) {
-				wp_send_json_error( [ 'message' => __( 'Contact not found in GoHighLevel', 'ghl-crm-integration' ) ] );
+				wp_send_json_error( [ 'message' => __( 'Contact not found in GoHighLevel', 'syncly' ) ] );
 			}
 
 			$contact = $response['contact'];
@@ -1021,7 +1021,7 @@ class UserProfileFields {
 
 			wp_send_json_success(
 				[
-					'message'   => __( 'Successfully synced from GoHighLevel!', 'ghl-crm-integration' ),
+					'message'   => __( 'Successfully synced from GoHighLevel!', 'syncly' ),
 					'contact'   => $contact,
 					'tags'      => $tag_names,
 					'tag_ids'   => $tag_id_list,
@@ -1035,7 +1035,7 @@ class UserProfileFields {
 				[
 					'message' => sprintf(
 						/* translators: %s: Error message */
-						__( 'Failed to sync from GoHighLevel: %s', 'ghl-crm-integration' ),
+						__( 'Failed to sync from GoHighLevel: %s', 'syncly' ),
 						$e->getMessage()
 					),
 				]

@@ -86,70 +86,38 @@ class Database {
 
 		?>
 		<div class="notice notice-warning is-dismissible ghl-crm-db-update-notice">
-			<h3><?php esc_html_e( 'GHL CRM Integration - Database Update Required', 'ghl-crm-integration' ); ?></h3>
+			<h3><?php esc_html_e( 'GHL CRM Integration - Database Update Required', 'syncly' ); ?></h3>
 			<p>
 				<?php
 				printf(
 					/* translators: 1: current version, 2: new version */
-					esc_html__( 'The GHL CRM Integration plugin database needs to be updated from version %1$s to %2$s. This update will:', 'ghl-crm-integration' ),
+					esc_html__( 'The GHL CRM Integration plugin database needs to be updated from version %1$s to %2$s. This update will:', 'syncly' ),
 					'<strong>' . esc_html( $installed_version ) . '</strong>',
 					'<strong>' . esc_html( self::DB_VERSION ) . '</strong>'
 				);
 				?>
 			</p>
 			<ul style="margin-left: 20px;">
-				<li><?php esc_html_e( '✅ Add performance indexes for faster queue processing', 'ghl-crm-integration' ); ?></li>
-				<li><?php esc_html_e( '✅ Optimize dashboard statistics queries (5-10x faster)', 'ghl-crm-integration' ); ?></li>
-				<li><?php esc_html_e( '✅ Improve log cleanup efficiency for large databases', 'ghl-crm-integration' ); ?></li>
-				<li><?php esc_html_e( '⚡ Expected performance boost: up to 10x faster queries', 'ghl-crm-integration' ); ?></li>
+				<li><?php esc_html_e( '✅ Add performance indexes for faster queue processing', 'syncly' ); ?></li>
+				<li><?php esc_html_e( '✅ Optimize dashboard statistics queries (5-10x faster)', 'syncly' ); ?></li>
+				<li><?php esc_html_e( '✅ Improve log cleanup efficiency for large databases', 'syncly' ); ?></li>
+				<li><?php esc_html_e( '⚡ Expected performance boost: up to 10x faster queries', 'syncly' ); ?></li>
 			</ul>
 			<p>
 				<button type="button" class="button button-primary" id="ghl-crm-update-database" data-nonce="<?php echo esc_attr( wp_create_nonce( 'ghl_crm_update_db' ) ); ?>">
-					<?php esc_html_e( 'Update Database Now', 'ghl-crm-integration' ); ?>
+					<?php esc_html_e( 'Update Database Now', 'syncly' ); ?>
 				</button>
-				<button type="button" class="button button-secondary" onclick="jQuery(this).closest('.notice').slideUp();">
-					<?php esc_html_e( 'Remind Me Later', 'ghl-crm-integration' ); ?>
+				<button type="button" class="button button-secondary ghl-crm-remind-db-update">
+					<?php esc_html_e( 'Remind Me Later', 'syncly' ); ?>
 				</button>
 			</p>
 		</div>
-		<script>
-		jQuery(document).ready(function($) {
-			$('#ghl-crm-update-database').on('click', function() {
-				var $button = $(this);
-				var $notice = $button.closest('.notice');
-				var nonce = $button.data('nonce');
-				
-				$button.prop('disabled', true).text('<?php esc_attr_e( 'Updating...', 'ghl-crm-integration' ); ?>');
-				
-				$.ajax({
-					url: ajaxurl,
-					type: 'POST',
-					data: {
-						action: 'ghl_crm_update_database',
-						nonce: nonce
-					},
-					success: function(response) {
-						if (response.success) {
-							$notice.removeClass('notice-warning').addClass('notice-success');
-							$notice.html('<p><strong><?php esc_attr_e( 'Database updated successfully!', 'ghl-crm-integration' ); ?></strong> <?php esc_attr_e( 'Sync logging should now work correctly.', 'ghl-crm-integration' ); ?></p>');
-							setTimeout(function() {
-								$notice.slideUp();
-							}, 3000);
-						} else {
-							$notice.removeClass('notice-warning').addClass('notice-error');
-							$notice.html('<p><strong><?php esc_attr_e( 'Update failed:', 'ghl-crm-integration' ); ?></strong> ' + (response.data || '<?php esc_attr_e( 'Unknown error', 'ghl-crm-integration' ); ?>') + '</p>');
-							$button.prop('disabled', false).text('<?php esc_attr_e( 'Retry Update', 'ghl-crm-integration' ); ?>');
-						}
-					},
-					error: function() {
-						$notice.removeClass('notice-warning').addClass('notice-error');
-						$notice.html('<p><strong><?php esc_attr_e( 'Update failed:', 'ghl-crm-integration' ); ?></strong> <?php esc_attr_e( 'Network error. Please try again.', 'ghl-crm-integration' ); ?></p>');
-						$button.prop('disabled', false).text('<?php esc_attr_e( 'Retry Update', 'ghl-crm-integration' ); ?>');
-					}
-				});
-			});
-		});
-		</script>
+		<?php
+		wp_add_inline_script(
+			'jquery-core',
+			'jQuery(function($){$(document).on("click",".ghl-crm-remind-db-update",function(){$(this).closest(".notice").slideUp();});$(document).on("click","#ghl-crm-update-database",function(){var $button=$(this),$notice=$button.closest(".notice"),nonce=$button.data("nonce");$button.prop("disabled",true).text(' . wp_json_encode( __( 'Updating...', 'syncly' ) ) . ');$.ajax({url:ajaxurl,type:"POST",data:{action:"ghl_crm_update_database",nonce:nonce},success:function(response){if(response.success){$notice.removeClass("notice-warning").addClass("notice-success");$notice.html("<p><strong>"+' . wp_json_encode( __( 'Database updated successfully!', 'syncly' ) ) . '+"</strong> "+' . wp_json_encode( __( 'Sync logging should now work correctly.', 'syncly' ) ) . '+"</p>");setTimeout(function(){$notice.slideUp();},3000);}else{$notice.removeClass("notice-warning").addClass("notice-error");$notice.html("<p><strong>"+' . wp_json_encode( __( 'Update failed:', 'syncly' ) ) . '+"</strong> "+(response.data||' . wp_json_encode( __( 'Unknown error', 'syncly' ) ) . ')+"</p>");$button.prop("disabled",false).text(' . wp_json_encode( __( 'Retry Update', 'syncly' ) ) . ');}},error:function(){$notice.removeClass("notice-warning").addClass("notice-error");$notice.html("<p><strong>"+' . wp_json_encode( __( 'Update failed:', 'syncly' ) ) . '+"</strong> "+' . wp_json_encode( __( 'Network error. Please try again.', 'syncly' ) ) . '+"</p>");$button.prop("disabled",false).text(' . wp_json_encode( __( 'Retry Update', 'syncly' ) ) . ');}});});});'
+		);
+		?>
 		<?php
 	}
 
@@ -162,12 +130,12 @@ class Database {
 		// Verify nonce
 		$raw_nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
 		if ( ! wp_verify_nonce( $raw_nonce, 'ghl_crm_update_db' ) ) {
-			wp_send_json_error( __( 'Security check failed', 'ghl-crm-integration' ) );
+			wp_send_json_error( __( 'Security check failed', 'syncly' ) );
 		}
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions', 'ghl-crm-integration' ) );
+			wp_send_json_error( __( 'Insufficient permissions', 'syncly' ) );
 		}
 
 		try {
@@ -178,7 +146,7 @@ class Database {
 			$this->migrate_database( $installed_version );
 			$settings_manager->update_option( 'ghl_crm_db_version', self::DB_VERSION );
 
-			wp_send_json_success( __( 'Database updated successfully', 'ghl-crm-integration' ) );
+			wp_send_json_success( __( 'Database updated successfully', 'syncly' ) );
 		} catch ( \Exception $e ) {
 			do_action(
 				'ghl_crm_log_event',
@@ -192,7 +160,7 @@ class Database {
 				],
 				'error'
 			);
-			wp_send_json_error( __( 'Database update failed: ', 'ghl-crm-integration' ) . $e->getMessage() );
+			wp_send_json_error( __( 'Database update failed: ', 'syncly' ) . $e->getMessage() );
 		}
 	}
 

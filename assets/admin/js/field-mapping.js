@@ -14,6 +14,8 @@
 	 * Initialize field mapping functionality
 	 */
 	function initFieldMapping() {
+		hydrateFieldMappingData();
+
 		const $customToggle = $('#ghl-toggle-custom-fields');
 		const $customWrapper = $('#ghl-custom-fields-wrapper');
 
@@ -406,6 +408,32 @@
 
 		// Initialize duplicate check on page load
 		checkDuplicateMappings();
+
+		if (window.GHL_FieldMapping && typeof window.GHL_FieldMapping.bindLazyDropdowns === 'function') {
+			window.GHL_FieldMapping.bindLazyDropdowns();
+		}
+	}
+
+	function hydrateFieldMappingData() {
+		const dataElement = document.getElementById('ghl-field-mapping-data');
+
+		if (!dataElement) {
+			return;
+		}
+
+		try {
+			const data = JSON.parse(dataElement.textContent || '{}');
+
+			if (data.fields && typeof data.fields === 'object') {
+				window.GHL_FIELDS = data.fields;
+			}
+
+			if (data.savedMappings && typeof data.savedMappings === 'object') {
+				window.GHL_SAVED_MAPPINGS = data.savedMappings;
+			}
+		} catch (error) {
+			console.error('Failed to parse field mapping data:', error);
+		}
 	}
 
 	// Export to global scope for SPA to call
@@ -628,11 +656,27 @@
 
 	window.GHL_FieldMapping = window.GHL_FieldMapping || {};
 
+	window.GHL_FieldMapping.bindLazyDropdowns = function() {
+		$('.ghl-lazy-select:not(.ghl-lazy-select--disabled)')
+			.off('click.ghlLazySelect')
+			.on('click.ghlLazySelect', function(e) {
+				if ($(e.target).closest('.ghl-lazy-dropdown').length) return;
+
+				e.stopPropagation();
+				var $this = $(this);
+				if ($this.hasClass('ghl-lazy-select--open')) {
+					closeDropdown();
+				} else {
+					openDropdown($this);
+				}
+			});
+	};
+
 	/**
 	 * No-op — kept for SPA-router backward compatibility.
 	 * Select2 is no longer used; dropdowns are lazy.
 	 */
-	window.GHL_FieldMapping.initSelect2 = function() {};
+	window.GHL_FieldMapping.initSelect2 = window.GHL_FieldMapping.bindLazyDropdowns;
 
 	/**
 	 * Update row highlighting based on mapped status
@@ -652,6 +696,8 @@
 	/* -------------------------------------------------- doc-ready */
 
 	$(document).ready(function() {
+		window.GHL_FieldMapping.bindLazyDropdowns();
+
 		// Add data-label attributes for mobile responsive card layout
 		$('.ghl-crm-field-mapping .ghl-table tbody tr').each(function() {
 			var $cells = $(this).find('td');

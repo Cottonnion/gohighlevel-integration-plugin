@@ -58,22 +58,15 @@ class FormSettings {
 		add_action( 'wp_ajax_ghl_crm_get_forms', [ $this, 'handle_get_forms' ] );
 		add_action( 'wp_ajax_ghl_save_form_settings', [ $this, 'ajax_save_form_settings' ] );
 		add_action( 'wp_ajax_ghl_get_form_settings', [ $this, 'ajax_get_form_settings' ] );
-		add_action( 'wp_ajax_ghl_mark_form_submitted', [ $this, 'ajax_mark_form_submitted' ] );
-		add_action( 'wp_ajax_nopriv_ghl_mark_form_submitted', [ $this, 'ajax_mark_form_submitted' ] );
 	}
 
 	/**
-	 * Check if Pro plugin is active
+	 * Check if licensed Pro form features are available.
 	 *
 	 * @return bool
 	 */
 	public static function is_pro_active(): bool {
-		/**
-		 * Filter to check if Pro plugin features are available
-		 *
-		 * @param bool $is_pro Whether Pro features are active
-		 */
-		return apply_filters( 'ghl_crm_is_pro_active', false );
+		return (bool) apply_filters( 'ghl_crm_is_pro_active', false );
 	}
 
 	/**
@@ -100,11 +93,9 @@ class FormSettings {
 	public function get_form_settings( string $form_id ): array {
 		$all_settings = $this->get_all_settings();
 
-		// FREE plugin defaults (Pro plugin can extend via filter if needed)
 		$defaults = [
-			'autofill_enabled' => true,       // Auto-fill enabled by default
-			'logged_only'      => false,      // Show to everyone by default
-			'submission_limit' => 'unlimited', // Unlimited submissions by default
+			'autofill_enabled' => true,
+			'logged_only'      => false,
 		];
 
 		if ( isset( $all_settings[ $form_id ] ) && is_array( $all_settings[ $form_id ] ) ) {
@@ -123,7 +114,6 @@ class FormSettings {
 	public function save_form_settings( string $form_id, array $settings, array $raw_settings = [] ): bool {
 		$all_settings = $this->get_all_settings();
 
-		// Sanitize FREE settings only (autofill_enabled, logged_only)
 		$sanitized_settings = [
 			'autofill_enabled' => isset( $settings['autofill_enabled'] ) && $settings['autofill_enabled'],
 			'logged_only'      => isset( $settings['logged_only'] ) && $settings['logged_only'],
@@ -157,24 +147,25 @@ class FormSettings {
 		try {
 			// Verify nonce
 			if ( ! check_ajax_referer( 'ghl_crm_forms_nonce', 'nonce', false ) ) {
-				wp_send_json_error( [ 'message' => __( 'Invalid security token.', 'ghl-crm-integration' ) ] );
+				wp_send_json_error( [ 'message' => __( 'Invalid security token.', 'syncly' ) ] );
 			}
 
 			// Check permissions
 			if ( ! current_user_can( 'manage_options' ) ) {
-				wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'ghl-crm-integration' ) ] );
+				wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'syncly' ) ] );
 			}
 
 			// Get form ID
 			$form_id = isset( $_POST['form_id'] ) ? sanitize_text_field( wp_unslash( $_POST['form_id'] ) ) : '';
 			if ( empty( $form_id ) ) {
-				wp_send_json_error( [ 'message' => __( 'Form ID is required.', 'ghl-crm-integration' ) ] );
+				wp_send_json_error( [ 'message' => __( 'Form ID is required.', 'syncly' ) ] );
 			}
 
 			// Get settings - handle both nested array and form-encoded format
-			$raw_settings = isset( $_POST['settings'] ) && is_array( $_POST['settings'] )
-			? $_POST['settings']
-			: $_POST;
+			$sanitized_post = map_deep( wp_unslash( $_POST ), 'sanitize_text_field' );
+			$raw_settings   = isset( $sanitized_post['settings'] ) && is_array( $sanitized_post['settings'] )
+				? $sanitized_post['settings']
+				: $sanitized_post;
 
 			// Parse boolean values properly (handle 'true'/'false' strings and actual booleans)
 			$autofill_enabled = false;
@@ -189,8 +180,6 @@ class FormSettings {
 				$logged_only = ( $value === true || $value === 'true' || $value === '1' || $value === 1 );
 			}
 
-			// FREE plugin only handles free settings
-			// Pro plugin will add custom_params, submission_limit, submitted_message via filter
 			$settings = [
 				'autofill_enabled' => $autofill_enabled,
 				'logged_only'      => $logged_only,
@@ -201,14 +190,14 @@ class FormSettings {
 
 			wp_send_json_success(
 				[
-					'message'  => __( 'Form settings saved successfully.', 'ghl-crm-integration' ),
+					'message'  => __( 'Form settings saved successfully.', 'syncly' ),
 					'settings' => $this->get_form_settings( $form_id ),
 				]
 			);
 		} catch ( \Throwable $e ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'Error saving form settings.', 'ghl-crm-integration' ),
+					'message' => __( 'Error saving form settings.', 'syncly' ),
 					'error'   => $e->getMessage(),
 					'trace'   => $e->getTraceAsString(),
 				]
@@ -222,18 +211,18 @@ class FormSettings {
 	public function ajax_get_form_settings(): void {
 		// Verify nonce
 		if ( ! check_ajax_referer( 'ghl_crm_forms_nonce', 'nonce', false ) ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid security token.', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid security token.', 'syncly' ) ] );
 		}
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'syncly' ) ] );
 		}
 
 		// Get form ID
 		$form_id = isset( $_GET['form_id'] ) ? sanitize_text_field( wp_unslash( $_GET['form_id'] ) ) : '';
 		if ( empty( $form_id ) ) {
-			wp_send_json_error( [ 'message' => __( 'Form ID is required.', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Form ID is required.', 'syncly' ) ] );
 		}
 
 		$settings = $this->get_form_settings( $form_id );
@@ -241,38 +230,6 @@ class FormSettings {
 		wp_send_json_success(
 			[
 				'settings' => $settings,
-			]
-		);
-	}
-
-	/**
-	 * AJAX handler to mark form as submitted
-	 *
-	 * @return void
-	 */
-	public function ajax_mark_form_submitted(): void {
-		// Verify nonce
-		if ( ! check_ajax_referer( 'ghl_form_submission', 'nonce', false ) ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid security token.', 'ghl-crm-integration' ) ] );
-		}
-
-		// Check if user is logged in
-		if ( ! is_user_logged_in() ) {
-			wp_send_json_error( [ 'message' => __( 'User not logged in.', 'ghl-crm-integration' ) ] );
-		}
-
-		// Get form ID
-		$form_id = isset( $_POST['form_id'] ) ? sanitize_text_field( wp_unslash( $_POST['form_id'] ) ) : '';
-		if ( empty( $form_id ) ) {
-			wp_send_json_error( [ 'message' => __( 'Form ID is required.', 'ghl-crm-integration' ) ] );
-		}
-
-		// Mark as submitted
-		$this->mark_form_submitted( $form_id );
-
-		wp_send_json_success(
-			[
-				'message' => __( 'Form marked as submitted.', 'ghl-crm-integration' ),
 			]
 		);
 	}
@@ -305,152 +262,21 @@ class FormSettings {
 	 */
 	public static function get_available_variables(): array {
 		return [
-			'{user_email}'        => __( 'User email address', 'ghl-crm-integration' ),
-			'{user_login}'        => __( 'Username', 'ghl-crm-integration' ),
-			'{user_first_name}'   => __( 'User first name', 'ghl-crm-integration' ),
-			'{user_last_name}'    => __( 'User last name', 'ghl-crm-integration' ),
-			'{user_display_name}' => __( 'User display name', 'ghl-crm-integration' ),
-			'{user_id}'           => __( 'User ID', 'ghl-crm-integration' ),
-			'{user_role}'         => __( 'User role', 'ghl-crm-integration' ),
-			'{site_url}'          => __( 'Site URL', 'ghl-crm-integration' ),
-			'{site_name}'         => __( 'Site name', 'ghl-crm-integration' ),
-			'{current_url}'       => __( 'Current page URL', 'ghl-crm-integration' ),
-			'{current_title}'     => __( 'Current page title', 'ghl-crm-integration' ),
-			'{meta:field_name}'   => __( 'User meta field (replace field_name with actual meta key)', 'ghl-crm-integration' ),
+			'{user_email}'        => __( 'User email address', 'syncly' ),
+			'{user_login}'        => __( 'Username', 'syncly' ),
+			'{user_first_name}'   => __( 'User first name', 'syncly' ),
+			'{user_last_name}'    => __( 'User last name', 'syncly' ),
+			'{user_display_name}' => __( 'User display name', 'syncly' ),
+			'{user_id}'           => __( 'User ID', 'syncly' ),
+			'{user_role}'         => __( 'User role', 'syncly' ),
+			'{site_url}'          => __( 'Site URL', 'syncly' ),
+			'{site_name}'         => __( 'Site name', 'syncly' ),
+			'{current_url}'       => __( 'Current page URL', 'syncly' ),
+			'{current_title}'     => __( 'Current page title', 'syncly' ),
+			'{meta:field_name}'   => __( 'User meta field (replace field_name with actual meta key)', 'syncly' ),
 		];
 	}
 
-	/**
-	 * Replace variables in custom parameters with actual values
-	 *
-	 * @param array $params Custom parameters with variables.
-	 * @return array Parameters with resolved values.
-	 */
-	public function resolve_custom_params( array $params ): array {
-		$resolved = [];
-
-		foreach ( $params as $param ) {
-			if ( ! isset( $param['key'], $param['value'] ) ) {
-				continue;
-			}
-
-			$key   = $param['key'];
-			$value = $this->replace_variables( $param['value'] );
-
-			// Only add if value is not empty after replacement
-			if ( ( ! empty( $value ) && $value !== $param['value'] ) || false === strpos( $param['value'], '{' ) ) {
-				$resolved[ $key ] = $value;
-			}
-		}
-
-		return $resolved;
-	}
-
-	/**
-	 * Replace variable placeholders with actual values
-	 *
-	 * @param string $text Text containing variables.
-	 * @return string Text with variables replaced.
-	 */
-	private function replace_variables( string $text ): string {
-		// No user logged in, return empty for user-specific variables
-		if ( ! is_user_logged_in() ) {
-			// Check if text contains user-specific variables
-			if ( preg_match( '/{user_|{meta:}/i', $text ) ) {
-				return '';
-			}
-		}
-
-		$user = wp_get_current_user();
-
-		// User variables
-		$replacements = [
-			'{user_email}'        => $user->user_email ?? '',
-			'{user_login}'        => $user->user_login ?? '',
-			'{user_first_name}'   => $user->first_name ?? '',
-			'{user_last_name}'    => $user->last_name ?? '',
-			'{user_display_name}' => $user->display_name ?? '',
-			'{user_id}'           => $user->ID ?? '',
-			'{user_role}'         => ! empty( $user->roles ) ? $user->roles[0] : '',
-			'{site_url}'          => get_site_url(),
-			'{site_name}'         => get_bloginfo( 'name' ),
-			'{current_url}'       => '', // Will be replaced by JS
-			'{current_title}'     => '', // Will be replaced by JS
-		];
-
-		// Replace standard variables
-		$text = str_replace( array_keys( $replacements ), array_values( $replacements ), $text );
-
-		// Handle meta fields {meta:field_name}
-		if ( preg_match_all( '/{meta:([^}]+)}/', $text, $matches ) ) {
-			foreach ( $matches[1] as $index => $meta_key ) {
-				$meta_value = get_user_meta( $user->ID, $meta_key, true );
-				$text       = str_replace( $matches[0][ $index ], $meta_value, $text );
-			}
-		}
-
-		return $text;
-	}
-
-	/**
-	 * Check if user has already submitted a form
-	 *
-	 * @param string $form_id Form ID.
-	 * @param int    $user_id User ID (0 for current user).
-	 * @return bool
-	 */
-	public function has_user_submitted( string $form_id, int $user_id = 0 ): bool {
-		if ( 0 === $user_id ) {
-			$user_id = get_current_user_id();
-		}
-
-		if ( 0 === $user_id ) {
-			return false; // Not logged in
-		}
-
-		$submitted_forms = get_user_meta( $user_id, '_ghl_submitted_forms', true );
-		if ( ! is_array( $submitted_forms ) ) {
-			$submitted_forms = [];
-		}
-
-		return in_array( $form_id, $submitted_forms, true );
-	}
-
-	/**
-	 * Mark form as submitted by user
-	 *
-	 * @param string $form_id Form ID.
-	 * @param int    $user_id User ID (0 for current user).
-	 * @return bool
-	 */
-	public function mark_form_submitted( string $form_id, int $user_id = 0 ): bool {
-		if ( 0 === $user_id ) {
-			$user_id = get_current_user_id();
-		}
-
-		if ( 0 === $user_id ) {
-			return false;
-		}
-
-		$submitted_forms = get_user_meta( $user_id, '_ghl_submitted_forms', true );
-		if ( ! is_array( $submitted_forms ) ) {
-			$submitted_forms = [];
-		}
-
-		if ( ! in_array( $form_id, $submitted_forms, true ) ) {
-			$submitted_forms[] = $form_id;
-			update_user_meta( $user_id, '_ghl_submitted_forms', $submitted_forms );
-		}
-
-		return true;
-	}
-
-	/**
-	 * Check if form should be hidden for user
-	 *
-	 * @param string $form_id Form ID.
-	 * @return bool
-	 */
 	/**
 	 * Handle AJAX request to get forms from GoHighLevel.
 	 *
@@ -462,7 +288,7 @@ class FormSettings {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to access forms.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to access forms.', 'syncly' ),
 				],
 				403
 			);
@@ -472,7 +298,7 @@ class FormSettings {
 		if ( ! $settings_manager->is_connection_verified() ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'Please connect to GoHighLevel first.', 'ghl-crm-integration' ),
+					'message' => __( 'Please connect to GoHighLevel first.', 'syncly' ),
 				],
 				401
 			);
@@ -496,7 +322,7 @@ class FormSettings {
 				[
 					'message' => sprintf(
 						/* translators: %s: Error message */
-						__( 'Failed to fetch forms: %s', 'ghl-crm-integration' ),
+						__( 'Failed to fetch forms: %s', 'syncly' ),
 						$e->getMessage()
 					),
 				],
@@ -507,7 +333,7 @@ class FormSettings {
 				[
 					'message' => sprintf(
 						/* translators: %s: error message */
-						__( 'A fatal error occurred while fetching forms: %s', 'ghl-crm-integration' ),
+						__( 'A fatal error occurred while fetching forms: %s', 'syncly' ),
 						$e->getMessage()
 					),
 				],
@@ -516,25 +342,4 @@ class FormSettings {
 		}
 	}
 
-	/**
-	 * Check if a form should be hidden based on submission limits.
-	 *
-	 * @param string $form_id The GHL form ID.
-	 * @return bool
-	 */
-	public function should_hide_form( string $form_id ): bool {
-		$settings = $this->get_form_settings( $form_id );
-
-		// If submission limit is unlimited, never hide
-		if ( 'unlimited' === $settings['submission_limit'] ) {
-			return false;
-		}
-
-		// If limit is 'once', check if user has submitted
-		if ( 'once' === $settings['submission_limit'] ) {
-			return $this->has_user_submitted( $form_id );
-		}
-
-		return false;
-	}
 }

@@ -68,7 +68,7 @@ class CustomObjectAjaxHandler {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to access Custom Objects.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to access Custom Objects.', 'syncly' ),
 				],
 				403
 			);
@@ -82,13 +82,13 @@ class CustomObjectAjaxHandler {
 		if ( ! $is_connected ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'Not connected to GoHighLevel. Please connect first.', 'ghl-crm-integration' ),
+					'message' => __( 'Not connected to GoHighLevel. Please connect first.', 'syncly' ),
 				],
 				400
 			);
 		}
 
-		$force_refresh = isset( $_POST['force_refresh'] ) && '1' === $_POST['force_refresh'];
+		$force_refresh = isset( $_POST['force_refresh'] ) && '1' === sanitize_key( wp_unslash( $_POST['force_refresh'] ) );
 
 		try {
 			$custom_object_resource = new \GHL_CRM\API\Resources\CustomObjectResource(
@@ -115,7 +115,7 @@ class CustomObjectAjaxHandler {
 				[
 					'message' => sprintf(
 						/* translators: %s: Error message */
-						__( 'Failed to fetch Custom Objects: %s', 'ghl-crm-integration' ),
+						__( 'Failed to fetch Custom Objects: %s', 'syncly' ),
 						$e->getMessage()
 					),
 				],
@@ -135,18 +135,18 @@ class CustomObjectAjaxHandler {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to access Custom Objects.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to access Custom Objects.', 'syncly' ),
 				],
 				403
 			);
 		}
 
-		$schema_id = sanitize_text_field( $_POST['schema_id'] ?? '' );
+		$schema_id = isset( $_POST['schema_id'] ) ? sanitize_text_field( wp_unslash( $_POST['schema_id'] ) ) : '';
 
 		if ( empty( $schema_id ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'Schema ID is required.', 'ghl-crm-integration' ),
+					'message' => __( 'Schema ID is required.', 'syncly' ),
 				],
 				400
 			);
@@ -161,7 +161,7 @@ class CustomObjectAjaxHandler {
 			if ( ! $schema ) {
 				wp_send_json_error(
 					[
-						'message' => __( 'Schema not found.', 'ghl-crm-integration' ),
+						'message' => __( 'Schema not found.', 'syncly' ),
 					],
 					404
 				);
@@ -229,7 +229,7 @@ class CustomObjectAjaxHandler {
 				[
 					'message'   => sprintf(
 						/* translators: %s: Error message */
-						__( 'Failed to fetch schema details: %s', 'ghl-crm-integration' ),
+						__( 'Failed to fetch schema details: %s', 'syncly' ),
 						$e->getMessage()
 					),
 					'schema_id' => $schema_id,
@@ -241,7 +241,7 @@ class CustomObjectAjaxHandler {
 				[
 					'message'   => sprintf(
 						/* translators: %s: Error message */
-						__( 'An unexpected error occurred while fetching schema details: %s', 'ghl-crm-integration' ),
+						__( 'An unexpected error occurred while fetching schema details: %s', 'syncly' ),
 						$t->getMessage()
 					),
 					'schema_id' => $schema_id,
@@ -260,7 +260,7 @@ class CustomObjectAjaxHandler {
 		check_ajax_referer( 'ghl_crm_mappings', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
 		}
 
 		$post_types = get_post_types( [ 'public' => true ], 'objects' );
@@ -284,16 +284,20 @@ class CustomObjectAjaxHandler {
 		check_ajax_referer( 'ghl_crm_mappings', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
 		}
 
-		$post_type = sanitize_text_field( $_POST['post_type'] ?? '' );
+		$post_type = isset( $_POST['post_type'] ) ? sanitize_key( wp_unslash( $_POST['post_type'] ) ) : '';
 
 		if ( empty( $post_type ) ) {
-			wp_send_json_error( [ 'message' => __( 'Post type is required', 'ghl-crm-integration' ) ], 400 );
+			wp_send_json_error( [ 'message' => __( 'Post type is required', 'syncly' ) ], 400 );
 		}
 
-		$fields = \GHL_CRM_Pro\Sync\CustomObjectFieldDiscovery::get_fields_for_post_type( $post_type );
+		$fields = apply_filters( 'ghl_crm_cpt_fields_for_post_type', null, $post_type );
+
+		if ( ! is_array( $fields ) ) {
+			wp_send_json_error( [ 'message' => __( 'Custom object field discovery is unavailable.', 'syncly' ) ], 404 );
+		}
 
 		wp_send_json_success( [ 'fields' => $fields ] );
 	}
@@ -307,40 +311,44 @@ class CustomObjectAjaxHandler {
 		check_ajax_referer( 'ghl_crm_mappings', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
 		}
 
 		$settings_manager = SettingsManager::get_instance();
 
-		$mapping_id   = sanitize_text_field( $_POST['mapping_id'] ?? '' );
+		$mapping_id   = isset( $_POST['mapping_id'] ) ? sanitize_text_field( wp_unslash( $_POST['mapping_id'] ) ) : '';
+		$wp_post_type = isset( $_POST['wp_post_type'] ) ? sanitize_key( wp_unslash( $_POST['wp_post_type'] ) ) : '';
+		$post_type    = get_post_type_object( $wp_post_type );
+		$triggers     = isset( $_POST['triggers'] ) && is_array( $_POST['triggers'] ) ? wp_unslash( $_POST['triggers'] ) : [];
 		$mapping_data = [
 			'id'                  => $mapping_id ? $mapping_id : 'mapping_' . time(),
-			'name'                => sanitize_text_field( $_POST['mapping_name'] ?? '' ),
-			'wp_post_type'        => sanitize_text_field( $_POST['wp_post_type'] ?? '' ),
-			'wp_post_type_label'  => get_post_type_object( $_POST['wp_post_type'] ?? '' )->label ?? '',
-			'ghl_object'          => sanitize_text_field( $_POST['ghl_object'] ?? '' ),
-			'ghl_object_key'      => sanitize_text_field( $_POST['ghl_object_key'] ?? '' ),
-			'active'              => isset( $_POST['mapping_active'] ) && 'true' === $_POST['mapping_active'],
-			'triggers'            => array_map( 'sanitize_text_field', $_POST['triggers'] ?? [] ),
+			'name'                => isset( $_POST['mapping_name'] ) ? sanitize_text_field( wp_unslash( $_POST['mapping_name'] ) ) : '',
+			'wp_post_type'        => $wp_post_type,
+			'wp_post_type_label'  => $post_type ? $post_type->label : '',
+			'ghl_object'          => isset( $_POST['ghl_object'] ) ? sanitize_text_field( wp_unslash( $_POST['ghl_object'] ) ) : '',
+			'ghl_object_key'      => isset( $_POST['ghl_object_key'] ) ? sanitize_text_field( wp_unslash( $_POST['ghl_object_key'] ) ) : '',
+			'active'              => isset( $_POST['mapping_active'] ) && 'true' === sanitize_key( wp_unslash( $_POST['mapping_active'] ) ),
+			'triggers'            => array_map( 'sanitize_text_field', $triggers ),
 
 			// Legacy fields for backward compatibility.
-			'contact_source'      => sanitize_text_field( $_POST['contact_source'] ?? '' ),
-			'contact_field'       => sanitize_text_field( $_POST['contact_field'] ?? '' ),
-			'contact_not_found'   => sanitize_text_field( $_POST['contact_not_found'] ?? 'skip' ),
+			'contact_source'      => isset( $_POST['contact_source'] ) ? sanitize_text_field( wp_unslash( $_POST['contact_source'] ) ) : '',
+			'contact_field'       => isset( $_POST['contact_field'] ) ? sanitize_text_field( wp_unslash( $_POST['contact_field'] ) ) : '',
+			'contact_not_found'   => isset( $_POST['contact_not_found'] ) ? sanitize_text_field( wp_unslash( $_POST['contact_not_found'] ) ) : 'skip',
 
 			// Multi-association support.
 			'associations'        => [],
 
 			'field_mappings'      => [],
-			'enable_batch_sync'   => isset( $_POST['enable_batch_sync'] ) && 'true' === $_POST['enable_batch_sync'],
-			'log_sync_operations' => isset( $_POST['log_sync_operations'] ) && 'true' === $_POST['log_sync_operations'],
+			'enable_batch_sync'   => isset( $_POST['enable_batch_sync'] ) && 'true' === sanitize_key( wp_unslash( $_POST['enable_batch_sync'] ) ),
+			'log_sync_operations' => isset( $_POST['log_sync_operations'] ) && 'true' === sanitize_key( wp_unslash( $_POST['log_sync_operations'] ) ),
 			'created_at'          => $mapping_id ? null : current_time( 'mysql' ),
 			'updated_at'          => current_time( 'mysql' ),
 		];
 
 		// Process associations (new format).
-		if ( ! empty( $_POST['associations'] ) && is_array( $_POST['associations'] ) ) {
-			foreach ( $_POST['associations'] as $assoc ) {
+		$associations = isset( $_POST['associations'] ) && is_array( $_POST['associations'] ) ? wp_unslash( $_POST['associations'] ) : [];
+		if ( ! empty( $associations ) ) {
+			foreach ( $associations as $assoc ) {
 				$mapping_data['associations'][] = [
 					'target_type'      => sanitize_text_field( $assoc['target_type'] ?? '' ),
 					'source'           => sanitize_text_field( $assoc['source'] ?? '' ),
@@ -361,8 +369,9 @@ class CustomObjectAjaxHandler {
 		}
 
 		// Process field mappings.
-		if ( ! empty( $_POST['field_mappings'] ) && is_array( $_POST['field_mappings'] ) ) {
-			foreach ( $_POST['field_mappings'] as $field_map ) {
+		$field_mappings = isset( $_POST['field_mappings'] ) && is_array( $_POST['field_mappings'] ) ? wp_unslash( $_POST['field_mappings'] ) : [];
+		if ( ! empty( $field_mappings ) ) {
+			foreach ( $field_mappings as $field_map ) {
 				$mapping_data['field_mappings'][] = [
 					'wp_field'      => sanitize_text_field( $field_map['wp_field'] ?? '' ),
 					'wp_field_name' => sanitize_text_field( $field_map['wp_field_name'] ?? '' ),
@@ -393,7 +402,7 @@ class CustomObjectAjaxHandler {
 
 		wp_send_json_success(
 			[
-				'message' => __( 'Mapping saved successfully', 'ghl-crm-integration' ),
+				'message' => __( 'Mapping saved successfully', 'syncly' ),
 				'mapping' => $mapping_data,
 			]
 		);
@@ -408,7 +417,7 @@ class CustomObjectAjaxHandler {
 		check_ajax_referer( 'ghl_crm_mappings', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
 		}
 
 		$mappings = SettingsManager::get_instance()->get_option( 'ghl_crm_custom_object_mappings', [] );
@@ -425,11 +434,11 @@ class CustomObjectAjaxHandler {
 		check_ajax_referer( 'ghl_crm_mappings', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
 		}
 
 		$settings_manager = SettingsManager::get_instance();
-		$mapping_id       = sanitize_text_field( $_POST['mapping_id'] ?? '' );
+		$mapping_id       = isset( $_POST['mapping_id'] ) ? sanitize_text_field( wp_unslash( $_POST['mapping_id'] ) ) : '';
 		$mappings         = $settings_manager->get_option( 'ghl_crm_custom_object_mappings', [] );
 
 		$mappings = array_filter(
@@ -441,7 +450,7 @@ class CustomObjectAjaxHandler {
 
 		$settings_manager->update_option( 'ghl_crm_custom_object_mappings', array_values( $mappings ) );
 
-		wp_send_json_success( [ 'message' => __( 'Mapping deleted successfully', 'ghl-crm-integration' ) ] );
+		wp_send_json_success( [ 'message' => __( 'Mapping deleted successfully', 'syncly' ) ] );
 	}
 
 	/** Prevent cloning. */

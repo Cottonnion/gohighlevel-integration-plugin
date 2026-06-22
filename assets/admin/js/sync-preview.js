@@ -19,12 +19,7 @@ window.ghlSyncPreview = {
 			});
 		}
 
-		// Load SweetAlert2 if not already loaded
-		if (typeof Swal === 'undefined') {
-			var script = document.createElement('script');
-			script.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
-			document.head.appendChild(script);
-		}
+		// SweetAlert2 is bundled by the plugin assets when available.
 
 		// Form submission handler
 		const self = this;

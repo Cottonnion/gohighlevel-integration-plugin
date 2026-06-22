@@ -1,3 +1,21 @@
+.ghl-dashboard-tab {
+	transition: all 0.2s ease;
+}
+
+.ghl-dashboard-tab:hover {
+	background: #f1f5f9 !important;
+	color: #1e293b !important;
+}
+
+.ghl-dashboard-tab.active {
+	background: #6366f1 !important;
+	color: #fff !important;
+}
+
+.ghl-dashboard-tab.active:hover {
+	background: #4f46e5 !important;
+}
+
 /**
  * Dashboard Styles
  *

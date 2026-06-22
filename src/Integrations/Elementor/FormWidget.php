@@ -34,7 +34,7 @@ class FormWidget extends \Elementor\Widget_Base {
 	 * @return string
 	 */
 	public function get_title(): string {
-		return __( 'GoHighLevel Form', 'ghl-crm-integration' );
+		return __( 'GoHighLevel Form', 'syncly' );
 	}
 
 	/**
@@ -83,7 +83,7 @@ class FormWidget extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'content_section',
 			[
-				'label' => __( 'Form Settings', 'ghl-crm-integration' ),
+				'label' => __( 'Form Settings', 'syncly' ),
 				'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
 			]
 		);
@@ -100,10 +100,10 @@ class FormWidget extends \Elementor\Widget_Base {
 							<span style="color: #000; font-style: normal;">%s</span>
 						</p>
 					</div>',
-					__( 'Form Configuration', 'ghl-crm-integration' ),
+					__( 'Form Configuration', 'syncly' ),
 					sprintf(
 						/* translators: %s: Link to forms settings page */
-						__( 'Advanced form settings (submission limits, logged-in restrictions, custom messages) are managed from the <a href="%s" target="_blank" style="color: #2196F3; font-style: normal;">Forms Settings</a> page in the plugin dashboard.', 'ghl-crm-integration' ),
+						__( 'Advanced form settings (submission limits, logged-in restrictions, custom messages) are managed from the <a href="%s" target="_blank" style="color: #2196F3; font-style: normal;">Forms Settings</a> page in the plugin dashboard.', 'syncly' ),
 						admin_url( 'admin.php?page=ghl-crm-admin#forms' )
 					)
 				),
@@ -115,12 +115,12 @@ class FormWidget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'form_id',
 			[
-				'label'       => __( 'Select Form', 'ghl-crm-integration' ),
+				'label'       => __( 'Select Form', 'syncly' ),
 				'type'        => \Elementor\Controls_Manager::SELECT,
 				'options'     => $this->get_available_forms(),
 				'default'     => '',
 				'label_block' => true,
-				'description' => __( 'Choose a GoHighLevel form to display. Forms are synced from your GHL account.', 'ghl-crm-integration' ),
+				'description' => __( 'Choose a GoHighLevel form to display. Forms are synced from your GHL account.', 'syncly' ),
 			]
 		);
 
@@ -130,7 +130,7 @@ class FormWidget extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'style_section',
 			[
-				'label' => __( 'Form Style', 'ghl-crm-integration' ),
+				'label' => __( 'Form Style', 'syncly' ),
 				'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
 			]
 		);
@@ -138,7 +138,7 @@ class FormWidget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'form_width',
 			[
-				'label'      => __( 'Width', 'ghl-crm-integration' ),
+				'label'      => __( 'Width', 'syncly' ),
 				'type'       => \Elementor\Controls_Manager::SLIDER,
 				'size_units' => [ 'px', '%' ],
 				'range'      => [
@@ -164,7 +164,7 @@ class FormWidget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'form_height',
 			[
-				'label'       => __( 'Minimum Height', 'ghl-crm-integration' ),
+				'label'       => __( 'Minimum Height', 'syncly' ),
 				'type'        => \Elementor\Controls_Manager::SLIDER,
 				'size_units'  => [ 'px' ],
 				'range'       => [
@@ -180,14 +180,14 @@ class FormWidget extends \Elementor\Widget_Base {
 				'selectors'   => [
 					'{{WRAPPER}} .ghl-form-wrapper' => 'min-height: {{SIZE}}{{UNIT}};',
 				],
-				'description' => __( 'Set a minimum height for the form. The form will expand if content is larger.', 'ghl-crm-integration' ),
+				'description' => __( 'Set a minimum height for the form. The form will expand if content is larger.', 'syncly' ),
 			]
 		);
 
 		$this->add_responsive_control(
 			'form_margin',
 			[
-				'label'      => __( 'Margin', 'ghl-crm-integration' ),
+				'label'      => __( 'Margin', 'syncly' ),
 				'type'       => \Elementor\Controls_Manager::DIMENSIONS,
 				'size_units' => [ 'px', '%', 'em' ],
 				'selectors'  => [
@@ -199,7 +199,7 @@ class FormWidget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'form_padding',
 			[
-				'label'      => __( 'Padding', 'ghl-crm-integration' ),
+				'label'      => __( 'Padding', 'syncly' ),
 				'type'       => \Elementor\Controls_Manager::DIMENSIONS,
 				'size_units' => [ 'px', '%', 'em' ],
 				'selectors'  => [
@@ -218,7 +218,7 @@ class FormWidget extends \Elementor\Widget_Base {
 	 */
 	private function get_available_forms(): array {
 		$options = [
-			'' => __( '— Select a Form —', 'ghl-crm-integration' ),
+			'' => __( '— Select a Form —', 'syncly' ),
 		];
 
 		try {
@@ -226,7 +226,7 @@ class FormWidget extends \Elementor\Widget_Base {
 			$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
 			if ( ! $settings_manager->is_connection_verified() ) {
 				return [
-					'' => __( '— Not Connected to GoHighLevel —', 'ghl-crm-integration' ),
+					'' => __( '— Not Connected to GoHighLevel —', 'syncly' ),
 				];
 			}
 
@@ -245,12 +245,12 @@ class FormWidget extends \Elementor\Widget_Base {
 
 			if ( count( $options ) === 1 ) {
 				return [
-					'' => __( '— No Forms Found —', 'ghl-crm-integration' ),
+					'' => __( '— No Forms Found —', 'syncly' ),
 				];
 			}
 		} catch ( \Exception $e ) {
 			return [
-				'' => __( '— Error Loading Forms —', 'ghl-crm-integration' ),
+				'' => __( '— Error Loading Forms —', 'syncly' ),
 			];
 		}
 
@@ -270,8 +270,8 @@ class FormWidget extends \Elementor\Widget_Base {
 			if ( \Elementor\Plugin::$instance->editor->is_edit_mode() ) {
 				echo '<div style="padding: 40px; text-align: center; background: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 4px;">';
 				echo '<p style="margin: 0; color: #6c757d; font-size: 14px;">';
-				echo '<strong>' . esc_html__( 'GoHighLevel Form Widget', 'ghl-crm-integration' ) . '</strong><br>';
-				echo esc_html__( 'Please select a form from the widget settings.', 'ghl-crm-integration' );
+				echo '<strong>' . esc_html__( 'GoHighLevel Form Widget', 'syncly' ) . '</strong><br>';
+				echo esc_html__( 'Please select a form from the widget settings.', 'syncly' );
 				echo '</p>';
 				echo '</div>';
 			}

@@ -103,7 +103,7 @@ class ElementorConditions {
 		$element->start_controls_section(
 			'ghl_restriction_section',
 			[
-				'label' => __( 'GHL Conditional Display', 'ghl-crm-integration' ),
+				'label' => __( 'GHL Conditional Display', 'syncly' ),
 				'tab'   => Controls_Manager::TAB_ADVANCED,
 			]
 		);
@@ -112,13 +112,13 @@ class ElementorConditions {
 		$element->add_control(
 			'ghl_enable_restriction',
 			[
-				'label'        => __( 'Enable Restriction', 'ghl-crm-integration' ),
+				'label'        => __( 'Enable Restriction', 'syncly' ),
 				'type'         => Controls_Manager::SWITCHER,
-				'label_on'     => __( 'Yes', 'ghl-crm-integration' ),
-				'label_off'    => __( 'No', 'ghl-crm-integration' ),
+				'label_on'     => __( 'Yes', 'syncly' ),
+				'label_off'    => __( 'No', 'syncly' ),
 				'return_value' => 'yes',
 				'default'      => '',
-				'description'  => __( 'Show/hide this widget based on GoHighLevel tags', 'ghl-crm-integration' ),
+				'description'  => __( 'Show/hide this widget based on GoHighLevel tags', 'syncly' ),
 			]
 		);
 
@@ -126,15 +126,15 @@ class ElementorConditions {
 		$element->add_control(
 			'ghl_restriction_type',
 			[
-				'label'     => __( 'Restriction Type', 'ghl-crm-integration' ),
+				'label'     => __( 'Restriction Type', 'syncly' ),
 				'type'      => Controls_Manager::SELECT,
 				'default'   => 'has_any_tag',
 				'options'   => [
-					'has_any_tag'  => __( 'User has ANY of these tags', 'ghl-crm-integration' ),
-					'has_all_tags' => __( 'User has ALL of these tags', 'ghl-crm-integration' ),
-					'not_has_tags' => __( 'User does NOT have these tags', 'ghl-crm-integration' ),
-					'logged_in'    => __( 'User is logged in (any user)', 'ghl-crm-integration' ),
-					'logged_out'   => __( 'User is NOT logged in', 'ghl-crm-integration' ),
+					'has_any_tag'  => __( 'User has ANY of these tags', 'syncly' ),
+					'has_all_tags' => __( 'User has ALL of these tags', 'syncly' ),
+					'not_has_tags' => __( 'User does NOT have these tags', 'syncly' ),
+					'logged_in'    => __( 'User is logged in (any user)', 'syncly' ),
+					'logged_out'   => __( 'User is NOT logged in', 'syncly' ),
 				],
 				'condition' => [
 					'ghl_enable_restriction' => 'yes',
@@ -146,12 +146,12 @@ class ElementorConditions {
 		$element->add_control(
 			'ghl_required_tags',
 			[
-				'label'       => __( 'Required Tags', 'ghl-crm-integration' ),
+				'label'       => __( 'Required Tags', 'syncly' ),
 				'type'        => Controls_Manager::SELECT2,
 				'multiple'    => true,
 				'options'     => $this->get_available_tags(),
 				'label_block' => true,
-				'description' => __( 'Select tags from your GoHighLevel account', 'ghl-crm-integration' ),
+				'description' => __( 'Select tags from your GoHighLevel account', 'syncly' ),
 				'condition'   => [
 					'ghl_enable_restriction' => 'yes',
 					'ghl_restriction_type!'  => [ 'logged_in', 'logged_out' ],
@@ -164,7 +164,7 @@ class ElementorConditions {
 		$element->add_control(
 			'ghl_conditions_heading',
 			[
-				'label'     => __( 'Additional Conditions', 'ghl-crm-integration' ),
+				'label'     => __( 'Additional Conditions', 'syncly' ),
 				'type'      => Controls_Manager::HEADING,
 				'separator' => 'before',
 				'condition' => [
@@ -177,14 +177,14 @@ class ElementorConditions {
 		$element->add_control(
 			'ghl_condition_logic',
 			[
-				'label'       => __( 'Condition Logic', 'ghl-crm-integration' ),
+				'label'       => __( 'Condition Logic', 'syncly' ),
 				'type'        => Controls_Manager::SELECT,
 				'default'     => 'and',
 				'options'     => [
-					'and' => __( 'AND — all conditions must pass', 'ghl-crm-integration' ),
-					'or'  => __( 'OR — any condition can pass', 'ghl-crm-integration' ),
+					'and' => __( 'AND — all conditions must pass', 'syncly' ),
+					'or'  => __( 'OR — any condition can pass', 'syncly' ),
 				],
-				'description' => __( 'How the primary condition above combines with additional conditions below.', 'ghl-crm-integration' ),
+				'description' => __( 'How the primary condition above combines with additional conditions below.', 'syncly' ),
 				'condition'   => [
 					'ghl_enable_restriction' => 'yes',
 					'ghl_restriction_type!'  => [ 'logged_in', 'logged_out' ],
@@ -197,13 +197,13 @@ class ElementorConditions {
 		$repeater->add_control(
 			'match_type',
 			[
-				'label'   => __( 'Match Type', 'ghl-crm-integration' ),
+				'label'   => __( 'Match Type', 'syncly' ),
 				'type'    => Controls_Manager::SELECT,
 				'default' => 'has_any',
 				'options' => [
-					'has_any'  => __( 'User has ANY of these tags', 'ghl-crm-integration' ),
-					'has_all'  => __( 'User has ALL of these tags', 'ghl-crm-integration' ),
-					'has_none' => __( 'User has NONE of these tags', 'ghl-crm-integration' ),
+					'has_any'  => __( 'User has ANY of these tags', 'syncly' ),
+					'has_all'  => __( 'User has ALL of these tags', 'syncly' ),
+					'has_none' => __( 'User has NONE of these tags', 'syncly' ),
 				],
 			]
 		);
@@ -211,7 +211,7 @@ class ElementorConditions {
 		$repeater->add_control(
 			'tags',
 			[
-				'label'       => __( 'Tags', 'ghl-crm-integration' ),
+				'label'       => __( 'Tags', 'syncly' ),
 				'type'        => Controls_Manager::SELECT2,
 				'multiple'    => true,
 				'options'     => $this->get_available_tags(),
@@ -222,13 +222,13 @@ class ElementorConditions {
 		$element->add_control(
 			'ghl_tag_conditions',
 			[
-				'label'         => __( 'Condition Groups', 'ghl-crm-integration' ),
+				'label'         => __( 'Condition Groups', 'syncly' ),
 				'type'          => Controls_Manager::REPEATER,
 				'fields'        => $repeater->get_controls(),
 				'default'       => [],
 				'prevent_empty' => false,
 				'title_field'   => '{{{ match_type === "has_any" ? "Has ANY of" : match_type === "has_all" ? "Has ALL of" : "Has NONE of" }}} ({{{ tags ? tags.length : 0 }}} tags)',
-				'description'   => __( 'Add condition groups to build compound rules. Leave empty to use only the primary condition above.', 'ghl-crm-integration' ),
+				'description'   => __( 'Add condition groups to build compound rules. Leave empty to use only the primary condition above.', 'syncly' ),
 				'condition'     => [
 					'ghl_enable_restriction' => 'yes',
 					'ghl_restriction_type!'  => [ 'logged_in', 'logged_out' ],
@@ -240,13 +240,13 @@ class ElementorConditions {
 		$element->add_control(
 			'ghl_hide_completely',
 			[
-				'label'        => __( 'Hide Completely', 'ghl-crm-integration' ),
+				'label'        => __( 'Hide Completely', 'syncly' ),
 				'type'         => Controls_Manager::SWITCHER,
-				'label_on'     => __( 'Yes', 'ghl-crm-integration' ),
-				'label_off'    => __( 'No', 'ghl-crm-integration' ),
+				'label_on'     => __( 'Yes', 'syncly' ),
+				'label_off'    => __( 'No', 'syncly' ),
 				'return_value' => 'yes',
 				'default'      => 'yes',
-				'description'  => __( 'If disabled, widget space will be preserved (invisible but takes space)', 'ghl-crm-integration' ),
+				'description'  => __( 'If disabled, widget space will be preserved (invisible but takes space)', 'syncly' ),
 				'condition'    => [
 					'ghl_enable_restriction' => 'yes',
 				],

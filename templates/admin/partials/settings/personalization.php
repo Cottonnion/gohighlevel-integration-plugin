@@ -23,17 +23,17 @@ $settings         = $settings_manager->get_settings_array();
 		<div class="ghl-settings-header">
 			<h2>
 				<span class="dashicons dashicons-email-alt"></span>
-				<?php esc_html_e( 'Email Campaign Personalization (?ghl_cid=)', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Email Campaign Personalization (?ghl_cid=)', 'syncly' ); ?>
 			</h2>
 			<p class="description">
-				<?php esc_html_e( 'When GoHighLevel sends an email campaign, append {{contact.id}} to links so visitors arriving from those emails can see personalized content even without logging in. Use [ghl_user_meta] shortcodes normally; the plugin resolves them from the contact\'s GHL data.', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'When GoHighLevel sends an email campaign, append {{contact.id}} to links so visitors arriving from those emails can see personalized content even without logging in. Use [ghl_user_meta] shortcodes normally; the plugin resolves them from the contact\'s GHL data.', 'syncly' ); ?>
 			</p>
 			<p class="description" style="margin-top: 6px;">
 				<?php
 				echo wp_kses(
 					sprintf(
 						/* translators: %s: Site home URL for personalization link example. */
-						__( '<strong>Simple personalization:</strong> <code>https://%s/page?ghl_cid={{contact.id}}</code>', 'ghl-crm-integration' ),
+						__( '<strong>Simple personalization:</strong> <code>https://%s/page?ghl_cid={{contact.id}}</code>', 'syncly' ),
 						esc_html( home_url() )
 					),
 					[
@@ -55,8 +55,8 @@ $settings         = $settings_manager->get_settings_array();
 						<tr>
 							<th scope="row">
 								<label for="enable_ghl_cid">
-									<?php esc_html_e( 'Enable ?ghl_cid= Parameter', 'ghl-crm-integration' ); ?>
-									<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'When enabled, the plugin reads the ghl_cid query parameter from the URL and uses it to personalize [ghl_user_meta] shortcodes for non-logged-in visitors arriving from GHL email campaigns.', 'ghl-crm-integration' ); ?>">?</span>
+									<?php esc_html_e( 'Enable ?ghl_cid= Parameter', 'syncly' ); ?>
+									<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'When enabled, the plugin reads the ghl_cid query parameter from the URL and uses it to personalize [ghl_user_meta] shortcodes for non-logged-in visitors arriving from GHL email campaigns.', 'syncly' ); ?>">?</span>
 								</label>
 							</th>
 							<td>
@@ -73,7 +73,7 @@ $settings         = $settings_manager->get_settings_array();
 										<span class="ghl-checkbox-inner"></span>
 									</span>
 									<span class="ghl-checkbox-label">
-										<?php esc_html_e( 'Personalize pages for visitors from GHL email links', 'ghl-crm-integration' ); ?>
+										<?php esc_html_e( 'Personalize pages for visitors from GHL email links', 'syncly' ); ?>
 									</span>
 								</label>
 							</td>
@@ -82,7 +82,7 @@ $settings         = $settings_manager->get_settings_array();
 						<tr>
 							<th scope="row">
 								<label for="ghl-cid-link-template">
-									<?php esc_html_e( 'Copy Link Template', 'ghl-crm-integration' ); ?>
+									<?php esc_html_e( 'Copy Link Template', 'syncly' ); ?>
 								</label>
 							</th>
 							<td>
@@ -94,10 +94,10 @@ $settings         = $settings_manager->get_settings_array();
 									value="<?php echo esc_url( home_url( '/page?ghl_cid={{contact.id}}' ) ); ?>"
 								>
 								<button type="button" class="ghl-button ghl-button-secondary" id="ghl-copy-cid-template" style="margin-left: 8px; vertical-align: middle;">
-									<?php esc_html_e( 'Copy', 'ghl-crm-integration' ); ?>
+									<?php esc_html_e( 'Copy', 'syncly' ); ?>
 								</button>
 								<p class="description ghl-description-spacing">
-										<?php esc_html_e( 'Copy this template and use it in your GHL email campaigns.', 'ghl-crm-integration' ); ?>
+										<?php esc_html_e( 'Copy this template and use it in your GHL email campaigns.', 'syncly' ); ?>
 								</p>
 							</td>
 						</tr>
@@ -105,8 +105,8 @@ $settings         = $settings_manager->get_settings_array();
 						<tr>
 							<th scope="row">
 								<label for="ghl_cid_hidden_fields">
-									<?php esc_html_e( 'Hide Fields From Guests', 'ghl-crm-integration' ); ?>
-									<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Select fields to hide from campaign visitors. Leave empty to show all fields.', 'ghl-crm-integration' ); ?>">?</span>
+									<?php esc_html_e( 'Hide Fields From Guests', 'syncly' ); ?>
+									<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Select fields to hide from campaign visitors. Leave empty to show all fields.', 'syncly' ); ?>">?</span>
 								</label>
 							</th>
 							<td>
@@ -119,16 +119,16 @@ $settings         = $settings_manager->get_settings_array();
 								>
 									<?php
 									$available_fields = array(
-										'first_name'  => __( 'First Name', 'ghl-crm-integration' ),
-										'last_name'   => __( 'Last Name', 'ghl-crm-integration' ),
-										'email'       => __( 'Email Address', 'ghl-crm-integration' ),
-										'phone'       => __( 'Phone Number', 'ghl-crm-integration' ),
-										'company'     => __( 'Company Name', 'ghl-crm-integration' ),
-										'street'      => __( 'Street Address', 'ghl-crm-integration' ),
-										'city'        => __( 'City', 'ghl-crm-integration' ),
-										'state'       => __( 'State/Province', 'ghl-crm-integration' ),
-										'postal_code' => __( 'Postal Code', 'ghl-crm-integration' ),
-										'country'     => __( 'Country', 'ghl-crm-integration' ),
+										'first_name'  => __( 'First Name', 'syncly' ),
+										'last_name'   => __( 'Last Name', 'syncly' ),
+										'email'       => __( 'Email Address', 'syncly' ),
+										'phone'       => __( 'Phone Number', 'syncly' ),
+										'company'     => __( 'Company Name', 'syncly' ),
+										'street'      => __( 'Street Address', 'syncly' ),
+										'city'        => __( 'City', 'syncly' ),
+										'state'       => __( 'State/Province', 'syncly' ),
+										'postal_code' => __( 'Postal Code', 'syncly' ),
+										'country'     => __( 'Country', 'syncly' ),
 									);
 
 									$hidden_fields = isset( $settings['ghl_cid_hidden_fields'] ) ? (array) json_decode( $settings['ghl_cid_hidden_fields'], true ) : array();
@@ -143,7 +143,7 @@ $settings         = $settings_manager->get_settings_array();
 									?>
 								</select>
 								<p class="description ghl-description-spacing" style="margin-top: 12px;">
-									<?php esc_html_e( 'By default, all fields are visible to campaign visitors. Select fields above to hide them.', 'ghl-crm-integration' ); ?>
+									<?php esc_html_e( 'By default, all fields are visible to campaign visitors. Select fields above to hide them.', 'syncly' ); ?>
 								</p>
 								<input type="hidden" id="ghl_cid_hidden_fields_json" name="ghl_cid_hidden_fields" value="<?php echo esc_attr( $settings['ghl_cid_hidden_fields'] ?? '[]' ); ?>">
 							</td>
@@ -152,16 +152,16 @@ $settings         = $settings_manager->get_settings_array();
 						<tr>
 							<th scope="row">
 								<label>
-									<?php esc_html_e( 'Test Link Debugger', 'ghl-crm-integration' ); ?>
-									<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Paste a campaign URL and see exactly what contact data resolves and which fields are available.', 'ghl-crm-integration' ); ?>">?</span>
+									<?php esc_html_e( 'Test Link Debugger', 'syncly' ); ?>
+									<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Paste a campaign URL and see exactly what contact data resolves and which fields are available.', 'syncly' ); ?>">?</span>
 								</label>
 							</th>
 							<td>
 								<button type="button" class="ghl-button ghl-button-secondary" id="ghl-test-link-btn">
-									<?php esc_html_e( 'Open Test Link Tool', 'ghl-crm-integration' ); ?>
+									<?php esc_html_e( 'Open Test Link Tool', 'syncly' ); ?>
 								</button>
 								<p class="description ghl-description-spacing">
-									<?php esc_html_e( 'Debug what a campaign visitor will see from a ?ghl_cid= URL.', 'ghl-crm-integration' ); ?>
+									<?php esc_html_e( 'Debug what a campaign visitor will see from a ?ghl_cid= URL.', 'syncly' ); ?>
 								</p>
 							</td>
 						</tr>
@@ -174,18 +174,18 @@ $settings         = $settings_manager->get_settings_array();
 		<hr>
 
 		<button type="button" class="ghl-button ghl-button-primary ghl-save-settings-btn">
-			<span class="ghl-button-text"><?php esc_html_e( 'Save Personalization Settings', 'ghl-crm-integration' ); ?></span>
+			<span class="ghl-button-text"><?php esc_html_e( 'Save Personalization Settings', 'syncly' ); ?></span>
 		</button>
 	</div>
 </div>
 
-<script>
+<?php ob_start(); ?>
 (function() {
 	// Initialize Select2 for field selection
 	var fieldSelect = document.querySelector('.ghl-field-select2');
 	if (fieldSelect && typeof jQuery !== 'undefined' && jQuery.fn.select2) {
 		jQuery(fieldSelect).select2({
-			placeholder: '<?php echo esc_js( __( 'Select fields to hide...', 'ghl-crm-integration' ) ); ?>',
+			placeholder: '<?php echo esc_js( __( 'Select fields to hide...', 'syncly' ) ); ?>',
 			allowClear: true,
 			width: '100%'
 		});
@@ -389,4 +389,4 @@ $settings         = $settings_manager->get_settings_array();
 		return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
 	}
 })();
-</script>
+<?php wp_add_inline_script( 'ghl-crm-settings-js', ob_get_clean() ); ?>

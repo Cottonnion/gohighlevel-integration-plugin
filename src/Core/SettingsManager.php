@@ -48,6 +48,42 @@ class SettingsManager {
 	private const VERIFICATION_OPTION_NAME = 'ghl_crm_connection_verified';
 
 	/**
+	 * Settings whose selected GHL tags/fields belong to a specific location.
+	 *
+	 * Stored as {setting_key}_{location_id}; hydrated back to {setting_key} for callers.
+	 *
+	 * @var array<int, string>
+	 */
+	private const LOCATION_SCOPED_SETTING_KEYS = [
+		'user_field_mapping',
+		'role_tags',
+		'global_tags',
+		'user_register_tags',
+		'restrictions_allowed_tags',
+		'family_parent_tag',
+		'login_last_login_field_id',
+		'login_count_field_id',
+		'login_first_login_tags',
+		'login_every_login_tags',
+		'login_milestone_tags',
+		'login_inactivity_tags',
+		'login_active_tags',
+		'login_tag_redirects',
+		'wc_customer_tag',
+		'wc_abandoned_cart_tag',
+		'wc_abandoned_cart_recovery_tag',
+	];
+
+	/**
+	 * Standalone options containing GHL location-specific object/field mappings.
+	 *
+	 * @var array<int, string>
+	 */
+	private const LOCATION_SCOPED_OPTION_NAMES = [
+		'ghl_crm_custom_object_mappings',
+	];
+
+	/**
 	 * Get class instance | singleton pattern
 	 *
 	 * @return self
@@ -88,7 +124,7 @@ class SettingsManager {
 		add_action( 'wp_ajax_ghl_crm_get_settings', [ $this, 'get_settings' ] );
 		add_action( 'wp_ajax_ghl_crm_test_connection', [ $this, 'test_connection' ] );
 		add_action( 'wp_ajax_ghl_crm_save_field_mapping', [ $this, 'save_field_mapping' ] );
-		add_action( 'wp_ajax_ghl_crm_preview_user_sync', [ $this, 'preview_user_sync' ] ); // Pro-gated in handler
+		add_action( 'wp_ajax_ghl_crm_preview_user_sync', [ $this, 'preview_user_sync' ] );
 		add_action( 'wp_ajax_ghl_crm_oauth_reconnect', [ $this, 'oauth_reconnect' ] );
 		add_action( 'wp_ajax_ghl_crm_refresh_access_token', [ $this, 'ajax_refresh_access_token' ] );
 		add_action( 'wp_ajax_ghl_crm_save_wizard_settings', [ $this, 'handle_save_wizard_settings' ] );
@@ -129,7 +165,7 @@ class SettingsManager {
 			if ( ! current_user_can( 'manage_options' ) ) {
 				wp_send_json_error(
 					[
-						'message' => __( 'You do not have permission to save settings.', 'ghl-crm-integration' ),
+						'message' => __( 'You do not have permission to save settings.', 'syncly' ),
 					],
 					403
 				);
@@ -164,15 +200,9 @@ class SettingsManager {
 
 				// Sanitize based on value type
 				if ( is_array( $value ) ) {
-					// Special handling for location-specific tag configurations
-					if ( in_array( $key, [ 'role_tags', 'global_tags', 'user_register_tags' ], true ) ) {
-						$location_specific = $this->save_location_specific_tags( $key, $value );
-						if ( null !== $location_specific ) {
-							$new_settings[ $location_specific['key'] ] = $location_specific['value'];
-						}
-						continue; // Don't save as regular settings
+					if ( 'role_tags' === $key ) {
+						$new_settings[ $key ] = $this->sanitize_role_tags( $value );
 					} else {
-						// Handle other arrays (checkboxes, multi-selects, etc.)
 						$new_settings[ $key ] = $this->sanitize_array_recursive( $value );
 					}
 				} else {
@@ -208,11 +238,7 @@ class SettingsManager {
 				]
 			);
 
-			// Remove legacy non-location tag keys when location-specific keys are present
-			$active_location_id = $settings['location_id'] ?? $settings['oauth_location_id'] ?? '';
-			if ( ! empty( $active_location_id ) ) {
-				unset( $settings['role_tags'], $settings['global_tags'], $settings['user_register_tags'] );
-			}
+			$settings = $this->prepare_location_scoped_settings_for_storage( $settings );
 
 			// Validate critical fields only if user is actively trying to set up manual API connection
 			// Don't validate on imports or when only location_id is present
@@ -223,7 +249,7 @@ class SettingsManager {
 				if ( empty( $settings['location_id'] ) ) {
 					wp_send_json_error(
 						[
-							'message' => __( 'Location ID is required when setting API Token.', 'ghl-crm-integration' ),
+							'message' => __( 'Location ID is required when setting API Token.', 'syncly' ),
 						],
 						400
 					);
@@ -241,7 +267,7 @@ class SettingsManager {
 			}
 
 			if ( ! $saved ) {
-				throw new \Exception( __( 'Failed to save settings. Please try again.', 'ghl-crm-integration' ) );
+				throw new \Exception( __( 'Failed to save settings. Please try again.', 'syncly' ) );
 			}
 
 				// Build response settings and include location-specific tag configurations
@@ -249,7 +275,7 @@ class SettingsManager {
 				$location_id       = $response_settings['location_id'] ?? $response_settings['oauth_location_id'] ?? '';
 
 			if ( ! empty( $location_id ) ) {
-				// Preserve only location-scoped tag keys in the response
+				// Preserve legacy response shape for role/global/register tag settings.
 				$response_settings[ "role_tags_{$location_id}" ]          = $this->get_location_role_tags( $location_id );
 				$response_settings[ "global_tags_{$location_id}" ]        = $this->get_location_global_tags( $location_id );
 				$response_settings[ "user_register_tags_{$location_id}" ] = $this->get_location_register_tags( $location_id );
@@ -258,13 +284,13 @@ class SettingsManager {
 			}
 
 				$response_data = [
-					'message'  => __( 'Settings saved successfully!', 'ghl-crm-integration' ),
+					'message'  => __( 'Settings saved successfully!', 'syncly' ),
 					'settings' => $response_settings,
 				];
 
 				// Add warning if credentials changed
 				if ( $credentials_changed ) {
-					$response_data['warning'] = __( 'API credentials changed. Please test your connection to verify.', 'ghl-crm-integration' );
+					$response_data['warning'] = __( 'API credentials changed. Please test your connection to verify.', 'syncly' );
 				}
 
 				wp_send_json_success( $response_data );
@@ -273,7 +299,7 @@ class SettingsManager {
 				[
 					'message'       => sprintf(
 						/* translators: %s: error message */
-						__( 'An error occurred while saving settings: %s', 'ghl-crm-integration' ),
+						__( 'An error occurred while saving settings: %s', 'syncly' ),
 						$e->getMessage()
 					),
 					'error_details' => [
@@ -289,7 +315,7 @@ class SettingsManager {
 				[
 					'message'       => sprintf(
 						/* translators: %s: error message */
-						__( 'A fatal error occurred while saving settings: %s', 'ghl-crm-integration' ),
+						__( 'A fatal error occurred while saving settings: %s', 'syncly' ),
 						$e->getMessage()
 					),
 					'error_details' => [
@@ -329,7 +355,7 @@ class SettingsManager {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to view settings.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to view settings.', 'syncly' ),
 				],
 				403
 			);
@@ -362,7 +388,7 @@ class SettingsManager {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to test connection.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to test connection.', 'syncly' ),
 				],
 				403
 			);
@@ -406,7 +432,7 @@ class SettingsManager {
 		check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'ghl-crm-integration' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'syncly' ) ], 403 );
 		}
 
 		try {
@@ -418,7 +444,7 @@ class SettingsManager {
 				[
 					'message' => sprintf(
 						/* translators: %s: token validity duration */
-						__( 'Access token refreshed successfully. Valid for %s.', 'ghl-crm-integration' ),
+						__( 'Access token refreshed successfully. Valid for %s.', 'syncly' ),
 						$expires
 					),
 				]
@@ -441,7 +467,7 @@ class SettingsManager {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to reconnect OAuth.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to reconnect OAuth.', 'syncly' ),
 				],
 				403
 			);
@@ -454,7 +480,7 @@ class SettingsManager {
 
 			wp_send_json_success(
 				[
-					'message'      => __( 'Redirecting to GoHighLevel for reconnection...', 'ghl-crm-integration' ),
+					'message'      => __( 'Redirecting to GoHighLevel for reconnection...', 'syncly' ),
 					'redirect_url' => $auth_url,
 				]
 			);
@@ -463,7 +489,7 @@ class SettingsManager {
 				[
 					'message' => sprintf(
 						/* translators: %s: Error message */
-						__( 'Reconnection failed: %s', 'ghl-crm-integration' ),
+						__( 'Reconnection failed: %s', 'syncly' ),
 						$e->getMessage()
 					),
 				],
@@ -486,7 +512,7 @@ class SettingsManager {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to save field mapping.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to save field mapping.', 'syncly' ),
 				],
 				403
 			);
@@ -494,7 +520,7 @@ class SettingsManager {
 
 		// Get field mapping data from POST
 		$field_mappings = isset( $_POST['field_mappings'] ) && is_array( $_POST['field_mappings'] )
-			? $_POST['field_mappings']
+			? wp_unslash( $_POST['field_mappings'] )
 			: [];
 
 		// Process and sanitize field mappings
@@ -516,6 +542,7 @@ class SettingsManager {
 		// Update field mapping
 		$current_settings['user_field_mapping'] = $sanitized_mappings;
 		$current_settings['updated_at']         = current_time( 'mysql' );
+		$current_settings                       = $this->prepare_location_scoped_settings_for_storage( $current_settings );
 
 		// Save settings
 		$saved = $this->save_site_settings( $current_settings );
@@ -523,14 +550,14 @@ class SettingsManager {
 		if ( $saved ) {
 			wp_send_json_success(
 				[
-					'message' => __( 'Field mapping saved successfully!', 'ghl-crm-integration' ),
+					'message' => __( 'Field mapping saved successfully!', 'syncly' ),
 					'count'   => count( $sanitized_mappings ),
 				]
 			);
 		} else {
 			wp_send_json_error(
 				[
-					'message' => __( 'Failed to save field mapping. Please try again.', 'ghl-crm-integration' ),
+					'message' => __( 'Failed to save field mapping. Please try again.', 'syncly' ),
 				],
 				500
 			);
@@ -611,7 +638,7 @@ class SettingsManager {
 	 */
 	public function get_settings_array( ?int $site_id = null ): array {
 		$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
-		return $repository->get_settings_array( $site_id );
+		return $this->hydrate_location_scoped_settings( $repository->get_settings_array( $site_id ) );
 	}
 
 	/**
@@ -621,9 +648,9 @@ class SettingsManager {
 	 * @param int|null $site_id  Optional. Site ID for multisite.
 	 * @return bool
 	 */
-	private function save_site_settings( array $settings, ?int $site_id = null ): bool {
+	public function save_site_settings( array $settings, ?int $site_id = null ): bool {
 		$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
-		return $repository->save_site_settings( $settings, $site_id );
+		return $repository->save_site_settings( $this->prepare_location_scoped_settings_for_storage( $settings ), $site_id );
 	}
 
 	/**
@@ -656,6 +683,11 @@ class SettingsManager {
 	 * @return mixed
 	 */
 	public function get_setting( string $key, $default = '', ?int $site_id = null ) {
+		if ( $this->is_location_scoped_setting_key( $key ) ) {
+			$settings = $this->get_settings_array( $site_id );
+			return $settings[ $key ] ?? $default;
+		}
+
 		$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
 		return $repository->get_setting( $key, $default, $site_id );
 	}
@@ -669,8 +701,90 @@ class SettingsManager {
 	 * @return bool True on success, false on failure.
 	 */
 	public function update_setting( string $key, $value, ?int $site_id = null ): bool {
+		if ( $this->is_location_scoped_setting_key( $key ) ) {
+			$settings         = $this->get_settings_array( $site_id );
+			$settings[ $key ] = $value;
+			return $this->save_site_settings( $settings, $site_id );
+		}
+
 		$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
 		return $repository->update_setting( $key, $value, $site_id );
+	}
+
+	/**
+	 * Get the location ID from a settings array without going through hydrated getters.
+	 *
+	 * @param array $settings Settings array.
+	 * @return string Location ID or empty string.
+	 */
+	private function get_location_id_from_settings( array $settings ): string {
+		return (string) ( $settings['location_id'] ?? $settings['oauth_location_id'] ?? '' );
+	}
+
+	/**
+	 * Determine whether a setting key should be scoped to the active GHL location.
+	 *
+	 * @param string $key Setting key.
+	 * @return bool True when the key is location-scoped.
+	 */
+	private function is_location_scoped_setting_key( string $key ): bool {
+		return in_array( $key, self::LOCATION_SCOPED_SETTING_KEYS, true );
+	}
+
+	/**
+	 * Determine whether an option should be scoped to the active GHL location.
+	 *
+	 * @param string $option_name Option name.
+	 * @return bool True when the option is location-scoped.
+	 */
+	private function is_location_scoped_option_name( string $option_name ): bool {
+		return in_array( $option_name, self::LOCATION_SCOPED_OPTION_NAMES, true );
+	}
+
+	/**
+	 * Hydrate location-scoped stored keys back onto their base keys for consumers.
+	 *
+	 * @param array $settings Raw settings from storage.
+	 * @return array Settings with current-location aliases populated.
+	 */
+	private function hydrate_location_scoped_settings( array $settings ): array {
+		$location_id = $this->get_location_id_from_settings( $settings );
+
+		if ( '' === $location_id ) {
+			return $settings;
+		}
+
+		foreach ( self::LOCATION_SCOPED_SETTING_KEYS as $key ) {
+			$scoped_key = TagManager::scoped_meta_key( $key, $location_id );
+			if ( array_key_exists( $scoped_key, $settings ) ) {
+				$settings[ $key ] = $settings[ $scoped_key ];
+			}
+		}
+
+		return $settings;
+	}
+
+	/**
+	 * Move current-location selector settings from base keys to location-scoped keys before saving.
+	 *
+	 * @param array $settings Settings about to be stored.
+	 * @return array Settings prepared for storage.
+	 */
+	public function prepare_location_scoped_settings_for_storage( array $settings ): array {
+		$location_id = $this->get_location_id_from_settings( $settings );
+
+		if ( '' === $location_id ) {
+			return $settings;
+		}
+
+		foreach ( self::LOCATION_SCOPED_SETTING_KEYS as $key ) {
+			if ( array_key_exists( $key, $settings ) ) {
+				$settings[ TagManager::scoped_meta_key( $key, $location_id ) ] = $settings[ $key ];
+				unset( $settings[ $key ] );
+			}
+		}
+
+		return $settings;
 	}
 
 	/**
@@ -695,6 +809,21 @@ class SettingsManager {
 	 */
 	public function get_option( string $option_name, $default = false, ?int $site_id = null ) {
 		$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
+
+		if ( $this->is_location_scoped_option_name( $option_name ) ) {
+			$settings    = $this->get_settings_array( $site_id );
+			$location_id = $this->get_location_id_from_settings( $settings );
+
+			if ( '' !== $location_id ) {
+				$missing = new \stdClass();
+				$value   = $repository->get_option( TagManager::scoped_meta_key( $option_name, $location_id ), $missing, $site_id );
+
+				if ( $value !== $missing ) {
+					return $value;
+				}
+			}
+		}
+
 		return $repository->get_option( $option_name, $default, $site_id );
 	}
 
@@ -708,6 +837,16 @@ class SettingsManager {
 	 */
 	public function update_option( string $option_name, $value, ?int $site_id = null ): bool {
 		$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
+
+		if ( $this->is_location_scoped_option_name( $option_name ) ) {
+			$settings    = $this->get_settings_array( $site_id );
+			$location_id = $this->get_location_id_from_settings( $settings );
+
+			if ( '' !== $location_id ) {
+				$option_name = TagManager::scoped_meta_key( $option_name, $location_id );
+			}
+		}
+
 		return $repository->update_option( $option_name, $value, $site_id );
 	}
 
@@ -806,7 +945,7 @@ class SettingsManager {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'You do not have permission to save integrations settings.', 'ghl-crm-integration' ),
+					'message' => __( 'You do not have permission to save integrations settings.', 'syncly' ),
 				],
 				403
 			);
@@ -837,7 +976,7 @@ class SettingsManager {
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
 		}
 
 		// Delegate to AjaxHandler
@@ -855,7 +994,7 @@ class SettingsManager {
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
 		}
 
 		// Delegate to AjaxHandler
@@ -873,7 +1012,7 @@ class SettingsManager {
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied', 'ghl-crm-integration' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
 		}
 
 		// Delegate to AjaxHandler
@@ -960,7 +1099,7 @@ class SettingsManager {
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
-				[ 'message' => __( 'You do not have permission to preview syncs.', 'ghl-crm-integration' ) ],
+				[ 'message' => __( 'You do not have permission to preview syncs.', 'syncly' ) ],
 				403
 			);
 		}
@@ -968,7 +1107,7 @@ class SettingsManager {
 		$user_identifier = isset( $_POST['user_identifier'] ) ? sanitize_text_field( wp_unslash( $_POST['user_identifier'] ) ) : '';
 
 		if ( empty( $user_identifier ) ) {
-			wp_send_json_error( [ 'message' => __( 'Please provide a username or email.', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Please provide a username or email.', 'syncly' ) ] );
 		}
 
 		// Try to find user by email or username
@@ -978,7 +1117,7 @@ class SettingsManager {
 		}
 
 		if ( ! $user ) {
-			wp_send_json_error( [ 'message' => __( 'User not found.', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'User not found.', 'syncly' ) ] );
 		}
 
 		/**
@@ -998,9 +1137,20 @@ class SettingsManager {
 			wp_send_json_success( $preview_data );
 		}
 
-		wp_send_json_error(
-			[ 'message' => __( 'Sync Preview is available with the Pro add-on.', 'ghl-crm-integration' ) ],
-			403
+		wp_send_json_success(
+			[
+				'action'          => 'update',
+				'user_name'       => $user->display_name,
+				'user_email'      => $user->user_email,
+				'fields_to_sync'  => [
+					[ 'ghl_field' => 'email', 'wp_value' => $user->user_email, 'ghl_value' => '', 'status' => 'preview' ],
+					[ 'ghl_field' => 'first_name', 'wp_value' => get_user_meta( $user->ID, 'first_name', true ), 'ghl_value' => '', 'status' => 'preview' ],
+					[ 'ghl_field' => 'last_name', 'wp_value' => get_user_meta( $user->ID, 'last_name', true ), 'ghl_value' => '', 'status' => 'preview' ],
+				],
+				'fields_changed' => [],
+				'tags_to_add'    => [],
+				'warnings'       => [ __( 'Preview generated locally without writing data to GoHighLevel.', 'syncly' ) ],
+			]
 		);
 	}
 
@@ -1024,8 +1174,11 @@ class SettingsManager {
 			return [];
 		}
 
-		$key = "role_tags_{$location_id}";
-		return $this->get_setting( $key, [] );
+		$settings = $this->get_settings_array();
+		$key      = "role_tags_{$location_id}";
+		$value    = $settings[ $key ] ?? ( $settings['role_tags'] ?? [] );
+
+		return is_array( $value ) ? $value : [];
 	}
 
 	/**
@@ -1043,8 +1196,11 @@ class SettingsManager {
 			return [];
 		}
 
-		$key = "global_tags_{$location_id}";
-		return $this->get_setting( $key, [] );
+		$settings = $this->get_settings_array();
+		$key      = "global_tags_{$location_id}";
+		$value    = $settings[ $key ] ?? ( $settings['global_tags'] ?? [] );
+
+		return is_array( $value ) ? $value : [];
 	}
 
 	/**
@@ -1062,8 +1218,11 @@ class SettingsManager {
 			return [];
 		}
 
-		$key = "user_register_tags_{$location_id}";
-		return $this->get_setting( $key, [] );
+		$settings = $this->get_settings_array();
+		$key      = "user_register_tags_{$location_id}";
+		$value    = $settings[ $key ] ?? ( $settings['user_register_tags'] ?? [] );
+
+		return is_array( $value ) ? $value : [];
 	}
 
 	/**

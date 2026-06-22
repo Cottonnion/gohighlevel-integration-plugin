@@ -83,7 +83,7 @@ class CustomObjectResource extends AbstractResource {
 			throw new \Exception(
 				sprintf(
 					/* translators: %s: error reason */
-					esc_html__( 'Failed to delete custom object record: %s', 'ghl-crm-integration' ),
+					esc_html__( 'Failed to delete custom object record: %s', 'syncly' ),
 					esc_html( $reason )
 				)
 			);
@@ -162,7 +162,7 @@ class CustomObjectResource extends AbstractResource {
 			throw new \Exception(
 				sprintf(
 					/* translators: %s: error reason */
-					esc_html__( 'Failed to create custom object schema: %s', 'ghl-crm-integration' ),
+					esc_html__( 'Failed to create custom object schema: %s', 'syncly' ),
 					esc_html( $reason )
 				)
 			);
@@ -196,7 +196,7 @@ class CustomObjectResource extends AbstractResource {
 			throw new \Exception(
 				sprintf(
 					/* translators: %s: error reason */
-					esc_html__( 'Failed to create custom object record: %s', 'ghl-crm-integration' ),
+					esc_html__( 'Failed to create custom object record: %s', 'syncly' ),
 					esc_html( $reason )
 				)
 			);
@@ -232,7 +232,7 @@ class CustomObjectResource extends AbstractResource {
 			throw new \Exception(
 				sprintf(
 					/* translators: %s: error reason */
-					esc_html__( 'Failed to update custom object record: %s', 'ghl-crm-integration' ),
+					esc_html__( 'Failed to update custom object record: %s', 'syncly' ),
 					esc_html( $reason )
 				)
 			);
@@ -280,7 +280,7 @@ class CustomObjectResource extends AbstractResource {
 			throw new \Exception(
 				sprintf(
 					/* translators: %s: error reason */
-					esc_html__( 'Failed to get associations: %s', 'ghl-crm-integration' ),
+					esc_html__( 'Failed to get associations: %s', 'syncly' ),
 					esc_html( $reason )
 				)
 			);
@@ -325,7 +325,7 @@ class CustomObjectResource extends AbstractResource {
 			throw new \Exception(
 				sprintf(
 					/* translators: %s: error reason */
-					esc_html__( 'Failed to create association: %s', 'ghl-crm-integration' ),
+					esc_html__( 'Failed to create association: %s', 'syncly' ),
 					esc_html( $reason )
 				)
 			);
@@ -402,7 +402,7 @@ class CustomObjectResource extends AbstractResource {
 			throw new \Exception(
 				sprintf(
 					/* translators: %s: error reason */
-					esc_html__( 'Failed to associate record with contact: %s', 'ghl-crm-integration' ),
+					esc_html__( 'Failed to associate record with contact: %s', 'syncly' ),
 					esc_html( $reason )
 				)
 			);
@@ -488,7 +488,7 @@ class CustomObjectResource extends AbstractResource {
 			throw new \Exception(
 				sprintf(
 					/* translators: %s: error reason */
-					esc_html__( 'Failed to disassociate record from contact: %s', 'ghl-crm-integration' ),
+					esc_html__( 'Failed to disassociate record from contact: %s', 'syncly' ),
 					esc_html( $reason )
 				)
 			);

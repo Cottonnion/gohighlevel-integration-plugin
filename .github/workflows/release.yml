@@ -1,4 +1,4 @@
-name: Release
+name: Release — Syncly
 
 on:
   push:
@@ -10,7 +10,7 @@ jobs:
     name: Build & Publish Release
     runs-on: ubuntu-latest
     env:
-      PLUGIN_SLUG: ghl-crm-integration
+      PLUGIN_SLUG: syncly
     permissions:
       contents: write
     steps:
@@ -35,9 +35,9 @@ jobs:
       - name: Build production zip
         run: |
           set -euo pipefail
-          STAGING_ROOT="${RUNNER_TEMP}/ghl-crm-release"
+          STAGING_ROOT="${RUNNER_TEMP}/syncly-release"
           STAGING_DIR="${STAGING_ROOT}/${PLUGIN_SLUG}"
-          ARTIFACT_DIR="${RUNNER_TEMP}/ghl-crm-dist"
+          ARTIFACT_DIR="${RUNNER_TEMP}/syncly-dist"
 
           rm -rf "${STAGING_ROOT}" "${ARTIFACT_DIR}"
           mkdir -p "${STAGING_DIR}" "${ARTIFACT_DIR}"

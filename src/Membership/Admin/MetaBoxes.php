@@ -173,7 +173,7 @@ class MetaBoxes {
 		foreach ( $post_types as $post_type ) {
 			add_meta_box(
 				'ghl_membership_restrictions',
-				__( 'GHL Membership Restrictions', 'ghl-crm-integration' ),
+				__( 'GHL Membership Restrictions', 'syncly' ),
 				[ $this, 'render_membership_meta_box' ],
 				$post_type,
 				'side',
@@ -203,28 +203,28 @@ class MetaBoxes {
 		?>
 		<div class="ghl-membership-meta-box">
 			<p class="description">
-				<?php esc_html_e( 'Control who can access this content based on their GoHighLevel tags.', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Control who can access this content based on their GoHighLevel tags.', 'syncly' ); ?>
 			</p>
 
 			<!-- Restriction Type -->
 			<p>
 				<label for="ghl_restriction_type">
-					<strong><?php esc_html_e( 'Restriction Type', 'ghl-crm-integration' ); ?></strong>
+					<strong><?php esc_html_e( 'Restriction Type', 'syncly' ); ?></strong>
 				</label>
 			</p>
 			<p>
 				<select name="ghl_restriction_type" id="ghl_restriction_type" class="widefat">
 					<option value="" <?php selected( $restriction_type, '' ); ?>>
-						<?php esc_html_e( '— No Restrictions —', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( '— No Restrictions —', 'syncly' ); ?>
 					</option>
 					<option value="has_any_tag" <?php selected( $restriction_type, 'has_any_tag' ); ?>>
-						<?php esc_html_e( 'User has ANY of these tags', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'User has ANY of these tags', 'syncly' ); ?>
 					</option>
 					<option value="has_all_tags" <?php selected( $restriction_type, 'has_all_tags' ); ?>>
-						<?php esc_html_e( 'User has ALL of these tags', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'User has ALL of these tags', 'syncly' ); ?>
 					</option>
 					<option value="not_has_tags" <?php selected( $restriction_type, 'not_has_tags' ); ?>>
-						<?php esc_html_e( 'User does NOT have these tags', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'User does NOT have these tags', 'syncly' ); ?>
 					</option>
 				</select>
 			</p>
@@ -233,7 +233,7 @@ class MetaBoxes {
 			<div id="ghl-tags-container" style="<?php echo empty( $restriction_type ) ? 'display:none;' : ''; ?>">
 				<p>
 					<label for="ghl_required_tags">
-						<strong><?php esc_html_e( 'Tags', 'ghl-crm-integration' ); ?></strong>
+						<strong><?php esc_html_e( 'Tags', 'syncly' ); ?></strong>
 					</label>
 				</p>
 				<p>
@@ -242,7 +242,7 @@ class MetaBoxes {
 						id="ghl_required_tags" 
 						class="widefat ghl-tags-select" 
 						multiple="multiple"
-						data-placeholder="<?php esc_attr_e( 'Select or type tags...', 'ghl-crm-integration' ); ?>">
+						data-placeholder="<?php esc_attr_e( 'Select or type tags...', 'syncly' ); ?>">
 						<?php foreach ( $required_tags as $tag ) : ?>
 							<option value="<?php echo esc_attr( $tag ); ?>" selected="selected">
 								<?php echo esc_html( $tag ); ?>
@@ -256,7 +256,7 @@ class MetaBoxes {
 			<div id="ghl-redirect-container" style="<?php echo empty( $restriction_type ) ? 'display:none;' : ''; ?>">
 				<p>
 					<label for="ghl_redirect_url">
-						<strong><?php esc_html_e( 'Redirect URL', 'ghl-crm-integration' ); ?></strong>
+						<strong><?php esc_html_e( 'Redirect URL', 'syncly' ); ?></strong>
 					</label>
 				</p>
 				<p>
@@ -266,10 +266,10 @@ class MetaBoxes {
 						id="ghl_redirect_url" 
 						class="widefat" 
 						value="<?php echo esc_url( $redirect_url ); ?>"
-						placeholder="<?php esc_attr_e( 'https://example.com/login', 'ghl-crm-integration' ); ?>"
+						placeholder="<?php esc_attr_e( 'https://example.com/login', 'syncly' ); ?>"
 					/>
 					<span class="description">
-						<?php esc_html_e( 'Where to redirect users who don\'t have access. Leave empty to show a message instead.', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Where to redirect users who don\'t have access. Leave empty to show a message instead.', 'syncly' ); ?>
 					</span>
 				</p>
 			</div>
@@ -279,17 +279,17 @@ class MetaBoxes {
 			<!-- Help Text -->
 			<details>
 				<summary style="cursor: pointer; font-weight: 600;">
-					<?php esc_html_e( 'How it works', 'ghl-crm-integration' ); ?>
+					<?php esc_html_e( 'How it works', 'syncly' ); ?>
 				</summary>
 				<div style="margin-top: 10px; font-size: 12px; color: #666;">
-					<p><strong><?php esc_html_e( 'ANY of these tags:', 'ghl-crm-integration' ); ?></strong><br>
-						<?php esc_html_e( 'User needs at least ONE of the selected tags to access.', 'ghl-crm-integration' ); ?>
+					<p><strong><?php esc_html_e( 'ANY of these tags:', 'syncly' ); ?></strong><br>
+						<?php esc_html_e( 'User needs at least ONE of the selected tags to access.', 'syncly' ); ?>
 					</p>
-					<p><strong><?php esc_html_e( 'ALL of these tags:', 'ghl-crm-integration' ); ?></strong><br>
-						<?php esc_html_e( 'User needs ALL selected tags to access.', 'ghl-crm-integration' ); ?>
+					<p><strong><?php esc_html_e( 'ALL of these tags:', 'syncly' ); ?></strong><br>
+						<?php esc_html_e( 'User needs ALL selected tags to access.', 'syncly' ); ?>
 					</p>
-					<p><strong><?php esc_html_e( 'Does NOT have these tags:', 'ghl-crm-integration' ); ?></strong><br>
-						<?php esc_html_e( 'User must NOT have any of the selected tags to access.', 'ghl-crm-integration' ); ?>
+					<p><strong><?php esc_html_e( 'Does NOT have these tags:', 'syncly' ); ?></strong><br>
+						<?php esc_html_e( 'User must NOT have any of the selected tags to access.', 'syncly' ); ?>
 					</p>
 				</div>
 			</details>

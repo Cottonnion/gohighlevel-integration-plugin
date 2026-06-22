@@ -98,7 +98,7 @@ class UserBulkActions {
 	 * @return array Modified actions.
 	 */
 	public function register_bulk_action( array $actions ): array {
-		$actions[ self::BULK_ACTION_KEY ] = __( 'Sync to GoHighLevel', 'ghl-crm-integration' );
+		$actions[ self::BULK_ACTION_KEY ] = __( 'Sync to GoHighLevel', 'syncly' );
 
 		return $actions;
 	}
@@ -196,18 +196,18 @@ class UserBulkActions {
 		if ( $queued && $failed ) {
 			$message = sprintf(
 				/* translators: 1: number of users queued, 2: number of failures */
-				__( '%1$d users queued for GoHighLevel sync. %2$d users could not be queued.', 'ghl-crm-integration' ),
+				__( '%1$d users queued for GoHighLevel sync. %2$d users could not be queued.', 'syncly' ),
 				$queued,
 				$failed
 			);
 		} elseif ( $queued ) {
 			$message = sprintf(
 				/* translators: %d: number of users queued */
-				_n( '%d user queued for GoHighLevel sync.', '%d users queued for GoHighLevel sync.', $queued, 'ghl-crm-integration' ),
+				_n( '%d user queued for GoHighLevel sync.', '%d users queued for GoHighLevel sync.', $queued, 'syncly' ),
 				$queued
 			);
 		} else {
-			$message = __( 'No users were queued for GoHighLevel sync.', 'ghl-crm-integration' );
+			$message = __( 'No users were queued for GoHighLevel sync.', 'syncly' );
 		}
 
 		printf(

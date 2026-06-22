@@ -25,13 +25,13 @@ if ( ! defined( 'GHL_CRM_PATH' ) ) {
 	define( 'GHL_CRM_PATH', dirname( __DIR__ ) . '/' );
 }
 if ( ! defined( 'GHL_CRM_URL' ) ) {
-	define( 'GHL_CRM_URL', 'https://example.com/wp-content/plugins/ghl-crm-integration/' );
+	define( 'GHL_CRM_URL', 'https://example.com/wp-content/plugins/syncly/' );
 }
 if ( ! defined( 'GHL_CRM_BASENAME' ) ) {
-	define( 'GHL_CRM_BASENAME', 'ghl-crm-integration/gohighlevel-crm-integration.php' );
+	define( 'GHL_CRM_BASENAME', 'syncly/gohighlevel-crm-integration.php' );
 }
 if ( ! defined( 'GHL_CRM_TEXTDOMAIN' ) ) {
-	define( 'GHL_CRM_TEXTDOMAIN', 'ghl-crm-integration' );
+	define( 'GHL_CRM_TEXTDOMAIN', 'syncly' );
 }
 
 // WordPress time constants the plugin may reference.

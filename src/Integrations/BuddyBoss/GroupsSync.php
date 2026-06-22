@@ -639,7 +639,7 @@ class GroupsSync {
 		check_ajax_referer( 'ghl_buddyboss_bulk_sync', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'Insufficient permissions', 'ghl-crm-integration' ) );
+			wp_die( esc_html__( 'Insufficient permissions', 'syncly' ) );
 		}
 
 		$sync_type = sanitize_text_field( $_POST['sync_type'] ?? '' );

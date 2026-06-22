@@ -296,7 +296,7 @@ To add new variables:
 Example:
 ```php
 // In get_available_variables()
-'{custom_var}' => __('Description of custom variable', 'ghl-crm-integration'),
+'{custom_var}' => __('Description of custom variable', 'syncly'),
 
 // In replace_variables()
 if (strpos($value, '{custom_var}') !== false) {

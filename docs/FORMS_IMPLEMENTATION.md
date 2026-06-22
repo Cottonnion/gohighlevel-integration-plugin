@@ -224,7 +224,7 @@ All strings wrapped in translation functions:
 - `__()` for return values
 - `esc_html_e()` for echo output
 - `esc_html__()` for escaped output
-- Text domain: `ghl-crm-integration`
+- Text domain: `syncly`
 
 ## Dependencies
 

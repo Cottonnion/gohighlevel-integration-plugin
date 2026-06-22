@@ -68,71 +68,63 @@ $is_connected     = $oauth_status['connected'] || ! empty( $settings['api_token'
 // Define available settings tabs
 $settings_tabs = [
 	'general'              => [
-		'label' => __( 'General', 'ghl-crm-integration' ),
+		'label' => __( 'General', 'syncly' ),
 		'icon'  => 'dashicons-admin-generic',
 	],
 	'restrictions-manager' => [
-		'label' => __( 'Restrictions Manager', 'ghl-crm-integration' ),
+		'label' => __( 'Restrictions Manager', 'syncly' ),
 		'icon'  => 'dashicons-lock',
 	],
 	'rest-api'             => [
-		'label'      => __( 'REST API', 'ghl-crm-integration' ),
-		'icon'       => 'dashicons-editor-code',
-		'pro'        => true,
-		'pro_filter' => 'ghl_crm_public_rest_api_enabled',
+		'label' => __( 'REST API', 'syncly' ),
+		'icon'  => 'dashicons-editor-code',
 	],
 	'webhooks'             => [
-		'label' => __( 'Webhooks', 'ghl-crm-integration' ),
+		'label' => __( 'Webhooks', 'syncly' ),
 		'icon'  => 'dashicons-admin-links',
 	],
 	'notifications'        => [
-		'label' => __( 'Email Notifications', 'ghl-crm-integration' ),
+		'label' => __( 'Email Notifications', 'syncly' ),
 		'icon'  => 'dashicons-email',
 	],
 	// 'sync-options' => [
-	// 'label' => __( 'Sync Options', 'ghl-crm-integration' ),
+	// 'label' => __( 'Sync Options', 'syncly' ),
 	// 'icon'  => 'dashicons-update',
 	// ],
 	'role-tags'            => [
-		'label' => __( 'Role-Based Tags', 'ghl-crm-integration' ),
+		'label' => __( 'Role-Based Tags', 'syncly' ),
 		'icon'  => 'dashicons-tag',
 	],
 	'family-relationships' => [
-		'label'      => __( 'Family Relationships', 'ghl-crm-integration' ),
-		'icon'       => 'dashicons-groups',
-		'pro'        => true,
-		'pro_filter' => 'ghl_crm_family_relationships_enabled',
+		'label' => __( 'Family Relationships', 'syncly' ),
+		'icon'  => 'dashicons-groups',
 	],
 	'sync-preview'         => [
-		'label'      => __( 'Sync Preview', 'ghl-crm-integration' ),
-		'icon'       => 'dashicons-visibility',
-		'pro'        => true,
-		'pro_filter' => 'ghl_crm_sync_preview_enabled',
+		'label' => __( 'Sync Preview', 'syncly' ),
+		'icon'  => 'dashicons-visibility',
 	],
 	'login-sync'           => [
-		'label'      => __( 'Login Sync', 'ghl-crm-integration' ),
-		'icon'       => 'dashicons-shield-alt',
-		'pro'        => true,
-		'pro_filter' => 'ghl_crm_login_sync_enabled',
+		'label' => __( 'Login Sync', 'syncly' ),
+		'icon'  => 'dashicons-shield-alt',
 	],
 	'personalization'      => [
-		'label' => __( 'Personalization', 'ghl-crm-integration' ),
+		'label' => __( 'Personalization', 'syncly' ),
 		'icon'  => 'dashicons-email-alt',
 	],
 	// 'conversations' => [
-	// 'label' => __( 'Conversations', 'ghl-crm-integration' ),
+	// 'label' => __( 'Conversations', 'syncly' ),
 	// 'icon'  => 'dashicons-format-chat',
 	// ],
 	'advanced'             => [
-		'label' => __( 'Advanced', 'ghl-crm-integration' ),
+		'label' => __( 'Advanced', 'syncly' ),
 		'icon'  => 'dashicons-admin-tools',
 	],
 	'tools'                => [
-		'label' => __( 'Tools', 'ghl-crm-integration' ),
+		'label' => __( 'Tools', 'syncly' ),
 		'icon'  => 'dashicons-admin-settings',
 	],
 	'stats'                => [
-		'label' => __( 'System Status', 'ghl-crm-integration' ),
+		'label' => __( 'System Status', 'syncly' ),
 		'icon'  => 'dashicons-info',
 	],
 ];
@@ -160,6 +152,21 @@ $settings_tabs = [
  */
 $settings_tabs = apply_filters( 'ghl_crm_settings_tabs', $settings_tabs, $is_connected, $settings );
 
+foreach ( $settings_tabs as $tab_key => $tab_data ) {
+	if ( empty( $tab_data['pro'] ) ) {
+		continue;
+	}
+
+	$feature_enabled = ! empty( $tab_data['pro_filter'] ) && apply_filters( $tab_data['pro_filter'], false );
+	if ( ! $feature_enabled ) {
+		unset( $settings_tabs[ $tab_key ] );
+	}
+}
+
+if ( ! isset( $settings_tabs[ $current_tab ] ) ) {
+	$current_tab = 'general';
+}
+
 ?>
 <div class="wrap ghl-crm-settings">
 	<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
@@ -168,22 +175,22 @@ $settings_tabs = apply_filters( 'ghl_crm_settings_tabs', $settings_tabs, $is_con
 		<?php if ( 'general' === $current_tab ) : ?>
 			<div class="notice notice-info">
 				<p>
-					<strong><?php esc_html_e( 'Not Connected', 'ghl-crm-integration' ); ?></strong><br>
-					<?php esc_html_e( 'Please configure your connection settings below. Other settings tabs will be available once connected.', 'ghl-crm-integration' ); ?>
+					<strong><?php esc_html_e( 'Not Connected', 'syncly' ); ?></strong><br>
+					<?php esc_html_e( 'Please configure your connection settings below. Other settings tabs will be available once connected.', 'syncly' ); ?>
 				</p>
 			</div>
 		<?php else : ?>
 			<div class="notice notice-warning">
 				<p>
-					<strong><?php esc_html_e( 'Not Connected', 'ghl-crm-integration' ); ?></strong><br>
+					<strong><?php esc_html_e( 'Not Connected', 'syncly' ); ?></strong><br>
 					<?php
 					printf(
 						/* translators: %s: Link to dashboard page */
-						esc_html__( 'Please connect to GoHighLevel in %s first.', 'ghl-crm-integration' ),
+						esc_html__( 'Please connect to GoHighLevel in %s first.', 'syncly' ),
 						sprintf(
 							'<a href="%s">%s</a>',
 							esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ),
-							esc_html__( 'Dashboard', 'ghl-crm-integration' )
+							esc_html__( 'Dashboard', 'syncly' )
 						)
 					);
 					?>
@@ -216,18 +223,15 @@ $settings_tabs = apply_filters( 'ghl_crm_settings_tabs', $settings_tabs, $is_con
 
 					$disabled_title = '';
 					if ( ! $has_capability ) {
-						$disabled_title = __( 'Insufficient permissions', 'ghl-crm-integration' );
+						$disabled_title = __( 'Insufficient permissions', 'syncly' );
 					} elseif ( $requires_connection && ! $is_connected ) {
-						$disabled_title = __( 'Connect to GoHighLevel first', 'ghl-crm-integration' );
+						$disabled_title = __( 'Connect to GoHighLevel first', 'syncly' );
 					}
 					?>
 					<li class="<?php echo esc_attr( $li_class ); ?>" data-tab="<?php echo esc_attr( $tab_key ); ?>" <?php echo $is_disabled ? 'title="' . esc_attr( $disabled_title ) . '"' : ''; ?>>
 						<span class="dashicons <?php echo esc_attr( $tab_data['icon'] ); ?>"></span>
 						<span class="ghl-tab-label">
 							<?php echo esc_html( $tab_data['label'] ); ?>
-							<?php if ( ! empty( $tab_data['pro'] ) && ( empty( $tab_data['pro_filter'] ) || ! apply_filters( $tab_data['pro_filter'], false ) ) ) : ?>
-								<span style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 9px; padding: 1px 5px; border-radius: 3px; margin-left: 4px; font-weight: 700;">PRO</span>
-							<?php endif; ?>
 						</span>
 					</li>
 				<?php endforeach; ?>
@@ -235,7 +239,7 @@ $settings_tabs = apply_filters( 'ghl_crm_settings_tabs', $settings_tabs, $is_con
 		</nav>
 
 		<!-- Mobile Menu Toggle Button -->
-		<button type="button" class="ghl-settings-menu-toggle" id="ghl-menu-toggle" aria-label="<?php esc_attr_e( 'Toggle settings menu', 'ghl-crm-integration' ); ?>">
+		<button type="button" class="ghl-settings-menu-toggle" id="ghl-menu-toggle" aria-label="<?php esc_attr_e( 'Toggle settings menu', 'syncly' ); ?>">
 			<span class="dashicons dashicons-menu"></span>
 			<span class="dashicons dashicons-no-alt"></span>
 		</button>
@@ -245,14 +249,14 @@ $settings_tabs = apply_filters( 'ghl_crm_settings_tabs', $settings_tabs, $is_con
 			<?php
 			// Check if current tab exists in settings tabs
 			if ( ! isset( $settings_tabs[ $current_tab ] ) ) {
-				echo '<div class="notice notice-error"><p>' . esc_html__( 'Settings tab not found.', 'ghl-crm-integration' ) . '</p></div>';
+				echo '<div class="notice notice-error"><p>' . esc_html__( 'Settings tab not found.', 'syncly' ) . '</p></div>';
 			} else {
 				$tab_data = $settings_tabs[ $current_tab ];
 
 				// Check if user has required capability
 				$required_capability = $tab_data['capability'] ?? 'manage_options';
 				if ( ! current_user_can( $required_capability ) ) {
-					echo '<div class="notice notice-error"><p>' . esc_html__( 'You do not have permission to access this settings tab.', 'ghl-crm-integration' ) . '</p></div>';
+					echo '<div class="notice notice-error"><p>' . esc_html__( 'You do not have permission to access this settings tab.', 'syncly' ) . '</p></div>';
 				} else {
 					// Fire action before rendering tab content
 					do_action( 'ghl_crm_before_settings_tab_content', $current_tab, $tab_data, $settings );
@@ -270,7 +274,7 @@ $settings_tabs = apply_filters( 'ghl_crm_settings_tabs', $settings_tabs, $is_con
 						if ( file_exists( $partial_file ) ) {
 							include $partial_file;
 						} else {
-							echo '<div class="notice notice-error"><p>' . esc_html__( 'Settings tab content not found.', 'ghl-crm-integration' ) . '</p></div>';
+							echo '<div class="notice notice-error"><p>' . esc_html__( 'Settings tab content not found.', 'syncly' ) . '</p></div>';
 						}
 					}
 

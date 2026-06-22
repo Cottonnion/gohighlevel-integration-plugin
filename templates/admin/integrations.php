@@ -28,15 +28,15 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 	<?php if ( ! $is_connected ) : ?>
 		<div class="notice notice-warning">
 			<p>
-				<strong><?php esc_html_e( 'Not Connected', 'ghl-crm-integration' ); ?></strong><br>
+				<strong><?php esc_html_e( 'Not Connected', 'syncly' ); ?></strong><br>
 				<?php
 				printf(
 					/* translators: %s: Link to dashboard page */
-					esc_html__( 'Please connect to GoHighLevel in %s first.', 'ghl-crm-integration' ),
+					esc_html__( 'Please connect to GoHighLevel in %s first.', 'syncly' ),
 					sprintf(
 						'<a href="%s">%s</a>',
 						esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ),
-						esc_html__( 'Dashboard', 'ghl-crm-integration' )
+						esc_html__( 'Dashboard', 'syncly' )
 					)
 				);
 				?>
@@ -55,28 +55,28 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 	<div class="notice notice-info" style="margin: 20px 0; padding: 15px; border-left-color: #2271b1;">
 		<h3 style="margin-top: 0;">
 			<span class="dashicons dashicons-info" style="color: #2271b1;"></span>
-			<?php esc_html_e( 'About Integration Settings', 'ghl-crm-integration' ); ?>
+			<?php esc_html_e( 'About Integration Settings', 'syncly' ); ?>
 		</h3>
 		<p>
-			<?php esc_html_e( 'Control how WordPress integrates with GoHighLevel for WooCommerce, BuddyBoss, and other platforms.', 'ghl-crm-integration' ); ?>
+			<?php esc_html_e( 'Control how WordPress integrates with GoHighLevel for WooCommerce, BuddyBoss, and other platforms.', 'syncly' ); ?>
 		</p>
 		<ul style="list-style: disc; margin-left: 20px;">
 			<li>
-				<strong><?php esc_html_e( 'Master Toggle:', 'ghl-crm-integration' ); ?></strong> 
-				<?php esc_html_e( 'Each integration has a master toggle at the top. Disabling it immediately stops ALL sync activities for that integration.', 'ghl-crm-integration' ); ?>
+				<strong><?php esc_html_e( 'Master Toggle:', 'syncly' ); ?></strong> 
+				<?php esc_html_e( 'Each integration has a master toggle at the top. Disabling it immediately stops ALL sync activities for that integration.', 'syncly' ); ?>
 			</li>
 			<li>
-				<strong><?php esc_html_e( 'Individual Settings:', 'ghl-crm-integration' ); ?></strong> 
-				<?php esc_html_e( 'Fine-tune which events trigger syncs (orders, groups, courses, etc.) and configure tags for automation.', 'ghl-crm-integration' ); ?>
+				<strong><?php esc_html_e( 'Individual Settings:', 'syncly' ); ?></strong> 
+				<?php esc_html_e( 'Fine-tune which events trigger syncs (orders, groups, courses, etc.) and configure tags for automation.', 'syncly' ); ?>
 			</li>
 			<li>
-				<strong><?php esc_html_e( 'Tags:', 'ghl-crm-integration' ); ?></strong> 
-				<?php esc_html_e( 'Assign tags to contacts based on WordPress events. These tags can trigger workflows in GoHighLevel.', 'ghl-crm-integration' ); ?>
+				<strong><?php esc_html_e( 'Tags:', 'syncly' ); ?></strong> 
+				<?php esc_html_e( 'Assign tags to contacts based on WordPress events. These tags can trigger workflows in GoHighLevel.', 'syncly' ); ?>
 			</li>
 		</ul>
 		<p style="margin-bottom: 0;">
-			<strong><?php esc_html_e( 'Important:', 'ghl-crm-integration' ); ?></strong> 
-			<?php esc_html_e( 'When you disable a master toggle, all related sync operations stop immediately. Existing data remains in GoHighLevel but no new syncs will occur until you re-enable it.', 'ghl-crm-integration' ); ?>
+			<strong><?php esc_html_e( 'Important:', 'syncly' ); ?></strong> 
+			<?php esc_html_e( 'When you disable a master toggle, all related sync operations stop immediately. Existing data remains in GoHighLevel but no new syncs will occur until you re-enable it.', 'syncly' ); ?>
 		</p>
 	</div>
 
@@ -90,7 +90,7 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 				[
 					'id'     => 'buddyboss',
 					'icon'   => 'groups',
-					'label'  => __( 'BuddyBoss', 'ghl-crm-integration' ),
+					'label'  => __( 'BuddyBoss', 'syncly' ),
 					'active' => true,
 					'order'  => 10,
 				],
@@ -126,7 +126,7 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 						if ( file_exists( $buddyboss_template ) ) {
 							include $buddyboss_template;
 						} else {
-							echo '<div class="notice notice-error"><p>' . esc_html__( 'BuddyBoss settings template not found.', 'ghl-crm-integration' ) . '</p></div>';
+							echo '<div class="notice notice-error"><p>' . esc_html__( 'BuddyBoss settings template not found.', 'syncly' ) . '</p></div>';
 						}
 					},
 				],
@@ -157,7 +157,7 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 	<!-- Save Button -->
 	<div class="ghl-form-actions">
 		<button type="button" id="save-integrations-settings" class="ghl-button ghl-button-primary button-large">
-			<span class="button-text"><?php esc_html_e( 'Save Integration Settings', 'ghl-crm-integration' ); ?></span>
+			<span class="button-text"><?php esc_html_e( 'Save Integration Settings', 'syncly' ); ?></span>
 			<span class="spinner"></span>
 		</button>
 	</div>

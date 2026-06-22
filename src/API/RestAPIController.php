@@ -115,7 +115,7 @@ class RestAPIController {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return new \WP_Error(
 				'rest_forbidden',
-				__( 'You do not have permission to access this endpoint.', 'ghl-crm-integration' ),
+				__( 'You do not have permission to access this endpoint.', 'syncly' ),
 				[ 'status' => 403 ]
 			);
 		}
@@ -148,7 +148,7 @@ class RestAPIController {
 			return new \WP_REST_Response(
 				[
 					'forms' => [],
-					'error' => __( 'Not connected to GoHighLevel', 'ghl-crm-integration' ),
+					'error' => __( 'Not connected to GoHighLevel', 'syncly' ),
 				]
 			);
 		}
@@ -193,7 +193,7 @@ class RestAPIController {
 			return new \WP_REST_Response(
 				[
 					'tags'  => [],
-					'error' => __( 'Not connected to GoHighLevel', 'ghl-crm-integration' ),
+					'error' => __( 'Not connected to GoHighLevel', 'syncly' ),
 				]
 			);
 		}
@@ -206,7 +206,7 @@ class RestAPIController {
 				return new \WP_REST_Response(
 					[
 						'tags'  => [],
-						'error' => __( 'No tags found. Please sync your GoHighLevel tags in settings.', 'ghl-crm-integration' ),
+						'error' => __( 'No tags found. Please sync your GoHighLevel tags in settings.', 'syncly' ),
 					]
 				);
 			}
@@ -251,7 +251,7 @@ class RestAPIController {
 		if ( empty( $auth_header ) ) {
 			return new \WP_Error(
 				'rest_forbidden',
-				__( 'Authorization header missing. Include: Authorization: Bearer YOUR_API_KEY', 'ghl-crm-integration' ),
+				__( 'Authorization header missing. Include: Authorization: Bearer YOUR_API_KEY', 'syncly' ),
 				[ 'status' => 401 ]
 			);
 		}
@@ -262,7 +262,7 @@ class RestAPIController {
 		} else {
 			return new \WP_Error(
 				'rest_forbidden',
-				__( 'Invalid Authorization header format. Use: Bearer YOUR_API_KEY', 'ghl-crm-integration' ),
+				__( 'Invalid Authorization header format. Use: Bearer YOUR_API_KEY', 'syncly' ),
 				[ 'status' => 401 ]
 			);
 		}
@@ -271,7 +271,7 @@ class RestAPIController {
 		if ( empty( $stored_key ) || hash_equals( $stored_key, $provided_key ) === false ) {
 			return new \WP_Error(
 				'rest_forbidden',
-				__( 'Invalid API key', 'ghl-crm-integration' ),
+				__( 'Invalid API key', 'syncly' ),
 				[ 'status' => 403 ]
 			);
 		}
@@ -283,7 +283,7 @@ class RestAPIController {
 			if ( ! $this->is_ip_allowed( $client_ip, $ip_whitelist ) ) {
 				return new \WP_Error(
 					'rest_forbidden',
-					__( 'IP address not whitelisted', 'ghl-crm-integration' ),
+					__( 'IP address not whitelisted', 'syncly' ),
 					[ 'status' => 403 ]
 				);
 			}
@@ -312,7 +312,7 @@ class RestAPIController {
 		if ( strlen( (string) $raw_body ) > 100000 ) {
 			return new \WP_Error(
 				'payload_too_large',
-				__( 'Payload too large.', 'ghl-crm-integration' ),
+				__( 'Payload too large.', 'syncly' ),
 				[ 'status' => 413 ]
 			);
 		}
@@ -322,7 +322,7 @@ class RestAPIController {
 		if ( empty( $params['email'] ) ) {
 			return new \WP_Error(
 				'missing_email',
-				__( 'Email is required', 'ghl-crm-integration' ),
+				__( 'Email is required', 'syncly' ),
 				[ 'status' => 400 ]
 			);
 		}
@@ -355,7 +355,7 @@ class RestAPIController {
 				return new \WP_REST_Response(
 					[
 						'success' => true,
-						'message' => __( 'User updated successfully', 'ghl-crm-integration' ),
+						'message' => __( 'User updated successfully', 'syncly' ),
 						'user_id' => $user->ID,
 					],
 					200
@@ -386,7 +386,7 @@ class RestAPIController {
 				return new \WP_REST_Response(
 					[
 						'success' => true,
-						'message' => __( 'User created successfully', 'ghl-crm-integration' ),
+						'message' => __( 'User created successfully', 'syncly' ),
 						'user_id' => $user_id,
 					],
 					201
@@ -418,7 +418,7 @@ class RestAPIController {
 				[
 					'success' => true,
 					/* translators: %s: Type of sync (e.g., users, contacts) */
-					'message' => sprintf( __( '%s sync triggered successfully', 'ghl-crm-integration' ), ucfirst( $sync_type ) ),
+					'message' => sprintf( __( '%s sync triggered successfully', 'syncly' ), ucfirst( $sync_type ) ),
 				],
 				200
 			);
@@ -460,7 +460,7 @@ class RestAPIController {
 		return new \WP_REST_Response(
 			[
 				'success' => true,
-				'message' => __( 'Webhook endpoint is active', 'ghl-crm-integration' ),
+				'message' => __( 'Webhook endpoint is active', 'syncly' ),
 			],
 			200
 		);
@@ -496,7 +496,7 @@ class RestAPIController {
 		if ( ! $this->acquire_rate_limit_lock( $lock_key ) ) {
 			return new \WP_Error(
 				'rate_limit_busy',
-				__( 'Rate limit is busy. Please retry shortly.', 'ghl-crm-integration' ),
+				__( 'Rate limit is busy. Please retry shortly.', 'syncly' ),
 				[ 'status' => 429 ]
 			);
 		}
@@ -512,7 +512,7 @@ class RestAPIController {
 				'rate_limit_exceeded',
 				sprintf(
 					/* translators: %d: Maximum number of requests allowed per minute */
-					__( 'Rate limit exceeded. Maximum %d requests per minute allowed.', 'ghl-crm-integration' ),
+					__( 'Rate limit exceeded. Maximum %d requests per minute allowed.', 'syncly' ),
 					$requests_per_minute
 				),
 				[

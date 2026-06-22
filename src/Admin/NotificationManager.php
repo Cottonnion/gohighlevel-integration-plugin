@@ -150,7 +150,7 @@ class NotificationManager {
 	 * @return bool
 	 */
 	public function send_connection_lost( string $reason ): bool {
-		$subject = __( '[CRITICAL] GoHighLevel Connection Lost', 'ghl-crm-integration' );
+		$subject = __( '[CRITICAL] GoHighLevel Connection Lost', 'syncly' );
 
 		$message = sprintf(
 			'<h2 style="color: #dc3545;">%s</h2>
@@ -159,15 +159,15 @@ class NotificationManager {
 			<p><strong>%s:</strong> %s</p>
 			<p>%s</p>
 			<p><a href="%s" style="display: inline-block; padding: 10px 20px; background: #0073aa; color: white; text-decoration: none; border-radius: 3px;">%s</a></p>',
-			esc_html__( 'GoHighLevel Connection Lost', 'ghl-crm-integration' ),
-			esc_html__( 'Your WordPress site has lost connection to GoHighLevel. All syncing operations have stopped.', 'ghl-crm-integration' ),
-			esc_html__( 'Reason', 'ghl-crm-integration' ),
+			esc_html__( 'GoHighLevel Connection Lost', 'syncly' ),
+			esc_html__( 'Your WordPress site has lost connection to GoHighLevel. All syncing operations have stopped.', 'syncly' ),
+			esc_html__( 'Reason', 'syncly' ),
 			esc_html( $reason ),
-			esc_html__( 'Action Required', 'ghl-crm-integration' ),
-			esc_html__( 'Reconnect to GoHighLevel immediately to resume syncing', 'ghl-crm-integration' ),
-			esc_html__( 'This is a critical issue that requires immediate attention. No data will sync until the connection is restored.', 'ghl-crm-integration' ),
+			esc_html__( 'Action Required', 'syncly' ),
+			esc_html__( 'Reconnect to GoHighLevel immediately to resume syncing', 'syncly' ),
+			esc_html__( 'This is a critical issue that requires immediate attention. No data will sync until the connection is restored.', 'syncly' ),
 			esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ),
-			esc_html__( 'Reconnect Now', 'ghl-crm-integration' )
+			esc_html__( 'Reconnect Now', 'syncly' )
 		);
 
 		return $this->send( 'connection_lost', $subject, $message, [ 'reason' => $reason ] );
@@ -184,13 +184,13 @@ class NotificationManager {
 	public function send_sync_error( string $sync_type, string $error, array $metadata = [] ): bool {
 		$subject = sprintf(
 			/* translators: %s: Sync type (e.g., WooCommerce Order, User) */
-			__( '[ERROR] %s Sync Failed', 'ghl-crm-integration' ),
+			__( '[ERROR] %s Sync Failed', 'syncly' ),
 			$sync_type
 		);
 
 		$metadata_html = '';
 		if ( ! empty( $metadata ) ) {
-			$metadata_html = '<h3>' . esc_html__( 'Error Details:', 'ghl-crm-integration' ) . '</h3><ul>';
+			$metadata_html = '<h3>' . esc_html__( 'Error Details:', 'syncly' ) . '</h3><ul>';
 			foreach ( $metadata as $key => $value ) {
 				$metadata_html .= sprintf(
 					'<li><strong>%s:</strong> %s</li>',
@@ -209,15 +209,15 @@ class NotificationManager {
 			%s
 			<p><a href="%s" style="display: inline-block; padding: 10px 20px; background: #0073aa; color: white; text-decoration: none; border-radius: 3px;">%s</a></p>',
 			/* translators: %s: Sync type label. */
-			esc_html( sprintf( __( '%s Sync Failed', 'ghl-crm-integration' ), $sync_type ) ),
-			esc_html__( 'A sync operation failed. The data will be retried automatically.', 'ghl-crm-integration' ),
-			esc_html__( 'Sync Type', 'ghl-crm-integration' ),
+			esc_html( sprintf( __( '%s Sync Failed', 'syncly' ), $sync_type ) ),
+			esc_html__( 'A sync operation failed. The data will be retried automatically.', 'syncly' ),
+			esc_html__( 'Sync Type', 'syncly' ),
 			esc_html( $sync_type ),
-			esc_html__( 'Error', 'ghl-crm-integration' ),
+			esc_html__( 'Error', 'syncly' ),
 			esc_html( $error ),
 			$metadata_html,
 			esc_url( admin_url( 'admin.php?page=ghl-crm-admin&tab=logs' ) ),
-			esc_html__( 'View Logs', 'ghl-crm-integration' )
+			esc_html__( 'View Logs', 'syncly' )
 		);
 
 		return $this->send(
@@ -240,7 +240,7 @@ class NotificationManager {
 	public function send_queue_backlog( int $queue_count ): bool {
 		$subject = sprintf(
 			/* translators: %d: Number of items in queue */
-			__( '[WARNING] Sync Queue Backlog: %d Items Pending', 'ghl-crm-integration' ),
+			__( '[WARNING] Sync Queue Backlog: %d Items Pending', 'syncly' ),
 			$queue_count
 		);
 
@@ -256,17 +256,17 @@ class NotificationManager {
 				<li>%s</li>
 			</ul>
 			<p><a href="%s" style="display: inline-block; padding: 10px 20px; background: #0073aa; color: white; text-decoration: none; border-radius: 3px;">%s</a></p>',
-			esc_html__( 'Sync Queue Backlog Warning', 'ghl-crm-integration' ),
-			esc_html__( 'Your sync queue has a large number of pending items. This may indicate processing issues or heavy traffic.', 'ghl-crm-integration' ),
-			esc_html__( 'Pending Items', 'ghl-crm-integration' ),
+			esc_html__( 'Sync Queue Backlog Warning', 'syncly' ),
+			esc_html__( 'Your sync queue has a large number of pending items. This may indicate processing issues or heavy traffic.', 'syncly' ),
+			esc_html__( 'Pending Items', 'syncly' ),
 			number_format_i18n( $queue_count ),
-			esc_html__( 'Possible Causes', 'ghl-crm-integration' ),
-			esc_html__( 'API rate limiting is slowing down processing', 'ghl-crm-integration' ),
-			esc_html__( 'Heavy traffic or bulk operations in progress', 'ghl-crm-integration' ),
-			esc_html__( 'Server resources constrained (slow WP-Cron)', 'ghl-crm-integration' ),
-			esc_html__( 'GoHighLevel API experiencing slowness', 'ghl-crm-integration' ),
+			esc_html__( 'Possible Causes', 'syncly' ),
+			esc_html__( 'API rate limiting is slowing down processing', 'syncly' ),
+			esc_html__( 'Heavy traffic or bulk operations in progress', 'syncly' ),
+			esc_html__( 'Server resources constrained (slow WP-Cron)', 'syncly' ),
+			esc_html__( 'GoHighLevel API experiencing slowness', 'syncly' ),
 			esc_url( admin_url( 'admin.php?page=ghl-crm-admin&tab=queue' ) ),
-			esc_html__( 'View Queue', 'ghl-crm-integration' )
+			esc_html__( 'View Queue', 'syncly' )
 		);
 
 		return $this->send( 'queue_backlog', $subject, $message, [ 'queue_count' => $queue_count ] );
@@ -279,7 +279,7 @@ class NotificationManager {
 	 * @return bool
 	 */
 	public function send_rate_limit( int $retry_after ): bool {
-		$subject = __( '[WARNING] GoHighLevel API Rate Limit Exceeded', 'ghl-crm-integration' );
+		$subject = __( '[WARNING] GoHighLevel API Rate Limit Exceeded', 'syncly' );
 
 		$message = sprintf(
 			'<h2 style="color: #f0ad4e;">%s</h2>
@@ -291,14 +291,14 @@ class NotificationManager {
 				<li>%s</li>
 				<li>%s</li>
 			</ul>',
-			esc_html__( 'API Rate Limit Exceeded', 'ghl-crm-integration' ),
-			esc_html__( 'Your site has hit the GoHighLevel API rate limit. Syncing will automatically resume when the limit resets.', 'ghl-crm-integration' ),
-			esc_html__( 'Rate limit resets in', 'ghl-crm-integration' ),
+			esc_html__( 'API Rate Limit Exceeded', 'syncly' ),
+			esc_html__( 'Your site has hit the GoHighLevel API rate limit. Syncing will automatically resume when the limit resets.', 'syncly' ),
+			esc_html__( 'Rate limit resets in', 'syncly' ),
 			esc_html( human_time_diff( time(), time() + $retry_after ) ),
-			esc_html__( 'To reduce rate limiting:', 'ghl-crm-integration' ),
-			esc_html__( 'Increase sync intervals in settings', 'ghl-crm-integration' ),
-			esc_html__( 'Disable real-time syncing for less critical data', 'ghl-crm-integration' ),
-			esc_html__( 'Consider upgrading your GoHighLevel plan for higher limits', 'ghl-crm-integration' )
+			esc_html__( 'To reduce rate limiting:', 'syncly' ),
+			esc_html__( 'Increase sync intervals in settings', 'syncly' ),
+			esc_html__( 'Disable real-time syncing for less critical data', 'syncly' ),
+			esc_html__( 'Consider upgrading your GoHighLevel plan for higher limits', 'syncly' )
 		);
 
 		return $this->send( 'rate_limit', $subject, $message, [ 'retry_after' => $retry_after ] );
@@ -320,7 +320,7 @@ class NotificationManager {
 	public function send_daily_limit_reached( int $daily_count, int $pending = 0 ): bool {
 		$resets_at = gmdate( 'Y-m-d H:i:s', strtotime( 'tomorrow midnight' ) );
 
-		$subject = __( '[CRITICAL] GoHighLevel Daily API Limit Reached (200,000 Requests)', 'ghl-crm-integration' );
+		$subject = __( '[CRITICAL] GoHighLevel Daily API Limit Reached (200,000 Requests)', 'syncly' );
 
 		$message = sprintf(
 			'<h2 style="color: #d63638;">%s</h2>
@@ -337,20 +337,20 @@ class NotificationManager {
 				<li>%s</li>
 			</ul>
 			<p><a href="%s" style="display: inline-block; padding: 10px 20px; background: #0073aa; color: white; text-decoration: none; border-radius: 3px;">%s</a></p>',
-			esc_html__( 'Daily API Limit Reached', 'ghl-crm-integration' ),
-			esc_html__( 'Your site has reached the GoHighLevel daily limit of 200,000 API requests. Queue processing is paused and will automatically resume when the limit resets.', 'ghl-crm-integration' ),
-			esc_html__( 'Requests today', 'ghl-crm-integration' ),
+			esc_html__( 'Daily API Limit Reached', 'syncly' ),
+			esc_html__( 'Your site has reached the GoHighLevel daily limit of 200,000 API requests. Queue processing is paused and will automatically resume when the limit resets.', 'syncly' ),
+			esc_html__( 'Requests today', 'syncly' ),
 			number_format_i18n( $daily_count ),
-			esc_html__( 'Items still pending', 'ghl-crm-integration' ),
+			esc_html__( 'Items still pending', 'syncly' ),
 			number_format_i18n( $pending ),
-			esc_html__( 'Resets at', 'ghl-crm-integration' ),
+			esc_html__( 'Resets at', 'syncly' ),
 			esc_html( $resets_at ),
-			esc_html__( 'What you can do:', 'ghl-crm-integration' ),
-			esc_html__( 'No action needed — processing resumes automatically at midnight UTC', 'ghl-crm-integration' ),
-			esc_html__( 'Reduce batch size in settings to spread requests more evenly', 'ghl-crm-integration' ),
-			esc_html__( 'Review which integrations are generating the most sync traffic', 'ghl-crm-integration' ),
+			esc_html__( 'What you can do:', 'syncly' ),
+			esc_html__( 'No action needed — processing resumes automatically at midnight UTC', 'syncly' ),
+			esc_html__( 'Reduce batch size in settings to spread requests more evenly', 'syncly' ),
+			esc_html__( 'Review which integrations are generating the most sync traffic', 'syncly' ),
 			esc_url( admin_url( 'admin.php?page=ghl-crm-admin&tab=queue' ) ),
-			esc_html__( 'View Queue Status', 'ghl-crm-integration' )
+			esc_html__( 'View Queue Status', 'syncly' )
 		);
 
 		return $this->send(
@@ -374,7 +374,7 @@ class NotificationManager {
 	public function send_webhook_failure( string $webhook_type, string $error ): bool {
 		$subject = sprintf(
 			/* translators: %s: Webhook type */
-			__( '[ERROR] %s Webhook Failed', 'ghl-crm-integration' ),
+			__( '[ERROR] %s Webhook Failed', 'syncly' ),
 			$webhook_type
 		);
 
@@ -386,15 +386,15 @@ class NotificationManager {
 			<p>%s</p>
 			<p><a href="%s" style="display: inline-block; padding: 10px 20px; background: #0073aa; color: white; text-decoration: none; border-radius: 3px;">%s</a></p>',
 			/* translators: %s: Webhook type label. */
-			esc_html( sprintf( __( '%s Webhook Failed', 'ghl-crm-integration' ), $webhook_type ) ),
-			esc_html__( 'A webhook from GoHighLevel failed to process. Updates from GHL may not be reflected on your site.', 'ghl-crm-integration' ),
-			esc_html__( 'Webhook Type', 'ghl-crm-integration' ),
+			esc_html( sprintf( __( '%s Webhook Failed', 'syncly' ), $webhook_type ) ),
+			esc_html__( 'A webhook from GoHighLevel failed to process. Updates from GHL may not be reflected on your site.', 'syncly' ),
+			esc_html__( 'Webhook Type', 'syncly' ),
 			esc_html( $webhook_type ),
-			esc_html__( 'Error', 'ghl-crm-integration' ),
+			esc_html__( 'Error', 'syncly' ),
 			esc_html( $error ),
-			esc_html__( 'Check your webhook endpoint configuration and verify it\'s accessible from GoHighLevel servers.', 'ghl-crm-integration' ),
+			esc_html__( 'Check your webhook endpoint configuration and verify it\'s accessible from GoHighLevel servers.', 'syncly' ),
 			esc_url( admin_url( 'admin.php?page=ghl-crm-admin&tab=logs' ) ),
-			esc_html__( 'View Webhook Logs', 'ghl-crm-integration' )
+			esc_html__( 'View Webhook Logs', 'syncly' )
 		);
 
 		return $this->send(
@@ -420,7 +420,7 @@ class NotificationManager {
 
 		$subject = sprintf(
 			/* translators: %s: Date */
-			__( 'GoHighLevel Daily Summary - %s', 'ghl-crm-integration' ),
+			__( 'GoHighLevel Daily Summary - %s', 'syncly' ),
 			wp_date( $this->settings_manager->get_option( 'date_format' ) )
 		);
 
@@ -481,36 +481,36 @@ class NotificationManager {
 			</table>
 			
 			<p style="margin-top: 20px;"><a href="%s" style="display: inline-block; padding: 10px 20px; background: #0073aa; color: white; text-decoration: none; border-radius: 3px;">%s</a></p>',
-			esc_html__( 'Daily Summary Report', 'ghl-crm-integration' ),
+			esc_html__( 'Daily Summary Report', 'syncly' ),
 			/* translators: %s: Local time when the summary period ends. */
-			esc_html( sprintf( __( 'Here\'s what happened with your GoHighLevel integration in the last 24 hours (ending %s).', 'ghl-crm-integration' ), wp_date( 'g:i A' ) ) ),
-			esc_html__( 'Sync Statistics', 'ghl-crm-integration' ),
-			esc_html__( 'Total Syncs', 'ghl-crm-integration' ),
+			esc_html( sprintf( __( 'Here\'s what happened with your GoHighLevel integration in the last 24 hours (ending %s).', 'syncly' ), wp_date( 'g:i A' ) ) ),
+			esc_html__( 'Sync Statistics', 'syncly' ),
+			esc_html__( 'Total Syncs', 'syncly' ),
 			number_format_i18n( $stats['total_syncs'] ),
-			esc_html__( 'Successful', 'ghl-crm-integration' ),
+			esc_html__( 'Successful', 'syncly' ),
 			number_format_i18n( $stats['successful_syncs'] ),
-			esc_html__( 'Failed', 'ghl-crm-integration' ),
+			esc_html__( 'Failed', 'syncly' ),
 			$stats['failed_syncs'] > 0 ? '#d63638' : '#46b450',
 			number_format_i18n( $stats['failed_syncs'] ),
-			esc_html__( 'Success Rate', 'ghl-crm-integration' ),
+			esc_html__( 'Success Rate', 'syncly' ),
 			$stats['success_rate'] >= 95 ? '#46b450' : ( $stats['success_rate'] >= 80 ? '#f0ad4e' : '#d63638' ),
 			number_format_i18n( $stats['success_rate'], 1 ),
-			esc_html__( 'Activity Breakdown', 'ghl-crm-integration' ),
-			esc_html__( 'Users Synced', 'ghl-crm-integration' ),
+			esc_html__( 'Activity Breakdown', 'syncly' ),
+			esc_html__( 'Users Synced', 'syncly' ),
 			number_format_i18n( $stats['users_synced'] ),
-			esc_html__( 'Orders Processed', 'ghl-crm-integration' ),
+			esc_html__( 'Orders Processed', 'syncly' ),
 			number_format_i18n( $stats['orders_synced'] ),
-			esc_html__( 'LearnDash Events', 'ghl-crm-integration' ),
+			esc_html__( 'LearnDash Events', 'syncly' ),
 			number_format_i18n( $stats['learndash_synced'] ),
-			esc_html__( 'BuddyBoss Events', 'ghl-crm-integration' ),
+			esc_html__( 'BuddyBoss Events', 'syncly' ),
 			number_format_i18n( $stats['buddyboss_synced'] ),
-			esc_html__( 'Queue Status', 'ghl-crm-integration' ),
-			esc_html__( 'Pending Items', 'ghl-crm-integration' ),
+			esc_html__( 'Queue Status', 'syncly' ),
+			esc_html__( 'Pending Items', 'syncly' ),
 			number_format_i18n( $stats['queue_pending'] ),
-			esc_html__( 'Webhooks Received', 'ghl-crm-integration' ),
+			esc_html__( 'Webhooks Received', 'syncly' ),
 			number_format_i18n( $stats['webhooks_received'] ),
 			esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ),
-			esc_html__( 'View Dashboard', 'ghl-crm-integration' )
+			esc_html__( 'View Dashboard', 'syncly' )
 		);
 
 		return $this->send( 'daily_summary', $subject, $message );
@@ -640,7 +640,7 @@ class NotificationManager {
 			return '';
 		}
 
-		$html  = '<h3>' . esc_html__( 'Top Errors (Last 24 Hours)', 'ghl-crm-integration' ) . '</h3>';
+		$html  = '<h3>' . esc_html__( 'Top Errors (Last 24 Hours)', 'syncly' ) . '</h3>';
 		$html .= '<ol>';
 
 		foreach ( $errors as $error ) {
@@ -716,14 +716,14 @@ class NotificationManager {
 			</html>',
 			esc_html( $subject ),
 			esc_html( $site_name ),
-			esc_html__( 'GoHighLevel CRM Integration', 'ghl-crm-integration' ),
+			esc_html__( 'GoHighLevel CRM Integration', 'syncly' ),
 			$message, // Already escaped in calling methods
 			sprintf(
 				/* translators: %s: Site name */
-				esc_html__( 'This notification was sent from %s', 'ghl-crm-integration' ),
+				esc_html__( 'This notification was sent from %s', 'syncly' ),
 				'<a href="' . esc_url( $site_url ) . '" style="color: #0073aa; text-decoration: none;">' . esc_html( $site_name ) . '</a>'
 			),
-			esc_html__( 'You are receiving this because you enabled GoHighLevel notifications in your WordPress admin.', 'ghl-crm-integration' )
+			esc_html__( 'You are receiving this because you enabled GoHighLevel notifications in your WordPress admin.', 'syncly' )
 		);
 
 		return $template;
@@ -867,10 +867,10 @@ class NotificationManager {
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Insufficient permissions', 'ghl-crm-integration' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Insufficient permissions', 'syncly' ) ] );
 		}
 
-		$subject = __( 'Test Notification - GoHighLevel CRM Integration', 'ghl-crm-integration' );
+		$subject = __( 'Test Notification - GoHighLevel CRM Integration', 'syncly' );
 
 		$message = sprintf(
 			'<h2 style="color: #46b450;">%s</h2>
@@ -884,17 +884,17 @@ class NotificationManager {
 			<p style="margin-top: 20px; padding: 15px; background: #f0f6fc; border-left: 4px solid #0073aa; border-radius: 3px;">
 				<strong>%s:</strong> %s
 			</p>',
-			esc_html__( 'Test Notification Successful!', 'ghl-crm-integration' ),
-			esc_html__( 'This is a test notification from your GoHighLevel CRM Integration plugin.', 'ghl-crm-integration' ),
-			esc_html__( 'If you received this email, your notification system is working correctly. Critical alerts will be sent to this address.', 'ghl-crm-integration' ),
-			esc_html__( 'Sent To', 'ghl-crm-integration' ),
+			esc_html__( 'Test Notification Successful!', 'syncly' ),
+			esc_html__( 'This is a test notification from your GoHighLevel CRM Integration plugin.', 'syncly' ),
+			esc_html__( 'If you received this email, your notification system is working correctly. Critical alerts will be sent to this address.', 'syncly' ),
+			esc_html__( 'Sent To', 'syncly' ),
 			esc_html( $this->get_notification_email() ),
-			esc_html__( 'Sent At', 'ghl-crm-integration' ),
+			esc_html__( 'Sent At', 'syncly' ),
 			esc_html( wp_date( $this->settings_manager->get_option( 'date_format' ) . ' ' . $this->settings_manager->get_option( 'time_format' ) ) ),
-			esc_html__( 'From Site', 'ghl-crm-integration' ),
+			esc_html__( 'From Site', 'syncly' ),
 			esc_html( get_bloginfo( 'name' ) ),
-			esc_html__( 'Note', 'ghl-crm-integration' ),
-			esc_html__( 'If you didn\'t receive this email, check your spam folder and verify the email address in your notification settings.', 'ghl-crm-integration' )
+			esc_html__( 'Note', 'syncly' ),
+			esc_html__( 'If you didn\'t receive this email, check your spam folder and verify the email address in your notification settings.', 'syncly' )
 		);
 
 		// Force send test notification (bypass settings check)
@@ -908,7 +908,7 @@ class NotificationManager {
 				[
 					'message' => sprintf(
 						/* translators: %s: Email address */
-						__( 'Test notification sent to %s. Check your inbox (and spam folder).', 'ghl-crm-integration' ),
+						__( 'Test notification sent to %s. Check your inbox (and spam folder).', 'syncly' ),
 						$to
 					),
 				]
@@ -916,7 +916,7 @@ class NotificationManager {
 		} else {
 			wp_send_json_error(
 				[
-					'message' => __( 'Failed to send test notification. Check your WordPress email configuration.', 'ghl-crm-integration' ),
+					'message' => __( 'Failed to send test notification. Check your WordPress email configuration.', 'syncly' ),
 				]
 			);
 		}

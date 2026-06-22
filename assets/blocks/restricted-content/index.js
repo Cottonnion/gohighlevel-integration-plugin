@@ -35,13 +35,13 @@
   function getRuleLabel(rule) {
     switch (rule) {
       case "any":
-        return __("Has ANY of these tags", "ghl-crm-integration");
+        return __("Has ANY of these tags", "syncly");
       case "all":
-        return __("Has ALL of these tags", "ghl-crm-integration");
+        return __("Has ALL of these tags", "syncly");
       case "none":
-        return __("Does NOT have these tags", "ghl-crm-integration");
+        return __("Does NOT have these tags", "syncly");
       default:
-        return __("Restricted", "ghl-crm-integration");
+        return __("Restricted", "syncly");
     }
   }
 
@@ -86,7 +86,7 @@
     $sel.select2({
       tags: true,
       tokenSeparators: [","],
-      placeholder: __("Search and select tags...", "ghl-crm-integration"),
+      placeholder: __("Search and select tags...", "syncly"),
       allowClear: true,
       multiple: true,
       width: "100%",
@@ -118,10 +118,10 @@
 
   blocks.registerBlockType("ghl-crm/restricted-content", {
     apiVersion: 2,
-    title: __("Restricted Content", "ghl-crm-integration"),
+    title: __("Restricted Content", "syncly"),
     description: __(
       "Control content visibility based on GoHighLevel contact tags",
-      "ghl-crm-integration",
+      "syncly",
     ),
     icon: "lock",
     category: "ghl-crm",
@@ -133,7 +133,7 @@
           attributes: {
             content: __(
               "This content is restricted to VIP members only",
-              "ghl-crm-integration",
+              "syncly",
             ),
           },
         },
@@ -232,10 +232,10 @@
             Placeholder,
             {
               icon: "lock",
-              label: __("Restricted Content", "ghl-crm-integration"),
+              label: __("Restricted Content", "syncly"),
               instructions: __(
                 "Please connect to GoHighLevel in plugin settings to use content restrictions.",
-                "ghl-crm-integration",
+                "syncly",
               ),
             },
             el(
@@ -244,7 +244,7 @@
                 href: "/wp-admin/admin.php?page=ghl-crm-settings",
                 className: "button button-primary",
               },
-              __("Go to Settings", "ghl-crm-integration"),
+              __("Go to Settings", "syncly"),
             ),
           ),
         );
@@ -259,7 +259,7 @@
           {
             style: { display: "block", marginBottom: "8px", fontWeight: "600" },
           },
-          __("Select Tags", "ghl-crm-integration"),
+          __("Select Tags", "syncly"),
         ),
         el("select", {
           id: selectId,
@@ -275,7 +275,7 @@
           },
           __(
             "Search for tags or type to create new ones",
-            "ghl-crm-integration",
+            "syncly",
           ),
         ),
       );
@@ -287,25 +287,25 @@
         el(
           PanelBody,
           {
-            title: __("Access Rules", "ghl-crm-integration"),
+            title: __("Access Rules", "syncly"),
             initialOpen: true,
           },
           el(SelectControl, {
-            label: __("Restriction Rule", "ghl-crm-integration"),
+            label: __("Restriction Rule", "syncly"),
             value: attrs.rule,
             options: [
               {
-                label: __("User has ANY of these tags", "ghl-crm-integration"),
+                label: __("User has ANY of these tags", "syncly"),
                 value: "any",
               },
               {
-                label: __("User has ALL of these tags", "ghl-crm-integration"),
+                label: __("User has ALL of these tags", "syncly"),
                 value: "all",
               },
               {
                 label: __(
                   "User does NOT have these tags",
-                  "ghl-crm-integration",
+                  "syncly",
                 ),
                 value: "none",
               },
@@ -315,7 +315,7 @@
             },
             help: __(
               "Choose how tags should be checked for access",
-              "ghl-crm-integration",
+              "syncly",
             ),
           }),
           tagSelector,
@@ -324,19 +324,19 @@
         el(
           PanelBody,
           {
-            title: __("Additional Conditions", "ghl-crm-integration"),
+            title: __("Additional Conditions", "syncly"),
             initialOpen: false,
           },
           el(SelectControl, {
-            label: __("Condition Logic", "ghl-crm-integration"),
+            label: __("Condition Logic", "syncly"),
             value: attrs.conditionLogic || "and",
             options: [
               {
-                label: __("AND — all conditions must pass", "ghl-crm-integration"),
+                label: __("AND — all conditions must pass", "syncly"),
                 value: "and",
               },
               {
-                label: __("OR — any condition can pass", "ghl-crm-integration"),
+                label: __("OR — any condition can pass", "syncly"),
                 value: "or",
               },
             ],
@@ -345,7 +345,7 @@
             },
             help: __(
               "How the primary rule above combines with additional conditions below.",
-              "ghl-crm-integration",
+              "syncly",
             ),
           }),
           // Render existing condition groups
@@ -375,7 +375,7 @@
                 el(
                   "strong",
                   { style: { fontSize: "12px", textTransform: "uppercase", color: "#1e1e1e" } },
-                  __("Condition", "ghl-crm-integration") + " #" + (index + 1),
+                  __("Condition", "syncly") + " #" + (index + 1),
                 ),
                 el(
                   "button",
@@ -389,16 +389,16 @@
                     },
                     style: { fontSize: "11px" },
                   },
-                  __("Remove", "ghl-crm-integration"),
+                  __("Remove", "syncly"),
                 ),
               ),
               el(SelectControl, {
-                label: __("Match Type", "ghl-crm-integration"),
+                label: __("Match Type", "syncly"),
                 value: condition.matchType || "any",
                 options: [
-                  { label: __("User has ANY of these tags", "ghl-crm-integration"), value: "any" },
-                  { label: __("User has ALL of these tags", "ghl-crm-integration"), value: "all" },
-                  { label: __("User has NONE of these tags", "ghl-crm-integration"), value: "none" },
+                  { label: __("User has ANY of these tags", "syncly"), value: "any" },
+                  { label: __("User has ALL of these tags", "syncly"), value: "all" },
+                  { label: __("User has NONE of these tags", "syncly"), value: "none" },
                 ],
                 onChange: function (v) {
                   var updated = (attrs.tagConditions || []).map(function (c, i) {
@@ -408,7 +408,7 @@
                 },
               }),
               el(SelectControl, {
-                label: __("Tags", "ghl-crm-integration"),
+                label: __("Tags", "syncly"),
                 multiple: true,
                 value: condition.tags || [],
                 options: (blockData.tags || []).map(function (tag) {
@@ -420,7 +420,7 @@
                   });
                   setAttrs({ tagConditions: updated });
                 },
-                help: __("Hold Ctrl/Cmd to select multiple tags.", "ghl-crm-integration"),
+                help: __("Hold Ctrl/Cmd to select multiple tags.", "syncly"),
                 style: { minHeight: "80px" },
               }),
             );
@@ -438,7 +438,7 @@
               },
               style: { width: "100%" },
             },
-            __("+ Add Condition Group", "ghl-crm-integration"),
+            __("+ Add Condition Group", "syncly"),
           ),
           el(
             "p",
@@ -448,25 +448,25 @@
             },
             __(
               "Add condition groups to build compound rules. Example: has ANY of [premium, vip] AND has NONE of [suspended].",
-              "ghl-crm-integration",
+              "syncly",
             ),
           ),
         ),
         el(
           PanelBody,
           {
-            title: __("Fallback Settings", "ghl-crm-integration"),
+            title: __("Fallback Settings", "syncly"),
             initialOpen: false,
           },
           el(ToggleControl, {
-            label: __("Show Fallback Message", "ghl-crm-integration"),
+            label: __("Show Fallback Message", "syncly"),
             checked: attrs.showMessage,
             onChange: function (v) {
               setAttrs({ showMessage: v });
             },
             help: __(
               "Display a message when user does not have access",
-              "ghl-crm-integration",
+              "syncly",
             ),
           }),
           attrs.showMessage &&
@@ -474,14 +474,14 @@
               Fragment,
               null,
               el(TextareaControl, {
-                label: __("Fallback Content", "ghl-crm-integration"),
+                label: __("Fallback Content", "syncly"),
                 value: attrs.fallbackContent,
                 onChange: function (v) {
                   setAttrs({ fallbackContent: v });
                 },
                 help: __(
                   "Message shown to users without access (supports HTML)",
-                  "ghl-crm-integration",
+                  "syncly",
                 ),
                 rows: 4,
               }),
@@ -500,7 +500,7 @@
                         marginBottom: "6px",
                       },
                     },
-                    __("Background Color", "ghl-crm-integration"),
+                    __("Background Color", "syncly"),
                   ),
                   el(ColorPalette, {
                     value: attrs.fallbackBgColor,
@@ -521,7 +521,7 @@
                         marginBottom: "6px",
                       },
                     },
-                    __("Text Color", "ghl-crm-integration"),
+                    __("Text Color", "syncly"),
                   ),
                   el(ColorPalette, {
                     value: attrs.fallbackTextColor,
@@ -542,7 +542,7 @@
                         marginBottom: "6px",
                       },
                     },
-                    __("Border Color", "ghl-crm-integration"),
+                    __("Border Color", "syncly"),
                   ),
                   el(ColorPalette, {
                     value: attrs.fallbackBorderColor,
@@ -552,7 +552,7 @@
                   }),
                 ),
                 el(RangeControl, {
-                  label: __("Padding (px)", "ghl-crm-integration"),
+                  label: __("Padding (px)", "syncly"),
                   value: attrs.fallbackPadding,
                   onChange: function (value) {
                     setAttrs({ fallbackPadding: value });
@@ -570,11 +570,11 @@
       var tagCount = attrs.tags.length;
       var tagLabel =
         tagCount === 1
-          ? __("tag", "ghl-crm-integration")
-          : __("tags", "ghl-crm-integration");
+          ? __("tag", "syncly")
+          : __("tags", "syncly");
       var conditionCount = (attrs.tagConditions || []).length;
       var conditionSuffix = conditionCount > 0
-        ? " + " + conditionCount + " " + (conditionCount === 1 ? __("condition", "ghl-crm-integration") : __("conditions", "ghl-crm-integration")) + " [" + (attrs.conditionLogic || "and").toUpperCase() + "]"
+        ? " + " + conditionCount + " " + (conditionCount === 1 ? __("condition", "syncly") : __("conditions", "syncly")) + " [" + (attrs.conditionLogic || "and").toUpperCase() + "]"
         : "";
 
       var restrictionIndicator = el(
@@ -599,7 +599,7 @@
           el(
             "strong",
             { style: { display: "block", marginBottom: "4px" } },
-            __("Restricted Content", "ghl-crm-integration"),
+            __("Restricted Content", "syncly"),
           ),
           el(
             "span",
@@ -629,7 +629,7 @@
               el(
                 "strong",
                 { style: { display: "block", marginBottom: "4px" } },
-                __("Fallback Content:", "ghl-crm-integration"),
+                __("Fallback Content:", "syncly"),
               ),
               el(
                 "div",

@@ -798,20 +798,11 @@
 					color: ${color};
 					font-size: 13px;
 					font-weight: 500;
-					animation: fadeInSlide 0.3s ease-out;
 				">
 					<span class="dashicons dashicons-${icon}" style="font-size: 16px;"></span>
 					${message}
 				</span>
 			`);
-
-      // Add animation styles if not already present
-      if (!$("#ghl-inline-feedback-animation").length) {
-        $(
-          '<style id="ghl-inline-feedback-animation">@keyframes fadeInSlide { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }</style>',
-        ).appendTo("head");
-      }
-
       // Insert feedback
       $element.closest(".ghl-checkbox-label").after($feedback);
 

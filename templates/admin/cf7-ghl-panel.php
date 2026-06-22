@@ -20,7 +20,7 @@ defined( 'ABSPATH' ) || exit;
 
 	<!-- Enable Integration -->
 	<div class="ghl-crm-section">
-		<h3><?php esc_html_e( 'GoHighLevel Integration', 'ghl-crm-integration' ); ?></h3>
+		<h3><?php esc_html_e( 'GoHighLevel Integration', 'syncly' ); ?></h3>
 		
 		<div class="ghl-form-item">
 			<div class="ghl-form-item-content">
@@ -36,14 +36,14 @@ defined( 'ABSPATH' ) || exit;
 						<span class="ghl-checkbox-inner"></span>
 					</span>
 					<span class="ghl-checkbox-label">
-						<?php esc_html_e( 'Send form submissions to GoHighLevel', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Send form submissions to GoHighLevel', 'syncly' ); ?>
 					</span>
 				</label>
 			</div>
 		</div>
 
 		<p class="description">
-			<?php esc_html_e( 'When enabled, form submissions will create or update contacts in your GoHighLevel account.', 'ghl-crm-integration' ); ?>
+			<?php esc_html_e( 'When enabled, form submissions will create or update contacts in your GoHighLevel account.', 'syncly' ); ?>
 		</p>
 	</div>
 
@@ -52,21 +52,21 @@ defined( 'ABSPATH' ) || exit;
 		
 		<!-- Field Mapping -->
 		<div class="ghl-crm-section">
-			<h3><?php esc_html_e( 'Field Mapping', 'ghl-crm-integration' ); ?></h3>
+			<h3><?php esc_html_e( 'Field Mapping', 'syncly' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Map your Contact Form 7 fields to GoHighLevel contact fields. At minimum, map an email field.', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Map your Contact Form 7 fields to GoHighLevel contact fields. At minimum, map an email field.', 'syncly' ); ?>
 			</p>
 
 			<div id="ghl_crm_email_notice" class="ghl-crm-status ghl-crm-status-disconnected" style="display:none;">
 				<span class="dashicons dashicons-warning"></span>
-				<?php esc_html_e( 'Email mapping is required. Please map at least one CF7 field to the "Email" GHL field — submissions without an email will be ignored.', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Email mapping is required. Please map at least one CF7 field to the "Email" GHL field — submissions without an email will be ignored.', 'syncly' ); ?>
 			</div>
 
 			<table class="ghl-crm-field-mapping widefat striped">
 				<thead>
 					<tr>
-						<th><?php esc_html_e( 'CF7 Field', 'ghl-crm-integration' ); ?></th>
-						<th><?php esc_html_e( 'GoHighLevel Field', 'ghl-crm-integration' ); ?></th>
+						<th><?php esc_html_e( 'CF7 Field', 'syncly' ); ?></th>
+						<th><?php esc_html_e( 'GoHighLevel Field', 'syncly' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -81,7 +81,7 @@ defined( 'ABSPATH' ) || exit;
 									<select name="ghl_crm_field_mapping[<?php echo esc_attr( $field['name'] ); ?>]" 
 											class="ghl-field-select"
 											data-saved-value="<?php echo esc_attr( $config['field_mapping'][ $field['name'] ] ?? '' ); ?>">
-										<option value=""><?php esc_html_e( '— Loading fields... —', 'ghl-crm-integration' ); ?></option>
+										<option value=""><?php esc_html_e( '— Loading fields... —', 'syncly' ); ?></option>
 									</select>
 								</td>
 							</tr>
@@ -89,7 +89,7 @@ defined( 'ABSPATH' ) || exit;
 					<?php else : ?>
 						<tr>
 							<td colspan="2">
-								<em><?php esc_html_e( 'No form fields detected. Add form fields in the Form tab first.', 'ghl-crm-integration' ); ?></em>
+								<em><?php esc_html_e( 'No form fields detected. Add form fields in the Form tab first.', 'syncly' ); ?></em>
 							</td>
 						</tr>
 					<?php endif; ?>
@@ -99,9 +99,9 @@ defined( 'ABSPATH' ) || exit;
 
 		<!-- Tags -->
 		<div class="ghl-crm-section">
-			<h3><?php esc_html_e( 'Contact Tags', 'ghl-crm-integration' ); ?></h3>
+			<h3><?php esc_html_e( 'Contact Tags', 'syncly' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Select tags to apply to contacts created from this form.', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'Select tags to apply to contacts created from this form.', 'syncly' ); ?>
 			</p>
 
 			<div class="ghl-form-item">
@@ -112,8 +112,8 @@ defined( 'ABSPATH' ) || exit;
 						multiple 
 						class="ghl-tags-select"
 						data-saved-tags='<?php echo esc_attr( wp_json_encode( $config['tags'] ) ); ?>'
-						data-placeholder="<?php esc_attr_e( 'Select tags to apply on submission...', 'ghl-crm-integration' ); ?>">
-						<option value=""><?php esc_html_e( 'Loading tags...', 'ghl-crm-integration' ); ?></option>
+						data-placeholder="<?php esc_attr_e( 'Select tags to apply on submission...', 'syncly' ); ?>">
+						<option value=""><?php esc_html_e( 'Loading tags...', 'syncly' ); ?></option>
 					</select>
 				</div>
 			</div>
@@ -121,7 +121,7 @@ defined( 'ABSPATH' ) || exit;
 
 		<!-- Update Behavior -->
 		<div class="ghl-crm-section">
-			<h3><?php esc_html_e( 'Update Behavior', 'ghl-crm-integration' ); ?></h3>
+			<h3><?php esc_html_e( 'Update Behavior', 'syncly' ); ?></h3>
 			
 			<div class="ghl-form-item">
 				<div class="ghl-form-item-content">
@@ -137,20 +137,20 @@ defined( 'ABSPATH' ) || exit;
 							<span class="ghl-checkbox-inner"></span>
 						</span>
 						<span class="ghl-checkbox-label">
-							<?php esc_html_e( 'Update existing contacts if email already exists', 'ghl-crm-integration' ); ?>
+							<?php esc_html_e( 'Update existing contacts if email already exists', 'syncly' ); ?>
 						</span>
 					</label>
 				</div>
 			</div>
 
 			<p class="description">
-				<?php esc_html_e( 'When enabled, if a contact with the same email exists, their information will be updated. When disabled, duplicate submissions will be ignored.', 'ghl-crm-integration' ); ?>
+				<?php esc_html_e( 'When enabled, if a contact with the same email exists, their information will be updated. When disabled, duplicate submissions will be ignored.', 'syncly' ); ?>
 			</p>
 		</div>
 
 		<!-- Connection Status -->
 		<div class="ghl-crm-section">
-			<h3><?php esc_html_e( 'Connection Status', 'ghl-crm-integration' ); ?></h3>
+			<h3><?php esc_html_e( 'Connection Status', 'syncly' ); ?></h3>
 			<?php
 			$settings    = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
 			$connected   = ! empty( $settings['location_id'] );
@@ -162,7 +162,7 @@ defined( 'ABSPATH' ) || exit;
 					<?php
 					printf(
 						/* translators: %s: Location ID */
-						esc_html__( 'Connected to GoHighLevel (Location: %s)', 'ghl-crm-integration' ),
+						esc_html__( 'Connected to GoHighLevel (Location: %s)', 'syncly' ),
 						esc_html( $location_id )
 					);
 					?>
@@ -170,9 +170,9 @@ defined( 'ABSPATH' ) || exit;
 			<?php else : ?>
 				<p class="ghl-crm-status ghl-crm-status-disconnected">
 					<span class="dashicons dashicons-warning"></span>
-					<?php esc_html_e( 'Not connected to GoHighLevel. ', 'ghl-crm-integration' ); ?>
+					<?php esc_html_e( 'Not connected to GoHighLevel. ', 'syncly' ); ?>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ); ?>">
-						<?php esc_html_e( 'Connect now', 'ghl-crm-integration' ); ?>
+						<?php esc_html_e( 'Connect now', 'syncly' ); ?>
 					</a>
 				</p>
 			<?php endif; ?>

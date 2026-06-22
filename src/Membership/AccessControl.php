@@ -96,12 +96,6 @@ class AccessControl {
 		$location_id = $settings->get_setting( 'location_id' ) ?: $settings->get_setting( 'oauth_location_id' );
 		$tags        = $tag_manager->get_user_tag_names( $user_id, $location_id );
 
-		// Check if PRO plugin is active and Family Accounts is enabled
-		if ( get_option( 'ghl_crm_family_accounts_enabled', false ) && class_exists( '\\GHL_CRM_Pro\\FamilyManager' ) ) {
-			$family_manager = \GHL_CRM_Pro\FamilyManager::get_instance();
-			$tags           = $family_manager->get_inherited_tags( $user_id, $tags );
-		}
-
 			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward-compatible public hook.
 			$tags = apply_filters( 'ghl_user_effective_tags', $tags, $user_id );
 
@@ -190,7 +184,7 @@ class AccessControl {
 	public function get_denial_message( int $post_id ): string {
 		$message = apply_filters(
 			'ghl_crm_access_denial_message',
-			__( 'You do not have permission to view this content.', 'ghl-crm-integration' ),
+			__( 'You do not have permission to view this content.', 'syncly' ),
 			$post_id
 		);
 
