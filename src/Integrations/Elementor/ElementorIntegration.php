@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Integrations\Elementor;
+namespace Syncly\Integrations\Elementor;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -10,7 +10,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * Handles Elementor plugin integration and widget registration
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Integrations/Elementor
  */
 class ElementorIntegration {
@@ -64,15 +64,15 @@ class ElementorIntegration {
 		/**
 		 * Allow Pro to initialize Elementor conditional display restrictions.
 		 *
-		 * Deferred to 'ghl_crm_loaded' so that Pro's FreePluginHooks has
+		 * Deferred to 'syncly_loaded' so that Pro's FreePluginHooks has
 		 * registered its add_action callback before this fires.
 		 *
 		 * @since 1.2.0
 		 */
 		add_action(
-			'ghl_crm_loaded',
+			'syncly_loaded',
 			static function () {
-				do_action( 'ghl_crm_init_elementor_conditions' );
+				do_action( 'syncly_init_elementor_conditions' );
 			}
 		);
 	}
@@ -84,7 +84,7 @@ class ElementorIntegration {
 	 * @return void
 	 */
 	public function register_widgets( $widgets_manager ): void {
-		require_once GHL_CRM_PATH . 'src/Integrations/Elementor/FormWidget.php';
+		require_once SYNCLY_PATH . 'src/Integrations/Elementor/FormWidget.php';
 
 		$widgets_manager->register( new FormWidget() );
 	}
@@ -97,7 +97,7 @@ class ElementorIntegration {
 	 */
 	public function register_category( $elements_manager ): void {
 		$elements_manager->add_category(
-			'ghl-crm',
+			'syncly',
 			[
 				'title' => __( 'GoHighLevel CRM', 'syncly' ),
 				'icon'  => 'fa fa-plug',

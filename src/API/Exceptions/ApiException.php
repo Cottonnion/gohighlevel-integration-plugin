@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\API\Exceptions;
+namespace Syncly\API\Exceptions;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Base API Exception
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage API/Exceptions
  */
 class ApiException extends \Exception {

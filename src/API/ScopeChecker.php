@@ -4,12 +4,12 @@
  *
  * Checks if the connected API token has access to required scopes
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
-namespace GHL_CRM\API;
+namespace Syncly\API;
 
-use GHL_CRM\Core\SettingsManager;
+use Syncly\Core\SettingsManager;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -63,7 +63,7 @@ class ScopeChecker {
 
 		try {
 			// Get Client instance
-			$client = \GHL_CRM\API\Client\Client::get_instance();
+			$client = \Syncly\API\Client\Client::get_instance();
 
 			// Prevent scope checks from triggering OAuth refresh/disconnect cascades
 			$client->set_skip_oauth_refresh( true );
@@ -130,7 +130,7 @@ class ScopeChecker {
 
 		// Restore normal OAuth refresh behavior
 		try {
-			$client = \GHL_CRM\API\Client\Client::get_instance();
+			$client = \Syncly\API\Client\Client::get_instance();
 			$client->set_skip_oauth_refresh( false );
 		} catch ( \Exception $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch
 			// Client may not be available, safe to ignore.
@@ -293,7 +293,7 @@ class ScopeChecker {
 				</p>
 				<p>
 					<?php esc_html_e( 'Please reconnect your GoHighLevel account with the required permissions, or contact your administrator to update the API key/OAuth app scopes.', 'syncly' ); ?>
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ); ?>" class="button button-small">
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin' ) ); ?>" class="button button-small">
 						<?php esc_html_e( 'Go to Connection Settings', 'syncly' ); ?>
 					</a>
 				</p>

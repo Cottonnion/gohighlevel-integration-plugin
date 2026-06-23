@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\API\Resources;
+namespace Syncly\API\Resources;
 
-use GHL_CRM\API\Client\ClientInterface;
-use GHL_CRM\API\Client\Client;
+use Syncly\API\Client\ClientInterface;
+use Syncly\API\Client\Client;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Base class for all API resources
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage API/Resources
  */
 abstract class AbstractResource {

@@ -116,7 +116,7 @@
 
   // ─── Block Definition ────────────────────────────────────────────────────────
 
-  blocks.registerBlockType("ghl-crm/restricted-content", {
+  blocks.registerBlockType("syncly/restricted-content", {
     apiVersion: 2,
     title: __("Restricted Content", "syncly"),
     description: __(
@@ -124,7 +124,7 @@
       "syncly",
     ),
     icon: "lock",
-    category: "ghl-crm",
+    category: "syncly",
     example: {
       attributes: { rule: "any", tags: ["vip", "premium"], showMessage: true },
       innerBlocks: [
@@ -241,7 +241,7 @@
             el(
               "a",
               {
-                href: "/wp-admin/admin.php?page=ghl-crm-settings",
+                href: "/wp-admin/admin.php?page=syncly-settings",
                 className: "button button-primary",
               },
               __("Go to Settings", "syncly"),

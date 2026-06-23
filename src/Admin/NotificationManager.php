@@ -2,19 +2,19 @@
 /**
  * Notification Manager
  *
- * Enterprise-grade notification system for GHL CRM Integration.
+ * Enterprise-grade notification system for Syncly.
  * Handles email alerts, throttling, daily summaries, and notification templates.
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Core
  * @since      1.0.0
  */
 
 declare(strict_types=1);
 
-namespace GHL_CRM\Admin;
+namespace Syncly\Admin;
 
-use GHL_CRM\Core\SettingsManager;
+use Syncly\Core\SettingsManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -92,7 +92,7 @@ class NotificationManager {
 	private function init_hooks(): void {
 		// Schedule daily summary if enabled
 		add_action( 'init', [ $this, 'schedule_daily_summary' ] );
-		add_action( 'ghl_crm_daily_summary', [ $this, 'send_daily_summary' ] );
+		add_action( 'syncly_daily_summary', [ $this, 'send_daily_summary' ] );
 
 		// AJAX handler for test notification
 		add_action( 'wp_ajax_ghl_send_test_notification', [ $this, 'handle_test_notification' ] );
@@ -166,7 +166,7 @@ class NotificationManager {
 			esc_html__( 'Action Required', 'syncly' ),
 			esc_html__( 'Reconnect to GoHighLevel immediately to resume syncing', 'syncly' ),
 			esc_html__( 'This is a critical issue that requires immediate attention. No data will sync until the connection is restored.', 'syncly' ),
-			esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ),
+			esc_url( admin_url( 'admin.php?page=syncly-admin' ) ),
 			esc_html__( 'Reconnect Now', 'syncly' )
 		);
 
@@ -216,7 +216,7 @@ class NotificationManager {
 			esc_html__( 'Error', 'syncly' ),
 			esc_html( $error ),
 			$metadata_html,
-			esc_url( admin_url( 'admin.php?page=ghl-crm-admin&tab=logs' ) ),
+			esc_url( admin_url( 'admin.php?page=syncly-admin&tab=logs' ) ),
 			esc_html__( 'View Logs', 'syncly' )
 		);
 
@@ -265,7 +265,7 @@ class NotificationManager {
 			esc_html__( 'Heavy traffic or bulk operations in progress', 'syncly' ),
 			esc_html__( 'Server resources constrained (slow WP-Cron)', 'syncly' ),
 			esc_html__( 'GoHighLevel API experiencing slowness', 'syncly' ),
-			esc_url( admin_url( 'admin.php?page=ghl-crm-admin&tab=queue' ) ),
+			esc_url( admin_url( 'admin.php?page=syncly-admin&tab=queue' ) ),
 			esc_html__( 'View Queue', 'syncly' )
 		);
 
@@ -349,7 +349,7 @@ class NotificationManager {
 			esc_html__( 'No action needed — processing resumes automatically at midnight UTC', 'syncly' ),
 			esc_html__( 'Reduce batch size in settings to spread requests more evenly', 'syncly' ),
 			esc_html__( 'Review which integrations are generating the most sync traffic', 'syncly' ),
-			esc_url( admin_url( 'admin.php?page=ghl-crm-admin&tab=queue' ) ),
+			esc_url( admin_url( 'admin.php?page=syncly-admin&tab=queue' ) ),
 			esc_html__( 'View Queue Status', 'syncly' )
 		);
 
@@ -393,7 +393,7 @@ class NotificationManager {
 			esc_html__( 'Error', 'syncly' ),
 			esc_html( $error ),
 			esc_html__( 'Check your webhook endpoint configuration and verify it\'s accessible from GoHighLevel servers.', 'syncly' ),
-			esc_url( admin_url( 'admin.php?page=ghl-crm-admin&tab=logs' ) ),
+			esc_url( admin_url( 'admin.php?page=syncly-admin&tab=logs' ) ),
 			esc_html__( 'View Webhook Logs', 'syncly' )
 		);
 
@@ -509,7 +509,7 @@ class NotificationManager {
 			number_format_i18n( $stats['queue_pending'] ),
 			esc_html__( 'Webhooks Received', 'syncly' ),
 			number_format_i18n( $stats['webhooks_received'] ),
-			esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ),
+			esc_url( admin_url( 'admin.php?page=syncly-admin' ) ),
 			esc_html__( 'View Dashboard', 'syncly' )
 		);
 
@@ -716,7 +716,7 @@ class NotificationManager {
 			</html>',
 			esc_html( $subject ),
 			esc_html( $site_name ),
-			esc_html__( 'GoHighLevel CRM Integration', 'syncly' ),
+			esc_html( SYNCLY_PLUGIN_NAME ),
 			$message, // Already escaped in calling methods
 			sprintf(
 				/* translators: %s: Site name */
@@ -829,12 +829,12 @@ class NotificationManager {
 		// Try Action Scheduler first (if available and initialized)
 		if ( function_exists( 'as_next_scheduled_action' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {
 			// Check if already scheduled with Action Scheduler
-			if ( ! as_next_scheduled_action( 'ghl_crm_daily_summary' ) ) {
-				as_schedule_recurring_action( $next_run, DAY_IN_SECONDS, 'ghl_crm_daily_summary', [], 'ghl-crm' );
+			if ( ! as_next_scheduled_action( 'syncly_daily_summary' ) ) {
+				as_schedule_recurring_action( $next_run, DAY_IN_SECONDS, 'syncly_daily_summary', [], 'syncly' );
 			}
-		} elseif ( ! wp_next_scheduled( 'ghl_crm_daily_summary' ) ) {
+		} elseif ( ! wp_next_scheduled( 'syncly_daily_summary' ) ) {
 			// Fallback to WP-Cron.
-			wp_schedule_event( $next_run, 'daily', 'ghl_crm_daily_summary' );
+			wp_schedule_event( $next_run, 'daily', 'syncly_daily_summary' );
 		}
 	}
 
@@ -846,13 +846,13 @@ class NotificationManager {
 	private function unschedule_daily_summary(): void {
 		// Unschedule from Action Scheduler if available and initialized
 		if ( function_exists( 'as_unschedule_all_actions' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {
-			as_unschedule_all_actions( 'ghl_crm_daily_summary', [], 'ghl-crm' );
+			as_unschedule_all_actions( 'syncly_daily_summary', [], 'syncly' );
 		}
 
 		// Unschedule from WP-Cron
-		$timestamp = wp_next_scheduled( 'ghl_crm_daily_summary' );
+		$timestamp = wp_next_scheduled( 'syncly_daily_summary' );
 		if ( $timestamp ) {
-			wp_unschedule_event( $timestamp, 'ghl_crm_daily_summary' );
+			wp_unschedule_event( $timestamp, 'syncly_daily_summary' );
 		}
 	}
 
@@ -863,14 +863,18 @@ class NotificationManager {
 	 */
 	public function handle_test_notification(): void {
 		// Verify nonce
-		check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce' );
+		check_ajax_referer( 'syncly_settings_nonce', 'nonce' );
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( [ 'message' => __( 'Insufficient permissions', 'syncly' ) ] );
 		}
 
-		$subject = __( 'Test Notification - GoHighLevel CRM Integration', 'syncly' );
+		$subject = sprintf(
+			/* translators: %s: Plugin name */
+			__( 'Test Notification - %s', 'syncly' ),
+			SYNCLY_PLUGIN_NAME
+		);
 
 		$message = sprintf(
 			'<h2 style="color: #46b450;">%s</h2>
@@ -885,7 +889,11 @@ class NotificationManager {
 				<strong>%s:</strong> %s
 			</p>',
 			esc_html__( 'Test Notification Successful!', 'syncly' ),
-			esc_html__( 'This is a test notification from your GoHighLevel CRM Integration plugin.', 'syncly' ),
+			sprintf(
+				/* translators: %s: Plugin name */
+				esc_html__( 'This is a test notification from your %s plugin.', 'syncly' ),
+				esc_html( SYNCLY_PLUGIN_NAME )
+			),
 			esc_html__( 'If you received this email, your notification system is working correctly. Critical alerts will be sent to this address.', 'syncly' ),
 			esc_html__( 'Sent To', 'syncly' ),
 			esc_html( $this->get_notification_email() ),

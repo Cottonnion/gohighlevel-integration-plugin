@@ -38,30 +38,30 @@
 }
 
 /* Hide WordPress Admin UI on Setup Wizard */
-.admin_page_ghl-crm-setup-wizard #wpadminbar {
+.admin_page_syncly-setup-wizard #wpadminbar {
     display: none !important;
 }
 
-.admin_page_ghl-crm-setup-wizard #adminmenuback,
-.admin_page_ghl-crm-setup-wizard #adminmenuwrap {
+.admin_page_syncly-setup-wizard #adminmenuback,
+.admin_page_syncly-setup-wizard #adminmenuwrap {
     display: none !important;
 }
 
-.admin_page_ghl-crm-setup-wizard #wpcontent,
-.admin_page_ghl-crm-setup-wizard #wpfooter {
+.admin_page_syncly-setup-wizard #wpcontent,
+.admin_page_syncly-setup-wizard #wpfooter {
     margin-left: 0 !important;
     padding-left: 0 !important;
 }
 
-.admin_page_ghl-crm-setup-wizard #wpbody {
+.admin_page_syncly-setup-wizard #wpbody {
     padding-top: 0 !important;
 }
 
-.admin_page_ghl-crm-setup-wizard #wpbody-content {
+.admin_page_syncly-setup-wizard #wpbody-content {
     padding-bottom: 0 !important;
 }
 
-.admin_page_ghl-crm-setup-wizard html.wp-toolbar {
+.admin_page_syncly-setup-wizard html.wp-toolbar {
     padding-top: 0 !important;
 }
 

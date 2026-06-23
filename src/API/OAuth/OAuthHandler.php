@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\API\OAuth;
+namespace Syncly\API\OAuth;
 
-use GHL_CRM\API\Client\Client;
-use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Utilities\FileLogger;
+use Syncly\API\Client\Client;
+use Syncly\Core\SettingsManager;
+use Syncly\Utilities\FileLogger;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Handles GoHighLevel OAuth2 authentication flow
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage API/OAuth
  */
 class OAuthHandler {
@@ -90,7 +90,7 @@ class OAuthHandler {
 	 */
 	public function register_oauth_endpoint(): void {
 		register_rest_route(
-			'ghl-crm/v1',
+			'syncly/v1',
 			'/oauth/callback',
 			[
 				'methods'             => 'GET',
@@ -127,7 +127,7 @@ class OAuthHandler {
 		$return_url = add_query_arg(
 			'ghl_state',
 			$state_nonce,
-			admin_url( 'admin.php?page=ghl-crm-admin' )
+			admin_url( 'admin.php?page=syncly-admin' )
 		);
 
 		// Bind state to nonce (not path) to keep compatibility with proxy redirect logic
@@ -148,8 +148,8 @@ class OAuthHandler {
 			return rest_url( 'ghl/v1/callback' );
 		}
 		// Primary method: admin page URL for admin_init callback
-		// Use ghl-crm-admin (SPA page) instead of ghl-crm-settings
-		return admin_url( 'admin.php?page=ghl-crm-admin' );
+		// Use syncly-admin (SPA page) instead of syncly-settings
+		return admin_url( 'admin.php?page=syncly-admin' );
 	}
 
 	/**
@@ -159,10 +159,10 @@ class OAuthHandler {
 	 * @return void
 	 */
 	public function handle_admin_oauth_callback(): void {
-		// Check if this is an OAuth callback - look for 'code' parameter on ghl-crm-admin page
+		// Check if this is an OAuth callback - look for 'code' parameter on syncly-admin page
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 
-		if ( 'ghl-crm-admin' !== $page ) {
+		if ( 'syncly-admin' !== $page ) {
 			return;
 		}
 
@@ -191,7 +191,7 @@ class OAuthHandler {
 				add_query_arg(
 					'ghl_state',
 					$state_nonce,
-					admin_url( 'admin.php?page=ghl-crm-admin' )
+					admin_url( 'admin.php?page=syncly-admin' )
 				)
 			);
 			$this->log_oauth_event(
@@ -212,7 +212,7 @@ class OAuthHandler {
 						'oauth'   => 'error',
 						'message' => urlencode( __( 'Missing state parameter. OAuth cancelled for security.', 'syncly' ) ),
 					],
-					admin_url( 'admin.php?page=ghl-crm-admin' )
+					admin_url( 'admin.php?page=syncly-admin' )
 				)
 			);
 			exit;
@@ -238,12 +238,12 @@ class OAuthHandler {
 						'oauth'   => 'error',
 						'message' => urlencode( $result->get_error_message() ),
 					],
-					admin_url( 'admin.php?page=ghl-crm-admin' )
+					admin_url( 'admin.php?page=syncly-admin' )
 				)
 			);
 		} else {
 			$this->log_oauth_event( 'oauth_callback_success', [ 'source' => 'admin' ] );
-			wp_safe_redirect( add_query_arg( 'oauth', 'success', admin_url( 'admin.php?page=ghl-crm-admin' ) ) );
+			wp_safe_redirect( add_query_arg( 'oauth', 'success', admin_url( 'admin.php?page=syncly-admin' ) ) );
 		}
 		exit;
 	}
@@ -276,12 +276,12 @@ class OAuthHandler {
 						'oauth'   => 'error',
 						'message' => urlencode( $result->get_error_message() ),
 					],
-					admin_url( 'admin.php?page=ghl-crm-settings' )
+					admin_url( 'admin.php?page=syncly-settings' )
 				)
 			);
 		} else {
 			$this->log_oauth_event( 'oauth_callback_success', [ 'source' => 'rest' ] );
-			wp_safe_redirect( add_query_arg( 'oauth', 'success', admin_url( 'admin.php?page=ghl-crm-settings' ) ) );
+			wp_safe_redirect( add_query_arg( 'oauth', 'success', admin_url( 'admin.php?page=syncly-settings' ) ) );
 		}
 		exit;
 	}
@@ -383,10 +383,10 @@ class OAuthHandler {
 			'verified_at' => current_time( 'mysql' ),
 			'method'      => 'oauth2',
 		];
-		$this->settings_manager->update_option( 'ghl_crm_connection_verified', $verification_data );
+		$this->settings_manager->update_option( 'syncly_connection_verified', $verification_data );
 
 		// Trigger action to notify other components that connection status has changed
-		do_action( 'ghl_crm_connection_status_changed', true, 'oauth2' );
+		do_action( 'syncly_connection_status_changed', true, 'oauth2' );
 	}
 
 	/**
@@ -411,7 +411,7 @@ class OAuthHandler {
 			}
 
 			// Remove verification using SettingsManager (multisite-aware)
-			$this->settings_manager->update_option( 'ghl_crm_connection_verified', false );
+			$this->settings_manager->update_option( 'syncly_connection_verified', false );
 
 			// Clear cached token state so refresh guard does not trip after disconnect
 			self::$access_token_cache = null;
@@ -419,7 +419,7 @@ class OAuthHandler {
 			self::$last_refresh_error = null;
 
 			// Trigger disconnection action
-			do_action( 'ghl_crm_connection_status_changed', false, 'oauth_disconnected' );
+			do_action( 'syncly_connection_status_changed', false, 'oauth_disconnected' );
 
 			return true;
 		} catch ( \Throwable $e ) {

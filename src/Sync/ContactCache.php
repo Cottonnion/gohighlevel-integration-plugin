@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Sync;
+namespace Syncly\Sync;
 
-use GHL_CRM\Core\SettingsManager;
+use Syncly\Core\SettingsManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Reduces API calls by caching contact lookups
  * Cache duration is configurable via settings
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Sync
  */
 class ContactCache {
@@ -57,7 +57,7 @@ class ContactCache {
 	 * @return int Cache duration in seconds
 	 */
 	private function get_cache_ttl(): int {
-		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 		$cache_duration   = absint( $settings_manager->get_setting( 'cache_duration', self::DEFAULT_CACHE_TTL ) );
 
 		// If set to 0, disable caching

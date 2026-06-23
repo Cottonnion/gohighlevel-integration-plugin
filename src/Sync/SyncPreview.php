@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Sync;
+namespace Syncly\Sync;
 
-use GHL_CRM\API\Resources\ContactResource;
-use GHL_CRM\Core\SettingsManager;
+use Syncly\API\Resources\ContactResource;
+use Syncly\Core\SettingsManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Provides dry-run preview of sync operations without executing them
  * Shows what will happen before committing to sync
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Sync
  */
 class SyncPreview {

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Sync;
+namespace Syncly\Sync;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -12,13 +12,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Persists aggregate counts for successful and failed sync events per site.
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 class SyncStats {
 	/**
 	 * Option key for per-site statistics.
 	 */
-	private const OPTION_KEY = 'ghl_crm_sync_stats';
+	private const OPTION_KEY = 'syncly_sync_stats';
 
 	/**
 	 * Singleton instance.

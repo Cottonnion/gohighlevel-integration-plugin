@@ -23,12 +23,12 @@
 	var __ = i18n.__;
 	var apiFetch = window.wp.apiFetch;
 
-	blocks.registerBlockType('ghl-crm/form', {
+	blocks.registerBlockType('syncly/form', {
 		apiVersion: 2,
 		title: __('GoHighLevel Form', 'syncly'),
 		description: __('Embed a GoHighLevel form to capture leads directly on your site. Form settings can be configured in the Forms sub menu', 'syncly'),
 		icon: 'forms',
-		category: 'ghl-crm',
+		category: 'syncly',
 		example: {
 			attributes: {
 				formId: 'preview',
@@ -81,7 +81,7 @@
 			function loadForms() {
 				setLoading(true);
 				apiFetch({
-					path: '/ghl-crm/v1/forms',
+					path: '/syncly/v1/forms',
 				}).then(function (response) {
 					var formOptions = [
 						{ label: __('Select a form...', 'syncly'), value: '' }
@@ -107,7 +107,7 @@
 			// Load forms on mount
 			useEffect(function () {
 				apiFetch({
-					path: '/ghl-crm/v1/connection/status',
+					path: '/syncly/v1/connection/status',
 				}).then(function (response) {
 					setConnected(response.connected || false);
 					if (response.connected) {
@@ -129,7 +129,7 @@
 					instructions: __('Please connect to GoHighLevel in plugin settings to use forms.', 'syncly')
 				},
 					el('a', {
-						href: '/wp-admin/admin.php?page=ghl-crm-settings',
+						href: '/wp-admin/admin.php?page=syncly-settings',
 						className: 'button button-primary'
 					}, __('Go to Settings', 'syncly'))
 				);
@@ -183,7 +183,7 @@
 			var formName = selectedForm ? selectedForm.label : attrs.formId;
 
 			// Get location ID and form URL from settings
-			var ghlSettings = window.ghlCrmSettings || {};
+			var ghlSettings = window.synclySettings || {};
 			var locationId = ghlSettings.locationId || '';
 			var formUrl = '';
 			

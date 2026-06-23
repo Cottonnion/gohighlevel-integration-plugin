@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\API\Resources;
+namespace Syncly\API\Resources;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Handles GoHighLevel custom object API operations
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage API/Resources
  */
 class CustomObjectResource extends AbstractResource {
@@ -48,7 +48,7 @@ class CustomObjectResource extends AbstractResource {
 			$objects = $response['objects'] ?? [];
 
 			// Cache using configured duration
-			$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+			$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 			$cache_duration   = absint( $settings_manager->get_setting( 'cache_duration', HOUR_IN_SECONDS ) );
 			set_transient( 'ghl_custom_objects_schemas', $objects, $cache_duration );
 
@@ -300,7 +300,7 @@ class CustomObjectResource extends AbstractResource {
 	 */
 	public function create_association( string $schema_key, string $singular_label, string $plural_label, string $cardinality = 'ONE_TO_MANY' ): array {
 		try {
-			$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+			$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 			$location_id      = $settings_manager->get_setting( 'location_id', '' );
 
 			// Association definition structure per GHL API
@@ -357,7 +357,7 @@ class CustomObjectResource extends AbstractResource {
 			//
 			// IMPORTANT: The order must match the association definition!
 			// If association is: contact → custom_object, then firstRecordId = contact, secondRecordId = custom_object
-			$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+			$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 			$location_id      = $settings_manager->get_setting( 'location_id', '' );
 
 			// Determine correct order based on association direction
@@ -438,7 +438,7 @@ class CustomObjectResource extends AbstractResource {
 
 			// First, we need to get the relation ID
 			// GET /associations/relations?associationId={associationId}&firstRecordId={firstRecordId}
-			$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+			$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 			$location_id      = $settings_manager->get_setting( 'location_id', '' );
 
 			// Get existing relations for the first record

@@ -5,14 +5,14 @@
  * Shows supported form plugins that can sync submissions to GHL conversations.
  * Loaded as a settings tab partial via handle_settings_tab_request.
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 defined( 'ABSPATH' ) || exit;
 
 // Settings are inherited from the parent settings.php context.
 if ( ! isset( $settings ) ) {
-	$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+	$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 	$settings         = $settings_manager->get_settings_array();
 }
 
@@ -82,7 +82,7 @@ $form_plugins = [
 ?>
 
 <div class="ghl-settings-wrapper">
-	<?php wp_nonce_field( 'ghl_crm_settings_nonce', 'ghl_crm_nonce' ); ?>
+	<?php wp_nonce_field( 'syncly_settings_nonce', 'syncly_nonce' ); ?>
 
 	<!-- Form Plugins Grid -->
 	<div class="ghl-conversations-plugins" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 20px; margin: 20px 0;">

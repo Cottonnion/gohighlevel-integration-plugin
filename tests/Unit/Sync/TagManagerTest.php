@@ -5,15 +5,15 @@
  * Tests tag normalization, ID/name conversion, user meta storage,
  * and location-scoped meta key generation.
  *
- * @package GHL_CRM_Integration\Tests\Unit\Sync
+ * @package Syncly\Tests\Unit\Sync
  */
 
 declare(strict_types=1);
 
-namespace GHL_CRM\Tests\Unit\Sync;
+namespace Syncly\Tests\Unit\Sync;
 
-use GHL_CRM\Sync\TagManager;
-use GHL_CRM\Tests\TestCase;
+use Syncly\Sync\TagManager;
+use Syncly\Tests\TestCase;
 use Brain\Monkey\Functions;
 use Mockery;
 
@@ -36,7 +36,7 @@ class TagManagerTest extends TestCase {
 
 		// Build SettingsManager mock and inject via reflection (can't use overload:
 		// because the class may already be autoloaded by earlier test suites).
-		$settings_mock = Mockery::mock( \GHL_CRM\Core\SettingsManager::class );
+		$settings_mock = Mockery::mock( \Syncly\Core\SettingsManager::class );
 		$settings_mock->shouldReceive( 'get_setting' )
 			->with( 'location_id' )
 			->andReturn( 'loc_abc123' )
@@ -46,7 +46,7 @@ class TagManagerTest extends TestCase {
 			->andReturn( 3600 )
 			->byDefault();
 
-		$sm_ref  = new \ReflectionClass( \GHL_CRM\Core\SettingsManager::class );
+		$sm_ref  = new \ReflectionClass( \Syncly\Core\SettingsManager::class );
 		$sm_prop = $sm_ref->getProperty( 'instance' );
 		$sm_prop->setAccessible( true );
 		$sm_prop->setValue( null, $settings_mock );
@@ -71,7 +71,7 @@ class TagManagerTest extends TestCase {
 
 	protected function tearDown(): void {
 		$this->resetSingleton( TagManager::class );
-		$this->resetSingleton( \GHL_CRM\Core\SettingsManager::class );
+		$this->resetSingleton( \Syncly\Core\SettingsManager::class );
 		parent::tearDown();
 	}
 
@@ -246,7 +246,7 @@ class TagManagerTest extends TestCase {
 		$hook_user  = null;
 		$hook_tags  = null;
 		Functions\when( 'do_action' )->alias( function ( $hook, ...$args ) use ( &$hook_fired, &$hook_user, &$hook_tags ) {
-			if ( $hook === 'ghl_crm_user_tags_updated' ) {
+			if ( $hook === 'syncly_user_tags_updated' ) {
 				$hook_fired = true;
 				$hook_user  = $args[0] ?? null;
 				$hook_tags  = $args[1] ?? null;
@@ -255,7 +255,7 @@ class TagManagerTest extends TestCase {
 
 		$stored = $this->tag_manager->store_user_tags( 42, [ 'tag_001', 'tag_002' ] );
 
-		$this->assertTrue( $hook_fired, 'ghl_crm_user_tags_updated should fire when tags change' );
+		$this->assertTrue( $hook_fired, 'syncly_user_tags_updated should fire when tags change' );
 		$this->assertSame( 42, $hook_user );
 		$this->assertContains( 'tag_001', $stored );
 		$this->assertContains( 'tag_002', $stored );
@@ -273,7 +273,7 @@ class TagManagerTest extends TestCase {
 
 		$hook_fired = false;
 		Functions\when( 'do_action' )->alias( function ( $hook ) use ( &$hook_fired ) {
-			if ( $hook === 'ghl_crm_user_tags_updated' ) {
+			if ( $hook === 'syncly_user_tags_updated' ) {
 				$hook_fired = true;
 			}
 		});

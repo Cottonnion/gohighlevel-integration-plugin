@@ -4,15 +4,15 @@
  *
  * Sync options tab content for note synchronization and performance settings
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/templates/admin/partials/settings
+ * @package    Syncly
+ * @subpackage Syncly/templates/admin/partials/settings
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
 
 // Note sync settings
@@ -20,7 +20,7 @@ $note_sync_direction = $settings['note_sync_direction'] ?? 'to_ghl';
 ?>
 
 <div class="ghl-settings-wrapper">
-	<?php wp_nonce_field( 'ghl_crm_settings_nonce', 'ghl_crm_nonce' ); ?>
+	<?php wp_nonce_field( 'syncly_settings_nonce', 'syncly_nonce' ); ?>
 	
 	<!-- Note Synchronization Section -->
 	<div class="ghl-settings-section ghl-settings-card">
@@ -64,7 +64,7 @@ $note_sync_direction = $settings['note_sync_direction'] ?? 'to_ghl';
 							</option>
 						</select>
 						<p class="description ghl-form-description">
-							<?php esc_html_e( 'Choose how notes should sync between platforms. Notes will be stored in user meta (ghl_crm_contact_notes) and displayed in user profiles. Set to Disabled to stop all note synchronization.', 'syncly' ); ?>
+							<?php esc_html_e( 'Choose how notes should sync between platforms. Notes will be stored in user meta (syncly_contact_notes) and displayed in user profiles. Set to Disabled to stop all note synchronization.', 'syncly' ); ?>
 						</p>
 					</div>
 				</div>

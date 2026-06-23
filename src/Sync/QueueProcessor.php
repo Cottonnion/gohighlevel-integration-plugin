@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Sync;
+namespace Syncly\Sync;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Handles execution of queue items (sync operations)
  * Routes to appropriate sync handlers based on item type
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Sync
  */
 class QueueProcessor {
@@ -110,16 +110,16 @@ class QueueProcessor {
 		$this->contact_cache = $contact_cache ?? ContactCache::get_instance();
 
 		$this->event_dispatcher = $event_dispatcher ?? static function ( string $event, array $context ): void {
-			do_action( 'ghl_crm_queue_processor_event', $event, $context );
-			do_action( "ghl_crm_queue_processor_{$event}", $context );
+			do_action( 'syncly_queue_processor_event', $event, $context );
+			do_action( "syncly_queue_processor_{$event}", $context );
 		};
 
-		$this->client_factory = $client_factory ?? static function (): \GHL_CRM\API\Client\Client {
-			return \GHL_CRM\API\Client\Client::get_instance();
+		$this->client_factory = $client_factory ?? static function (): \Syncly\API\Client\Client {
+			return \Syncly\API\Client\Client::get_instance();
 		};
 
-		$this->contact_resource_factory = $contact_resource_factory ?? static function ( \GHL_CRM\API\Client\Client $client ): \GHL_CRM\API\Resources\ContactResource {
-			return new \GHL_CRM\API\Resources\ContactResource( $client );
+		$this->contact_resource_factory = $contact_resource_factory ?? static function ( \Syncly\API\Client\Client $client ): \Syncly\API\Resources\ContactResource {
+			return new \Syncly\API\Resources\ContactResource( $client );
 		};
 
 		$this->boot_default_handlers();
@@ -132,7 +132,7 @@ class QueueProcessor {
 		 *
 		 * @param QueueProcessor $processor The processor instance.
 		 */
-		do_action( 'ghl_crm_queue_processor_ready', $this );
+		do_action( 'syncly_queue_processor_ready', $this );
 	}
 
 	/**
@@ -206,7 +206,7 @@ class QueueProcessor {
 			);
 
 			do_action(
-				'ghl_crm_log_event',
+				'syncly_log_event',
 				'queue_processor_error',
 				'Queue processor encountered an error',
 				[
@@ -291,21 +291,21 @@ class QueueProcessor {
 
 		switch ( strtolower( $item_type ) ) {
 			case 'order':
-				return apply_filters( 'ghl_crm_execute_order_sync', false, $action, $item_id, $payload );
+				return apply_filters( 'syncly_execute_order_sync', false, $action, $item_id, $payload );
 
 			case 'group':
-				return apply_filters( 'ghl_crm_execute_group_sync', false, $action, $item_id, $payload );
+				return apply_filters( 'syncly_execute_group_sync', false, $action, $item_id, $payload );
 
 			case 'course':
 				try {
-					return apply_filters( 'ghl_crm_execute_course_sync', false, $action, $item_id, $payload );
+					return apply_filters( 'syncly_execute_course_sync', false, $action, $item_id, $payload );
 				} catch ( \Throwable $course_error ) {
-					do_action( 'ghl_crm_sync_error', 'queue_course_filter', $payload, $course_error );
+					do_action( 'syncly_sync_error', 'queue_course_filter', $payload, $course_error );
 					throw $course_error;
 				}
 
 			default:
-				return apply_filters( 'ghl_crm_execute_sync', false, $item_type, $action, $item_id, $payload );
+				return apply_filters( 'syncly_execute_sync', false, $item_type, $action, $item_id, $payload );
 		}
 	}
 
@@ -378,7 +378,7 @@ class QueueProcessor {
 	/**
 	 * Handle tag addition
 	 *
-	 * @param \GHL_CRM\API\Resources\ContactResource $contact_resource Contact resource
+	 * @param \Syncly\API\Resources\ContactResource $contact_resource Contact resource
 	 * @param array                                  $payload Payload data
 	 * @return array
 	 * @throws \Exception
@@ -436,7 +436,7 @@ class QueueProcessor {
 	/**
 	 * Handle tag removal
 	 *
-	 * @param \GHL_CRM\API\Resources\ContactResource $contact_resource Contact resource
+	 * @param \Syncly\API\Resources\ContactResource $contact_resource Contact resource
 	 * @param array                                  $payload Payload data
 	 * @return array
 	 * @throws \Exception
@@ -471,8 +471,8 @@ class QueueProcessor {
 	/**
 	 * Handle user register/update
 	 *
-	 * @param \GHL_CRM\API\Client\Client             $client Client instance
-	 * @param \GHL_CRM\API\Resources\ContactResource $contact_resource Contact resource
+	 * @param \Syncly\API\Client\Client             $client Client instance
+	 * @param \Syncly\API\Resources\ContactResource $contact_resource Contact resource
 	 * @param array                                  $payload Payload data
 	 * @return array
 	 * @throws \Exception
@@ -606,8 +606,8 @@ class QueueProcessor {
 	/**
 	 * Handle user delete
 	 *
-	 * @param \GHL_CRM\API\Client\Client             $client Client instance
-	 * @param \GHL_CRM\API\Resources\ContactResource $contact_resource Contact resource
+	 * @param \Syncly\API\Client\Client             $client Client instance
+	 * @param \Syncly\API\Resources\ContactResource $contact_resource Contact resource
 	 * @param array                                  $payload Payload data
 	 * @return array
 	 */
@@ -650,8 +650,8 @@ class QueueProcessor {
 	/**
 	 * Handle user login
 	 *
-	 * @param \GHL_CRM\API\Client\Client             $client Client instance
-	 * @param \GHL_CRM\API\Resources\ContactResource $contact_resource Contact resource
+	 * @param \Syncly\API\Client\Client             $client Client instance
+	 * @param \Syncly\API\Resources\ContactResource $contact_resource Contact resource
 	 * @param array                                  $payload Payload data
 	 * @return array
 	 */
@@ -691,7 +691,7 @@ class QueueProcessor {
 			if ( $user_id > 0 ) {
 				$user = get_userdata( $user_id );
 				if ( $user ) {
-					$user_hooks      = \GHL_CRM\Integrations\Users\UserHooks::get_instance();
+					$user_hooks      = \Syncly\Integrations\Users\UserHooks::get_instance();
 					$contact_payload = $user_hooks->build_register_payload( $user );
 
 					/**
@@ -705,9 +705,9 @@ class QueueProcessor {
 					 * @param \WP_User $user            WordPress user.
 					 * @param array    $payload         Original user_login payload.
 					 */
-					$contact_payload = apply_filters( 'ghl_crm_login_register_payload', $contact_payload, $user, $payload );
+					$contact_payload = apply_filters( 'syncly_login_register_payload', $contact_payload, $user, $payload );
 
-					\GHL_CRM\Sync\QueueManager::get_instance()->add_to_queue(
+					\Syncly\Sync\QueueManager::get_instance()->add_to_queue(
 						'user',
 						$user_id,
 						'user_register',
@@ -733,7 +733,7 @@ class QueueProcessor {
 		$update_data = [ 'email' => $email ];
 
 		// Append last_login / login_count custom fields when field IDs are configured.
-		$settings             = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
+		$settings             = \Syncly\Core\SettingsManager::get_instance()->get_settings_array();
 		$last_login_field_id  = $settings['login_last_login_field_id'] ?? '';
 		$login_count_field_id = $settings['login_count_field_id'] ?? '';
 		$custom_fields        = [];
@@ -778,7 +778,7 @@ class QueueProcessor {
 			];
 		} catch ( \Exception $e ) {
 			do_action(
-				'ghl_crm_sync_error',
+				'syncly_sync_error',
 				'user_login_sync_update',
 				[
 					'contact_id' => $contact['id'] ?? null,
@@ -807,7 +807,7 @@ class QueueProcessor {
 	 */
 	private function execute_contact_sync( string $action, string $contact_id, array $payload ): array {
 
-		$ghl_sync = \GHL_CRM\Sync\GHLToWordPressSync::get_instance();
+		$ghl_sync = \Syncly\Sync\GHLToWordPressSync::get_instance();
 
 		switch ( $action ) {
 			case 'contact_create':
@@ -883,7 +883,7 @@ class QueueProcessor {
 	 * @return string|null
 	 */
 	private function get_location_id(): ?string {
-		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 		return $settings_manager->get_setting( 'location_id' );
 	}
 

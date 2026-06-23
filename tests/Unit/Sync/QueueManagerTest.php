@@ -9,15 +9,15 @@
  * Uses reflection to inject mock dependencies (RateLimiter, QueueProcessor,
  * QueueLogger, ContactCache) and a mock $wpdb global.
  *
- * @package GHL_CRM_Integration\Tests\Unit\Sync
+ * @package Syncly\Tests\Unit\Sync
  */
 
 declare(strict_types=1);
 
-namespace GHL_CRM\Tests\Unit\Sync;
+namespace Syncly\Tests\Unit\Sync;
 
-use GHL_CRM\Sync\QueueManager;
-use GHL_CRM\Tests\TestCase;
+use Syncly\Sync\QueueManager;
+use Syncly\Tests\TestCase;
 use Brain\Monkey\Functions;
 use Mockery;
 
@@ -90,17 +90,17 @@ class QueueManagerTest extends TestCase {
 		$prop->setValue( null, $inst );
 
 		// --- Mock helper dependencies ---
-		$this->rate_limiter = Mockery::mock( 'GHL_CRM\\Sync\\RateLimiter' );
+		$this->rate_limiter = Mockery::mock( 'Syncly\\Sync\\RateLimiter' );
 		$this->rate_limiter->shouldReceive( 'check_limits' )->andReturn( true )->byDefault();
 		$this->rate_limiter->shouldReceive( 'track_request' )->byDefault();
 		$this->rate_limiter->shouldReceive( 'is_rate_limit_error' )->andReturn( false )->byDefault();
 		$this->rate_limiter->shouldReceive( 'get_status' )->andReturn( [] )->byDefault();
 
-		$contact_cache = Mockery::mock( 'GHL_CRM\\Sync\\ContactCache' );
+		$contact_cache = Mockery::mock( 'Syncly\\Sync\\ContactCache' );
 
-		$this->processor = Mockery::mock( 'GHL_CRM\\Sync\\QueueProcessor' );
+		$this->processor = Mockery::mock( 'Syncly\\Sync\\QueueProcessor' );
 
-		$this->logger = Mockery::mock( 'GHL_CRM\\Sync\\QueueLogger' );
+		$this->logger = Mockery::mock( 'Syncly\\Sync\\QueueLogger' );
 		$this->logger->shouldReceive( 'log_event' )->byDefault();
 
 		$this->inject( $inst, 'rate_limiter', $this->rate_limiter );
@@ -109,7 +109,7 @@ class QueueManagerTest extends TestCase {
 		$this->inject( $inst, 'logger', $this->logger );
 
 		// --- Mock SettingsManager singleton (used by get_ghl_location_id / process_site_queue) ---
-		$this->settings_manager = Mockery::mock( \GHL_CRM\Core\SettingsManager::class );
+		$this->settings_manager = Mockery::mock( \Syncly\Core\SettingsManager::class );
 		$this->settings_manager->shouldReceive( 'get_setting' )
 			->andReturnUsing( function ( $key = null, $default = null ) {
 				if ( 'location_id' === $key ) {
@@ -123,17 +123,17 @@ class QueueManagerTest extends TestCase {
 			->byDefault();
 		$this->settings_manager->shouldReceive( 'is_connection_verified' )->andReturn( true )->byDefault();
 
-		$sm_ref  = new \ReflectionClass( \GHL_CRM\Core\SettingsManager::class );
+		$sm_ref  = new \ReflectionClass( \Syncly\Core\SettingsManager::class );
 		$sm_prop = $sm_ref->getProperty( 'instance' );
 		$sm_prop->setAccessible( true );
 		$sm_prop->setValue( null, $this->settings_manager );
 
 		// --- Mock NotificationManager singleton (used by check_queue_backlog / failure path) ---
-		$this->notification_manager = Mockery::mock( \GHL_CRM\Admin\NotificationManager::class );
+		$this->notification_manager = Mockery::mock( \Syncly\Admin\NotificationManager::class );
 		$this->notification_manager->shouldReceive( 'send_queue_backlog' )->byDefault();
 		$this->notification_manager->shouldReceive( 'send_sync_error' )->byDefault();
 
-		$nm_ref  = new \ReflectionClass( \GHL_CRM\Admin\NotificationManager::class );
+		$nm_ref  = new \ReflectionClass( \Syncly\Admin\NotificationManager::class );
 		$nm_prop = $nm_ref->getProperty( 'instance' );
 		$nm_prop->setAccessible( true );
 		$nm_prop->setValue( null, $this->notification_manager );
@@ -143,8 +143,8 @@ class QueueManagerTest extends TestCase {
 
 	protected function tearDown(): void {
 		$this->resetSingleton( QueueManager::class );
-		$this->resetSingleton( \GHL_CRM\Core\SettingsManager::class );
-		$this->resetSingleton( \GHL_CRM\Admin\NotificationManager::class );
+		$this->resetSingleton( \Syncly\Core\SettingsManager::class );
+		$this->resetSingleton( \Syncly\Admin\NotificationManager::class );
 		unset( $GLOBALS['wpdb'] );
 		parent::tearDown();
 	}
@@ -582,7 +582,7 @@ class QueueManagerTest extends TestCase {
 		$this->wpdb->shouldReceive( 'get_var' )->andReturn( 2000 );
 
 		Functions\when( 'get_transient' )->alias( function ( $key ) {
-			return $key === 'ghl_crm_backlog_notified' ? true : false;
+			return $key === 'syncly_backlog_notified' ? true : false;
 		} );
 
 		$this->notification_manager->shouldNotReceive( 'send_queue_backlog' );

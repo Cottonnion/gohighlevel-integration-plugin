@@ -7,9 +7,9 @@
 (function ($) {
   "use strict";
 
-  // Localized data (handle: ghl-crm-cf7-js → var: ghl_crm_cf7_js_data)
+  // Localized data (handle: syncly-cf7-js → var: syncly_cf7_js_data)
   const localized =
-    typeof ghl_crm_cf7_js_data !== "undefined" ? ghl_crm_cf7_js_data : {};
+    typeof syncly_cf7_js_data !== "undefined" ? syncly_cf7_js_data : {};
 
   const GHL_CF7_Admin = {
     /**
@@ -26,7 +26,7 @@
      */
     bindEvents: function () {
       // Toggle settings visibility when integration is enabled/disabled
-      $("#ghl_crm_enabled").on("change", this.toggleSettings);
+      $("#syncly_enabled").on("change", this.toggleSettings);
 
       // Checkbox visual toggle (ghl-checkbox pattern)
       $(document).on("change", ".ghl-checkbox-original", function () {
@@ -47,7 +47,7 @@
      */
     toggleSettings: function () {
       const isEnabled = $(this).is(":checked");
-      $("#ghl_crm_settings_container").toggle(isEnabled);
+      $("#syncly_settings_container").toggle(isEnabled);
     },
 
     /**
@@ -63,7 +63,7 @@
         url: ajaxurl,
         type: "POST",
         data: {
-          action: "ghl_crm_get_custom_fields",
+          action: "syncly_get_custom_fields",
           nonce: nonce,
         },
         success: function (response) {
@@ -139,14 +139,14 @@
         }
       });
 
-      $("#ghl_crm_email_notice").toggle(!hasEmail);
+      $("#syncly_email_notice").toggle(!hasEmail);
     },
 
     /**
      * Initialize Select2 for tags
      */
     initTagsSelect2: function () {
-      const $select = $("#ghl_crm_cf7_tags");
+      const $select = $("#syncly_cf7_tags");
       if (!$select.length) {
         return;
       }
@@ -198,7 +198,7 @@
 
   // Initialize on document ready
   $(document).ready(function () {
-    if ($(".ghl-crm-cf7-panel").length) {
+    if ($(".syncly-cf7-panel").length) {
       GHL_CF7_Admin.init();
     }
   });

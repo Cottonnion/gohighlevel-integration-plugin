@@ -1,5 +1,5 @@
 /* Field Mapping Page Styles */
-.ghl-crm-field-mapping .ghl-crm-mapping-container {
+.syncly-field-mapping .syncly-mapping-container {
 	margin-top: 20px;
 	background: #fff;
 	padding: 20px;
@@ -7,18 +7,18 @@
 	box-shadow: 0 1px 1px rgba(0,0,0,.04);
 }
 
-.ghl-crm-field-mapping .form-table thead th {
+.syncly-field-mapping .form-table thead th {
 	font-weight: 600;
 	padding: 10px;
 	border-bottom: 2px solid #ccd0d4;
 }
 
-.ghl-crm-field-mapping .form-table tbody td {
+.syncly-field-mapping .form-table tbody td {
 	padding: 15px 10px;
 	border-bottom: 1px solid #f0f0f1;
 }
 
-.ghl-crm-field-mapping code {
+.syncly-field-mapping code {
 	background: #f0f0f1;
 	padding: 2px 6px;
 	border-radius: 3px;
@@ -41,13 +41,13 @@
 }
 
 /* Disabled options in GHL field dropdowns */
-.ghl-crm-field-mapping .ghl-lazy-select--disabled .ghl-lazy-select__text {
+.syncly-field-mapping .ghl-lazy-select--disabled .ghl-lazy-select__text {
 	color: #999;
 	font-style: italic;
 }
 
 /* Highlight currently focused dropdown trigger */
-.ghl-crm-field-mapping .ghl-lazy-select:focus {
+.syncly-field-mapping .ghl-lazy-select:focus {
 	border-color: #635BFF;
 	box-shadow: 0 0 0 1px #635BFF;
 	outline: none;
@@ -331,37 +331,37 @@
 
 /* Tablet and below */
 @media screen and (max-width: 1024px) {
-	.ghl-crm-field-mapping .ghl-crm-mapping-container {
+	.syncly-field-mapping .syncly-mapping-container {
 		padding: 15px;
 	}
 	
-	.ghl-crm-field-mapping .form-table tbody td {
+	.syncly-field-mapping .form-table tbody td {
 		padding: 12px 8px;
 	}
 }
 
 /* Mobile devices */
 @media screen and (max-width: 768px) {
-	.ghl-crm-field-mapping .ghl-crm-mapping-container {
+	.syncly-field-mapping .syncly-mapping-container {
 		padding: 10px;
 		margin-top: 15px;
 	}
 	
 	/* Hide table headers on mobile */
-	.ghl-crm-field-mapping .form-table thead {
+	.syncly-field-mapping .form-table thead {
 		display: none;
 	}
 	
 	/* Convert table to card-based layout */
-	.ghl-crm-field-mapping .form-table,
-	.ghl-crm-field-mapping .form-table tbody,
-	.ghl-crm-field-mapping .form-table tbody tr {
+	.syncly-field-mapping .form-table,
+	.syncly-field-mapping .form-table tbody,
+	.syncly-field-mapping .form-table tbody tr {
 		display: block;
 		width: 100%;
 	}
 	
 	/* Each row becomes a card */
-	.ghl-crm-field-mapping .form-table tbody tr {
+	.syncly-field-mapping .form-table tbody tr {
 		margin-bottom: 15px;
 		border: 1px solid #ddd;
 		border-radius: 6px;
@@ -371,7 +371,7 @@
 	}
 	
 	/* Table cells as block elements */
-	.ghl-crm-field-mapping .form-table tbody td {
+	.syncly-field-mapping .form-table tbody td {
 		display: block;
 		width: 100%;
 		padding: 8px 0;
@@ -380,7 +380,7 @@
 	}
 	
 	/* Add labels using data attributes */
-	.ghl-crm-field-mapping .form-table tbody td::before {
+	.syncly-field-mapping .form-table tbody td::before {
 		content: attr(data-label);
 		display: block;
 		font-weight: 600;
@@ -390,16 +390,16 @@
 	}
 	
 	/* Adjust spacing for first and last cells */
-	.ghl-crm-field-mapping .form-table tbody td:first-child {
+	.syncly-field-mapping .form-table tbody td:first-child {
 		padding-top: 0;
 	}
 	
-	.ghl-crm-field-mapping .form-table tbody td:last-child {
+	.syncly-field-mapping .form-table tbody td:last-child {
 		padding-bottom: 0;
 	}
 	
 	/* Dropdowns full width on mobile */
-	.ghl-crm-field-mapping .ghl-lazy-select {
+	.syncly-field-mapping .ghl-lazy-select {
 		width: 100% !important;
 		max-width: 100% !important;
 		font-size: 14px;
@@ -415,7 +415,7 @@
 	}
 	
 	/* Code blocks more readable */
-	.ghl-crm-field-mapping code {
+	.syncly-field-mapping code {
 		font-size: 13px;
 		padding: 3px 7px;
 		word-break: break-word;
@@ -429,20 +429,20 @@
 
 /* Small mobile devices */
 @media screen and (max-width: 480px) {
-	.ghl-crm-field-mapping .ghl-crm-mapping-container {
+	.syncly-field-mapping .syncly-mapping-container {
 		padding: 8px;
 	}
 	
-	.ghl-crm-field-mapping .form-table tbody tr {
+	.syncly-field-mapping .form-table tbody tr {
 		padding: 10px;
 		margin-bottom: 12px;
 	}
 	
-	.ghl-crm-field-mapping .ghl-lazy-select {
+	.syncly-field-mapping .ghl-lazy-select {
 		font-size: 15px; /* Prevent iOS zoom on focus */
 	}
 	
-	.ghl-crm-field-mapping code {
+	.syncly-field-mapping code {
 		font-size: 12px;
 	}
 }

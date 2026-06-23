@@ -1,12 +1,12 @@
 <?php
 /**
- * PHPUnit bootstrap for GHL CRM Integration tests.
+ * PHPUnit bootstrap for Syncly tests.
  *
  * Loads Composer autoloader and Brain\Monkey, defines WordPress
  * constants/stubs so plugin classes can be instantiated without
  * a running WordPress installation.
  *
- * @package GHL_CRM_Integration\Tests
+ * @package Syncly\Tests
  */
 
 declare(strict_types=1);
@@ -18,20 +18,20 @@ require_once dirname( __DIR__ ) . '/vendor/autoload.php';
 if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', '/tmp/wordpress/' );
 }
-if ( ! defined( 'GHL_CRM_VERSION' ) ) {
-	define( 'GHL_CRM_VERSION', '1.1.1' );
+if ( ! defined( 'SYNCLY_VERSION' ) ) {
+	define( 'SYNCLY_VERSION', '1.1.1' );
 }
-if ( ! defined( 'GHL_CRM_PATH' ) ) {
-	define( 'GHL_CRM_PATH', dirname( __DIR__ ) . '/' );
+if ( ! defined( 'SYNCLY_PATH' ) ) {
+	define( 'SYNCLY_PATH', dirname( __DIR__ ) . '/' );
 }
-if ( ! defined( 'GHL_CRM_URL' ) ) {
-	define( 'GHL_CRM_URL', 'https://example.com/wp-content/plugins/syncly/' );
+if ( ! defined( 'SYNCLY_URL' ) ) {
+	define( 'SYNCLY_URL', 'https://example.com/wp-content/plugins/syncly/' );
 }
-if ( ! defined( 'GHL_CRM_BASENAME' ) ) {
-	define( 'GHL_CRM_BASENAME', 'syncly/gohighlevel-crm-integration.php' );
+if ( ! defined( 'SYNCLY_BASENAME' ) ) {
+	define( 'SYNCLY_BASENAME', 'syncly/gohighlevel-crm-integration.php' );
 }
-if ( ! defined( 'GHL_CRM_TEXTDOMAIN' ) ) {
-	define( 'GHL_CRM_TEXTDOMAIN', 'syncly' );
+if ( ! defined( 'SYNCLY_TEXTDOMAIN' ) ) {
+	define( 'SYNCLY_TEXTDOMAIN', 'syncly' );
 }
 
 // WordPress time constants the plugin may reference.

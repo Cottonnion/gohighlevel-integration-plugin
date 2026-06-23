@@ -2,7 +2,7 @@
 /**
  * Webhooks Settings Partial - Manual Setup
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -10,12 +10,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Get webhook handler
-$webhook_handler    = \GHL_CRM\API\Webhooks\WebhookHandler::get_instance();
+$webhook_handler    = \Syncly\API\Webhooks\WebhookHandler::get_instance();
 $webhook_status     = $webhook_handler->get_webhook_status();
 $setup_instructions = $webhook_handler->get_webhook_setup_instructions();
 $webhook_secret     = $setup_instructions['webhook_secret'] ?? '';
 $webhook_header     = strtoupper( $setup_instructions['webhook_header'] ?? 'X-GHL-TOKEN' );
-$settings           = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
+$settings           = \Syncly\Core\SettingsManager::get_instance()->get_settings_array();
 ?>
 
 <div class="ghl-settings-webhooks">
@@ -167,14 +167,14 @@ $settings           = \GHL_CRM\Core\SettingsManager::get_instance()->get_setting
 			</h4>
 			<p><?php esc_html_e( 'Open your GoHighLevel workflow, click “Test Workflow” (top right), send a test, then confirm it appears in Sync Logs.', 'syncly' ); ?></p>
 			<p class="description" style="font-size: 12px; color: #666;">
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin#/sync-logs' ) ); ?>" class="ghl-button ghl-button-secondary"><?php esc_html_e( 'Open Sync Logs', 'syncly' ); ?></a>
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin#/sync-logs' ) ); ?>" class="ghl-button ghl-button-secondary"><?php esc_html_e( 'Open Sync Logs', 'syncly' ); ?></a>
 			</p>
 		</div>
 	</div>
 
 	<!-- Webhook Settings Form -->
 	<form id="ghl-webhooks-settings-form" method="post">
-		<?php wp_nonce_field( 'ghl_crm_settings_nonce', 'ghl_crm_nonce' ); ?>
+		<?php wp_nonce_field( 'syncly_settings_nonce', 'syncly_nonce' ); ?>
 
 		<h3><?php esc_html_e( 'Webhook Processing Settings', 'syncly' ); ?></h3>
 
@@ -254,7 +254,7 @@ $settings           = \GHL_CRM\Core\SettingsManager::get_instance()->get_setting
 
 </div>
 
-<script>
+<?php ob_start(); ?>
 jQuery(document).ready(function($) {
 
 	$('#copy-webhook-url').on('click', function() {
@@ -310,8 +310,8 @@ jQuery(document).ready(function($) {
 			url: ajaxurl,
 			type: 'POST',
 			data: {
-				action: 'ghl_crm_regenerate_webhook_secret',
-				nonce: '<?php echo esc_js( wp_create_nonce( 'ghl_crm_admin' ) ); ?>'
+				action: 'syncly_regenerate_webhook_secret',
+				nonce: '<?php echo esc_js( wp_create_nonce( 'syncly_admin' ) ); ?>'
 			},
 			success: function(response) {
 
@@ -363,8 +363,8 @@ jQuery(document).ready(function($) {
 			url: ajaxurl,
 			type: 'POST',
 			data: {
-				action: 'ghl_crm_test_webhook',
-				nonce: '<?php echo esc_js( wp_create_nonce( 'ghl_crm_admin' ) ); ?>'
+				action: 'syncly_test_webhook',
+				nonce: '<?php echo esc_js( wp_create_nonce( 'syncly_admin' ) ); ?>'
 			},
 			success: function(response) {
 
@@ -418,9 +418,9 @@ function copyJsonTemplate(templateId, event) {
 		button.innerHTML = originalText;
 	}, 2000);
 }
-</script>
+<?php wp_add_inline_script( 'syncly-settings-js', ob_get_clean() ); ?>
 
-<style>
+<?php ob_start(); ?>
 .ghl-spin {
 	animation: ghl-spin 1s linear infinite;
 }
@@ -457,4 +457,4 @@ function copyJsonTemplate(templateId, event) {
 	border-radius: 5px;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
-</style>
+<?php wp_add_inline_style( 'syncly-settings-css', ob_get_clean() ); ?>

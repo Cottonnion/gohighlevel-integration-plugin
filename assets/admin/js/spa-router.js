@@ -3,8 +3,8 @@
  *
  * Handles hash-based routing and dynamic content loading for the admin interface.
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/assets/admin/js
+ * @package    Syncly
+ * @subpackage Syncly/assets/admin/js
  */
 
 (function($) {
@@ -15,9 +15,9 @@
      */
     class GHLCRMRouter {
         constructor() {
-            this.appContainer = $('#ghl-crm-app');
+            this.appContainer = $('#syncly-app');
             this.currentView = null;
-            this.config = window.ghlCrmSpaConfig || {};
+            this.config = window.synclySpaConfig || {};
             this.viewCache = {};
             this.prefetchCache = {};
             this.inflightPrefetch = {};
@@ -153,7 +153,7 @@
                 url: this.config.ajaxUrl,
                 type: 'POST',
                 data: {
-                    action: 'ghl_crm_spa_view',
+                    action: 'syncly_spa_view',
                     nonce: this.config.nonce,
                     view: view,
                     params: params

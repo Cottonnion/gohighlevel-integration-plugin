@@ -2,13 +2,13 @@
 /**
  * Forms Management Template
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 defined( 'ABSPATH' ) || exit;
 
 // Get settings
-$settings_manager   = \GHL_CRM\Core\SettingsManager::get_instance();
+$settings_manager   = \Syncly\Core\SettingsManager::get_instance();
 $settings           = $settings_manager->get_settings_array();
 $white_label_domain = $settings['ghl_white_label_domain'] ?? '';
 ?>
@@ -16,7 +16,7 @@ $white_label_domain = $settings['ghl_white_label_domain'] ?? '';
 <div class="ghl-forms-container">
 	<!-- Connection Check -->
 	<?php
-	$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
+	$oauth_handler = new \Syncly\API\OAuth\OAuthHandler();
 	$oauth_status  = $oauth_handler->get_connection_status();
 	$is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 
@@ -31,7 +31,7 @@ $white_label_domain = $settings['ghl_white_label_domain'] ?? '';
 					esc_html__( 'Please connect to GoHighLevel in %s first.', 'syncly' ),
 					sprintf(
 						'<a href="%s">%s</a>',
-						esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ),
+						esc_url( admin_url( 'admin.php?page=syncly-admin' ) ),
 						esc_html__( 'Dashboard', 'syncly' )
 					)
 				);
@@ -43,7 +43,7 @@ $white_label_domain = $settings['ghl_white_label_domain'] ?? '';
 	endif;
 
 	// Check scope access for Forms
-	\GHL_CRM\API\ScopeChecker::render_scope_notice( 'forms' );
+	\Syncly\API\ScopeChecker::render_scope_notice( 'forms' );
 
 	// Helpful Information Notice
 	?>
@@ -94,7 +94,7 @@ $white_label_domain = $settings['ghl_white_label_domain'] ?? '';
 						esc_html__( 'Using a white label domain? Configure it in %s to ensure form embeds use your custom domain.', 'syncly' ),
 						sprintf(
 							'<a href="%s">%s</a>',
-							esc_url( admin_url( 'admin.php?page=ghl-crm-admin&tab=settings#/settings' ) ),
+							esc_url( admin_url( 'admin.php?page=syncly-admin&tab=settings#/settings' ) ),
 							esc_html__( 'General Settings', 'syncly' )
 						)
 					);

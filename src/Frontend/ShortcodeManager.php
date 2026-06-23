@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Frontend;
+namespace Syncly\Frontend;
 
-use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Integrations\Forms\FormSettings;
-use GHL_CRM\Sync\TagManager;
+use Syncly\Core\SettingsManager;
+use Syncly\Integrations\Forms\FormSettings;
+use Syncly\Sync\TagManager;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -14,8 +14,8 @@ defined( 'ABSPATH' ) || exit;
  *
  * Handles registration and rendering of plugin shortcodes
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/Core
+ * @package    Syncly
+ * @subpackage Syncly/Core
  */
 class ShortcodeManager {
 	/**
@@ -89,8 +89,8 @@ class ShortcodeManager {
 		}
 
 		// Allow extensions to hide forms for their own rules.
-		if ( apply_filters( 'ghl_crm_form_should_hide', false, $form_id ) ) {
-			$message = (string) apply_filters( 'ghl_crm_form_submitted_message', '', $form_id );
+		if ( apply_filters( 'syncly_form_should_hide', false, $form_id ) ) {
+			$message = (string) apply_filters( 'syncly_form_submitted_message', '', $form_id );
 
 			if ( ! empty( $message ) ) {
 				return '<div class="ghl-form-submitted-message" style="padding: 20px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; color: #155724; text-align: center;">' .
@@ -114,7 +114,7 @@ class ShortcodeManager {
 		// Generate unique ID for this form instance
 		$wrapper_id = 'ghl-form-' . sanitize_key( $form_id ) . '-' . wp_rand( 1000, 9999 );
 
-		$track_submission = (bool) apply_filters( 'ghl_crm_form_track_submission', false, $form_id );
+		$track_submission = (bool) apply_filters( 'syncly_form_track_submission', false, $form_id );
 
 		// Build iframe HTML
 		ob_start();
@@ -126,7 +126,7 @@ class ShortcodeManager {
 			</div>
 			<iframe 
 				src="<?php echo esc_url( $embed_url ); ?>" 
-				style="width: 100%; <?php echo 'auto' === $height ? 'height: ' . esc_attr( (string) apply_filters( 'ghl_crm_form_default_height', 800 ) ) . 'px;' : 'height: ' . esc_attr( $height ) . ';'; ?> border: none; display: none;"
+				style="width: 100%; <?php echo 'auto' === $height ? 'height: ' . esc_attr( (string) apply_filters( 'syncly_form_default_height', 800 ) ) . 'px;' : 'height: ' . esc_attr( $height ) . ';'; ?> border: none; display: none;"
 				scrolling="yes"
 				id="<?php echo esc_attr( $wrapper_id ); ?>-iframe"
 				data-form-id="<?php echo esc_attr( $form_id ); ?>"
@@ -147,7 +147,7 @@ class ShortcodeManager {
 	 */
 	private function get_form_embed_url( string $form_id ) {
 		// Check connection
-		$connection_manager = \GHL_CRM\API\ConnectionManager::get_instance();
+		$connection_manager = \Syncly\API\ConnectionManager::get_instance();
 		if ( ! $connection_manager->is_connection_verified() ) {
 			return false;
 		}
@@ -244,7 +244,7 @@ class ShortcodeManager {
 	 * @return string HTML output
 	 */
 	public function render_family_manager_shortcode( $atts ): string {
-		$output = apply_filters( 'ghl_crm_render_family_manager_shortcode', '', $atts );
+		$output = apply_filters( 'syncly_render_family_manager_shortcode', '', $atts );
 		if ( is_string( $output ) && '' !== $output ) {
 			return $output;
 		}
@@ -281,8 +281,8 @@ class ShortcodeManager {
 			 * @param array  $atts    Shortcode attributes.
 			 * @param string $content Shortcode inner content.
 			 */
-			do_action( 'ghl_crm_restrict_guest_access', $atts, $content );
-			return apply_filters( 'ghl_crm_restrict_guest_output', '', $atts, $content );
+			do_action( 'syncly_restrict_guest_access', $atts, $content );
+			return apply_filters( 'syncly_restrict_guest_output', '', $atts, $content );
 		}
 
 		// Parse attributes
@@ -311,7 +311,7 @@ class ShortcodeManager {
 
 		// Get user's tags
 		$user_id        = get_current_user_id();
-		$access_control = \GHL_CRM\Membership\AccessControl::get_instance();
+		$access_control = \Syncly\Membership\AccessControl::get_instance();
 		$user_tags      = $access_control->get_user_tags( $user_id );
 
 		// Normalize tags for comparison
@@ -365,7 +365,7 @@ class ShortcodeManager {
 
 		if ( ! $is_logged_in ) {
 			// Allow guest personalization via ?ghl_cid= if the feature is enabled.
-			$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+			$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 			if ( ! empty( $settings_manager->get_setting( 'enable_ghl_cid' ) ) ) {
 				$guest_contact_id = ContactIdHandler::get_guest_contact_id();
 			}
@@ -395,7 +395,7 @@ class ShortcodeManager {
 		// --- Guest visitor path ---
 		if ( null !== $guest_contact_id ) {
 			// Check if field is in hidden list for guests
-			$settings_manager   = \GHL_CRM\Core\SettingsManager::get_instance();
+			$settings_manager   = \Syncly\Core\SettingsManager::get_instance();
 			$hidden_fields_json = $settings_manager->get_setting( 'ghl_cid_hidden_fields', '' );
 			$hidden_fields      = ! empty( $hidden_fields_json ) ? (array) json_decode( $hidden_fields_json, true ) : array();
 
@@ -406,7 +406,7 @@ class ShortcodeManager {
 
 			$value = '';
 			// Prefer reading WP user meta directly if this contact has a WP account.
-			$tag_manager   = \GHL_CRM\Sync\TagManager::get_instance();
+			$tag_manager   = \Syncly\Sync\TagManager::get_instance();
 			$guest_user_id = $tag_manager->find_user_by_contact_id( $guest_contact_id );
 
 			if ( $guest_user_id ) {
@@ -507,7 +507,7 @@ class ShortcodeManager {
 		}
 
 		try {
-			$tag_manager    = \GHL_CRM\Sync\TagManager::get_instance();
+			$tag_manager    = \Syncly\Sync\TagManager::get_instance();
 			$contact_id_key = $tag_manager->get_user_contact_id_meta_key();
 			$contact_id     = get_user_meta( $user_id, $contact_id_key, true );
 
@@ -516,7 +516,7 @@ class ShortcodeManager {
 			}
 
 			// Use existing sync infrastructure — handles API response unwrapping and full field mapping.
-			$sync   = \GHL_CRM\Sync\GHLToWordPressSync::get_instance();
+			$sync   = \Syncly\Sync\GHLToWordPressSync::get_instance();
 			$result = $sync->sync_contact_to_wordpress( $contact_id );
 
 			if ( is_wp_error( $result ) ) {
@@ -524,7 +524,7 @@ class ShortcodeManager {
 			}
 
 			// Throttle further syncs for this user (default: 1 hour).
-			set_transient( $transient_key, 1, (int) apply_filters( 'ghl_crm_sync_throttle_ttl', HOUR_IN_SECONDS ) );
+			set_transient( $transient_key, 1, (int) apply_filters( 'syncly_sync_throttle_ttl', HOUR_IN_SECONDS ) );
 
 			// Re-read the requested field now that sync has populated user meta.
 			$value = get_user_meta( $user_id, $field, true );

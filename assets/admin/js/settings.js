@@ -3,7 +3,7 @@
  *
  * Handles settings page interactions via AJAX
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 (function ($, window) {
@@ -91,8 +91,8 @@
 			
 			// Collect all form data from the active settings tab
 			const formData = {
-				action: 'ghl_crm_save_settings',
-				nonce: $('input[name*="nonce"]').first().val() || $('#ghl_crm_nonce').val(),
+				action: 'syncly_save_settings',
+				nonce: $('input[name*="nonce"]').first().val() || $('#syncly_nonce').val(),
 			};
 
 			syncPersonalizationHiddenFields($settingsWrapper);
@@ -218,8 +218,8 @@
 				url: ajaxurl,
 				type: 'POST',
 				data: {
-					action: 'ghl_crm_test_connection',
-					nonce: $('#ghl_crm_nonce').val(),
+					action: 'syncly_test_connection',
+					nonce: $('#syncly_nonce').val(),
 				},
 				success: function (response) {
 					if (response.success) {
@@ -287,8 +287,8 @@
 			url: ajaxurl,
 			type: 'POST',
 			data: {
-				action: 'ghl_crm_clear_cache',
-				nonce: $('#ghl_crm_nonce').val()
+				action: 'syncly_clear_cache',
+				nonce: $('#syncly_nonce').val()
 			},
 			success: function(response) {
 				if (response.success) {
@@ -364,8 +364,8 @@
 			url: ajaxurl,
 			type: 'POST',
 			data: {
-				action: 'ghl_crm_reset_settings',
-				nonce: $('#ghl_crm_nonce').val()
+				action: 'syncly_reset_settings',
+				nonce: $('#syncly_nonce').val()
 			},
 			success: function(response) {
 				if (response.success) {
@@ -404,8 +404,8 @@
 			url: ajaxurl,
 			type: 'POST',
 			data: {
-				action: 'ghl_crm_system_health_check',
-				nonce: $('#ghl_crm_nonce').val()
+				action: 'syncly_system_health_check',
+				nonce: $('#syncly_nonce').val()
 			},
 			success: function(response) {
 				if (response.success) {
@@ -514,8 +514,8 @@
 			url: ajaxurl,
 			type: 'POST',
 			data: {
-				action: 'ghl_crm_get_settings',
-				nonce: $('#ghl_crm_nonce').val()
+				action: 'syncly_get_settings',
+				nonce: $('#syncly_nonce').val()
 			},
 			success: function(response) {
 				if (response.success && response.data.settings) {
@@ -542,7 +542,7 @@
 					const url = window.URL.createObjectURL(dataBlob);
 					const link = document.createElement('a');
 					link.href = url;
-					link.download = 'ghl-crm-settings-' + new Date().toISOString().split('T')[0] + '.json';
+					link.download = 'syncly-settings-' + new Date().toISOString().split('T')[0] + '.json';
 					document.body.appendChild(link);
 					link.click();
 					document.body.removeChild(link);
@@ -625,8 +625,8 @@
 					url: ajaxurl,
 					type: 'POST',
 					data: {
-						action: 'ghl_crm_save_settings',
-						nonce: $('#ghl_crm_nonce').val(),
+						action: 'syncly_save_settings',
+						nonce: $('#syncly_nonce').val(),
 						...importedSettings
 					},
 					success: function(response) {
@@ -765,7 +765,7 @@
 	function loadGoHighLevelTags() {
 		const $tagsSelect = $('#user_register_tags');
 		const savedTags = $tagsSelect.data('saved-tags') || [];
-		const tags = (typeof ghl_crm_settings_js_data !== 'undefined' && ghl_crm_settings_js_data.tags) ? ghl_crm_settings_js_data.tags : [];
+		const tags = (typeof syncly_settings_js_data !== 'undefined' && syncly_settings_js_data.tags) ? syncly_settings_js_data.tags : [];
 
 		$tagsSelect.empty();
 
@@ -810,7 +810,7 @@
 			return;
 		}
 
-		var tags = (typeof ghl_crm_settings_js_data !== 'undefined' && ghl_crm_settings_js_data.tags) ? ghl_crm_settings_js_data.tags : [];
+		var tags = (typeof syncly_settings_js_data !== 'undefined' && syncly_settings_js_data.tags) ? syncly_settings_js_data.tags : [];
 
 		// Pre-populate options from localized tags
 		tags.forEach(function(tag) {
@@ -835,8 +835,8 @@
 			url: ajaxurl,
 			type: 'POST',
 			data: {
-				action: 'ghl_crm_get_settings',
-				nonce: $('#ghl_crm_nonce').val()
+				action: 'syncly_get_settings',
+				nonce: $('#syncly_nonce').val()
 			},
 			success: function(response) {
 				if (response.success && response.data.settings) {
@@ -866,7 +866,7 @@
 	 */
 	function initRoleTagsSelect2() {
 		if (typeof $.fn.select2 !== 'undefined' && $('.ghl-role-tags-select').length > 0) {
-			var tags = (typeof ghl_crm_settings_js_data !== 'undefined' && ghl_crm_settings_js_data.tags) ? ghl_crm_settings_js_data.tags : [];
+			var tags = (typeof syncly_settings_js_data !== 'undefined' && syncly_settings_js_data.tags) ? syncly_settings_js_data.tags : [];
 
 			// Pre-populate options from localized tags on each select
 			$('.ghl-role-tags-select').each(function() {
@@ -925,7 +925,7 @@
 				return;
 			}
 
-			executeBulkTagOperation('add', role, tagsArray, $(this), 'ghl_crm_bulk_add_role_tags');
+			executeBulkTagOperation('add', role, tagsArray, $(this), 'syncly_bulk_add_role_tags');
 		});
 
 		// Bulk remove tags
@@ -947,7 +947,7 @@
 				return;
 			}
 
-			executeBulkTagOperation('remove', role, tagsArray, $(this), 'ghl_crm_bulk_remove_role_tags');
+			executeBulkTagOperation('remove', role, tagsArray, $(this), 'syncly_bulk_remove_role_tags');
 		});
 	}
 
@@ -998,7 +998,7 @@
 			dataType: 'json',
 			data: {
 				action: action,
-				nonce: $('#ghl_crm_nonce').val(),
+				nonce: $('#syncly_nonce').val(),
 				role: role,
 				tags: tagsArray.join(',')
 			},
@@ -1065,7 +1065,7 @@
 	function loadFamilyParentTags() {
 		const $tagsSelect = $('#family_parent_tag');
 		const savedTag = $tagsSelect.data('saved-tag') || '';
-		var tags = (typeof ghl_crm_settings_js_data !== 'undefined' && ghl_crm_settings_js_data.tags) ? ghl_crm_settings_js_data.tags : [];
+		var tags = (typeof syncly_settings_js_data !== 'undefined' && syncly_settings_js_data.tags) ? syncly_settings_js_data.tags : [];
 
 		$tagsSelect.empty();
 
@@ -1160,8 +1160,8 @@
 			url: ajaxurl,
 			type: 'POST',
 			data: {
-				action: 'ghl_crm_sync_families_buddyboss',
-				nonce: $('#ghl_crm_nonce').val()
+				action: 'syncly_sync_families_buddyboss',
+				nonce: $('#syncly_nonce').val()
 			},
 			success: function(response) {
 				if (response.success) {
@@ -1269,7 +1269,7 @@
 				type: 'POST',
 				data: {
 					action: 'ghl_send_test_notification',
-					nonce: $('#ghl_crm_nonce').val()
+					nonce: $('#syncly_nonce').val()
 				},
 				success: function(response) {
 					if (response.success) {

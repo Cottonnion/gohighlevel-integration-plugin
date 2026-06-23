@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\API\Resources;
+namespace Syncly\API\Resources;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Handles GoHighLevel Contacts API operations
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage API/Resources
  */
 class ContactResource extends AbstractResource {

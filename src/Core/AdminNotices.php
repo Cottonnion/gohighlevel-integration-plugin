@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Core;
+namespace Syncly\Core;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - Uses get_site_transient/set_site_transient/delete_site_transient for proper multisite support
  * - Network admin pages are not currently supported
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Core
  */
 class AdminNotices {
@@ -29,12 +29,12 @@ class AdminNotices {
 	 *
 	 * Note: Uses site transients (site-specific in multisite)
 	 */
-	private const TRANSIENT_PREFIX = 'ghl_crm_notice_';
+	private const TRANSIENT_PREFIX = 'syncly_notice_';
 
 	/**
 	 * User meta key for storing dismissed upgrade notice state
 	 */
-	private const UPGRADE_NOTICE_DISMISSED_KEY = 'ghl_crm_upgrade_notice_dismissed';
+	private const UPGRADE_NOTICE_DISMISSED_KEY = 'syncly_upgrade_notice_dismissed';
 
 	/**
 	 * Singleton instance
@@ -69,13 +69,13 @@ class AdminNotices {
 	 */
 	private function init_hooks(): void {
 		// Display notices on settings page
-		add_action( 'ghl_crm_settings_notices', [ $this, 'display_notices' ] );
+		add_action( 'syncly_settings_notices', [ $this, 'display_notices' ] );
 
 		// Display notices on all admin pages (for global notices)
 		add_action( 'admin_notices', [ $this, 'display_global_notices' ] );
 
 		// AJAX handler for dismissing optional notices.
-		add_action( 'wp_ajax_ghl_crm_dismiss_upgrade_notice', [ $this, 'ajax_dismiss_upgrade_notice' ] );
+		add_action( 'wp_ajax_syncly_dismiss_upgrade_notice', [ $this, 'ajax_dismiss_upgrade_notice' ] );
 	}
 
 	/**
@@ -226,7 +226,7 @@ class AdminNotices {
 
 	/**
 	 * Display notices on settings page
-	 * Called via ghl_crm_settings_notices action hook
+	 * Called via syncly_settings_notices action hook
 	 *
 	 * @return void
 	 */
@@ -315,7 +315,7 @@ class AdminNotices {
 	 * @return bool
 	 */
 	private function is_pro_active(): bool {
-		return apply_filters( 'ghl_crm_is_pro_active', false );
+		return apply_filters( 'syncly_is_pro_active', false );
 	}
 
 	/**
@@ -363,7 +363,7 @@ class AdminNotices {
 	 */
 	public function ajax_dismiss_upgrade_notice(): void {
 		// Verify nonce
-		if ( ! check_ajax_referer( 'ghl_crm_dismiss_upgrade_notice', 'nonce', false ) ) {
+		if ( ! check_ajax_referer( 'syncly_dismiss_upgrade_notice', 'nonce', false ) ) {
 			wp_send_json_error( [ 'message' => __( 'Invalid security token.', 'syncly' ) ] );
 		}
 

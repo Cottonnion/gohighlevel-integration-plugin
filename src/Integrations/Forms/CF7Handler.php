@@ -1,23 +1,23 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Integrations\Forms;
+namespace Syncly\Integrations\Forms;
 
 defined( 'ABSPATH' ) || exit;
 
-use GHL_CRM\Core\AssetsManager;
-use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Sync\TagManager;
-use GHL_CRM\Sync\QueueManager;
-use GHL_CRM\Sync\QueueProcessor;
+use Syncly\Core\AssetsManager;
+use Syncly\Core\SettingsManager;
+use Syncly\Sync\TagManager;
+use Syncly\Sync\QueueManager;
+use Syncly\Sync\QueueProcessor;
 
 /**
  * Contact Form 7 Integration Handler
  *
  * Adds GHL CRM tab to CF7 form editor and handles form submissions
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/Integrations/Forms
+ * @package    Syncly
+ * @subpackage Syncly/Integrations/Forms
  */
 class CF7Handler {
 	/**
@@ -39,7 +39,7 @@ class CF7Handler {
 	 *
 	 * @var string
 	 */
-	private const META_KEY = '_ghl_crm_cf7_config';
+	private const META_KEY = '_syncly_cf7_config';
 
 	/**
 	 * Get class instance
@@ -124,7 +124,7 @@ class CF7Handler {
 	 * @return array Modified panels.
 	 */
 	public function add_ghl_panel( array $panels ): array {
-		$panels['ghl-crm-panel'] = [
+		$panels['syncly-panel'] = [
 			'title'    => __( 'GHL CRM', 'syncly' ),
 			'callback' => [ $this, 'render_panel' ],
 		];
@@ -146,7 +146,7 @@ class CF7Handler {
 		$cf7_fields = $this->get_cf7_form_fields( $contact_form );
 
 		// Load template (GHL fields loaded dynamically via AJAX)
-		include GHL_CRM_PATH . 'templates/admin/cf7-ghl-panel.php';
+		include SYNCLY_PATH . 'templates/admin/cf7-ghl-panel.php';
 	}
 
 	/**
@@ -182,7 +182,7 @@ class CF7Handler {
 	 * @return array Form config with defaults.
 	 */
 	private function get_form_config( int $form_id ): array {
-		$config = get_post_meta( $form_id, \GHL_CRM\Sync\TagManager::scoped_meta_key( self::META_KEY ), true );
+		$config = get_post_meta( $form_id, \Syncly\Sync\TagManager::scoped_meta_key( self::META_KEY ), true );
 
 		$defaults = [
 			'enabled'       => false,
@@ -202,22 +202,22 @@ class CF7Handler {
 	 */
 	public function save_form_settings( $contact_form ): void {
 		// Verify nonce
-		if ( ! isset( $_POST['ghl_crm_cf7_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['ghl_crm_cf7_nonce'] ) ), 'ghl_crm_cf7_save' ) ) {
+		if ( ! isset( $_POST['syncly_cf7_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['syncly_cf7_nonce'] ) ), 'syncly_cf7_save' ) ) {
 			return;
 		}
 
 		$form_id = $contact_form->id();
 
 		// Get submitted data
-		$enabled       = isset( $_POST['ghl_crm_enabled'] ) && '1' === $_POST['ghl_crm_enabled'];
-		$update_exists = isset( $_POST['ghl_crm_update_exists'] ) && '1' === $_POST['ghl_crm_update_exists'];
+		$enabled       = isset( $_POST['syncly_enabled'] ) && '1' === $_POST['syncly_enabled'];
+		$update_exists = isset( $_POST['syncly_update_exists'] ) && '1' === $_POST['syncly_update_exists'];
 
 		// Sanitize field mapping
 		$field_mapping = [];
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce verified above
-		if ( isset( $_POST['ghl_crm_field_mapping'] ) && is_array( $_POST['ghl_crm_field_mapping'] ) ) {
+		if ( isset( $_POST['syncly_field_mapping'] ) && is_array( $_POST['syncly_field_mapping'] ) ) {
 			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized in loop below
-			$raw_mapping = wp_unslash( $_POST['ghl_crm_field_mapping'] );
+			$raw_mapping = wp_unslash( $_POST['syncly_field_mapping'] );
 			foreach ( $raw_mapping as $cf7_field => $ghl_field ) {
 				$cf7_field_clean = sanitize_text_field( $cf7_field );
 				$ghl_field_clean = sanitize_text_field( $ghl_field );
@@ -231,9 +231,9 @@ class CF7Handler {
 		// Sanitize tags
 		$tags = [];
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce verified above
-		if ( isset( $_POST['ghl_crm_tags'] ) && is_array( $_POST['ghl_crm_tags'] ) ) {
+		if ( isset( $_POST['syncly_tags'] ) && is_array( $_POST['syncly_tags'] ) ) {
 			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized in loop below
-			$raw_tags = wp_unslash( $_POST['ghl_crm_tags'] );
+			$raw_tags = wp_unslash( $_POST['syncly_tags'] );
 			foreach ( $raw_tags as $tag ) {
 				$tag_clean = sanitize_text_field( $tag );
 				if ( ! empty( $tag_clean ) ) {
@@ -250,7 +250,7 @@ class CF7Handler {
 			'update_exists' => $update_exists,
 		];
 
-		update_post_meta( $form_id, \GHL_CRM\Sync\TagManager::scoped_meta_key( self::META_KEY ), $config );
+		update_post_meta( $form_id, \Syncly\Sync\TagManager::scoped_meta_key( self::META_KEY ), $config );
 	}
 
 	/**
@@ -286,7 +286,7 @@ class CF7Handler {
 		if ( empty( $contact_data['email'] ) ) {
 			// Form submission missing email - log for debugging but don't throw error
 			do_action(
-				'ghl_crm_log_event',
+				'syncly_log_event',
 				'cf7_missing_email',
 				'CF7 submission missing email field',
 				[ 'form_id' => $form_id ],
@@ -388,24 +388,24 @@ class CF7Handler {
 		$ghl_tags       = TagManager::get_instance()->get_tags_for_localization();
 
 		$assets_manager->add_admin_asset(
-			'ghl-crm-cf7-css',
+			'syncly-cf7-css',
 			[ 'toplevel_page_wpcf7' ],
 			'cf7-integration.css',
-			[ 'ghl-crm-globals-css', 'ghl-crm-select2-css' ],
+			[ 'syncly-globals-css', 'syncly-select2-css' ],
 			[],
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 
 		$assets_manager->add_admin_asset(
-			'ghl-crm-cf7-js',
+			'syncly-cf7-js',
 			[ 'toplevel_page_wpcf7' ],
 			'cf7-integration.js',
-			[ 'jquery', 'ghl-crm-select2' ],
+			[ 'jquery', 'syncly-select2' ],
 			[
 				'tags'  => $ghl_tags,
-				'nonce' => wp_create_nonce( 'ghl_crm_field_mapping_nonce' ),
+				'nonce' => wp_create_nonce( 'syncly_field_mapping_nonce' ),
 			],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true
 		);
 	}

@@ -15,12 +15,12 @@
   },
   "autoload": {
     "psr-4": {
-      "GHL_CRM\\": "src/"
+      "Syncly\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "GHL_CRM\\Tests\\": "tests/"
+      "Syncly\\Tests\\": "tests/"
     }
   },
   "config": {

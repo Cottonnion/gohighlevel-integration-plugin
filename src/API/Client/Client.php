@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\API\Client;
+namespace Syncly\API\Client;
 
-use GHL_CRM\API\Exceptions\ApiException;
-use GHL_CRM\API\Exceptions\RateLimitException;
-use GHL_CRM\API\Exceptions\AuthenticationException;
-use GHL_CRM\Utilities\FileLogger;
+use Syncly\API\Exceptions\ApiException;
+use Syncly\API\Exceptions\RateLimitException;
+use Syncly\API\Exceptions\AuthenticationException;
+use Syncly\Utilities\FileLogger;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -54,7 +54,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - All token storage is multisite-aware via SettingsManager
  * - Circuit breaker uses per-site transients
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage API/Client
  */
 class Client implements ClientInterface {
@@ -152,14 +152,14 @@ class Client implements ClientInterface {
 	 *
 	 * @var string
 	 */
-	private const CIRCUIT_BREAKER_KEY = 'ghl_crm_refresh_circuit_breaker';
+	private const CIRCUIT_BREAKER_KEY = 'syncly_refresh_circuit_breaker';
 
 	/**
 	 * Transient key for throttling global OAuth admin notices.
 	 *
 	 * @var string
 	 */
-	private const OAUTH_NOTICE_THROTTLE_KEY = 'ghl_crm_oauth_notice_throttle';
+	private const OAUTH_NOTICE_THROTTLE_KEY = 'syncly_oauth_notice_throttle';
 
 	/**
 	 * Minutes to wait after hitting the failure threshold before retrying.
@@ -190,7 +190,7 @@ class Client implements ClientInterface {
 	 *
 	 * @var string
 	 */
-	private const RECONNECT_THROTTLE_KEY = 'ghl_crm_reconnect_throttle';
+	private const RECONNECT_THROTTLE_KEY = 'syncly_reconnect_throttle';
 
 	/**
 	 * Transient key for cross-process refresh mutex.
@@ -201,7 +201,7 @@ class Client implements ClientInterface {
 	 *
 	 * @var string
 	 */
-	private const REFRESH_LOCK_KEY = 'ghl_crm_token_refresh_lock';
+	private const REFRESH_LOCK_KEY = 'syncly_token_refresh_lock';
 
 	/**
 	 * Duration in seconds the refresh lock is held.
@@ -225,7 +225,7 @@ class Client implements ClientInterface {
 	 *
 	 * @var string
 	 */
-	public const SCHEDULED_REFRESH_HOOK = 'ghl_crm_refresh_oauth_token';
+	public const SCHEDULED_REFRESH_HOOK = 'syncly_refresh_oauth_token';
 
 	/**
 	 * How often (in seconds) the background refresh check runs.
@@ -527,7 +527,7 @@ class Client implements ClientInterface {
 									);
 
 									// Update all found users using TagManager for proper location-scoped storage
-									$tag_manager   = \GHL_CRM\Sync\TagManager::get_instance();
+									$tag_manager   = \Syncly\Sync\TagManager::get_instance();
 									$updated_count = 0;
 
 									foreach ( array_unique( $user_ids ) as $user_id ) {
@@ -586,7 +586,7 @@ class Client implements ClientInterface {
 												)
 											);
 
-											$tag_manager = \GHL_CRM\Sync\TagManager::get_instance();
+											$tag_manager = \Syncly\Sync\TagManager::get_instance();
 											foreach ( array_unique( $user_ids ) as $user_id ) {
 												$tag_manager->store_user_contact_id( (int) $user_id, $new_contact_id, $location_id );
 											}
@@ -741,7 +741,7 @@ class Client implements ClientInterface {
 	 */
 	private function load_settings(): void {
 		// Get settings from SettingsManager (multisite-aware)
-		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 		$settings         = $settings_manager->get_settings_array();
 
 		// OAuth2 tokens from settings
@@ -978,13 +978,13 @@ class Client implements ClientInterface {
 		}
 
 		// Schedule recurring refresh if not already scheduled
-		if ( ! as_has_scheduled_action( self::SCHEDULED_REFRESH_HOOK, [], 'ghl-crm' ) ) {
+		if ( ! as_has_scheduled_action( self::SCHEDULED_REFRESH_HOOK, [], 'syncly' ) ) {
 			as_schedule_recurring_action(
 				time() + self::SCHEDULED_REFRESH_INTERVAL,
 				self::SCHEDULED_REFRESH_INTERVAL,
 				self::SCHEDULED_REFRESH_HOOK,
 				[],
-				'ghl-crm'
+				'syncly'
 			);
 			$this->log_oauth_event(
 				'Scheduled background token refresh',
@@ -1049,7 +1049,7 @@ class Client implements ClientInterface {
 	 */
 	public static function unschedule_background_refresh(): void {
 		if ( function_exists( 'as_unschedule_all_actions' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {
-			as_unschedule_all_actions( self::SCHEDULED_REFRESH_HOOK, [], 'ghl-crm' );
+			as_unschedule_all_actions( self::SCHEDULED_REFRESH_HOOK, [], 'syncly' );
 		}
 	}
 
@@ -1108,7 +1108,7 @@ class Client implements ClientInterface {
 	 * @return void
 	 */
 	private function update_oauth_health( string $status, string $message = '' ): void {
-		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 		$settings_manager->update_setting( 'oauth_health_status', $status );
 		$settings_manager->update_setting( 'oauth_health_message', sanitize_text_field( $message ) );
 		$settings_manager->update_setting( 'oauth_health_checked_at', current_time( 'mysql' ) );
@@ -1122,9 +1122,9 @@ class Client implements ClientInterface {
 	private function mark_oauth_healthy(): void {
 		$this->update_oauth_health( 'healthy', '' );
 
-		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 		$settings_manager->update_option(
-			'ghl_crm_connection_verified',
+			'syncly_connection_verified',
 			[
 				'verified'    => true,
 				'verified_at' => current_time( 'mysql' ),
@@ -1151,7 +1151,7 @@ class Client implements ClientInterface {
 
 		set_transient( $transient_key, true, self::CIRCUIT_BREAKER_COOLDOWN * MINUTE_IN_SECONDS );
 
-		\GHL_CRM\Core\AdminNotices::get_instance()->error(
+		\Syncly\Core\AdminNotices::get_instance()->error(
 			__( 'GoHighLevel OAuth refresh is temporarily unhealthy. The plugin will retry automatically; reconnect your account if this persists.', 'syncly' ),
 			true
 		);
@@ -1355,7 +1355,7 @@ class Client implements ClientInterface {
 			try {
 				$auth_code = $this->reconnect_api();
 				// Exchange auth code for new tokens
-				$redirect_uri = admin_url( 'admin.php?page=ghl-crm-admin' );
+				$redirect_uri = admin_url( 'admin.php?page=syncly-admin' );
 				return $this->exchange_code_for_token( $auth_code, $redirect_uri );
 			} catch ( ApiException $e ) {
 				$this->log_oauth_event( 'Refresh token corrupted and reconnect failed', [ 'error' => $e->getMessage() ] );
@@ -1917,7 +1917,7 @@ class Client implements ClientInterface {
 	 * @return void
 	 */
 	private function save_oauth_tokens( ?int $expires_at = null ): void {
-		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 
 		// Update individual settings using SettingsManager (multisite-aware)
 		$settings_manager->update_setting( 'oauth_access_token', $this->access_token );
@@ -1948,7 +1948,7 @@ class Client implements ClientInterface {
 		$this->access_token  = '';
 		$this->refresh_token = '';
 
-		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 
 		// Delete OAuth settings using SettingsManager (multisite-aware)
 		$settings_manager->delete_setting( 'oauth_access_token' );
@@ -1957,12 +1957,12 @@ class Client implements ClientInterface {
 		$settings_manager->update_setting( 'oauth_health_status', 'reconnect_required' );
 		$settings_manager->update_setting( 'oauth_health_message', __( 'OAuth tokens were cleared and the account must be reconnected.', 'syncly' ) );
 		$settings_manager->update_setting( 'oauth_health_checked_at', current_time( 'mysql' ) );
-		$settings_manager->update_option( 'ghl_crm_connection_verified', false );
+		$settings_manager->update_option( 'syncly_connection_verified', false );
 
 		// Clear circuit breaker when disconnecting to avoid confusing errors
 		$this->reset_circuit_breaker();
 
-		do_action( 'ghl_crm_connection_status_changed', false, 'oauth_tokens_cleared' );
+		do_action( 'syncly_connection_status_changed', false, 'oauth_tokens_cleared' );
 
 		// Unschedule background refresh since we no longer have tokens
 		self::unschedule_background_refresh();

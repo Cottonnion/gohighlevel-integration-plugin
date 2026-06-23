@@ -4,7 +4,7 @@
  *
  * Reusable template for displaying PRO feature upgrade notices
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  *
  * Available variables:
  * @var string $title Feature title
@@ -32,35 +32,35 @@ $style       = $style ?? 'box';
 
 <?php if ( 'banner' === $style ) : ?>
 	<!-- Banner Style -->
-	<div class="ghl-pro-upgrade-notice ghl-pro-upgrade-notice--banner" style="margin: 20px 0; padding: 22px 26px; background: #fff; border: 1px solid #e2e8f0; border-left: 4px solid #1f2937; box-shadow: 0 2px 10px rgba(0,0,0,0.06); border-radius: 6px;">
-		<div style="display: flex; align-items: center; gap: 16px;">
-			<div style="flex-shrink: 0;">
-				<span class="dashicons dashicons-star-filled" style="font-size: 30px; width: 30px; height: 30px; color: #1f2937;"></span>
+	<div class="ghl-pro-upgrade-notice ghl-pro-upgrade-notice--banner" style="margin: 20px 0; padding: 24px; background: var(--ghl-bg-secondary, #f9fafb); border: 1px solid var(--ghl-border-primary, #e5e7eb); border-radius: var(--ghl-radius-lg, 12px);">
+		<div style="display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+			<div style="flex-shrink: 0; width: 44px; height: 44px; border-radius: var(--ghl-radius-md, 8px); background: var(--ghl-primary-light, #f5f5ff); display: flex; align-items: center; justify-content: center;">
+				<span class="dashicons dashicons-star-filled" style="font-size: 20px; width: 20px; height: 20px; color: var(--ghl-primary, #635bff);"></span>
 			</div>
-			<div style="flex: 1;">
-				<div style="text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; color: #475569; margin-bottom: 6px; font-weight: 600;">Syncly</div>
-				<h3 style="margin: 0 0 8px 0; font-size: 17px; font-weight: 700; color: #0f172a;">
+			<div style="flex: 1; min-width: 220px;">
+				<span style="display: inline-flex; align-items: center; padding: 2px 10px; border-radius: var(--ghl-radius-full, 9999px); background: var(--ghl-primary-light, #f5f5ff); color: var(--ghl-primary, #635bff); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px;">Syncly Pro</span>
+				<h3 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 600; color: var(--ghl-text-primary, #111827);">
 					<?php echo esc_html( $notice_title ); ?>
 				</h3>
 				<?php if ( ! empty( $description ) ) : ?>
-					<p style="margin: 0 0 10px 0; font-size: 14px; color: #475569; line-height: 1.6;">
+					<p style="margin: 0; font-size: 13px; color: var(--ghl-text-secondary, #6b7280); line-height: 1.6;">
 						<?php echo esc_html( $description ); ?>
 					</p>
 				<?php endif; ?>
-				
+
 				<?php if ( ! empty( $features ) ) : ?>
-					<ul style="margin: 12px 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 12px 14px;">
+					<ul style="margin: 14px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px;">
 						<?php foreach ( $features as $feature ) : ?>
-							<li style="font-size: 13px; color: #1f2937; display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; background: #f8fafc; border-radius: 4px; border: 1px solid #e2e8f0;">
-								<span class="dashicons dashicons-yes-alt" style="color: #0f766e; font-size: 16px; width: 16px; height: 16px;"></span>
+							<li style="font-size: 12px; font-weight: 500; color: var(--ghl-text-primary, #111827); display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fff; border-radius: var(--ghl-radius-full, 9999px); border: 1px solid var(--ghl-border-primary, #e5e7eb);">
+								<span class="dashicons dashicons-yes-alt" style="color: var(--ghl-primary, #635bff); font-size: 14px; width: 14px; height: 14px;"></span>
 								<?php echo esc_html( $feature ); ?>
 							</li>
 						<?php endforeach; ?>
 					</ul>
 				<?php endif; ?>
 			</div>
-			<div style="flex-shrink: 0;">
-				<a href="<?php echo esc_url( $cta_url ); ?>" target="_blank" rel="noopener noreferrer" class="button button-primary" style="background: #1f2937; border-color: #1f2937; text-shadow: none; box-shadow: none; padding: 10px 18px; height: auto; font-size: 14px; font-weight: 600;">
+			<div style="flex-shrink: 0; align-self: center;">
+				<a href="<?php echo esc_url( $cta_url ); ?>" target="_blank" rel="noopener noreferrer" class="ghl-button ghl-button-primary">
 					<?php echo esc_html( $cta_text ); ?>
 				</a>
 			</div>
@@ -69,39 +69,38 @@ $style       = $style ?? 'box';
 
 <?php else : ?>
 	<!-- Box Style (Default) -->
-	<div class="ghl-pro-upgrade-notice ghl-pro-upgrade-notice--box" style="margin: 24px 0; padding: 32px; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 4px 14px rgba(0,0,0,0.05);">
-		<div style="text-align: center; max-width: 760px; margin: 0 auto;">
-			<div style="display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; background: #e2e8f0; border-radius: 10px; margin-bottom: 16px;">
-				<span class="dashicons dashicons-star-filled" style="font-size: 26px; width: 26px; height: 26px; color: #1f2937;"></span>
+	<div class="ghl-pro-upgrade-notice ghl-pro-upgrade-notice--box" style="margin: 24px 0; padding: 36px 32px; background: #fff; border: 1px solid var(--ghl-border-primary, #e5e7eb); border-radius: var(--ghl-radius-lg, 12px); box-shadow: var(--ghl-shadow-sm, 0 1px 3px rgba(0,0,0,0.08));">
+		<div style="text-align: center; max-width: 560px; margin: 0 auto;">
+			<div style="display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; background: var(--ghl-primary-light, #f5f5ff); border-radius: var(--ghl-radius-md, 8px); margin-bottom: 18px;">
+				<span class="dashicons dashicons-star-filled" style="font-size: 24px; width: 24px; height: 24px; color: var(--ghl-primary, #635bff);"></span>
 			</div>
 
-			<div style="text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; color: #475569; margin-bottom: 8px; font-weight: 600;">GoHighLevel CRM</div>
-			<h3 style="margin: 0 0 10px 0; font-size: 21px; font-weight: 700; color: #0f172a;">
+			<span style="display: inline-flex; align-items: center; padding: 3px 11px; border-radius: var(--ghl-radius-full, 9999px); background: var(--ghl-primary-light, #f5f5ff); color: var(--ghl-primary, #635bff); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;">Syncly Pro</span>
+
+			<h3 style="margin: 0 0 10px 0; font-size: 20px; font-weight: 600; color: var(--ghl-text-primary, #111827);">
 				<?php echo esc_html( $notice_title ); ?>
 			</h3>
 
 			<?php if ( ! empty( $description ) ) : ?>
-				<p style="margin: 0 0 20px 0; font-size: 15px; color: #1f2937; line-height: 1.6;">
+				<p style="margin: 0 0 22px 0; font-size: 14px; color: var(--ghl-text-secondary, #6b7280); line-height: 1.6;">
 					<?php echo esc_html( $description ); ?>
 				</p>
 			<?php endif; ?>
 
 			<?php if ( ! empty( $features ) ) : ?>
-				<ul style="margin: 22px 0; padding: 0; list-style: none; text-align: left; display: inline-block;">
+				<ul style="margin: 0 0 26px; padding: 0; list-style: none; text-align: left; display: inline-block; width: 100%;">
 					<?php foreach ( $features as $feature ) : ?>
-						<li style="margin-bottom: 10px; font-size: 14px; color: #111827; display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
-							<span class="dashicons dashicons-yes-alt" style="color: #0f766e; font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px;"></span>
+						<li style="margin-bottom: 8px; font-size: 13px; color: var(--ghl-text-primary, #111827); display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--ghl-bg-secondary, #f9fafb); border: 1px solid var(--ghl-border-primary, #e5e7eb); border-radius: var(--ghl-radius-base, 6px);">
+							<span class="dashicons dashicons-yes-alt" style="color: var(--ghl-primary, #635bff); font-size: 16px; width: 16px; height: 16px; flex-shrink: 0;"></span>
 							<span><?php echo esc_html( $feature ); ?></span>
 						</li>
 					<?php endforeach; ?>
 				</ul>
 			<?php endif; ?>
 
-			<div style="margin-top: 22px;">
-				<a href="<?php echo esc_url( $cta_url ); ?>" target="_blank" rel="noopener noreferrer" class="button button-primary button-hero" style="background: #1f2937; border-color: #1f2937; text-shadow: none; box-shadow: none; padding: 12px 28px; height: auto; font-size: 15px; font-weight: 600;">
-					<?php echo esc_html( $cta_text ); ?>
-				</a>
-			</div>
+			<a href="<?php echo esc_url( $cta_url ); ?>" target="_blank" rel="noopener noreferrer" class="ghl-button ghl-button-primary ghl-button-large">
+				<?php echo esc_html( $cta_text ); ?>
+			</a>
 		</div>
 	</div>
 <?php endif; ?>

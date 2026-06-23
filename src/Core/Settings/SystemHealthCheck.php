@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Core\Settings;
+namespace Syncly\Core\Settings;
 
-use GHL_CRM\Core\SettingsManager;
+use Syncly\Core\SettingsManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,8 +15,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Runs comprehensive diagnostics on the plugin and server environment.
  * Extracted from SettingsManager to reduce file size and improve cohesion.
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/Core/Settings
+ * @package    Syncly
+ * @subpackage Syncly/Core/Settings
  */
 class SystemHealthCheck {
 
@@ -48,7 +48,7 @@ class SystemHealthCheck {
 	 * @return void
 	 */
 	public function init(): void {
-		add_action( 'wp_ajax_ghl_crm_system_health_check', [ $this, 'system_health_check' ] );
+		add_action( 'wp_ajax_syncly_system_health_check', [ $this, 'system_health_check' ] );
 	}
 
 	/**
@@ -57,7 +57,7 @@ class SystemHealthCheck {
 	 * @return void
 	 */
 	public function system_health_check(): void {
-		check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce' );
+		check_ajax_referer( 'syncly_settings_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
@@ -310,7 +310,7 @@ class SystemHealthCheck {
 	private function check_file_permissions( array &$checks ): void {
 		$upload_dir      = wp_upload_dir();
 		$upload_writable = wp_is_writable( $upload_dir['basedir'] );
-		$plugin_dir      = GHL_CRM_PATH;
+		$plugin_dir      = SYNCLY_PATH;
 		$plugin_readable = is_readable( $plugin_dir );
 
 		$checks['file_permissions'] = [

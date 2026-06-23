@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\API;
+namespace Syncly\API;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Handles external REST API endpoints with authentication and rate limiting
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage API
  */
 class RestAPIController {
@@ -26,7 +26,7 @@ class RestAPIController {
 	/**
 	 * Settings manager instance
 	 *
-	 * @var \GHL_CRM\Core\SettingsManager
+	 * @var \Syncly\Core\SettingsManager
 	 */
 	private $settings_manager;
 
@@ -46,7 +46,7 @@ class RestAPIController {
 	 * Private constructor
 	 */
 	private function __construct() {
-		$this->settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$this->settings_manager = \Syncly\Core\SettingsManager::get_instance();
 		$this->init_hooks();
 	}
 
@@ -67,7 +67,7 @@ class RestAPIController {
 	public function register_routes(): void {
 		// Editor-only routes (admin-only) — registered regardless of public REST toggle
 		register_rest_route(
-			'ghl-crm/v1',
+			'syncly/v1',
 			'/connection/status',
 			[
 				'methods'             => 'GET',
@@ -77,7 +77,7 @@ class RestAPIController {
 		);
 
 		register_rest_route(
-			'ghl-crm/v1',
+			'syncly/v1',
 			'/forms',
 			[
 				'methods'             => 'GET',
@@ -87,7 +87,7 @@ class RestAPIController {
 		);
 
 		register_rest_route(
-			'ghl-crm/v1',
+			'syncly/v1',
 			'/tags',
 			[
 				'methods'             => 'GET',
@@ -101,9 +101,9 @@ class RestAPIController {
 		 *
 		 * @since 1.0.0
 		 *
-		 * @param \GHL_CRM\API\RestAPIController $controller The REST API controller instance.
+		 * @param \Syncly\API\RestAPIController $controller The REST API controller instance.
 		 */
-		do_action( 'ghl_crm_register_public_rest_routes', $this );
+		do_action( 'syncly_register_public_rest_routes', $this );
 	}
 
 	/**
@@ -154,7 +154,7 @@ class RestAPIController {
 		}
 
 		try {
-			$forms_resource = new \GHL_CRM\API\Resources\FormsResource();
+			$forms_resource = new \Syncly\API\Resources\FormsResource();
 			$forms          = $forms_resource->get_forms();
 
 			if ( is_wp_error( $forms ) ) {
@@ -199,7 +199,7 @@ class RestAPIController {
 		}
 
 		try {
-			$tag_manager = \GHL_CRM\Sync\TagManager::get_instance();
+			$tag_manager = \Syncly\Sync\TagManager::get_instance();
 			$tags        = $tag_manager->get_tags( false );
 
 			if ( empty( $tags ) ) {
@@ -349,7 +349,7 @@ class RestAPIController {
 				}
 
 				// Queue sync to GHL
-				$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
+				$queue_manager = \Syncly\Sync\QueueManager::get_instance();
 				$queue_manager->add_to_queue( 'user', $user->ID, 'profile_update', $params );
 
 				return new \WP_REST_Response(
@@ -380,7 +380,7 @@ class RestAPIController {
 				}
 
 				// Queue sync to GHL
-				$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
+				$queue_manager = \Syncly\Sync\QueueManager::get_instance();
 				$queue_manager->add_to_queue( 'user', $user_id, 'user_register', $params );
 
 				return new \WP_REST_Response(
@@ -412,7 +412,7 @@ class RestAPIController {
 		$sync_type = $params['type'] ?? 'users';
 
 		try {
-			do_action( 'ghl_crm_trigger_manual_sync', $sync_type );
+			do_action( 'syncly_trigger_manual_sync', $sync_type );
 
 			return new \WP_REST_Response(
 				[
@@ -438,7 +438,7 @@ class RestAPIController {
 	 * @return \WP_REST_Response
 	 */
 	public function get_status( \WP_REST_Request $request ) {
-		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
+		$queue_manager = \Syncly\Sync\QueueManager::get_instance();
 		$status        = $queue_manager->get_queue_status();
 
 		return new \WP_REST_Response(
@@ -474,7 +474,7 @@ class RestAPIController {
 	 */
 	public function handle_webhook( \WP_REST_Request $request ) {
 		// Delegate to WebhookHandler
-		$webhook_handler = \GHL_CRM\API\Webhooks\WebhookHandler::get_instance();
+		$webhook_handler = \Syncly\API\Webhooks\WebhookHandler::get_instance();
 		return $webhook_handler->handle_request( $request );
 	}
 

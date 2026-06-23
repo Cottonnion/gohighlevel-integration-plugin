@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Core;
+namespace Syncly\Core;
 
-use GHL_CRM\Core\Settings\AjaxHandler;
-use GHL_CRM\Sync\TagManager;
+use Syncly\Core\Settings\AjaxHandler;
+use Syncly\Sync\TagManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,8 +15,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Handles settings storage and retrieval via AJAX.
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/Core
+ * @package    Syncly
+ * @subpackage Syncly/Core
  */
 class SettingsManager {
 	/**
@@ -31,21 +31,21 @@ class SettingsManager {
 	 *
 	 * @var string
 	 */
-	private const OPTION_NAME = 'ghl_crm_settings';
+	private const OPTION_NAME = 'syncly_settings';
 
 	/**
 	 * Network-wide settings option name
 	 *
 	 * @var string
 	 */
-	private const NETWORK_OPTION_NAME = 'ghl_crm_network_settings';
+	private const NETWORK_OPTION_NAME = 'syncly_network_settings';
 
 	/**
 	 * Connection verification option name
 	 *
 	 * @var string
 	 */
-	private const VERIFICATION_OPTION_NAME = 'ghl_crm_connection_verified';
+	private const VERIFICATION_OPTION_NAME = 'syncly_connection_verified';
 
 	/**
 	 * Settings whose selected GHL tags/fields belong to a specific location.
@@ -80,7 +80,7 @@ class SettingsManager {
 	 * @var array<int, string>
 	 */
 	private const LOCATION_SCOPED_OPTION_NAMES = [
-		'ghl_crm_custom_object_mappings',
+		'syncly_custom_object_mappings',
 	];
 
 	/**
@@ -120,19 +120,19 @@ class SettingsManager {
 	 */
 	public function init(): void {
 		// Core settings AJAX handlers (remain in SettingsManager).
-		add_action( 'wp_ajax_ghl_crm_save_settings', [ $this, 'save_settings' ] );
-		add_action( 'wp_ajax_ghl_crm_get_settings', [ $this, 'get_settings' ] );
-		add_action( 'wp_ajax_ghl_crm_test_connection', [ $this, 'test_connection' ] );
-		add_action( 'wp_ajax_ghl_crm_save_field_mapping', [ $this, 'save_field_mapping' ] );
-		add_action( 'wp_ajax_ghl_crm_preview_user_sync', [ $this, 'preview_user_sync' ] );
-		add_action( 'wp_ajax_ghl_crm_oauth_reconnect', [ $this, 'oauth_reconnect' ] );
-		add_action( 'wp_ajax_ghl_crm_refresh_access_token', [ $this, 'ajax_refresh_access_token' ] );
-		add_action( 'wp_ajax_ghl_crm_save_wizard_settings', [ $this, 'handle_save_wizard_settings' ] );
-		add_action( 'wp_ajax_ghl_crm_bulk_sync_users', [ $this, 'handle_bulk_sync_users' ] );
-		add_action( 'wp_ajax_ghl_crm_bulk_import_from_ghl', [ $this, 'handle_bulk_import_from_ghl' ] );
+		add_action( 'wp_ajax_syncly_save_settings', [ $this, 'save_settings' ] );
+		add_action( 'wp_ajax_syncly_get_settings', [ $this, 'get_settings' ] );
+		add_action( 'wp_ajax_syncly_test_connection', [ $this, 'test_connection' ] );
+		add_action( 'wp_ajax_syncly_save_field_mapping', [ $this, 'save_field_mapping' ] );
+		add_action( 'wp_ajax_syncly_preview_user_sync', [ $this, 'preview_user_sync' ] );
+		add_action( 'wp_ajax_syncly_oauth_reconnect', [ $this, 'oauth_reconnect' ] );
+		add_action( 'wp_ajax_syncly_refresh_access_token', [ $this, 'ajax_refresh_access_token' ] );
+		add_action( 'wp_ajax_syncly_save_wizard_settings', [ $this, 'handle_save_wizard_settings' ] );
+		add_action( 'wp_ajax_syncly_bulk_sync_users', [ $this, 'handle_bulk_sync_users' ] );
+		add_action( 'wp_ajax_syncly_bulk_import_from_ghl', [ $this, 'handle_bulk_import_from_ghl' ] );
 
 		// Integrations AJAX handlers (delegated to AjaxHandler).
-		add_action( 'wp_ajax_ghl_crm_save_integrations', [ $this, 'handle_save_integrations' ] );
+		add_action( 'wp_ajax_syncly_save_integrations', [ $this, 'handle_save_integrations' ] );
 		add_action( 'wp_ajax_ghl_get_pipelines', [ $this, 'handle_get_pipelines' ] );
 		add_action( 'wp_ajax_ghl_get_pipeline_stages', [ $this, 'handle_get_pipeline_stages' ] );
 		add_action( 'wp_ajax_ghl_search_products', [ $this, 'handle_search_products' ] );
@@ -144,10 +144,10 @@ class SettingsManager {
 		add_action( 'wp_ajax_ghl_save_logs_per_page', [ $this, 'handle_save_logs_per_page' ] );
 
 		// Field Mapping Suggestions (delegated to AjaxHandler).
-		add_action( 'wp_ajax_ghl_crm_get_field_suggestions', [ $this, 'handle_get_field_suggestions' ] );
+		add_action( 'wp_ajax_syncly_get_field_suggestions', [ $this, 'handle_get_field_suggestions' ] );
 
 		// Purge caches when connection status changes (location switch, OAuth, disconnect).
-		add_action( 'ghl_crm_connection_status_changed', [ $this, 'purge_location_caches' ] );
+		add_action( 'syncly_connection_status_changed', [ $this, 'purge_location_caches' ] );
 	}
 
 	/**
@@ -159,7 +159,7 @@ class SettingsManager {
 	public function save_settings(): void {
 		try {
 			// Verify nonce
-			check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce' );
+			check_ajax_referer( 'syncly_settings_nonce', 'nonce' );
 
 			// Check permissions
 			if ( ! current_user_can( 'manage_options' ) ) {
@@ -257,7 +257,7 @@ class SettingsManager {
 			}
 
 			// Save settings (multisite aware) - use repository
-			$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
+			$repository = \Syncly\Core\Settings\SettingsRepository::get_instance();
 			$saved      = $repository->save_site_settings( $settings );
 
 			// If credentials changed, invalidate verification and purge caches
@@ -338,7 +338,7 @@ class SettingsManager {
 	 * @return array Result array with 'success' boolean and 'message' string.
 	 */
 	public function save_manual_connection_settings( array $new_settings ): array {
-		$connection_manager = \GHL_CRM\API\ConnectionManager::get_instance();
+		$connection_manager = \Syncly\API\ConnectionManager::get_instance();
 		return $connection_manager->save_manual_connection_settings( $new_settings );
 	}
 
@@ -349,7 +349,7 @@ class SettingsManager {
 	 */
 	public function get_settings(): void {
 		// Verify nonce
-		check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce' );
+		check_ajax_referer( 'syncly_settings_nonce', 'nonce' );
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -363,7 +363,7 @@ class SettingsManager {
 
 		// Check connection status
 		$settings      = $this->get_settings_array();
-		$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
+		$oauth_handler = new \Syncly\API\OAuth\OAuthHandler();
 		$oauth_status  = $oauth_handler->get_connection_status();
 		$is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 
@@ -382,7 +382,7 @@ class SettingsManager {
 	 */
 	public function test_connection(): void {
 		// Verify nonce
-		check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce' );
+		check_ajax_referer( 'syncly_settings_nonce', 'nonce' );
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -395,7 +395,7 @@ class SettingsManager {
 		}
 
 		// Use ConnectionManager to test connection
-		$connection_manager = \GHL_CRM\API\ConnectionManager::get_instance();
+		$connection_manager = \Syncly\API\ConnectionManager::get_instance();
 		$result             = $connection_manager->test_connection();
 
 		// Return AJAX response based on result
@@ -429,14 +429,14 @@ class SettingsManager {
 	 * @return void
 	 */
 	public function ajax_refresh_access_token(): void {
-		check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce' );
+		check_ajax_referer( 'syncly_settings_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'syncly' ) ], 403 );
 		}
 
 		try {
-			$client  = \GHL_CRM\API\Client\Client::get_instance();
+			$client  = \Syncly\API\Client\Client::get_instance();
 			$result  = $client->refresh_access_token();
 			$expires = isset( $result['expires_in'] ) ? human_time_diff( time(), time() + (int) $result['expires_in'] ) : '24 hours';
 
@@ -461,7 +461,7 @@ class SettingsManager {
 	 */
 	public function oauth_reconnect(): void {
 		// Verify nonce
-		check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce' );
+		check_ajax_referer( 'syncly_settings_nonce', 'nonce' );
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -475,7 +475,7 @@ class SettingsManager {
 
 		try {
 			// Get OAuth authorization URL
-			$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
+			$oauth_handler = new \Syncly\API\OAuth\OAuthHandler();
 			$auth_url      = $oauth_handler->get_authorization_url();
 
 			wp_send_json_success(
@@ -506,7 +506,7 @@ class SettingsManager {
 	 */
 	public function save_field_mapping(): void {
 		// Verify nonce
-		check_ajax_referer( 'ghl_crm_field_mapping_nonce', 'nonce' );
+		check_ajax_referer( 'syncly_field_mapping_nonce', 'nonce' );
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -637,7 +637,7 @@ class SettingsManager {
 	 * @return array
 	 */
 	public function get_settings_array( ?int $site_id = null ): array {
-		$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
+		$repository = \Syncly\Core\Settings\SettingsRepository::get_instance();
 		return $this->hydrate_location_scoped_settings( $repository->get_settings_array( $site_id ) );
 	}
 
@@ -649,7 +649,7 @@ class SettingsManager {
 	 * @return bool
 	 */
 	public function save_site_settings( array $settings, ?int $site_id = null ): bool {
-		$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
+		$repository = \Syncly\Core\Settings\SettingsRepository::get_instance();
 		return $repository->save_site_settings( $this->prepare_location_scoped_settings_for_storage( $settings ), $site_id );
 	}
 
@@ -659,7 +659,7 @@ class SettingsManager {
 	 * @return array
 	 */
 	public function get_network_settings(): array {
-		$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
+		$repository = \Syncly\Core\Settings\SettingsRepository::get_instance();
 		return $repository->get_network_settings();
 	}
 
@@ -670,7 +670,7 @@ class SettingsManager {
 	 * @return bool
 	 */
 	public function save_network_settings( array $settings ): bool {
-		$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
+		$repository = \Syncly\Core\Settings\SettingsRepository::get_instance();
 		return $repository->save_network_settings( $settings );
 	}
 
@@ -688,7 +688,7 @@ class SettingsManager {
 			return $settings[ $key ] ?? $default;
 		}
 
-		$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
+		$repository = \Syncly\Core\Settings\SettingsRepository::get_instance();
 		return $repository->get_setting( $key, $default, $site_id );
 	}
 
@@ -707,7 +707,7 @@ class SettingsManager {
 			return $this->save_site_settings( $settings, $site_id );
 		}
 
-		$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
+		$repository = \Syncly\Core\Settings\SettingsRepository::get_instance();
 		return $repository->update_setting( $key, $value, $site_id );
 	}
 
@@ -795,7 +795,7 @@ class SettingsManager {
 	 * @return bool True on success, false on failure.
 	 */
 	public function delete_setting( string $key, ?int $site_id = null ): bool {
-		$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
+		$repository = \Syncly\Core\Settings\SettingsRepository::get_instance();
 		return $repository->delete_setting( $key, $site_id );
 	}
 
@@ -808,7 +808,7 @@ class SettingsManager {
 	 * @return mixed Option value
 	 */
 	public function get_option( string $option_name, $default = false, ?int $site_id = null ) {
-		$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
+		$repository = \Syncly\Core\Settings\SettingsRepository::get_instance();
 
 		if ( $this->is_location_scoped_option_name( $option_name ) ) {
 			$settings    = $this->get_settings_array( $site_id );
@@ -836,7 +836,7 @@ class SettingsManager {
 	 * @return bool True on success, false on failure
 	 */
 	public function update_option( string $option_name, $value, ?int $site_id = null ): bool {
-		$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
+		$repository = \Syncly\Core\Settings\SettingsRepository::get_instance();
 
 		if ( $this->is_location_scoped_option_name( $option_name ) ) {
 			$settings    = $this->get_settings_array( $site_id );
@@ -856,7 +856,7 @@ class SettingsManager {
 	 * @return bool
 	 */
 	public function is_multisite(): bool {
-		$repository = \GHL_CRM\Core\Settings\SettingsRepository::get_instance();
+		$repository = \Syncly\Core\Settings\SettingsRepository::get_instance();
 		return $repository->is_multisite();
 	}
 
@@ -867,7 +867,7 @@ class SettingsManager {
 	 * @return bool
 	 */
 	public function is_connection_verified( ?int $site_id = null ): bool {
-		$connection_manager = \GHL_CRM\API\ConnectionManager::get_instance();
+		$connection_manager = \Syncly\API\ConnectionManager::get_instance();
 		return $connection_manager->is_connection_verified( $site_id );
 	}
 
@@ -878,7 +878,7 @@ class SettingsManager {
 	 * @return bool
 	 */
 	private function mark_connection_verified( ?int $site_id = null ): bool {
-		$connection_manager = \GHL_CRM\API\ConnectionManager::get_instance();
+		$connection_manager = \Syncly\API\ConnectionManager::get_instance();
 		return $connection_manager->mark_connection_verified( $site_id );
 	}
 
@@ -889,7 +889,7 @@ class SettingsManager {
 	 * @return bool
 	 */
 	private function mark_connection_unverified( ?int $site_id = null ): bool {
-		$connection_manager = \GHL_CRM\API\ConnectionManager::get_instance();
+		$connection_manager = \Syncly\API\ConnectionManager::get_instance();
 		return $connection_manager->mark_connection_unverified( $site_id );
 	}
 
@@ -939,7 +939,7 @@ class SettingsManager {
 	 */
 	public function handle_save_integrations(): void {
 		// Verify nonce
-		check_ajax_referer( 'ghl_crm_admin', 'nonce' );
+		check_ajax_referer( 'syncly_admin', 'nonce' );
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -972,7 +972,7 @@ class SettingsManager {
 	 */
 	public function handle_get_pipelines(): void {
 		// Verify nonce
-		check_ajax_referer( 'ghl_crm_admin', 'nonce' );
+		check_ajax_referer( 'syncly_admin', 'nonce' );
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -990,7 +990,7 @@ class SettingsManager {
 	 */
 	public function handle_get_pipeline_stages(): void {
 		// Verify nonce
-		check_ajax_referer( 'ghl_crm_admin', 'nonce' );
+		check_ajax_referer( 'syncly_admin', 'nonce' );
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -1008,7 +1008,7 @@ class SettingsManager {
 	 */
 	public function handle_search_products(): void {
 		// Verify nonce
-		check_ajax_referer( 'ghl_crm_admin', 'nonce' );
+		check_ajax_referer( 'syncly_admin', 'nonce' );
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -1095,7 +1095,7 @@ class SettingsManager {
 	 * @return void Outputs JSON response and exits.
 	 */
 	public function preview_user_sync(): void {
-		check_ajax_referer( 'ghl_crm_admin', 'nonce' );
+		check_ajax_referer( 'syncly_admin', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
@@ -1128,7 +1128,7 @@ class SettingsManager {
 		 * @param array|null $preview_data Null by default; Pro returns preview data array.
 		 * @param int        $user_id      WordPress user ID to preview.
 		 */
-		$preview_data = apply_filters( 'ghl_crm_preview_user_sync_result', null, $user->ID );
+		$preview_data = apply_filters( 'syncly_preview_user_sync_result', null, $user->ID );
 
 		if ( null !== $preview_data ) {
 			if ( isset( $preview_data['error'] ) ) {
@@ -1299,7 +1299,7 @@ class SettingsManager {
 		}
 
 		// 4. Reset TagManager in-memory cache if it's already instantiated
-		if ( class_exists( '\GHL_CRM\Sync\TagManager' ) ) {
+		if ( class_exists( '\Syncly\Sync\TagManager' ) ) {
 			try {
 				$tag_manager = TagManager::get_instance();
 				$tag_manager->refresh_cache();

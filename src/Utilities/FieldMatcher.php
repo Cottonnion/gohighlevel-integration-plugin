@@ -4,11 +4,11 @@
  *
  * Uses Levenshtein distance and semantic matching to suggest field mappings
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Utilities
  */
 
-namespace GHL_CRM\Utilities;
+namespace Syncly\Utilities;
 
 defined( 'ABSPATH' ) || exit;
 

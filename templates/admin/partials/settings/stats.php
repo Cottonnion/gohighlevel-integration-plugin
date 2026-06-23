@@ -4,15 +4,15 @@
  *
  * Display plugin status, connection health, and system information
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/templates/admin/partials/settings
+ * @package    Syncly
+ * @subpackage Syncly/templates/admin/partials/settings
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
 
 // Get plugin stats
@@ -21,7 +21,7 @@ $user_count  = count_users();
 $total_users = $user_count['total_users'];
 
 // Get OAuth connection status.
-$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
+$oauth_handler = new \Syncly\API\OAuth\OAuthHandler();
 $oauth_status  = $oauth_handler->get_connection_status();
 
 $is_oauth_connected = ! empty( $oauth_status['connected'] );
@@ -46,7 +46,7 @@ $has_location    = ! empty( $location_id );
 $needs_reconnect = $has_location && ! $api_connected;
 
 // Get rate limiter stats
-$rate_limiter      = \GHL_CRM\Sync\RateLimiter::get_instance();
+$rate_limiter      = \Syncly\Sync\RateLimiter::get_instance();
 $rate_limit_status = $rate_limiter->get_status( $location_id );
 
 // Burst limit (100 requests per 10 seconds)
@@ -64,7 +64,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 ?>
 
 <div class="ghl-settings-wrapper">
-	<?php wp_nonce_field( 'ghl_crm_settings_nonce', 'ghl_crm_nonce' ); ?>
+	<?php wp_nonce_field( 'syncly_settings_nonce', 'syncly_nonce' ); ?>
 	
 	<!-- Plugin Status -->
 	<div class="ghl-settings-section ghl-settings-card">
@@ -74,7 +74,13 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 				<?php esc_html_e( 'Plugin Status', 'syncly' ); ?>
 			</h2>
 			<p class="description">
-				<?php esc_html_e( 'Current operational status of the GoHighLevel CRM Integration plugin.', 'syncly' ); ?>
+				<?php
+				printf(
+					/* translators: %s: Plugin name */
+					esc_html__( 'Current operational status of the %s plugin.', 'syncly' ),
+					esc_html( SYNCLY_PLUGIN_NAME )
+				);
+				?>
 			</p>
 		</div>
 		
@@ -461,7 +467,7 @@ $daily_resets_at = $rate_limit_status['daily']['resets_at'] ?? null;
 							<?php esc_html_e( 'Plugin Version', 'syncly' ); ?>
 						</th>
 						<td>
-							<code><?php echo esc_html( GHL_CRM_VERSION ?? '1.0.0' ); ?></code>
+							<code><?php echo esc_html( SYNCLY_VERSION ?? '1.0.0' ); ?></code>
 						</td>
 					</tr>
 					

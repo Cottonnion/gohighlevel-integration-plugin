@@ -4,7 +4,7 @@
  * Detects GoHighLevel form iframes and modifies their src URL to pre-fill fields
  * with logged-in user data
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 (function() {
 	'use strict';

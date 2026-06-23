@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Integrations\Forms;
+namespace Syncly\Integrations\Forms;
 
-use GHL_CRM\Core\SettingsManager;
+use Syncly\Core\SettingsManager;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -12,8 +12,8 @@ defined( 'ABSPATH' ) || exit;
  *
  * Handles per-form settings for auto-fill and visibility
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/Core
+ * @package    Syncly
+ * @subpackage Syncly/Core
  */
 class FormSettings {
 	/**
@@ -28,7 +28,7 @@ class FormSettings {
 	 *
 	 * @var string
 	 */
-	private const OPTION_KEY = 'ghl_crm_form_settings';
+	private const OPTION_KEY = 'syncly_form_settings';
 
 	/**
 	 * Get class instance
@@ -55,7 +55,7 @@ class FormSettings {
 	 * @return void
 	 */
 	public function init(): void {
-		add_action( 'wp_ajax_ghl_crm_get_forms', [ $this, 'handle_get_forms' ] );
+		add_action( 'wp_ajax_syncly_get_forms', [ $this, 'handle_get_forms' ] );
 		add_action( 'wp_ajax_ghl_save_form_settings', [ $this, 'ajax_save_form_settings' ] );
 		add_action( 'wp_ajax_ghl_get_form_settings', [ $this, 'ajax_get_form_settings' ] );
 	}
@@ -66,7 +66,7 @@ class FormSettings {
 	 * @return bool
 	 */
 	public static function is_pro_active(): bool {
-		return (bool) apply_filters( 'ghl_crm_is_pro_active', false );
+		return (bool) apply_filters( 'syncly_is_pro_active', false );
 	}
 
 	/**
@@ -127,7 +127,7 @@ class FormSettings {
 		 * @param string $form_id            Form ID
 		 * @param array  $raw_settings       Raw POST data from AJAX request
 		 */
-		$sanitized_settings = apply_filters( 'ghl_crm_form_settings_before_save', $sanitized_settings, $form_id, $raw_settings );
+		$sanitized_settings = apply_filters( 'syncly_form_settings_before_save', $sanitized_settings, $form_id, $raw_settings );
 
 		$all_settings[ $form_id ] = $sanitized_settings;
 
@@ -146,7 +146,7 @@ class FormSettings {
 	public function ajax_save_form_settings(): void {
 		try {
 			// Verify nonce
-			if ( ! check_ajax_referer( 'ghl_crm_forms_nonce', 'nonce', false ) ) {
+			if ( ! check_ajax_referer( 'syncly_forms_nonce', 'nonce', false ) ) {
 				wp_send_json_error( [ 'message' => __( 'Invalid security token.', 'syncly' ) ] );
 			}
 
@@ -210,7 +210,7 @@ class FormSettings {
 		 */
 	public function ajax_get_form_settings(): void {
 		// Verify nonce
-		if ( ! check_ajax_referer( 'ghl_crm_forms_nonce', 'nonce', false ) ) {
+		if ( ! check_ajax_referer( 'syncly_forms_nonce', 'nonce', false ) ) {
 			wp_send_json_error( [ 'message' => __( 'Invalid security token.', 'syncly' ) ] );
 		}
 
@@ -283,7 +283,7 @@ class FormSettings {
 	 * @return void Outputs JSON response and exits.
 	 */
 	public function handle_get_forms(): void {
-		check_ajax_referer( 'ghl_crm_forms_nonce', 'nonce' );
+		check_ajax_referer( 'syncly_forms_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
@@ -305,7 +305,7 @@ class FormSettings {
 		}
 
 		try {
-			$forms_resource = new \GHL_CRM\API\Resources\FormsResource();
+			$forms_resource = new \Syncly\API\Resources\FormsResource();
 			$forms          = $forms_resource->get_forms( true );
 
 			$settings           = $settings_manager->get_settings_array();

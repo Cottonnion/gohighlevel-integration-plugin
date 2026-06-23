@@ -2,18 +2,18 @@
 /**
  * Centralized user meta synchronization after queue completion.
  *
- * Listens to 'ghl_crm_after_sync_success' and handles all user-meta
+ * Listens to 'syncly_after_sync_success' and handles all user-meta
  * updates (contact ID, tags, last-sync timestamp, pending tags) so
  * QueueManager stays focused on queue orchestration.
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 declare(strict_types=1);
 
-namespace GHL_CRM\Sync;
+namespace Syncly\Sync;
 
-use GHL_CRM\Sync\TagManager;
+use Syncly\Sync\TagManager;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -69,7 +69,7 @@ class UserMetaSync {
 	 * @return void
 	 */
 	public function init(): void {
-		add_action( 'ghl_crm_after_sync_success', [ $this, 'handle_sync_success' ], 10, 4 );
+		add_action( 'syncly_after_sync_success', [ $this, 'handle_sync_success' ], 10, 4 );
 	}
 
 	/**
@@ -137,7 +137,7 @@ class UserMetaSync {
 				 * @param object   $item     Queue item.
 				 * @param array    $payload  Sync payload.
 				 */
-				return apply_filters( 'ghl_crm_resolve_sync_user_id', null, $item, $payload );
+				return apply_filters( 'syncly_resolve_sync_user_id', null, $item, $payload );
 		}
 	}
 
@@ -327,13 +327,13 @@ class UserMetaSync {
 		}
 
 		try {
-			$profile_fields = \GHL_CRM\Admin\Profile\UserProfileFields::get_instance();
+			$profile_fields = \Syncly\Admin\Profile\UserProfileFields::get_instance();
 
 			if ( method_exists( $profile_fields, 'refresh_user_from_ghl' ) ) {
 				$profile_fields->refresh_user_from_ghl( $user_id, $contact_id );
 			} else {
 				// Fallback: direct API call.
-				$client   = \GHL_CRM\API\Client\Client::get_instance();
+				$client   = \Syncly\API\Client\Client::get_instance();
 				$response = $client->get( "contacts/{$contact_id}" );
 
 				if ( ! empty( $response['contact'] ) ) {
@@ -352,7 +352,7 @@ class UserMetaSync {
 				}
 			}
 		} catch ( \Throwable $e ) {
-			do_action( 'ghl_crm_log_event', 'user_meta_sync_failed', $e->getMessage(), [ 'user_id' => $user_id ?? 0 ], 'error' );
+			do_action( 'syncly_log_event', 'user_meta_sync_failed', $e->getMessage(), [ 'user_id' => $user_id ?? 0 ], 'error' );
 		}
 	}
 }

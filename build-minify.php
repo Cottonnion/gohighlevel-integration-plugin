@@ -5,7 +5,7 @@
  * Run via:   composer build
  * Requires:  matthiasmullie/minify (dev dependency)
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

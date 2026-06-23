@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Sync;
+namespace Syncly\Sync;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Handles logging of sync events to database
  * Multisite-aware with per-site tables
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Sync
  */
 class QueueLogger {
@@ -69,7 +69,7 @@ class QueueLogger {
 		string $sync_type = 'user'
 	): void {
 		// Check if sync logging is enabled
-		if ( ! \GHL_CRM\Core\SettingsManager::is_sync_logging_enabled() ) {
+		if ( ! \Syncly\Core\SettingsManager::is_sync_logging_enabled() ) {
 			return;
 		}
 

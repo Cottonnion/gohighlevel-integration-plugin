@@ -2,16 +2,16 @@
 /**
  * Template: Field Mapping Page (Dynamic)
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 // Check connection status
-$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
-$oauth_handler    = new \GHL_CRM\API\OAuth\OAuthHandler();
+$oauth_handler    = new \Syncly\API\OAuth\OAuthHandler();
 $oauth_status     = $oauth_handler->get_connection_status();
 $is_connected     = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 
@@ -78,7 +78,7 @@ $excluded_meta_keys = array(
 
 // Get all unique meta keys from all users (cached to avoid repeated uncached direct queries)
 global $wpdb;
-$meta_keys_cache_group = 'ghl_crm_field_mapping';
+$meta_keys_cache_group = 'syncly_field_mapping';
 $meta_keys_cache_key   = 'user_meta_keys_' . get_current_blog_id();
 
 $all_meta_keys = wp_cache_get( $meta_keys_cache_key, $meta_keys_cache_group );
@@ -94,7 +94,7 @@ $custom_user_fields = array();
 $woocommerce_fields = array();
 $buddyboss_fields   = array();
 $learndash_fields   = array();
-$is_pro_active      = (bool) apply_filters( 'ghl_crm_is_pro_active', false );
+$is_pro_active      = (bool) apply_filters( 'syncly_is_pro_active', false );
 
 /**
  * Filter: Allow PRO plugin to add custom user meta fields
@@ -104,7 +104,7 @@ $is_pro_active      = (bool) apply_filters( 'ghl_crm_is_pro_active', false );
  * @param array $default_user_meta Default WordPress user meta fields
  * @param array $excluded_meta_keys Excluded meta keys
  */
-$custom_user_fields = apply_filters( 'ghl_crm_field_mapping_custom_fields', $custom_user_fields, $all_meta_keys, $default_user_meta, $excluded_meta_keys );
+$custom_user_fields = apply_filters( 'syncly_field_mapping_custom_fields', $custom_user_fields, $all_meta_keys, $default_user_meta, $excluded_meta_keys );
 
 /**
  * Filter: Allow PRO plugin to add WooCommerce fields
@@ -112,21 +112,21 @@ $custom_user_fields = apply_filters( 'ghl_crm_field_mapping_custom_fields', $cus
  * @param array $woocommerce_fields WooCommerce billing/shipping fields (key => label)
  * @param array $all_meta_keys All meta keys from database
  */
-$woocommerce_fields = apply_filters( 'ghl_crm_field_mapping_woocommerce_fields', $woocommerce_fields, $all_meta_keys );
+$woocommerce_fields = apply_filters( 'syncly_field_mapping_woocommerce_fields', $woocommerce_fields, $all_meta_keys );
 
 /**
  * Filter: Allow PRO plugin to add BuddyBoss/BuddyPress XProfile fields
  *
  * @param array $buddyboss_fields BuddyBoss XProfile fields (key => label)
  */
-$buddyboss_fields = apply_filters( 'ghl_crm_field_mapping_buddyboss_fields', $buddyboss_fields );
+$buddyboss_fields = apply_filters( 'syncly_field_mapping_buddyboss_fields', $buddyboss_fields );
 
 /**
  * Filter: Allow PRO plugin to add LearnDash course progress fields
  *
  * @param array $learndash_fields LearnDash progress fields (key => label)
  */
-$learndash_fields = apply_filters( 'ghl_crm_field_mapping_learndash_fields', $learndash_fields );
+$learndash_fields = apply_filters( 'syncly_field_mapping_learndash_fields', $learndash_fields );
 
 // Sort custom fields alphabetically
 asort( $custom_user_fields );
@@ -160,7 +160,7 @@ $total_fields = count( $default_wp_fields ) + count( $custom_user_fields ) + cou
 // Get current field mappings
 $saved_mappings = $settings['user_field_mapping'] ?? [];
 ?>
-<div class="wrap ghl-crm-field-mapping">
+<div class="wrap syncly-field-mapping">
 	
 	<?php if ( ! $is_connected ) : ?>
 		<div class="notice notice-warning">
@@ -172,7 +172,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 					esc_html__( 'Please connect to GoHighLevel in %s first.', 'syncly' ),
 					sprintf(
 						'<a href="%s">%s</a>',
-						esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ),
+						esc_url( admin_url( 'admin.php?page=syncly-admin' ) ),
 						esc_html__( 'Dashboard', 'syncly' )
 					)
 				);
@@ -184,8 +184,8 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 
 	<?php
 	// Check scope access for Contacts and Custom Fields
-	\GHL_CRM\API\ScopeChecker::render_scope_notice( 'contacts' );
-	\GHL_CRM\API\ScopeChecker::render_scope_notice( 'custom_fields' );
+	\Syncly\API\ScopeChecker::render_scope_notice( 'contacts' );
+	\Syncly\API\ScopeChecker::render_scope_notice( 'custom_fields' );
 	?>
 
 	<!-- Helpful Information Notice -->
@@ -225,16 +225,18 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 		<?php
 		// Build reload URL — use explicit admin page URL since this template may be
 		// loaded via AJAX (where REQUEST_URI would be admin-ajax.php).
-		$reload_url = add_query_arg( 'refresh_fields', '1', admin_url( 'admin.php?page=ghl-crm-admin' ) ) . '#/field-mapping';
+		$reload_url = add_query_arg( 'refresh_fields', '1', admin_url( 'admin.php?page=syncly-admin' ) ) . '#/field-mapping';
 		?>
 		<a href="<?php echo esc_url( $reload_url ); ?>" class="ghl-button ghl-button-primary" style="text-decoration: none;">
 			<span class="dashicons dashicons-update" style="margin-top: 3px;"></span>
 			<?php esc_html_e( 'Reload Fields from GoHighLevel', 'syncly' ); ?>
 		</a>
-		<button type="button" id="ghl-auto-suggest-mappings" class="ghl-button ghl-button-secondary" <?php echo ! apply_filters( 'ghl_crm_field_suggestions_enabled', false ) ? 'disabled style="opacity: 0.7; cursor: not-allowed;"' : ''; ?>>
+		<?php if ( apply_filters( 'syncly_field_suggestions_enabled', false ) ) : ?>
+		<button type="button" id="ghl-auto-suggest-mappings" class="ghl-button ghl-button-secondary">
 			<span class="dashicons dashicons-lightbulb" style="margin-top: 3px;"></span>
 			<?php esc_html_e( 'Auto-Suggest Mappings', 'syncly' ); ?>
 		</button>
+		<?php endif; ?>
 	</div>
 
 	<?php if ( $refresh_fields ) : ?>
@@ -252,7 +254,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 	<?php endif; ?>
 
 	<form id="ghl-field-mapping-form" method="post" action="">
-		<?php wp_nonce_field( 'ghl_crm_field_mapping', 'ghl_crm_mapping_nonce' ); ?>
+		<?php wp_nonce_field( 'syncly_field_mapping', 'syncly_mapping_nonce' ); ?>
 		
 		<!-- Default WordPress Fields -->
 		<div class="ghl-field-section-header">
@@ -570,46 +572,20 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 		<?php endif; ?>
 
 		<?php if ( ! $is_pro_active && empty( $buddyboss_fields ) && empty( $custom_user_fields ) && empty( $woocommerce_fields ) && empty( $learndash_fields ) ) : ?>
-			<div class="ghl-field-section-header ghl-pro-preview-header">
-				<h3><?php esc_html_e( 'Extended Field Mapping', 'syncly' ); ?></h3>
-				<p class="description"><?php esc_html_e( 'Map WooCommerce, BuddyBoss, LearnDash, and custom user fields with Syncly Pro.', 'syncly' ); ?></p>
-			</div>
-
-			<div class="ghl-field-mapping-pro-preview" aria-label="<?php esc_attr_e( 'Syncly Pro field mapping preview', 'syncly' ); ?>">
-				<div class="ghl-field-mapping-pro-preview__header">
-					<div>
-						<span class="ghl-field-mapping-pro-preview__eyebrow"><?php esc_html_e( 'Syncly Pro', 'syncly' ); ?></span>
-						<h4><?php esc_html_e( 'Advanced field sources', 'syncly' ); ?></h4>
-					</div>
-					<a href="<?php echo esc_url( apply_filters( 'ghl_crm_upgrade_url', 'https://highlevelsync.com/' ) ); ?>" class="ghl-button ghl-button-secondary" target="_blank" rel="noopener noreferrer">
-						<span class="dashicons dashicons-unlock"></span>
-						<?php esc_html_e( 'Learn More', 'syncly' ); ?>
-					</a>
-				</div>
-
-				<div class="ghl-field-mapping-pro-preview__table" aria-hidden="true">
-					<div class="ghl-field-mapping-pro-preview__row ghl-field-mapping-pro-preview__row--head">
-						<span><?php esc_html_e( 'WordPress Field', 'syncly' ); ?></span>
-						<span><?php esc_html_e( 'GoHighLevel Field', 'syncly' ); ?></span>
-						<span><?php esc_html_e( 'Sync Direction', 'syncly' ); ?></span>
-					</div>
-					<div class="ghl-field-mapping-pro-preview__row">
-						<span><strong><?php esc_html_e( 'Billing Phone', 'syncly' ); ?></strong><small><?php esc_html_e( 'WooCommerce', 'syncly' ); ?></small></span>
-						<span class="ghl-field-mapping-pro-preview__select"><?php esc_html_e( 'Phone', 'syncly' ); ?></span>
-						<span class="ghl-field-mapping-pro-preview__select"><?php esc_html_e( 'Both Ways', 'syncly' ); ?></span>
-					</div>
-					<div class="ghl-field-mapping-pro-preview__row">
-						<span><strong><?php esc_html_e( 'Profile Type', 'syncly' ); ?></strong><small><?php esc_html_e( 'BuddyBoss', 'syncly' ); ?></small></span>
-						<span class="ghl-field-mapping-pro-preview__select"><?php esc_html_e( 'Contact Segment', 'syncly' ); ?></span>
-						<span class="ghl-field-mapping-pro-preview__select"><?php esc_html_e( 'To GoHighLevel', 'syncly' ); ?></span>
-					</div>
-					<div class="ghl-field-mapping-pro-preview__row">
-						<span><strong><?php esc_html_e( 'Course Progress', 'syncly' ); ?></strong><small><?php esc_html_e( 'LearnDash', 'syncly' ); ?></small></span>
-						<span class="ghl-field-mapping-pro-preview__select"><?php esc_html_e( 'Progress Score', 'syncly' ); ?></span>
-						<span class="ghl-field-mapping-pro-preview__select"><?php esc_html_e( 'To GoHighLevel', 'syncly' ); ?></span>
-					</div>
-				</div>
-			</div>
+			<?php
+			$notice_title = __( 'Extended Field Mapping', 'syncly' );
+			$description  = __( 'Map WooCommerce, BuddyBoss, LearnDash, and custom user fields with Syncly Pro.', 'syncly' );
+			$features      = [
+				__( 'WooCommerce order and billing fields', 'syncly' ),
+				__( 'BuddyBoss profile fields', 'syncly' ),
+				__( 'LearnDash course and progress fields', 'syncly' ),
+				__( 'Custom user meta fields', 'syncly' ),
+			];
+			$cta_text = __( 'Learn More', 'syncly' );
+			$cta_url  = apply_filters( 'syncly_upgrade_url', 'https://highlevelsync.com/' );
+			$style    = 'banner';
+			include SYNCLY_PATH . 'templates/admin/partials/pro-upgrade-notice.php';
+			?>
 		<?php endif; ?>
 
 			<p class="submit">
@@ -625,12 +601,12 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 
 <?php
 wp_add_inline_script(
-	'ghl-crm-field-mapping-js',
+	'syncly-field-mapping-js',
 	'window.GHL_FIELDS = ' . wp_json_encode( $ghl_fields ) . '; window.GHL_SAVED_MAPPINGS = ' . wp_json_encode( $saved_mappings ) . ';',
 	'before'
 );
 wp_add_inline_style(
-	'ghl-crm-field-mapping-css',
+	'syncly-field-mapping-css',
 	'@keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(359deg); } }'
 );
 ?>

@@ -3,7 +3,7 @@
  *
  * Handles field mapping form submission via AJAX
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Assets/Admin/JS
  */
 
@@ -158,8 +158,8 @@
 
 			// Prepare AJAX data
 			const formData = {
-				action: 'ghl_crm_save_field_mapping',
-				nonce: ghl_crm_field_mapping_js_data.nonce,
+				action: 'syncly_save_field_mapping',
+				nonce: syncly_field_mapping_js_data.nonce,
 				field_mappings: fieldMappings
 			};
 
@@ -220,8 +220,8 @@
 				url: ajaxurl,
 				type: 'POST',
 				data: {
-					action: 'ghl_crm_get_field_suggestions',
-					nonce: ghl_crm_field_mapping_js_data.nonce,
+					action: 'syncly_get_field_suggestions',
+					nonce: syncly_field_mapping_js_data.nonce,
 					wp_fields: wpFields,
 					ghl_fields: ghlFields
 				},
@@ -699,7 +699,7 @@
 		window.GHL_FieldMapping.bindLazyDropdowns();
 
 		// Add data-label attributes for mobile responsive card layout
-		$('.ghl-crm-field-mapping .ghl-table tbody tr').each(function() {
+		$('.syncly-field-mapping .ghl-table tbody tr').each(function() {
 			var $cells = $(this).find('td');
 			$cells.eq(0).attr('data-label', 'WordPress Field');
 			$cells.eq(1).attr('data-label', 'GoHighLevel Field');

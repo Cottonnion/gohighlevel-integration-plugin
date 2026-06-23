@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Core\Settings;
+namespace Syncly\Core\Settings;
 
-use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Sync\TagManager;
+use Syncly\Core\SettingsManager;
+use Syncly\Sync\TagManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -16,8 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Handles cache clearing, settings reset, and manual queue trigger AJAX endpoints.
  * Extracted from SettingsManager to reduce file size and improve cohesion.
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/Core/Settings
+ * @package    Syncly
+ * @subpackage Syncly/Core/Settings
  */
 class MaintenanceHandler {
 
@@ -49,9 +49,9 @@ class MaintenanceHandler {
 	 * @return void
 	 */
 	public function init(): void {
-		add_action( 'wp_ajax_ghl_crm_clear_cache', [ $this, 'clear_cache' ] );
-		add_action( 'wp_ajax_ghl_crm_reset_settings', [ $this, 'reset_settings' ] );
-		add_action( 'wp_ajax_ghl_crm_manual_queue_trigger', [ $this, 'manual_queue_trigger' ] );
+		add_action( 'wp_ajax_syncly_clear_cache', [ $this, 'clear_cache' ] );
+		add_action( 'wp_ajax_syncly_reset_settings', [ $this, 'reset_settings' ] );
+		add_action( 'wp_ajax_syncly_manual_queue_trigger', [ $this, 'manual_queue_trigger' ] );
 	}
 
 	/**
@@ -60,7 +60,7 @@ class MaintenanceHandler {
 	 * @return void
 	 */
 	public function clear_cache(): void {
-		check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce' );
+		check_ajax_referer( 'syncly_settings_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
@@ -131,7 +131,7 @@ class MaintenanceHandler {
 	 * @return void
 	 */
 	public function reset_settings(): void {
-		check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce' );
+		check_ajax_referer( 'syncly_settings_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
@@ -211,7 +211,7 @@ class MaintenanceHandler {
 	 * @return void
 	 */
 	public function manual_queue_trigger(): void {
-		check_ajax_referer( 'ghl_crm_manual_queue', 'nonce' );
+		check_ajax_referer( 'syncly_manual_queue', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
@@ -223,7 +223,7 @@ class MaintenanceHandler {
 		}
 
 		try {
-			$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
+			$queue_manager = \Syncly\Sync\QueueManager::get_instance();
 
 			global $wpdb;
 			$table_name      = $wpdb->prefix . 'ghl_sync_queue';

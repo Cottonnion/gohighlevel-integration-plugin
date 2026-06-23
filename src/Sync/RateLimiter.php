@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Sync;
+namespace Syncly\Sync;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Handles GHL API rate limiting (burst and daily limits)
  * Tracks limits by location ID across multisite installations
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Sync
  */
 class RateLimiter {
@@ -268,7 +268,7 @@ class RateLimiter {
 		return strpos( $message, 'rate limit' ) !== false
 			|| strpos( $message, 'too many requests' ) !== false
 			|| strpos( $message, '429' ) !== false
-			|| ( $e instanceof \GHL_CRM\API\Exceptions\RateLimitException );
+			|| ( $e instanceof \Syncly\API\Exceptions\RateLimitException );
 	}
 
 	/**

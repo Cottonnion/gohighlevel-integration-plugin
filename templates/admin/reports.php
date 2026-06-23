@@ -2,7 +2,7 @@
 /**
  * Reports & Analytics Template
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -10,12 +10,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Hardcoded data for now - will be replaced with real data later
-$report_data         = \GHL_CRM\Core\Dashboard\StatsProvider::get_instance()->get_report_data();
-$oauth_handler       = new \GHL_CRM\API\OAuth\OAuthHandler();
+$report_data         = \Syncly\Core\Dashboard\StatsProvider::get_instance()->get_report_data();
+$oauth_handler       = new \Syncly\API\OAuth\OAuthHandler();
 $oauth_status        = $oauth_handler->get_connection_status();
 $is_oauth_connected  = ! empty( $oauth_status['connected'] );
-$oauth_reconnect_url = admin_url( 'admin.php?page=ghl-crm-oauth-connect' );
-$ghl_settings        = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
+$oauth_reconnect_url = admin_url( 'admin.php?page=syncly-oauth-connect' );
+$ghl_settings        = \Syncly\Core\SettingsManager::get_instance()->get_settings_array();
 $ghl_white_label     = $ghl_settings['ghl_white_label_domain'] ?? '';
 $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/' ) : 'https://app.gohighlevel.com';
 ?>
@@ -115,7 +115,7 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 			</div>
 			<div style="font-size: 32px; font-weight: 700; margin-bottom: 4px; color: #1e293b;"><?php echo number_format( $report_data['contacts']['synced'] ); ?></div>
 			<div style="font-size: 14px; color: #64748b; margin-bottom: 8px;">Synced Contacts</div>
-			<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin#/sync-logs' ) ); ?>" style="font-size: 12px; color: #10b981; text-decoration: none; font-weight: 500;">
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin#/sync-logs' ) ); ?>" style="font-size: 12px; color: #10b981; text-decoration: none; font-weight: 500;">
 				View Sync Details →
 			</a>
 		</div>
@@ -127,7 +127,7 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 		$badge_text    = $has_pending ? esc_html__( 'Action Needed', 'syncly' ) : esc_html__( 'All Clear', 'syncly' );
 		$badge_style   = $has_pending ? 'color: #92400e; background: #fef3c7;' : 'color: #15803d; background: #dcfce7;';
 		$icon_color    = $has_pending ? '#f59e0b' : '#10b981';
-		$link_url      = $has_pending ? admin_url( 'admin.php?page=ghl-crm-admin#/sync-logs/status/failed' ) : admin_url( 'admin.php?page=ghl-crm-admin#/sync-logs' );
+		$link_url      = $has_pending ? admin_url( 'admin.php?page=syncly-admin#/sync-logs/status/failed' ) : admin_url( 'admin.php?page=syncly-admin#/sync-logs' );
 		$link_color    = $has_pending ? '#f59e0b' : '#10b981';
 		$link_text     = $has_pending ? esc_html__( 'Fix Issues →', 'syncly' ) : esc_html__( 'View Sync Logs →', 'syncly' );
 		?>
@@ -155,7 +155,7 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 						<span class="dashicons dashicons-clock" style="color: #6366f1;"></span>
 						Recent Sync Activity
 					</h3>
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin#/sync-logs' ) ); ?>" style="font-size: 13px; color: #6366f1; text-decoration: none; font-weight: 500;">
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin#/sync-logs' ) ); ?>" style="font-size: 13px; color: #6366f1; text-decoration: none; font-weight: 500;">
 						View All →
 					</a>
 				</div>
@@ -186,7 +186,7 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 						<span class="dashicons dashicons-admin-plugins" style="color: #6366f1;"></span>
 						Active Integrations
 					</h3>
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin#/integrations' ) ); ?>" style="font-size: 13px; color: #6366f1; text-decoration: none; font-weight: 500;">
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin#/integrations' ) ); ?>" style="font-size: 13px; color: #6366f1; text-decoration: none; font-weight: 500;">
 						Manage →
 					</a>
 				</div>
@@ -248,23 +248,23 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 					Quick Links
 				</h3>
 				<div style="display: flex; flex-direction: column; gap: 8px;">
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin#/settings' ) ); ?>" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #f1f5f9;">
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin#/settings' ) ); ?>" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #f1f5f9;">
 						<span class="dashicons dashicons-admin-settings" style="color: #6366f1; font-size: 16px;"></span>
 						Plugin Settings
 					</a>
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin#/field-mapping' ) ); ?>" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #f1f5f9;">
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin#/field-mapping' ) ); ?>" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #f1f5f9;">
 						<span class="dashicons dashicons-editor-table" style="color: #6366f1; font-size: 16px;"></span>
 						Field Mapping
 					</a>
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin#/custom-objects' ) ); ?>" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #f1f5f9;">
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin#/custom-objects' ) ); ?>" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #f1f5f9;">
 						<span class="dashicons dashicons-database" style="color: #6366f1; font-size: 16px;"></span>
 						Custom Objects
 					</a>
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin#/sync-logs/status/success' ) ); ?>" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #f1f5f9;">
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin#/sync-logs/status/success' ) ); ?>" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #f1f5f9;">
 						<span class="dashicons dashicons-yes-alt" style="color: #10b981; font-size: 16px;"></span>
 						View Successful Syncs
 					</a>
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin#/sync-logs/status/failed' ) ); ?>" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #f1f5f9;">
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin#/sync-logs/status/failed' ) ); ?>" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #f1f5f9;">
 						<span class="dashicons dashicons-warning" style="color: #f59e0b; font-size: 16px;"></span>
 						View Failed Syncs
 					</a>
@@ -277,7 +277,7 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 
 			<!-- GoHighLevel Quick Links -->
 			<?php
-			$ghl_settings    = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
+			$ghl_settings    = \Syncly\Core\SettingsManager::get_instance()->get_settings_array();
 			$ghl_white_label = $ghl_settings['ghl_white_label_domain'] ?? '';
 			$ghl_base_domain = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/' ) : 'https://app.gohighlevel.com';
 			$ghl_location_id = $ghl_settings['location_id'] ?? ( $ghl_settings['oauth_location_id'] ?? '' );

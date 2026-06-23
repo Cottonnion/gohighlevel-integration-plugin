@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Sync;
+namespace Syncly\Sync;
 
-use GHL_CRM\API\Client\Client;
-use GHL_CRM\Core\SettingsManager;
+use Syncly\API\Client\Client;
+use Syncly\Core\SettingsManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - Normalizing mixed tag input (IDs, names, pairs) into canonical form
  * - Storing/retrieving per-user contact IDs and tags in location-scoped meta
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Core
  */
 class TagManager {
@@ -893,7 +893,7 @@ class TagManager {
 	/**
 	 * Persist GHL tag IDs for a user after normalization.
 	 *
-	 * Fires the 'ghl_crm_user_tags_updated' action when the stored tags
+	 * Fires the 'syncly_user_tags_updated' action when the stored tags
 	 * actually change, allowing integrations (e.g. LearnDash auto-enrollment)
 	 * to react.
 	 *
@@ -923,7 +923,7 @@ class TagManager {
 			 * @param int   $user_id WordPress user ID.
 			 * @param array $ids     Normalized tag IDs that were stored.
 			 */
-			do_action( 'ghl_crm_user_tags_updated', $user_id, $ids );
+			do_action( 'syncly_user_tags_updated', $user_id, $ids );
 		}
 
 		return $ids;

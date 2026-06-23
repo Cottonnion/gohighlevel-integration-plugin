@@ -1,7 +1,7 @@
 /**
  * Integrations Page JavaScript
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Assets/Admin/JS
  */
 
@@ -125,7 +125,7 @@
         return;
       }
 
-      var allTags = (typeof ghl_crm_integrations_js_data !== "undefined" && ghl_crm_integrations_js_data.tags) ? ghl_crm_integrations_js_data.tags : [];
+      var allTags = (typeof syncly_integrations_js_data !== "undefined" && syncly_integrations_js_data.tags) ? syncly_integrations_js_data.tags : [];
 
       // Initialize each Select2 dropdown
       $tagsSelects.each(function () {
@@ -227,8 +227,8 @@
      */
     gatherFormData() {
       const data = {
-        action: "ghl_crm_save_integrations",
-        nonce: ghl_crm_integrations_js_data.nonce,
+        action: "syncly_save_integrations",
+        nonce: syncly_integrations_js_data.nonce,
       };
 
       // WooCommerce Settings
@@ -437,7 +437,7 @@
 
       // Make AJAX request
       $.ajax({
-        url: ghl_crm_integrations_js_data.ajaxUrl,
+        url: syncly_integrations_js_data.ajaxUrl,
         type: "POST",
         data: formData,
         success: (response) => {
@@ -510,7 +510,7 @@
           console.error("XHR response:", xhr.responseText);
 
           let errorMessage =
-            ghl_crm_integrations_js_data.i18n.saveError ||
+            syncly_integrations_js_data.i18n.saveError ||
             "An error occurred while saving settings.";
 
           // Try to parse JSON response for error message
@@ -847,12 +847,12 @@
         width: "100%",
         scrollAfterSelect: false,
         ajax: {
-          url: ghl_crm_integrations_js_data.ajaxUrl,
+          url: syncly_integrations_js_data.ajaxUrl,
           dataType: "json",
           delay: 250,
           data: (params) => ({
             action: "ghl_get_pipelines",
-            nonce: ghl_crm_integrations_js_data.nonce,
+            nonce: syncly_integrations_js_data.nonce,
             search: params.term,
             page: params.page || 1,
           }),
@@ -940,12 +940,12 @@
      */
     loadPipelineStages(pipelineId, $stageSelects) {
       $.ajax({
-        url: ghl_crm_integrations_js_data.ajaxUrl,
+        url: syncly_integrations_js_data.ajaxUrl,
         type: "POST",
         dataType: "json",
         data: {
           action: "ghl_get_pipelines",
-          nonce: ghl_crm_integrations_js_data.nonce,
+          nonce: syncly_integrations_js_data.nonce,
           page: 1,
         },
         success: (response) => {
@@ -985,12 +985,12 @@
         closeOnSelect: false,
         scrollAfterSelect: false,
         ajax: {
-          url: ghl_crm_integrations_js_data.ajaxUrl,
+          url: syncly_integrations_js_data.ajaxUrl,
           dataType: "json",
           delay: 250,
           data: (params) => ({
             action: "ghl_search_products",
-            nonce: ghl_crm_integrations_js_data.nonce,
+            nonce: syncly_integrations_js_data.nonce,
             search: params.term,
             page: params.page || 1,
           }),

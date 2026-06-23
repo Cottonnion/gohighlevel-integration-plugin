@@ -2,7 +2,7 @@
  * Universal Tooltip System - tooltip-system.js
  * A global tooltip system that creates tooltips for any element with data-ghl-tooltip attribute
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Assets/Admin/JS
  *
  * Usage: <span data-ghl-tooltip="This is a tooltip explanation">?</span>

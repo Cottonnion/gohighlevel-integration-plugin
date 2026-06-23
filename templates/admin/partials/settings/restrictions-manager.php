@@ -5,15 +5,15 @@
  * Content restriction settings tab
  * Controls membership access control based on GHL tags
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/templates/admin/partials/settings
+ * @package    Syncly
+ * @subpackage Syncly/templates/admin/partials/settings
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
 
 // Get restriction settings with defaults
@@ -28,13 +28,13 @@ $allow_admins             = $settings['restrictions_allow_admins'] ?? true;
 $hide_restricted_archives = $settings['restrictions_hide_archives'] ?? false;
 $hide_from_rest_api       = $settings['restrictions_hide_rest_api'] ?? false;
 $allowed_tags             = $settings['restrictions_allowed_tags'] ?? [];
-$is_pro_active            = apply_filters( 'ghl_crm_archive_protection_enabled', false );
-$overrides_pro_active     = apply_filters( 'ghl_crm_restriction_overrides_enabled', false );
-$upgrade_url              = apply_filters( 'ghl_crm_upgrade_url', 'https://highlevelsync.com/' );
+$is_pro_active            = apply_filters( 'syncly_archive_protection_enabled', false );
+$overrides_pro_active     = apply_filters( 'syncly_restriction_overrides_enabled', false );
+$upgrade_url              = apply_filters( 'syncly_upgrade_url', 'https://highlevelsync.com/' );
 ?>
 
 <div class="ghl-settings-wrapper">
-	<?php wp_nonce_field( 'ghl_crm_settings_nonce', 'ghl_crm_nonce' ); ?>
+	<?php wp_nonce_field( 'syncly_settings_nonce', 'syncly_nonce' ); ?>
 	
 	<!-- Master Toggle -->
 	<div class="ghl-settings-section ghl-settings-card">
@@ -372,7 +372,6 @@ $upgrade_url              = apply_filters( 'ghl_crm_upgrade_url', 'https://highl
 									<div><strong><?php esc_html_e( 'Global bypass tags', 'syncly' ); ?></strong><p class="description" style="margin: 4px 0 0;"><?php esc_html_e( 'Allow selected GoHighLevel tags to bypass all content restrictions.', 'syncly' ); ?></p></div>
 									<a href="<?php echo esc_url( $upgrade_url ); ?>" class="ghl-button ghl-button-secondary" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Learn More', 'syncly' ); ?></a>
 								</div>
-								<div aria-hidden="true" style="display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 6px;"><span style="padding: 5px 9px; border-radius: 999px; background: #e0f2fe; color: #075985; font-size: 12px; font-weight: 600;">admin-access</span><span style="padding: 5px 9px; border-radius: 999px; background: #dcfce7; color: #166534; font-size: 12px; font-weight: 600;">vip-member</span></div>
 							</div>
 						<?php endif; ?>
 					</td>

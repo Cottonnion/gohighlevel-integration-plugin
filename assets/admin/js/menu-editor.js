@@ -3,8 +3,8 @@
  *
  * Handles conditional menu visibility fields in WordPress menu editor
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/assets/admin/js
+ * @package    Syncly
+ * @subpackage Syncly/assets/admin/js
  */
 
 (function ($) {

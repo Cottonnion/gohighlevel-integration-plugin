@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
-namespace GHL_CRM\Integrations\Users;
+namespace Syncly\Integrations\Users;
 
-use GHL_CRM\API\Client\Client;
-use GHL_CRM\API\Resources\ContactResource;
-use GHL_CRM\Core\SettingsManager;
+use Syncly\API\Client\Client;
+use Syncly\API\Resources\ContactResource;
+use Syncly\Core\SettingsManager;
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Listens to WordPress user events and triggers sync to GoHighLevel
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Integrations/Users
  */
 class UserHooks {
@@ -58,7 +58,7 @@ class UserHooks {
 		$this->register_hooks();
 
 		// Re-register hooks when connection status changes (OAuth completion, manual connection, etc.)
-		add_action( 'ghl_crm_connection_status_changed', [ $this, 'register_hooks' ] );
+		add_action( 'syncly_connection_status_changed', [ $this, 'register_hooks' ] );
 	}
 	/**
 	 * Register WordPress hooks based on settings
@@ -69,7 +69,7 @@ class UserHooks {
 		$settings = $this->settings_manager->get_settings_array();
 
 		// Remove any previously registered hooks to prevent duplicates
-		// (this method may fire again on ghl_crm_connection_status_changed).
+		// (this method may fire again on syncly_connection_status_changed).
 		$this->remove_hooks();
 
 		// Check if connection is verified first
@@ -136,7 +136,7 @@ class UserHooks {
 	 *
 	 * Called at the top of register_hooks() to prevent duplicate callbacks
 	 * when the method is invoked more than once in the same request (e.g.
-	 * after ghl_crm_connection_status_changed fires).
+	 * after syncly_connection_status_changed fires).
 	 *
 	 * @return void
 	 */
@@ -206,7 +206,7 @@ class UserHooks {
 		}
 
 		// Queue for async processing
-		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
+		$queue_manager = \Syncly\Sync\QueueManager::get_instance();
 
 		$queue_id = $queue_manager->add_to_queue(
 			'user',
@@ -344,7 +344,7 @@ class UserHooks {
 		$existing_tags = [];
 		// Get contact ID for current location
 		$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
-		$contact_id  = \GHL_CRM\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+		$contact_id  = \Syncly\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 
 		// If this user just came from an inbound webhook, skip outbound profile sync to avoid loops
 		if ( $contact_id ) {
@@ -357,10 +357,10 @@ class UserHooks {
 
 		// Use locally-cached tags instead of a synchronous API call
 		// that would block the profile-save request.
-		$profile_tags = \GHL_CRM\Sync\TagManager::get_instance()->get_user_tag_ids( $user_id );
+		$profile_tags = \Syncly\Sync\TagManager::get_instance()->get_user_tag_ids( $user_id );
 		if ( is_array( $profile_tags ) ) {
 			// Profile tags are now stored as IDs - convert to names for payload
-			$tag_manager            = \GHL_CRM\Sync\TagManager::get_instance();
+			$tag_manager            = \Syncly\Sync\TagManager::get_instance();
 			$sanitized_profile_tags = array_map( 'sanitize_text_field', $profile_tags );
 			$tag_ids                = array_filter(
 				$sanitized_profile_tags,
@@ -421,7 +421,7 @@ class UserHooks {
 			$contact_data['tags'] = array_values( $all_tags );
 		}
 
-		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
+		$queue_manager = \Syncly\Sync\QueueManager::get_instance();
 		$queue_id      = $queue_manager->add_to_queue(
 			'user',
 			$user_id,
@@ -430,7 +430,7 @@ class UserHooks {
 		);
 
 
-		do_action( 'ghl_crm_sync_parent_tags_to_children', $user_id );
+		do_action( 'syncly_sync_parent_tags_to_children', $user_id );
 
 		return false !== $queue_id;
 	}
@@ -472,7 +472,7 @@ class UserHooks {
 		$location_id = $settings['location_id'] ?? ( $settings['oauth_location_id'] ?? '' );
 		$contact_id  = '';
 		if ( ! empty( $location_id ) ) {
-			$contact_id = \GHL_CRM\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+			$contact_id = \Syncly\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 		}
 
 		// Queue deletion with settings
@@ -481,7 +481,7 @@ class UserHooks {
 			'contact_id' => $contact_id ?: '',
 			'delete'     => ! empty( $settings['delete_contact_on_user_delete'] ),
 		];
-		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
+		$queue_manager = \Syncly\Sync\QueueManager::get_instance();
 		$queue_manager->add_to_queue(
 			'user',
 			$user_id,
@@ -515,7 +515,7 @@ class UserHooks {
 		$location_id = $settings['location_id'] ?? ( $settings['oauth_location_id'] ?? '' );
 		$contact_id  = '';
 		if ( ! empty( $location_id ) ) {
-			$contact_id = \GHL_CRM\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+			$contact_id = \Syncly\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 		}
 
 		// Queue deletion with settings (same as delete_user)
@@ -526,7 +526,7 @@ class UserHooks {
 			'blog_id'    => $blog_id, // Track which site triggered this
 		];
 
-		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
+		$queue_manager = \Syncly\Sync\QueueManager::get_instance();
 		$queue_manager->add_to_queue(
 			'user',
 			$user_id,
@@ -562,7 +562,7 @@ class UserHooks {
 		 * @param int      $login_count Total logins recorded so far.
 		 * @param int      $timestamp   Unix timestamp of this login.
 		 */
-		do_action( 'ghl_crm_user_login_meta_updated', $user, $count, $now );
+		do_action( 'syncly_user_login_meta_updated', $user, $count, $now );
 
 		// Throttle GHL API sync: Once per hour to avoid spam.
 		$last_login_key = "ghl_last_login_{$user->ID}";
@@ -579,7 +579,7 @@ class UserHooks {
 			'last_login'  => current_time( 'mysql' ),
 			'login_count' => $count,
 		];
-		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
+		$queue_manager = \Syncly\Sync\QueueManager::get_instance();
 		$queue_manager->add_to_queue(
 			'user',
 			$user->ID,
@@ -660,7 +660,7 @@ class UserHooks {
 			// Allow integrations to resolve virtual/computed field values
 			// (e.g. LearnDash progress extracted from serialized meta).
 			if ( empty( $value ) ) {
-				$value = apply_filters( 'ghl_crm_resolve_field_value', $value, $wp_field, $user->ID );
+				$value = apply_filters( 'syncly_resolve_field_value', $value, $wp_field, $user->ID );
 			}
 
 			// Only add non-empty values
@@ -711,7 +711,7 @@ class UserHooks {
 		if ( ! empty( $tags ) && is_array( $tags ) ) {
 			try {
 				// Fetch existing tags to merge (don't overwrite)
-				$client          = \GHL_CRM\API\Client\Client::get_instance();
+				$client          = \Syncly\API\Client\Client::get_instance();
 				$contact_details = $client->get( "contacts/{$contact_id}" );
 
 				$existing_tags = [];

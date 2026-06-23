@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Core\Settings;
+namespace Syncly\Core\Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Handles saving and retrieving settings from the database
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Core\Settings
  */
 class SettingsRepository {
@@ -21,7 +21,7 @@ class SettingsRepository {
 	 *
 	 * @var string
 	 */
-	private const OPTION_NAME = 'ghl_crm_settings';
+	private const OPTION_NAME = 'syncly_settings';
 
 	/**
 	 * Sensitive keys that should be encrypted at rest.
@@ -39,14 +39,14 @@ class SettingsRepository {
 	 *
 	 * @var string
 	 */
-	private const NETWORK_OPTION_NAME = 'ghl_crm_network_settings';
+	private const NETWORK_OPTION_NAME = 'syncly_network_settings';
 
 	/**
 	 * Verification option name
 	 *
 	 * @var string
 	 */
-	private const VERIFICATION_OPTION_NAME = 'ghl_crm_connection_verified';
+	private const VERIFICATION_OPTION_NAME = 'syncly_connection_verified';
 
 	/**
 	 * Singleton instance

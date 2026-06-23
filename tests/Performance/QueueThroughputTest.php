@@ -14,15 +14,15 @@
  *
  * Results table printed to stdout at the end of each test.
  *
- * @package GHL_CRM_Integration\Tests\Performance
+ * @package Syncly\Tests\Performance
  */
 
 declare(strict_types=1);
 
-namespace GHL_CRM\Tests\Performance;
+namespace Syncly\Tests\Performance;
 
-use GHL_CRM\Sync\QueueManager;
-use GHL_CRM\Tests\TestCase;
+use Syncly\Sync\QueueManager;
+use Syncly\Tests\TestCase;
 use Brain\Monkey\Functions;
 use Mockery;
 
@@ -131,17 +131,17 @@ class QueueThroughputTest extends TestCase {
 		$prop->setValue( null, $inst );
 
 		// Mock helpers.
-		$rate_limiter = Mockery::mock( 'GHL_CRM\\Sync\\RateLimiter' );
+		$rate_limiter = Mockery::mock( 'Syncly\\Sync\\RateLimiter' );
 		$rate_limiter->shouldReceive( 'check_limits' )->andReturn( true )->byDefault();
 		$rate_limiter->shouldReceive( 'track_request' )->byDefault();
 		$rate_limiter->shouldReceive( 'is_rate_limit_error' )->andReturn( false )->byDefault();
 		$rate_limiter->shouldReceive( 'get_status' )->andReturn( [] )->byDefault();
 
-		$contact_cache = Mockery::mock( 'GHL_CRM\\Sync\\ContactCache' );
+		$contact_cache = Mockery::mock( 'Syncly\\Sync\\ContactCache' );
 
-		$this->processor = Mockery::mock( 'GHL_CRM\\Sync\\QueueProcessor' );
+		$this->processor = Mockery::mock( 'Syncly\\Sync\\QueueProcessor' );
 
-		$logger = Mockery::mock( 'GHL_CRM\\Sync\\QueueLogger' );
+		$logger = Mockery::mock( 'Syncly\\Sync\\QueueLogger' );
 		$logger->shouldReceive( 'log_event' )->byDefault();
 
 		$this->inject( $inst, 'rate_limiter', $rate_limiter );
@@ -150,7 +150,7 @@ class QueueThroughputTest extends TestCase {
 		$this->inject( $inst, 'logger', $logger );
 
 		// SettingsManager mock.
-		$sm = Mockery::mock( \GHL_CRM\Core\SettingsManager::class );
+		$sm = Mockery::mock( \Syncly\Core\SettingsManager::class );
 		$sm->shouldReceive( 'get_setting' )->andReturnUsing( function ( $key = null, $default = null ) {
 			return match ( $key ) {
 				'location_id' => 'loc_bench',
@@ -160,17 +160,17 @@ class QueueThroughputTest extends TestCase {
 		} )->byDefault();
 		$sm->shouldReceive( 'is_connection_verified' )->andReturn( true )->byDefault();
 
-		$sm_ref  = new \ReflectionClass( \GHL_CRM\Core\SettingsManager::class );
+		$sm_ref  = new \ReflectionClass( \Syncly\Core\SettingsManager::class );
 		$sm_prop = $sm_ref->getProperty( 'instance' );
 		$sm_prop->setAccessible( true );
 		$sm_prop->setValue( null, $sm );
 
 		// NotificationManager mock.
-		$nm = Mockery::mock( \GHL_CRM\Admin\NotificationManager::class );
+		$nm = Mockery::mock( \Syncly\Admin\NotificationManager::class );
 		$nm->shouldReceive( 'send_queue_backlog' )->byDefault();
 		$nm->shouldReceive( 'send_sync_error' )->byDefault();
 
-		$nm_ref  = new \ReflectionClass( \GHL_CRM\Admin\NotificationManager::class );
+		$nm_ref  = new \ReflectionClass( \Syncly\Admin\NotificationManager::class );
 		$nm_prop = $nm_ref->getProperty( 'instance' );
 		$nm_prop->setAccessible( true );
 		$nm_prop->setValue( null, $nm );
@@ -180,8 +180,8 @@ class QueueThroughputTest extends TestCase {
 
 	protected function tearDown(): void {
 		$this->resetSingleton( QueueManager::class );
-		$this->resetSingleton( \GHL_CRM\Core\SettingsManager::class );
-		$this->resetSingleton( \GHL_CRM\Admin\NotificationManager::class );
+		$this->resetSingleton( \Syncly\Core\SettingsManager::class );
+		$this->resetSingleton( \Syncly\Admin\NotificationManager::class );
 		unset( $GLOBALS['wpdb'] );
 		parent::tearDown();
 	}

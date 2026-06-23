@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\API\Exceptions;
+namespace Syncly\API\Exceptions;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Thrown when API rate limit is exceeded
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage API/Exceptions
  */
 class RateLimitException extends ApiException {

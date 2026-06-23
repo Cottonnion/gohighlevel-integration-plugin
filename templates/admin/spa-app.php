@@ -5,8 +5,8 @@
  * This template provides the container for the Single Page Application.
  * All content is loaded dynamically via JavaScript and AJAX.
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/templates/admin
+ * @package    Syncly
+ * @subpackage Syncly/templates/admin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -14,8 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 ?>
 
-<div class="wrap ghl-crm-wrap">
-	<!-- <h1 class="wp-heading-inline"><?php esc_html_e( 'GoHighLevel CRM Integration', 'syncly' ); ?></h1> -->
+<div class="wrap syncly-wrap">
 	<hr class="wp-header-end">
 
 	<!-- Horizontal Header Navigation -->
@@ -56,7 +55,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			 *
 			 * @param array $nav_tabs Array of navigation tabs with keys: route => array(label, icon)
 			 */
-			$nav_tabs = apply_filters( 'ghl_crm_admin_nav_tabs', $nav_tabs );
+			$nav_tabs = apply_filters( 'syncly_admin_nav_tabs', $nav_tabs );
 
 			// Render navigation tabs
 			foreach ( $nav_tabs as $route => $tab_data ) {
@@ -78,12 +77,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 	<!-- Upgrade Notice (dismissible banner) -->
 	<?php
-	$admin_notices = \GHL_CRM\Core\AdminNotices::get_instance();
+	$admin_notices = \Syncly\Core\AdminNotices::get_instance();
 	$admin_notices->render_upgrade_notice();
 	?>
 
 	<!-- SPA Application Container -->
-	<div id="ghl-crm-app" class="ghl-spa-container">
+	<div id="syncly-app" class="ghl-spa-container">
 		<div class="ghl-spa-loading">
 			<div class="ghl-loading-spinner"></div>
 			<p><?php esc_html_e( 'Loading...', 'syncly' ); ?></p>
@@ -93,18 +92,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 <?php
 wp_add_inline_script(
-	'ghl-crm-spa-js',
-	'var ghlCrmSpaConfig = ' . wp_json_encode(
+	'syncly-spa-js',
+	'var synclySpaConfig = ' . wp_json_encode(
 		[
 			'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
-			'nonce'    => wp_create_nonce( 'ghl_crm_spa_nonce' ),
+			'nonce'    => wp_create_nonce( 'syncly_spa_nonce' ),
 			'strings'  => [
 				'loading'  => __( 'Loading...', 'syncly' ),
 				'error'    => __( 'Error loading view. Please refresh the page.', 'syncly' ),
 				'notFound' => __( 'Page not found.', 'syncly' ),
 			],
 			'settings' => [
-				'tabs'   => \GHL_CRM\Core\MenuManager::get_valid_settings_tabs(),
+				'tabs'   => \Syncly\Core\MenuManager::get_valid_settings_tabs(),
 				'routes' => [
 					'dashboard'    => 'dashboard',
 					'settings'     => 'settings',

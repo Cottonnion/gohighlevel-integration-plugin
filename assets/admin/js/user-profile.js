@@ -97,7 +97,7 @@
         url: ghlUserProfile.ajaxUrl,
         type: "POST",
         data: {
-          action: "ghl_crm_sync_user_now",
+          action: "syncly_sync_user_now",
           nonce: ghlUserProfile.nonce,
           user_id: userId,
         },
@@ -182,7 +182,7 @@
           url: ghlUserProfile.ajaxUrl,
           type: "POST",
           data: {
-            action: "ghl_crm_refresh_from_ghl",
+            action: "syncly_refresh_from_ghl",
             nonce: ghlUserProfile.nonce,
             user_id: userId,
             contact_id: contactId,
@@ -317,7 +317,7 @@
           url: ghlUserProfile.ajaxUrl,
           type: "POST",
           data: {
-            action: "ghl_crm_sync_user_now",
+            action: "syncly_sync_user_now",
             nonce: ghlUserProfile.nonce,
             user_id: userId,
           },
@@ -384,7 +384,7 @@
           url: ghlUserProfile.ajaxUrl,
           type: "POST",
           data: {
-            action: "ghl_crm_generate_login_link",
+            action: "syncly_generate_login_link",
             user_id: userId,
             nonce: ghlUserProfile.nonce,
           },

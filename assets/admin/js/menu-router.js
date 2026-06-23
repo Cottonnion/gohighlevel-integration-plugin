@@ -3,8 +3,8 @@
  *
  * Manages active menu state based on SPA hash routing
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/assets/admin/js
+ * @package    Syncly
+ * @subpackage Syncly/assets/admin/js
  */
 
 (function ($) {
@@ -45,7 +45,7 @@
     buildMenuMap() {
       // Find all submenu items under our plugin menu (sidebar)
       const $submenuItems = $(
-        "#adminmenu .toplevel_page_ghl-crm-admin .wp-submenu a",
+        "#adminmenu .toplevel_page_syncly-admin .wp-submenu a",
       );
 
       $submenuItems.each((index, element) => {
@@ -53,7 +53,7 @@
         const href = $item.attr("href");
 
         if (href) {
-          // Extract the hash from href (e.g., "admin.php?page=ghl-crm-admin#/settings" -> "settings")
+          // Extract the hash from href (e.g., "admin.php?page=syncly-admin#/settings" -> "settings")
           const hashMatch = href.match(/#\/([\w-]*)/);
 
           if (hashMatch) {
@@ -94,8 +94,8 @@
 
       // Check if this is a settings tab - if so, treat as settings view
       const settingsTabs =
-        typeof ghlCrmSpaConfig !== "undefined" && ghlCrmSpaConfig.settings
-          ? ghlCrmSpaConfig.settings.tabs
+        typeof synclySpaConfig !== "undefined" && synclySpaConfig.settings
+          ? synclySpaConfig.settings.tabs
           : [
               "general",
               "api",
@@ -161,7 +161,7 @@
      * Ensure the parent menu item is expanded (wp-has-current-submenu class)
      */
     ensureParentExpanded() {
-      const $parentMenuItem = $("#adminmenu .toplevel_page_ghl-crm-admin");
+      const $parentMenuItem = $("#adminmenu .toplevel_page_syncly-admin");
 
       // Add classes to ensure submenu stays open
       $parentMenuItem.addClass("wp-has-current-submenu wp-menu-open");
@@ -194,7 +194,7 @@
   // Initialize menu router when document is ready
   $(document).ready(function () {
     // Only initialize if we're on the plugin admin page
-    if ($("#adminmenu .toplevel_page_ghl-crm-admin").length > 0) {
+    if ($("#adminmenu .toplevel_page_syncly-admin").length > 0) {
       new GHLMenuRouter();
     }
   });

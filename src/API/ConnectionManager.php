@@ -4,12 +4,12 @@
  *
  * Handles GoHighLevel API connection management, testing, and validation
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
-namespace GHL_CRM\API;
+namespace Syncly\API;
 
-use GHL_CRM\Core\Settings\SettingsRepository;
+use Syncly\Core\Settings\SettingsRepository;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -217,7 +217,7 @@ class ConnectionManager {
 
 		if ( $result ) {
 			// Trigger action to notify other components that connection status has changed
-			do_action( 'ghl_crm_connection_status_changed', true, 'manual' );
+			do_action( 'syncly_connection_status_changed', true, 'manual' );
 		}
 
 		return $result;
@@ -297,7 +297,7 @@ class ConnectionManager {
 			$this->mark_connection_unverified( $site_id );
 
 			// Trigger disconnection action
-			do_action( 'ghl_crm_connection_status_changed', false, 'disconnected' );
+			do_action( 'syncly_connection_status_changed', false, 'disconnected' );
 
 			return true;
 		}

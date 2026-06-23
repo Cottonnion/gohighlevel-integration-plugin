@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Admin\CustomObjects;
+namespace Syncly\Admin\CustomObjects;
 
-use GHL_CRM\Core\SettingsManager;
+use Syncly\Core\SettingsManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,8 +15,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Handles all Custom Object mapping CRUD and schema retrieval AJAX endpoints.
  * Extracted from SettingsManager to reduce file size and improve cohesion.
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/Core/Settings
+ * @package    Syncly
+ * @subpackage Syncly/Core/Settings
  */
 class CustomObjectAjaxHandler {
 
@@ -48,13 +48,13 @@ class CustomObjectAjaxHandler {
 	 * @return void
 	 */
 	public function init(): void {
-		add_action( 'wp_ajax_ghl_crm_get_custom_objects', [ $this, 'get_custom_objects' ] );
-		add_action( 'wp_ajax_ghl_crm_get_schema_details', [ $this, 'get_schema_details' ] );
-		add_action( 'wp_ajax_ghl_crm_get_post_types', [ $this, 'get_post_types' ] );
-		add_action( 'wp_ajax_ghl_crm_get_cpt_fields', [ $this, 'get_cpt_fields' ] );
-		add_action( 'wp_ajax_ghl_crm_save_mapping', [ $this, 'save_mapping' ] );
-		add_action( 'wp_ajax_ghl_crm_get_mappings', [ $this, 'get_mappings' ] );
-		add_action( 'wp_ajax_ghl_crm_delete_mapping', [ $this, 'delete_mapping' ] );
+		add_action( 'wp_ajax_syncly_get_custom_objects', [ $this, 'get_custom_objects' ] );
+		add_action( 'wp_ajax_syncly_get_schema_details', [ $this, 'get_schema_details' ] );
+		add_action( 'wp_ajax_syncly_get_post_types', [ $this, 'get_post_types' ] );
+		add_action( 'wp_ajax_syncly_get_cpt_fields', [ $this, 'get_cpt_fields' ] );
+		add_action( 'wp_ajax_syncly_save_mapping', [ $this, 'save_mapping' ] );
+		add_action( 'wp_ajax_syncly_get_mappings', [ $this, 'get_mappings' ] );
+		add_action( 'wp_ajax_syncly_delete_mapping', [ $this, 'delete_mapping' ] );
 	}
 
 	/**
@@ -63,7 +63,7 @@ class CustomObjectAjaxHandler {
 	 * @return void
 	 */
 	public function get_custom_objects(): void {
-		check_ajax_referer( 'ghl_crm_custom_objects', 'nonce' );
+		check_ajax_referer( 'syncly_custom_objects', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
@@ -74,7 +74,7 @@ class CustomObjectAjaxHandler {
 			);
 		}
 
-		$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
+		$oauth_handler = new \Syncly\API\OAuth\OAuthHandler();
 		$oauth_status  = $oauth_handler->get_connection_status();
 		$settings      = SettingsManager::get_instance()->get_settings_array();
 		$is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
@@ -91,8 +91,8 @@ class CustomObjectAjaxHandler {
 		$force_refresh = isset( $_POST['force_refresh'] ) && '1' === sanitize_key( wp_unslash( $_POST['force_refresh'] ) );
 
 		try {
-			$custom_object_resource = new \GHL_CRM\API\Resources\CustomObjectResource(
-				\GHL_CRM\API\Client\Client::get_instance()
+			$custom_object_resource = new \Syncly\API\Resources\CustomObjectResource(
+				\Syncly\API\Client\Client::get_instance()
 			);
 
 			$reflection        = new \ReflectionClass( $custom_object_resource );
@@ -130,7 +130,7 @@ class CustomObjectAjaxHandler {
 	 * @return void
 	 */
 	public function get_schema_details(): void {
-		check_ajax_referer( 'ghl_crm_custom_objects', 'nonce' );
+		check_ajax_referer( 'syncly_custom_objects', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
@@ -153,8 +153,8 @@ class CustomObjectAjaxHandler {
 		}
 
 		try {
-			$client                 = \GHL_CRM\API\Client\Client::get_instance();
-			$custom_object_resource = new \GHL_CRM\API\Resources\CustomObjectResource( $client );
+			$client                 = \Syncly\API\Client\Client::get_instance();
+			$custom_object_resource = new \Syncly\API\Resources\CustomObjectResource( $client );
 
 			$schema = $custom_object_resource->get_schema( $schema_id );
 
@@ -257,7 +257,7 @@ class CustomObjectAjaxHandler {
 	 * @return void
 	 */
 	public function get_post_types(): void {
-		check_ajax_referer( 'ghl_crm_mappings', 'nonce' );
+		check_ajax_referer( 'syncly_mappings', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
@@ -281,7 +281,7 @@ class CustomObjectAjaxHandler {
 	 * @return void
 	 */
 	public function get_cpt_fields(): void {
-		check_ajax_referer( 'ghl_crm_mappings', 'nonce' );
+		check_ajax_referer( 'syncly_mappings', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
@@ -293,7 +293,7 @@ class CustomObjectAjaxHandler {
 			wp_send_json_error( [ 'message' => __( 'Post type is required', 'syncly' ) ], 400 );
 		}
 
-		$fields = apply_filters( 'ghl_crm_cpt_fields_for_post_type', null, $post_type );
+		$fields = apply_filters( 'syncly_cpt_fields_for_post_type', null, $post_type );
 
 		if ( ! is_array( $fields ) ) {
 			wp_send_json_error( [ 'message' => __( 'Custom object field discovery is unavailable.', 'syncly' ) ], 404 );
@@ -308,7 +308,7 @@ class CustomObjectAjaxHandler {
 	 * @return void
 	 */
 	public function save_mapping(): void {
-		check_ajax_referer( 'ghl_crm_mappings', 'nonce' );
+		check_ajax_referer( 'syncly_mappings', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
@@ -382,7 +382,7 @@ class CustomObjectAjaxHandler {
 		}
 
 		// Get existing mappings.
-		$mappings = $settings_manager->get_option( 'ghl_crm_custom_object_mappings', [] );
+		$mappings = $settings_manager->get_option( 'syncly_custom_object_mappings', [] );
 
 		// Update or add mapping.
 		$found = false;
@@ -398,7 +398,7 @@ class CustomObjectAjaxHandler {
 			$mappings[] = $mapping_data;
 		}
 
-		$settings_manager->update_option( 'ghl_crm_custom_object_mappings', $mappings );
+		$settings_manager->update_option( 'syncly_custom_object_mappings', $mappings );
 
 		wp_send_json_success(
 			[
@@ -414,13 +414,13 @@ class CustomObjectAjaxHandler {
 	 * @return void
 	 */
 	public function get_mappings(): void {
-		check_ajax_referer( 'ghl_crm_mappings', 'nonce' );
+		check_ajax_referer( 'syncly_mappings', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
 		}
 
-		$mappings = SettingsManager::get_instance()->get_option( 'ghl_crm_custom_object_mappings', [] );
+		$mappings = SettingsManager::get_instance()->get_option( 'syncly_custom_object_mappings', [] );
 
 		wp_send_json_success( [ 'mappings' => $mappings ] );
 	}
@@ -431,7 +431,7 @@ class CustomObjectAjaxHandler {
 	 * @return void
 	 */
 	public function delete_mapping(): void {
-		check_ajax_referer( 'ghl_crm_mappings', 'nonce' );
+		check_ajax_referer( 'syncly_mappings', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
@@ -439,7 +439,7 @@ class CustomObjectAjaxHandler {
 
 		$settings_manager = SettingsManager::get_instance();
 		$mapping_id       = isset( $_POST['mapping_id'] ) ? sanitize_text_field( wp_unslash( $_POST['mapping_id'] ) ) : '';
-		$mappings         = $settings_manager->get_option( 'ghl_crm_custom_object_mappings', [] );
+		$mappings         = $settings_manager->get_option( 'syncly_custom_object_mappings', [] );
 
 		$mappings = array_filter(
 			$mappings,
@@ -448,7 +448,7 @@ class CustomObjectAjaxHandler {
 			}
 		);
 
-		$settings_manager->update_option( 'ghl_crm_custom_object_mappings', array_values( $mappings ) );
+		$settings_manager->update_option( 'syncly_custom_object_mappings', array_values( $mappings ) );
 
 		wp_send_json_success( [ 'message' => __( 'Mapping deleted successfully', 'syncly' ) ] );
 	}

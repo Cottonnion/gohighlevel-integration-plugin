@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Core;
+namespace Syncly\Core;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -12,8 +12,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Handles admin menus, submenus, and plugin action links.
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/Core
+ * @package    Syncly
+ * @subpackage Syncly/Core
  */
 class MenuManager {
 	/**
@@ -52,12 +52,12 @@ class MenuManager {
 	 */
 	public function init(): void {
 		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
-		add_filter( 'plugin_action_links_' . GHL_CRM_BASENAME, [ $this, 'add_plugin_action_links' ] );
-		add_action( 'wp_ajax_ghl_crm_spa_view', [ $this, 'handle_spa_view_request' ] );
-		add_action( 'wp_ajax_ghl_crm_load_settings_tab', [ $this, 'handle_settings_tab_request' ] );
-		add_action( 'wp_ajax_ghl_crm_oauth_disconnect', [ $this, 'handle_oauth_disconnect' ] );
-		add_action( 'wp_ajax_ghl_crm_manual_connect', [ $this, 'handle_manual_connect' ] );
-		add_action( 'wp_ajax_ghl_crm_disconnect_api', [ $this, 'handle_disconnect_api' ] );
+		add_filter( 'plugin_action_links_' . SYNCLY_BASENAME, [ $this, 'add_plugin_action_links' ] );
+		add_action( 'wp_ajax_syncly_spa_view', [ $this, 'handle_spa_view_request' ] );
+		add_action( 'wp_ajax_syncly_load_settings_tab', [ $this, 'handle_settings_tab_request' ] );
+		add_action( 'wp_ajax_syncly_oauth_disconnect', [ $this, 'handle_oauth_disconnect' ] );
+		add_action( 'wp_ajax_syncly_manual_connect', [ $this, 'handle_manual_connect' ] );
+		add_action( 'wp_ajax_syncly_disconnect_api', [ $this, 'handle_disconnect_api' ] );
 		add_filter( 'admin_footer_text', [ $this, 'custom_admin_footer_text' ] );
 		add_action( 'admin_head', [ $this, 'adjust_admin_viewport' ] );
 		add_action( 'admin_head', [ $this, 'remove_notices_on_plugins_admin_pages' ] );
@@ -71,7 +71,7 @@ class MenuManager {
 	public function adjust_admin_viewport(): void {
 		$current_screen = get_current_screen();
 
-		if ( ! $current_screen || strpos( (string) $current_screen->id, 'ghl-crm' ) === false ) {
+		if ( ! $current_screen || strpos( (string) $current_screen->id, 'syncly' ) === false ) {
 			return;
 		}
 
@@ -89,7 +89,7 @@ class MenuManager {
 	public function remove_notices_on_plugins_admin_pages(): void {
 		$current_screen = get_current_screen();
 
-		if ( ! $current_screen || strpos( $current_screen->id, 'ghl-crm' ) === false ) {
+		if ( ! $current_screen || strpos( $current_screen->id, 'syncly' ) === false ) {
 			return;
 		}
 
@@ -116,65 +116,65 @@ class MenuManager {
 			__( 'Syncly', 'syncly' ),
 			__( 'Syncly', 'syncly' ),
 			'manage_options',
-			'ghl-crm-admin',
+			'syncly-admin',
 			[ $this, 'render_spa_app' ],
 			'dashicons-randomize',
-			81
+			51
 		);
 
-		remove_submenu_page( 'ghl-crm-admin', 'ghl-crm-admin' );
+		remove_submenu_page( 'syncly-admin', 'syncly-admin' );
 
 		add_submenu_page(
-			'ghl-crm-admin',
+			'syncly-admin',
 			__( 'Dashboard', 'syncly' ),
 			__( 'Dashboard', 'syncly' ),
 			'manage_options',
-			'ghl-crm-admin',
+			'syncly-admin',
 			[ $this, 'render_spa_app' ]
 		);
 
 		add_submenu_page(
-			'ghl-crm-admin',
+			'syncly-admin',
 			__( 'Settings', 'syncly' ),
 			__( 'Settings', 'syncly' ),
 			'manage_options',
-			'ghl-crm-admin#/settings',
+			'syncly-admin#/settings',
 			'__return_false'
 		);
 
 		add_submenu_page(
-			'ghl-crm-admin',
+			'syncly-admin',
 			__( 'Integrations', 'syncly' ),
 			__( 'Integrations', 'syncly' ),
 			'manage_options',
-			'ghl-crm-admin#/integrations',
+			'syncly-admin#/integrations',
 			'__return_false'
 		);
 
 		add_submenu_page(
-			'ghl-crm-admin',
+			'syncly-admin',
 			__( 'Field Mapping', 'syncly' ),
 			__( 'Field Mapping', 'syncly' ),
 			'manage_options',
-			'ghl-crm-admin#/field-mapping',
+			'syncly-admin#/field-mapping',
 			'__return_false'
 		);
 
 		add_submenu_page(
-			'ghl-crm-admin',
+			'syncly-admin',
 			__( 'Sync Logs', 'syncly' ),
 			__( 'Sync Logs', 'syncly' ),
 			'manage_options',
-			'ghl-crm-admin#/sync-logs',
+			'syncly-admin#/sync-logs',
 			'__return_false'
 		);
 
 		add_submenu_page(
-			'ghl-crm-admin',
+			'syncly-admin',
 			__( 'Forms', 'syncly' ),
 			__( 'Forms', 'syncly' ),
 			'manage_options',
-			'ghl-crm-admin#/forms',
+			'syncly-admin#/forms',
 			'__return_false'
 		);
 
@@ -183,7 +183,7 @@ class MenuManager {
 			__( 'Setup Wizard', 'syncly' ),
 			__( 'Setup Wizard', 'syncly' ),
 			'manage_options',
-			'ghl-crm-setup-wizard',
+			'syncly-setup-wizard',
 			[ $this, 'render_setup_wizard' ]
 		);
 	}
@@ -200,7 +200,7 @@ class MenuManager {
 	public function add_plugin_action_links( array $links ): array {
 		$settings_link = sprintf(
 			'<a href="%s">%s</a>',
-			esc_url( admin_url( 'admin.php?page=ghl-crm-admin#/settings' ) ),
+			esc_url( admin_url( 'admin.php?page=syncly-admin#/settings' ) ),
 			esc_html__( 'Settings', 'syncly' )
 		);
 
@@ -222,11 +222,11 @@ class MenuManager {
 		$current_screen = get_current_screen();
 
 		// Check if we're on one of our plugin pages
-		if ( isset( $current_screen->id ) && strpos( $current_screen->id, 'ghl-crm' ) !== false ) {
+		if ( isset( $current_screen->id ) && strpos( $current_screen->id, 'syncly' ) !== false ) {
 			$footer_text = sprintf(
 				/* translators: 1: Plugin name highlighted in strong text, 2: Review link HTML. */
 				esc_html__( 'Thank you for using %1$s! If you find it helpful, please %2$s on WordPress.org.', 'syncly' ),
-				'<strong>' . esc_html__( 'GoHighLevel CRM Integration', 'syncly' ) . '</strong>',
+				'<strong>' . esc_html( SYNCLY_PLUGIN_NAME ) . '</strong>',
 				'<a href="https://wordpress.org/support/plugin/syncly/reviews/#new-post" target="_blank" rel="noopener noreferrer">' . esc_html__( 'leave a review', 'syncly' ) . '</a>'
 			);
 		}
@@ -286,7 +286,7 @@ class MenuManager {
 	 * @return void
 	 */
 	public function render_integrations_page(): void {
-		wp_safe_redirect( admin_url( 'admin.php?page=ghl-crm-settings&tab=integrations' ) );
+		wp_safe_redirect( admin_url( 'admin.php?page=syncly-settings&tab=integrations' ) );
 		exit;
 	}
 
@@ -299,7 +299,7 @@ class MenuManager {
 	 * @return void
 	 */
 	public function render_field_mapping_page(): void {
-		wp_safe_redirect( admin_url( 'admin.php?page=ghl-crm-settings&tab=field-mapping' ) );
+		wp_safe_redirect( admin_url( 'admin.php?page=syncly-settings&tab=field-mapping' ) );
 		exit;
 	}
 
@@ -344,7 +344,7 @@ class MenuManager {
 	 * @return void
 	 */
 	public function handle_spa_view_request(): void {
-		check_ajax_referer( 'ghl_crm_spa_nonce', 'nonce' );
+		check_ajax_referer( 'syncly_spa_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
@@ -418,7 +418,7 @@ class MenuManager {
 	 * @return void Outputs JSON response and exits.
 	 */
 	public function handle_oauth_disconnect(): void {
-		check_ajax_referer( 'ghl_crm_oauth_disconnect', 'nonce' );
+		check_ajax_referer( 'syncly_oauth_disconnect', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
@@ -430,7 +430,7 @@ class MenuManager {
 		}
 
 		try {
-			$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
+			$oauth_handler = new \Syncly\API\OAuth\OAuthHandler();
 			$result        = $oauth_handler->disconnect();
 
 			if ( $result ) {
@@ -470,7 +470,7 @@ class MenuManager {
 	 */
 	public function handle_manual_connect(): void {
 		// Verify nonce
-		check_ajax_referer( 'ghl_crm_manual_connect', 'ghl_manual_connect_nonce' );
+		check_ajax_referer( 'syncly_manual_connect', 'ghl_manual_connect_nonce' );
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -496,7 +496,7 @@ class MenuManager {
 		}
 
 		// Test the connection using Client helper method
-		$client      = \GHL_CRM\API\Client\Client::get_instance();
+		$client      = \Syncly\API\Client\Client::get_instance();
 		$test_result = $client->test_manual_connection( $api_token, $location_id );
 
 		if ( ! $test_result['success'] ) {
@@ -538,7 +538,7 @@ class MenuManager {
 			'verified_at' => current_time( 'mysql' ),
 			'method'      => 'manual_api_key',
 		];
-		$settings_manager->update_option( 'ghl_crm_connection_verified', $verification_data );
+		$settings_manager->update_option( 'syncly_connection_verified', $verification_data );
 
 		// Success!
 		wp_send_json_success(
@@ -555,7 +555,7 @@ class MenuManager {
 	 */
 	public function handle_disconnect_api(): void {
 		// Verify nonce (reuse the disconnect nonce)
-		check_ajax_referer( 'ghl_crm_oauth_disconnect', 'nonce' );
+		check_ajax_referer( 'syncly_oauth_disconnect', 'nonce' );
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -704,7 +704,7 @@ class MenuManager {
 		 *
 		 * @param string|null $template_path Custom template path or null to use default
 		 */
-		$custom_template_path = apply_filters( 'ghl_crm_custom_objects_template_path', null );
+		$custom_template_path = apply_filters( 'syncly_custom_objects_template_path', null );
 
 		ob_start();
 		if ( $custom_template_path && file_exists( $custom_template_path ) ) {
@@ -775,25 +775,23 @@ class MenuManager {
 		$base_tabs = [
 			'general',
 			'restrictions-manager',
-			'rest-api',
 			'webhooks',
 			'notifications',
 			'sync-options',
 			'role-tags',
-			'family-relationships',
 			'sync-preview',
-			'login-sync',
 			'personalization',
 			// 'conversations',
 			'advanced',
 			'tools',
 			'stats',
+			'upgrade',
 		];
 
 		// Get settings manager to check connection status
-		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 		$settings         = $settings_manager->get_settings_array();
-		$oauth_handler    = new \GHL_CRM\API\OAuth\OAuthHandler();
+		$oauth_handler    = new \Syncly\API\OAuth\OAuthHandler();
 		$oauth_status     = $oauth_handler->get_connection_status();
 		$is_connected     = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 
@@ -801,19 +799,21 @@ class MenuManager {
 		$settings_tabs = [
 			'general'              => [ 'label' => __( 'General', 'syncly' ) ],
 			'restrictions-manager' => [ 'label' => __( 'Restrictions Manager', 'syncly' ) ],
-			'rest-api'             => [ 'label' => __( 'REST API', 'syncly' ) ],
 			'webhooks'             => [ 'label' => __( 'Webhooks', 'syncly' ) ],
 			'notifications'        => [ 'label' => __( 'Email Notifications', 'syncly' ) ],
 			'role-tags'            => [ 'label' => __( 'Role-Based Tags', 'syncly' ) ],
-			'family-relationships' => [ 'label' => __( 'Family Relationships', 'syncly' ) ],
 			'sync-preview'         => [ 'label' => __( 'Sync Preview', 'syncly' ) ],
-			'login-sync'           => [ 'label' => __( 'Login Sync', 'syncly' ) ],
 			'personalization'      => [ 'label' => __( 'Personalization', 'syncly' ) ],
 			// 'conversations'        => [ 'label' => __( 'Conversations', 'syncly' ) ],
 			'advanced'             => [ 'label' => __( 'Advanced', 'syncly' ) ],
 			'tools'                => [ 'label' => __( 'Tools', 'syncly' ) ],
 			'stats'                => [ 'label' => __( 'System Status', 'syncly' ) ],
 		];
+
+		// Hide the upsell tab once Pro is active and licensed — nothing left to upgrade to.
+		if ( ! apply_filters( 'syncly_is_pro_active', false ) ) {
+			$settings_tabs['upgrade'] = [ 'label' => __( 'Upgrade to Pro', 'syncly' ) ];
+		}
 
 		/**
 		 * Allow developers to add custom settings tabs
@@ -823,7 +823,7 @@ class MenuManager {
 		 * @param bool  $is_connected  Whether the plugin is connected to GoHighLevel
 		 * @param array $settings      Current plugin settings
 		 */
-		$settings_tabs = apply_filters( 'ghl_crm_settings_tabs', $settings_tabs, $is_connected, $settings );
+		$settings_tabs = apply_filters( 'syncly_settings_tabs', $settings_tabs, $is_connected, $settings );
 
 		// Return just the tab keys
 		return array_keys( $settings_tabs );
@@ -835,7 +835,7 @@ class MenuManager {
 	 * @return void Outputs JSON response and exits.
 	 */
 	public function handle_settings_tab_request(): void {
-		check_ajax_referer( 'ghl_crm_spa_nonce', 'nonce' );
+		check_ajax_referer( 'syncly_spa_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
@@ -861,9 +861,9 @@ class MenuManager {
 		}
 
 		// Get settings to check connection and build tabs array
-		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 		$settings         = $settings_manager->get_settings_array();
-		$oauth_handler    = new \GHL_CRM\API\OAuth\OAuthHandler();
+		$oauth_handler    = new \Syncly\API\OAuth\OAuthHandler();
 		$oauth_status     = $oauth_handler->get_connection_status();
 		$is_connected     = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 
@@ -871,13 +871,10 @@ class MenuManager {
 		$settings_tabs = [
 			'general'              => [ 'label' => __( 'General', 'syncly' ) ],
 			'restrictions-manager' => [ 'label' => __( 'Restrictions Manager', 'syncly' ) ],
-			'rest-api'             => [ 'label' => __( 'REST API', 'syncly' ) ],
 			'webhooks'             => [ 'label' => __( 'Webhooks', 'syncly' ) ],
 			'notifications'        => [ 'label' => __( 'Email Notifications', 'syncly' ) ],
 			'role-tags'            => [ 'label' => __( 'Role-Based Tags', 'syncly' ) ],
-			'family-relationships' => [ 'label' => __( 'Family Relationships', 'syncly' ) ],
 			'sync-preview'         => [ 'label' => __( 'Sync Preview', 'syncly' ) ],
-			'login-sync'           => [ 'label' => __( 'Login Sync', 'syncly' ) ],
 			'personalization'      => [ 'label' => __( 'Personalization', 'syncly' ) ],
 			// 'conversations'        => [ 'label' => __( 'Conversations', 'syncly' ) ],
 			'advanced'             => [ 'label' => __( 'Advanced', 'syncly' ) ],
@@ -885,8 +882,13 @@ class MenuManager {
 			'stats'                => [ 'label' => __( 'System Status', 'syncly' ) ],
 		];
 
+		// Hide the upsell tab once Pro is active and licensed — nothing left to upgrade to.
+		if ( ! apply_filters( 'syncly_is_pro_active', false ) ) {
+			$settings_tabs['upgrade'] = [ 'label' => __( 'Upgrade to Pro', 'syncly' ) ];
+		}
+
 		// Apply the same filter as settings.php
-		$settings_tabs = apply_filters( 'ghl_crm_settings_tabs', $settings_tabs, $is_connected, $settings );
+		$settings_tabs = apply_filters( 'syncly_settings_tabs', $settings_tabs, $is_connected, $settings );
 
 		// Check if tab has custom file path or callback
 		$tab_config = $settings_tabs[ $tab ] ?? [];
@@ -897,7 +899,7 @@ class MenuManager {
 			$partial_file = $tab_config['file'];
 		} else {
 			// Default path in FREE plugin
-			$partial_file = GHL_CRM_PATH . 'templates/admin/partials/settings/' . $tab . '.php';
+			$partial_file = SYNCLY_PATH . 'templates/admin/partials/settings/' . $tab . '.php';
 		}
 
 		// Check if file exists
@@ -948,7 +950,7 @@ class MenuManager {
 			extract( $args, EXTR_SKIP );
 		}
 
-		$template_path = GHL_CRM_PATH . 'templates/' . $template_name . '.php';
+		$template_path = SYNCLY_PATH . 'templates/' . $template_name . '.php';
 
 		if ( file_exists( $template_path ) ) {
 			include $template_path;
@@ -986,7 +988,7 @@ class MenuManager {
 					printf(
 						/* translators: %s: Template path */
 						esc_html__( 'Expected location: %s', 'syncly' ),
-						'<code>' . esc_html( GHL_CRM_PATH . 'templates/' . $template_name . '.php' ) . '</code>'
+						'<code>' . esc_html( SYNCLY_PATH . 'templates/' . $template_name . '.php' ) . '</code>'
 					);
 					?>
 				</p>
@@ -1004,8 +1006,8 @@ class MenuManager {
 	 * @return string Base64 encoded SVG data URI.
 	 */
 	private function get_menu_icon(): string {
-		$icon_path = GHL_CRM_PATH . 'assets/images/ghl-icon.svg';
-		$icon_url  = GHL_CRM_URL . 'assets/images/ghl-icon.svg';
+		$icon_path = SYNCLY_PATH . 'assets/images/ghl-icon.svg';
+		$icon_url  = SYNCLY_URL . 'assets/images/ghl-icon.svg';
 
 		if ( file_exists( $icon_path ) ) {
 			return $icon_url;

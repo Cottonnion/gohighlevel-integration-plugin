@@ -1,14 +1,14 @@
 /**
  * Forms Management JavaScript
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  * @subpackage Assets/Admin/JS
  */
 
 (function ($) {
 	'use strict';
 
-	const formsData = window.ghl_crm_forms_js_data || {};
+	const formsData = window.syncly_forms_js_data || {};
 	const strings = formsData.strings || {};
 	const whiteLabelDomain = formsData.whiteLabelDomain || '';
 	const ajaxUrl = formsData.ajaxUrl || '';
@@ -59,7 +59,7 @@
 				url: formsData.ajaxUrl || ajaxurl,
 				type: 'POST',
 				data: {
-					action: 'ghl_crm_get_forms',
+					action: 'syncly_get_forms',
 					nonce: formsData.nonce
 				},
 				success: (response) => {

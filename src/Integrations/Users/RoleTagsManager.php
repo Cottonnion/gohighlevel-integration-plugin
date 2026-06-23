@@ -4,17 +4,17 @@
  *
  * Manages role-based tag assignments and removal for GHL contacts
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Integrations/Users
  */
 
 declare(strict_types=1);
 
-namespace GHL_CRM\Integrations\Users;
+namespace Syncly\Integrations\Users;
 
-use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Sync\TagManager;
-use GHL_CRM\Sync\QueueManager;
+use Syncly\Core\SettingsManager;
+use Syncly\Sync\TagManager;
+use Syncly\Sync\QueueManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -90,11 +90,11 @@ class RoleTagsManager {
 		add_action( 'remove_user_role', [ $this, 'handle_role_removed' ], 10, 2 );
 
 		// AJAX handlers for bulk operations
-		add_action( 'wp_ajax_ghl_crm_bulk_add_role_tags', [ $this, 'ajax_bulk_add_role_tags' ] );
-		add_action( 'wp_ajax_ghl_crm_bulk_remove_role_tags', [ $this, 'ajax_bulk_remove_role_tags' ] );
+		add_action( 'wp_ajax_syncly_bulk_add_role_tags', [ $this, 'ajax_bulk_add_role_tags' ] );
+		add_action( 'wp_ajax_syncly_bulk_remove_role_tags', [ $this, 'ajax_bulk_remove_role_tags' ] );
 
 		// Protect role-based tags from removal by other sources (e.g. group leave).
-		add_filter( 'ghl_crm_tags_protected_from_removal', [ $this, 'protect_role_tags' ], 10, 4 );
+		add_filter( 'syncly_tags_protected_from_removal', [ $this, 'protect_role_tags' ], 10, 4 );
 	}
 
 	/**
@@ -353,7 +353,7 @@ class RoleTagsManager {
 				]
 			);
 		} catch ( \Exception $e ) {
-			do_action( 'ghl_crm_log_event', 'queue_tag_addition_failed', $e->getMessage(), [ 'user_id' => $user_id ], 'error' );
+			do_action( 'syncly_log_event', 'queue_tag_addition_failed', $e->getMessage(), [ 'user_id' => $user_id ], 'error' );
 		}
 	}
 
@@ -378,7 +378,7 @@ class RoleTagsManager {
 				]
 			);
 		} catch ( \Exception $e ) {
-			do_action( 'ghl_crm_log_event', 'queue_tag_removal_failed', $e->getMessage(), [ 'user_id' => $user_id ], 'error' );
+			do_action( 'syncly_log_event', 'queue_tag_removal_failed', $e->getMessage(), [ 'user_id' => $user_id ], 'error' );
 		}
 	}
 
@@ -390,7 +390,7 @@ class RoleTagsManager {
 	public function ajax_bulk_add_role_tags(): void {
 		try {
 			// Verify nonce
-			check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce' );
+			check_ajax_referer( 'syncly_settings_nonce', 'nonce' );
 
 			// Check permissions
 			if ( ! current_user_can( 'manage_options' ) ) {
@@ -486,7 +486,7 @@ class RoleTagsManager {
 	public function ajax_bulk_remove_role_tags(): void {
 		try {
 			// Verify nonce
-			check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce' );
+			check_ajax_referer( 'syncly_settings_nonce', 'nonce' );
 
 			// Check permissions
 			if ( ! current_user_can( 'manage_options' ) ) {
@@ -569,7 +569,7 @@ class RoleTagsManager {
 	/**
 	 * Claim tags that the user's current roles provide.
 	 *
-	 * Hooked to `ghl_crm_tags_protected_from_removal` — prevents other sources
+	 * Hooked to `syncly_tags_protected_from_removal` — prevents other sources
 	 * from removing tags that belong to the user's active WordPress role(s).
 	 *
 	 * @since 1.1.3

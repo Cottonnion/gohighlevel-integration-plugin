@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Integrations\Gutenberg;
+namespace Syncly\Integrations\Gutenberg;
 
-use GHL_CRM\API\ConnectionManager;
-use GHL_CRM\Core\AssetsManager;
-use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Sync\TagManager;
+use Syncly\API\ConnectionManager;
+use Syncly\Core\AssetsManager;
+use Syncly\Core\SettingsManager;
+use Syncly\Sync\TagManager;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -15,7 +15,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * Registers and manages Gutenberg blocks for GoHighLevel integration
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Integrations/Gutenberg
  */
 class BlocksManager {
@@ -87,7 +87,7 @@ class BlocksManager {
 	public function register_blocks(): void {
 		// Register GHL Form Block
 		register_block_type(
-			'ghl-crm/form',
+			'syncly/form',
 			[
 				'render_callback' => [ $this, 'render_form_block' ],
 				'attributes'      => [
@@ -109,7 +109,7 @@ class BlocksManager {
 
 		// Register Restricted Content Block
 		register_block_type(
-			'ghl-crm/restricted-content',
+			'syncly/restricted-content',
 			[
 				'render_callback' => [ $this, 'render_restricted_content_block' ],
 				'attributes'      => [
@@ -161,7 +161,7 @@ class BlocksManager {
 		return array_merge(
 			[
 				[
-					'slug'  => 'ghl-crm',
+					'slug'  => 'syncly',
 					'title' => __( 'GoHighLevel CRM', 'syncly' ),
 					'icon'  => 'admin-links',
 				],
@@ -177,8 +177,8 @@ class BlocksManager {
 	 */
 	public function enqueue_frontend_assets(): void {
 		// Only enqueue if blocks are present on the page
-		if ( has_block( 'ghl-crm/form' ) || has_block( 'ghl-crm/restricted-content' ) ) {
-			AssetsManager::get_instance()->enqueue_public_asset( 'ghl-crm-blocks' );
+		if ( has_block( 'syncly/form' ) || has_block( 'syncly/restricted-content' ) ) {
+			AssetsManager::get_instance()->enqueue_public_asset( 'syncly-blocks' );
 		}
 	}
 
@@ -199,7 +199,7 @@ class BlocksManager {
 		}
 
 		// Use ShortcodeManager to render the form
-		$shortcode_manager = \GHL_CRM\Frontend\ShortcodeManager::get_instance();
+		$shortcode_manager = \Syncly\Frontend\ShortcodeManager::get_instance();
 		return $shortcode_manager->render_form_shortcode(
 			[
 				'id'     => $form_id,
@@ -313,7 +313,7 @@ class BlocksManager {
 		}
 
 		// Get user tags using AccessControl
-		$access_control = \GHL_CRM\Membership\AccessControl::get_instance();
+		$access_control = \Syncly\Membership\AccessControl::get_instance();
 		$user_id        = get_current_user_id();
 
 		// Guest users

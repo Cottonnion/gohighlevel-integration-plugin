@@ -4,10 +4,10 @@
  *
  * Handles secure one-time login links for user impersonation
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
-namespace GHL_CRM\Auth;
+namespace Syncly\Auth;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -219,7 +219,7 @@ class AutoLoginManager {
 		global $wpdb;
 
 		// Get all user IDs with autologin tokens.
-		$cache_group = 'ghl_crm_autologin';
+		$cache_group = 'syncly_autologin';
 		$cache_key   = 'autologin_token_user_ids_' . get_current_blog_id();
 		$user_ids    = wp_cache_get( $cache_key, $cache_group );
 

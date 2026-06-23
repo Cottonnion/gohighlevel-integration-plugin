@@ -1,20 +1,20 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Sync;
+namespace Syncly\Sync;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-use GHL_CRM\Sync\SyncStats;
+use Syncly\Sync\SyncStats;
 
 /**
  * Sync Logger
  *
  * Handles logging of synchronization activities to the database
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Sync
  */
 class SyncLogger {
@@ -58,7 +58,7 @@ class SyncLogger {
 	 */
 	public function log( string $sync_type, int $item_id, string $action, string $status, string $message, array $metadata = [], string $ghl_id = '' ) {
 		// Check if sync logging is enabled
-		if ( ! \GHL_CRM\Core\SettingsManager::is_sync_logging_enabled() ) {
+		if ( ! \Syncly\Core\SettingsManager::is_sync_logging_enabled() ) {
 			return false;
 		}
 

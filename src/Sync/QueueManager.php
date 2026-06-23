@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Sync;
+namespace Syncly\Sync;
 
-use GHL_CRM\Sync\TagManager;
+use Syncly\Sync\TagManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - QueueProcessor: Handle sync execution
  * - QueueLogger: Handle logging
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Sync
  */
 class QueueManager {
@@ -107,7 +107,7 @@ class QueueManager {
 	 */
 	private function init_hooks(): void {
 		// Register Action Scheduler hook for queue processing
-		add_action( 'ghl_crm_process_queue', [ $this, 'process_queue' ] );
+		add_action( 'syncly_process_queue', [ $this, 'process_queue' ] );
 
 		// Schedule recurring action AFTER Action Scheduler is ready
 		add_action( 'init', [ $this, 'schedule_queue_processor' ], 999 );
@@ -139,14 +139,14 @@ class QueueManager {
 	public function schedule_queue_processor(): void {
 		// Schedule recurring action via Action Scheduler (runs every 10 seconds)
 		if ( function_exists( 'as_next_scheduled_action' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {
-			$next_scheduled = as_next_scheduled_action( 'ghl_crm_process_queue' );
+			$next_scheduled = as_next_scheduled_action( 'syncly_process_queue' );
 
 			if ( false === $next_scheduled ) {
-				as_schedule_recurring_action( time(), self::PROCESSING_INTERVAL, 'ghl_crm_process_queue', [], 'ghl-crm' );
+				as_schedule_recurring_action( time(), self::PROCESSING_INTERVAL, 'syncly_process_queue', [], 'syncly' );
 			}
-		} elseif ( ! wp_next_scheduled( 'ghl_crm_process_queue' ) ) {
+		} elseif ( ! wp_next_scheduled( 'syncly_process_queue' ) ) {
 			// Fallback to WP-Cron if Action Scheduler not available or not yet initialized.
-			wp_schedule_event( time(), 'every_minute', 'ghl_crm_process_queue' );
+			wp_schedule_event( time(), 'every_minute', 'syncly_process_queue' );
 		}
 	}
 
@@ -302,7 +302,7 @@ class QueueManager {
 		// Prevent concurrent processing (race condition protection)
 		// Use site transient for network-wide lock in multisite (wp_sitemeta table).
 		// In single-site this falls back to wp_options (same as get_transient).
-		$lock_key = 'ghl_crm_queue_processing';
+		$lock_key = 'syncly_queue_processing';
 		if ( get_site_transient( $lock_key ) ) {
 
 			return; // Already processing
@@ -330,7 +330,7 @@ class QueueManager {
 
 					// CRITICAL: Reload Client settings after blog switch (multisite fix)
 					// The Client singleton caches settings on first init, before blog switch
-					\GHL_CRM\API\Client\Client::get_instance()->reload_settings();
+					\Syncly\API\Client\Client::get_instance()->reload_settings();
 
 					$this->process_site_queue();
 					restore_current_blog();
@@ -379,7 +379,7 @@ class QueueManager {
 
 		// CRITICAL: Skip processing if OAuth is not connected
 		// Prevents burning retry attempts when auth is down
-		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 		if ( ! $settings_manager->is_connection_verified() ) {
 			return;
 		}
@@ -512,7 +512,7 @@ class QueueManager {
 	 * - Updates user meta (_ghl_contact_id, _ghl_last_sync, _ghl_tags)
 	 * - Processes pending tags after contact creation
 	 * - Logs to ghl_sync_log table
-	 * - Fires 'ghl_crm_after_sync_success' and 'ghl_crm_log_event' hooks
+	 * - Fires 'syncly_after_sync_success' and 'syncly_log_event' hooks
 	 * - Sends admin notifications on final failure
 	 *
 	 * Dependencies:
@@ -566,7 +566,7 @@ class QueueManager {
 			if ( ! $rate_ok ) {
 				// If the daily limit specifically was hit, notify the admin (once per day).
 				if ( $location_id && $this->rate_limiter->is_daily_limit_reached( $location_id ) ) {
-					$notification_manager = \GHL_CRM\Admin\NotificationManager::get_instance();
+					$notification_manager = \Syncly\Admin\NotificationManager::get_instance();
 					$notification_manager->send_daily_limit_reached(
 						$this->rate_limiter->get_daily_count( $location_id ),
 						$this->get_pending_count()
@@ -689,7 +689,7 @@ class QueueManager {
 				);
 
 				// Automatically fire enterprise-grade hook so integrations can handle sync-back logic
-				do_action( 'ghl_crm_after_sync_success', $item, $contact_id, $result, $payload );
+				do_action( 'syncly_after_sync_success', $item, $contact_id, $result, $payload );
 
 				// Log success with full request/response data (using QueueLogger helper)
 				$this->logger->log_event(
@@ -762,7 +762,7 @@ class QueueManager {
 
 			// Check if it's an authentication/token error (circuit breaker, token refresh failure, etc.)
 			// Don't burn retry attempts on auth errors - the item itself isn't broken, auth is.
-			$is_auth_error = ( $e instanceof \GHL_CRM\API\Exceptions\AuthenticationException )
+			$is_auth_error = ( $e instanceof \Syncly\API\Exceptions\AuthenticationException )
 				|| false !== stripos( $e->getMessage(), 'Token refresh' )
 				|| false !== stripos( $e->getMessage(), 'refresh temporarily disabled' )
 				|| false !== stripos( $e->getMessage(), 'No refresh token' )
@@ -821,7 +821,7 @@ class QueueManager {
 
 			// Send notification if max attempts reached (final failure)
 			if ( 'failed' === $status ) {
-				$notification_manager = \GHL_CRM\Admin\NotificationManager::get_instance();
+				$notification_manager = \Syncly\Admin\NotificationManager::get_instance();
 				$sync_type_label      = $this->get_friendly_sync_type_label( $item->item_type, $item->action );
 
 				$notification_manager->send_sync_error(
@@ -851,7 +851,7 @@ class QueueManager {
 			);
 
 			do_action(
-				'ghl_crm_log_event',
+				'syncly_log_event',
 				'queue_item_error',
 				'Queue item processing failed',
 				array_merge(
@@ -1055,7 +1055,7 @@ class QueueManager {
 	 */
 	private function get_ghl_location_id(): ?string {
 		// Get from settings manager
-		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 		$location_id      = $settings_manager->get_setting( 'location_id' );
 
 		return ! empty( $location_id ) ? (string) $location_id : null;
@@ -1115,12 +1115,12 @@ class QueueManager {
 	 */
 	public static function unschedule_actions(): void {
 		if ( function_exists( 'as_unschedule_all_actions' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {
-			as_unschedule_all_actions( 'ghl_crm_process_queue', [], 'ghl-crm' );
+			as_unschedule_all_actions( 'syncly_process_queue', [], 'syncly' );
 		} else {
 			// Fallback: Clear WP-Cron (AS not available or not yet initialized)
-			$timestamp = wp_next_scheduled( 'ghl_crm_process_queue' );
+			$timestamp = wp_next_scheduled( 'syncly_process_queue' );
 			if ( $timestamp ) {
-				wp_unschedule_event( $timestamp, 'ghl_crm_process_queue' );
+				wp_unschedule_event( $timestamp, 'syncly_process_queue' );
 			}
 		}
 	}
@@ -1173,7 +1173,7 @@ class QueueManager {
 	 *
 	 * Threshold:
 	 * - Default: 1000 pending items
-	 * - Configurable via 'ghl_crm_queue_backlog_threshold' filter
+	 * - Configurable via 'syncly_queue_backlog_threshold' filter
 	 * - Notification sent once per backlog event (via NotificationManager)
 	 *
 	 * Performance:
@@ -1186,14 +1186,14 @@ class QueueManager {
 		$pending_count = $this->get_pending_count();
 
 		// Threshold for backlog warning (configurable via filter)
-		$threshold = apply_filters( 'ghl_crm_queue_backlog_threshold', 1000 );
+		$threshold = apply_filters( 'syncly_queue_backlog_threshold', 1000 );
 
 		// Add cooldown to prevent notification spam (once per hour)
-		if ( $pending_count > $threshold && ! get_transient( 'ghl_crm_backlog_notified' ) ) {
-			$notification_manager = \GHL_CRM\Admin\NotificationManager::get_instance();
+		if ( $pending_count > $threshold && ! get_transient( 'syncly_backlog_notified' ) ) {
+			$notification_manager = \Syncly\Admin\NotificationManager::get_instance();
 			$notification_manager->send_queue_backlog( $pending_count );
 			// Set cooldown to prevent spam (1 hour)
-			set_transient( 'ghl_crm_backlog_notified', true, HOUR_IN_SECONDS );
+			set_transient( 'syncly_backlog_notified', true, HOUR_IN_SECONDS );
 		}
 	}
 }

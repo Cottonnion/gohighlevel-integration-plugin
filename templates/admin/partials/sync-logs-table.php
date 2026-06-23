@@ -4,7 +4,7 @@
  *
  * This partial is used for AJAX loading of sync logs.
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -18,7 +18,7 @@ $per_page      = isset( $per_page ) ? max( 1, (int) $per_page ) : 20;
 $offset        = isset( $offset ) ? max( 0, (int) $offset ) : 0;
 $log_count     = isset( $log_count ) ? max( 0, (int) $log_count ) : count( $logs );
 $total_pages   = isset( $total_pages ) ? max( 1, (int) $total_pages ) : 1;
-$is_pro_active = (bool) apply_filters( 'ghl_crm_is_pro_active', false );
+$is_pro_active = (bool) apply_filters( 'syncly_is_pro_active', false );
 ?>
 
 <div class="ghl-logs-table-wrapper">
@@ -83,7 +83,7 @@ $is_pro_active = (bool) apply_filters( 'ghl_crm_is_pro_active', false );
 						</td>
 						<td>
 							<?php
-							$details_button = apply_filters( 'ghl_crm_sync_log_details_button', '', $log, $details_json );
+							$details_button = apply_filters( 'syncly_sync_log_details_button', '', $log, $details_json );
 
 							if ( $is_pro_active && ! empty( $details_button ) ) {
 								echo wp_kses_post( $details_button );

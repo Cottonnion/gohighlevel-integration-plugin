@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Membership\Admin;
+namespace Syncly\Membership\Admin;
 
-use GHL_CRM\Core\SettingsManager;
+use Syncly\Core\SettingsManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Adds GHL membership restriction meta boxes to pages, posts, and products
  * Allows controlling access based on GoHighLevel tags
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Membership/Admin
  */
 class MetaBoxes {
@@ -89,7 +89,7 @@ class MetaBoxes {
 	 * Register admin assets via AssetsManager for all supported post types.
 	 */
 	public function register_assets(): void {
-		$assets_manager  = \GHL_CRM\Core\AssetsManager::get_instance();
+		$assets_manager  = \Syncly\Core\AssetsManager::get_instance();
 		$supported_types = $this->get_supported_post_types();
 		$screens         = array_map(
 			static function ( string $type ): string {
@@ -104,12 +104,12 @@ class MetaBoxes {
 
 		// Globals CSS.
 		$assets_manager->add_admin_asset(
-			'ghl-crm-globals-css',
+			'syncly-globals-css',
 			$screens,
 			'globals.css',
 			array(),
 			array(),
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			false
 		);
 
@@ -118,9 +118,9 @@ class MetaBoxes {
 			'ghl-membership-admin-css',
 			$screens,
 			'membership-admin.css',
-			array( 'ghl-crm-select2-css', 'ghl-crm-globals-css' ),
+			array( 'syncly-select2-css', 'syncly-globals-css' ),
 			array(),
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			false
 		);
 
@@ -129,13 +129,13 @@ class MetaBoxes {
 			'ghl-membership-admin-js',
 			$screens,
 			'membership-admin.js',
-			array( 'jquery', 'ghl-crm-select2' ),
+			array( 'jquery', 'syncly-select2' ),
 			array(
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_user_profile' ),
-				'tags'    => \GHL_CRM\Sync\TagManager::get_instance()->get_tags_for_localization(),
+				'tags'    => \Syncly\Sync\TagManager::get_instance()->get_tags_for_localization(),
 			),
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 	}
 
@@ -157,7 +157,7 @@ class MetaBoxes {
 		$post_types = array_diff( $post_types, [ 'attachment' ] );
 
 		// Allow filtering of supported post types
-		$post_types = apply_filters( 'ghl_crm_restriction_post_types', $post_types );
+		$post_types = apply_filters( 'syncly_restriction_post_types', $post_types );
 
 		return array_values( $post_types );
 	}
@@ -191,7 +191,7 @@ class MetaBoxes {
 	public function render_membership_meta_box( \WP_Post $post ): void {
 		// Get saved values
 		$restriction_type = get_post_meta( $post->ID, '_ghl_restriction_type', true );
-		$required_tags    = get_post_meta( $post->ID, \GHL_CRM\Sync\TagManager::scoped_meta_key( '_ghl_required_tags' ), true );
+		$required_tags    = get_post_meta( $post->ID, \Syncly\Sync\TagManager::scoped_meta_key( '_ghl_required_tags' ), true );
 		$redirect_url     = get_post_meta( $post->ID, '_ghl_redirect_url', true );
 
 		if ( ! is_array( $required_tags ) ) {
@@ -333,7 +333,7 @@ class MetaBoxes {
 		$required_tags = isset( $_POST['ghl_required_tags'] ) && is_array( $_POST['ghl_required_tags'] )
 			? array_map( 'sanitize_text_field', wp_unslash( $_POST['ghl_required_tags'] ) )
 			: [];
-		update_post_meta( $post_id, \GHL_CRM\Sync\TagManager::scoped_meta_key( '_ghl_required_tags' ), $required_tags );
+		update_post_meta( $post_id, \Syncly\Sync\TagManager::scoped_meta_key( '_ghl_required_tags' ), $required_tags );
 
 		// Save redirect URL
 		$redirect_url = isset( $_POST['ghl_redirect_url'] ) ? esc_url_raw( wp_unslash( $_POST['ghl_redirect_url'] ) ) : '';

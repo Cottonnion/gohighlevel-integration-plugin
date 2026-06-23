@@ -19,7 +19,6 @@ syncly/DEV_CHANGELOG.md
 syncly/TODO.md
 syncly/FEATURES-AND-BENEFITS.md
 syncly/tmp.md
-syncly/templates/admin/partials/pro-upgrade-notice.php
 syncly/templates/admin/partials/settings/conversations.php
 syncly/vendor/bin/*
 syncly/vendor/matthiasmullie/*

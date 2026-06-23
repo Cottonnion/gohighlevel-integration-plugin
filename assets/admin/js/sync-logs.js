@@ -1,7 +1,7 @@
 /**
  * Sync Logs Page JavaScript
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 (function ($) {
@@ -34,8 +34,8 @@
             /**
              * Allow PRO plugin to cache additional elements
              */
-            if (typeof window.ghlCrmSyncLogsPro !== 'undefined') {
-                window.ghlCrmSyncLogsPro.cacheElements(this);
+            if (typeof window.synclySyncLogsPro !== 'undefined') {
+                window.synclySyncLogsPro.cacheElements(this);
             }
         },
 
@@ -58,8 +58,8 @@
             /**
              * Allow PRO plugin to bind additional events
              */
-            if (typeof window.ghlCrmSyncLogsPro !== 'undefined') {
-                window.ghlCrmSyncLogsPro.bindEvents(self);
+            if (typeof window.synclySyncLogsPro !== 'undefined') {
+                window.synclySyncLogsPro.bindEvents(self);
             }
 
             // Close modal button
@@ -130,7 +130,7 @@
                     data: {
                         action: 'ghl_save_logs_per_page',
                         per_page: perPage,
-                        nonce: ghl_crm_sync_logs_js_data.nonce
+                        nonce: syncly_sync_logs_js_data.nonce
                     },
                     success: function () {
                         // Reload page to apply new per-page setting
@@ -233,15 +233,15 @@
          */
         showDetailsModal: function (details, isPreviewMode = false) {
             if (isPreviewMode) {
-                this.showMockupDetailsModal();
+                this.showUpgradeNoticeModal();
                 return;
             }
 
-            if (typeof window.ghlCrmSyncLogsPro !== 'undefined' && !isPreviewMode) {
+            if (typeof window.synclySyncLogsPro !== 'undefined' && !isPreviewMode) {
                 if (this.modal && this.modal.length) {
                     this.modal.find('.ghl-modal-body').removeClass('ghl-blur-locked');
                 }
-                window.ghlCrmSyncLogsPro.showDetailsModal(details);
+                window.synclySyncLogsPro.showDetailsModal(details);
                 return;
             }
 
@@ -256,92 +256,20 @@
         },
 
         /**
-         * Show a static detailed-log preview in the existing modal.
+         * Show the real details modal populated with the Pro upgrade notice
+         * (server-rendered, same component used elsewhere in the plugin).
          */
-        showMockupDetailsModal: function () {
-            const data = window.ghl_crm_sync_logs_js_data || {};
-            const upgradeUrl = data.upgradeUrl || 'https://highlevelsync.com/';
+        showUpgradeNoticeModal: function () {
+            const data = window.syncly_sync_logs_js_data || {};
 
-            if (!this.modal || !this.modal.length || !this.content || !this.content.length) {
+            if (!this.modal || !this.modal.length || !this.content || !this.content.length || !data.upgradeNoticeHtml) {
                 this.showProUpgradeNotice();
                 return;
             }
 
-            this.content.html(this.getMockupDetailsHtml(upgradeUrl));
+            this.content.html(data.upgradeNoticeHtml);
             this.modal.find('.ghl-modal-body').removeClass('ghl-blur-locked');
             this.modal.fadeIn(200);
-        },
-
-        /**
-         * Build inert preview markup for detailed sync logs.
-         *
-         * @param {string} upgradeUrl Companion add-on URL.
-         * @returns {string}
-         */
-        getMockupDetailsHtml: function (upgradeUrl) {
-            const safeUpgradeUrl = this.escapeHtml(upgradeUrl);
-
-            return `
-                <div class="ghl-sync-log-preview">
-                    <div class="ghl-sync-log-preview__header">
-                        <div>
-                            <span class="ghl-sync-log-preview__eyebrow">Detailed Sync Logs</span>
-                            <h3>Inspect complete sync payloads</h3>
-                        </div>
-                        <a href="${safeUpgradeUrl}" target="_blank" rel="noopener noreferrer" class="ghl-button ghl-button-secondary">
-                            <span class="dashicons dashicons-unlock"></span>
-                            Learn More
-                        </a>
-                    </div>
-
-                    <div class="ghl-sync-details-grid">
-                        <div class="ghl-sync-detail-card">
-                            <span class="ghl-sync-detail-label">Sync Type</span>
-                            <div class="ghl-sync-detail-value">Contact</div>
-                        </div>
-                        <div class="ghl-sync-detail-card">
-                            <span class="ghl-sync-detail-label">Action</span>
-                            <div class="ghl-sync-detail-value">Update Contact</div>
-                        </div>
-                        <div class="ghl-sync-detail-card">
-                            <span class="ghl-sync-detail-label">Status</span>
-                            <div class="ghl-sync-detail-value">Success</div>
-                        </div>
-                        <div class="ghl-sync-detail-card">
-                            <span class="ghl-sync-detail-label">GHL ID</span>
-                            <div class="ghl-sync-detail-value">contact_8G9n2K</div>
-                        </div>
-                    </div>
-
-                    <div class="ghl-sync-detail-card">
-                        <span class="ghl-sync-detail-label">Metadata</span>
-                        <pre class="ghl-sync-details-pre">{
-  "request": {
-    "method": "PUT",
-    "endpoint": "/contacts/contact_8G9n2K",
-    "payload": {
-      "email": "customer@example.com",
-      "tags": ["member", "active"],
-      "customFields": {
-        "membership_level": "Gold",
-        "last_login": "2026-06-22 14:18:03"
-      }
-    }
-  },
-  "response": {
-    "status": 200,
-    "duration_ms": 482,
-    "message": "Contact updated successfully"
-  }
-}</pre>
-                    </div>
-
-                    <div class="ghl-sync-log-preview__note">
-                        <span class="dashicons dashicons-lock"></span>
-                        <span>Detailed request, response, and metadata inspection is available in the companion add-on.</span>
-                    </div>
-                </div>
-            `;
         },
 
         /**
@@ -354,32 +282,10 @@
         },
 
         /**
-         * Create blurred version of text
-         * @param {string} text - Original text
-         * @returns {string} - Blurred text
-         */
-        blurText: function (text) {
-            // Replace characters with similar looking blurred characters
-            return text.replace(/[a-zA-Z0-9]/g, function (char) {
-                const blurChars = ['█', '▓', '▒', '░'];
-                return blurChars[Math.floor(Math.random() * blurChars.length)];
-            });
-        },
-
-        escapeHtml: function (value) {
-            return String(value || '')
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-        },
-
-        /**
          * Show details unavailable notice.
          */
         showProUpgradeNotice: function () {
-            const data = window.ghl_crm_sync_logs_js_data || {};
+            const data = window.syncly_sync_logs_js_data || {};
             const upgradeUrl = data.upgradeUrl || 'https://highlevelsync.com/';
 
             if (typeof Swal !== 'undefined') {
@@ -427,7 +333,7 @@
                     type: 'POST',
                     data: {
                         action: 'ghl_delete_old_logs',
-                        nonce: ghl_crm_sync_logs_js_data.nonce
+                        nonce: syncly_sync_logs_js_data.nonce
                     },
                     success: function (response) {
                         if (response.success) {
@@ -487,7 +393,7 @@
                     type: 'POST',
                     data: {
                         action: 'ghl_clear_all_logs',
-                        nonce: ghl_crm_sync_logs_js_data.nonce
+                        nonce: syncly_sync_logs_js_data.nonce
                     },
                     success: function (response) {
                         if (response.success) {
@@ -532,8 +438,8 @@
                 url: ajaxurl,
                 type: 'POST',
                 data: {
-                    action: 'ghl_crm_manual_queue_trigger',
-                    nonce: ghl_crm_sync_logs_js_data.nonce
+                    action: 'syncly_manual_queue_trigger',
+                    nonce: syncly_sync_logs_js_data.nonce
                 },
                 success: function (response) {
                     if (response.success) {
@@ -577,7 +483,7 @@
                 type: 'POST',
                 data: {
                     action: 'ghl_get_logs',
-                    nonce: ghl_crm_sync_logs_js_data.nonce,
+                    nonce: syncly_sync_logs_js_data.nonce,
                     page: page,
                     status: status,
                     search: search

@@ -4,7 +4,7 @@
  *
  * Settings tab for configuring BuddyBoss Groups sync with GoHighLevel Custom Objects
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Integrations/BuddyBoss
  */
 
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Get current settings
-$settings            = $settings ?? \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
+$settings            = $settings ?? \Syncly\Core\SettingsManager::get_instance()->get_settings_array();
 $is_buddyboss_active = function_exists( 'bp_is_active' ) && bp_is_active( 'groups' );
 ?>
 
@@ -371,5 +371,5 @@ jQuery(document).ready(function($) {
 		});
 	});
 });
-<?php wp_add_inline_script( 'ghl-crm-settings-js', ob_get_clean() ); ?>
+<?php wp_add_inline_script( 'syncly-settings-js', ob_get_clean() ); ?>
 <?php endif; ?>

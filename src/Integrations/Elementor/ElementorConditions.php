@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Integrations\Elementor;
+namespace Syncly\Integrations\Elementor;
 
 use Elementor\Controls_Manager;
-use GHL_CRM\Core\AssetsManager;
-use GHL_CRM\Membership\AccessControl;
+use Syncly\Core\AssetsManager;
+use Syncly\Membership\AccessControl;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -14,7 +14,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * Adds conditional visibility controls to all Elementor widgets based on GHL tags
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Integrations/Elementor
  */
 class ElementorConditions {
@@ -82,9 +82,9 @@ class ElementorConditions {
 				'nonce'         => wp_create_nonce( 'ghl_user_profile' ),
 				'availableTags' => $this->get_available_tags(),
 			],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true,
-			GHL_CRM_URL . 'assets/admin/js/'
+			SYNCLY_URL . 'assets/admin/js/'
 		);
 	}
 
@@ -450,7 +450,7 @@ class ElementorConditions {
 	 * @return array Array of tag options [tag_name => tag_name]
 	 */
 	private function get_available_tags(): array {
-		$tag_manager = \GHL_CRM\Sync\TagManager::get_instance();
+		$tag_manager = \Syncly\Sync\TagManager::get_instance();
 
 		try {
 			// Get all tags for the current location

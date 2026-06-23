@@ -1,7 +1,7 @@
 /**
  * Custom Objects Admin JavaScript
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  * @since 1.0.0
  */
 
@@ -83,11 +83,11 @@
 		}
 
 		$.ajax({
-			url: ghl_crm_custom_objects_js_data.ajaxUrl,
+			url: syncly_custom_objects_js_data.ajaxUrl,
 			type: 'POST',
 			data: {
-				action: 'ghl_crm_get_custom_objects',
-				nonce: ghl_crm_custom_objects_js_data.nonces.customObjects,
+				action: 'syncly_get_custom_objects',
+				nonce: syncly_custom_objects_js_data.nonces.customObjects,
 				force_refresh: forceRefresh ? 1 : 0
 			},
 			success: function(response) {
@@ -95,11 +95,11 @@
 					renderSchemas(response.data.schemas);
 					if (callback) callback();
 				} else {
-					showError(response.data.message || ghl_crm_custom_objects_js_data.i18n.failedToLoadSchemas);
+					showError(response.data.message || syncly_custom_objects_js_data.i18n.failedToLoadSchemas);
 				}
 			},
 			error: function(xhr, status, error) {
-				showError(ghl_crm_custom_objects_js_data.i18n.networkError + ': ' + error);
+				showError(syncly_custom_objects_js_data.i18n.networkError + ': ' + error);
 			},
 			complete: function() {
 				$spinner.removeClass('is-active');
@@ -117,8 +117,8 @@
 			$container.html(`
 				<div class="ghl-empty-state">
 					<span class="dashicons dashicons-database"></span>
-					<h3>${ghl_crm_custom_objects_js_data.i18n.noCustomObjectsFound}</h3>
-					<p>${ghl_crm_custom_objects_js_data.i18n.createCustomObjectsMessage}</p>
+					<h3>${syncly_custom_objects_js_data.i18n.noCustomObjectsFound}</h3>
+					<p>${syncly_custom_objects_js_data.i18n.createCustomObjectsMessage}</p>
 				</div>
 			`);
 			return;
@@ -129,7 +129,7 @@
 		schemas.forEach(function(schema) {
 			const singularLabel = schema.labels?.singular || schema.name || 'Object';
 			const pluralLabel = schema.labels?.plural || singularLabel + 's';
-			const description = schema.description || ghl_crm_custom_objects_js_data.i18n.noDescription;
+			const description = schema.description || syncly_custom_objects_js_data.i18n.noDescription;
 			const requiredCount = schema.requiredProperties ? schema.requiredProperties.length : 0;
 			const searchableCount = schema.searchableProperties ? schema.searchableProperties.length : 0;
 			const typeBadge = schema.type === 'SYSTEM_DEFINED' 
@@ -154,22 +154,22 @@
 						<div class="ghl-schema-meta">
 							<div class="ghl-schema-meta-item">
 								<span class="dashicons dashicons-yes-alt"></span>
-								<span>${requiredCount} ${ghl_crm_custom_objects_js_data.i18n.requiredFields}</span>
+								<span>${requiredCount} ${syncly_custom_objects_js_data.i18n.requiredFields}</span>
 							</div>
 							<div class="ghl-schema-meta-item">
 								<span class="dashicons dashicons-search"></span>
-								<span>${searchableCount} ${ghl_crm_custom_objects_js_data.i18n.searchableFields}</span>
+								<span>${searchableCount} ${syncly_custom_objects_js_data.i18n.searchableFields}</span>
 							</div>
 							<div class="ghl-schema-meta-item">
 								<span class="dashicons dashicons-calendar-alt"></span>
-								<span>${ghl_crm_custom_objects_js_data.i18n.created}: ${createdDate}</span>
+								<span>${syncly_custom_objects_js_data.i18n.created}: ${createdDate}</span>
 							</div>
 						</div>
 					</div>
 					<div class="ghl-schema-card-footer">
 						<button type="button" class="ghl-button ghl-button-secondary ghl-view-schema" data-schema-id="${schema.id}">
 							<span class="dashicons dashicons-visibility"></span>
-							${ghl_crm_custom_objects_js_data.i18n.viewDetails}
+							${syncly_custom_objects_js_data.i18n.viewDetails}
 						</button>
 					</div>
 				</div>
@@ -191,14 +191,14 @@
 		const schemaId = $btn.data('schema-id');
 		const originalHtml = $btn.html();
 		
-		$btn.prop('disabled', true).html('<span class="dashicons dashicons-update ghl-spin"></span> ' + ghl_crm_custom_objects_js_data.i18n.loading);
+		$btn.prop('disabled', true).html('<span class="dashicons dashicons-update ghl-spin"></span> ' + syncly_custom_objects_js_data.i18n.loading);
 		
 		$.ajax({
-			url: ghl_crm_custom_objects_js_data.ajaxUrl,
+			url: syncly_custom_objects_js_data.ajaxUrl,
 			type: 'POST',
 			data: {
-				action: 'ghl_crm_get_schema_details',
-				nonce: ghl_crm_custom_objects_js_data.nonces.customObjects,
+				action: 'syncly_get_schema_details',
+				nonce: syncly_custom_objects_js_data.nonces.customObjects,
 				schema_id: schemaId
 			},
 			success: function(response) {
@@ -209,8 +209,8 @@
 				} else {
 					Swal.fire({
 						icon: 'error',
-						title: ghl_crm_custom_objects_js_data.i18n.error,
-						text: response.data?.message || ghl_crm_custom_objects_js_data.i18n.failedToFetchSchemaDetails,
+						title: syncly_custom_objects_js_data.i18n.error,
+						text: response.data?.message || syncly_custom_objects_js_data.i18n.failedToFetchSchemaDetails,
 						confirmButtonColor: '#d63638'
 					});
 				}
@@ -219,7 +219,7 @@
 				$btn.prop('disabled', false).html(originalHtml);
 				Swal.fire({
 					icon: 'error',
-					title: ghl_crm_custom_objects_js_data.i18n.failedToFetchSchemaDetails,
+					title: syncly_custom_objects_js_data.i18n.failedToFetchSchemaDetails,
 					text: error,
 					confirmButtonColor: '#d63638'
 				});
@@ -239,26 +239,26 @@
 		
 		// Schema Overview
 		bodyHtml += '<div class="ghl-modal-section">';
-		bodyHtml += '<h3>' + ghl_crm_custom_objects_js_data.i18n.overview + '</h3>';
+		bodyHtml += '<h3>' + syncly_custom_objects_js_data.i18n.overview + '</h3>';
 		bodyHtml += '<table class="ghl-detail-table">';
-		bodyHtml += `<tr><th>${ghl_crm_custom_objects_js_data.i18n.type}:</th><td>${schema.type === 'SYSTEM_DEFINED' ? 'System Defined' : 'User Defined'}</td></tr>`;
-		bodyHtml += `<tr><th>${ghl_crm_custom_objects_js_data.i18n.key}:</th><td><code>${escapeHtml(schema.key)}</code></td></tr>`;
+		bodyHtml += `<tr><th>${syncly_custom_objects_js_data.i18n.type}:</th><td>${schema.type === 'SYSTEM_DEFINED' ? 'System Defined' : 'User Defined'}</td></tr>`;
+		bodyHtml += `<tr><th>${syncly_custom_objects_js_data.i18n.key}:</th><td><code>${escapeHtml(schema.key)}</code></td></tr>`;
 		bodyHtml += `<tr><th>ID:</th><td><code>${escapeHtml(schema.id)}</code></td></tr>`;
 		if (schema.description) {
-			bodyHtml += `<tr><th>${ghl_crm_custom_objects_js_data.i18n.description}:</th><td>${escapeHtml(schema.description)}</td></tr>`;
+			bodyHtml += `<tr><th>${syncly_custom_objects_js_data.i18n.description}:</th><td>${escapeHtml(schema.description)}</td></tr>`;
 		}
 		if (schema.primaryDisplayProperty) {
-			bodyHtml += `<tr><th>${ghl_crm_custom_objects_js_data.i18n.primaryDisplay}:</th><td><code>${escapeHtml(schema.primaryDisplayProperty)}</code></td></tr>`;
+			bodyHtml += `<tr><th>${syncly_custom_objects_js_data.i18n.primaryDisplay}:</th><td><code>${escapeHtml(schema.primaryDisplayProperty)}</code></td></tr>`;
 		}
-		bodyHtml += `<tr><th>${ghl_crm_custom_objects_js_data.i18n.created}:</th><td>${new Date(schema.createdAt).toLocaleString()}</td></tr>`;
-		bodyHtml += `<tr><th>${ghl_crm_custom_objects_js_data.i18n.updated}:</th><td>${new Date(schema.updatedAt).toLocaleString()}</td></tr>`;
+		bodyHtml += `<tr><th>${syncly_custom_objects_js_data.i18n.created}:</th><td>${new Date(schema.createdAt).toLocaleString()}</td></tr>`;
+		bodyHtml += `<tr><th>${syncly_custom_objects_js_data.i18n.updated}:</th><td>${new Date(schema.updatedAt).toLocaleString()}</td></tr>`;
 		bodyHtml += '</table>';
 		bodyHtml += '</div>';
 		
 		// Required Properties
 		if (schema.requiredProperties && schema.requiredProperties.length > 0) {
 			bodyHtml += '<div class="ghl-modal-section">';
-			bodyHtml += '<h3>' + ghl_crm_custom_objects_js_data.i18n.requiredProperties + '</h3>';
+			bodyHtml += '<h3>' + syncly_custom_objects_js_data.i18n.requiredProperties + '</h3>';
 			bodyHtml += '<ul class="ghl-property-list">';
 			schema.requiredProperties.forEach(function(prop) {
 				bodyHtml += `<li><span class="dashicons dashicons-yes-alt"></span> <code>${escapeHtml(prop)}</code></li>`;
@@ -270,7 +270,7 @@
 		// Searchable Properties
 		if (schema.searchableProperties && schema.searchableProperties.length > 0) {
 			bodyHtml += '<div class="ghl-modal-section">';
-			bodyHtml += '<h3>' + ghl_crm_custom_objects_js_data.i18n.searchableProperties + '</h3>';
+			bodyHtml += '<h3>' + syncly_custom_objects_js_data.i18n.searchableProperties + '</h3>';
 			bodyHtml += '<ul class="ghl-property-list">';
 			schema.searchableProperties.forEach(function(prop) {
 				bodyHtml += `<li><span class="dashicons dashicons-search"></span> <code>${escapeHtml(prop)}</code></li>`;
@@ -282,7 +282,7 @@
 		// Unique Properties
 		if (schema.uniqueProperties && schema.uniqueProperties.length > 0) {
 			bodyHtml += '<div class="ghl-modal-section">';
-			bodyHtml += '<h3>' + ghl_crm_custom_objects_js_data.i18n.uniqueProperties + '</h3>';
+			bodyHtml += '<h3>' + syncly_custom_objects_js_data.i18n.uniqueProperties + '</h3>';
 			bodyHtml += '<ul class="ghl-property-list">';
 			schema.uniqueProperties.forEach(function(prop) {
 				bodyHtml += `<li><span class="dashicons dashicons-admin-network"></span> <code>${escapeHtml(prop)}</code></li>`;
@@ -294,7 +294,7 @@
 		// Add Record Configuration
 		if (schema.addRecordConfiguration && schema.addRecordConfiguration.length > 0) {
 			bodyHtml += '<div class="ghl-modal-section">';
-			bodyHtml += '<h3>' + ghl_crm_custom_objects_js_data.i18n.addRecordConfiguration + '</h3>';
+			bodyHtml += '<h3>' + syncly_custom_objects_js_data.i18n.addRecordConfiguration + '</h3>';
 			bodyHtml += '<ul class="ghl-field-list">';
 			schema.addRecordConfiguration.forEach(function(config) {
 				const isGroup = config.isGroupField;
@@ -319,8 +319,8 @@
 		// Associations Section
 		if (associations && associations.length > 0) {
 			bodyHtml += '<div class="ghl-modal-section" style="background: #e7f3ff; border-left: 4px solid #2271b1; padding: 15px;">';
-			bodyHtml += '<h3><span class="dashicons dashicons-admin-links"></span> ' + ghl_crm_custom_objects_js_data.i18n.associations + '</h3>';
-			bodyHtml += '<p class="description">' + ghl_crm_custom_objects_js_data.i18n.associationsDescription + '</p>';
+			bodyHtml += '<h3><span class="dashicons dashicons-admin-links"></span> ' + syncly_custom_objects_js_data.i18n.associations + '</h3>';
+			bodyHtml += '<p class="description">' + syncly_custom_objects_js_data.i18n.associationsDescription + '</p>';
 			bodyHtml += '<ul class="ghl-property-list">';
 			associations.forEach(function(assoc) {
 				const assocType = assoc.type || assoc.key || 'Unknown';
@@ -328,17 +328,17 @@
 				bodyHtml += `<li><span class="dashicons dashicons-admin-links" style="color: #2271b1;"></span> <strong>${escapeHtml(assocLabel)}</strong> <code>(${escapeHtml(assocType)})</code></li>`;
 			});
 			bodyHtml += '</ul>';
-			bodyHtml += '<p style="margin-top: 10px;"><strong>Note:</strong> ' + ghl_crm_custom_objects_js_data.i18n.contactLinkNote + '</p>';
+			bodyHtml += '<p style="margin-top: 10px;"><strong>Note:</strong> ' + syncly_custom_objects_js_data.i18n.contactLinkNote + '</p>';
 			bodyHtml += '</div>';
 		} else {
 			bodyHtml += '<div class="ghl-modal-section" style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px;">';
-			bodyHtml += '<h3><span class="dashicons dashicons-info"></span> ' + ghl_crm_custom_objects_js_data.i18n.noAssociations + '</h3>';
-			bodyHtml += '<p>' + ghl_crm_custom_objects_js_data.i18n.noAssociationsMessage + '</p>';
+			bodyHtml += '<h3><span class="dashicons dashicons-info"></span> ' + syncly_custom_objects_js_data.i18n.noAssociations + '</h3>';
+			bodyHtml += '<p>' + syncly_custom_objects_js_data.i18n.noAssociationsMessage + '</p>';
 			bodyHtml += '</div>';
 		}
 
 		bodyHtml += '<div class="ghl-modal-section">';
-		bodyHtml += '<h3>' + ghl_crm_custom_objects_js_data.i18n.rawJson + '</h3>';
+		bodyHtml += '<h3>' + syncly_custom_objects_js_data.i18n.rawJson + '</h3>';
 		bodyHtml += '<pre class="ghl-json-viewer">' + JSON.stringify(schema, null, 2) + '</pre>';
 		bodyHtml += '</div>';
 
@@ -366,12 +366,12 @@
 			$mappingsSection.hide();
 			$schemasContainer.show();
 			$(this).find('.dashicons').removeClass('dashicons-arrow-left').addClass('dashicons-admin-settings');
-			$(this).contents().last()[0].textContent = ' ' + ghl_crm_custom_objects_js_data.i18n.viewMappings;
+			$(this).contents().last()[0].textContent = ' ' + syncly_custom_objects_js_data.i18n.viewMappings;
 		} else {
 			$schemasContainer.hide();
 			$mappingsSection.show();
 			$(this).find('.dashicons').removeClass('dashicons-admin-settings').addClass('dashicons-arrow-left');
-			$(this).contents().last()[0].textContent = ' ' + ghl_crm_custom_objects_js_data.i18n.backToObjects;
+			$(this).contents().last()[0].textContent = ' ' + syncly_custom_objects_js_data.i18n.backToObjects;
 			loadMappings();
 		}
 	}
@@ -436,16 +436,16 @@
 	 */
 	function loadPostTypes(selectedValue = null, callback = null) {
 		$.ajax({
-			url: ghl_crm_custom_objects_js_data.ajaxUrl,
+			url: syncly_custom_objects_js_data.ajaxUrl,
 			type: 'POST',
 			data: {
-				action: 'ghl_crm_get_post_types',
-				nonce: ghl_crm_custom_objects_js_data.nonces.mappings
+				action: 'syncly_get_post_types',
+				nonce: syncly_custom_objects_js_data.nonces.mappings
 			},
 			success: function(response) {
 				if (response.success) {
 					const $select = $('#wp-post-type');
-					$select.empty().append('<option value="">' + ghl_crm_custom_objects_js_data.i18n.selectPostType + '</option>');
+					$select.empty().append('<option value="">' + syncly_custom_objects_js_data.i18n.selectPostType + '</option>');
 					
 					$.each(response.data.post_types, function(key, label) {
 						$select.append(`<option value="${key}">${escapeHtml(label)}</option>`);
@@ -479,11 +479,11 @@
 		};
 
 		$.ajax({
-			url: ghl_crm_custom_objects_js_data.ajaxUrl,
+			url: syncly_custom_objects_js_data.ajaxUrl,
 			type: 'POST',
 			data: {
-				action: 'ghl_crm_get_cpt_fields',
-				nonce: ghl_crm_custom_objects_js_data.nonces.mappings,
+				action: 'syncly_get_cpt_fields',
+				nonce: syncly_custom_objects_js_data.nonces.mappings,
 				post_type: postType
 			},
 			success: function(response) {
@@ -672,7 +672,7 @@
 	 */
 	function loadGHLObjects() {
 		const $select = $('#ghl-object');
-		$select.empty().append('<option value="">' + ghl_crm_custom_objects_js_data.i18n.selectCustomObject + '</option>');
+		$select.empty().append('<option value="">' + syncly_custom_objects_js_data.i18n.selectCustomObject + '</option>');
 		
 		if (!window.ghlSchemas || window.ghlSchemas.length === 0) {
 			console.warn('GHL Schemas not loaded yet');
@@ -695,11 +695,11 @@
 	 */
 	function loadGHLObjectFields(schemaId) {
 		$.ajax({
-			url: ghl_crm_custom_objects_js_data.ajaxUrl,
+			url: syncly_custom_objects_js_data.ajaxUrl,
 			type: 'POST',
 			data: {
-				action: 'ghl_crm_get_schema_details',
-				nonce: ghl_crm_custom_objects_js_data.nonces.customObjects,
+				action: 'syncly_get_schema_details',
+				nonce: syncly_custom_objects_js_data.nonces.customObjects,
 				schema_id: schemaId
 			},
 			success: function(response) {
@@ -767,9 +767,9 @@
 			$(this).empty();
 			
 			if (ghlFieldOptions.length === 0) {
-				$(this).append('<option value="">' + ghl_crm_custom_objects_js_data.i18n.selectGHLObjectFirst + '</option>');
+				$(this).append('<option value="">' + syncly_custom_objects_js_data.i18n.selectGHLObjectFirst + '</option>');
 			} else {
-				$(this).append('<option value="">' + ghl_crm_custom_objects_js_data.i18n.selectGHLField + '</option>');
+				$(this).append('<option value="">' + syncly_custom_objects_js_data.i18n.selectGHLField + '</option>');
 				
 				ghlFieldOptions.forEach(function(field) {
 					const $option = $(`<option value="${field.id}">${escapeHtml(field.text)}</option>`);
@@ -779,7 +779,7 @@
 					$(this).append($option);
 				}.bind(this));
 				
-				$(this).append('<option value="__custom__">' + ghl_crm_custom_objects_js_data.i18n.enterCustomFieldKey + '</option>');
+				$(this).append('<option value="__custom__">' + syncly_custom_objects_js_data.i18n.enterCustomFieldKey + '</option>');
 				
 				if (currentValue) {
 					$(this).val(currentValue);
@@ -823,24 +823,24 @@
 					<select name="field_mappings[${rowId}][wp_field]" class="wp-field-select" required>
 						${wpFieldOptionsHtml}
 					</select>
-					<input type="text" name="field_mappings[${rowId}][wp_field_name]" class="wp-field-name" placeholder="${ghl_crm_custom_objects_js_data.i18n.fieldNamePlaceholder}" style="display:none; margin-top: 5px; width: 100%;">
+					<input type="text" name="field_mappings[${rowId}][wp_field_name]" class="wp-field-name" placeholder="${syncly_custom_objects_js_data.i18n.fieldNamePlaceholder}" style="display:none; margin-top: 5px; width: 100%;">
 				</td>
 				<td class="arrow-cell">→</td>
 				<td>
 					<select name="field_mappings[${rowId}][ghl_field]" class="ghl-field-select" required>
-						<option value="">${ghl_crm_custom_objects_js_data.i18n.selectGHLField}</option>
-						<option value="__custom__">${ghl_crm_custom_objects_js_data.i18n.enterCustomFieldKey}</option>
+						<option value="">${syncly_custom_objects_js_data.i18n.selectGHLField}</option>
+						<option value="__custom__">${syncly_custom_objects_js_data.i18n.enterCustomFieldKey}</option>
 					</select>
-					<input type="text" name="field_mappings[${rowId}][ghl_field_custom]" class="ghl-field-custom" placeholder="${ghl_crm_custom_objects_js_data.i18n.customFieldPlaceholder}" style="display:none; margin-top: 5px; width: 100%;">
+					<input type="text" name="field_mappings[${rowId}][ghl_field_custom]" class="ghl-field-custom" placeholder="${syncly_custom_objects_js_data.i18n.customFieldPlaceholder}" style="display:none; margin-top: 5px; width: 100%;">
 				</td>
 				<td>
 					<select name="field_mappings[${rowId}][transform]">
-						<option value="none">${ghl_crm_custom_objects_js_data.i18n.transformNone}</option>
-						<option value="sanitize">${ghl_crm_custom_objects_js_data.i18n.transformSanitize}</option>
-						<option value="number">${ghl_crm_custom_objects_js_data.i18n.transformNumber}</option>
-						<option value="date_iso">${ghl_crm_custom_objects_js_data.i18n.transformDateISO}</option>
-						<option value="strip_html">${ghl_crm_custom_objects_js_data.i18n.transformStripHTML}</option>
-						<option value="json_encode">${ghl_crm_custom_objects_js_data.i18n.transformJSON}</option>
+						<option value="none">${syncly_custom_objects_js_data.i18n.transformNone}</option>
+						<option value="sanitize">${syncly_custom_objects_js_data.i18n.transformSanitize}</option>
+						<option value="number">${syncly_custom_objects_js_data.i18n.transformNumber}</option>
+						<option value="date_iso">${syncly_custom_objects_js_data.i18n.transformDateISO}</option>
+						<option value="strip_html">${syncly_custom_objects_js_data.i18n.transformStripHTML}</option>
+						<option value="json_encode">${syncly_custom_objects_js_data.i18n.transformJSON}</option>
 					</select>
 				</td>
 				<td>
@@ -924,8 +924,8 @@
 		const $spinner = $form.find('.spinner');
 		
 		const mappingData = {
-			action: 'ghl_crm_save_mapping',
-			nonce: ghl_crm_custom_objects_js_data.nonces.mappings,
+			action: 'syncly_save_mapping',
+			nonce: syncly_custom_objects_js_data.nonces.mappings,
 			mapping_id: $('#mapping-id').val(),
 			mapping_name: $('#mapping-name').val(),
 			wp_post_type: $('#wp-post-type').val(),
@@ -996,7 +996,7 @@
 		$spinner.addClass('is-active');
 		
 		$.ajax({
-			url: ghl_crm_custom_objects_js_data.ajaxUrl,
+			url: syncly_custom_objects_js_data.ajaxUrl,
 			type: 'POST',
 			data: mappingData,
 			success: function(response) {
@@ -1005,14 +1005,14 @@
 					loadMappings();
 					Swal.fire({
 						icon: 'success',
-						title: ghl_crm_custom_objects_js_data.i18n.mappingSaved,
+						title: syncly_custom_objects_js_data.i18n.mappingSaved,
 						showConfirmButton: false,
 						timer: 1500
 					});
 				} else {
 					Swal.fire({
 						icon: 'error',
-						title: ghl_crm_custom_objects_js_data.i18n.error,
+						title: syncly_custom_objects_js_data.i18n.error,
 						text: response.data.message,
 						confirmButtonColor: '#d63638'
 					});
@@ -1021,7 +1021,7 @@
 			error: function() {
 				Swal.fire({
 					icon: 'error',
-					title: ghl_crm_custom_objects_js_data.i18n.networkError,
+					title: syncly_custom_objects_js_data.i18n.networkError,
 					confirmButtonColor: '#d63638'
 				});
 			},
@@ -1036,11 +1036,11 @@
 	 */
 	function loadMappings() {
 		$.ajax({
-			url: ghl_crm_custom_objects_js_data.ajaxUrl,
+			url: syncly_custom_objects_js_data.ajaxUrl,
 			type: 'POST',
 			data: {
-				action: 'ghl_crm_get_mappings',
-				nonce: ghl_crm_custom_objects_js_data.nonces.mappings
+				action: 'syncly_get_mappings',
+				nonce: syncly_custom_objects_js_data.nonces.mappings
 			},
 			success: function(response) {
 				if (response.success) {
@@ -1061,8 +1061,8 @@
 			$container.html(`
 				<div class="ghl-empty-state">
 					<span class="dashicons dashicons-admin-settings"></span>
-					<h3>${ghl_crm_custom_objects_js_data.i18n.noMappingsCreated}</h3>
-					<p>${ghl_crm_custom_objects_js_data.i18n.createMappingMessage}</p>
+					<h3>${syncly_custom_objects_js_data.i18n.noMappingsCreated}</h3>
+					<p>${syncly_custom_objects_js_data.i18n.createMappingMessage}</p>
 				</div>
 			`);
 			return;
@@ -1071,7 +1071,7 @@
 		let html = '';
 		mappings.forEach(function(mapping) {
 			const statusClass = mapping.active ? 'active' : 'inactive';
-			const statusLabel = mapping.active ? ghl_crm_custom_objects_js_data.i18n.active : ghl_crm_custom_objects_js_data.i18n.inactive;
+			const statusLabel = mapping.active ? syncly_custom_objects_js_data.i18n.active : syncly_custom_objects_js_data.i18n.inactive;
 			
 			html += `
 				<div class="ghl-mapping-card ${statusClass}">
@@ -1080,20 +1080,20 @@
 						<span class="ghl-mapping-status ${statusClass}">${statusLabel}</span>
 					</div>
 					<div class="ghl-mapping-meta">
-						<span><strong>${ghl_crm_custom_objects_js_data.i18n.cpt}:</strong> ${escapeHtml(mapping.wp_post_type_label || mapping.wp_post_type)}</span>
+						<span><strong>${syncly_custom_objects_js_data.i18n.cpt}:</strong> ${escapeHtml(mapping.wp_post_type_label || mapping.wp_post_type)}</span>
 						<span>→</span>
-						<span><strong>${ghl_crm_custom_objects_js_data.i18n.ghlObject}:</strong> ${escapeHtml(mapping.ghl_object_label || mapping.ghl_object_key)}</span>
+						<span><strong>${syncly_custom_objects_js_data.i18n.ghlObject}:</strong> ${escapeHtml(mapping.ghl_object_label || mapping.ghl_object_key)}</span>
 						<span>|</span>
-						<span><strong>${ghl_crm_custom_objects_js_data.i18n.fields}:</strong> ${mapping.field_mappings ? mapping.field_mappings.length : 0}</span>
+						<span><strong>${syncly_custom_objects_js_data.i18n.fields}:</strong> ${mapping.field_mappings ? mapping.field_mappings.length : 0}</span>
 					</div>
 					<div class="ghl-mapping-actions">
 						<button type="button" class="ghl-button ghl-button-secondary edit-mapping" data-mapping-id="${mapping.id}">
 							<span class="dashicons dashicons-edit"></span>
-							${ghl_crm_custom_objects_js_data.i18n.edit}
+							${syncly_custom_objects_js_data.i18n.edit}
 						</button>
 						<button type="button" class="ghl-button ghl-button-secondary delete-mapping" data-mapping-id="${mapping.id}">
 							<span class="dashicons dashicons-trash"></span>
-							${ghl_crm_custom_objects_js_data.i18n.delete}
+							${syncly_custom_objects_js_data.i18n.delete}
 						</button>
 					</div>
 				</div>
@@ -1118,29 +1118,29 @@
 		const mappingId = $(this).data('mapping-id');
 		
 		Swal.fire({
-			title: ghl_crm_custom_objects_js_data.i18n.confirmDelete,
+			title: syncly_custom_objects_js_data.i18n.confirmDelete,
 			icon: 'warning',
 			showCancelButton: true,
 			confirmButtonColor: '#d63638',
 			cancelButtonColor: '#2271b1',
-			confirmButtonText: ghl_crm_custom_objects_js_data.i18n.delete || 'Delete',
-			cancelButtonText: ghl_crm_custom_objects_js_data.i18n.cancel || 'Cancel'
+			confirmButtonText: syncly_custom_objects_js_data.i18n.delete || 'Delete',
+			cancelButtonText: syncly_custom_objects_js_data.i18n.cancel || 'Cancel'
 		}).then((result) => {
 			if (result.isConfirmed) {
 				$.ajax({
-					url: ghl_crm_custom_objects_js_data.ajaxUrl,
+					url: syncly_custom_objects_js_data.ajaxUrl,
 					type: 'POST',
 					data: {
-						action: 'ghl_crm_delete_mapping',
-						nonce: ghl_crm_custom_objects_js_data.nonces.mappings,
+						action: 'syncly_delete_mapping',
+						nonce: syncly_custom_objects_js_data.nonces.mappings,
 						mapping_id: mappingId
 					},
 					success: function(response) {
 						if (response.success) {
 							Swal.fire({
 								icon: 'success',
-								title: ghl_crm_custom_objects_js_data.i18n.deleted || 'Deleted!',
-								text: ghl_crm_custom_objects_js_data.i18n.mappingDeleted || 'Mapping has been deleted.',
+								title: syncly_custom_objects_js_data.i18n.deleted || 'Deleted!',
+								text: syncly_custom_objects_js_data.i18n.mappingDeleted || 'Mapping has been deleted.',
 								showConfirmButton: false,
 								timer: 1500
 							});
@@ -1148,7 +1148,7 @@
 						} else {
 							Swal.fire({
 								icon: 'error',
-								title: ghl_crm_custom_objects_js_data.i18n.errorDeletingMapping,
+								title: syncly_custom_objects_js_data.i18n.errorDeletingMapping,
 								confirmButtonColor: '#d63638'
 							});
 						}
@@ -1156,7 +1156,7 @@
 					error: function() {
 						Swal.fire({
 							icon: 'error',
-							title: ghl_crm_custom_objects_js_data.i18n.networkError,
+							title: syncly_custom_objects_js_data.i18n.networkError,
 							confirmButtonColor: '#d63638'
 						});
 					}
@@ -1281,7 +1281,7 @@
 		const $container = $('#ghl-schemas-container');x
 		$container.html(`
 			<div class="notice notice-error">
-				<p><strong>${ghl_crm_custom_objects_js_data.i18n.error}:</strong> ${escapeHtml(message)}</p>
+				<p><strong>${syncly_custom_objects_js_data.i18n.error}:</strong> ${escapeHtml(message)}</p>
 			</div>
 		`);
 	}

@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Core;
+namespace Syncly\Core;
 
-use GHL_CRM\API\ConnectionManager;
-use GHL_CRM\Sync\TagManager;
+use Syncly\API\ConnectionManager;
+use Syncly\Sync\TagManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,8 +15,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Handles enqueuing of CSS and Javascript
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/Core
+ * @package    Syncly
+ * @subpackage Syncly/Core
  */
 class AssetsManager {
 	/**
@@ -105,14 +105,14 @@ class AssetsManager {
 		// Register SweetAlert2 (local)
 		wp_register_style(
 			'ghl-sweetalert2',
-			GHL_CRM_URL . 'assets/admin/css/sweetalert2.min.css',
+			SYNCLY_URL . 'assets/admin/css/sweetalert2.min.css',
 			[],
 			'11.26.22'
 		);
 
 		wp_register_script(
 			'ghl-sweetalert2',
-			GHL_CRM_URL . 'assets/admin/js/sweetalert2.all.min.js',
+			SYNCLY_URL . 'assets/admin/js/sweetalert2.all.min.js',
 			[],
 			'11.26.22',
 			true
@@ -121,7 +121,7 @@ class AssetsManager {
 		// Register Chart.js (local)
 		wp_register_script(
 			'ghl-chartjs',
-			GHL_CRM_URL . 'assets/admin/js/chart.umd.min.js',
+			SYNCLY_URL . 'assets/admin/js/chart.umd.min.js',
 			[],
 			'4.4.0',
 			true
@@ -129,15 +129,15 @@ class AssetsManager {
 
 		// Register Select2 (local files) with plugin-specific handles to avoid conflicts
 		wp_register_style(
-			'ghl-crm-select2-css',
-			GHL_CRM_URL . 'assets/admin/css/select2.min.css',
+			'syncly-select2-css',
+			SYNCLY_URL . 'assets/admin/css/select2.min.css',
 			[],
 			'4.1.0'
 		);
 
 		wp_register_script(
-			'ghl-crm-select2',
-			GHL_CRM_URL . 'assets/admin/js/select2.min.js',
+			'syncly-select2',
+			SYNCLY_URL . 'assets/admin/js/select2.min.js',
 			[ 'jquery' ],
 			'4.1.0',
 			true
@@ -157,93 +157,93 @@ class AssetsManager {
 
 		// Tooltip System (loads on all GHL admin pages)
 		$this->add_admin_asset(
-			'ghl-crm-tooltip-system',
+			'syncly-tooltip-system',
 			[
-				'toplevel_page_ghl-crm-admin',              // New SPA page
-				'toplevel_page_ghl-crm-settings',           // Legacy main tabbed page
-				'ghl-crm_page_ghl-crm-sync-logs',          // Sync logs page
+				'toplevel_page_syncly-admin',              // New SPA page
+				'toplevel_page_syncly-settings',           // Legacy main tabbed page
+				'syncly_page_syncly-sync-logs',          // Sync logs page
 			],
 			'tooltip-system.js',
 			[],
 			[],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true
 		);
 
 		// Admin Menu Styling (loads on all admin pages to style the menu)
 		$this->add_admin_asset(
-			'ghl-crm-admin-menu-css',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-admin-menu-css',
+			[ 'toplevel_page_syncly-admin' ],
 			'admin-menu.css',
 			[],
 			[],
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 
 		// Menu Router for SPA active state management
 		$this->add_admin_asset(
-			'ghl-crm-menu-router-js',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-menu-router-js',
+			[ 'toplevel_page_syncly-admin' ],
 			'menu-router.js',
 			[ 'jquery' ],
 			[],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true
 		);
 
 		// SPA Application assets (new single-page admin)
 		$this->add_admin_asset(
-			'ghl-crm-spa-css',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-spa-css',
+			[ 'toplevel_page_syncly-admin' ],
 			'spa-app.css',
 			[],
 			[],
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 
 		$this->add_admin_asset(
-			'ghl-crm-spa-js',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-spa-js',
+			[ 'toplevel_page_syncly-admin' ],
 			'spa-router.js',
 			[ 'jquery', 'ghl-sweetalert2' ],
 			[],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true
 		);
 
 		// Upgrade notice (dismissible banner)
 		$this->add_admin_asset(
-			'ghl-crm-upgrade-notice-js',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-upgrade-notice-js',
+			[ 'toplevel_page_syncly-admin' ],
 			'upgrade-notice.js',
 			[ 'jquery' ],
 			[],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true
 		);
 
 		// Dashboard assets (loads on SPA page)
 		$this->add_admin_asset(
-			'ghl-crm-dashboard-css',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-dashboard-css',
+			[ 'toplevel_page_syncly-admin' ],
 			'dashboard.css',
 			[],
 			[],
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 
 		$this->add_admin_asset(
-			'ghl-crm-dashboard-js',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-dashboard-js',
+			[ 'toplevel_page_syncly-admin' ],
 			'dashboard.js',
 			[ 'jquery', 'ghl-sweetalert2', 'ghl-chartjs' ],
 			[
 				'ajaxUrl'            => admin_url( 'admin-ajax.php' ),
-				'nonce'              => wp_create_nonce( 'ghl_crm_admin' ),
-				'manualConnectNonce' => wp_create_nonce( 'ghl_crm_manual_connect' ),
-				'disconnectNonce'    => wp_create_nonce( 'ghl_crm_oauth_disconnect' ),
-				'manualQueueNonce'   => wp_create_nonce( 'ghl_crm_manual_queue' ),
-				'settingsNonce'      => wp_create_nonce( 'ghl_crm_settings_nonce' ),
+				'nonce'              => wp_create_nonce( 'syncly_admin' ),
+				'manualConnectNonce' => wp_create_nonce( 'syncly_manual_connect' ),
+				'disconnectNonce'    => wp_create_nonce( 'syncly_oauth_disconnect' ),
+				'manualQueueNonce'   => wp_create_nonce( 'syncly_manual_queue' ),
+				'settingsNonce'      => wp_create_nonce( 'syncly_settings_nonce' ),
 				'i18n'               => [
 					'connecting'                => __( 'Connecting...', 'syncly' ),
 					'connectionFailed'          => __( 'Connection failed', 'syncly' ),
@@ -266,136 +266,136 @@ class AssetsManager {
 					'refreshMetadataFailed'     => __( 'Failed to refresh tags and fields.', 'syncly' ),
 				],
 			],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true
 		);
 
 		// Analytics assets (loads on SPA page for analytics view)
 		$this->add_admin_asset(
-			'ghl-crm-analytics-js',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-analytics-js',
+			[ 'toplevel_page_syncly-admin' ],
 			'analytics.js',
 			[ 'jquery', 'ghl-sweetalert2', 'ghl-chartjs' ],
 			[],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true
 		);
 		// Field Mapping assets (need to load on SPA page)
 		$this->add_admin_asset(
-			'ghl-crm-field-mapping-css',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-field-mapping-css',
+			[ 'toplevel_page_syncly-admin' ],
 			'field-mapping.css',
 			[],
 			[],
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 
 		$this->add_admin_asset(
-			'ghl-crm-field-mapping-js',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-field-mapping-js',
+			[ 'toplevel_page_syncly-admin' ],
 			'field-mapping.js',
 			[ 'jquery', 'ghl-sweetalert2' ],
 			[
-				'nonce' => wp_create_nonce( 'ghl_crm_field_mapping_nonce' ),
+				'nonce' => wp_create_nonce( 'syncly_field_mapping_nonce' ),
 			],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true
 		);
 
 		// Integrations assets (need to load on SPA page)
 		$this->add_admin_asset(
-			'synclys-css',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-integrations-css',
+			[ 'toplevel_page_syncly-admin' ],
 			'integrations.css',
 			[],
 			[],
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 
 		$this->add_admin_asset(
-			'synclys-js',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-integrations-js',
+			[ 'toplevel_page_syncly-admin' ],
 			'integrations.js',
 			[ 'jquery', 'ghl-sweetalert2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
+				'nonce'   => wp_create_nonce( 'syncly_admin' ),
 				'tags'    => $ghl_tags,
 			],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true
 		);
 
 		// Settings assets (need to load on SPA page)
 		$this->add_admin_asset(
-			'ghl-crm-settings-css',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-settings-css',
+			[ 'toplevel_page_syncly-admin' ],
 			'settings.css',
-			[ 'ghl-sweetalert2', 'ghl-crm-select2-css' ],
+			[ 'ghl-sweetalert2', 'syncly-select2-css' ],
 			[],
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 
 		$this->add_admin_asset(
-			'ghl-crm-advanced-settings-css',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-advanced-settings-css',
+			[ 'toplevel_page_syncly-admin' ],
 			'advanced-settings.css',
-			[ 'ghl-crm-settings-css' ],
+			[ 'syncly-settings-css' ],
 			[],
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 
 		$this->add_admin_asset(
-			'ghl-crm-settings-menu-css',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-settings-menu-css',
+			[ 'toplevel_page_syncly-admin' ],
 			'settings-menu.css',
 			[],
 			[],
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 
 		$this->add_admin_asset(
-			'ghl-crm-settings-menu-js',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-settings-menu-js',
+			[ 'toplevel_page_syncly-admin' ],
 			'settings-menu.js',
 			[ 'jquery' ],
 			[],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true
 		);
 
 		$this->add_admin_asset(
-			'ghl-crm-settings-js',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-settings-js',
+			[ 'toplevel_page_syncly-admin' ],
 			'settings.js',
-			[ 'jquery', 'ghl-sweetalert2', 'ghl-crm-select2' ],
+			[ 'jquery', 'ghl-sweetalert2', 'syncly-select2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
+				'nonce'   => wp_create_nonce( 'syncly_admin' ),
 				'tags'    => $ghl_tags,
 			],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true
 		);
 
 		// Sync Preview assets
 		$this->add_admin_asset(
-			'ghl-crm-sync-preview-css',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-sync-preview-css',
+			[ 'toplevel_page_syncly-admin' ],
 			'sync-preview.css',
-			[ 'ghl-crm-settings-css' ],
+			[ 'syncly-settings-css' ],
 			[],
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 
 		$this->add_admin_asset(
-			'ghl-crm-sync-preview-js',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-sync-preview-js',
+			[ 'toplevel_page_syncly-admin' ],
 			'sync-preview.js',
-			[ 'jquery', 'ghl-sweetalert2', 'ghl-crm-select2' ],
+			[ 'jquery', 'ghl-sweetalert2', 'syncly-select2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
+				'nonce'   => wp_create_nonce( 'syncly_admin' ),
 				'i18n'    => [
 					'searchPlaceholder'  => __( 'Search for a user...', 'syncly' ),
 					'missingInfo'        => __( 'Missing Information', 'syncly' ),
@@ -429,156 +429,157 @@ class AssetsManager {
 					'gotIt'              => __( 'Got it!', 'syncly' ),
 				],
 			],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true
 		);
 
 		// Global CSS for all admin pages (now includes tabbed main-settings page)
 		$this->add_admin_asset(
-			'ghl-crm-globals-css',
+			'syncly-globals-css',
 			[
-				'toplevel_page_ghl-crm-settings',           // Legacy main tabbed page
-				'toplevel_page_ghl-crm-admin',              // New SPA page
-				'ghl-crm_page_ghl-crm-sync-logs',
+				'toplevel_page_syncly-settings',           // Legacy main tabbed page
+				'toplevel_page_syncly-admin',              // New SPA page
+				'syncly_page_syncly-sync-logs',
 				'toplevel_page_wpcf7',
 			],
 			'globals.css',
 			[],
 			[],
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 
 		// Settings page CSS (loads on main-settings page for all tabs)
 		$this->add_admin_asset(
-			'ghl-crm-settings-css',
-			[ 'toplevel_page_ghl-crm-settings', 'toplevel_page_wpcf7' ],
+			'syncly-settings-css',
+			[ 'toplevel_page_syncly-settings', 'toplevel_page_wpcf7' ],
 			'settings.css',
-			[ 'ghl-crm-globals-css', 'ghl-sweetalert2', 'ghl-crm-select2-css' ],
+			[ 'syncly-globals-css', 'ghl-sweetalert2', 'syncly-select2-css' ],
 			[],
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 
 		// Settings page JS (loads on main-settings page for settings tab)
 		$this->add_admin_asset(
-			'ghl-crm-settings-js',
-			[ 'toplevel_page_ghl-crm-settings' ],
+			'syncly-settings-js',
+			[ 'toplevel_page_syncly-settings' ],
 			'settings.js',
-			[ 'jquery', 'ghl-sweetalert2', 'ghl-crm-select2' ],
+			[ 'jquery', 'ghl-sweetalert2', 'syncly-select2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
+				'nonce'   => wp_create_nonce( 'syncly_admin' ),
 				'tags'    => $ghl_tags,
 			],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true
 		);
 
 		// Tools page JS (loads on main-settings page for tools tab)
 		$this->add_admin_asset(
-			'ghl-crm-tools-js',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-tools-js',
+			[ 'toplevel_page_syncly-admin' ],
 			'tools.js',
 			[ 'jquery', 'ghl-sweetalert2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
+				'nonce'   => wp_create_nonce( 'syncly_admin' ),
 			],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true
 		);
 
 		// Field Mapping CSS (loads on main-settings page for field-mapping tab)
 		$this->add_admin_asset(
-			'ghl-crm-field-mapping-css',
-			[ 'toplevel_page_ghl-crm-settings' ],
+			'syncly-field-mapping-css',
+			[ 'toplevel_page_syncly-settings' ],
 			'field-mapping.css',
-			[ 'ghl-crm-globals-css' ],
+			[ 'syncly-globals-css' ],
 			[],
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 
 		// Field Mapping JS (loads on main-settings page for field-mapping tab)
 		$this->add_admin_asset(
-			'ghl-crm-field-mapping-js',
-			[ 'toplevel_page_ghl-crm-settings' ],
+			'syncly-field-mapping-js',
+			[ 'toplevel_page_syncly-settings' ],
 			'field-mapping.js',
 			[ 'jquery', 'ghl-sweetalert2' ],
 			[
-				'nonce' => wp_create_nonce( 'ghl_crm_field_mapping_nonce' ),
+				'nonce' => wp_create_nonce( 'syncly_field_mapping_nonce' ),
 			],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true
 		);
 		// Integrations CSS (loads on main-settings page for integrations tab)
 		$this->add_admin_asset(
-			'synclys-css',
-			[ 'toplevel_page_ghl-crm-settings' ],
+			'syncly-integrations-css',
+			[ 'toplevel_page_syncly-settings' ],
 			'integrations.css',
-			[ 'ghl-crm-globals-css' ],
+			[ 'syncly-globals-css' ],
 			[],
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 
 		// Integrations JS (loads on main-settings page for integrations tab)
 		$this->add_admin_asset(
-			'synclys-js',
-			[ 'toplevel_page_ghl-crm-settings' ],
+			'syncly-integrations-js',
+			[ 'toplevel_page_syncly-settings' ],
 			'integrations.js',
 			[ 'jquery', 'ghl-sweetalert2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'ghl_crm_admin' ),
+				'nonce'   => wp_create_nonce( 'syncly_admin' ),
 				'tags'    => $ghl_tags,
 			],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true
 		);
 
 		// Sync Logs page assets (separate page)
 		$this->add_admin_asset(
-			'ghl-crm-sync-logs-css',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-sync-logs-css',
+			[ 'toplevel_page_syncly-admin' ],
 			'sync-logs.css',
-			[ 'ghl-crm-globals-css' ],
+			[ 'syncly-globals-css' ],
 			[],
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 
 		$this->add_admin_asset(
-			'ghl-crm-sync-logs-js',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-sync-logs-js',
+			[ 'toplevel_page_syncly-admin' ],
 			'sync-logs.js',
 			[ 'jquery', 'ghl-sweetalert2' ],
 			[
-				'nonce'      => wp_create_nonce( 'ghl_sync_logs_nonce' ),
-				'ajaxurl'    => admin_url( 'admin-ajax.php' ),
-				'upgradeUrl' => apply_filters( 'ghl_crm_upgrade_url', 'https://highlevelsync.com/' ),
+				'nonce'             => wp_create_nonce( 'ghl_sync_logs_nonce' ),
+				'ajaxurl'           => admin_url( 'admin-ajax.php' ),
+				'upgradeUrl'        => apply_filters( 'syncly_upgrade_url', 'https://highlevelsync.com/' ),
+				'upgradeNoticeHtml' => $this->get_sync_log_details_upgrade_notice_html(),
 			],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true
 		);
 
 		// Forms page assets (SPA)
 		$this->add_admin_asset(
-			'ghl-crm-forms-css',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-forms-css',
+			[ 'toplevel_page_syncly-admin' ],
 			'forms.css',
 			[],
 			[],
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 
-		$is_pro_active = (bool) apply_filters( 'ghl_crm_is_pro_active', false );
-		$upgrade_url   = apply_filters( 'ghl_crm_upgrade_url', 'https://highlevelsync.com/' );
+		$is_pro_active = (bool) apply_filters( 'syncly_is_pro_active', false );
+		$upgrade_url   = apply_filters( 'syncly_upgrade_url', 'https://highlevelsync.com/' );
 
 		$this->add_admin_asset(
-			'ghl-crm-forms-js',
-			[ 'toplevel_page_ghl-crm-admin' ],
+			'syncly-forms-js',
+			[ 'toplevel_page_syncly-admin' ],
 			'forms.js',
 			[ 'jquery' ],
 			[
 				'ajaxUrl'          => admin_url( 'admin-ajax.php' ),
-				'nonce'            => wp_create_nonce( 'ghl_crm_forms_nonce' ),
+				'nonce'            => wp_create_nonce( 'syncly_forms_nonce' ),
 				'whiteLabelDomain' => $white_label_domain,
 				'formSettings'     => $this->get_all_form_settings(),
 				'isPro'            => $is_pro_active,
@@ -605,28 +606,28 @@ class AssetsManager {
 					'unlockFeature'    => __( 'Learn more about the companion add-on.', 'syncly' ),
 				],
 			],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true
 		);
 
 		// Setup Wizard assets (loads only on setup wizard page)
 		$this->add_admin_asset(
-			'ghl-crm-setup-wizard-css',
-			[ 'admin_page_ghl-crm-setup-wizard' ],
+			'syncly-setup-wizard-css',
+			[ 'admin_page_syncly-setup-wizard' ],
 			'setup-wizard.css',
 			[],
 			[],
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 
 		// Also load dashboard.css on setup wizard for consistent styling (connection tabs, etc.)
 		$this->add_admin_asset(
-			'ghl-crm-setup-wizard-dashboard-css',
-			[ 'admin_page_ghl-crm-setup-wizard' ],
+			'syncly-setup-wizard-dashboard-css',
+			[ 'admin_page_syncly-setup-wizard' ],
 			'dashboard.css',
-			[ 'ghl-crm-setup-wizard-css' ],
+			[ 'syncly-setup-wizard-css' ],
 			[],
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 
 		// Correctly fetch connection tokens from the settings array
@@ -652,16 +653,16 @@ class AssetsManager {
 		$enable_role_tags = ! empty( $role_tags_config );
 
 		$this->add_admin_asset(
-			'ghl-crm-setup-wizard-js',
-			[ 'admin_page_ghl-crm-setup-wizard' ],
+			'syncly-setup-wizard-js',
+			[ 'admin_page_syncly-setup-wizard' ],
 			'setup-wizard.js',
 			[ 'jquery', 'ghl-sweetalert2' ],
 			[
 				'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
-				'nonce'        => wp_create_nonce( 'ghl_crm_spa_nonce' ),
-				'oauthUrl'     => admin_url( 'admin.php?page=ghl-crm-oauth-connect' ),
-				'settingsUrl'  => admin_url( 'admin.php?page=ghl-crm-admin#/settings' ),
-				'dashboardUrl' => admin_url( 'admin.php?page=ghl-crm-admin' ),
+				'nonce'        => wp_create_nonce( 'syncly_spa_nonce' ),
+				'oauthUrl'     => admin_url( 'admin.php?page=syncly-oauth-connect' ),
+				'settingsUrl'  => admin_url( 'admin.php?page=syncly-admin#/settings' ),
+				'dashboardUrl' => admin_url( 'admin.php?page=syncly-admin' ),
 				'isConnected'  => ( ! empty( $oauth_token ) || ! empty( $api_token ) ) ? '1' : '0',
 				'tags'         => $ghl_tags,
 				'settings'     => [
@@ -675,7 +676,7 @@ class AssetsManager {
 					'enable_role_tags'              => $enable_role_tags,
 				],
 			],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true
 		);
 	}
@@ -701,7 +702,7 @@ class AssetsManager {
 		string $file,
 		array $dependencies = [],
 		array $localization = [],
-		string $version = GHL_CRM_VERSION,
+		string $version = SYNCLY_VERSION,
 		bool $enqueue_in_footer = true,
 		?string $base_url = null
 	): void {
@@ -731,7 +732,7 @@ class AssetsManager {
 		$post_type = isset( $current_screen->post_type ) ? $current_screen->post_type : null;
 
 		// Enqueue WordPress editor assets on admin pages that might need them
-		if ( in_array( $screen_id, [ 'toplevel_page_ghl-crm-admin', 'toplevel_page_ghl-crm-settings' ], true ) ) {
+		if ( in_array( $screen_id, [ 'toplevel_page_syncly-admin', 'toplevel_page_syncly-settings' ], true ) ) {
 			wp_enqueue_editor();
 		}
 
@@ -764,7 +765,7 @@ class AssetsManager {
 	private function enqueue_asset( string $handle, array $asset, string $context = 'admin' ): void {
 		$file      = $asset['file'];
 		$deps      = $asset['dependencies'] ?? [];
-		$version   = $asset['version'] ?? GHL_CRM_VERSION;
+		$version   = $asset['version'] ?? SYNCLY_VERSION;
 		$in_footer = $asset['enqueue_in_footer'] ?? true;
 		$localize  = $asset['localization'] ?? [];
 		$base_url  = $asset['base_url'] ?? null;
@@ -780,9 +781,9 @@ class AssetsManager {
 		if ( $base_url ) {
 			$file_url = rtrim( $base_url, '/' ) . '/' . $file;
 		} elseif ( 'admin' === $context ) {
-			$file_url = GHL_CRM_URL . 'assets/admin/' . ( $is_style ? 'css/' : 'js/' ) . $file;
+			$file_url = SYNCLY_URL . 'assets/admin/' . ( $is_style ? 'css/' : 'js/' ) . $file;
 		} else {
-			$file_url = GHL_CRM_URL . 'assets/public/' . ( $is_style ? 'css/' : 'js/' ) . $file;
+			$file_url = SYNCLY_URL . 'assets/public/' . ( $is_style ? 'css/' : 'js/' ) . $file;
 		}
 
 		// Enqueue the asset
@@ -854,7 +855,7 @@ class AssetsManager {
 			$sub_dir  = ( 'admin' === $context )
 				? 'assets/admin/' . ( $is_style ? 'css/' : 'js/' )
 				: 'assets/public/' . ( $is_style ? 'css/' : 'js/' );
-			$abs_path = GHL_CRM_PATH . $sub_dir . $min_file;
+			$abs_path = SYNCLY_PATH . $sub_dir . $min_file;
 		}
 
 		return file_exists( $abs_path ) ? $min_file : $file;
@@ -877,7 +878,7 @@ class AssetsManager {
 		string $file,
 		array $dependencies = [],
 		array $localization = [],
-		string $version = GHL_CRM_VERSION,
+		string $version = SYNCLY_VERSION,
 		bool $enqueue_in_footer = true,
 		?string $base_url = null
 	): void {
@@ -900,11 +901,11 @@ class AssetsManager {
 	public function define_frontend_assets(): void {
 		// GHL Forms frontend CSS
 		$this->add_public_asset(
-			'ghl-crm-forms-frontend-css',
+			'syncly-forms-frontend-css',
 			'forms.css',
 			[],
 			[],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			false
 		);
 
@@ -914,40 +915,40 @@ class AssetsManager {
 			'restrictions.css',
 			[],
 			[],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			false,
-			GHL_CRM_URL . 'assets/frontend/css/'
+			SYNCLY_URL . 'assets/frontend/css/'
 		);
 
 		// Blocks frontend CSS (for block render output)
 		$this->add_public_asset(
-			'ghl-crm-blocks',
+			'syncly-blocks',
 			'blocks-frontend.css',
 			[],
 			[],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			false,
-			GHL_CRM_URL . 'assets/blocks/'
+			SYNCLY_URL . 'assets/blocks/'
 		);
 
 		// GHL Forms frontend JS
 		// $this->add_public_asset(
-		// 'ghl-crm-forms-frontend-js',
+		// 'syncly-forms-frontend-js',
 		// 'form-handler.js',
 		// [ 'jquery' ],
 		// [
 		// 'ajax_url' => admin_url( 'admin-ajax.php' ),
 		// 'nonce'    => wp_create_nonce( 'ghl_form_submission' ),
 		// ],
-		// GHL_CRM_VERSION,
+		// SYNCLY_VERSION,
 		// true
 		// );
 
 		// GHL Form Auto-fill (experimental - tests URL parameter pre-filling)
 		$user_data         = $this->get_current_user_data_for_autofill();
-		$all_form_settings = \GHL_CRM\Integrations\Forms\FormSettings::get_instance()->get_all_settings();
+		$all_form_settings = \Syncly\Integrations\Forms\FormSettings::get_instance()->get_all_settings();
 
-		$is_pro_active = \GHL_CRM\Integrations\Forms\FormSettings::is_pro_active();
+		$is_pro_active = \Syncly\Integrations\Forms\FormSettings::is_pro_active();
 
 		// Resolve custom parameters for each form when the companion add-on enables them.
 		foreach ( $all_form_settings as $form_id => $form_config ) {
@@ -958,7 +959,7 @@ class AssetsManager {
 				continue;
 			}
 
-			$resolved_params = apply_filters( 'ghl_crm_form_custom_params', [], (string) $form_id );
+			$resolved_params = apply_filters( 'syncly_form_custom_params', [], (string) $form_id );
 			if ( ! empty( $resolved_params ) && is_array( $resolved_params ) ) {
 				$all_form_settings[ $form_id ]['resolved_params'] = $resolved_params;
 			} else {
@@ -981,7 +982,7 @@ class AssetsManager {
 				'ajaxUrl'          => admin_url( 'admin-ajax.php' ),
 				'nonce'            => wp_create_nonce( 'ghl_form_submission' ),
 			],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true
 		);
 	}
@@ -1027,7 +1028,7 @@ class AssetsManager {
 		string $handle,
 		string $file_url,
 		array $dependencies = [],
-		string $version = GHL_CRM_VERSION,
+		string $version = SYNCLY_VERSION,
 		bool $in_footer = true,
 		array $localizations = []
 	): void {
@@ -1051,7 +1052,7 @@ class AssetsManager {
 		foreach ( $this->block_editor_assets as $handle => $asset ) {
 			$file_url = $asset['file_url'];
 			$deps     = $asset['dependencies'] ?? [];
-			$version  = $asset['version'] ?? GHL_CRM_VERSION;
+			$version  = $asset['version'] ?? SYNCLY_VERSION;
 			$ext      = pathinfo( wp_parse_url( $file_url, PHP_URL_PATH ) ?: $file_url, PATHINFO_EXTENSION );
 
 			if ( 'css' === $ext ) {
@@ -1081,18 +1082,18 @@ class AssetsManager {
 
 		// GHL Form Block JS
 		$this->add_block_editor_asset(
-			'ghl-crm-form-block',
-			GHL_CRM_URL . 'assets/blocks/ghl-form/index.js',
+			'syncly-form-block',
+			SYNCLY_URL . 'assets/blocks/ghl-form/index.js',
 			[ 'wp-blocks', 'wp-element', 'wp-editor', 'wp-components', 'wp-i18n', 'wp-api-fetch' ],
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			true,
 			[
 				[
-					'name' => 'ghlCrmSettings',
+					'name' => 'synclySettings',
 					'data' => [
 						'locationId'  => $connection_status['location_id'] ?? '',
 						'connected'   => $is_connected,
-						'settingsUrl' => admin_url( 'admin.php?page=ghl-crm-settings' ),
+						'settingsUrl' => admin_url( 'admin.php?page=syncly-settings' ),
 					],
 				],
 			]
@@ -1100,10 +1101,10 @@ class AssetsManager {
 
 		// GHL Form Block Editor CSS
 		$this->add_block_editor_asset(
-			'ghl-crm-form-block-editor',
-			GHL_CRM_URL . 'assets/blocks/ghl-form/editor.css',
+			'syncly-form-block-editor',
+			SYNCLY_URL . 'assets/blocks/ghl-form/editor.css',
 			[ 'wp-edit-blocks' ],
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 
 		// Restricted Content Block JS
@@ -1120,10 +1121,10 @@ class AssetsManager {
 		}
 
 		$this->add_block_editor_asset(
-			'ghl-crm-restricted-content-block',
-			GHL_CRM_URL . 'assets/blocks/restricted-content/index.js',
-			[ 'wp-blocks', 'wp-element', 'wp-editor', 'wp-block-editor', 'wp-components', 'wp-i18n', 'jquery', 'ghl-crm-select2' ],
-			GHL_CRM_VERSION,
+			'syncly-restricted-content-block',
+			SYNCLY_URL . 'assets/blocks/restricted-content/index.js',
+			[ 'wp-blocks', 'wp-element', 'wp-editor', 'wp-block-editor', 'wp-components', 'wp-i18n', 'jquery', 'syncly-select2' ],
+			SYNCLY_VERSION,
 			true,
 			[
 				[
@@ -1138,10 +1139,10 @@ class AssetsManager {
 
 		// Restricted Content Block Editor CSS
 		$this->add_block_editor_asset(
-			'ghl-crm-restricted-content-block-editor',
-			GHL_CRM_URL . 'assets/blocks/restricted-content/editor.css',
-			[ 'wp-edit-blocks', 'ghl-crm-select2-css' ],
-			GHL_CRM_VERSION
+			'syncly-restricted-content-block-editor',
+			SYNCLY_URL . 'assets/blocks/restricted-content/editor.css',
+			[ 'wp-edit-blocks', 'syncly-select2-css' ],
+			SYNCLY_VERSION
 		);
 	}
 
@@ -1226,7 +1227,7 @@ class AssetsManager {
 	 * @return array All form settings
 	 */
 	private function get_all_form_settings(): array {
-		$form_settings = \GHL_CRM\Integrations\Forms\FormSettings::get_instance();
+		$form_settings = \Syncly\Integrations\Forms\FormSettings::get_instance();
 		return $form_settings->get_all_settings();
 	}
 
@@ -1237,45 +1238,42 @@ class AssetsManager {
 	 * @return string Preview markup.
 	 */
 	private function get_forms_addon_mockup_html( string $upgrade_url ): string {
+		$notice_title = __( 'Advanced Form Controls', 'syncly' );
+		$description  = __( 'Pass logged-in user data into embedded forms, limit submissions per user, and add dynamic custom URL parameters.', 'syncly' );
+		$features     = [
+			__( 'Auto-fill forms with logged-in user data', 'syncly' ),
+			__( 'Limit submissions per user', 'syncly' ),
+			__( 'Dynamic custom URL parameters', 'syncly' ),
+		];
+		$cta_text = __( 'Learn More', 'syncly' );
+		$cta_url  = $upgrade_url;
+		$style    = 'banner';
+
 		ob_start();
-		?>
-		<div class="ghl-settings-group ghl-pro-preview-card">
-			<div class="ghl-pro-preview-header">
-				<h3>
-					<span class="dashicons dashicons-lock"></span>
-					<?php esc_html_e( 'Advanced Form Controls', 'syncly' ); ?>
-					<span class="ghl-pro-badge-small"><?php esc_html_e( 'Add-on', 'syncly' ); ?></span>
-				</h3>
-				<a href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank" rel="noopener noreferrer" class="ghl-button ghl-button-secondary">
-					<span class="dashicons dashicons-unlock"></span>
-					<?php esc_html_e( 'Learn More', 'syncly' ); ?>
-				</a>
-			</div>
-			<div class="ghl-pro-preview-surface" aria-hidden="true">
-				<div class="ghl-pro-preview-section">
-					<div class="ghl-pro-preview-title-row">
-						<span class="ghl-pro-preview-title"><?php esc_html_e( 'Auto-fill Form Data', 'syncly' ); ?></span>
-						<span class="ghl-pro-preview-toggle is-on"></span>
-					</div>
-					<p class="ghl-pro-preview-copy"><?php esc_html_e( 'Pass logged-in user data into embedded forms.', 'syncly' ); ?></p>
-				</div>
-				<div class="ghl-pro-preview-section">
-					<div class="ghl-pro-preview-title-row">
-						<span class="ghl-pro-preview-title"><?php esc_html_e( 'Submission Controls', 'syncly' ); ?></span>
-						<span class="ghl-pro-preview-pill"><?php esc_html_e( 'Once per user', 'syncly' ); ?></span>
-					</div>
-					<div class="ghl-pro-preview-message"><?php esc_html_e( 'Thank you. You have already submitted this form.', 'syncly' ); ?></div>
-				</div>
-				<div class="ghl-pro-preview-section">
-					<div class="ghl-pro-preview-title-row">
-						<span class="ghl-pro-preview-title"><?php esc_html_e( 'Custom URL Parameters', 'syncly' ); ?></span>
-						<span class="ghl-pro-preview-pill"><?php esc_html_e( 'Dynamic', 'syncly' ); ?></span>
-					</div>
-					<div class="ghl-pro-preview-param"><code>{user_email}</code><span>=</span><code>email</code></div>
-				</div>
-			</div>
-		</div>
-		<?php
+		include SYNCLY_PATH . 'templates/admin/partials/pro-upgrade-notice.php';
+		return (string) ob_get_clean();
+	}
+
+	/**
+	 * Get the upgrade notice markup shown inside the sync logs "View Details"
+	 * modal when Pro isn't active.
+	 *
+	 * @return string Notice markup.
+	 */
+	private function get_sync_log_details_upgrade_notice_html(): string {
+		$notice_title = __( 'Detailed Sync Logs', 'syncly' );
+		$description  = __( 'Inspect the full request, response, and metadata for every sync event.', 'syncly' );
+		$features     = [
+			__( 'Full request and response payloads', 'syncly' ),
+			__( 'Field-by-field sync metadata', 'syncly' ),
+			__( 'Faster troubleshooting of failed syncs', 'syncly' ),
+		];
+		$cta_text = __( 'Learn More', 'syncly' );
+		$cta_url  = apply_filters( 'syncly_upgrade_url', 'https://highlevelsync.com/' );
+		$style    = 'box';
+
+		ob_start();
+		include SYNCLY_PATH . 'templates/admin/partials/pro-upgrade-notice.php';
 		return (string) ob_get_clean();
 	}
 

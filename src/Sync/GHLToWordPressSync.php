@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Sync;
+namespace Syncly\Sync;
 
-use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Sync\TagManager;
-use GHL_CRM\API\Resources\ContactResource;
-use GHL_CRM\API\Client\Client;
+use Syncly\Core\SettingsManager;
+use Syncly\Sync\TagManager;
+use Syncly\API\Resources\ContactResource;
+use Syncly\API\Client\Client;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Handles syncing data from GoHighLevel to WordPress users
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Sync
  */
 class GHLToWordPressSync {
@@ -472,8 +472,8 @@ class GHLToWordPressSync {
 
 		if ( ! empty( $tags ) && is_array( $tags ) ) {
 			// Use TagManager to store tags with the correct location-scoped meta key
-			// and automatically fire the ghl_crm_user_tags_updated hook on change.
-			\GHL_CRM\Sync\TagManager::get_instance()->store_user_tags( $user_id, $tags );
+			// and automatically fire the syncly_user_tags_updated hook on change.
+			\Syncly\Sync\TagManager::get_instance()->store_user_tags( $user_id, $tags );
 		}
 	}
 

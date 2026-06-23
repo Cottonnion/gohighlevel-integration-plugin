@@ -2,12 +2,12 @@
 /**
  * Setup Wizard Template
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
 $is_connected     = ! empty( $settings['oauth_access_token'] ) || ! empty( $settings['api_token'] );
 
@@ -17,7 +17,7 @@ $is_buddyboss_active   = function_exists( 'bp_is_active' ) && bp_is_active( 'gro
 $is_learndash_active   = defined( 'LEARNDASH_VERSION' );
 
 // Check whether companion integration handlers are active.
-$is_pro_version = (bool) apply_filters( 'ghl_crm_is_pro_active', false );
+$is_pro_version = (bool) apply_filters( 'syncly_is_pro_active', false );
 
 // Determine which integrations to show
 $show_woocommerce = $is_pro_version && $is_woocommerce_active;
@@ -73,7 +73,7 @@ $enable_role_tags              = ! empty( $settings['role_tags'] ) && is_array( 
 			</svg>
 			<h1><?php esc_html_e( 'GoHighLevel CRM', 'syncly' ); ?></h1>
 		</div>
-		<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ); ?>" class="ghl-setup-exit">
+		<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin' ) ); ?>" class="ghl-setup-exit">
 			<?php esc_html_e( 'Exit Setup', 'syncly' ); ?>
 		</a>
 	</div>
@@ -191,7 +191,7 @@ $enable_role_tags              = ! empty( $settings['role_tags'] ) && is_array( 
 							<div class="ghl-collapse-content" id="ghl-wizard-connection-options" style="display: none;">
 								<?php
 								// Get OAuth handler
-								$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
+								$oauth_handler = new \Syncly\API\OAuth\OAuthHandler();
 
 								// Include the connection setup template
 								include plugin_dir_path( __FILE__ ) . 'connection-setup.php';
@@ -208,7 +208,7 @@ $enable_role_tags              = ! empty( $settings['role_tags'] ) && is_array( 
 					
 					<?php
 					// Get OAuth handler
-					$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
+					$oauth_handler = new \Syncly\API\OAuth\OAuthHandler();
 
 					// Include the connection setup template
 					include plugin_dir_path( __FILE__ ) . 'connection-setup.php';

@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\API\Resources;
+namespace Syncly\API\Resources;
 
-use GHL_CRM\API\Client\Client;
-use GHL_CRM\API\Exceptions\APIException;
+use Syncly\API\Client\Client;
+use Syncly\API\Exceptions\APIException;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -21,8 +21,8 @@ defined( 'ABSPATH' ) || exit;
  * We manually generate embed URLs using the configured white-label domain (defaults to link.gohighlevel.com).
  * Until GHL provides more comprehensive form data via their API, customization is limited.
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/API/Resources
+ * @package    Syncly
+ * @subpackage Syncly/API/Resources
  */
 class FormsResource {
 	/**
@@ -44,7 +44,7 @@ class FormsResource {
 	 *
 	 * @var string
 	 */
-	private const CACHE_KEY = 'ghl_crm_forms_list';
+	private const CACHE_KEY = 'syncly_forms_list';
 
 	/**
 	 * Constructor
@@ -70,7 +70,7 @@ class FormsResource {
 		}
 
 		// Get location ID from settings (multisite-safe).
-		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 		$settings         = $settings_manager->get_settings_array();
 		$location_id      = $settings['location_id'] ?? '';
 		if ( empty( $location_id ) ) {
@@ -137,7 +137,7 @@ class FormsResource {
 		}
 
 		// Get location ID from settings (multisite-safe).
-		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 		$settings         = $settings_manager->get_settings_array();
 		$location_id      = $settings['location_id'] ?? '';
 		if ( empty( $location_id ) ) {
@@ -255,7 +255,7 @@ class FormsResource {
 			return $this->form_embed_base_url;
 		}
 
-		$settings    = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
+		$settings    = \Syncly\Core\SettingsManager::get_instance()->get_settings_array();
 		$white_label = $settings['ghl_white_label_domain'] ?? '';
 		$scheme      = 'https';
 		$host        = '';
@@ -327,7 +327,7 @@ class FormsResource {
 	 * @throws APIException When API request fails.
 	 */
 	public function get_form_submissions( string $form_id = '', int $page = 1, int $limit = 20 ): array {
-		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 		$settings         = $settings_manager->get_settings_array();
 		$location_id      = $settings['location_id'] ?? '';
 

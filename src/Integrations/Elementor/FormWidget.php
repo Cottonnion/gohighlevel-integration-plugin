@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Integrations\Elementor;
+namespace Syncly\Integrations\Elementor;
 
-use GHL_CRM\API\Resources\FormsResource;
-use GHL_CRM\API\Client\Client;
-use GHL_CRM\Frontend\ShortcodeManager;
+use Syncly\API\Resources\FormsResource;
+use Syncly\API\Client\Client;
+use Syncly\Frontend\ShortcodeManager;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -14,7 +14,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * Provides an Elementor widget for embedding GoHighLevel forms
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Integrations/Elementor
  */
 class FormWidget extends \Elementor\Widget_Base {
@@ -52,7 +52,7 @@ class FormWidget extends \Elementor\Widget_Base {
 	 * @return array
 	 */
 	public function get_categories(): array {
-		return [ 'ghl-crm', 'general' ];
+		return [ 'syncly', 'general' ];
 	}
 
 	/**
@@ -104,7 +104,7 @@ class FormWidget extends \Elementor\Widget_Base {
 					sprintf(
 						/* translators: %s: Link to forms settings page */
 						__( 'Advanced form settings (submission limits, logged-in restrictions, custom messages) are managed from the <a href="%s" target="_blank" style="color: #2196F3; font-style: normal;">Forms Settings</a> page in the plugin dashboard.', 'syncly' ),
-						admin_url( 'admin.php?page=ghl-crm-admin#forms' )
+						admin_url( 'admin.php?page=syncly-admin#forms' )
 					)
 				),
 				'content_classes' => 'elementor-panel-alert elementor-panel-alert-info',
@@ -223,7 +223,7 @@ class FormWidget extends \Elementor\Widget_Base {
 
 		try {
 			// Check if connected
-			$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+			$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 			if ( ! $settings_manager->is_connection_verified() ) {
 				return [
 					'' => __( '— Not Connected to GoHighLevel —', 'syncly' ),

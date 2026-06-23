@@ -3,7 +3,7 @@
  *
  * Tracks cart data when using WooCommerce Checkout Block
  *
- * @package GHL_CRM
+ * @package Syncly
  */
 
 (function ($) {

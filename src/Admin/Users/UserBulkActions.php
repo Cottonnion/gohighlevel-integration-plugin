@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Admin\Users;
+namespace Syncly\Admin\Users;
 
-use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Integrations\Users\UserHooks;
+use Syncly\Core\SettingsManager;
+use Syncly\Integrations\Users\UserHooks;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Adds GoHighLevel sync options to the WordPress users bulk actions menu.
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Admin/Users
  */
 class UserBulkActions {

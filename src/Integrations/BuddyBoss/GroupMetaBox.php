@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Integrations\BuddyBoss;
+namespace Syncly\Integrations\BuddyBoss;
 
-use GHL_CRM\Sync\QueueManager;
+use Syncly\Sync\QueueManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Adds GHL sync info and controls to BuddyBoss group admin screens
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Integrations/BuddyBoss
  */
 class GroupMetaBox {
@@ -35,9 +35,9 @@ class GroupMetaBox {
 	/**
 	 * Settings Manager
 	 *
-	 * @var \GHL_CRM\Core\SettingsManager
+	 * @var \Syncly\Core\SettingsManager
 	 */
-	private \GHL_CRM\Core\SettingsManager $settings_manager;
+	private \Syncly\Core\SettingsManager $settings_manager;
 
 	/**
 	 * Get instance
@@ -56,7 +56,7 @@ class GroupMetaBox {
 	 */
 	private function __construct() {
 		$this->queue_manager    = QueueManager::get_instance();
-		$this->settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$this->settings_manager = \Syncly\Core\SettingsManager::get_instance();
 		$this->register_hooks();
 	}
 
@@ -87,19 +87,19 @@ class GroupMetaBox {
 	 * Register admin assets via AssetsManager.
 	 */
 	private function register_assets(): void {
-		$assets_manager = \GHL_CRM\Core\AssetsManager::get_instance();
+		$assets_manager = \Syncly\Core\AssetsManager::get_instance();
 
 		// BuddyBoss group edit screen ID (child of buddyboss-platform menu).
 		$screens = array( 'buddyboss_page_bp-groups' );
 
 		// Globals CSS for design tokens (custom properties).
 		$assets_manager->add_admin_asset(
-			'ghl-crm-globals-css',
+			'syncly-globals-css',
 			$screens,
 			'globals.css',
 			array(),
 			array(),
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			false
 		);
 
@@ -108,9 +108,9 @@ class GroupMetaBox {
 			'ghl-buddyboss-group-meta-box-css',
 			$screens,
 			'buddyboss-group-meta-box.css',
-			array( 'ghl-crm-globals-css' ),
+			array( 'syncly-globals-css' ),
 			array(),
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			false
 		);
 
@@ -129,7 +129,7 @@ class GroupMetaBox {
 					'membersQueued' => __( 'Members queued for sync!', 'syncly' ),
 				),
 			),
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 	}
 

@@ -2,7 +2,7 @@
 /**
  * Dashboard Template
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -10,15 +10,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Get OAuth handler and status
-$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
+$oauth_handler = new \Syncly\API\OAuth\OAuthHandler();
 $oauth_status  = $oauth_handler->get_connection_status();
-$settings      = \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
+$settings      = \Syncly\Core\SettingsManager::get_instance()->get_settings_array();
 
 $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
-$is_pro_active = (bool) apply_filters( 'ghl_crm_is_pro_active', false );
-$has_analytics = $is_pro_active && has_action( 'ghl_crm_render_analytics_tab' );
+$is_pro_active = (bool) apply_filters( 'syncly_is_pro_active', false );
+$has_analytics = $is_pro_active && has_action( 'syncly_render_analytics_tab' );
 ?>
-<div class="ghl-crm-dashboard">
+<div class="syncly-dashboard">
 	<?php if ( $is_connected ) : ?>
 		<!-- Tab Navigation -->
 		<div class="ghl-dashboard-tabs" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px 12px 0 0; padding: 0; margin-bottom: -1px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);">
@@ -44,7 +44,7 @@ $has_analytics = $is_pro_active && has_action( 'ghl_crm_render_analytics_tab' );
 			<!-- Analytics Tab -->
 			<div id="ghl-tab-analytics" class="ghl-tab-content" style="display: none;">
 				<?php if ( $has_analytics ) : ?>
-					<?php do_action( 'ghl_crm_render_analytics_tab' ); ?>
+					<?php do_action( 'syncly_render_analytics_tab' ); ?>
 				<?php else : ?>
 					<?php include plugin_dir_path( __FILE__ ) . 'analytics.php'; ?>
 				<?php endif; ?>

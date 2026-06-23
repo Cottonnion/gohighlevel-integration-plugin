@@ -36,7 +36,7 @@
         const savedTags = $select.data('saved-tags') || [];
 
         // Pre-populate options from localized tags
-        var allTags = (typeof ghl_crm_pro_woocommerce_data !== 'undefined' && ghl_crm_pro_woocommerce_data.tags) ? ghl_crm_pro_woocommerce_data.tags : [];
+        var allTags = (typeof syncly_pro_woocommerce_data !== 'undefined' && syncly_pro_woocommerce_data.tags) ? syncly_pro_woocommerce_data.tags : [];
         allTags.forEach(function(tag) {
             var label = String(tag.name || tag.id || '');
             if (label && !$select[0].querySelector('option[value="' + CSS.escape(label) + '"]')) {

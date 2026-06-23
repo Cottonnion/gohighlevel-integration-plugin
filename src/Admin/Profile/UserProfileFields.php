@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Admin\Profile;
+namespace Syncly\Admin\Profile;
 
-use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Sync\TagManager;
-use GHL_CRM\API\Client\Client;
-use GHL_CRM\API\Resources\ContactResource;
+use Syncly\Core\SettingsManager;
+use Syncly\Sync\TagManager;
+use Syncly\API\Client\Client;
+use Syncly\API\Resources\ContactResource;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Adds GoHighLevel data section to user profile/edit pages
  * Includes contact info, tags management with Select2, and sync controls
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Admin/Profile
  */
 class UserProfileFields {
@@ -108,10 +108,10 @@ class UserProfileFields {
 		$this->register_assets();
 
 		// AJAX handlers
-		add_action( 'wp_ajax_ghl_crm_get_contact_data', [ $this, 'ajax_get_contact_data' ] );
-		add_action( 'wp_ajax_ghl_crm_sync_user_now', [ $this, 'ajax_sync_user_now' ] );
-		add_action( 'wp_ajax_ghl_crm_generate_login_link', [ $this, 'ajax_generate_login_link' ] );
-		add_action( 'wp_ajax_ghl_crm_refresh_from_ghl', [ $this, 'ajax_refresh_from_ghl' ] );
+		add_action( 'wp_ajax_syncly_get_contact_data', [ $this, 'ajax_get_contact_data' ] );
+		add_action( 'wp_ajax_syncly_sync_user_now', [ $this, 'ajax_sync_user_now' ] );
+		add_action( 'wp_ajax_syncly_generate_login_link', [ $this, 'ajax_generate_login_link' ] );
+		add_action( 'wp_ajax_syncly_refresh_from_ghl', [ $this, 'ajax_refresh_from_ghl' ] );
 	}
 
 	/**
@@ -242,17 +242,17 @@ class UserProfileFields {
 	 * Register assets via AssetsManager for user profile screens.
 	 */
 	private function register_assets(): void {
-		$assets_manager = \GHL_CRM\Core\AssetsManager::get_instance();
+		$assets_manager = \Syncly\Core\AssetsManager::get_instance();
 		$screens        = array( 'profile', 'user-edit' );
 
 		// Globals CSS (Select2 custom styling: checkboxes, borders, highlight colors).
 		$assets_manager->add_admin_asset(
-			'ghl-crm-globals-css',
+			'syncly-globals-css',
 			$screens,
 			'globals.css',
 			array(),
 			array(),
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			false
 		);
 
@@ -263,7 +263,7 @@ class UserProfileFields {
 			'settings.css',
 			array(),
 			array(),
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			false
 		);
 
@@ -272,9 +272,9 @@ class UserProfileFields {
 			'ghl-user-profile-css',
 			$screens,
 			'user-profile.css',
-			array( 'ghl-crm-select2-css', 'ghl-crm-globals-css', 'ghl-settings-css' ),
+			array( 'syncly-select2-css', 'syncly-globals-css', 'ghl-settings-css' ),
 			array(),
-			GHL_CRM_VERSION,
+			SYNCLY_VERSION,
 			false
 		);
 
@@ -283,11 +283,11 @@ class UserProfileFields {
 			'ghl-user-profile-js',
 			$screens,
 			'user-profile.js',
-			array( 'jquery', 'ghl-crm-select2' ),
+			array( 'jquery', 'syncly-select2' ),
 			array(
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ghl_user_profile' ),
-				'tags'    => \GHL_CRM\Sync\TagManager::get_instance()->get_tags_for_localization(),
+				'tags'    => \Syncly\Sync\TagManager::get_instance()->get_tags_for_localization(),
 				'strings' => array(
 					'loading'        => __( 'Loading...', 'syncly' ),
 					'syncSuccess'    => __( 'User synced successfully!', 'syncly' ),
@@ -300,7 +300,7 @@ class UserProfileFields {
 					'syncToError'    => __( 'Failed to sync to GoHighLevel. Please try again.', 'syncly' ),
 				),
 			),
-			GHL_CRM_VERSION
+			SYNCLY_VERSION
 		);
 	}
 
@@ -318,7 +318,7 @@ class UserProfileFields {
 
 		// Get GHL data
 		$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
-		$contact_id  = \GHL_CRM\Sync\TagManager::get_instance()->get_user_contact_id( $user->ID, $location_id );
+		$contact_id  = \Syncly\Sync\TagManager::get_instance()->get_user_contact_id( $user->ID, $location_id );
 
 		// Only show sync timestamps when the user actually has a contact on this location.
 		$last_sync       = $contact_id ? get_user_meta( $user->ID, '_ghl_last_sync', true ) : '';
@@ -711,14 +711,14 @@ class UserProfileFields {
 		if ( $new_ids !== $current_ids ) {
 			$stored_ids  = $tag_manager->store_user_tags( $user_id, $submitted_tags );
 			$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
-			$contact_id  = \GHL_CRM\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+			$contact_id  = \Syncly\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 
 			if ( ! empty( $contact_id ) ) {
 				$payload_tags = $tag_manager->prepare_tags_for_payload( $stored_ids, $normalized['pairs'] ?? [] );
 				$this->sync_tags_to_ghl( $contact_id, $payload_tags );
 			}
 
-			// Note: ghl_crm_user_tags_updated hook is now fired automatically
+			// Note: syncly_user_tags_updated hook is now fired automatically
 			// inside TagManager::store_user_tags() when tags change.
 		}
 	}
@@ -762,7 +762,7 @@ class UserProfileFields {
 		}
 
 		$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
-		$contact_id  = \GHL_CRM\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+		$contact_id  = \Syncly\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 
 		if ( empty( $contact_id ) ) {
 			wp_send_json_error( [ 'message' => __( 'User not synced to GHL', 'syncly' ) ] );
@@ -833,13 +833,13 @@ class UserProfileFields {
 		}
 
 		// Trigger sync via UserHooks
-		$user_hooks = \GHL_CRM\Integrations\Users\UserHooks::get_instance();
+		$user_hooks = \Syncly\Integrations\Users\UserHooks::get_instance();
 
 		// Prepare contact data
-		$contact_data = apply_filters( 'ghl_crm_prepare_user_contact_data', [], $user );
+		$contact_data = apply_filters( 'syncly_prepare_user_contact_data', [], $user );
 
 		// Add to queue
-		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
+		$queue_manager = \Syncly\Sync\QueueManager::get_instance();
 		$queue_id      = $queue_manager->add_to_queue( 'user', $user_id, 'profile_update', $contact_data );
 
 		if ( $queue_id ) {
@@ -886,7 +886,7 @@ class UserProfileFields {
 		}
 
 		try {
-			$auto_login_manager = \GHL_CRM\Auth\AutoLoginManager::get_instance();
+			$auto_login_manager = \Syncly\Auth\AutoLoginManager::get_instance();
 			$token_data         = $auto_login_manager->generate_token( $user_id );
 
 			// Get WordPress date/time format using SettingsManager (multisite-aware)

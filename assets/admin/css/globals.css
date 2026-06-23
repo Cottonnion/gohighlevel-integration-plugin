@@ -4,7 +4,7 @@
  * Design system for GoHighLevel CRM Integration plugin
  * All admin pages should use these CSS custom properties
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 :root {
@@ -73,8 +73,8 @@
 	/* ========================================
 	   TYPOGRAPHY (Clean, readable, modern)
 	   ======================================== */
-	--ghl-font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-	--ghl-font-family-mono: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+	--ghl-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+	--ghl-font-family-mono: Consolas, Monaco, monospace;
 	
 	--ghl-font-size-xs: 12px;
 	--ghl-font-size-sm: 13px;

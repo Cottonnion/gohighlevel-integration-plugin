@@ -3,7 +3,7 @@
  *
  * Handles Chart.js visualizations and analytics data export
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 (function ($) {

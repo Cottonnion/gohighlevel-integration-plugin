@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Core;
+namespace Syncly\Core;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Handles creation and management of custom database tables.
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Core
  */
 class Database {
@@ -56,17 +56,17 @@ class Database {
 	 */
 	public function init(): void {
 		$settings_manager  = SettingsManager::get_instance();
-		$installed_version = $settings_manager->get_option( 'ghl_crm_db_version', '0.0.0' );
+		$installed_version = $settings_manager->get_option( 'syncly_db_version', '0.0.0' );
 
 		if ( version_compare( $installed_version, self::DB_VERSION, '<' ) ) {
 			// For new installations, create tables immediately
 			if ( '0.0.0' === $installed_version ) {
 				$this->migrate_database( $installed_version );
-				$settings_manager->update_option( 'ghl_crm_db_version', self::DB_VERSION );
+				$settings_manager->update_option( 'syncly_db_version', self::DB_VERSION );
 			} else {
 				// For existing installations, show admin notice for manual update
 				add_action( 'admin_notices', [ $this, 'show_database_update_notice' ] );
-				add_action( 'wp_ajax_ghl_crm_update_database', [ $this, 'handle_database_update' ] );
+				add_action( 'wp_ajax_syncly_update_database', [ $this, 'handle_database_update' ] );
 			}
 		}
 	}
@@ -78,20 +78,29 @@ class Database {
 	 */
 	public function show_database_update_notice(): void {
 		$settings_manager  = SettingsManager::get_instance();
-		$installed_version = $settings_manager->get_option( 'ghl_crm_db_version', '0.0.0' );
+		$installed_version = $settings_manager->get_option( 'syncly_db_version', '0.0.0' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
 
 		?>
-		<div class="notice notice-warning is-dismissible ghl-crm-db-update-notice">
-			<h3><?php esc_html_e( 'GHL CRM Integration - Database Update Required', 'syncly' ); ?></h3>
+		<div class="notice notice-warning is-dismissible syncly-db-update-notice">
+			<h3>
+				<?php
+				printf(
+					/* translators: %s: Plugin name */
+					esc_html__( '%s - Database Update Required', 'syncly' ),
+					esc_html( SYNCLY_PLUGIN_NAME )
+				);
+				?>
+			</h3>
 			<p>
 				<?php
 				printf(
-					/* translators: 1: current version, 2: new version */
-					esc_html__( 'The GHL CRM Integration plugin database needs to be updated from version %1$s to %2$s. This update will:', 'syncly' ),
+					/* translators: 1: Plugin name, 2: current version, 3: new version */
+					esc_html__( 'The %1$s plugin database needs to be updated from version %2$s to %3$s. This update will:', 'syncly' ),
+					esc_html( SYNCLY_PLUGIN_NAME ),
 					'<strong>' . esc_html( $installed_version ) . '</strong>',
 					'<strong>' . esc_html( self::DB_VERSION ) . '</strong>'
 				);
@@ -104,10 +113,10 @@ class Database {
 				<li><?php esc_html_e( '⚡ Expected performance boost: up to 10x faster queries', 'syncly' ); ?></li>
 			</ul>
 			<p>
-				<button type="button" class="button button-primary" id="ghl-crm-update-database" data-nonce="<?php echo esc_attr( wp_create_nonce( 'ghl_crm_update_db' ) ); ?>">
+				<button type="button" class="button button-primary" id="syncly-update-database" data-nonce="<?php echo esc_attr( wp_create_nonce( 'syncly_update_db' ) ); ?>">
 					<?php esc_html_e( 'Update Database Now', 'syncly' ); ?>
 				</button>
-				<button type="button" class="button button-secondary ghl-crm-remind-db-update">
+				<button type="button" class="button button-secondary syncly-remind-db-update">
 					<?php esc_html_e( 'Remind Me Later', 'syncly' ); ?>
 				</button>
 			</p>
@@ -115,7 +124,7 @@ class Database {
 		<?php
 		wp_add_inline_script(
 			'jquery-core',
-			'jQuery(function($){$(document).on("click",".ghl-crm-remind-db-update",function(){$(this).closest(".notice").slideUp();});$(document).on("click","#ghl-crm-update-database",function(){var $button=$(this),$notice=$button.closest(".notice"),nonce=$button.data("nonce");$button.prop("disabled",true).text(' . wp_json_encode( __( 'Updating...', 'syncly' ) ) . ');$.ajax({url:ajaxurl,type:"POST",data:{action:"ghl_crm_update_database",nonce:nonce},success:function(response){if(response.success){$notice.removeClass("notice-warning").addClass("notice-success");$notice.html("<p><strong>"+' . wp_json_encode( __( 'Database updated successfully!', 'syncly' ) ) . '+"</strong> "+' . wp_json_encode( __( 'Sync logging should now work correctly.', 'syncly' ) ) . '+"</p>");setTimeout(function(){$notice.slideUp();},3000);}else{$notice.removeClass("notice-warning").addClass("notice-error");$notice.html("<p><strong>"+' . wp_json_encode( __( 'Update failed:', 'syncly' ) ) . '+"</strong> "+(response.data||' . wp_json_encode( __( 'Unknown error', 'syncly' ) ) . ')+"</p>");$button.prop("disabled",false).text(' . wp_json_encode( __( 'Retry Update', 'syncly' ) ) . ');}},error:function(){$notice.removeClass("notice-warning").addClass("notice-error");$notice.html("<p><strong>"+' . wp_json_encode( __( 'Update failed:', 'syncly' ) ) . '+"</strong> "+' . wp_json_encode( __( 'Network error. Please try again.', 'syncly' ) ) . '+"</p>");$button.prop("disabled",false).text(' . wp_json_encode( __( 'Retry Update', 'syncly' ) ) . ');}});});});'
+			'jQuery(function($){$(document).on("click",".syncly-remind-db-update",function(){$(this).closest(".notice").slideUp();});$(document).on("click","#syncly-update-database",function(){var $button=$(this),$notice=$button.closest(".notice"),nonce=$button.data("nonce");$button.prop("disabled",true).text(' . wp_json_encode( __( 'Updating...', 'syncly' ) ) . ');$.ajax({url:ajaxurl,type:"POST",data:{action:"syncly_update_database",nonce:nonce},success:function(response){if(response.success){$notice.removeClass("notice-warning").addClass("notice-success");$notice.html("<p><strong>"+' . wp_json_encode( __( 'Database updated successfully!', 'syncly' ) ) . '+"</strong> "+' . wp_json_encode( __( 'Sync logging should now work correctly.', 'syncly' ) ) . '+"</p>");setTimeout(function(){$notice.slideUp();},3000);}else{$notice.removeClass("notice-warning").addClass("notice-error");$notice.html("<p><strong>"+' . wp_json_encode( __( 'Update failed:', 'syncly' ) ) . '+"</strong> "+(response.data||' . wp_json_encode( __( 'Unknown error', 'syncly' ) ) . ')+"</p>");$button.prop("disabled",false).text(' . wp_json_encode( __( 'Retry Update', 'syncly' ) ) . ');}},error:function(){$notice.removeClass("notice-warning").addClass("notice-error");$notice.html("<p><strong>"+' . wp_json_encode( __( 'Update failed:', 'syncly' ) ) . '+"</strong> "+' . wp_json_encode( __( 'Network error. Please try again.', 'syncly' ) ) . '+"</p>");$button.prop("disabled",false).text(' . wp_json_encode( __( 'Retry Update', 'syncly' ) ) . ');}});});});'
 		);
 		?>
 		<?php
@@ -129,7 +138,7 @@ class Database {
 	public function handle_database_update(): void {
 		// Verify nonce
 		$raw_nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
-		if ( ! wp_verify_nonce( $raw_nonce, 'ghl_crm_update_db' ) ) {
+		if ( ! wp_verify_nonce( $raw_nonce, 'syncly_update_db' ) ) {
 			wp_send_json_error( __( 'Security check failed', 'syncly' ) );
 		}
 
@@ -140,16 +149,16 @@ class Database {
 
 		try {
 			$settings_manager  = SettingsManager::get_instance();
-			$installed_version = $settings_manager->get_option( 'ghl_crm_db_version', '0.0.0' );
+			$installed_version = $settings_manager->get_option( 'syncly_db_version', '0.0.0' );
 
 			// Perform the migration
 			$this->migrate_database( $installed_version );
-			$settings_manager->update_option( 'ghl_crm_db_version', self::DB_VERSION );
+			$settings_manager->update_option( 'syncly_db_version', self::DB_VERSION );
 
 			wp_send_json_success( __( 'Database updated successfully', 'syncly' ) );
 		} catch ( \Exception $e ) {
 			do_action(
-				'ghl_crm_log_event',
+				'syncly_log_event',
 				'database_update_failed',
 				'GHL CRM database update failed.',
 				[
@@ -474,7 +483,7 @@ class Database {
 		}
 
 		$settings_manager = SettingsManager::get_instance();
-		$settings_manager->update_option( 'ghl_crm_db_version', false );
+		$settings_manager->update_option( 'syncly_db_version', false );
 	}
 
 	/**
@@ -517,7 +526,7 @@ class Database {
 		$current_site_id        = get_current_blog_id();
 
 		// Get retention period from settings via SettingsManager (default: 30 days)
-		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 		$retention_days   = absint( $settings_manager->get_setting( 'log_retention_days', 30 ) );
 		$retention_hours  = max( 1, $retention_days * 24 ); // Convert to hours, minimum 1 hour
 
@@ -596,12 +605,12 @@ class Database {
 	public function schedule_cleanup(): void {
 		if ( function_exists( 'as_next_scheduled_action' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {
 			// Use Action Scheduler (runs daily at midnight)
-			if ( false === as_next_scheduled_action( 'ghl_crm_cleanup_database' ) ) {
-				as_schedule_recurring_action( strtotime( 'tomorrow midnight' ), DAY_IN_SECONDS, 'ghl_crm_cleanup_database', [], 'ghl-crm' );
+			if ( false === as_next_scheduled_action( 'syncly_cleanup_database' ) ) {
+				as_schedule_recurring_action( strtotime( 'tomorrow midnight' ), DAY_IN_SECONDS, 'syncly_cleanup_database', [], 'syncly' );
 			}
-		} elseif ( ! wp_next_scheduled( 'ghl_crm_cleanup_database' ) ) {
+		} elseif ( ! wp_next_scheduled( 'syncly_cleanup_database' ) ) {
 			// Fallback to WP-Cron (AS not available or not yet initialized, e.g. during activation).
-			wp_schedule_event( strtotime( 'tomorrow midnight' ), 'daily', 'ghl_crm_cleanup_database' );
+			wp_schedule_event( strtotime( 'tomorrow midnight' ), 'daily', 'syncly_cleanup_database' );
 		}
 	}
 }

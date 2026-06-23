@@ -2,7 +2,7 @@
 /**
  * Template: Sync Logs Page
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -10,15 +10,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Check connection status
-$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
-$oauth_handler    = new \GHL_CRM\API\OAuth\OAuthHandler();
+$oauth_handler    = new \Syncly\API\OAuth\OAuthHandler();
 $oauth_status     = $oauth_handler->get_connection_status();
 $is_connected     = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 
 // Check if logging is enabled
-$is_logging_enabled = \GHL_CRM\Core\SettingsManager::is_sync_logging_enabled();
-$is_pro_active      = (bool) apply_filters( 'ghl_crm_is_pro_active', false );
+$is_logging_enabled = \Syncly\Core\SettingsManager::is_sync_logging_enabled();
+$is_pro_active      = (bool) apply_filters( 'syncly_is_pro_active', false );
 
 // Get per-page preference from user meta (default 20)
 $current_user_id = get_current_user_id();
@@ -33,7 +33,7 @@ $current_page = $raw_page ? max( 1, (int) $raw_page ) : 1;
 $offset       = ( $current_page - 1 ) * $logs_per_page;
 
 // Get logs for site ID 1
-$sync_logger = \GHL_CRM\Sync\SyncLogger::get_instance();
+$sync_logger = \Syncly\Sync\SyncLogger::get_instance();
 $logs        = $sync_logger->get_logs(
 	[
 		'limit'   => $logs_per_page,
@@ -62,7 +62,7 @@ $log_count   = $wpdb->get_var(
 $total_pages = ceil( $log_count / $logs_per_page );
 ?>
 
-<div class="wrap ghl-crm-sync-logs">
+<div class="wrap syncly-sync-logs">
 
 
 	<?php if ( ! $is_connected ) : ?>
@@ -75,7 +75,7 @@ $total_pages = ceil( $log_count / $logs_per_page );
 					esc_html__( 'Please connect to GoHighLevel in %s first.', 'syncly' ),
 					sprintf(
 						'<a href="%s">%s</a>',
-						esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ),
+						esc_url( admin_url( 'admin.php?page=syncly-admin' ) ),
 						esc_html__( 'Dashboard', 'syncly' )
 					)
 				);
@@ -93,7 +93,7 @@ $total_pages = ceil( $log_count / $logs_per_page );
 		<?php else : ?>
 			<span style="color: #dc3232;"><?php esc_html_e( 'Disabled', 'syncly' ); ?></span>
 			<span style="color: #666;"> — 
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin&tab=advanced#advanced' ) ); ?>"><?php esc_html_e( 'Enable in Settings', 'syncly' ); ?></a>
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin&tab=advanced#advanced' ) ); ?>"><?php esc_html_e( 'Enable in Settings', 'syncly' ); ?></a>
 			</span>
 		<?php endif; ?>
 		<span style="margin-left: 20px; color: #666;">
@@ -223,7 +223,7 @@ $total_pages = ceil( $log_count / $logs_per_page );
 								</td>
 								<td>
 									<?php
-									$details_button = apply_filters( 'ghl_crm_sync_log_details_button', '', $log, $details_json );
+									$details_button = apply_filters( 'syncly_sync_log_details_button', '', $log, $details_json );
 
 									if ( $is_pro_active && ! empty( $details_button ) ) {
 										echo wp_kses_post( $details_button );
@@ -338,7 +338,7 @@ $total_pages = ceil( $log_count / $logs_per_page );
 <?php
 /**
  * Allow extensions to render additional modal content or override
- * Hook: ghl_crm_sync_logs_after_content
+ * Hook: syncly_sync_logs_after_content
  */
-do_action( 'ghl_crm_sync_logs_after_content' );
+do_action( 'syncly_sync_logs_after_content' );
 ?>

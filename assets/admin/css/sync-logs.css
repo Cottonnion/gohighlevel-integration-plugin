@@ -1,7 +1,7 @@
 /**
  * Sync Logs Page Styles
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 /* Status Indicator */
@@ -394,7 +394,6 @@
     border-radius: 8px;
     overflow: auto;
     max-height: 500px;
-    font-family: 'Monaco', 'Courier New', monospace;
     font-size: 13px;
     line-height: 1.6;
     color: #1e293b;
@@ -683,12 +682,12 @@
     }
 
     /* Status indicator at top */
-    .wrap.ghl-crm-sync-logs > div[style*="border-left"] {
+    .wrap.syncly-sync-logs > div[style*="border-left"] {
         padding: 12px !important;
         font-size: 12px !important;
     }
 
-    .wrap.ghl-crm-sync-logs > div[style*="border-left"] span {
+    .wrap.syncly-sync-logs > div[style*="border-left"] span {
         display: block;
         margin: 8px 0 0 0 !important;
     }

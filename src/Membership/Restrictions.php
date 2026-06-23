@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Membership;
+namespace Syncly\Membership;
 
-use GHL_CRM\Core\AssetsManager;
-use GHL_CRM\Core\SettingsManager;
+use Syncly\Core\AssetsManager;
+use Syncly\Core\SettingsManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - Uses $wpdb->postmeta which WordPress automatically switches based on current blog
  * - All queries respect current site context
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Membership
  */
 class Restrictions {
@@ -96,10 +96,10 @@ class Restrictions {
 		 *
 		 * @since 1.0.0
 		 *
-		 * @param \GHL_CRM\Membership\Restrictions $restrictions     The Restrictions instance.
-		 * @param \GHL_CRM\Core\SettingsManager    $settings_manager The SettingsManager instance.
+		 * @param \Syncly\Membership\Restrictions $restrictions     The Restrictions instance.
+		 * @param \Syncly\Core\SettingsManager    $settings_manager The SettingsManager instance.
 		 */
-		do_action( 'ghl_crm_register_advanced_restriction_hooks', $this, $this->settings_manager );
+		do_action( 'syncly_register_advanced_restriction_hooks', $this, $this->settings_manager );
 
 		// Enqueue frontend styles
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_frontend_assets' ] );
@@ -144,7 +144,7 @@ class Restrictions {
 		if ( ! empty( $allowed_tags ) && is_array( $allowed_tags ) ) {
 			$user_id     = get_current_user_id();
 			$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
-			$user_tags   = \GHL_CRM\Sync\TagManager::get_instance()->get_user_tag_names( $user_id, $location_id );
+			$user_tags   = \Syncly\Sync\TagManager::get_instance()->get_user_tag_names( $user_id, $location_id );
 
 			if ( ! empty( $user_tags ) ) {
 				$allowed_lower = array_map( 'strtolower', $allowed_tags );
@@ -210,7 +210,7 @@ class Restrictions {
 	 */
 	private function handle_access_denial( int $post_id, string $reason ): void {
 		// Allow plugins to modify behavior
-		$should_deny = apply_filters( 'ghl_crm_should_deny_access', true, $post_id, $reason );
+		$should_deny = apply_filters( 'syncly_should_deny_access', true, $post_id, $reason );
 
 		if ( ! $should_deny ) {
 			return;
@@ -267,7 +267,7 @@ class Restrictions {
 		}
 
 		// Allow plugins to customize message
-		$message = apply_filters( 'ghl_crm_denial_page_content', $message, $post_id, $reason );
+		$message = apply_filters( 'syncly_denial_page_content', $message, $post_id, $reason );
 
 		// Get title from settings
 		$title = $this->settings_manager->get_setting(
@@ -364,7 +364,7 @@ class Restrictions {
 
 		$message .= '</div>';
 
-		return wp_kses_post( apply_filters( 'ghl_crm_restricted_content_message', $message, $post_id, $reason ) );
+		return wp_kses_post( apply_filters( 'syncly_restricted_content_message', $message, $post_id, $reason ) );
 	}
 
 	/**

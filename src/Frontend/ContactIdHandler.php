@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Frontend;
+namespace Syncly\Frontend;
 
-use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Sync\TagManager;
+use Syncly\Core\SettingsManager;
+use Syncly\Sync\TagManager;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -16,8 +16,8 @@ defined( 'ABSPATH' ) || exit;
  *  - Reads and validates the contact ID from the URL
  *  - Persists the contact ID in a signed short-lived cookie so [ghl_user_meta] can
  *    personalize the page for non-logged-in visitors
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/Frontend
+ * @package    Syncly
+ * @subpackage Syncly/Frontend
  */
 class ContactIdHandler {
 
@@ -235,8 +235,8 @@ class ContactIdHandler {
 		error_log( '[GHL CID] Fetching contact from API. contact_id=' . $contact_id );
 
 		try {
-			$client           = \GHL_CRM\API\Client\Client::get_instance();
-			$contact_resource = new \GHL_CRM\API\Resources\ContactResource( $client );
+			$client           = \Syncly\API\Client\Client::get_instance();
+			$contact_resource = new \Syncly\API\Resources\ContactResource( $client );
 			$contact_data     = $contact_resource->get( $contact_id );
 
 			if ( ! is_array( $contact_data ) ) {

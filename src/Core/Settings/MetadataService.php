@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Core\Settings;
+namespace Syncly\Core\Settings;
 
-use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Sync\TagManager;
+use Syncly\Core\SettingsManager;
+use Syncly\Sync\TagManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -16,8 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Handles GHL tags, custom fields, and metadata refresh AJAX endpoints.
  * Extracted from SettingsManager to reduce file size and improve cohesion.
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/Core/Settings
+ * @package    Syncly
+ * @subpackage Syncly/Core/Settings
  */
 class MetadataService {
 
@@ -49,9 +49,9 @@ class MetadataService {
 	 * @return void
 	 */
 	public function init(): void {
-		add_action( 'wp_ajax_ghl_crm_get_tags', [ $this, 'get_tags' ] );
-		add_action( 'wp_ajax_ghl_crm_get_custom_fields', [ $this, 'get_custom_fields' ] );
-		add_action( 'wp_ajax_ghl_crm_refresh_metadata', [ $this, 'refresh_metadata' ] );
+		add_action( 'wp_ajax_syncly_get_tags', [ $this, 'get_tags' ] );
+		add_action( 'wp_ajax_syncly_get_custom_fields', [ $this, 'get_custom_fields' ] );
+		add_action( 'wp_ajax_syncly_refresh_metadata', [ $this, 'refresh_metadata' ] );
 	}
 
 	/**
@@ -78,10 +78,10 @@ class MetadataService {
 		$nonce = isset( $request_data['nonce'] ) ? sanitize_text_field( wp_unslash( (string) $request_data['nonce'] ) ) : '';
 
 		if (
-			! wp_verify_nonce( $nonce, 'ghl_crm_settings_nonce' ) &&
-			! wp_verify_nonce( $nonce, 'ghl_crm_admin' ) &&
+			! wp_verify_nonce( $nonce, 'syncly_settings_nonce' ) &&
+			! wp_verify_nonce( $nonce, 'syncly_admin' ) &&
 			! wp_verify_nonce( $nonce, 'ghl_user_profile' ) &&
-			! wp_verify_nonce( $nonce, 'ghl_crm_spa_nonce' )
+			! wp_verify_nonce( $nonce, 'syncly_spa_nonce' )
 		) {
 			wp_send_json_error( [ 'message' => 'Invalid nonce.' ], 403 );
 		}
@@ -172,7 +172,7 @@ class MetadataService {
 		}
 
 		try {
-			$client   = \GHL_CRM\API\Client\Client::get_instance();
+			$client   = \Syncly\API\Client\Client::get_instance();
 			$response = $client->get( 'locations/' . $location_id . '/customFields', [] );
 
 			if ( ! empty( $response['customFields'] ) && is_array( $response['customFields'] ) ) {
@@ -213,7 +213,7 @@ class MetadataService {
 	 * @return void
 	 */
 	public function get_custom_fields(): void {
-		check_ajax_referer( 'ghl_crm_field_mapping_nonce', 'nonce' );
+		check_ajax_referer( 'syncly_field_mapping_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
@@ -235,7 +235,7 @@ class MetadataService {
 	 * @return void
 	 */
 	public function refresh_metadata(): void {
-		check_ajax_referer( 'ghl_crm_admin', 'nonce' );
+		check_ajax_referer( 'syncly_admin', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
@@ -260,7 +260,7 @@ class MetadataService {
 				);
 			}
 
-			$client = \GHL_CRM\API\Client\Client::get_instance();
+			$client = \Syncly\API\Client\Client::get_instance();
 
 			// Fetch tags directly from API and refresh transient cache.
 			$tags_response = $client->get( 'locations/' . $location_id . '/tags' );

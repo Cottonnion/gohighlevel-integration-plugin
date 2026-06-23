@@ -28,48 +28,48 @@
  * - .ghl-button-primary, .ghl-button-secondary (buttons)
  * - CSS custom properties (--ghl-*)
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 /* Settings Page Wrapper */
-.ghl-crm-settings {
+.syncly-settings {
 	font-family: var(--ghl-font-family);
 }
 
 /* Required field indicator */
-.ghl-crm-settings .required {
+.syncly-settings .required {
 	color: var(--ghl-error);
 	font-weight: var(--ghl-font-weight-semibold);
 }
 
 /* Test Connection Section - uses .ghl-divider pattern */
-.ghl-crm-settings .ghl-crm-test-connection {
+.syncly-settings .syncly-test-connection {
 	margin-top: var(--ghl-spacing-3xl);
 	padding-top: var(--ghl-spacing-xl);
 	border-top: 1px solid var(--ghl-border-primary);
 }
 
 /* Settings Form Specific Styles */
-.ghl-crm-settings .form-table th {
+.syncly-settings .form-table th {
 	font-weight: var(--ghl-font-weight-medium);
 	color: var(--ghl-text-primary);
 	padding: var(--ghl-spacing-base);
 }
 
-.ghl-crm-settings .form-table td {
+.syncly-settings .form-table td {
 	padding: var(--ghl-spacing-base);
 }
 
-.ghl-crm-settings .form-table input[type="text"],
-.ghl-crm-settings .form-table input[type="password"],
-.ghl-crm-settings .form-table select {
+.syncly-settings .form-table input[type="text"],
+.syncly-settings .form-table input[type="password"],
+.syncly-settings .form-table select {
 	/* Inherits from .ghl-input in globals.css */
 	width: 100%;
 	max-width: 400px;
 }
 
 /* Settings form description */
-.ghl-crm-settings .form-table p.description {
+.syncly-settings .form-table p.description {
 	margin-top: var(--ghl-spacing-xs);
 	font-size: var(--ghl-font-size-sm);
 	color: var(--ghl-text-secondary);
@@ -77,7 +77,7 @@
 }
 
 /* API Token visibility toggle (if needed) */
-.ghl-crm-settings .token-toggle {
+.syncly-settings .token-toggle {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--ghl-spacing-sm);
@@ -88,12 +88,12 @@
 	transition: color var(--ghl-transition-fast);
 }
 
-.ghl-crm-settings .token-toggle:hover {
+.syncly-settings .token-toggle:hover {
 	color: var(--ghl-primary-hover);
 }
 
 /* Connection status indicator */
-.ghl-crm-settings .connection-status {
+.syncly-settings .connection-status {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--ghl-spacing-sm);
@@ -103,23 +103,23 @@
 	font-weight: var(--ghl-font-weight-medium);
 }
 
-.ghl-crm-settings .connection-status--connected {
+.syncly-settings .connection-status--connected {
 	background: var(--ghl-success-light);
 	color: var(--ghl-success-dark);
 }
 
-.ghl-crm-settings .connection-status--disconnected {
+.syncly-settings .connection-status--disconnected {
 	background: var(--ghl-error-light);
 	color: var(--ghl-error-dark);
 }
 
-.ghl-crm-settings .connection-status--checking {
+.syncly-settings .connection-status--checking {
 	background: var(--ghl-info-light);
 	color: var(--ghl-info-dark);
 }
 
 /* Loading spinner for test connection */
-.ghl-crm-settings .spinner {
+.syncly-settings .spinner {
 	float: none;
 	margin: 0;
 	vertical-align: middle;

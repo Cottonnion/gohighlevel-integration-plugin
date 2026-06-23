@@ -1,7 +1,7 @@
 /**
  * Sync Preview JavaScript
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 window.ghlSyncPreview = {
@@ -11,7 +11,7 @@ window.ghlSyncPreview = {
 		// Initialize Select2 for user selection
 		if ($('#user_identifier').length) {
 			$('#user_identifier').select2({
-				placeholder: ghl_crm_sync_preview_js_data.i18n.searchPlaceholder,
+				placeholder: syncly_sync_preview_js_data.i18n.searchPlaceholder,
 				allowClear: true,
 				width: '100%',
 				templateResult: this.formatUserOption,
@@ -32,8 +32,8 @@ window.ghlSyncPreview = {
 				if (!userIdentifier) {
 					Swal.fire({
 						icon: 'warning',
-						title: ghl_crm_sync_preview_js_data.i18n.missingInfo,
-						text: ghl_crm_sync_preview_js_data.i18n.selectUser,
+						title: syncly_sync_preview_js_data.i18n.missingInfo,
+						text: syncly_sync_preview_js_data.i18n.selectUser,
 						confirmButtonColor: '#635bff'
 					});
 					return;
@@ -77,8 +77,8 @@ window.ghlSyncPreview = {
 		
 		// Step 1: Validating user
 		Swal.fire({
-			title: ghl_crm_sync_preview_js_data.i18n.validatingUser,
-			html: '<div class="ghl-preview-step"><span class="dashicons dashicons-admin-users ghl-spin"></span><br>' + ghl_crm_sync_preview_js_data.i18n.lookingUpUser + '</div>',
+			title: syncly_sync_preview_js_data.i18n.validatingUser,
+			html: '<div class="ghl-preview-step"><span class="dashicons dashicons-admin-users ghl-spin"></span><br>' + syncly_sync_preview_js_data.i18n.lookingUpUser + '</div>',
 			allowOutsideClick: false,
 			showConfirmButton: false,
 			didOpen: () => {
@@ -90,26 +90,26 @@ window.ghlSyncPreview = {
 
 		// Step 2: Checking GHL connection
 		Swal.update({
-			title: ghl_crm_sync_preview_js_data.i18n.connectingGHL,
-			html: '<div class="ghl-preview-step"><span class="dashicons dashicons-cloud ghl-spin"></span><br>' + ghl_crm_sync_preview_js_data.i18n.establishingAPI + '</div>'
+			title: syncly_sync_preview_js_data.i18n.connectingGHL,
+			html: '<div class="ghl-preview-step"><span class="dashicons dashicons-cloud ghl-spin"></span><br>' + syncly_sync_preview_js_data.i18n.establishingAPI + '</div>'
 		});
 
 		await this.sleep(600);
 
 		// Step 3: Analyzing fields
 		Swal.update({
-			title: ghl_crm_sync_preview_js_data.i18n.analyzingFields,
-			html: '<div class="ghl-preview-step"><span class="dashicons dashicons-update ghl-spin"></span><br>' + ghl_crm_sync_preview_js_data.i18n.comparingData + '</div>'
+			title: syncly_sync_preview_js_data.i18n.analyzingFields,
+			html: '<div class="ghl-preview-step"><span class="dashicons dashicons-update ghl-spin"></span><br>' + syncly_sync_preview_js_data.i18n.comparingData + '</div>'
 		});
 
 		// Make the actual AJAX request
 		try {
 			const response = await $.ajax({
-				url: ghl_crm_sync_preview_js_data.ajaxUrl,
+				url: syncly_sync_preview_js_data.ajaxUrl,
 				type: 'POST',
 				data: {
-					action: 'ghl_crm_preview_user_sync',
-					nonce: ghl_crm_sync_preview_js_data.nonce,
+					action: 'syncly_preview_user_sync',
+					nonce: syncly_sync_preview_js_data.nonce,
 					user_identifier: userIdentifier
 				}
 			});
@@ -121,16 +121,16 @@ window.ghlSyncPreview = {
 			} else {
 				Swal.fire({
 					icon: 'error',
-					title: ghl_crm_sync_preview_js_data.i18n.previewFailed,
-					html: '<p>' + (response.data?.message || ghl_crm_sync_preview_js_data.i18n.unknownError) + '</p>',
+					title: syncly_sync_preview_js_data.i18n.previewFailed,
+					html: '<p>' + (response.data?.message || syncly_sync_preview_js_data.i18n.unknownError) + '</p>',
 					confirmButtonColor: '#d63638'
 				});
 			}
 		} catch (error) {
 			Swal.fire({
 				icon: 'error',
-				title: ghl_crm_sync_preview_js_data.i18n.requestFailed,
-				html: '<p>' + ghl_crm_sync_preview_js_data.i18n.connectionError + '</p>',
+				title: syncly_sync_preview_js_data.i18n.requestFailed,
+				html: '<p>' + syncly_sync_preview_js_data.i18n.connectionError + '</p>',
 				confirmButtonColor: '#d63638'
 			});
 		}
@@ -169,16 +169,16 @@ window.ghlSyncPreview = {
 		const tagsToAdd = data.tags_to_add || [];
 		
 		html += '<div class="ghl-quick-stats">';
-		html += '<div class="stat-item"><strong>' + fieldsToSync.length + '</strong><br><span>' + ghl_crm_sync_preview_js_data.i18n.totalFields + '</span></div>';
-		html += '<div class="stat-item stat-changed"><strong>' + fieldsChanged.length + '</strong><br><span>' + ghl_crm_sync_preview_js_data.i18n.willChange + '</span></div>';
-		html += '<div class="stat-item stat-unchanged"><strong>' + fieldsUnchanged + '</strong><br><span>' + ghl_crm_sync_preview_js_data.i18n.alreadySynced + '</span></div>';
+		html += '<div class="stat-item"><strong>' + fieldsToSync.length + '</strong><br><span>' + syncly_sync_preview_js_data.i18n.totalFields + '</span></div>';
+		html += '<div class="stat-item stat-changed"><strong>' + fieldsChanged.length + '</strong><br><span>' + syncly_sync_preview_js_data.i18n.willChange + '</span></div>';
+		html += '<div class="stat-item stat-unchanged"><strong>' + fieldsUnchanged + '</strong><br><span>' + syncly_sync_preview_js_data.i18n.alreadySynced + '</span></div>';
 		html += '</div>';
 		
 		// Tags stats if any
 		if (tagsToAdd.length > 0) {
 			html += '<div class="ghl-tags-stat">';
 			html += '<span class="dashicons dashicons-tag"></span> ';
-			html += '<strong>' + tagsToAdd.length + '</strong> ' + ghl_crm_sync_preview_js_data.i18n.tagsWillApply;
+			html += '<strong>' + tagsToAdd.length + '</strong> ' + syncly_sync_preview_js_data.i18n.tagsWillApply;
 			html += '</div>';
 		}
 
@@ -186,7 +186,7 @@ window.ghlSyncPreview = {
 		if (data.ghl_contact && data.action === 'update') {
 			html += '<div class="ghl-existing-contact">';
 			html += '<span class="dashicons dashicons-cloud"></span> ';
-			html += '<strong>' + ghl_crm_sync_preview_js_data.i18n.updatingExisting + '</strong> ';
+			html += '<strong>' + syncly_sync_preview_js_data.i18n.updatingExisting + '</strong> ';
 			html += self.escapeHtml(data.ghl_contact.name || data.ghl_contact.email);
 			html += '</div>';
 		}
@@ -195,7 +195,7 @@ window.ghlSyncPreview = {
 		if (data.conflicts && data.conflicts.length > 0) {
 			html += '<div class="ghl-alert ghl-alert-error">';
 			html += '<span class="dashicons dashicons-warning"></span>';
-			html += '<div><strong>' + ghl_crm_sync_preview_js_data.i18n.conflictsDetected + '</strong><ul>';
+			html += '<div><strong>' + syncly_sync_preview_js_data.i18n.conflictsDetected + '</strong><ul>';
 			data.conflicts.forEach(function(conflict) {
 				html += '<li>' + self.escapeHtml(conflict.message) + '</li>';
 			});
@@ -206,7 +206,7 @@ window.ghlSyncPreview = {
 		if (data.validations && data.validations.length > 0) {
 			html += '<div class="ghl-alert ghl-alert-warning">';
 			html += '<span class="dashicons dashicons-info"></span>';
-			html += '<div><strong>' + ghl_crm_sync_preview_js_data.i18n.validationWarnings + '</strong><ul>';
+			html += '<div><strong>' + syncly_sync_preview_js_data.i18n.validationWarnings + '</strong><ul>';
 			data.validations.forEach(function(validation) {
 				html += '<li>' + self.escapeHtml(validation.message) + '</li>';
 			});
@@ -216,15 +216,15 @@ window.ghlSyncPreview = {
 		// Show all fields - with changes highlighted
 		if (fieldsToSync.length > 0) {
 			html += '<div class="ghl-field-changes">';
-			html += '<h4><span class="dashicons dashicons-update"></span> ' + ghl_crm_sync_preview_js_data.i18n.fieldMapping + '</h4>';
+			html += '<h4><span class="dashicons dashicons-update"></span> ' + syncly_sync_preview_js_data.i18n.fieldMapping + '</h4>';
 			
 			// Add column headers
 			html += '<div class="field-headers">';
 			html += '<div class="header-row">';
-			html += '<div class="header-field">' + ghl_crm_sync_preview_js_data.i18n.ghlField + '</div>';
-			html += '<div class="header-ghl">' + ghl_crm_sync_preview_js_data.i18n.currentGHL + '</div>';
-			html += '<div class="header-wp">' + ghl_crm_sync_preview_js_data.i18n.wpValue + '</div>';
-			html += '<div class="header-status">' + ghl_crm_sync_preview_js_data.i18n.status + '</div>';
+			html += '<div class="header-field">' + syncly_sync_preview_js_data.i18n.ghlField + '</div>';
+			html += '<div class="header-ghl">' + syncly_sync_preview_js_data.i18n.currentGHL + '</div>';
+			html += '<div class="header-wp">' + syncly_sync_preview_js_data.i18n.wpValue + '</div>';
+			html += '<div class="header-status">' + syncly_sync_preview_js_data.i18n.status + '</div>';
 			html += '</div>';
 			html += '</div>';
 			
@@ -258,9 +258,9 @@ window.ghlSyncPreview = {
 				// Status badge
 				html += '<div class="field-status">';
 				if (willChange) {
-					html += '<span class="change-badge">' + ghl_crm_sync_preview_js_data.i18n.willUpdate + '</span>';
+					html += '<span class="change-badge">' + syncly_sync_preview_js_data.i18n.willUpdate + '</span>';
 				} else {
-					html += '<span class="no-change-badge">' + ghl_crm_sync_preview_js_data.i18n.inSync + '</span>';
+					html += '<span class="no-change-badge">' + syncly_sync_preview_js_data.i18n.inSync + '</span>';
 				}
 				html += '</div>';
 				
@@ -275,7 +275,7 @@ window.ghlSyncPreview = {
 		// Tags
 		if (tagsToAdd.length > 0) {
 			html += '<div class="ghl-tags-section">';
-			html += '<h4><span class="dashicons dashicons-tag"></span> ' + ghl_crm_sync_preview_js_data.i18n.tagsToApply + '</h4>';
+			html += '<h4><span class="dashicons dashicons-tag"></span> ' + syncly_sync_preview_js_data.i18n.tagsToApply + '</h4>';
 			html += '<div class="ghl-tags-grid">';
 			tagsToAdd.forEach(function(tag) {
 				html += '<span class="ghl-tag-pill">' + self.escapeHtml(tag) + '</span>';
@@ -287,12 +287,12 @@ window.ghlSyncPreview = {
 
 		// Show the beautiful modal
 		Swal.fire({
-			title: '<span class="dashicons dashicons-visibility"></span> ' + ghl_crm_sync_preview_js_data.i18n.syncPreview,
+			title: '<span class="dashicons dashicons-visibility"></span> ' + syncly_sync_preview_js_data.i18n.syncPreview,
 			html: html,
 			width: '900px',
 			showCloseButton: true,
 			showCancelButton: false,
-			confirmButtonText: ghl_crm_sync_preview_js_data.i18n.gotIt,
+			confirmButtonText: syncly_sync_preview_js_data.i18n.gotIt,
 			confirmButtonColor: '#635bff',
 			customClass: {
 				popup: 'ghl-preview-modal',

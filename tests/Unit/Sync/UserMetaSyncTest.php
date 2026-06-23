@@ -8,15 +8,15 @@
  * Uses reflection to inject mock dependencies since the real
  * TagManager/QueueManager classes are already loaded by the autoloader.
  *
- * @package GHL_CRM_Integration\Tests\Unit\Sync
+ * @package Syncly\Tests\Unit\Sync
  */
 
 declare(strict_types=1);
 
-namespace GHL_CRM\Tests\Unit\Sync;
+namespace Syncly\Tests\Unit\Sync;
 
-use GHL_CRM\Sync\UserMetaSync;
-use GHL_CRM\Tests\TestCase;
+use Syncly\Sync\UserMetaSync;
+use Syncly\Tests\TestCase;
 use Brain\Monkey\Functions;
 use Mockery;
 
@@ -61,7 +61,7 @@ class UserMetaSyncTest extends TestCase {
 		$prop->setValue( null, $inst );
 
 		// Create mock dependencies.
-		$this->tag_manager_mock = Mockery::mock( 'GHL_CRM\\Sync\\TagManager' );
+		$this->tag_manager_mock = Mockery::mock( 'Syncly\\Sync\\TagManager' );
 		$this->tag_manager_mock->shouldReceive( 'store_user_contact_id' )->byDefault();
 		$this->tag_manager_mock->shouldReceive( 'store_user_tags' )->andReturn( [] )->byDefault();
 		$this->tag_manager_mock->shouldReceive( 'get_user_tag_ids' )->andReturn( [] )->byDefault();
@@ -74,7 +74,7 @@ class UserMetaSyncTest extends TestCase {
 		$this->tag_manager_mock->shouldReceive( 'get_pending_tags_meta_key' )->andReturn( '_ghl_pending_tags' )->byDefault();
 		$this->tag_manager_mock->shouldReceive( 'get_pending_family_tags_meta_key' )->andReturn( '_ghl_pending_family_tags' )->byDefault();
 
-		$this->queue_manager_mock = Mockery::mock( 'GHL_CRM\\Sync\\QueueManager' );
+		$this->queue_manager_mock = Mockery::mock( 'Syncly\\Sync\\QueueManager' );
 		$this->queue_manager_mock->shouldReceive( 'add_to_queue' )->byDefault();
 
 		// Inject mocks into the instance.

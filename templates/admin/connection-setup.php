@@ -3,7 +3,7 @@
  * Connection Setup Template
  * Handles both OAuth and API Key connection methods
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Get OAuth handler (expected to be passed from parent or instantiated here)
-$oauth_handler = $oauth_handler ?? new \GHL_CRM\API\OAuth\OAuthHandler();
+$oauth_handler = $oauth_handler ?? new \Syncly\API\OAuth\OAuthHandler();
 ?>
 
 <!-- Connection Setup -->
@@ -192,7 +192,7 @@ $oauth_handler = $oauth_handler ?? new \GHL_CRM\API\OAuth\OAuthHandler();
 			</div>
 
 			<form id="ghl-manual-connection-form" method="post" style="max-width: 600px;">
-				<?php wp_nonce_field( 'ghl_crm_manual_connect', 'ghl_manual_connect_nonce' ); ?>
+				<?php wp_nonce_field( 'syncly_manual_connect', 'ghl_manual_connect_nonce' ); ?>
 				
 				<table class="form-table">
 					<tr>

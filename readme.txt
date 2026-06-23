@@ -4,7 +4,7 @@ Tags: gohighlevel, crm, woocommerce, buddyboss, learndash, webhooks
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.3.17
+Stable tag: 1.4.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -54,6 +54,21 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
 == Changelog ==
+
+= 1.4.1 =
+* Removed remaining locked/mockup screens (Forms add-on preview, Sync Logs detail preview) from the free plugin; replaced with plain upgrade notices.
+* Moved Family Relationships and Login Sync settings tabs to the Pro plugin; the free plugin no longer ships any disabled preview of these features.
+* Added a single "Upgrade to Pro" settings tab listing Pro-only features; it's automatically hidden once Pro is active and licensed.
+* Removed remaining legacy GHL_CRM branding (including camelCase identifiers) from the free and Pro plugins.
+* Replaced hardcoded plugin name strings with a single constant for consistent display text.
+* Removed a non-system font reference from the admin UI in favor of WordPress's own font stack.
+
+= 1.4.0 =
+* Renamed internal namespace, hooks, and identifiers from the legacy GHL_CRM prefix to Syncly throughout the codebase.
+* Removed locked/disabled preview screens from the free plugin; Pro-only features are now referenced via a plain upgrade link instead of an in-app mockup.
+* Moved inline scripts/styles to wp_enqueue_script/wp_enqueue_style.
+* Bundled SweetAlert2 locally instead of loading it from a CDN.
+* Updated Chart.js to the latest stable release.
 
 = 1.3.17 =
 * Updated plugin branding for the Syncly slug.

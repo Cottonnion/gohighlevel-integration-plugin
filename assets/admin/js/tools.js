@@ -4,7 +4,7 @@
  * Handles bulk sync all users functionality
  * Other tool operations (cache, reset, export, import, health check) are handled by settings.js
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 (function ($) {
@@ -65,11 +65,11 @@
       $("#bulk-sync-users-btn").prop("disabled", true);
 
       $.ajax({
-        url: ghl_crm_tools_js_data.ajaxUrl,
+        url: syncly_tools_js_data.ajaxUrl,
         type: "POST",
         data: {
-          action: "ghl_crm_bulk_sync_users",
-          nonce: ghl_crm_tools_js_data.nonce,
+          action: "syncly_bulk_sync_users",
+          nonce: syncly_tools_js_data.nonce,
           batch: batch,
         },
         success: (response) => {
@@ -248,8 +248,8 @@
       $("#bulk-import-ghl-btn").prop("disabled", true);
 
       const postData = {
-        action: "ghl_crm_bulk_import_from_ghl",
-        nonce: ghl_crm_tools_js_data.nonce,
+        action: "syncly_bulk_import_from_ghl",
+        nonce: syncly_tools_js_data.nonce,
         page: page,
       };
 
@@ -258,7 +258,7 @@
       }
 
       $.ajax({
-        url: ghl_crm_tools_js_data.ajaxUrl,
+        url: syncly_tools_js_data.ajaxUrl,
         type: "POST",
         data: postData,
         success: (response) => {

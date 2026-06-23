@@ -4,7 +4,7 @@
  *
  * Unified settings page with tabs for Settings, Integrations, and Field Mapping
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -22,11 +22,11 @@ $settings_tabs = array(
 );
 
 // Get settings manager instance
-$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
 
 // Get OAuth handler
-$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
+$oauth_handler = new \Syncly\API\OAuth\OAuthHandler();
 $oauth_status  = $oauth_handler->get_connection_status();
 $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 
@@ -48,7 +48,7 @@ if ( isset( $_POST['ghl_disconnect_oauth'] ) && check_admin_referer( 'ghl_discon
 	wp_safe_redirect(
 		add_query_arg(
 			array(
-				'page'  => 'ghl-crm-settings',
+				'page'  => 'syncly-settings',
 				'oauth' => 'disconnected',
 			),
 			admin_url( 'admin.php' )
@@ -66,7 +66,7 @@ if ( isset( $_GET['oauth'] ) && 'disconnected' === sanitize_key( wp_unslash( $_G
 }
 
 ?>
-<div class="wrap ghl-crm-settings">
+<div class="wrap syncly-settings">
 	<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
 	
 	<!-- Dynamic notification area -->
@@ -91,13 +91,13 @@ if ( isset( $_GET['oauth'] ) && 'disconnected' === sanitize_key( wp_unslash( $_G
 	 * Use this hook to display custom notices from anywhere in the plugin.
 	 *
 	 * Example usage:
-	 * add_action( 'ghl_crm_settings_notices', function() {
+	 * add_action( 'syncly_settings_notices', function() {
 	 *     echo '<div class="notice notice-error is-dismissible"><p>Error message here</p></div>';
 	 * });
 	 *
 	 * @since 1.0.0
 	 */
-	do_action( 'ghl_crm_settings_notices' );
+	do_action( 'syncly_settings_notices' );
 	?>
 
 	<?php if ( ! $is_connected && 'settings' !== $current_tab ) : ?>
@@ -110,7 +110,7 @@ if ( isset( $_GET['oauth'] ) && 'disconnected' === sanitize_key( wp_unslash( $_G
 					esc_html__( 'Please connect to GoHighLevel in %s first.', 'syncly' ),
 					sprintf(
 						'<a href="%s">%s</a>',
-						esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ),
+						esc_url( admin_url( 'admin.php?page=syncly-admin' ) ),
 						esc_html__( 'Dashboard', 'syncly' )
 					)
 				);
@@ -128,7 +128,7 @@ if ( isset( $_GET['oauth'] ) && 'disconnected' === sanitize_key( wp_unslash( $_G
 			echo esc_url(
 				add_query_arg(
 					array(
-						'page' => 'ghl-crm-settings',
+						'page' => 'syncly-settings',
 						'tab'  => $tab_key,
 					),
 					admin_url( 'admin.php' )
@@ -152,21 +152,21 @@ if ( isset( $_GET['oauth'] ) && 'disconnected' === sanitize_key( wp_unslash( $_G
 				?>
 				<?php
 				// Include just the content part of settings template
-				include GHL_CRM_PATH . 'templates/admin/settings.php';
+				include SYNCLY_PATH . 'templates/admin/settings.php';
 				break;
 
 			case 'integrations':
 				// Include integrations tab
-				include GHL_CRM_PATH . 'templates/admin/integrations.php';
+				include SYNCLY_PATH . 'templates/admin/integrations.php';
 				break;
 
 			case 'field-mapping':
 				// Include just the content part of field-mapping template
-				include GHL_CRM_PATH . 'templates/admin/field-mapping.php';
+				include SYNCLY_PATH . 'templates/admin/field-mapping.php';
 				break;
 
 			default:
-				include GHL_CRM_PATH . 'templates/admin/settings.php';
+				include SYNCLY_PATH . 'templates/admin/settings.php';
 				break;
 		}
 		?>

@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\API\Webhooks;
+namespace Syncly\API\Webhooks;
 
-use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Sync\QueueManager;
-use GHL_CRM\Sync\SyncLogger;
-use GHL_CRM\Sync\GHLToWordPressSync;
+use Syncly\Core\SettingsManager;
+use Syncly\Sync\QueueManager;
+use Syncly\Sync\SyncLogger;
+use Syncly\Sync\GHLToWordPressSync;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Handles incoming webhooks from GoHighLevel.
  * Users must manually set up webhooks in their GHL account using the provided URL.
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage API/Webhooks
  */
 class WebhookHandler {
@@ -97,8 +97,8 @@ class WebhookHandler {
 	 */
 	private function init_hooks(): void {
 		add_action( 'rest_api_init', [ $this, 'register_webhook_endpoint' ] );
-		add_action( 'wp_ajax_ghl_crm_test_webhook', [ $this, 'handle_test_webhook' ] );
-		add_action( 'wp_ajax_ghl_crm_regenerate_webhook_secret', [ $this, 'handle_regenerate_webhook_secret' ] );
+		add_action( 'wp_ajax_syncly_test_webhook', [ $this, 'handle_test_webhook' ] );
+		add_action( 'wp_ajax_syncly_regenerate_webhook_secret', [ $this, 'handle_regenerate_webhook_secret' ] );
 		add_action( 'ghl_process_webhook_async', [ $this, 'process_webhook_async' ], 10, 2 );
 	}
 
@@ -109,7 +109,7 @@ class WebhookHandler {
 	 */
 	public function register_webhook_endpoint(): void {
 		register_rest_route(
-			'ghl-crm/v1',
+			'syncly/v1',
 			'/webhooks',
 			[
 				'methods'             => 'POST',
@@ -125,7 +125,7 @@ class WebhookHandler {
 	 * @return string
 	 */
 	public function get_webhook_url(): string {
-		return rest_url( 'ghl-crm/v1/webhooks' );
+		return rest_url( 'syncly/v1/webhooks' );
 	}
 
 	/**
@@ -232,7 +232,7 @@ class WebhookHandler {
 	 * @return void
 	 */
 	public function handle_regenerate_webhook_secret(): void {
-		check_ajax_referer( 'ghl_crm_admin', 'nonce' );
+		check_ajax_referer( 'syncly_admin', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'syncly' ) ], 403 );
@@ -367,7 +367,7 @@ class WebhookHandler {
 			);
 
 			do_action(
-				'ghl_crm_log_event',
+				'syncly_log_event',
 				'webhook_processing_error',
 				'Webhook processing failed',
 				[
@@ -607,7 +607,7 @@ class WebhookHandler {
 	 */
 	public function handle_test_webhook(): void {
 		try {
-			check_ajax_referer( 'ghl_crm_admin', 'nonce' );
+			check_ajax_referer( 'syncly_admin', 'nonce' );
 
 			if ( ! current_user_can( 'manage_options' ) ) {
 				wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ] );

@@ -2,7 +2,7 @@
 /**
  * Integrations Settings Template
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Templates/Admin
  */
 
@@ -11,16 +11,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Get current settings
-$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
 
 // Check connection status
-$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
+$oauth_handler = new \Syncly\API\OAuth\OAuthHandler();
 $oauth_status  = $oauth_handler->get_connection_status();
 $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 ?>
 
-<div class="wrap ghl-crm-wrap">
+<div class="wrap syncly-wrap">
 	<h1 class="ghl-page-title">
 		<?php echo esc_html( get_admin_page_title() ); ?>
 	</h1>
@@ -35,7 +35,7 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 					esc_html__( 'Please connect to GoHighLevel in %s first.', 'syncly' ),
 					sprintf(
 						'<a href="%s">%s</a>',
-						esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ),
+						esc_url( admin_url( 'admin.php?page=syncly-admin' ) ),
 						esc_html__( 'Dashboard', 'syncly' )
 					)
 				);
@@ -47,8 +47,8 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 
 	<?php
 	// Check scope access for integrations
-	\GHL_CRM\API\ScopeChecker::render_scope_notice( 'contacts' );
-	\GHL_CRM\API\ScopeChecker::render_scope_notice( 'tags' );
+	\Syncly\API\ScopeChecker::render_scope_notice( 'contacts' );
+	\Syncly\API\ScopeChecker::render_scope_notice( 'tags' );
 	?>
 
 	<!-- Helpful Information Notice -->
@@ -95,7 +95,7 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 					'order'  => 10,
 				],
 			];
-			$integration_tabs = apply_filters( 'ghl_crm_integration_tabs', $default_tabs );
+			$integration_tabs = apply_filters( 'syncly_integration_tabs', $default_tabs );
 			// Sort by 'order' if present
 			usort(
 				$integration_tabs,
@@ -122,7 +122,7 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 					'active'  => true,
 					'order'   => 10,
 					'content' => function () {
-						$buddyboss_template = GHL_CRM_PATH . 'templates/admin/partials/integrations/buddyboss-groups.php';
+						$buddyboss_template = SYNCLY_PATH . 'templates/admin/partials/integrations/buddyboss-groups.php';
 						if ( file_exists( $buddyboss_template ) ) {
 							include $buddyboss_template;
 						} else {
@@ -131,7 +131,7 @@ $is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] )
 					},
 				],
 			];
-			$integration_panels = apply_filters( 'ghl_crm_integration_panels', $default_panels );
+			$integration_panels = apply_filters( 'syncly_integration_panels', $default_panels );
 			// Sort by 'order' if present
 			usort(
 				$integration_panels,

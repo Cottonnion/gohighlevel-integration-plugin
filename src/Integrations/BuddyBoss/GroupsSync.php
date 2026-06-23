@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Integrations\BuddyBoss;
+namespace Syncly\Integrations\BuddyBoss;
 
-use GHL_CRM\API\Resources\CustomObjectResource;
-use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Sync\TagManager;
-use GHL_CRM\Sync\QueueManager;
+use Syncly\API\Resources\CustomObjectResource;
+use Syncly\Core\SettingsManager;
+use Syncly\Sync\TagManager;
+use Syncly\Sync\QueueManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Automatically syncs BuddyBoss Groups to GoHighLevel Custom Objects
  * Creates Custom Objects per group type and links members via GoHighLevel associations
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Integrations/BuddyBoss
  */
 class GroupsSync {
@@ -112,7 +112,7 @@ class GroupsSync {
 		add_action( 'wp_ajax_ghl_buddyboss_bulk_sync', [ $this, 'handle_bulk_sync' ] );
 
 		// Queue processor filters
-		add_filter( 'ghl_crm_execute_sync', [ $this, 'execute_buddyboss_sync' ], 10, 5 );
+		add_filter( 'syncly_execute_sync', [ $this, 'execute_buddyboss_sync' ], 10, 5 );
 	}
 
 	/**
@@ -532,7 +532,7 @@ class GroupsSync {
 		// Try to create the Custom Object schema via API
 		try {
 			// Get location ID from settings
-			$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+			$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 			$location_id      = $settings_manager->get_setting( 'location_id', '' );
 
 			if ( empty( $location_id ) ) {
@@ -812,7 +812,7 @@ class GroupsSync {
 				// Prepare contact data
 				$contact_data = $this->prepare_contact_data_for_user( $user );
 
-				$queue_manager    = \GHL_CRM\Sync\QueueManager::get_instance();
+				$queue_manager    = \Syncly\Sync\QueueManager::get_instance();
 				$contact_queue_id = $queue_manager->add_to_queue( 'user', $user_id, 'profile_update', $contact_data );
 
 				// Build the updated payload with dependency, preserving all original data

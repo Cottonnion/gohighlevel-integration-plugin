@@ -3,8 +3,8 @@
  *
  * Handles dismissal of the upgrade notice banner
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/assets/admin/js
+ * @package    Syncly
+ * @subpackage Syncly/assets/admin/js
  */
 
 (function ($) {
@@ -26,7 +26,7 @@
         url: ajaxurl,
         type: "POST",
         data: {
-          action: "ghl_crm_dismiss_upgrade_notice",
+          action: "syncly_dismiss_upgrade_notice",
           nonce: nonce,
         },
         success: function (response) {

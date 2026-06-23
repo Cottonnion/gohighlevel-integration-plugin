@@ -1,10 +1,10 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "ghl-crm/form",
+	"name": "syncly/form",
 	"version": "1.0.0",
 	"title": "GoHighLevel Form",
-	"category": "ghl-crm",
+	"category": "syncly",
 	"icon": "forms",
 	"description": "Embed a GoHighLevel form with customizable settings.",
 	"keywords": ["ghl", "gohighlevel", "form", "crm", "contact"],

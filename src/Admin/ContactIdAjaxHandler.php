@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Admin;
+namespace Syncly\Admin;
 
-use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Sync\TagManager;
-use GHL_CRM\Frontend\ContactIdHandler;
+use Syncly\Core\SettingsManager;
+use Syncly\Sync\TagManager;
+use Syncly\Frontend\ContactIdHandler;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -14,8 +14,8 @@ defined( 'ABSPATH' ) || exit;
  *
  * Provides endpoints for testing campaign personalization links
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/Admin
+ * @package    Syncly
+ * @subpackage Syncly/Admin
  */
 class ContactIdAjaxHandler {
 	/**
@@ -61,7 +61,7 @@ class ContactIdAjaxHandler {
 	public function test_cid_link(): void {
 		// Verify nonce
 		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
-		if ( ! wp_verify_nonce( $nonce, 'ghl_crm_settings_nonce' ) ) {
+		if ( ! wp_verify_nonce( $nonce, 'syncly_settings_nonce' ) ) {
 			wp_send_json_error(
 				array(
 					'message' => __( 'Security check failed', 'syncly' ),

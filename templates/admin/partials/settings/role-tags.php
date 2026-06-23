@@ -2,14 +2,14 @@
 /**
  * Role Based Tags Settings Partial
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
 
 // Get all WordPress roles
@@ -20,12 +20,12 @@ $role_tags       = $settings_manager->get_location_role_tags();
 $global_tags_raw = $settings_manager->get_location_global_tags();
 // Convert array to comma-separated string for display, or keep as is if string
 $global_tags            = is_array( $global_tags_raw ) ? implode( ',', $global_tags_raw ) : $global_tags_raw;
-$global_tags_pro_active = (bool) apply_filters( 'ghl_crm_global_tags_enabled', false );
-$upgrade_url            = apply_filters( 'ghl_crm_upgrade_url', 'https://highlevelsync.com/' );
+$global_tags_pro_active = (bool) apply_filters( 'syncly_global_tags_enabled', false );
+$upgrade_url            = apply_filters( 'syncly_upgrade_url', 'https://highlevelsync.com/' );
 ?>
 
 <div class="ghl-settings-wrapper">
-	<?php wp_nonce_field( 'ghl_crm_settings_nonce', 'ghl_crm_nonce' ); ?>
+	<?php wp_nonce_field( 'syncly_settings_nonce', 'syncly_nonce' ); ?>
 	
 	<!-- Role Tags Section -->
 	<div class="ghl-settings-section ghl-settings-card">
@@ -183,11 +183,6 @@ $upgrade_url            = apply_filters( 'ghl_crm_upgrade_url', 'https://highlev
 										<p style="margin: 8px 0 0; color: #475569;"><?php esc_html_e( 'Apply location-wide tags to every synced contact without configuring each role separately.', 'syncly' ); ?></p>
 									</div>
 											<a href="<?php echo esc_url( $upgrade_url ); ?>" class="ghl-button ghl-button-secondary" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Learn More', 'syncly' ); ?></a>
-								</div>
-								<div aria-hidden="true" style="display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 6px;">
-									<span style="padding: 5px 9px; border-radius: 999px; background: #e0f2fe; color: #075985; font-size: 12px; font-weight: 600;">wp-contact</span>
-									<span style="padding: 5px 9px; border-radius: 999px; background: #dcfce7; color: #166534; font-size: 12px; font-weight: 600;">site-member</span>
-									<span style="padding: 5px 9px; border-radius: 999px; background: #fef3c7; color: #92400e; font-size: 12px; font-weight: 600;">newsletter</span>
 								</div>
 							</div>
 						<?php endif; ?>

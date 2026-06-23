@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Core\Dashboard;
+namespace Syncly\Core\Dashboard;
 
-use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Sync\TagManager;
-use GHL_CRM\Sync\SyncStats;
+use Syncly\Core\SettingsManager;
+use Syncly\Sync\TagManager;
+use Syncly\Sync\SyncStats;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Collects data required for the admin dashboard cards.
  * Stats are filtered by current location ID.
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 class StatsProvider {
 	/**
@@ -134,7 +134,7 @@ class StatsProvider {
 		 *
 		 * @param array $integrations Integrations status list.
 		 */
-		return apply_filters( 'ghl_crm_dashboard_integrations', $integrations );
+		return apply_filters( 'syncly_dashboard_integrations', $integrations );
 	}
 
 	private function get_dashboard_links(): array {
@@ -278,7 +278,7 @@ class StatsProvider {
 
 		try {
 			// Attempt to get real count from GHL API
-			$client = \GHL_CRM\API\Client\Client::get_instance();
+			$client = \Syncly\API\Client\Client::get_instance();
 
 			// Query contacts with limit 1 to get total from pagination
 			$response = $client->get(
@@ -429,7 +429,7 @@ class StatsProvider {
 	}
 
 	private function is_connection_healthy(): bool {
-		$oauth_handler = new \GHL_CRM\API\OAuth\OAuthHandler();
+		$oauth_handler = new \Syncly\API\OAuth\OAuthHandler();
 		$status        = $oauth_handler->get_connection_status();
 		$settings      = SettingsManager::get_instance()->get_settings_array();
 

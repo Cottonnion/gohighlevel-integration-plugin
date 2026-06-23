@@ -68,8 +68,8 @@
 			const hash = window.location.hash.slice(1);
 			if (hash && hash !== '') {
 				// Only handle if it's a settings tab (use centralized config)
-				const settingsTabs = (typeof ghlCrmSpaConfig !== 'undefined' && ghlCrmSpaConfig.settings) 
-					? ghlCrmSpaConfig.settings.tabs 
+				const settingsTabs = (typeof synclySpaConfig !== 'undefined' && synclySpaConfig.settings) 
+					? synclySpaConfig.settings.tabs 
 					: ['general', 'api', 'rest-api', 'webhooks', 'notifications', 'sync-options', 'role-tags', 'login-sync', 'personalization', 'conversations', 'advanced', 'stats'];
 				if (settingsTabs.includes(hash)) {
 					loadSettingsTab(hash);
@@ -153,15 +153,15 @@
 		$content.css('opacity', '0.5');
 		
 		// Check if we have the SPA config
-		const ajaxUrl = (typeof ghlCrmSpaConfig !== 'undefined') ? ghlCrmSpaConfig.ajaxUrl : ajaxurl;
-		const nonce = (typeof ghlCrmSpaConfig !== 'undefined') ? ghlCrmSpaConfig.nonce : '';
+		const ajaxUrl = (typeof synclySpaConfig !== 'undefined') ? synclySpaConfig.ajaxUrl : ajaxurl;
+		const nonce = (typeof synclySpaConfig !== 'undefined') ? synclySpaConfig.nonce : '';
 		
 		// Make AJAX request to load partial directly
 		$.ajax({
 			url: ajaxUrl,
 			type: 'POST',
 			data: {
-				action: 'ghl_crm_load_settings_tab',
+				action: 'syncly_load_settings_tab',
 				nonce: nonce,
 				tab: tab
 			},

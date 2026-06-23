@@ -3,7 +3,7 @@
  * Connection Status Widget (Sidebar)
  * Displays a compact connection status for the reports dashboard
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -11,9 +11,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Get connection data (these are expected to be passed from parent template)
-$oauth_handler = $oauth_handler ?? new \GHL_CRM\API\OAuth\OAuthHandler();
+$oauth_handler = $oauth_handler ?? new \Syncly\API\OAuth\OAuthHandler();
 $oauth_status  = $oauth_status ?? $oauth_handler->get_connection_status();
-$settings      = $settings ?? \GHL_CRM\Core\SettingsManager::get_instance()->get_settings_array();
+$settings      = $settings ?? \Syncly\Core\SettingsManager::get_instance()->get_settings_array();
 
 $is_connected = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 ?>
@@ -114,7 +114,7 @@ $is_connected = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 					<span class="dashicons dashicons-dismiss" style="font-size: 14px; margin-top: 3px;"></span>
 					<?php esc_html_e( 'Disconnect', 'syncly' ); ?>
 				</button>
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-admin#/settings' ) ); ?>" class="ghl-button" style=" text-align: center; font-size: 12px; text-decoration: none;">
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin#/settings' ) ); ?>" class="ghl-button" style=" text-align: center; font-size: 12px; text-decoration: none;">
 					<?php esc_html_e( 'Update Settings', 'syncly' ); ?>
 				</a>
 			</div>
@@ -131,7 +131,7 @@ $is_connected = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 			</div>
 		</div>
 		
-		<a href="<?php echo esc_url( admin_url( 'admin.php?page=ghl-crm-dashboard' ) ); ?>" class="ghl-button ghl-button-primary" style="width: 100%; justify-content: center; text-align: center; font-size: 13px;">
+		<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-dashboard' ) ); ?>" class="ghl-button ghl-button-primary" style="width: 100%; justify-content: center; text-align: center; font-size: 13px;">
 			<span class="dashicons dashicons-admin-site" style="font-size: 14px; margin-top: 3px;"></span>
 			<?php esc_html_e( 'Setup Connection', 'syncly' ); ?>
 		</a>

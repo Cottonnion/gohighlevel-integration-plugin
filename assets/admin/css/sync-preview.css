@@ -1,7 +1,7 @@
 /**
  * Sync Preview Styles
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 /* Select2 custom styling for user options */
@@ -18,7 +18,7 @@
 .ghl-user-option-email {
 	font-size: 12px;
 	color: #6b7280;
-	font-family: 'SF Mono', Monaco, monospace;
+	font-family: var(--ghl-font-family-mono);
 }
 
 /* Spinning animation for dashicons */
@@ -50,7 +50,7 @@
 
 /* SweetAlert2 custom styles */
 .ghl-preview-modal {
-	font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	font-family: var(--ghl-font-family);
 }
 
 .ghl-preview-title {
@@ -412,7 +412,7 @@
 	display: block;
 	padding: 6px 12px;
 	border-radius: 4px;
-	font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+	font-family: var(--ghl-font-family-mono);
 	font-size: 12px;
 	overflow-wrap: break-word;
 	word-wrap: break-word;

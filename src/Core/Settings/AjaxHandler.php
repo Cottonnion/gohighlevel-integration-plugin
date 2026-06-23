@@ -5,13 +5,13 @@
  * Handles all AJAX operations for the plugin.
  * This class is called by SettingsManager but keeps the business logic separate.
  *
- * @package GHL_CRM
+ * @package Syncly
  * @subpackage Core
  */
 
-namespace GHL_CRM\Core\Settings;
+namespace Syncly\Core\Settings;
 
-use GHL_CRM\Core\SettingsManager;
+use Syncly\Core\SettingsManager;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -30,7 +30,7 @@ class AjaxHandler {
 	private static function verify_admin_nonce(): void {
 		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
 
-		if ( ! wp_verify_nonce( $nonce, 'ghl_crm_admin' ) ) {
+		if ( ! wp_verify_nonce( $nonce, 'syncly_admin' ) ) {
 			wp_send_json_error(
 				[
 					'message' => __( 'Security check failed. Please reload the page and try again.', 'syncly' ),
@@ -48,7 +48,7 @@ class AjaxHandler {
 	private static function verify_field_mapping_nonce(): void {
 		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
 
-		if ( ! wp_verify_nonce( $nonce, 'ghl_crm_field_mapping_nonce' ) ) {
+		if ( ! wp_verify_nonce( $nonce, 'syncly_field_mapping_nonce' ) ) {
 			wp_send_json_error(
 				[
 					'message' => __( 'Security check failed. Please reload the page and try again.', 'syncly' ),
@@ -230,7 +230,7 @@ class AjaxHandler {
 			 *
 			 * @param array $integration_settings Parsed integration settings to save.
 			 */
-			$integration_settings = apply_filters( 'ghl_crm_save_integration_settings', $integration_settings );
+			$integration_settings = apply_filters( 'syncly_save_integration_settings', $integration_settings );
 
 			// Merge with current settings
 			$settings = array_merge(
@@ -304,7 +304,7 @@ class AjaxHandler {
 			}
 
 			// Get pipelines from GHL
-			$opportunity_resource = new \GHL_CRM\API\Resources\OpportunityResource();
+			$opportunity_resource = new \Syncly\API\Resources\OpportunityResource();
 			$response             = $opportunity_resource->get_pipelines( $location_id );
 
 			if ( ! empty( $response['pipelines'] ) ) {
@@ -334,7 +334,7 @@ class AjaxHandler {
 			}
 
 			// Get pipeline details including stages
-			$client   = \GHL_CRM\API\Client\Client::get_instance();
+			$client   = \Syncly\API\Client\Client::get_instance();
 			$response = $client->get( 'opportunities/pipelines/' . $pipeline_id );
 
 			if ( ! empty( $response['stages'] ) ) {
@@ -431,7 +431,7 @@ class AjaxHandler {
 			}
 
 			// Get logs
-			$sync_logger = \GHL_CRM\Sync\SyncLogger::get_instance();
+			$sync_logger = \Syncly\Sync\SyncLogger::get_instance();
 			$logs        = $sync_logger->get_logs( $args );
 
 			// Get total count
@@ -468,7 +468,7 @@ class AjaxHandler {
 			ob_start();
 			// Pass variables to template via closure/scope
 			// This avoids modifying global query vars which is safer for WordPress.org submission
-			include GHL_CRM_PATH . 'templates/admin/partials/sync-logs-table.php';
+			include SYNCLY_PATH . 'templates/admin/partials/sync-logs-table.php';
 			$html = ob_get_clean();
 
 			wp_send_json_success(
@@ -606,7 +606,7 @@ class AjaxHandler {
 			 * @param array      $wp_fields  Sanitized WordPress field keys.
 			 * @param array      $ghl_fields Sanitized GoHighLevel field keys.
 			 */
-			$result = apply_filters( 'ghl_crm_field_suggestions_result', null, $wp_fields, $ghl_fields );
+			$result = apply_filters( 'syncly_field_suggestions_result', null, $wp_fields, $ghl_fields );
 
 			if ( null !== $result ) {
 				wp_send_json_success( $result );
@@ -632,7 +632,7 @@ class AjaxHandler {
 	public static function save_wizard_settings(): void {
 		// Verify nonce
 		$nonce       = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
-		$nonce_check = wp_verify_nonce( $nonce, 'ghl_crm_spa_nonce' );
+		$nonce_check = wp_verify_nonce( $nonce, 'syncly_spa_nonce' );
 
 		if ( ! $nonce_check ) {
 			wp_send_json_error(
@@ -741,7 +741,7 @@ class AjaxHandler {
 			}
 
 			// Set option to prevent wizard redirect on future activations
-			update_option( 'ghl_crm_setup_wizard_completed', true );
+			update_option( 'syncly_setup_wizard_completed', true );
 					$location_id = $current_settings['location_id'] ?? ( $current_settings['oauth_location_id'] ?? '' );
 					$role_key    = $location_id ? 'role_tags_' . $location_id : 'role_tags';
 
@@ -828,7 +828,7 @@ class AjaxHandler {
 			$queued = 0;
 			$failed = 0;
 
-			$user_hooks = \GHL_CRM\Integrations\Users\UserHooks::get_instance();
+			$user_hooks = \Syncly\Integrations\Users\UserHooks::get_instance();
 
 			foreach ( $users as $user ) {
 				$wp_user = get_userdata( $user->ID );
@@ -854,7 +854,7 @@ class AjaxHandler {
 			if ( ! $has_more ) {
 				delete_transient( 'ghl_bulk_sync_total' );
 				// Save last bulk sync time
-				update_option( 'ghl_crm_last_bulk_sync', current_time( 'mysql' ), false );
+				update_option( 'syncly_last_bulk_sync', current_time( 'mysql' ), false );
 			}
 
 			wp_send_json_success(
@@ -966,7 +966,7 @@ class AjaxHandler {
 			$query  = ! empty( $query ) ? $query : null;
 
 			// Calculate running total from previous pages
-			$progress        = \GHL_CRM\Sync\BulkImportSync::get_progress();
+			$progress        = \Syncly\Sync\BulkImportSync::get_progress();
 			$total_processed = 0;
 			if ( false !== $progress && $page > 1 ) {
 				$total_processed = ( $progress['total_created'] ?? 0 )
@@ -982,7 +982,7 @@ class AjaxHandler {
 				$processed_ids = $progress['processed_ids'] ?? [];
 			}
 
-			$importer = \GHL_CRM\Sync\BulkImportSync::get_instance();
+			$importer = \Syncly\Sync\BulkImportSync::get_instance();
 			$result   = $importer->process_page( $cursor, $query, $total_processed, $processed_ids );
 
 			// Accumulate totals via transient
@@ -1018,12 +1018,12 @@ class AjaxHandler {
 			);
 			++$progress['pages'];
 
-			\GHL_CRM\Sync\BulkImportSync::save_progress( $progress );
+			\Syncly\Sync\BulkImportSync::save_progress( $progress );
 
 			// Clean up when done
 			if ( ! $result['has_more'] ) {
-				\GHL_CRM\Sync\BulkImportSync::clear_progress();
-				update_option( 'ghl_crm_last_bulk_import', current_time( 'mysql' ), false );
+				\Syncly\Sync\BulkImportSync::clear_progress();
+				update_option( 'syncly_last_bulk_import', current_time( 'mysql' ), false );
 			}
 
 			$grand_total = $progress['total_created'] + $progress['total_updated']

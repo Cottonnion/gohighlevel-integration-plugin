@@ -8,17 +8,17 @@
 
         init: function () {
             // Load existing settings from localized data
-            if (ghl_crm_setup_wizard_js_data.settings) {
+            if (syncly_setup_wizard_js_data.settings) {
                 this.settings = {
-                    enable_user_sync: ghl_crm_setup_wizard_js_data.settings.enable_user_sync,
-                    user_register: ghl_crm_setup_wizard_js_data.settings.user_register,
-                    user_register_tags: ghl_crm_setup_wizard_js_data.settings.user_register_tags || [],
-                    woocommerce: ghl_crm_setup_wizard_js_data.settings.woocommerce,
-                    buddyboss: ghl_crm_setup_wizard_js_data.settings.buddyboss,
-                    learndash: ghl_crm_setup_wizard_js_data.settings.learndash,
-                    delete_contact_on_user_delete: ghl_crm_setup_wizard_js_data.settings.delete_contact_on_user_delete,
-                    enable_sync_logging: ghl_crm_setup_wizard_js_data.settings.enable_sync_logging,
-                    enable_role_tags: ghl_crm_setup_wizard_js_data.settings.enable_role_tags
+                    enable_user_sync: syncly_setup_wizard_js_data.settings.enable_user_sync,
+                    user_register: syncly_setup_wizard_js_data.settings.user_register,
+                    user_register_tags: syncly_setup_wizard_js_data.settings.user_register_tags || [],
+                    woocommerce: syncly_setup_wizard_js_data.settings.woocommerce,
+                    buddyboss: syncly_setup_wizard_js_data.settings.buddyboss,
+                    learndash: syncly_setup_wizard_js_data.settings.learndash,
+                    delete_contact_on_user_delete: syncly_setup_wizard_js_data.settings.delete_contact_on_user_delete,
+                    enable_sync_logging: syncly_setup_wizard_js_data.settings.enable_sync_logging,
+                    enable_role_tags: syncly_setup_wizard_js_data.settings.enable_role_tags
                 };
             }
 
@@ -58,8 +58,8 @@
 
         loadTags: function () {
             const $tagsSelect = $('#wizard_user_register_tags');
-            const savedTags = ghl_crm_setup_wizard_js_data.settings.user_register_tags || [];
-            var tags = ghl_crm_setup_wizard_js_data.tags || [];
+            const savedTags = syncly_setup_wizard_js_data.settings.user_register_tags || [];
+            var tags = syncly_setup_wizard_js_data.tags || [];
 
             $tagsSelect.empty();
 
@@ -143,13 +143,13 @@
 
                 // Build FormData
                 const formData = new FormData();
-                formData.append('action', 'ghl_crm_manual_connect');
+                formData.append('action', 'syncly_manual_connect');
                 formData.append('ghl_manual_connect_nonce', nonce);
                 formData.append('api_token', apiToken);
                 formData.append('location_id', locationId);
 
                 $.ajax({
-                    url: ghl_crm_setup_wizard_js_data.ajaxUrl,
+                    url: syncly_setup_wizard_js_data.ajaxUrl,
                     type: 'POST',
                     data: formData,
                     processData: false,
@@ -252,7 +252,7 @@
         },
 
         isConnected: function () {
-            return ghl_crm_setup_wizard_js_data.isConnected === '1';
+            return syncly_setup_wizard_js_data.isConnected === '1';
         },
 
         finish: function () {
@@ -261,16 +261,16 @@
             button.prop('disabled', true).html('<span class="dashicons dashicons-update spin"></span> Saving...');
 
             $.ajax({
-                url: ghl_crm_setup_wizard_js_data.ajaxUrl,
+                url: syncly_setup_wizard_js_data.ajaxUrl,
                 method: 'POST',
                 data: {
-                    action: 'ghl_crm_save_wizard_settings',
-                    nonce: ghl_crm_setup_wizard_js_data.nonce,
+                    action: 'syncly_save_wizard_settings',
+                    nonce: syncly_setup_wizard_js_data.nonce,
                     settings: this.settings
                 },
                 success: (response) => {
                     if (response.success) {
-                        window.location.href = ghl_crm_setup_wizard_js_data.dashboardUrl;
+                        window.location.href = syncly_setup_wizard_js_data.dashboardUrl;
                     } else {
                         this.showError(response.data.message || 'Failed to save settings');
                         button.prop('disabled', false).html(originalText);

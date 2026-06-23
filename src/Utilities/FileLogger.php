@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Utilities;
+namespace Syncly\Utilities;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -11,10 +11,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * File Logger
  *
  * Dedicated file-based logger for OAuth, API, sync, and webhook events.
- * Writes to wp-content/uploads/ghl-crm-logs/ with daily rotation, size limits,
+ * Writes to wp-content/uploads/syncly-logs/ with daily rotation, size limits,
  * and .htaccess protection.
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Utilities
  */
 class FileLogger {
@@ -110,7 +110,7 @@ class FileLogger {
 	 */
 	private function __construct() {
 		$upload_dir    = wp_upload_dir();
-		$this->log_dir = trailingslashit( $upload_dir['basedir'] ) . 'ghl-crm-logs';
+		$this->log_dir = trailingslashit( $upload_dir['basedir'] ) . 'syncly-logs';
 
 		// Flush dedup counts at end of request so suppressed-count summaries are written.
 		register_shutdown_function( [ $this, 'flush_dedup_counts' ] );
@@ -376,7 +376,7 @@ class FileLogger {
 	 * @return int Number of files deleted.
 	 */
 	public function cleanup_old_logs(): int {
-		$transient_key = 'ghl_crm_log_cleanup_last';
+		$transient_key = 'syncly_log_cleanup_last';
 		if ( get_transient( $transient_key ) ) {
 			return 0;
 		}

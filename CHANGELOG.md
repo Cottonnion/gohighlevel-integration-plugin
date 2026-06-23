@@ -1,8 +1,24 @@
 # Changelog
 
-All notable changes to GoHighLevel CRM Integration will be documented in this file.
+All notable changes to Syncly will be documented in this file.
 
 ## [Unreleased]
+
+---
+
+## [1.4.1] - 2026-06-23
+
+### Removed
+
+- Remaining locked/mockup screens in the free plugin (Forms add-on preview, Sync Logs detail preview), replaced with plain upgrade notices.
+- Family Relationships and Login Sync settings tabs moved to the Pro plugin; free no longer ships a disabled preview of either.
+- Remaining legacy `GHL_CRM` branding (including camelCase identifiers) from the free and Pro plugins.
+- Non-system font reference in the admin UI in favor of WordPress's own font stack.
+
+### Added
+
+- A single "Upgrade to Pro" settings tab listing Pro-only features, automatically hidden once Pro is active and licensed.
+- A shared plugin-name constant used everywhere the plugin's display name appears.
 
 ---
 

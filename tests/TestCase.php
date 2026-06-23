@@ -6,12 +6,12 @@
  * WordPress functions (get_option, update_user_meta, etc.) can be
  * mocked without a real WordPress installation.
  *
- * @package GHL_CRM_Integration\Tests
+ * @package Syncly\Tests
  */
 
 declare(strict_types=1);
 
-namespace GHL_CRM\Tests;
+namespace Syncly\Tests;
 
 use Brain\Monkey;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;

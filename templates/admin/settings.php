@@ -4,12 +4,12 @@
  *
  * This template provides extensible settings tabs for developers.
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  *
  * @example Adding a custom settings tab:
  *
  * // Method 1: Using a callback function
- * add_filter( 'ghl_crm_settings_tabs', function( $tabs ) {
+ * add_filter( 'syncly_settings_tabs', function( $tabs ) {
  *     $tabs['my_custom_tab'] = [
  *         'label'    => __( 'My Custom Tab', 'my-plugin' ),
  *         'icon'     => 'dashicons-admin-customizer',
@@ -26,7 +26,7 @@
  * }
  *
  * // Method 2: Using a custom file
- * add_filter( 'ghl_crm_settings_tabs', function( $tabs ) {
+ * add_filter( 'syncly_settings_tabs', function( $tabs ) {
  *     $tabs['my_file_tab'] = [
  *         'label' => __( 'My File Tab', 'my-plugin' ),
  *         'icon'  => 'dashicons-media-document',
@@ -35,9 +35,9 @@
  *     return $tabs;
  * });
  *
- * @hook ghl_crm_settings_tabs         Filter to add custom settings tabs
- * @hook ghl_crm_before_settings_tab_content  Action fired before tab content
- * @hook ghl_crm_after_settings_tab_content   Action fired after tab content
+ * @hook syncly_settings_tabs         Filter to add custom settings tabs
+ * @hook syncly_before_settings_tab_content  Action fired before tab content
+ * @hook syncly_after_settings_tab_content   Action fired after tab content
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -54,14 +54,14 @@ if ( isset( $_GET['settings_tab'] ) ) {
 // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 // For POST requests (AJAX), verify nonce
-if ( isset( $_POST['settings_tab'] ) && check_ajax_referer( 'ghl_crm_settings_nonce', 'nonce', false ) ) {
+if ( isset( $_POST['settings_tab'] ) && check_ajax_referer( 'syncly_settings_nonce', 'nonce', false ) ) {
 	$current_tab = sanitize_text_field( wp_unslash( $_POST['settings_tab'] ) );
 }
 
 // Check connection status
-$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
-$oauth_handler    = new \GHL_CRM\API\OAuth\OAuthHandler();
+$oauth_handler    = new \Syncly\API\OAuth\OAuthHandler();
 $oauth_status     = $oauth_handler->get_connection_status();
 $is_connected     = $oauth_status['connected'] || ! empty( $settings['api_token'] );
 
@@ -74,10 +74,6 @@ $settings_tabs = [
 	'restrictions-manager' => [
 		'label' => __( 'Restrictions Manager', 'syncly' ),
 		'icon'  => 'dashicons-lock',
-	],
-	'rest-api'             => [
-		'label' => __( 'REST API', 'syncly' ),
-		'icon'  => 'dashicons-editor-code',
 	],
 	'webhooks'             => [
 		'label' => __( 'Webhooks', 'syncly' ),
@@ -95,17 +91,9 @@ $settings_tabs = [
 		'label' => __( 'Role-Based Tags', 'syncly' ),
 		'icon'  => 'dashicons-tag',
 	],
-	'family-relationships' => [
-		'label' => __( 'Family Relationships', 'syncly' ),
-		'icon'  => 'dashicons-groups',
-	],
 	'sync-preview'         => [
 		'label' => __( 'Sync Preview', 'syncly' ),
 		'icon'  => 'dashicons-visibility',
-	],
-	'login-sync'           => [
-		'label' => __( 'Login Sync', 'syncly' ),
-		'icon'  => 'dashicons-shield-alt',
 	],
 	'personalization'      => [
 		'label' => __( 'Personalization', 'syncly' ),
@@ -129,6 +117,15 @@ $settings_tabs = [
 	],
 ];
 
+// Hide the upsell tab once Pro is active and licensed — nothing left to upgrade to.
+if ( ! apply_filters( 'syncly_is_pro_active', false ) ) {
+	$settings_tabs['upgrade'] = [
+		'label'               => __( 'Upgrade to Pro', 'syncly' ),
+		'icon'                => 'dashicons-star-filled',
+		'requires_connection' => false,
+	];
+}
+
 /**
  * Allow developers to add custom settings tabs
  *
@@ -138,7 +135,7 @@ $settings_tabs = [
  * @param array $settings      Current plugin settings
  *
  * @example
- * add_filter( 'ghl_crm_settings_tabs', function( $tabs, $is_connected, $settings ) {
+ * add_filter( 'syncly_settings_tabs', function( $tabs, $is_connected, $settings ) {
  *     $tabs['my_custom_tab'] = [
  *         'label'    => __( 'My Custom Tab', 'my-plugin' ),
  *         'icon'     => 'dashicons-admin-customizer',
@@ -150,7 +147,7 @@ $settings_tabs = [
  *     return $tabs;
  * }, 10, 3 );
  */
-$settings_tabs = apply_filters( 'ghl_crm_settings_tabs', $settings_tabs, $is_connected, $settings );
+$settings_tabs = apply_filters( 'syncly_settings_tabs', $settings_tabs, $is_connected, $settings );
 
 foreach ( $settings_tabs as $tab_key => $tab_data ) {
 	if ( empty( $tab_data['pro'] ) ) {
@@ -168,7 +165,7 @@ if ( ! isset( $settings_tabs[ $current_tab ] ) ) {
 }
 
 ?>
-<div class="wrap ghl-crm-settings">
+<div class="wrap syncly-settings">
 	<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
 	
 	<?php if ( ! $is_connected ) : ?>
@@ -189,7 +186,7 @@ if ( ! isset( $settings_tabs[ $current_tab ] ) ) {
 						esc_html__( 'Please connect to GoHighLevel in %s first.', 'syncly' ),
 						sprintf(
 							'<a href="%s">%s</a>',
-							esc_url( admin_url( 'admin.php?page=ghl-crm-admin' ) ),
+							esc_url( admin_url( 'admin.php?page=syncly-admin' ) ),
 							esc_html__( 'Dashboard', 'syncly' )
 						)
 					);
@@ -259,7 +256,7 @@ if ( ! isset( $settings_tabs[ $current_tab ] ) ) {
 					echo '<div class="notice notice-error"><p>' . esc_html__( 'You do not have permission to access this settings tab.', 'syncly' ) . '</p></div>';
 				} else {
 					// Fire action before rendering tab content
-					do_action( 'ghl_crm_before_settings_tab_content', $current_tab, $tab_data, $settings );
+					do_action( 'syncly_before_settings_tab_content', $current_tab, $tab_data, $settings );
 
 					// Check if tab has a custom callback
 					if ( isset( $tab_data['callback'] ) && is_callable( $tab_data['callback'] ) ) {
@@ -270,7 +267,7 @@ if ( ! isset( $settings_tabs[ $current_tab ] ) ) {
 						include $tab_data['file'];
 					} else {
 						// Default: try to include standard partial file
-						$partial_file = GHL_CRM_PATH . 'templates/admin/partials/settings/' . $current_tab . '.php';
+						$partial_file = SYNCLY_PATH . 'templates/admin/partials/settings/' . $current_tab . '.php';
 						if ( file_exists( $partial_file ) ) {
 							include $partial_file;
 						} else {
@@ -279,7 +276,7 @@ if ( ! isset( $settings_tabs[ $current_tab ] ) ) {
 					}
 
 					// Fire action after rendering tab content
-					do_action( 'ghl_crm_after_settings_tab_content', $current_tab, $tab_data, $settings );
+					do_action( 'syncly_after_settings_tab_content', $current_tab, $tab_data, $settings );
 				}
 			}
 			?>

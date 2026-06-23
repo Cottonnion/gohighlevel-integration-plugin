@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\API\Client;
+namespace Syncly\API\Client;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Contract for all API client implementations
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage API/Client
  */
 interface ClientInterface {
@@ -22,7 +22,7 @@ interface ClientInterface {
 	 * @param string $endpoint API endpoint
 	 * @param array  $params   Query parameters
 	 * @return array Response data
-	 * @throws \GHL_CRM\API\Exceptions\ApiException
+	 * @throws \Syncly\API\Exceptions\ApiException
 	 */
 	public function get( string $endpoint, array $params = [] ): array;
 
@@ -32,7 +32,7 @@ interface ClientInterface {
 	 * @param string $endpoint API endpoint
 	 * @param array  $data     Request body
 	 * @return array Response data
-	 * @throws \GHL_CRM\API\Exceptions\ApiException
+	 * @throws \Syncly\API\Exceptions\ApiException
 	 */
 	public function post( string $endpoint, array $data = [] ): array;
 
@@ -42,7 +42,7 @@ interface ClientInterface {
 	 * @param string $endpoint API endpoint
 	 * @param array  $data     Request body
 	 * @return array Response data
-	 * @throws \GHL_CRM\API\Exceptions\ApiException
+	 * @throws \Syncly\API\Exceptions\ApiException
 	 */
 	public function put( string $endpoint, array $data = [] ): array;
 
@@ -51,7 +51,7 @@ interface ClientInterface {
 	 *
 	 * @param string $endpoint API endpoint
 	 * @return array Response data
-	 * @throws \GHL_CRM\API\Exceptions\ApiException
+	 * @throws \Syncly\API\Exceptions\ApiException
 	 */
 	public function delete( string $endpoint ): array;
 

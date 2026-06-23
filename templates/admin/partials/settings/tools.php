@@ -4,20 +4,20 @@
  *
  * Tools tab for data management, import/export, and system utilities
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/templates/admin/partials/settings
+ * @package    Syncly
+ * @subpackage Syncly/templates/admin/partials/settings
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
 ?>
 
 <div class="ghl-settings-wrapper">
-	<?php wp_nonce_field( 'ghl_crm_settings_nonce', 'ghl_crm_nonce' ); ?>
+	<?php wp_nonce_field( 'syncly_settings_nonce', 'syncly_nonce' ); ?>
 	
 	<!-- Data Management Section -->
 	<div class="ghl-settings-section ghl-settings-card">

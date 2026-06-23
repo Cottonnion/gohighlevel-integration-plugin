@@ -8,13 +8,13 @@
 
 declare(strict_types=1);
 
-use GHL_CRM\Sync\TagManager;
+use Syncly\Sync\TagManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	return;
 }
 
-if ( ! function_exists( 'ghl_crm_get_user_tag_ids' ) ) {
+if ( ! function_exists( 'syncly_get_user_tag_ids' ) ) {
 	/**
 	 * Get stored GHL tag IDs for a user.
 	 *
@@ -22,12 +22,12 @@ if ( ! function_exists( 'ghl_crm_get_user_tag_ids' ) ) {
 	 * @param string|null $location_id Optional location override; defaults to configured location.
 	 * @return array<string> List of tag IDs (strings).
 	 */
-	function ghl_crm_get_user_tag_ids( int $user_id, ?string $location_id = null ): array {
+	function syncly_get_user_tag_ids( int $user_id, ?string $location_id = null ): array {
 		return TagManager::get_instance()->get_user_tag_ids( $user_id, $location_id );
 	}
 }
 
-if ( ! function_exists( 'ghl_crm_get_user_tag_names' ) ) {
+if ( ! function_exists( 'syncly_get_user_tag_names' ) ) {
 	/**
 	 * Get stored GHL tag names for a user.
 	 *
@@ -35,12 +35,12 @@ if ( ! function_exists( 'ghl_crm_get_user_tag_names' ) ) {
 	 * @param string|null $location_id Optional location override; defaults to configured location.
 	 * @return array<string> List of tag names.
 	 */
-	function ghl_crm_get_user_tag_names( int $user_id, ?string $location_id = null ): array {
+	function syncly_get_user_tag_names( int $user_id, ?string $location_id = null ): array {
 		return TagManager::get_instance()->get_user_tag_names( $user_id, $location_id );
 	}
 }
 
-if ( ! function_exists( 'ghl_crm_user_has_tag' ) ) {
+if ( ! function_exists( 'syncly_user_has_tag' ) ) {
 	/**
 	 * Check if a user has at least one of the provided tags.
 	 *
@@ -52,7 +52,7 @@ if ( ! function_exists( 'ghl_crm_user_has_tag' ) ) {
 	 * @param string|null       $location_id Optional location override; defaults to configured location.
 	 * @return bool True when user has any of the provided tags.
 	 */
-	function ghl_crm_user_has_tag( int $user_id, $tags, ?string $location_id = null ): bool {
+	function syncly_user_has_tag( int $user_id, $tags, ?string $location_id = null ): bool {
 		$tag_manager  = TagManager::get_instance();
 		$user_tag_ids = $tag_manager->get_user_tag_ids( $user_id, $location_id );
 
@@ -74,7 +74,7 @@ if ( ! function_exists( 'ghl_crm_user_has_tag' ) ) {
 	}
 }
 
-if ( ! function_exists( 'ghl_crm_get_user_contact_id' ) ) {
+if ( ! function_exists( 'syncly_get_user_contact_id' ) ) {
 	/**
 	 * Get the mapped GHL contact ID for a user.
 	 *
@@ -82,12 +82,12 @@ if ( ! function_exists( 'ghl_crm_get_user_contact_id' ) ) {
 	 * @param string|null $location_id Optional location override; defaults to configured location.
 	 * @return string|null Contact ID or null.
 	 */
-	function ghl_crm_get_user_contact_id( int $user_id, ?string $location_id = null ): ?string {
+	function syncly_get_user_contact_id( int $user_id, ?string $location_id = null ): ?string {
 		return TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 	}
 }
 
-if ( ! function_exists( 'ghl_crm_add_tags_to_user' ) ) {
+if ( ! function_exists( 'syncly_add_tags_to_user' ) ) {
 	/**
 	 * Add tags to a user's contact in GHL (queues for async processing).
 	 *
@@ -99,7 +99,7 @@ if ( ! function_exists( 'ghl_crm_add_tags_to_user' ) ) {
 	 * @param string|null $location_id Optional location override; defaults to configured location.
 	 * @return bool True if queued successfully, false otherwise.
 	 */
-	function ghl_crm_add_tags_to_user( int $user_id, array $tags, ?string $location_id = null ): bool {
+	function syncly_add_tags_to_user( int $user_id, array $tags, ?string $location_id = null ): bool {
 		if ( empty( $tags ) ) {
 			return false;
 		}
@@ -132,7 +132,7 @@ if ( ! function_exists( 'ghl_crm_add_tags_to_user' ) ) {
 		}
 
 		// Queue the tag addition
-		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
+		$queue_manager = \Syncly\Sync\QueueManager::get_instance();
 		$queue_id      = $queue_manager->add_to_queue(
 			'user',
 			$user_id,
@@ -147,7 +147,7 @@ if ( ! function_exists( 'ghl_crm_add_tags_to_user' ) ) {
 	}
 }
 
-if ( ! function_exists( 'ghl_crm_remove_tags_from_user' ) ) {
+if ( ! function_exists( 'syncly_remove_tags_from_user' ) ) {
 	/**
 	 * Remove tags from a user's contact in GHL (queues for async processing).
 	 *
@@ -159,7 +159,7 @@ if ( ! function_exists( 'ghl_crm_remove_tags_from_user' ) ) {
 	 * @param string|null $location_id Optional location override; defaults to configured location.
 	 * @return bool True if queued successfully, false otherwise.
 	 */
-	function ghl_crm_remove_tags_from_user( int $user_id, array $tags, ?string $location_id = null ): bool {
+	function syncly_remove_tags_from_user( int $user_id, array $tags, ?string $location_id = null ): bool {
 		if ( empty( $tags ) ) {
 			return false;
 		}
@@ -180,7 +180,7 @@ if ( ! function_exists( 'ghl_crm_remove_tags_from_user' ) ) {
 		}
 
 		// Queue the tag removal
-		$queue_manager = \GHL_CRM\Sync\QueueManager::get_instance();
+		$queue_manager = \Syncly\Sync\QueueManager::get_instance();
 		$queue_id      = $queue_manager->add_to_queue(
 			'user',
 			$user_id,

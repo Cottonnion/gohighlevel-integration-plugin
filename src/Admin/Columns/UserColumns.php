@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Admin\Columns;
+namespace Syncly\Admin\Columns;
 
-use GHL_CRM\Core\SettingsManager;
+use Syncly\Core\SettingsManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Adds custom columns to the WordPress users list table in admin
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Admin/Columns
  */
 class UserColumns {
@@ -138,9 +138,9 @@ class UserColumns {
 	 * @return string Column HTML
 	 */
 	private function render_contact_id_column( int $user_id ): string {
-		$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 		$location_id      = $settings_manager->get_setting( 'location_id' ) ?: $settings_manager->get_setting( 'oauth_location_id' );
-		$contact_id       = \GHL_CRM\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+		$contact_id       = \Syncly\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 
 		if ( empty( $contact_id ) ) {
 			return '<span class="ghl-no-contact">—</span>';
@@ -184,9 +184,9 @@ class UserColumns {
 	private function render_sync_status_column( int $user_id ): string {
 		$synced_on_register = get_user_meta( $user_id, '_ghl_synced_on_register', true );
 		$last_sync_time     = get_user_meta( $user_id, '_ghl_last_sync', true );
-		$settings_manager   = \GHL_CRM\Core\SettingsManager::get_instance();
+		$settings_manager   = \Syncly\Core\SettingsManager::get_instance();
 		$location_id        = $settings_manager->get_setting( 'location_id' ) ?: $settings_manager->get_setting( 'oauth_location_id' );
-		$contact_id         = \GHL_CRM\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+		$contact_id         = \Syncly\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
 
 		if ( empty( $contact_id ) ) {
 			// Not synced yet
@@ -258,7 +258,7 @@ class UserColumns {
 
 		switch ( $orderby ) {
 			case 'ghl_contact_id':
-				$query->set( 'meta_key', \GHL_CRM\Sync\TagManager::get_instance()->get_user_contact_id_meta_key() );
+				$query->set( 'meta_key', \Syncly\Sync\TagManager::get_instance()->get_user_contact_id_meta_key() );
 				$query->set( 'orderby', 'meta_value' );
 				break;
 
@@ -275,7 +275,7 @@ class UserColumns {
 	 * @return void
 	 */
 	public function add_column_styles(): void {
-		wp_register_style( 'syncly-user-columns-inline', false, [], GHL_CRM_VERSION );
+		wp_register_style( 'syncly-user-columns-inline', false, [], SYNCLY_VERSION );
 		wp_enqueue_style( 'syncly-user-columns-inline' );
 		wp_add_inline_style(
 			'syncly-user-columns-inline',

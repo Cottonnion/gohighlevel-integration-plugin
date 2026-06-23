@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Admin;
+namespace Syncly\Admin;
 
-use GHL_CRM\Admin\Columns\UserColumns;
-use GHL_CRM\Admin\Profile\UserProfileFields;
-use GHL_CRM\Admin\Users\UserBulkActions;
-use GHL_CRM\Core\SettingsManager;
+use Syncly\Admin\Columns\UserColumns;
+use Syncly\Admin\Profile\UserProfileFields;
+use Syncly\Admin\Users\UserBulkActions;
+use Syncly\Core\SettingsManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Coordinates all admin UI customizations and enhancements
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Admin
  */
 class AdminUI {

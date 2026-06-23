@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Membership;
+namespace Syncly\Membership;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Handles checking user access based on GoHighLevel tags
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Membership
  */
 class AccessControl {
@@ -60,7 +60,7 @@ class AccessControl {
 		}
 
 		// Get required tags
-		$required_tags = get_post_meta( $post_id, \GHL_CRM\Sync\TagManager::scoped_meta_key( '_ghl_required_tags' ), true );
+		$required_tags = get_post_meta( $post_id, \Syncly\Sync\TagManager::scoped_meta_key( '_ghl_required_tags' ), true );
 		if ( ! is_array( $required_tags ) || empty( $required_tags ) ) {
 			return true; // No tags set, allow access
 		}
@@ -91,8 +91,8 @@ class AccessControl {
 	 * @return array Array of tag names
 	 */
 	public function get_user_tags( int $user_id ): array {
-		$tag_manager = \GHL_CRM\Sync\TagManager::get_instance();
-		$settings    = \GHL_CRM\Core\SettingsManager::get_instance();
+		$tag_manager = \Syncly\Sync\TagManager::get_instance();
+		$settings    = \Syncly\Core\SettingsManager::get_instance();
 		$location_id = $settings->get_setting( 'location_id' ) ?: $settings->get_setting( 'oauth_location_id' );
 		$tags        = $tag_manager->get_user_tag_names( $user_id, $location_id );
 
@@ -183,7 +183,7 @@ class AccessControl {
 	 */
 	public function get_denial_message( int $post_id ): string {
 		$message = apply_filters(
-			'ghl_crm_access_denial_message',
+			'syncly_access_denial_message',
 			__( 'You do not have permission to view this content.', 'syncly' ),
 			$post_id
 		);
@@ -211,7 +211,7 @@ class AccessControl {
 	public function get_restriction_details( int $post_id ): array {
 		return [
 			'type'         => get_post_meta( $post_id, '_ghl_restriction_type', true ),
-			'tags'         => get_post_meta( $post_id, \GHL_CRM\Sync\TagManager::scoped_meta_key( '_ghl_required_tags' ), true ),
+			'tags'         => get_post_meta( $post_id, \Syncly\Sync\TagManager::scoped_meta_key( '_ghl_required_tags' ), true ),
 			'redirect_url' => get_post_meta( $post_id, '_ghl_redirect_url', true ),
 		];
 	}

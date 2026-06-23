@@ -26,7 +26,7 @@
  *
  * Handles dashboard tab switching, connection form submission, and disconnect functionality
  *
- * @package GHL_CRM_Integration
+ * @package Syncly
  */
 
 (function ($) {
@@ -69,23 +69,23 @@
     const ajaxEndpoint =
       typeof ajaxurl !== "undefined"
         ? ajaxurl
-        : ghl_crm_dashboard_js_data.ajaxUrl;
+        : syncly_dashboard_js_data.ajaxUrl;
 
     const $manualSyncBtn = jQuery("#ghl-trigger-sync");
     const $clearCacheBtn = jQuery("#ghl-clear-cache");
     const $testConnBtn = jQuery("#ghl-test-connection");
     const $refreshMetaBtn = jQuery("#ghl-refresh-tags-fields");
     const $reconnectBtn = jQuery("#ghl-reconnect-account");
-    const i18n = ghl_crm_dashboard_js_data.i18n || {};
+    const i18n = syncly_dashboard_js_data.i18n || {};
 
     if ($manualSyncBtn.length) {
       $manualSyncBtn.on("click", function (event) {
         event.preventDefault();
         handleQuickAction(jQuery(this), {
-          action: "ghl_crm_manual_queue_trigger",
+          action: "syncly_manual_queue_trigger",
           data: {
-            action: "ghl_crm_manual_queue_trigger",
-            nonce: ghl_crm_dashboard_js_data.manualQueueNonce,
+            action: "syncly_manual_queue_trigger",
+            nonce: syncly_dashboard_js_data.manualQueueNonce,
           },
           loadingText: i18n.manualSyncProcessing || "Processing queue...",
           successMessage: function (response) {
@@ -122,10 +122,10 @@
       $clearCacheBtn.on("click", function (event) {
         event.preventDefault();
         handleQuickAction(jQuery(this), {
-          action: "ghl_crm_clear_cache",
+          action: "syncly_clear_cache",
           data: {
-            action: "ghl_crm_clear_cache",
-            nonce: ghl_crm_dashboard_js_data.settingsNonce,
+            action: "syncly_clear_cache",
+            nonce: syncly_dashboard_js_data.settingsNonce,
           },
           loadingText: i18n.clearCacheProcessing || "Clearing cache...",
           successMessage: function (response) {
@@ -151,10 +151,10 @@
       $testConnBtn.on("click", function (event) {
         event.preventDefault();
         handleQuickAction(jQuery(this), {
-          action: "ghl_crm_test_connection",
+          action: "syncly_test_connection",
           data: {
-            action: "ghl_crm_test_connection",
-            nonce: ghl_crm_dashboard_js_data.settingsNonce,
+            action: "syncly_test_connection",
+            nonce: syncly_dashboard_js_data.settingsNonce,
           },
           loadingText: i18n.testConnectionProcessing || "Testing connection...",
           successMessage: function (response) {
@@ -182,10 +182,10 @@
       $refreshMetaBtn.on("click", function (event) {
         event.preventDefault();
         handleQuickAction(jQuery(this), {
-          action: "ghl_crm_refresh_metadata",
+          action: "syncly_refresh_metadata",
           data: {
-            action: "ghl_crm_refresh_metadata",
-            nonce: ghl_crm_dashboard_js_data.nonce,
+            action: "syncly_refresh_metadata",
+            nonce: syncly_dashboard_js_data.nonce,
           },
           loadingText:
             i18n.refreshMetadataProcessing || "Refreshing metadata...",
@@ -221,10 +221,10 @@
       $reconnectBtn.on("click", function (event) {
         event.preventDefault();
         handleQuickAction(jQuery(this), {
-          action: "ghl_crm_oauth_reconnect",
+          action: "syncly_oauth_reconnect",
           data: {
-            action: "ghl_crm_oauth_reconnect",
-            nonce: ghl_crm_dashboard_js_data.settingsNonce,
+            action: "syncly_oauth_reconnect",
+            nonce: syncly_dashboard_js_data.settingsNonce,
           },
           loadingText: "Reconnecting...",
           successMessage: function (response) {
@@ -268,7 +268,7 @@
       config.ajaxUrl ||
       (typeof ajaxurl !== "undefined"
         ? ajaxurl
-        : ghl_crm_dashboard_js_data.ajaxUrl);
+        : syncly_dashboard_js_data.ajaxUrl);
 
     $button
       .data("ghl-loading", true)
@@ -374,18 +374,18 @@
         .prop("disabled", true)
         .html(
           '<span class="dashicons dashicons-update-alt" style="animation: rotation 1s infinite linear; margin-top: 3px;"></span> ' +
-            ghl_crm_dashboard_js_data.i18n.connecting,
+            syncly_dashboard_js_data.i18n.connecting,
         ); // Remove any existing notices
       $form.prev(".notice").remove();
 
       // Get values and ensure they're strings
       var apiToken = String($("#api_token").val() || "").trim();
       var locationId = String($("#location_id").val() || "").trim();
-      var nonce = ghl_crm_dashboard_js_data.manualConnectNonce;
+      var nonce = syncly_dashboard_js_data.manualConnectNonce;
 
       // Build FormData to ensure proper encoding
       var formData = new FormData();
-      formData.append("action", "ghl_crm_manual_connect");
+      formData.append("action", "syncly_manual_connect");
       formData.append("ghl_manual_connect_nonce", nonce);
       formData.append("api_token", apiToken);
       formData.append("location_id", locationId);
@@ -414,7 +414,7 @@
             var errorMsg =
               response.data && response.data.message
                 ? response.data.message
-                : ghl_crm_dashboard_js_data.i18n.connectionFailed;
+                : syncly_dashboard_js_data.i18n.connectionFailed;
 
             $form.before(
               '<div class="notice notice-error is-dismissible"><p>' +
@@ -426,7 +426,7 @@
           }
         },
         error: function (jqXHR, textStatus, errorThrown) {
-          var errorMsg = ghl_crm_dashboard_js_data.i18n.connectionError;
+          var errorMsg = syncly_dashboard_js_data.i18n.connectionError;
 
           // If response is -1, it's likely a nonce or action registration issue
           if (jqXHR.responseText === "-1" || jqXHR.responseText === "0") {
@@ -461,7 +461,7 @@
       // Show confirmation dialog
       Swal.fire({
         title:
-          ghl_crm_dashboard_js_data.i18n.disconnectConfirm || "Are you sure?",
+          syncly_dashboard_js_data.i18n.disconnectConfirm || "Are you sure?",
         text: "You will need to reconnect to use the integration features.",
         icon: "warning",
         showCancelButton: true,
@@ -474,14 +474,14 @@
           // Show loading state
           $btn
             .prop("disabled", true)
-            .text(ghl_crm_dashboard_js_data.i18n.disconnecting);
+            .text(syncly_dashboard_js_data.i18n.disconnecting);
 
           $.ajax({
             url: ajaxurl,
             type: "POST",
             data: {
-              action: "ghl_crm_oauth_disconnect",
-              nonce: ghl_crm_dashboard_js_data.disconnectNonce,
+              action: "syncly_oauth_disconnect",
+              nonce: syncly_dashboard_js_data.disconnectNonce,
             },
             success: function (response) {
               if (response.success) {
@@ -498,7 +498,7 @@
                 var errorMsg =
                   response.data && response.data.message
                     ? response.data.message
-                    : ghl_crm_dashboard_js_data.i18n.disconnectFailed;
+                    : syncly_dashboard_js_data.i18n.disconnectFailed;
                 Swal.fire({
                   icon: "error",
                   title: "Disconnect Failed",
@@ -511,7 +511,7 @@
               Swal.fire({
                 icon: "error",
                 title: "Connection Error",
-                text: ghl_crm_dashboard_js_data.i18n.disconnectError,
+                text: syncly_dashboard_js_data.i18n.disconnectError,
               });
               $btn.prop("disabled", false).text(originalText);
             },
@@ -530,7 +530,7 @@
       // Show confirmation dialog
       Swal.fire({
         title:
-          ghl_crm_dashboard_js_data.i18n.disconnectConfirm || "Are you sure?",
+          syncly_dashboard_js_data.i18n.disconnectConfirm || "Are you sure?",
         text: "Your API credentials will be removed. You will need to reconnect to use the integration features.",
         icon: "warning",
         showCancelButton: true,
@@ -545,15 +545,15 @@
             .prop("disabled", true)
             .html(
               '<span class="dashicons dashicons-update-alt" style="animation: rotation 1s infinite linear;"></span> ' +
-                ghl_crm_dashboard_js_data.i18n.disconnecting,
+                syncly_dashboard_js_data.i18n.disconnecting,
             );
 
           $.ajax({
             url: ajaxurl,
             type: "POST",
             data: {
-              action: "ghl_crm_disconnect_api",
-              nonce: ghl_crm_dashboard_js_data.disconnectNonce,
+              action: "syncly_disconnect_api",
+              nonce: syncly_dashboard_js_data.disconnectNonce,
             },
             success: function (response) {
               if (response.success) {
@@ -570,7 +570,7 @@
                 var errorMsg =
                   response.data && response.data.message
                     ? response.data.message
-                    : ghl_crm_dashboard_js_data.i18n.disconnectFailed;
+                    : syncly_dashboard_js_data.i18n.disconnectFailed;
                 Swal.fire({
                   icon: "error",
                   title: "Disconnect Failed",
@@ -583,7 +583,7 @@
               Swal.fire({
                 icon: "error",
                 title: "Connection Error",
-                text: ghl_crm_dashboard_js_data.i18n.disconnectError,
+                text: syncly_dashboard_js_data.i18n.disconnectError,
               });
               $btn.prop("disabled", false).html(originalText);
             },

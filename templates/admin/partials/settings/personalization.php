@@ -4,20 +4,20 @@
  *
  * Personalization settings tab content
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/templates/admin/partials/settings
+ * @package    Syncly
+ * @subpackage Syncly/templates/admin/partials/settings
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
 ?>
 
 <div class="ghl-settings-wrapper">
-	<?php wp_nonce_field( 'ghl_crm_settings_nonce', 'ghl_crm_nonce' ); ?>
+	<?php wp_nonce_field( 'syncly_settings_nonce', 'syncly_nonce' ); ?>
 
 	<div class="ghl-settings-section ghl-settings-card">
 		<div class="ghl-settings-header">
@@ -322,7 +322,7 @@ $settings         = $settings_manager->get_settings_array();
 			var formData = new FormData();
 			formData.append('action', 'ghl_test_cid_link');
 			formData.append('contact_id', contactId);
-			formData.append('nonce', document.querySelector('input[name="ghl_crm_nonce"]').value);
+			formData.append('nonce', document.querySelector('input[name="syncly_nonce"]').value);
 
 			fetch(ajaxurl, {
 				method: 'POST',
@@ -389,4 +389,4 @@ $settings         = $settings_manager->get_settings_array();
 		return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
 	}
 })();
-<?php wp_add_inline_script( 'ghl-crm-settings-js', ob_get_clean() ); ?>
+<?php wp_add_inline_script( 'syncly-settings-js', ob_get_clean() ); ?>

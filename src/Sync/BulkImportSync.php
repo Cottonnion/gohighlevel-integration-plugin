@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace GHL_CRM\Sync;
+namespace Syncly\Sync;
 
-use GHL_CRM\API\Client\Client;
-use GHL_CRM\API\Resources\ContactResource;
-use GHL_CRM\Core\SettingsManager;
-use GHL_CRM\Sync\TagManager;
+use Syncly\API\Client\Client;
+use Syncly\API\Resources\ContactResource;
+use Syncly\Core\SettingsManager;
+use Syncly\Sync\TagManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * NOTE: The GET /contacts/ endpoint is deprecated and will be removed
  * in a future GHL API version. This feature uses it until then.
  *
- * @package    GHL_CRM_Integration
+ * @package    Syncly
  * @subpackage Sync
  */
 class BulkImportSync {

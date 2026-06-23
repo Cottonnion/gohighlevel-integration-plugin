@@ -4,15 +4,15 @@
  *
  * General settings tab content
  *
- * @package    GHL_CRM_Integration
- * @subpackage GHL_CRM_Integration/templates/admin/partials/settings
+ * @package    Syncly
+ * @subpackage Syncly/templates/admin/partials/settings
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$settings_manager = \GHL_CRM\Core\SettingsManager::get_instance();
+$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
 
 // White label domain setting
@@ -26,7 +26,7 @@ $user_register_tags            = $settings_manager->get_location_register_tags()
 ?>
 
 <div class="ghl-settings-wrapper">
-	<?php wp_nonce_field( 'ghl_crm_settings_nonce', 'ghl_crm_nonce' ); ?>
+	<?php wp_nonce_field( 'syncly_settings_nonce', 'syncly_nonce' ); ?>
 	
 	<!-- White Label Domain Section -->
 	<div class="ghl-settings-section ghl-settings-card">
@@ -197,7 +197,7 @@ $user_register_tags            = $settings_manager->get_location_register_tags()
 		</div>
 		<hr>
 		<div style="padding: 12px 0;">
-			<button type="button" class="ghl-button ghl-button-secondary" onclick="window.location.href='admin.php?page=ghl-crm-setup-wizard'">
+			<button type="button" class="ghl-button ghl-button-secondary" onclick="window.location.href='admin.php?page=syncly-setup-wizard'">
 				<span class="dashicons dashicons-welcome-learn-more"></span>
 				<?php esc_html_e( 'Launch Setup Wizard', 'syncly' ); ?>
 			</button>
