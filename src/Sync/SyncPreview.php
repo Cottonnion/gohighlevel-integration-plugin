@@ -13,8 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Sync Preview
  *
- * Provides dry-run preview of sync operations without executing them
- * Shows what will happen before committing to sync
+ * Provides dry-run preview of sync operations without executing them.
+ * Shows what will happen before committing to sync.
  *
  * @package    Syncly
  * @subpackage Sync
