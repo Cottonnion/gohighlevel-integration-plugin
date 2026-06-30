@@ -282,9 +282,9 @@ class RateLimiter {
 	}
 
 	/**
-	 * Get daily cache key
+	 * Get daily cache key.
 	 *
-	 * @param string $location_id GHL location ID
+	 * @param string $location_id GHL location ID.
 	 * @return string
 	 */
 	private function get_daily_key( string $location_id ): string {
