@@ -457,10 +457,8 @@ class AjaxHandler {
 			$where_sql = implode( ' AND ', $where_clauses );
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Dynamic WHERE clauses are properly parameterized below.
 			$sql       = "SELECT COUNT(*) FROM {$wpdb->prefix}ghl_sync_log WHERE {$where_sql}";
-			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL is prepared with variadic parameters.
-			$prepared  = $wpdb->prepare( $sql, ...$where_values );
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Counting log rows for pagination against plugin-managed table.
-			$log_count = (int) $wpdb->get_var( $prepared );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- Counting log rows for pagination; SQL is prepared with variadic parameters from sanitized clauses.
+			$log_count = (int) $wpdb->get_var( $wpdb->prepare( $sql, ...$where_values ) );
 
 			$total_pages = ceil( $log_count / $per_page );
 

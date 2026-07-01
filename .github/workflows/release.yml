@@ -77,6 +77,8 @@ jobs:
           ! grep -RInE --exclude-dir=.git --exclude-dir=.github --exclude-dir=docs --exclude-dir=vendor "hash_hmac\( 'sha256', \$contact_id, \$secret|HMAC_SHA256_SECRET_CONTACT_ID|YOUR_HMAC" .
           ! grep -RInE --exclude-dir=.git --exclude-dir=.github --exclude-dir=docs --exclude-dir=vendor "syncly_register_advanced_restriction_hooks|syncly_archive_protection_enabled|syncly_restriction_overrides_enabled|overrides_pro_active" .
           ! grep -RInE "persist_guest_contact\( \$contact_id \);" -- src/Frontend/ContactIdHandler.php
+          grep -F "Tested up to: 7.0" readme.txt
+          test -d languages
           grep -F "https://labgenz.com/terms-of-service/" readme.txt
           grep -F "https://labgenz.com/privacy-policy/" readme.txt
 

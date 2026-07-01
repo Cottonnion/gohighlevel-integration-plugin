@@ -2,7 +2,7 @@
 Contributors: thelabgenz, yahyadeved
 Tags: gohighlevel, crm, woocommerce, buddyboss, learndash, webhooks
 Requires at least: 5.8
-Tested up to: 6.9
+Tested up to: 7.0
 Requires PHP: 7.4
 Stable tag: 1.4.3
 License: GPLv2 or later

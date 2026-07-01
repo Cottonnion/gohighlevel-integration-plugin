@@ -58,6 +58,8 @@ jobs:
 
       - name: Check declared service disclosures
         run: |
+          grep -F "Tested up to: 7.0" readme.txt
+          test -d languages
           grep -F "https://labgenz.com/terms-of-service/" readme.txt
           grep -F "https://labgenz.com/privacy-policy/" readme.txt
 
