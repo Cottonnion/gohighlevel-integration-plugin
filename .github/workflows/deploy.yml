@@ -1,9 +1,6 @@
 name: Deploy to Production
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
   workflow_dispatch:
 
 jobs:
