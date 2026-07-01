@@ -19,7 +19,6 @@ jobs:
       contents: write
     env:
       PLUGIN_SLUG: syncly
-      BUILD_ROOT: ${{ runner.temp }}/syncly-release
       DIST_DIR: ${{ github.workspace }}/dist
 
     steps:
@@ -84,6 +83,7 @@ jobs:
       - name: Stage production plugin files
         run: |
           set -euo pipefail
+          BUILD_ROOT="${RUNNER_TEMP}/syncly-release"
           STAGING_DIR="${BUILD_ROOT}/${PLUGIN_SLUG}"
 
           rm -rf "${BUILD_ROOT}" "${DIST_DIR}"
@@ -120,16 +120,16 @@ jobs:
             --exclude '.DS_Store'
 
       - name: Install production Composer dependencies
-        working-directory: ${{ env.BUILD_ROOT }}/${{ env.PLUGIN_SLUG }}
         run: |
+          cd "${RUNNER_TEMP}/syncly-release/${PLUGIN_SLUG}"
           composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader --classmap-authoritative
           test -f vendor/autoload.php
           test ! -d vendor/bin
 
       - name: Minify production assets
-        working-directory: ${{ env.BUILD_ROOT }}/${{ env.PLUGIN_SLUG }}
         run: |
           set -euo pipefail
+          cd "${RUNNER_TEMP}/syncly-release/${PLUGIN_SLUG}"
           npm_config_yes=true npx --package terser terser --version
           npm_config_yes=true npx --package clean-css-cli cleancss --version
 
@@ -148,6 +148,7 @@ jobs:
       - name: Build production zip
         run: |
           set -euo pipefail
+          BUILD_ROOT="${RUNNER_TEMP}/syncly-release"
           (
             cd "${BUILD_ROOT}"
             zip -r "${DIST_DIR}/${{ steps.release_tag.outputs.zip_name }}" "${PLUGIN_SLUG}" \
