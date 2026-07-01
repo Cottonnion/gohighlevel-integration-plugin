@@ -1268,7 +1268,7 @@
 				url: ajaxurl,
 				type: 'POST',
 				data: {
-					action: 'ghl_send_test_notification',
+					action: 'syncly_send_test_notification',
 					nonce: $('#syncly_nonce').val()
 				},
 				success: function(response) {

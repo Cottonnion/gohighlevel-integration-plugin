@@ -3,7 +3,7 @@
  * Plugin Name:       Syncly for GoHighLevel
  * Plugin URI:        https://highlevelsync.com/
  * Description:       WordPress integration plugin that connects WordPress, WooCommerce, BuddyBoss, and LearnDash with GoHighLevel CRM for real-time two-way sync and automation.
- * Version:           1.4.1
+ * Version:           1.4.3
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            LabGenz Team
@@ -25,35 +25,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Define plugin constants
 define( 'SYNCLY_PLUGIN_NAME', 'Syncly for GoHighLevel' );
-define( 'SYNCLY_VERSION', '1.4.1' );
+define( 'SYNCLY_VERSION', '1.4.3' );
 define( 'SYNCLY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'SYNCLY_URL', plugin_dir_url( __FILE__ ) );
 define( 'SYNCLY_BASENAME', plugin_basename( __FILE__ ) );
 define( 'SYNCLY_TEXTDOMAIN', 'syncly' );
 
-if ( ! defined( 'GHLBRIDGE_LOG' ) ) {
-	define( 'GHLBRIDGE_LOG', true );
+if ( ! defined( 'SYNCLY_BRIDGE_LOG' ) ) {
+	define( 'SYNCLY_BRIDGE_LOG', true );
 }
-
-// Back-compat aliases for the pre-rename GHL_CRM_* constants and namespace
-// (Syncly_Pro still references these in places).
-define( 'GHL_CRM_VERSION', SYNCLY_VERSION );
-define( 'GHL_CRM_PATH', SYNCLY_PATH );
-define( 'GHL_CRM_URL', SYNCLY_URL );
-define( 'GHL_CRM_BASENAME', SYNCLY_BASENAME );
-define( 'GHL_CRM_TEXTDOMAIN', SYNCLY_TEXTDOMAIN );
-
-spl_autoload_register(
-	function ( $class ) {
-		if ( strpos( $class, 'GHL_CRM\\' ) === 0 ) {
-			$mapped = 'Syncly\\' . substr( $class, strlen( 'GHL_CRM\\' ) );
-			if ( ( class_exists( $mapped ) || interface_exists( $mapped ) || trait_exists( $mapped ) )
-				&& ! class_exists( $class, false ) ) {
-				class_alias( $mapped, $class );
-			}
-		}
-	}
-);
 
 // Require Composer autoloader
 if ( file_exists( SYNCLY_PATH . 'vendor/autoload.php' ) ) {

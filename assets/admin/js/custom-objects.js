@@ -827,11 +827,11 @@
 				</td>
 				<td class="arrow-cell">→</td>
 				<td>
-					<select name="field_mappings[${rowId}][ghl_field]" class="ghl-field-select" required>
+					<select name="field_mappings[${rowId}][syncly_field]" class="ghl-field-select" required>
 						<option value="">${syncly_custom_objects_js_data.i18n.selectGHLField}</option>
 						<option value="__custom__">${syncly_custom_objects_js_data.i18n.enterCustomFieldKey}</option>
 					</select>
-					<input type="text" name="field_mappings[${rowId}][ghl_field_custom]" class="ghl-field-custom" placeholder="${syncly_custom_objects_js_data.i18n.customFieldPlaceholder}" style="display:none; margin-top: 5px; width: 100%;">
+					<input type="text" name="field_mappings[${rowId}][syncly_field_custom]" class="ghl-field-custom" placeholder="${syncly_custom_objects_js_data.i18n.customFieldPlaceholder}" style="display:none; margin-top: 5px; width: 100%;">
 				</td>
 				<td>
 					<select name="field_mappings[${rowId}][transform]">
@@ -987,7 +987,7 @@
 				mappingData.field_mappings.push({
 					wp_field: wpField,
 					wp_field_name: wpFieldName,
-					ghl_field: ghlField,
+					syncly_field: ghlField,
 					transform: transform
 				});
 			}

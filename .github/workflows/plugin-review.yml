@@ -1,25 +1,21 @@
-name: Release — Syncly
+name: WordPress.org Production Package
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
   workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Release tag, for example v1.4.2'
-        required: true
-        type: string
 
 jobs:
-  build-release:
-    name: Build production ZIP and publish GitHub Release
+  build-wordpress-org-package:
+    name: Build WordPress.org package
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     env:
       PLUGIN_SLUG: syncly
-      BUILD_ROOT: ${{ runner.temp }}/syncly-release
+      BUILD_ROOT: ${{ runner.temp }}/syncly-wordpress-org
       DIST_DIR: ${{ github.workspace }}/dist
 
     steps:
@@ -30,31 +26,13 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '7.4'
-          tools: composer:v2
           coverage: none
+          tools: composer:v2
 
       - name: Setup Node.js for asset minification
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      - name: Resolve release tag
-        id: release_tag
-        run: |
-          set -euo pipefail
-          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
-            RELEASE_TAG="${{ inputs.tag }}"
-          else
-            RELEASE_TAG="${GITHUB_REF_NAME}"
-          fi
-
-          if ! printf '%s' "${RELEASE_TAG}" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+([-.][A-Za-z0-9.]+)?$'; then
-            echo "Release tag must look like v1.4.2. Got: ${RELEASE_TAG}" >&2
-            exit 1
-          fi
-
-          echo "tag=${RELEASE_TAG}" >> "${GITHUB_OUTPUT}"
-          echo "zip_name=${PLUGIN_SLUG}-${RELEASE_TAG}.zip" >> "${GITHUB_OUTPUT}"
 
       - name: Validate Composer metadata
         run: composer validate --strict --no-check-publish
@@ -72,12 +50,15 @@ jobs:
           curl --fail --location --silent --show-error --head https://labgenz.com/terms-of-service/ >/dev/null
           curl --fail --location --silent --show-error --head https://labgenz.com/privacy-policy/ >/dev/null
 
-      - name: Check review-flagged patterns
+      - name: Check review-flagged prefixes and public contact flow
         run: |
           ! grep -RInE --exclude-dir=.git --exclude-dir=.github --exclude-dir=docs --exclude-dir=vendor "ghl_sync_lock_|ghl_last_login_|ghl_rest_api_rate_|ghl_bulk_import_progress" .
           ! grep -RInE --exclude-dir=.git --exclude-dir=.github --exclude-dir=docs --exclude-dir=vendor "hash_hmac\( 'sha256', \$contact_id, \$secret|HMAC_SHA256_SECRET_CONTACT_ID|YOUR_HMAC" .
           ! grep -RInE --exclude-dir=.git --exclude-dir=.github --exclude-dir=docs --exclude-dir=vendor "syncly_register_advanced_restriction_hooks|syncly_archive_protection_enabled|syncly_restriction_overrides_enabled|overrides_pro_active" .
           ! grep -RInE "persist_guest_contact\( \$contact_id \);" -- src/Frontend/ContactIdHandler.php
+
+      - name: Check declared service disclosures
+        run: |
           grep -F "https://labgenz.com/terms-of-service/" readme.txt
           grep -F "https://labgenz.com/privacy-policy/" readme.txt
 
@@ -150,7 +131,7 @@ jobs:
           set -euo pipefail
           (
             cd "${BUILD_ROOT}"
-            zip -r "${DIST_DIR}/${{ steps.release_tag.outputs.zip_name }}" "${PLUGIN_SLUG}" \
+            zip -r "${DIST_DIR}/${PLUGIN_SLUG}-wordpress-org.zip" "${PLUGIN_SLUG}" \
               -x "${PLUGIN_SLUG}/.git/*" \
               -x "${PLUGIN_SLUG}/.github/*" \
               -x "${PLUGIN_SLUG}/docs/*" \
@@ -180,13 +161,13 @@ jobs:
               -x "${PLUGIN_SLUG}/*.map" \
               -x "*.DS_Store"
           )
-          unzip -l "${DIST_DIR}/${{ steps.release_tag.outputs.zip_name }}" > "${DIST_DIR}/zip-contents.txt"
           ls -lah "${DIST_DIR}"
 
-      - name: Validate release artifact
+      - name: Validate production zip contents
         run: |
           set -euo pipefail
-          ZIP_FILE="${DIST_DIR}/${{ steps.release_tag.outputs.zip_name }}"
+          ZIP_FILE="${DIST_DIR}/${PLUGIN_SLUG}-wordpress-org.zip"
+          unzip -l "${ZIP_FILE}" > "${DIST_DIR}/zip-contents.txt"
 
           grep -q "${PLUGIN_SLUG}/syncly.php" "${DIST_DIR}/zip-contents.txt"
           grep -q "${PLUGIN_SLUG}/readme.txt" "${DIST_DIR}/zip-contents.txt"
@@ -199,14 +180,12 @@ jobs:
           ! grep -E "${PLUGIN_SLUG}/(\.gitignore|\.gitattributes|\.editorconfig|\.phpunit\.result\.cache|phpunit\.xml|phpunit\.xml\.dist|phpcs\.xml|phpcs\.xml\.dist|build-minify\.php|check|fix|zip-excludes?\.txt|README\.md|DEV_CHANGELOG\.md|FEATURES-AND-BENEFITS\.md|PRODUCTION-BUILD\.md)$" "${DIST_DIR}/zip-contents.txt"
           ! grep -E "${PLUGIN_SLUG}/vendor/bin/" "${DIST_DIR}/zip-contents.txt"
           ! grep -E "\.DS_Store|\.map$|\.zip$" "${DIST_DIR}/zip-contents.txt"
-          test -s "${ZIP_FILE}"
 
-      - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v2
+      - name: Upload production package artifact
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: ${{ steps.release_tag.outputs.tag }}
-          target_commitish: ${{ github.sha }}
-          files: |
-            dist/${{ steps.release_tag.outputs.zip_name }}
+          name: syncly-wordpress-org-package
+          path: |
+            dist/syncly-wordpress-org.zip
             dist/zip-contents.txt
-          generate_release_notes: true
+          if-no-files-found: error

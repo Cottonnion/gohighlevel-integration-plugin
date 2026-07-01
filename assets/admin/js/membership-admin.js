@@ -5,10 +5,10 @@
 (function($) {
     'use strict';
 
-    // AssetsManager localizes as ghl_membership_admin_js_data.
-    const ghlMembership = window.ghl_membership_admin_js_data || {};
+    // AssetsManager localizes as syncly_membership_admin_js_data.
+    const synclyMembership = window.syncly_membership_admin_js_data || {};
 
-    const GHLMembershipAdmin = {
+    const SynclyMembershipAdmin = {
         /**
          * Initialize
          */
@@ -28,7 +28,7 @@
             }
 
             // Pre-populate options from localized tags (already selected tags are in HTML)
-            var allTags = (typeof ghlMembership !== 'undefined' && ghlMembership.tags) ? ghlMembership.tags : [];
+            var allTags = (typeof synclyMembership !== 'undefined' && synclyMembership.tags) ? synclyMembership.tags : [];
             var selectedIds = $tagsSelect.find('option').map(function() {
                 return $(this).val();
             }).get();
@@ -79,7 +79,7 @@
 
     // Initialize on document ready
     $(document).ready(function() {
-        GHLMembershipAdmin.init();
+        SynclyMembershipAdmin.init();
     });
 
 })(jQuery);

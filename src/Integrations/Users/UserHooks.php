@@ -319,7 +319,7 @@ class UserHooks {
 	public function queue_user_profile_sync( int $user_id, ?\WP_User $old_user_data = null ): bool {
 		$settings = $this->settings_manager->get_settings_array();
 
-		$lock_key = "ghl_sync_lock_{$user_id}";
+		$lock_key = "syncly_user_sync_lock_{$user_id}";
 		if ( get_transient( $lock_key ) ) {
 			return false;
 		}
@@ -348,9 +348,9 @@ class UserHooks {
 
 		// If this user just came from an inbound webhook, skip outbound profile sync to avoid loops
 		if ( $contact_id ) {
-			$inbound_guard = get_transient( 'ghl_inbound_webhook_' . $contact_id );
+			$inbound_guard = get_transient( 'syncly_inbound_webhook_' . $contact_id );
 			if ( false !== $inbound_guard ) {
-				delete_transient( 'ghl_inbound_webhook_' . $contact_id );
+				delete_transient( 'syncly_inbound_webhook_' . $contact_id );
 				return false;
 			}
 		}
@@ -565,7 +565,7 @@ class UserHooks {
 		do_action( 'syncly_user_login_meta_updated', $user, $count, $now );
 
 		// Throttle GHL API sync: Once per hour to avoid spam.
-		$last_login_key = "ghl_last_login_{$user->ID}";
+		$last_login_key = "syncly_user_last_login_{$user->ID}";
 		$last_sync      = get_transient( $last_login_key );
 		if ( $last_sync ) {
 			return;

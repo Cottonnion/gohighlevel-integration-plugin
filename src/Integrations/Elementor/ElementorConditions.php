@@ -74,12 +74,12 @@ class ElementorConditions {
 	 */
 	private function register_editor_assets(): void {
 		AssetsManager::get_instance()->add_public_asset(
-			'ghl-elementor-conditions',
+			'syncly-elementor-conditions',
 			'elementor-conditions.js',
 			[ 'jquery', 'elementor-editor' ],
 			[
 				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
-				'nonce'         => wp_create_nonce( 'ghl_user_profile' ),
+				'nonce'         => wp_create_nonce( 'syncly_user_profile' ),
 				'availableTags' => $this->get_available_tags(),
 			],
 			SYNCLY_VERSION,
@@ -488,7 +488,7 @@ class ElementorConditions {
 	 */
 	public function enqueue_editor_scripts(): void {
 		$this->register_editor_assets();
-		AssetsManager::get_instance()->enqueue_public_asset( 'ghl-elementor-conditions' );
+		AssetsManager::get_instance()->enqueue_public_asset( 'syncly-elementor-conditions' );
 	}
 
 	/**

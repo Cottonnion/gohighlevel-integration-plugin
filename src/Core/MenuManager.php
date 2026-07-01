@@ -56,8 +56,6 @@ class MenuManager {
 		add_action( 'wp_ajax_syncly_spa_view', [ $this, 'handle_spa_view_request' ] );
 		add_action( 'wp_ajax_syncly_load_settings_tab', [ $this, 'handle_settings_tab_request' ] );
 		add_action( 'wp_ajax_syncly_oauth_disconnect', [ $this, 'handle_oauth_disconnect' ] );
-		add_action( 'wp_ajax_syncly_manual_connect', [ $this, 'handle_manual_connect' ] );
-		add_action( 'wp_ajax_syncly_disconnect_api', [ $this, 'handle_disconnect_api' ] );
 		add_filter( 'admin_footer_text', [ $this, 'custom_admin_footer_text' ] );
 		add_action( 'admin_head', [ $this, 'adjust_admin_viewport' ] );
 		add_action( 'admin_head', [ $this, 'remove_notices_on_plugins_admin_pages' ] );
@@ -344,7 +342,14 @@ class MenuManager {
 	 * @return void
 	 */
 	public function handle_spa_view_request(): void {
-		check_ajax_referer( 'syncly_spa_nonce', 'nonce' );
+		if ( ! $this->verify_spa_nonce() ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'Security check failed. Please refresh the page and try again.', 'syncly' ),
+				],
+				403
+			);
+		}
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
@@ -395,17 +400,16 @@ class MenuManager {
 						404
 					);
 			}
-		} catch ( \Exception $e ) {
+		} catch ( \Throwable $e ) {
 			wp_send_json_error(
 				[
-					'message' => __( 'An error occurred while processing the request: ', 'syncly' ) . $e->getMessage(),
-				],
-				500
-			);
-		} catch ( \Error $err ) {
-			wp_send_json_error(
-				[
-					'message' => __( 'A fatal error occurred while processing the request: ', 'syncly' ) . $err->getMessage(),
+					'message' => sprintf(
+						/* translators: 1: error message, 2: file path, 3: line number */
+						__( 'An error occurred while processing the request: %1$s in %2$s:%3$d', 'syncly' ),
+						$e->getMessage(),
+						$e->getFile(),
+						$e->getLine()
+					),
 				],
 				500
 			);
@@ -459,143 +463,6 @@ class MenuManager {
 				]
 			);
 		}
-	}
-
-	/**
-	 * Handle manual API key connection
-	 *
-	 * Uses Client helper method to test connection and SettingsManager helper to save.
-	 *
-	 * @return void Outputs JSON response and exits.
-	 */
-	public function handle_manual_connect(): void {
-		// Verify nonce
-		check_ajax_referer( 'syncly_manual_connect', 'ghl_manual_connect_nonce' );
-
-		// Check permissions
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error(
-				[
-					'message' => __( 'You do not have permission to manage connections.', 'syncly' ),
-				],
-				403
-			);
-		}
-
-		// Sanitize and validate inputs
-		$api_token   = isset( $_POST['api_token'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['api_token'] ) ) ) : '';
-		$location_id = isset( $_POST['location_id'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['location_id'] ) ) ) : '';
-
-		if ( empty( $api_token ) || empty( $location_id ) ) {
-			wp_send_json_error(
-				[
-					'message' => __( 'API Key and Location ID are required.', 'syncly' ),
-				],
-				400
-			);
-		}
-
-		// Test the connection using Client helper method
-		$client      = \Syncly\API\Client\Client::get_instance();
-		$test_result = $client->test_manual_connection( $api_token, $location_id );
-
-		if ( ! $test_result['success'] ) {
-			wp_send_json_error(
-				[
-					'message' => $test_result['message'],
-				],
-				401
-			);
-		}
-
-		// Connection successful, prepare settings
-		$new_settings = [
-			'api_token'           => $api_token,
-			'location_id'         => $location_id,
-			'location_name'       => 'Location: ' . $location_id,
-			// Clear OAuth tokens to prevent conflicts
-			'oauth_access_token'  => '',
-			'oauth_refresh_token' => '',
-			'oauth_expires_at'    => '',
-		];
-
-		// Save settings using SettingsManager helper method
-		$settings_manager = SettingsManager::get_instance();
-		$save_result      = $settings_manager->save_manual_connection_settings( $new_settings );
-
-		if ( ! $save_result['success'] ) {
-			wp_send_json_error(
-				[
-					'message' => $save_result['message'],
-				],
-				500
-			);
-		}
-
-		// Mark connection as verified since test succeeded (multisite-aware)
-		$settings_manager  = SettingsManager::get_instance();
-		$verification_data = [
-			'verified_at' => current_time( 'mysql' ),
-			'method'      => 'manual_api_key',
-		];
-		$settings_manager->update_option( 'syncly_connection_verified', $verification_data );
-
-		// Success!
-		wp_send_json_success(
-			[
-				'message' => $test_result['message'],
-			]
-		);
-	}
-
-	/**
-	 * Handle manual API key disconnection
-	 *
-	 * @return void Outputs JSON response and exits.
-	 */
-	public function handle_disconnect_api(): void {
-		// Verify nonce (reuse the disconnect nonce)
-		check_ajax_referer( 'syncly_oauth_disconnect', 'nonce' );
-
-		// Check permissions
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error(
-				[
-					'message' => __( 'You do not have permission to disconnect.', 'syncly' ),
-				],
-				403
-			);
-		}
-
-		// Clear API credentials
-		$settings_manager = SettingsManager::get_instance();
-		$new_settings     = [
-			'api_token'           => '',
-			'location_id'         => '',
-			'location_name'       => '',
-			// Also clear OAuth tokens to ensure clean state
-			'oauth_access_token'  => '',
-			'oauth_refresh_token' => '',
-			'oauth_expires_at'    => '',
-		];
-
-		$save_result = $settings_manager->save_manual_connection_settings( $new_settings );
-
-		if ( ! $save_result['success'] ) {
-			wp_send_json_error(
-				[
-					'message' => __( 'Failed to disconnect. Please try again.', 'syncly' ),
-				],
-				500
-			);
-		}
-
-		// Success!
-		wp_send_json_success(
-			[
-				'message' => __( 'Successfully disconnected from GoHighLevel.', 'syncly' ),
-			]
-		);
 	}
 
 	/**
@@ -677,8 +544,28 @@ class MenuManager {
 	 */
 	private function get_field_mapping_data(): void {
 		ob_start();
-		$this->load_template( 'admin/field-mapping' );
-		$html = ob_get_clean();
+
+		try {
+			$this->load_template( 'admin/field-mapping' );
+			$html = ob_get_clean();
+		} catch ( \Throwable $e ) {
+			if ( ob_get_level() > 0 ) {
+				ob_end_clean();
+			}
+
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: 1: error message, 2: file path, 3: line number */
+						__( 'Field mapping view failed: %1$s in %2$s:%3$d', 'syncly' ),
+						$e->getMessage(),
+						$e->getFile(),
+						$e->getLine()
+					),
+				],
+				500
+			);
+		}
 
 		wp_send_json_success(
 			[
@@ -835,7 +722,14 @@ class MenuManager {
 	 * @return void Outputs JSON response and exits.
 	 */
 	public function handle_settings_tab_request(): void {
-		check_ajax_referer( 'syncly_spa_nonce', 'nonce' );
+		if ( ! $this->verify_spa_nonce() ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'Security check failed. Please refresh the page and try again.', 'syncly' ),
+				],
+				403
+			);
+		}
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
@@ -931,6 +825,17 @@ class MenuManager {
 				'html' => $html,
 			]
 		);
+	}
+
+	/**
+	 * Verify nonce for admin SPA requests.
+	 *
+	 * @return bool Whether the request nonce is valid.
+	 */
+	private function verify_spa_nonce(): bool {
+		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
+
+		return (bool) wp_verify_nonce( $nonce, 'syncly_spa_nonce' ) || (bool) wp_verify_nonce( $nonce, 'syncly_admin' );
 	}
 
 	/**

@@ -31,7 +31,7 @@ class CustomObjectResource extends AbstractResource {
 	 */
 	public function get_schemas( bool $use_cache = true ): array {
 		if ( $use_cache ) {
-			$cached = get_transient( 'ghl_custom_objects_schemas' );
+			$cached = get_transient( 'syncly_custom_objects_schemas' );
 			if ( false !== $cached ) {
 				return $cached;
 			}
@@ -50,7 +50,7 @@ class CustomObjectResource extends AbstractResource {
 			// Cache using configured duration
 			$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 			$cache_duration   = absint( $settings_manager->get_setting( 'cache_duration', HOUR_IN_SECONDS ) );
-			set_transient( 'ghl_custom_objects_schemas', $objects, $cache_duration );
+			set_transient( 'syncly_custom_objects_schemas', $objects, $cache_duration );
 
 			return $objects;
 		} catch ( \Exception $e ) {
@@ -126,7 +126,7 @@ class CustomObjectResource extends AbstractResource {
 	 * @return bool True if cache was cleared
 	 */
 	public function clear_cache(): bool {
-		return delete_transient( 'ghl_custom_objects_schemas' );
+		return delete_transient( 'syncly_custom_objects_schemas' );
 	}
 
 	/**

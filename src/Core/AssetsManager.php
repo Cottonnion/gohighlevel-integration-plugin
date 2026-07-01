@@ -104,14 +104,14 @@ class AssetsManager {
 	public function register_external_libraries(): void {
 		// Register SweetAlert2 (local)
 		wp_register_style(
-			'ghl-sweetalert2',
+			'syncly-sweetalert2',
 			SYNCLY_URL . 'assets/admin/css/sweetalert2.min.css',
 			[],
 			'11.26.22'
 		);
 
 		wp_register_script(
-			'ghl-sweetalert2',
+			'syncly-sweetalert2',
 			SYNCLY_URL . 'assets/admin/js/sweetalert2.all.min.js',
 			[],
 			'11.26.22',
@@ -120,7 +120,7 @@ class AssetsManager {
 
 		// Register Chart.js (local)
 		wp_register_script(
-			'ghl-chartjs',
+			'syncly-chartjs',
 			SYNCLY_URL . 'assets/admin/js/chart.umd.min.js',
 			[],
 			'4.4.0',
@@ -205,7 +205,7 @@ class AssetsManager {
 			'syncly-spa-js',
 			[ 'toplevel_page_syncly-admin' ],
 			'spa-router.js',
-			[ 'jquery', 'ghl-sweetalert2' ],
+			[ 'jquery', 'syncly-sweetalert2' ],
 			[],
 			SYNCLY_VERSION,
 			true
@@ -236,7 +236,7 @@ class AssetsManager {
 			'syncly-dashboard-js',
 			[ 'toplevel_page_syncly-admin' ],
 			'dashboard.js',
-			[ 'jquery', 'ghl-sweetalert2', 'ghl-chartjs' ],
+			[ 'jquery', 'syncly-sweetalert2', 'syncly-chartjs' ],
 			[
 				'ajaxUrl'            => admin_url( 'admin-ajax.php' ),
 				'nonce'              => wp_create_nonce( 'syncly_admin' ),
@@ -275,7 +275,7 @@ class AssetsManager {
 			'syncly-analytics-js',
 			[ 'toplevel_page_syncly-admin' ],
 			'analytics.js',
-			[ 'jquery', 'ghl-sweetalert2', 'ghl-chartjs' ],
+			[ 'jquery', 'syncly-sweetalert2', 'syncly-chartjs' ],
 			[],
 			SYNCLY_VERSION,
 			true
@@ -294,7 +294,7 @@ class AssetsManager {
 			'syncly-field-mapping-js',
 			[ 'toplevel_page_syncly-admin' ],
 			'field-mapping.js',
-			[ 'jquery', 'ghl-sweetalert2' ],
+			[ 'jquery', 'syncly-sweetalert2' ],
 			[
 				'nonce' => wp_create_nonce( 'syncly_field_mapping_nonce' ),
 			],
@@ -316,7 +316,7 @@ class AssetsManager {
 			'syncly-integrations-js',
 			[ 'toplevel_page_syncly-admin' ],
 			'integrations.js',
-			[ 'jquery', 'ghl-sweetalert2' ],
+			[ 'jquery', 'syncly-sweetalert2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'syncly_admin' ),
@@ -331,7 +331,7 @@ class AssetsManager {
 			'syncly-settings-css',
 			[ 'toplevel_page_syncly-admin' ],
 			'settings.css',
-			[ 'ghl-sweetalert2', 'syncly-select2-css' ],
+			[ 'syncly-sweetalert2', 'syncly-select2-css' ],
 			[],
 			SYNCLY_VERSION
 		);
@@ -368,7 +368,7 @@ class AssetsManager {
 			'syncly-settings-js',
 			[ 'toplevel_page_syncly-admin' ],
 			'settings.js',
-			[ 'jquery', 'ghl-sweetalert2', 'syncly-select2' ],
+			[ 'jquery', 'syncly-sweetalert2', 'syncly-select2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'syncly_admin' ),
@@ -392,7 +392,7 @@ class AssetsManager {
 			'syncly-sync-preview-js',
 			[ 'toplevel_page_syncly-admin' ],
 			'sync-preview.js',
-			[ 'jquery', 'ghl-sweetalert2', 'syncly-select2' ],
+			[ 'jquery', 'syncly-sweetalert2', 'syncly-select2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'syncly_admin' ),
@@ -453,7 +453,7 @@ class AssetsManager {
 			'syncly-settings-css',
 			[ 'toplevel_page_syncly-settings', 'toplevel_page_wpcf7' ],
 			'settings.css',
-			[ 'syncly-globals-css', 'ghl-sweetalert2', 'syncly-select2-css' ],
+			[ 'syncly-globals-css', 'syncly-sweetalert2', 'syncly-select2-css' ],
 			[],
 			SYNCLY_VERSION
 		);
@@ -463,7 +463,7 @@ class AssetsManager {
 			'syncly-settings-js',
 			[ 'toplevel_page_syncly-settings' ],
 			'settings.js',
-			[ 'jquery', 'ghl-sweetalert2', 'syncly-select2' ],
+			[ 'jquery', 'syncly-sweetalert2', 'syncly-select2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'syncly_admin' ),
@@ -478,7 +478,7 @@ class AssetsManager {
 			'syncly-tools-js',
 			[ 'toplevel_page_syncly-admin' ],
 			'tools.js',
-			[ 'jquery', 'ghl-sweetalert2' ],
+			[ 'jquery', 'syncly-sweetalert2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'syncly_admin' ),
@@ -502,7 +502,7 @@ class AssetsManager {
 			'syncly-field-mapping-js',
 			[ 'toplevel_page_syncly-settings' ],
 			'field-mapping.js',
-			[ 'jquery', 'ghl-sweetalert2' ],
+			[ 'jquery', 'syncly-sweetalert2' ],
 			[
 				'nonce' => wp_create_nonce( 'syncly_field_mapping_nonce' ),
 			],
@@ -524,7 +524,7 @@ class AssetsManager {
 			'syncly-integrations-js',
 			[ 'toplevel_page_syncly-settings' ],
 			'integrations.js',
-			[ 'jquery', 'ghl-sweetalert2' ],
+			[ 'jquery', 'syncly-sweetalert2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'syncly_admin' ),
@@ -548,9 +548,9 @@ class AssetsManager {
 			'syncly-sync-logs-js',
 			[ 'toplevel_page_syncly-admin' ],
 			'sync-logs.js',
-			[ 'jquery', 'ghl-sweetalert2' ],
+			[ 'jquery', 'syncly-sweetalert2' ],
 			[
-				'nonce'             => wp_create_nonce( 'ghl_sync_logs_nonce' ),
+				'nonce'             => wp_create_nonce( 'syncly_sync_logs_nonce' ),
 				'ajaxurl'           => admin_url( 'admin-ajax.php' ),
 				'upgradeUrl'        => apply_filters( 'syncly_upgrade_url', 'https://highlevelsync.com/' ),
 				'upgradeNoticeHtml' => $this->get_sync_log_details_upgrade_notice_html(),
@@ -656,7 +656,7 @@ class AssetsManager {
 			'syncly-setup-wizard-js',
 			[ 'admin_page_syncly-setup-wizard' ],
 			'setup-wizard.js',
-			[ 'jquery', 'ghl-sweetalert2' ],
+			[ 'jquery', 'syncly-sweetalert2' ],
 			[
 				'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
 				'nonce'        => wp_create_nonce( 'syncly_spa_nonce' ),
@@ -911,7 +911,7 @@ class AssetsManager {
 
 		// Restrictions frontend CSS (used by membership restrictions)
 		$this->add_public_asset(
-			'ghl-restrictions',
+			'syncly-restrictions',
 			'restrictions.css',
 			[],
 			[],
@@ -938,7 +938,7 @@ class AssetsManager {
 		// [ 'jquery' ],
 		// [
 		// 'ajax_url' => admin_url( 'admin-ajax.php' ),
-		// 'nonce'    => wp_create_nonce( 'ghl_form_submission' ),
+		// 'nonce'    => wp_create_nonce( 'syncly_form_submission' ),
 		// ],
 		// SYNCLY_VERSION,
 		// true
@@ -972,7 +972,7 @@ class AssetsManager {
 		$white_label_domain = $settings['ghl_white_label_domain'] ?? '';
 
 		$this->add_public_asset(
-			'ghl-form-autofill',
+			'syncly-form-autofill',
 			'form-autofill.js',
 			[],
 			[
@@ -980,7 +980,7 @@ class AssetsManager {
 				'formSettings'     => $all_form_settings,
 				'whiteLabelDomain' => $white_label_domain,
 				'ajaxUrl'          => admin_url( 'admin-ajax.php' ),
-				'nonce'            => wp_create_nonce( 'ghl_form_submission' ),
+				'nonce'            => wp_create_nonce( 'syncly_form_submission' ),
 			],
 			SYNCLY_VERSION,
 			true

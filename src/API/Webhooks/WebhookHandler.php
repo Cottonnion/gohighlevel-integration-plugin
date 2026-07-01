@@ -99,7 +99,7 @@ class WebhookHandler {
 		add_action( 'rest_api_init', [ $this, 'register_webhook_endpoint' ] );
 		add_action( 'wp_ajax_syncly_test_webhook', [ $this, 'handle_test_webhook' ] );
 		add_action( 'wp_ajax_syncly_regenerate_webhook_secret', [ $this, 'handle_regenerate_webhook_secret' ] );
-		add_action( 'ghl_process_webhook_async', [ $this, 'process_webhook_async' ], 10, 2 );
+		add_action( 'syncly_process_webhook_async', [ $this, 'process_webhook_async' ], 10, 2 );
 	}
 
 	/**
@@ -290,7 +290,7 @@ class WebhookHandler {
 		// Mark contact as inbound to prevent immediate outbound ping-pong
 		if ( isset( $normalized['data']['id'] ) && ! empty( $normalized['data']['id'] ) ) {
 			$contact_id = (string) $normalized['data']['id'];
-			set_transient( 'ghl_inbound_webhook_' . $contact_id, time(), 30 ); // short-lived guard
+			set_transient( 'syncly_inbound_webhook_' . $contact_id, time(), 30 ); // short-lived guard
 		}
 
 		// Skip contact events that have no email — these are social-media-only

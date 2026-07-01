@@ -95,8 +95,8 @@ class NotificationManager {
 		add_action( 'syncly_daily_summary', [ $this, 'send_daily_summary' ] );
 
 		// AJAX handler for test notification
-		add_action( 'wp_ajax_ghl_send_test_notification', [ $this, 'handle_test_notification' ] );
-		add_action( 'wp_ajax_ghl_send_test_daily_summary', [ $this, 'handle_test_daily_summary' ] );
+		add_action( 'wp_ajax_syncly_send_test_notification', [ $this, 'handle_test_notification' ] );
+		add_action( 'wp_ajax_syncly_send_test_daily_summary', [ $this, 'handle_test_daily_summary' ] );
 	}
 
 	/**

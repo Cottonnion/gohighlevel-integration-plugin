@@ -131,7 +131,7 @@ class OAuthHandler {
 		);
 
 		// Bind state to nonce (not path) to keep compatibility with proxy redirect logic
-		set_transient( 'ghl_oauth_state_' . $state_nonce, get_current_user_id(), self::STATE_TTL );
+		set_transient( 'syncly_oauth_state_' . $state_nonce, get_current_user_id(), self::STATE_TTL );
 
 		return rawurlencode( $return_url );
 	}
@@ -166,12 +166,13 @@ class OAuthHandler {
 			return;
 		}
 
-		$sanitized_get = array_map(
-			static function ( $value ) {
-				return is_scalar( $value ) ? sanitize_text_field( wp_unslash( (string) $value ) ) : '';
-			},
-			$_GET
-		);
+		$sanitized_get = [];
+		foreach ( $_GET as $key => $value ) {
+			$clean_key = sanitize_key( $key );
+			if ( '' !== $clean_key ) {
+				$sanitized_get[ $clean_key ] = is_scalar( $value ) ? sanitize_text_field( wp_unslash( (string) $value ) ) : '';
+			}
+		}
 
 		$this->log_oauth_event( 'oauth_callback_admin_enter', [ 'query_args' => $sanitized_get ] );
 
@@ -321,7 +322,7 @@ class OAuthHandler {
 			return new \WP_Error( 'invalid_state', __( 'OAuth state missing nonce. Please try again.', 'syncly' ) );
 		}
 
-		$stored_state = get_transient( 'ghl_oauth_state_' . $state_nonce );
+		$stored_state = get_transient( 'syncly_oauth_state_' . $state_nonce );
 
 		if ( empty( $stored_state ) ) {
 			$this->log_oauth_event( 'oauth_state_expired', [] );
@@ -329,7 +330,7 @@ class OAuthHandler {
 		}
 
 		// Clean up state transient
-		delete_transient( 'ghl_oauth_state_' . $state_nonce );
+		delete_transient( 'syncly_oauth_state_' . $state_nonce );
 		$this->log_oauth_event( 'oauth_state_valid', [ 'state_nonce' => $state_nonce ] );
 
 		try {

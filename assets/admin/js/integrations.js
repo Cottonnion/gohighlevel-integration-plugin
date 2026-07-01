@@ -851,7 +851,7 @@
           dataType: "json",
           delay: 250,
           data: (params) => ({
-            action: "ghl_get_pipelines",
+            action: 'syncly_get_pipelines',
             nonce: syncly_integrations_js_data.nonce,
             search: params.term,
             page: params.page || 1,
@@ -944,7 +944,7 @@
         type: "POST",
         dataType: "json",
         data: {
-          action: "ghl_get_pipelines",
+          action: 'syncly_get_pipelines',
           nonce: syncly_integrations_js_data.nonce,
           page: 1,
         },
@@ -989,7 +989,7 @@
           dataType: "json",
           delay: 250,
           data: (params) => ({
-            action: "ghl_search_products",
+            action: 'syncly_search_products',
             nonce: syncly_integrations_js_data.nonce,
             search: params.term,
             page: params.page || 1,

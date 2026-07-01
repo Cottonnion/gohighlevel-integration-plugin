@@ -350,8 +350,8 @@ jQuery(document).ready(function($) {
 			url: ajaxurl,
 			type: 'POST',
 			data: {
-				action: 'ghl_buddyboss_bulk_sync',
-				nonce: '<?php echo esc_js( wp_create_nonce( 'ghl_buddyboss_bulk_sync' ) ); ?>',
+				action: 'syncly_buddyboss_bulk_sync',
+				nonce: '<?php echo esc_js( wp_create_nonce( 'syncly_buddyboss_bulk_sync' ) ); ?>',
 				sync_type: syncType
 			},
 			success: function(response) {

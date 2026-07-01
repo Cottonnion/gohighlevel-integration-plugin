@@ -115,7 +115,7 @@ class MetaBoxes {
 
 		// Membership admin CSS.
 		$assets_manager->add_admin_asset(
-			'ghl-membership-admin-css',
+			'syncly-membership-admin-css',
 			$screens,
 			'membership-admin.css',
 			array( 'syncly-select2-css', 'syncly-globals-css' ),
@@ -126,13 +126,13 @@ class MetaBoxes {
 
 		// Membership admin JS.
 		$assets_manager->add_admin_asset(
-			'ghl-membership-admin-js',
+			'syncly-membership-admin-js',
 			$screens,
 			'membership-admin.js',
 			array( 'jquery', 'syncly-select2' ),
 			array(
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'ghl_user_profile' ),
+				'nonce'   => wp_create_nonce( 'syncly_user_profile' ),
 				'tags'    => \Syncly\Sync\TagManager::get_instance()->get_tags_for_localization(),
 			),
 			SYNCLY_VERSION
@@ -172,8 +172,8 @@ class MetaBoxes {
 
 		foreach ( $post_types as $post_type ) {
 			add_meta_box(
-				'ghl_membership_restrictions',
-				__( 'GHL Membership Restrictions', 'syncly' ),
+				'syncly_membership_restrictions',
+				__( 'Syncly Membership Restrictions', 'syncly' ),
 				[ $this, 'render_membership_meta_box' ],
 				$post_type,
 				'side',
@@ -198,7 +198,7 @@ class MetaBoxes {
 			$required_tags = [];
 		}
 
-		wp_nonce_field( 'ghl_membership_meta_box', 'ghl_membership_nonce' );
+		wp_nonce_field( 'syncly_membership_meta_box', 'syncly_membership_nonce' );
 
 		?>
 		<div class="ghl-membership-meta-box">
@@ -306,12 +306,12 @@ class MetaBoxes {
 	 */
 	public function save_membership_meta_box( int $post_id, \WP_Post $post ): void {
 		// Check if our nonce is set
-		if ( ! isset( $_POST['ghl_membership_nonce'] ) ) {
+		if ( ! isset( $_POST['syncly_membership_nonce'] ) ) {
 			return;
 		}
 
 		// Verify nonce
-		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['ghl_membership_nonce'] ) ), 'ghl_membership_meta_box' ) ) {
+		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['syncly_membership_nonce'] ) ), 'syncly_membership_meta_box' ) ) {
 			return;
 		}
 

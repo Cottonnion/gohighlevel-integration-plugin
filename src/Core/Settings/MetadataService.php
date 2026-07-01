@@ -67,8 +67,10 @@ class MetadataService {
 		if ( empty( $request_data ) ) {
 			// phpcs:ignore Generic.PHP.ForbiddenFunctions.FoundWithAlternative -- Reading raw JSON body from php://input is required for non-form AJAX payloads.
 			$raw_body = file_get_contents( 'php://input' );
-			if ( ! empty( $raw_body ) ) {
+			// Guard against oversized payloads before decoding.
+			if ( ! empty( $raw_body ) && strlen( $raw_body ) <= 1048576 ) {
 				$decoded = json_decode( $raw_body, true );
+				// json_decode does not sanitize; sanitize all values after decoding.
 				if ( json_last_error() === JSON_ERROR_NONE && is_array( $decoded ) ) {
 					$request_data = map_deep( $decoded, 'sanitize_text_field' );
 				}
@@ -80,7 +82,7 @@ class MetadataService {
 		if (
 			! wp_verify_nonce( $nonce, 'syncly_settings_nonce' ) &&
 			! wp_verify_nonce( $nonce, 'syncly_admin' ) &&
-			! wp_verify_nonce( $nonce, 'ghl_user_profile' ) &&
+			! wp_verify_nonce( $nonce, 'syncly_user_profile' ) &&
 			! wp_verify_nonce( $nonce, 'syncly_spa_nonce' )
 		) {
 			wp_send_json_error( [ 'message' => 'Invalid nonce.' ], 403 );
@@ -146,13 +148,13 @@ class MetadataService {
 	 * @param bool $force_refresh Whether to bypass the cache and fetch fresh data.
 	 * @return array{fields: array<string, string>, fieldTypes: array<string, string>, count: int}
 	 */
-	public function get_ghl_fields_cached( bool $force_refresh = false ): array {
+	public function get_syncly_fields_cached( bool $force_refresh = false ): array {
 		$settings_manager = SettingsManager::get_instance();
 		$settings         = $settings_manager->get_settings_array();
 		$location_id      = $settings['location_id'] ?? '';
 		$site_id          = get_current_blog_id();
 
-		$transient_key = 'ghl_fields_' . $location_id . '_site_' . $site_id;
+		$transient_key = 'syncly_fields_' . $location_id . '_site_' . $site_id;
 
 		if ( ! $force_refresh ) {
 			$cached = get_transient( $transient_key );
@@ -208,7 +210,7 @@ class MetadataService {
 	/**
 	 * AJAX handler: Get GHL custom fields for field mapping dropdowns.
 	 *
-	 * Forces a fresh API fetch via get_ghl_fields_cached( true ).
+	 * Forces a fresh API fetch via get_syncly_fields_cached( true ).
 	 *
 	 * @return void
 	 */
@@ -224,7 +226,7 @@ class MetadataService {
 			);
 		}
 
-		$result = $this->get_ghl_fields_cached( true );
+		$result = $this->get_syncly_fields_cached( true );
 
 		wp_send_json_success( $result );
 	}
@@ -272,7 +274,7 @@ class MetadataService {
 
 			$site_id       = get_current_blog_id();
 			$cache_seconds = absint( $settings_manager->get_setting( 'cache_duration', HOUR_IN_SECONDS ) );
-			$tags_key      = 'ghl_tags_' . $location_id . '_site_' . $site_id;
+			$tags_key      = 'syncly_tags_' . $location_id . '_site_' . $site_id;
 
 			set_transient( $tags_key, $tags, $cache_seconds );
 
@@ -299,7 +301,7 @@ class MetadataService {
 			}
 
 			// Save the fields transient so subsequent page loads (e.g. Login Sync tab) pick up the refreshed data.
-			$fields_transient_key = 'ghl_fields_' . $location_id . '_site_' . $site_id;
+			$fields_transient_key = 'syncly_fields_' . $location_id . '_site_' . $site_id;
 			set_transient(
 				$fields_transient_key,
 				[

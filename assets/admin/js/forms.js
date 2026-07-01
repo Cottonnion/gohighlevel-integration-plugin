@@ -124,12 +124,12 @@
 						</td>
 						<td class="ghl-table-col-shortcode" data-label="${strings.shortcode || 'Shortcode'}">
 							<div class="ghl-shortcode-box" title="${strings.clickToCopy || 'Click to copy'}">
-								[ghl_form id="${form.id}"]
+								[syncly_form id="${form.id}"]
 							</div>
 						</td>
 						<td class="ghl-table-col-actions" data-label="${strings.actions || 'Actions'}">
 							<div class="ghl-table-actions">
-								<button type="button" class="ghl-form-icon-btn ghl-copy-shortcode" data-shortcode="[ghl_form id=&quot;${form.id}&quot;]" title="${strings.copy || 'Copy shortcode'}">
+								<button type="button" class="ghl-form-icon-btn ghl-copy-shortcode" data-shortcode="[syncly_form id=&quot;${form.id}&quot;]" title="${strings.copy || 'Copy shortcode'}">
 									<span class="dashicons dashicons-clipboard"></span>
 								</button>
 								${form.widgetUrl ? `
@@ -273,11 +273,11 @@
 										<div class="ghl-form-item">
 											<div class="ghl-form-item-content">
 												<label class="ghl-checkbox ${autofillEnabled ? 'is-checked' : ''}">
-													<input type="checkbox" 
+													<input type="checkbox"
 														   class="ghl-checkbox-original"
-														   id="ghl-form-autofill-${formId}" 
-														   name="autofill_enabled" 
-														   value="1" 
+														   id="syncly-form-autofill-${formId}"
+														   name="autofill_enabled"
+														   value="1"
 														   ${autofillEnabled ? 'checked' : ''}>
 													<span class="ghl-checkbox-input ${autofillEnabled ? 'is-checked' : ''}">
 														<span class="ghl-checkbox-inner"></span>
@@ -375,7 +375,7 @@
 				const $btn = $(this);
 
 				const settings = {
-					autofill_enabled: $(`#ghl-form-autofill-${formId}`).prop('checked'),
+					autofill_enabled: $(`#syncly-form-autofill-${formId}`).prop('checked'),
 					logged_only: $(`#ghl-form-logged-only-${formId}`).prop('checked')
 				};
 
@@ -392,7 +392,7 @@
 					url: ajaxUrl,
 					type: 'POST',
 					data: {
-						action: 'ghl_save_form_settings',
+						action: 'syncly_save_form_settings',
 						nonce: nonce,
 						form_id: formId,
 						settings: settings

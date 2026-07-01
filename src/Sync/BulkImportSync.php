@@ -38,7 +38,7 @@ class BulkImportSync {
 	 *
 	 * @var string
 	 */
-	private const PROGRESS_TRANSIENT = 'ghl_bulk_import_progress';
+	private const PROGRESS_TRANSIENT = 'syncly_bulk_import_progress';
 
 	/**
 	 * Contact Resource

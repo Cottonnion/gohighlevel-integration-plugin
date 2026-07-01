@@ -11,10 +11,10 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Contact ID Handler
  *
- * Handles the ?ghl_cid= URL parameter sent via GoHighLevel email campaigns.
+ * Handles signed campaign URL parameters sent via GoHighLevel email campaigns.
  * When a contact clicks a link containing their GHL contact ID, this class:
  *  - Reads and validates the contact ID from the URL
- *  - Persists the contact ID in a signed short-lived cookie so [ghl_user_meta] can
+ *  - Persists the contact ID in a signed short-lived cookie so [syncly_user_meta] can
  *    personalize the page for non-logged-in visitors
  * @package    Syncly
  * @subpackage Syncly/Frontend
@@ -26,14 +26,14 @@ class ContactIdHandler {
 	 *
 	 * @var string
 	 */
-	const TRANSIENT_PREFIX = 'ghl_guest_contact_';
+	const TRANSIENT_PREFIX = 'syncly_guest_contact_';
 
 	/**
 	 * Cookie name used to store signed guest contact IDs.
 	 *
 	 * @var string
 	 */
-	const COOKIE_NAME = 'ghl_visitor_contact';
+	const COOKIE_NAME = 'syncly_visitor_contact';
 
 	/**
 	 * How long (seconds) to cache guest contact data in a transient.
@@ -78,9 +78,9 @@ class ContactIdHandler {
 
 	/**
 	 * Main handler: fires on every front-end request.
-	 * Reads ?ghl_cid= and ?ghl_token= from the URL, then either:
+	 * Reads the signed contact ID from the URL, then either:
 	 *  a) Auto-logs in the matched WP user (if enabled and token valid), or
-	 *  b) Caches the contact data for guest personalization via [ghl_user_meta].
+	 *  b) Caches the contact data for guest personalization via [syncly_user_meta].
 	 *
 	 * @return void
 	 */
@@ -92,13 +92,10 @@ class ContactIdHandler {
 			return;
 		}
 
-		// phpcs:disable WordPress.Security.NonceVerification.Recommended
-		if ( empty( $_GET['ghl_cid'] ) ) {
+		$contact_id = $this->get_request_contact_id();
+		if ( '' === $contact_id ) {
 			return;
 		}
-
-		$contact_id = sanitize_text_field( wp_unslash( $_GET['ghl_cid'] ) );
-		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 		error_log( '[GHL CID] Query param detected. contact_id=' . $contact_id );
 
@@ -112,7 +109,9 @@ class ContactIdHandler {
 
 		// --- Guest personalization path (always runs if not already logged in) ---
 		if ( ! is_user_logged_in() ) {
-			$this->persist_guest_contact( $contact_id );
+			if ( $this->has_valid_campaign_token( $settings_manager ) ) {
+				$this->persist_guest_contact( $contact_id );
+			}
 		}
 
 		$this->maybe_strip_sensitive_query_args();
@@ -120,7 +119,7 @@ class ContactIdHandler {
 
 	/**
 	 * Store the GHL contact ID for the current guest visitor so that
-	 * [ghl_user_meta] can personalize pages without requiring login.
+	 * [syncly_user_meta] can personalize pages without requiring login.
 	 * Data is stored in a WordPress transient keyed by the contact ID.
 	 *
 	 * @param string $contact_id GHL contact ID.
@@ -208,7 +207,7 @@ class ContactIdHandler {
 
 	/**
 	 * Fetch and cache contact data from GHL for a guest visitor.
-	 * Used by [ghl_user_meta] when there is no logged-in user.
+	 * Used by [syncly_user_meta] when there is no logged-in user.
 	 *
 	 * @param string $contact_id GHL contact ID.
 	 * @return array Contact data array or empty array on failure.
@@ -296,27 +295,57 @@ class ContactIdHandler {
 	}
 
 	/**
-	 * Verify signed token from URL (HMAC-SHA256(secret, contact_id)).
+	 * Verify the static campaign access token from the URL.
 	 *
-	 * @param string          $contact_id       GHL contact ID.
 	 * @param SettingsManager $settings_manager Settings manager instance.
 	 * @return bool
 	 */
-	private function has_valid_signed_token( string $contact_id, SettingsManager $settings_manager ): bool {
-		$secret = (string) $settings_manager->get_setting( 'ghl_cid_secret_key', '' );
-		if ( '' === $secret ) {
+	private function has_valid_campaign_token( SettingsManager $settings_manager ): bool {
+		$expected_token = trim( (string) $settings_manager->get_setting( 'ghl_cid_secret_key', '' ) );
+		if ( '' === $expected_token ) {
 			return false;
 		}
 
-		// phpcs:disable WordPress.Security.NonceVerification.Recommended
-		$token = isset( $_GET['ghl_token'] ) ? sanitize_text_field( wp_unslash( $_GET['ghl_token'] ) ) : '';
-		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		$token = $this->get_request_token();
 		if ( '' === $token ) {
 			return false;
 		}
 
-		$expected = hash_hmac( 'sha256', $contact_id, $secret );
-		return hash_equals( $expected, $token );
+		return hash_equals( $expected_token, $token );
+	}
+
+	/**
+	 * Get sanitized contact ID from supported campaign query args.
+	 *
+	 * @return string
+	 */
+	private function get_request_contact_id(): string {
+		foreach ( [ 'syncly_cid', 'ghl_cid' ] as $query_arg ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public campaign links are authenticated with the campaign access token before state is persisted.
+			if ( ! empty( $_GET[ $query_arg ] ) ) {
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public campaign links are authenticated with the campaign access token before state is persisted.
+				return sanitize_text_field( wp_unslash( $_GET[ $query_arg ] ) );
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Get sanitized campaign access token from supported campaign query args.
+	 *
+	 * @return string
+	 */
+	private function get_request_token(): string {
+		foreach ( [ 'syncly_token', 'ghl_token' ] as $query_arg ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This is the campaign access token used to authenticate the public campaign request.
+			if ( ! empty( $_GET[ $query_arg ] ) ) {
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This is the campaign access token used to authenticate the public campaign request.
+				return sanitize_text_field( wp_unslash( $_GET[ $query_arg ] ) );
+			}
+		}
+
+		return '';
 	}
 
 	/**
@@ -336,15 +365,14 @@ class ContactIdHandler {
 	 * @return void
 	 */
 	private function maybe_strip_sensitive_query_args(): void {
-		// phpcs:disable WordPress.Security.NonceVerification.Recommended
-		$has_sensitive_args = isset( $_GET['ghl_cid'] ) || isset( $_GET['ghl_token'] );
-		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Presence check only; request authentication happens before persistence.
+		$has_sensitive_args = isset( $_GET['syncly_cid'] ) || isset( $_GET['syncly_token'] ) || isset( $_GET['ghl_cid'] ) || isset( $_GET['ghl_token'] );
 
 		if ( ! $has_sensitive_args || is_admin() || wp_doing_ajax() || wp_is_json_request() || headers_sent() ) {
 			return;
 		}
 
-		$clean_url = remove_query_arg( [ 'ghl_cid', 'ghl_token' ] );
+		$clean_url = remove_query_arg( [ 'syncly_cid', 'syncly_token', 'ghl_cid', 'ghl_token' ] );
 		wp_safe_redirect( $clean_url );
 		exit;
 	}

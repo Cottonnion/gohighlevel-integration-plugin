@@ -151,7 +151,7 @@ class ContactCache {
 			$key_source .= '|' . strtolower( $location_id );
 		}
 
-		return 'ghl_contact_' . md5( $key_source );
+		return 'syncly_contact_' . md5( $key_source );
 	}
 
 	/**

@@ -50,10 +50,10 @@ class ShortcodeManager {
 	 * @return void
 	 */
 	public function init(): void {
-		add_shortcode( 'ghl_form', array( $this, 'render_form_shortcode' ) );
-		add_shortcode( 'ghl_family_manager', array( $this, 'render_family_manager_shortcode' ) );
-		add_shortcode( 'ghl_restrict', array( $this, 'render_restrict_shortcode' ) );
-		add_shortcode( 'ghl_user_meta', array( $this, 'render_user_meta_shortcode' ) );
+		add_shortcode( 'syncly_form', array( $this, 'render_form_shortcode' ) );
+		add_shortcode( 'syncly_family_manager', array( $this, 'render_family_manager_shortcode' ) );
+		add_shortcode( 'syncly_restrict', array( $this, 'render_restrict_shortcode' ) );
+		add_shortcode( 'syncly_user_meta', array( $this, 'render_user_meta_shortcode' ) );
 	}
 
 	/**
@@ -71,12 +71,12 @@ class ShortcodeManager {
 				'height' => 'auto',
 			),
 			$atts,
-			'ghl_form'
+			'syncly_form'
 		);
 
 		// Validate form ID
 		if ( empty( $atts['id'] ) ) {
-			return $this->render_error( __( 'Form ID is required. Use: [ghl_form id="your-form-id"]', 'syncly' ) );
+			return $this->render_error( __( 'Form ID is required. Use: [syncly_form id="your-form-id"]', 'syncly' ) );
 		}
 
 		$form_id = $atts['id'];
@@ -246,7 +246,7 @@ class ShortcodeManager {
 	public function render_family_manager_shortcode( $atts ): string {
 		$output = apply_filters( 'syncly_render_family_manager_shortcode', '', $atts );
 		if ( is_string( $output ) && '' !== $output ) {
-			return $output;
+			return wp_kses_post( $output );
 		}
 
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -282,7 +282,7 @@ class ShortcodeManager {
 			 * @param string $content Shortcode inner content.
 			 */
 			do_action( 'syncly_restrict_guest_access', $atts, $content );
-			return apply_filters( 'syncly_restrict_guest_output', '', $atts, $content );
+			return wp_kses_post( (string) apply_filters( 'syncly_restrict_guest_output', '', $atts, $content ) );
 		}
 
 		// Parse attributes
@@ -292,7 +292,7 @@ class ShortcodeManager {
 				'type' => 'any', // any, all, none
 			),
 			$atts,
-			'ghl_restrict'
+			'syncly_restrict'
 		);
 
 		// Validate tags
@@ -352,9 +352,9 @@ class ShortcodeManager {
 	 * Render user meta shortcode — displays CRM field data for the current user.
 	 *
 	 * Usage:
-	 *   [ghl_user_meta field="first_name"]
-	 *   [ghl_user_meta field="exam_date" default="Not set"]
-	 *   [ghl_user_meta field="advisor_name" sync_if_empty="true"]
+	 *   [syncly_user_meta field="first_name"]
+	 *   [syncly_user_meta field="exam_date" default="Not set"]
+	 *   [syncly_user_meta field="advisor_name" sync_if_empty="true"]
 	 *
 	 * @param array|string $atts Shortcode attributes.
 	 * @return string Field value, default, or empty string.
@@ -364,7 +364,7 @@ class ShortcodeManager {
 		$guest_contact_id = null;
 
 		if ( ! $is_logged_in ) {
-			// Allow guest personalization via ?ghl_cid= if the feature is enabled.
+			// Allow guest personalization from signed campaign links if the feature is enabled.
 			$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 			if ( ! empty( $settings_manager->get_setting( 'enable_ghl_cid' ) ) ) {
 				$guest_contact_id = ContactIdHandler::get_guest_contact_id();
@@ -382,7 +382,7 @@ class ShortcodeManager {
 				'sync_if_empty' => 'false',
 			],
 			$atts,
-			'ghl_user_meta'
+			'syncly_user_meta'
 		);
 
 		$field      = sanitize_text_field( (string) $atts['field'] );
@@ -501,7 +501,7 @@ class ShortcodeManager {
 	 * @return string The fetched value or empty string on failure.
 	 */
 	private function maybe_pull_field_from_ghl( int $user_id, string $field ): string {
-		$transient_key = 'ghl_pull_' . $user_id . '_' . $field;
+		$transient_key = 'syncly_pull_' . $user_id . '_' . $field;
 		if ( get_transient( $transient_key ) ) {
 			return '';
 		}

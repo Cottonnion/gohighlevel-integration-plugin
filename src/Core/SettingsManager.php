@@ -133,15 +133,15 @@ class SettingsManager {
 
 		// Integrations AJAX handlers (delegated to AjaxHandler).
 		add_action( 'wp_ajax_syncly_save_integrations', [ $this, 'handle_save_integrations' ] );
-		add_action( 'wp_ajax_ghl_get_pipelines', [ $this, 'handle_get_pipelines' ] );
-		add_action( 'wp_ajax_ghl_get_pipeline_stages', [ $this, 'handle_get_pipeline_stages' ] );
-		add_action( 'wp_ajax_ghl_search_products', [ $this, 'handle_search_products' ] );
+		add_action( 'wp_ajax_syncly_get_pipelines', [ $this, 'handle_get_pipelines' ] );
+		add_action( 'wp_ajax_syncly_get_pipeline_stages', [ $this, 'handle_get_pipeline_stages' ] );
+		add_action( 'wp_ajax_syncly_search_products', [ $this, 'handle_search_products' ] );
 
 		// Sync Logs AJAX handlers (delegated to AjaxHandler).
-		add_action( 'wp_ajax_ghl_get_logs', [ $this, 'handle_get_logs' ] );
-		add_action( 'wp_ajax_ghl_delete_old_logs', [ $this, 'handle_delete_old_logs' ] );
-		add_action( 'wp_ajax_ghl_clear_all_logs', [ $this, 'handle_clear_all_logs' ] );
-		add_action( 'wp_ajax_ghl_save_logs_per_page', [ $this, 'handle_save_logs_per_page' ] );
+		add_action( 'wp_ajax_syncly_get_logs', [ $this, 'handle_get_logs' ] );
+		add_action( 'wp_ajax_syncly_delete_old_logs', [ $this, 'handle_delete_old_logs' ] );
+		add_action( 'wp_ajax_syncly_clear_all_logs', [ $this, 'handle_clear_all_logs' ] );
+		add_action( 'wp_ajax_syncly_save_logs_per_page', [ $this, 'handle_save_logs_per_page' ] );
 
 		// Field Mapping Suggestions (delegated to AjaxHandler).
 		add_action( 'wp_ajax_syncly_get_field_suggestions', [ $this, 'handle_get_field_suggestions' ] );
@@ -902,8 +902,8 @@ class SettingsManager {
 	 * @param bool $force_refresh Whether to bypass the cache and fetch fresh data.
 	 * @return array{fields: array<string, string>, fieldTypes: array<string, string>, count: int}
 	 */
-	public function get_ghl_fields_cached( bool $force_refresh = false ): array {
-		return Settings\MetadataService::get_instance()->get_ghl_fields_cached( $force_refresh );
+	public function get_syncly_fields_cached( bool $force_refresh = false ): array {
+		return Settings\MetadataService::get_instance()->get_syncly_fields_cached( $force_refresh );
 	}
 
 	/**
@@ -1275,8 +1275,8 @@ class SettingsManager {
 				"DELETE FROM {$wpdb->options}
 				WHERE (option_name LIKE %s OR option_name LIKE %s)
 				AND option_name LIKE %s",
-				$wpdb->esc_like( '_transient_ghl_tags_' ) . '%',
-				$wpdb->esc_like( '_transient_timeout_ghl_tags_' ) . '%',
+				$wpdb->esc_like( '_transient_syncly_tags_' ) . '%',
+				$wpdb->esc_like( '_transient_timeout_syncly_tags_' ) . '%',
 				'%' . $wpdb->esc_like( '_site_' . (string) $site_id )
 			)
 		);

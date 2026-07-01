@@ -401,7 +401,7 @@ class AjaxHandler {
 	 */
 	public static function get_logs(): void {
 		try {
-			check_ajax_referer( 'ghl_sync_logs_nonce', 'nonce' );
+			check_ajax_referer( 'syncly_sync_logs_nonce', 'nonce' );
 
 			if ( ! current_user_can( 'manage_options' ) ) {
 				wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
@@ -490,7 +490,7 @@ class AjaxHandler {
 	 */
 	public static function delete_old_logs(): void {
 		try {
-			check_ajax_referer( 'ghl_sync_logs_nonce', 'nonce' );
+			check_ajax_referer( 'syncly_sync_logs_nonce', 'nonce' );
 
 			if ( ! current_user_can( 'manage_options' ) ) {
 				wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
@@ -532,7 +532,7 @@ class AjaxHandler {
 	 */
 	public static function clear_all_logs(): void {
 		try {
-			check_ajax_referer( 'ghl_sync_logs_nonce', 'nonce' );
+			check_ajax_referer( 'syncly_sync_logs_nonce', 'nonce' );
 
 			if ( ! current_user_can( 'manage_options' ) ) {
 				wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
@@ -589,13 +589,13 @@ class AjaxHandler {
 			$wp_fields = array_map( 'sanitize_text_field', $wp_fields_raw );
 
 			// Get GHL fields from request.
-			$ghl_fields_raw = isset( $_POST['ghl_fields'] ) ? wp_unslash( $_POST['ghl_fields'] ) : array();
-			if ( ! is_array( $ghl_fields_raw ) ) {
+			$syncly_fields_raw = isset( $_POST['ghl_fields'] ) ? wp_unslash( $_POST['ghl_fields'] ) : array();
+			if ( ! is_array( $syncly_fields_raw ) ) {
 				wp_send_json_error( [ 'message' => __( 'Invalid GHL field data', 'syncly' ) ], 400 );
 				return;
 			}
 
-			$ghl_fields = array_map( 'sanitize_text_field', $ghl_fields_raw );
+			$ghl_fields = array_map( 'sanitize_text_field', $syncly_fields_raw );
 
 			/**
 			 * Delegate field suggestions to Pro add-on.
@@ -804,9 +804,9 @@ class AjaxHandler {
 				$total       = $total_users['total_users'];
 
 				// Store total in transient for progress tracking
-				set_transient( 'ghl_bulk_sync_total', $total, HOUR_IN_SECONDS );
+				set_transient( 'syncly_bulk_sync_total', $total, HOUR_IN_SECONDS );
 			} else {
-				$total = get_transient( 'ghl_bulk_sync_total' );
+				$total = get_transient( 'syncly_bulk_sync_total' );
 				if ( false === $total ) {
 					// Transient expired, recalculate
 					$total_users = count_users();
@@ -852,7 +852,7 @@ class AjaxHandler {
 
 			// Clean up transient if done
 			if ( ! $has_more ) {
-				delete_transient( 'ghl_bulk_sync_total' );
+				delete_transient( 'syncly_bulk_sync_total' );
 				// Save last bulk sync time
 				update_option( 'syncly_last_bulk_sync', current_time( 'mysql' ), false );
 			}
@@ -894,7 +894,7 @@ class AjaxHandler {
 	public static function save_logs_per_page(): void {
 		// Verify nonce
 		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
-		if ( ! wp_verify_nonce( $nonce, 'ghl_sync_logs_nonce' ) ) {
+		if ( ! wp_verify_nonce( $nonce, 'syncly_sync_logs_nonce' ) ) {
 			wp_send_json_error(
 				[
 					'message' => __( 'Security check failed.', 'syncly' ),

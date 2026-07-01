@@ -532,7 +532,7 @@ Rendered by Pro via `ghl_crm_render_analytics_tab` action. Free plugin shows an 
 - `ghl_crm_preview_user_sync_result` — return sync preview / dry-run data
 - `ghl_crm_sync_preview_enabled` — enable sync preview UI (Pro returns `true`)
 - `ghl_crm_field_suggestions_enabled` — enable AI suggest button (Pro returns `true`)
-- `ghl_crm_archive_protection_enabled` — enable archive/REST protection settings (Pro returns `true`)
+- Archive and REST protection are built into the free restriction settings.
 - `ghl_crm_public_rest_api_enabled` — enable public REST API settings (Pro returns `true`)
 - `ghl_crm_family_relationships_enabled` — enable family settings tab (Pro returns `true`)
 - `ghl_crm_restriction_overrides_enabled` — enable admin bypass & allowed-tag overrides (Pro returns `true`)

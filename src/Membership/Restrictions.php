@@ -91,18 +91,35 @@ class Restrictions {
 		// Filter content for restricted posts
 		add_filter( 'the_content', [ $this, 'filter_restricted_content' ], 10, 1 );
 
-		/**
-		 * Allow Pro to register advanced restriction hooks (archive & REST API protection).
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param \Syncly\Membership\Restrictions $restrictions     The Restrictions instance.
-		 * @param \Syncly\Core\SettingsManager    $settings_manager The SettingsManager instance.
-		 */
-		do_action( 'syncly_register_advanced_restriction_hooks', $this, $this->settings_manager );
+		if ( $this->settings_manager->get_setting( 'restrictions_hide_archives', false ) ) {
+			add_action( 'pre_get_posts', [ $this, 'exclude_restricted_from_archives' ] );
+		}
+
+		if ( $this->settings_manager->get_setting( 'restrictions_hide_rest_api', false ) ) {
+			$this->register_rest_api_restriction_hooks();
+		}
 
 		// Enqueue frontend styles
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_frontend_assets' ] );
+	}
+
+	/**
+	 * Register REST API query filters for public REST-enabled post types.
+	 *
+	 * @return void
+	 */
+	private function register_rest_api_restriction_hooks(): void {
+		$post_types = get_post_types(
+			[
+				'public'       => true,
+				'show_in_rest' => true,
+			],
+			'names'
+		);
+
+		foreach ( $post_types as $post_type ) {
+			add_filter( "rest_{$post_type}_query", [ $this, 'exclude_restricted_from_rest_api' ], 10, 2 );
+		}
 	}
 
 	/**
@@ -120,7 +137,7 @@ class Restrictions {
 	 * @return void
 	 */
 	public function enqueue_frontend_assets(): void {
-		AssetsManager::get_instance()->enqueue_public_asset( 'ghl-restrictions' );
+		AssetsManager::get_instance()->enqueue_public_asset( 'syncly-restrictions' );
 	}
 
 	/**

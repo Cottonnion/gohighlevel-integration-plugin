@@ -41,7 +41,7 @@ $pro_features = [
 	[
 		'icon'        => 'dashicons-lock',
 		'title'       => __( 'Advanced Content Restrictions', 'syncly' ),
-		'description' => __( 'Hide restricted content from archive listings and the REST API, let administrators bypass restrictions, and set global bypass tags.', 'syncly' ),
+		'description' => __( 'Extend the built-in restriction tools with advanced inheritance, reporting, and automation workflows.', 'syncly' ),
 	],
 	[
 		'icon'        => 'dashicons-tag',

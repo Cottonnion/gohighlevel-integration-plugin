@@ -97,7 +97,7 @@ class AccessControl {
 		$tags        = $tag_manager->get_user_tag_names( $user_id, $location_id );
 
 			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward-compatible public hook.
-			$tags = apply_filters( 'ghl_user_effective_tags', $tags, $user_id );
+			$tags = apply_filters( 'syncly_user_effective_tags', $tags, $user_id );
 
 		return array_map( 'strtolower', array_unique( array_filter( $tags ) ) );
 	}

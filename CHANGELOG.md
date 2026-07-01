@@ -118,7 +118,7 @@ All notable changes to Syncly will be documented in this file.
 ### Added
 
 - **Field Privacy** — New "Hide Fields From Guests" setting in Personalization tab. Admin selects which contact fields to hide from campaign visitors (defaults to showing all).
-- **Test Link Debugger** — New tool in Personalization settings to test campaign URLs. Admin pastes a `?ghl_cid=` link and sees exactly what contact data and fields would resolve.
+- **Test Link Debugger** — New tool in Personalization settings to test signed campaign URLs and see exactly what contact data and fields would resolve.
 
 ### Changed
 
@@ -130,7 +130,7 @@ All notable changes to Syncly will be documented in this file.
 
 ### Removed
 
-- **Personalization strict mode** — Removed "Strict Mode (Require Signed Token)" option and HMAC secret key from settings. Personalization now works with `?ghl_cid={{contact.id}}` alone, without token requirement.
+- **Personalization strict mode** — Earlier plain contact-ID personalization was removed; current builds require campaign contact links with an access token before guest state is persisted.
 
 ---
 
@@ -147,7 +147,7 @@ All notable changes to Syncly will be documented in this file.
 
 ### Changed
 
-- **Personalization (Free)** — Removed live guest contact fetch from the free plugin when a `ghl_cid` contact does not map to a WordPress user.
+- **Personalization (Free)** — Removed live guest contact fetch from the free plugin when a campaign contact does not map to a WordPress user.
 - **Personalization settings UI** — Removed the "Live GHL Fetch (No WP User)" section from the free settings screen.
 
 ---
@@ -160,7 +160,7 @@ All notable changes to Syncly will be documented in this file.
 
 ### Changed
 
-- **Personalization free/pro split** — `?ghl_cid` guest personalization remains available in Free for contacts mapped to WordPress users, while advanced behaviors are now Pro-gated.
+- **Personalization free/pro split** — Guest personalization remains available in Free for signed campaign contacts mapped to WordPress users, while advanced behaviors are now Pro-gated.
 - **Personalization settings UI** — Pro-only controls remain visible in Free but are locked with clear "This is a PRO feature" messaging, matching the existing lock pattern used in other settings tabs.
 
 ### Pro Integration
@@ -173,12 +173,12 @@ All notable changes to Syncly will be documented in this file.
 
 ### Added
 
-- **Email campaign personalization** — New `ContactIdHandler` class handles `?ghl_cid=CONTACT_ID` URL parameters from email campaigns. Guest visitors get their contact ID persisted in a signed HttpOnly cookie for shortcode personalization across page loads.
+- **Email campaign personalization** — New `ContactIdHandler` class handles protected contact URL parameters from email campaigns. Guest visitors get their contact ID persisted in a signed HttpOnly cookie for shortcode personalization across page loads.
 - **`[ghl_user_meta]` guest support** — Shortcodes now resolve field values for non-logged-in visitors. If the contact maps to a WP user, WP user meta is read directly (same keys as logged-in). For contacts with no WP account, data is fetched from the GHL API and cached as a transient.
-- **Personalization settings tab** — New dedicated "Personalization" tab in the plugin settings with: enable toggle, auto-login toggle, HMAC secret key input with generator, strict token mode toggle, and copy link template helper.
+- **Personalization settings tab** — New dedicated "Personalization" tab in the plugin settings with: enable toggle, auto-login toggle, campaign token input, strict token mode toggle, and copy link template helper.
 - **`TagManager::find_user_by_contact_id()`** — New method to look up a WP user by their linked GHL contact ID, with location-scoped and legacy key fallback.
-- **Strict mode** — Optional `require_ghl_cid_token` setting. When enabled, requires a valid `HMAC_SHA256(secret, contact_id)` token in the URL before persisting guest data.
-- **Auto-login via signed link** — When enabled and a valid signed token is present, automatically logs in the matched WP user.
+- **Strict mode** — Optional `require_ghl_cid_token` setting. When enabled, requires a valid campaign access token in the URL before persisting guest data.
+- **Auto-login via protected link** — When enabled and a valid campaign access token is present, automatically logs in the matched WP user.
 
 ---
 

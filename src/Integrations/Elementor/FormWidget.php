@@ -25,7 +25,7 @@ class FormWidget extends \Elementor\Widget_Base {
 	 * @return string
 	 */
 	public function get_name(): string {
-		return 'ghl_form';
+		return 'syncly_form';
 	}
 
 	/**
@@ -289,7 +289,7 @@ class FormWidget extends \Elementor\Widget_Base {
 		);
 
 		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		echo $output;
+		echo wp_kses_post( $output );
 	}
 
 	/**

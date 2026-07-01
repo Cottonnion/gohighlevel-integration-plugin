@@ -56,8 +56,8 @@ class FormSettings {
 	 */
 	public function init(): void {
 		add_action( 'wp_ajax_syncly_get_forms', [ $this, 'handle_get_forms' ] );
-		add_action( 'wp_ajax_ghl_save_form_settings', [ $this, 'ajax_save_form_settings' ] );
-		add_action( 'wp_ajax_ghl_get_form_settings', [ $this, 'ajax_get_form_settings' ] );
+		add_action( 'wp_ajax_syncly_save_form_settings', [ $this, 'ajax_save_form_settings' ] );
+		add_action( 'wp_ajax_syncly_get_form_settings', [ $this, 'ajax_get_form_settings' ] );
 	}
 
 	/**

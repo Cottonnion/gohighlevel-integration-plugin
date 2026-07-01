@@ -5,10 +5,10 @@
 (function ($) {
   "use strict";
 
-  // AssetsManager localizes as ghl_user_profile_js_data.
-  const ghlUserProfile = window.ghl_user_profile_js_data || {};
+  // AssetsManager localizes as syncly_user_profile_js_data.
+  const synclyUserProfile = window.syncly_user_profile_js_data || {};
 
-  const GHLUserProfile = {
+  const SynclyUserProfile = {
     /**
      * Initialize
      */
@@ -29,7 +29,7 @@
       }
 
       // Pre-populate options from localized tags (already selected tags are in HTML)
-      var allTags = ghlUserProfile.tags || [];
+      var allTags = synclyUserProfile.tags || [];
       var selectedIds = $tagsSelect
         .find("option")
         .map(function () {
@@ -48,7 +48,7 @@
       $tagsSelect.select2({
         tags: true,
         tokenSeparators: [","],
-        placeholder: ghlUserProfile.strings.searchTags,
+        placeholder: synclyUserProfile.strings.searchTags,
         closeOnSelect: false,
         allowClear: true,
         width: "100%",
@@ -74,7 +74,7 @@
         }
 
         // Confirm action
-        if (!confirm(ghlUserProfile.strings.confirmSync)) {
+        if (!confirm(synclyUserProfile.strings.confirmSync)) {
           return;
         }
 
@@ -86,7 +86,7 @@
      * Sync user now via AJAX
      */
     syncUserNow: function (userId, $button) {
-      const self = this; // Store reference to GHLUserProfile object
+      const self = this; // Store reference to SynclyUserProfile object
       const $loading = $(".ghl-loading");
 
       // Disable button and show loading
@@ -94,17 +94,17 @@
       $loading.addClass("active is-active");
 
       $.ajax({
-        url: ghlUserProfile.ajaxUrl,
+        url: synclyUserProfile.ajaxUrl,
         type: "POST",
         data: {
           action: "syncly_sync_user_now",
-          nonce: ghlUserProfile.nonce,
+          nonce: synclyUserProfile.nonce,
           user_id: userId,
         },
         success: function (response) {
           if (response.success) {
             // Show success message
-            self.showNotice("success", ghlUserProfile.strings.syncSuccess);
+            self.showNotice("success", synclyUserProfile.strings.syncSuccess);
 
             // Reload page after 1 second to show updated data
             setTimeout(function () {
@@ -113,14 +113,14 @@
           } else {
             self.showNotice(
               "error",
-              response.data.message || ghlUserProfile.strings.syncError,
+              response.data.message || synclyUserProfile.strings.syncError,
             );
             $button.prop("disabled", false);
             $loading.removeClass("active is-active");
           }
         },
         error: function () {
-          self.showNotice("error", ghlUserProfile.strings.syncError);
+          self.showNotice("error", synclyUserProfile.strings.syncError);
           $button.prop("disabled", false);
           $loading.removeClass("active is-active");
         },
@@ -179,11 +179,11 @@
         $loading.addClass("active is-active");
 
         $.ajax({
-          url: ghlUserProfile.ajaxUrl,
+          url: synclyUserProfile.ajaxUrl,
           type: "POST",
           data: {
             action: "syncly_refresh_from_ghl",
-            nonce: ghlUserProfile.nonce,
+            nonce: synclyUserProfile.nonce,
             user_id: userId,
             contact_id: contactId,
           },
@@ -314,11 +314,11 @@
         $loading.addClass("active is-active");
 
         $.ajax({
-          url: ghlUserProfile.ajaxUrl,
+          url: synclyUserProfile.ajaxUrl,
           type: "POST",
           data: {
             action: "syncly_sync_user_now",
-            nonce: ghlUserProfile.nonce,
+            nonce: synclyUserProfile.nonce,
             user_id: userId,
           },
           success: function (response) {
@@ -326,7 +326,7 @@
               // Show success message
               self.showNotice(
                 "success",
-                ghlUserProfile.strings.syncToSuccess ||
+                synclyUserProfile.strings.syncToSuccess ||
                   "Successfully queued for sync to GoHighLevel!",
               );
 
@@ -338,7 +338,7 @@
               self.showNotice(
                 "error",
                 response.data.message ||
-                  ghlUserProfile.strings.syncToError ||
+                  synclyUserProfile.strings.syncToError ||
                   "Failed to sync to GoHighLevel",
               );
               $button.html(originalHtml);
@@ -347,7 +347,7 @@
           error: function () {
             self.showNotice(
               "error",
-              ghlUserProfile.strings.syncToError ||
+              synclyUserProfile.strings.syncToError ||
                 "Failed to sync to GoHighLevel. Please try again.",
             );
             $button.html(originalHtml);
@@ -381,12 +381,12 @@
         );
 
         $.ajax({
-          url: ghlUserProfile.ajaxUrl,
+          url: synclyUserProfile.ajaxUrl,
           type: "POST",
           data: {
             action: "syncly_generate_login_link",
             user_id: userId,
-            nonce: ghlUserProfile.nonce,
+            nonce: synclyUserProfile.nonce,
           },
           success: function (response) {
             if (response.success && response.data.login_url) {
@@ -551,9 +551,9 @@
 
   // Initialize on document ready
   $(document).ready(function () {
-    GHLUserProfile.init();
-    GHLUserProfile.initRefreshFromGHL();
-    GHLUserProfile.initSyncToGHL();
-    GHLUserProfile.initAutoLogin();
+    SynclyUserProfile.init();
+    SynclyUserProfile.initRefreshFromGHL();
+    SynclyUserProfile.initSyncToGHL();
+    SynclyUserProfile.initAutoLogin();
   });
 })(jQuery);

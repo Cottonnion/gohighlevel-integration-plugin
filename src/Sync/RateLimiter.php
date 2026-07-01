@@ -278,7 +278,7 @@ class RateLimiter {
 	 * @return string
 	 */
 	private function get_burst_key( string $location_id ): string {
-		return 'ghl_rate_burst_' . md5( $location_id );
+		return 'syncly_rate_burst_' . md5( $location_id );
 	}
 
 	/**
@@ -288,6 +288,6 @@ class RateLimiter {
 	 * @return string
 	 */
 	private function get_daily_key( string $location_id ): string {
-		return 'ghl_rate_daily_' . md5( $location_id ) . '_' . gmdate( 'Y-m-d' );
+		return 'syncly_rate_daily_' . md5( $location_id ) . '_' . gmdate( 'Y-m-d' );
 	}
 }

@@ -5,10 +5,10 @@
 (function ($) {
   "use strict";
 
-  // AssetsManager localizes as ghl_buddyboss_group_meta_box_js_data.
-  const ghlBuddyBossGroup = window.ghl_buddyboss_group_meta_box_js_data || {};
+  // AssetsManager localizes as syncly_buddyboss_group_meta_box_js_data.
+  const synclyBuddyBossGroup = window.syncly_buddyboss_group_meta_box_js_data || {};
 
-  const GHLBuddyBossGroupMetaBox = {
+  const SynclyBuddyBossGroupMetaBox = {
     /**
      * Initialize
      */
@@ -77,14 +77,14 @@
       // Update button text
       $btn.html(
         '<span class="dashicons dashicons-update"></span> ' +
-          ghlBuddyBossGroup.strings.syncing,
+          synclyBuddyBossGroup.strings.syncing,
       );
 
       $.ajax({
-        url: ghlBuddyBossGroup.ajaxUrl,
+        url: synclyBuddyBossGroup.ajaxUrl,
         type: "POST",
         data: {
-          action: "ghl_sync_buddyboss_group",
+          action: "syncly_sync_buddyboss_group",
           group_id: groupId,
           sync_type: syncType,
           nonce: nonce,
@@ -101,7 +101,7 @@
               .removeClass("success")
               .addClass("error")
               .text(
-                response.data.message || ghlBuddyBossGroup.strings.syncError,
+                response.data.message || synclyBuddyBossGroup.strings.syncError,
               )
               .show();
           }
@@ -110,7 +110,7 @@
           $message
             .removeClass("success")
             .addClass("error")
-            .text(ghlBuddyBossGroup.strings.syncError)
+            .text(synclyBuddyBossGroup.strings.syncError)
             .show();
         },
         complete: function () {
@@ -130,6 +130,6 @@
 
   // Initialize on document ready
   $(document).ready(function () {
-    GHLBuddyBossGroupMetaBox.init();
+    SynclyBuddyBossGroupMetaBox.init();
   });
 })(jQuery);

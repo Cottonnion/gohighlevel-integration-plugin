@@ -14,6 +14,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 $settings_manager = \Syncly\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
+$campaign_token   = trim( (string) ( $settings['ghl_cid_secret_key'] ?? '' ) );
+$link_token       = '' !== $campaign_token ? rawurlencode( $campaign_token ) : 'YOUR_CAMPAIGN_ACCESS_TOKEN';
+$link_template    = home_url( '/page' ) . '?syncly_cid={{contact.id}}&syncly_token=' . $link_token;
 ?>
 
 <div class="ghl-settings-wrapper">
@@ -23,17 +26,17 @@ $settings         = $settings_manager->get_settings_array();
 		<div class="ghl-settings-header">
 			<h2>
 				<span class="dashicons dashicons-email-alt"></span>
-				<?php esc_html_e( 'Email Campaign Personalization (?ghl_cid=)', 'syncly' ); ?>
+				<?php esc_html_e( 'Email Campaign Personalization', 'syncly' ); ?>
 			</h2>
 			<p class="description">
-				<?php esc_html_e( 'When GoHighLevel sends an email campaign, append {{contact.id}} to links so visitors arriving from those emails can see personalized content even without logging in. Use [ghl_user_meta] shortcodes normally; the plugin resolves them from the contact\'s GHL data.', 'syncly' ); ?>
+				<?php esc_html_e( 'When GoHighLevel sends an email campaign, append the contact ID and your campaign access token to links so visitors arriving from those emails can see personalized content even without logging in. Use [syncly_user_meta] shortcodes normally; the plugin resolves them from the contact\'s GHL data only after the access token is valid.', 'syncly' ); ?>
 			</p>
 			<p class="description" style="margin-top: 6px;">
 				<?php
 				echo wp_kses(
 					sprintf(
 						/* translators: %s: Site home URL for personalization link example. */
-						__( '<strong>Simple personalization:</strong> <code>https://%s/page?ghl_cid={{contact.id}}</code>', 'syncly' ),
+						__( '<strong>Campaign personalization:</strong> <code>https://%s/page?syncly_cid={{contact.id}}&amp;syncly_token=YOUR_CAMPAIGN_ACCESS_TOKEN</code>', 'syncly' ),
 						esc_html( home_url() )
 					),
 					[
@@ -55,8 +58,8 @@ $settings         = $settings_manager->get_settings_array();
 						<tr>
 							<th scope="row">
 								<label for="enable_ghl_cid">
-									<?php esc_html_e( 'Enable ?ghl_cid= Parameter', 'syncly' ); ?>
-									<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'When enabled, the plugin reads the ghl_cid query parameter from the URL and uses it to personalize [ghl_user_meta] shortcodes for non-logged-in visitors arriving from GHL email campaigns.', 'syncly' ); ?>">?</span>
+										<?php esc_html_e( 'Enable Campaign Contact Links', 'syncly' ); ?>
+										<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'When enabled, the plugin reads the syncly_cid query parameter from the URL and uses it to personalize [syncly_user_meta] shortcodes only when the syncly_token access token is valid.', 'syncly' ); ?>">?</span>
 								</label>
 							</th>
 							<td>
@@ -81,6 +84,28 @@ $settings         = $settings_manager->get_settings_array();
 
 						<tr>
 							<th scope="row">
+								<label for="ghl_cid_secret_key">
+									<?php esc_html_e( 'Campaign Access Token', 'syncly' ); ?>
+									<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Create a long random token, save it here, and add the same value to your GoHighLevel email links as syncly_token. Requests without this token are ignored.', 'syncly' ); ?>">?</span>
+								</label>
+							</th>
+							<td>
+								<input
+									type="password"
+									id="ghl_cid_secret_key"
+									name="ghl_cid_secret_key"
+									class="regular-text"
+									value="<?php echo esc_attr( $settings['ghl_cid_secret_key'] ?? '' ); ?>"
+									autocomplete="off"
+								>
+								<p class="description ghl-description-spacing">
+									<?php esc_html_e( 'Required. Use a long random value that only appears in trusted GoHighLevel campaign links.', 'syncly' ); ?>
+								</p>
+							</td>
+						</tr>
+
+						<tr>
+							<th scope="row">
 								<label for="ghl-cid-link-template">
 									<?php esc_html_e( 'Copy Link Template', 'syncly' ); ?>
 								</label>
@@ -91,7 +116,7 @@ $settings         = $settings_manager->get_settings_array();
 									id="ghl-cid-link-template"
 									readonly
 									class="regular-text"
-									value="<?php echo esc_url( home_url( '/page?ghl_cid={{contact.id}}' ) ); ?>"
+									value="<?php echo esc_attr( $link_template ); ?>"
 								>
 								<button type="button" class="ghl-button ghl-button-secondary" id="ghl-copy-cid-template" style="margin-left: 8px; vertical-align: middle;">
 									<?php esc_html_e( 'Copy', 'syncly' ); ?>
@@ -161,7 +186,7 @@ $settings         = $settings_manager->get_settings_array();
 									<?php esc_html_e( 'Open Test Link Tool', 'syncly' ); ?>
 								</button>
 								<p class="description ghl-description-spacing">
-									<?php esc_html_e( 'Debug what a campaign visitor will see from a ?ghl_cid= URL.', 'syncly' ); ?>
+									<?php esc_html_e( 'Debug what a campaign visitor will see from a signed contact URL.', 'syncly' ); ?>
 								</p>
 							</td>
 						</tr>
@@ -253,14 +278,14 @@ $settings         = $settings_manager->get_settings_array();
 					box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 				">
 					<h2 style="margin-top: 0;">Test Link Debugger</h2>
-					<p style="color: #666; margin-bottom: 16px;">Paste a campaign URL with ?ghl_cid= to see what resolves</p>
+					<p style="color: #666; margin-bottom: 16px;">Paste a campaign URL with a valid access token to see what resolves</p>
 
 					<div style="margin-bottom: 16px;">
 						<label style="display: block; margin-bottom: 8px; font-weight: 500;">Campaign URL</label>
 						<input
 							type="text"
 							id="ghl-test-url-input"
-							placeholder="https://yoursite.com/page?ghl_cid=abc123"
+							placeholder="https://yoursite.com/page?syncly_cid=abc123&syncly_token=..."
 							style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;"
 						>
 					</div>
@@ -310,17 +335,17 @@ $settings         = $settings_manager->get_settings_array();
 			resultsDiv.style.display = 'block';
 
 			var urlObj = new URL(url, window.location.origin);
-			var contactId = urlObj.searchParams.get('ghl_cid');
+			var contactId = urlObj.searchParams.get('syncly_cid') || urlObj.searchParams.get('ghl_cid');
 
 			if (!contactId) {
-				resultsDiv.innerHTML = '<strong style="color: red;">Error:</strong> No ?ghl_cid= parameter found in URL';
+				resultsDiv.innerHTML = '<strong style="color: red;">Error:</strong> No contact ID parameter found in URL';
 				submitBtn.disabled = false;
 				submitBtn.textContent = 'Test Link';
 				return;
 			}
 
 			var formData = new FormData();
-			formData.append('action', 'ghl_test_cid_link');
+			formData.append('action', 'syncly_test_cid_link');
 			formData.append('contact_id', contactId);
 			formData.append('nonce', document.querySelector('input[name="syncly_nonce"]').value);
 

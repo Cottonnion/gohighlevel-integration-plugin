@@ -234,12 +234,12 @@
                         window.initFieldMapping();
                     }
                     // Init Select2 on server-rendered options & highlight mapped rows
-                    if (window.GHL_FieldMapping) {
-                        if (typeof window.GHL_FieldMapping.initSelect2 === 'function') {
-                            window.GHL_FieldMapping.initSelect2();
+                    if (window.Syncly_FieldMapping) {
+                        if (typeof window.Syncly_FieldMapping.initSelect2 === 'function') {
+                            window.Syncly_FieldMapping.initSelect2();
                         }
-                        if (typeof window.GHL_FieldMapping.updateMappedRows === 'function') {
-                            window.GHL_FieldMapping.updateMappedRows();
+                        if (typeof window.Syncly_FieldMapping.updateMappedRows === 'function') {
+                            window.Syncly_FieldMapping.updateMappedRows();
                         }
                     }
                     break;

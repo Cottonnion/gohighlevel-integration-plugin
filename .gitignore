@@ -1,48 +1,50 @@
-# Composer
+# Composer dependencies are installed during CI/release builds.
 /vendor/
+/vendor-bin/
 
-# IDE
+# Node tooling and package manager caches.
+/node_modules/
+/.npm/
+/.yarn/
+
+# Release/build artifacts.
+/dist/
+/build/
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.map
+
+# PHPUnit, PHPCS, and local test output.
+/.phpunit.result.cache
+/coverage/
+/.phpcs-cache
+/tests/_output/
+
+# Local environment and secrets.
+.env
+.env.*
+!.env.example
+*.local
+
+# WordPress/local tooling files.
+/wp-content/debug.log
+/debug.log
+
+# OS and editor noise.
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+*.swp
+*.swo
+*~
 .vscode/
 .idea/
-*.sublime-project
-*.sublime-workspace
 
-# OS
-.DS_Store
-Thumbs.db
-
-# WordPress
-wp-config.php
-wp-content/uploads/
-wp-content/cache/
-wp-content/backup-db/
-
-# Node modules (if we add build tools later)
-node_modules/
-package-lock.json
-
-# Logs
+# Logs and temporary files.
 *.log
-error_log
-debug.log
-
-# Environment files
-.env
-.env.local
-
-# Build files
-/build/
-/dist/
-
-# Reference files from other plugins
-/refrence-classes/
-
-# Ignore all dotfiles/dotfolders except .github
-.*
-!.github/
-
-# todo
-TODO.md
-
-#ideas
-/ideas/
+*.tmp
+*.temp
+.cache/

@@ -138,9 +138,9 @@ asort( $woocommerce_fields );
 $refresh_fields = isset( $_GET['refresh_fields'] ) && '1' === sanitize_key( wp_unslash( $_GET['refresh_fields'] ) );
 
 if ( $refresh_fields ) {
-	$ghl_data = $settings_manager->get_ghl_fields_cached( true );
+	$ghl_data = $settings_manager->get_syncly_fields_cached( true );
 } else {
-	$ghl_data = $settings_manager->get_ghl_fields_cached();
+	$ghl_data = $settings_manager->get_syncly_fields_cached();
 }
 
 $ghl_fields      = $ghl_data['fields'];
@@ -602,7 +602,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 <?php
 wp_add_inline_script(
 	'syncly-field-mapping-js',
-	'window.GHL_FIELDS = ' . wp_json_encode( $ghl_fields ) . '; window.GHL_SAVED_MAPPINGS = ' . wp_json_encode( $saved_mappings ) . ';',
+	'window.Syncly_FIELDS = ' . wp_json_encode( $ghl_fields ) . '; window.Syncly_SAVED_MAPPINGS = ' . wp_json_encode( $saved_mappings ) . ';',
 	'before'
 );
 wp_add_inline_style(

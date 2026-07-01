@@ -258,7 +258,7 @@ class UserProfileFields {
 
 		// Settings CSS (button styles and layout).
 		$assets_manager->add_admin_asset(
-			'ghl-settings-css',
+			'syncly-settings-css',
 			$screens,
 			'settings.css',
 			array(),
@@ -269,10 +269,10 @@ class UserProfileFields {
 
 		// User profile CSS.
 		$assets_manager->add_admin_asset(
-			'ghl-user-profile-css',
+			'syncly-user-profile-css',
 			$screens,
 			'user-profile.css',
-			array( 'syncly-select2-css', 'syncly-globals-css', 'ghl-settings-css' ),
+			array( 'syncly-select2-css', 'syncly-globals-css', 'syncly-settings-css' ),
 			array(),
 			SYNCLY_VERSION,
 			false
@@ -280,13 +280,13 @@ class UserProfileFields {
 
 		// User profile JS.
 		$assets_manager->add_admin_asset(
-			'ghl-user-profile-js',
+			'syncly-user-profile-js',
 			$screens,
 			'user-profile.js',
 			array( 'jquery', 'syncly-select2' ),
 			array(
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'ghl_user_profile' ),
+				'nonce'   => wp_create_nonce( 'syncly_user_profile' ),
 				'tags'    => \Syncly\Sync\TagManager::get_instance()->get_tags_for_localization(),
 				'strings' => array(
 					'loading'        => __( 'Loading...', 'syncly' ),
@@ -626,7 +626,7 @@ class UserProfileFields {
 				</div>
 			</div>
 
-			<?php wp_nonce_field( 'ghl_save_user_data', 'ghl_user_nonce' ); ?>
+			<?php wp_nonce_field( 'syncly_save_user_data', 'syncly_user_nonce' ); ?>
 		</div>
 		<?php
 	}
@@ -694,7 +694,7 @@ class UserProfileFields {
 		}
 
 		// Verify nonce
-		if ( ! isset( $_POST['ghl_user_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['ghl_user_nonce'] ) ), 'ghl_save_user_data' ) ) {
+		if ( ! isset( $_POST['syncly_user_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['syncly_user_nonce'] ) ), 'syncly_save_user_data' ) ) {
 			return;
 		}
 
@@ -748,7 +748,7 @@ class UserProfileFields {
 	 */
 	public function ajax_get_contact_data(): void {
 		// Verify nonce
-		check_ajax_referer( 'ghl_user_profile', 'nonce' );
+		check_ajax_referer( 'syncly_user_profile', 'nonce' );
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -813,7 +813,7 @@ class UserProfileFields {
 	 */
 	public function ajax_sync_user_now(): void {
 		// Verify nonce
-		check_ajax_referer( 'ghl_user_profile', 'nonce' );
+		check_ajax_referer( 'syncly_user_profile', 'nonce' );
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -861,7 +861,7 @@ class UserProfileFields {
 	 */
 	public function ajax_generate_login_link(): void {
 		// Verify nonce.
-		check_ajax_referer( 'ghl_user_profile', 'nonce' );
+		check_ajax_referer( 'syncly_user_profile', 'nonce' );
 
 		// Check permissions - only administrators.
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -960,7 +960,7 @@ class UserProfileFields {
 	 */
 	public function ajax_refresh_from_ghl(): void {
 		// Verify nonce
-		check_ajax_referer( 'ghl_user_profile', 'nonce' );
+		check_ajax_referer( 'syncly_user_profile', 'nonce' );
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {

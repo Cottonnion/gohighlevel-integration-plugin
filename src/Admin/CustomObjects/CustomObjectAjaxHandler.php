@@ -372,10 +372,11 @@ class CustomObjectAjaxHandler {
 		$field_mappings = isset( $_POST['field_mappings'] ) && is_array( $_POST['field_mappings'] ) ? wp_unslash( $_POST['field_mappings'] ) : [];
 		if ( ! empty( $field_mappings ) ) {
 			foreach ( $field_mappings as $field_map ) {
+				$crm_field = $field_map['syncly_field'] ?? ( $field_map['ghl_field'] ?? '' );
 				$mapping_data['field_mappings'][] = [
 					'wp_field'      => sanitize_text_field( $field_map['wp_field'] ?? '' ),
 					'wp_field_name' => sanitize_text_field( $field_map['wp_field_name'] ?? '' ),
-					'ghl_field'     => sanitize_text_field( $field_map['ghl_field'] ?? '' ),
+					'ghl_field'     => sanitize_text_field( $crm_field ),
 					'transform'     => sanitize_text_field( $field_map['transform'] ?? 'none' ),
 				];
 			}

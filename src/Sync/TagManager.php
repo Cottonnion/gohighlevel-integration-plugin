@@ -154,7 +154,7 @@ class TagManager {
 		}
 
 		$site_id       = get_current_blog_id();
-		$transient_key = sprintf( 'ghl_tags_%s_site_%d', $location_id, $site_id );
+		$transient_key = sprintf( 'syncly_tags_%s_site_%d', $location_id, $site_id );
 
 		if ( ! $force_refresh ) {
 			$cached = get_transient( $transient_key );

@@ -28,9 +28,6 @@ $allow_admins             = $settings['restrictions_allow_admins'] ?? true;
 $hide_restricted_archives = $settings['restrictions_hide_archives'] ?? false;
 $hide_from_rest_api       = $settings['restrictions_hide_rest_api'] ?? false;
 $allowed_tags             = $settings['restrictions_allowed_tags'] ?? [];
-$is_pro_active            = apply_filters( 'syncly_archive_protection_enabled', false );
-$overrides_pro_active     = apply_filters( 'syncly_restriction_overrides_enabled', false );
-$upgrade_url              = apply_filters( 'syncly_upgrade_url', 'https://highlevelsync.com/' );
 ?>
 
 <div class="ghl-settings-wrapper">
@@ -235,7 +232,6 @@ $upgrade_url              = apply_filters( 'syncly_upgrade_url', 'https://highle
 						<?php esc_html_e( 'Hide from Archives', 'syncly' ); ?>
 					</th>
 					<td>
-						<?php if ( $is_pro_active ) : ?>
 						<label class="ghl-checkbox <?php echo $hide_restricted_archives ? 'is-checked' : ''; ?>">
 							<input type="checkbox" 
 									class="ghl-checkbox-original"
@@ -254,14 +250,6 @@ $upgrade_url              = apply_filters( 'syncly_upgrade_url', 'https://highle
 						<p class="description" style="margin-left: 54px; margin-top: 8px;">
 							<?php esc_html_e( 'When enabled, restricted posts won\'t appear in listings at all. When disabled, they\'ll show with the archive message.', 'syncly' ); ?>
 						</p>
-						<?php else : ?>
-							<div style="max-width: 620px; padding: 14px 16px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;">
-								<div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap;">
-									<div><strong><?php esc_html_e( 'Archive protection', 'syncly' ); ?></strong><p class="description" style="margin: 4px 0 0;"><?php esc_html_e( 'Hide restricted content from listings, search results, and archive pages.', 'syncly' ); ?></p></div>
-									<a href="<?php echo esc_url( $upgrade_url ); ?>" class="ghl-button ghl-button-secondary" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Learn More', 'syncly' ); ?></a>
-								</div>
-							</div>
-						<?php endif; ?>
 					</td>
 				</tr>
 
@@ -270,7 +258,6 @@ $upgrade_url              = apply_filters( 'syncly_upgrade_url', 'https://highle
 						<?php esc_html_e( 'Hide from REST API', 'syncly' ); ?>
 					</th>
 					<td>
-						<?php if ( $is_pro_active ) : ?>
 						<label class="ghl-checkbox <?php echo $hide_from_rest_api ? 'is-checked' : ''; ?>">
 							<input type="checkbox" 
 									class="ghl-checkbox-original"
@@ -289,14 +276,6 @@ $upgrade_url              = apply_filters( 'syncly_upgrade_url', 'https://highle
 						<p class="description" style="margin-left: 54px; margin-top: 8px;">
 							<?php esc_html_e( 'Prevents restricted posts from being exposed through the WordPress REST API (e.g., /wp-json/wp/v2/posts).', 'syncly' ); ?>
 						</p>
-						<?php else : ?>
-							<div style="max-width: 620px; padding: 14px 16px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;">
-								<div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap;">
-									<div><strong><?php esc_html_e( 'REST protection', 'syncly' ); ?></strong><p class="description" style="margin: 4px 0 0;"><?php esc_html_e( 'Remove restricted posts from WordPress REST API responses.', 'syncly' ); ?></p></div>
-									<a href="<?php echo esc_url( $upgrade_url ); ?>" class="ghl-button ghl-button-secondary" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Learn More', 'syncly' ); ?></a>
-								</div>
-							</div>
-						<?php endif; ?>
 					</td>
 				</tr>
 			</tbody>
@@ -315,7 +294,6 @@ $upgrade_url              = apply_filters( 'syncly_upgrade_url', 'https://highle
 						<?php esc_html_e( 'Allow Administrators', 'syncly' ); ?>
 					</th>
 					<td>
-						<?php if ( $overrides_pro_active ) : ?>
 						<label class="ghl-checkbox <?php echo $allow_admins ? 'is-checked' : ''; ?>">
 							<input type="checkbox" 
 									class="ghl-checkbox-original"
@@ -334,26 +312,17 @@ $upgrade_url              = apply_filters( 'syncly_upgrade_url', 'https://highle
 						<p class="description" style="margin-left: 54px; margin-top: 8px;">
 							<?php esc_html_e( 'Recommended: Allows admins to view all content for management purposes.', 'syncly' ); ?>
 						</p>
-						<?php else : ?>
-							<div style="max-width: 620px; padding: 14px 16px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;">
-								<div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap;">
-									<div><strong><?php esc_html_e( 'Administrator bypass', 'syncly' ); ?></strong><p class="description" style="margin: 4px 0 0;"><?php esc_html_e( 'Let administrators view restricted content while managing the site.', 'syncly' ); ?></p></div>
-									<a href="<?php echo esc_url( $upgrade_url ); ?>" class="ghl-button ghl-button-secondary" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Learn More', 'syncly' ); ?></a>
-								</div>
-							</div>
-						<?php endif; ?>
 					</td>
 				</tr>
 
 				<tr>
 					<th scope="row">
-						<label<?php echo $overrides_pro_active ? ' for="restrictions_allowed_tags"' : ''; ?>>
+						<label for="restrictions_allowed_tags">
 							<?php esc_html_e( 'Additional Allowed Tags', 'syncly' ); ?>
 							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Global bypass tags: Users with any of these tags can access ALL restricted content, regardless of individual page tag requirements.', 'syncly' ); ?>">?</span>
 						</label>
 					</th>
 					<td>
-						<?php if ( $overrides_pro_active ) : ?>
 						<div>
 							<select id="restrictions_allowed_tags" 
 									name="restrictions_allowed_tags[]" 
@@ -366,14 +335,6 @@ $upgrade_url              = apply_filters( 'syncly_upgrade_url', 'https://highle
 						<p class="description" style="margin-top: 8px;">
 							<?php esc_html_e( 'Users with any of these tags can view all restricted content, regardless of individual page restrictions.', 'syncly' ); ?>
 						</p>
-						<?php else : ?>
-							<div style="max-width: 620px; padding: 14px 16px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;">
-								<div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
-									<div><strong><?php esc_html_e( 'Global bypass tags', 'syncly' ); ?></strong><p class="description" style="margin: 4px 0 0;"><?php esc_html_e( 'Allow selected GoHighLevel tags to bypass all content restrictions.', 'syncly' ); ?></p></div>
-									<a href="<?php echo esc_url( $upgrade_url ); ?>" class="ghl-button ghl-button-secondary" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Learn More', 'syncly' ); ?></a>
-								</div>
-							</div>
-						<?php endif; ?>
 					</td>
 				</tr>
 			</tbody>

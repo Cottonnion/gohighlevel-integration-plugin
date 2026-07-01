@@ -11,16 +11,11 @@
   ],
   "require": {
     "php": ">=7.4",
-    "woocommerce/action-scheduler": "^3.9"
+    "woocommerce/action-scheduler": "^4.0"
   },
   "autoload": {
     "psr-4": {
       "Syncly\\": "src/"
-    }
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "Syncly\\Tests\\": "tests/"
     }
   },
   "config": {
@@ -32,22 +27,5 @@
     "allow-plugins": {
       "dealerdirect/phpcodesniffer-composer-installer": true
     }
-  },
-  "scripts": {
-    "check": "phpcs",
-    "fix": "phpcbf",
-    "check-file": "phpcs --file-list=-",
-    "fix-file": "phpcbf --file-list=-",
-    "standards": "phpcs -i",
-    "test": "phpunit --configuration tests/phpunit-config.xml",
-    "build": "php build-minify.php"
-  },
-  "require-dev": {
-    "brain/monkey": "^2.6",
-    "dealerdirect/phpcodesniffer-composer-installer": "^1.1",
-    "matthiasmullie/minify": "^1.3",
-    "phpunit/phpunit": "^9.6",
-    "squizlabs/php_codesniffer": "^3.13",
-    "wp-coding-standards/wpcs": "^3.2"
   }
 }

@@ -50,7 +50,7 @@ class ContactIdAjaxHandler {
 	 * @return void
 	 */
 	public function init(): void {
-		add_action( 'wp_ajax_ghl_test_cid_link', array( $this, 'test_cid_link' ) );
+		add_action( 'wp_ajax_syncly_test_cid_link', array( $this, 'test_cid_link' ) );
 	}
 
 	/**

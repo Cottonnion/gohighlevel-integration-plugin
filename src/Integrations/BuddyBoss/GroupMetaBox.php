@@ -80,7 +80,7 @@ class GroupMetaBox {
 		$this->register_assets();
 
 		// AJAX handler for manual sync
-		add_action( 'wp_ajax_ghl_sync_buddyboss_group', [ $this, 'handle_manual_sync' ] );
+		add_action( 'wp_ajax_syncly_sync_buddyboss_group', [ $this, 'handle_manual_sync' ] );
 	}
 
 	/**
@@ -105,7 +105,7 @@ class GroupMetaBox {
 
 		// BuddyBoss group meta box CSS.
 		$assets_manager->add_admin_asset(
-			'ghl-buddyboss-group-meta-box-css',
+			'syncly-buddyboss-group-meta-box-css',
 			$screens,
 			'buddyboss-group-meta-box.css',
 			array( 'syncly-globals-css' ),
@@ -116,7 +116,7 @@ class GroupMetaBox {
 
 		// BuddyBoss group meta box JS.
 		$assets_manager->add_admin_asset(
-			'ghl-buddyboss-group-meta-box-js',
+			'syncly-buddyboss-group-meta-box-js',
 			$screens,
 			'buddyboss-group-meta-box.js',
 			array( 'jquery' ),
@@ -212,7 +212,7 @@ class GroupMetaBox {
 			}
 		}
 
-		wp_nonce_field( 'ghl_sync_group_' . $group_id, 'ghl_sync_nonce' );
+		wp_nonce_field( 'syncly_sync_group_' . $group_id, 'ghl_sync_nonce' );
 		?>
 		<div class="ghl-group-sync-meta-box">
 
@@ -273,7 +273,7 @@ class GroupMetaBox {
 					class="ghl-button ghl-button-secondary ghl-sync-btn" 
 					id="ghl-sync-group-btn"
 					data-group-id="<?php echo esc_attr( $group_id ); ?>"
-					data-nonce="<?php echo esc_attr( wp_create_nonce( 'ghl_sync_group_' . $group_id ) ); ?>">
+					data-nonce="<?php echo esc_attr( wp_create_nonce( 'syncly_sync_group_' . $group_id ) ); ?>">
 					<span class="dashicons dashicons-update"></span>
 					<?php esc_html_e( 'Sync Group to GHL', 'syncly' ); ?>
 				</button>
@@ -282,7 +282,7 @@ class GroupMetaBox {
 					class="ghl-button ghl-button-secondary ghl-sync-btn" 
 					id="ghl-sync-members-btn"
 					data-group-id="<?php echo esc_attr( $group_id ); ?>"
-					data-nonce="<?php echo esc_attr( wp_create_nonce( 'ghl_sync_members_' . $group_id ) ); ?>">
+					data-nonce="<?php echo esc_attr( wp_create_nonce( 'syncly_sync_members_' . $group_id ) ); ?>">
 					<span class="dashicons dashicons-groups"></span>
 					<?php esc_html_e( 'Sync All Members', 'syncly' ); ?>
 				</button>
@@ -303,7 +303,7 @@ class GroupMetaBox {
 	 * Handle manual sync AJAX request
 	 */
 	public function handle_manual_sync(): void {
-		check_ajax_referer( 'ghl_sync_group_' . absint( $_POST['group_id'] ?? 0 ), 'nonce' );
+		check_ajax_referer( 'syncly_sync_group_' . absint( $_POST['group_id'] ?? 0 ), 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ] );

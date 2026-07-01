@@ -1447,6 +1447,7 @@ class Client implements ClientInterface {
 		if ( $status_code !== 200 || empty( $decoded['access_token'] ) ) {
 			$decoded_array            = is_array( $decoded ) ? $decoded : [];
 			$error_message            = $decoded_array['message'] ?? ( is_string( $body ) ? $body : 'unknown' );
+			$error_text               = strtolower( (string) $error_message );
 			self::$last_refresh_error = sprintf( 'Refresh HTTP %d: %s', $status_code, sanitize_text_field( (string) $error_message ) );
 			$this->record_refresh_failure();
 			$this->update_oauth_health( 429 === $status_code ? 'rate_limited' : 'refresh_failed', self::$last_refresh_error );
@@ -1458,13 +1459,24 @@ class Client implements ClientInterface {
 				);
 			}
 
-			// If refresh token is invalid, clear tokens and force reconnect to avoid loops
-			if ( isset( $decoded_array['error'] ) && 'invalid_grant' === $decoded_array['error'] ) {
-				$this->log_oauth_event( 'Refresh token marked invalid by provider; clearing stored tokens', $decoded_array );
+			$requires_reconnect = ( 401 === $status_code || 403 === $status_code ) && (
+				false !== strpos( $error_text, 'invalid refresh token' ) ||
+				false !== strpos( $error_text, 'invalid_grant' ) ||
+				false !== strpos( $error_text, 'unauthorized' ) ||
+				false !== strpos( $error_text, 'invalid jwt' ) ||
+				false !== strpos( $error_text, 'revoked' ) ||
+				false !== strpos( $error_text, 'expired' )
+			);
+
+			// If refresh token is invalid or the provider rejected the auth flow,
+			// clear tokens and force reconnect to avoid loops and stale state.
+			if ( $requires_reconnect || ( isset( $decoded_array['error'] ) && 'invalid_grant' === $decoded_array['error'] ) ) {
+				$this->log_oauth_event( 'Refresh token rejected by provider; clearing stored tokens', $decoded_array );
 				$this->clear_oauth_tokens();
+				$this->update_oauth_health( 'reconnect_required', __( 'GoHighLevel rejected the refresh token. Please reconnect your account.', 'syncly' ) );
 				// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Third argument is machine-readable context, not HTML output.
 				throw new ApiException(
-					esc_html__( 'Refresh token is invalid. Please reconnect your GoHighLevel account.', 'syncly' ),
+					esc_html__( 'GoHighLevel rejected the refresh token. Please reconnect your account.', 'syncly' ),
 					(int) $status_code
 				);
 			}

@@ -12,10 +12,10 @@
 	/**
 	 * Auto-fill handler for GHL forms
 	 */
-	class GHLFormAutoFill {
+	class SynclyFormAutoFill {
 		constructor() {
 			this.initialized = false;
-			this.ghlDomains = [
+			this.synclyDomains = [
 				'link.leadconnectorhq.com',
 				'link.gohighlevel.com',
 				'link.msgsndr.com',
@@ -23,7 +23,7 @@
 			];
 			
 			// Load configuration from localized data
-			this.config = typeof ghl_form_autofill_data !== 'undefined' ? ghl_form_autofill_data : {};
+			this.config = typeof syncly_form_autofill_data !== 'undefined' ? syncly_form_autofill_data : {};
 			this.userData = this.config.userData || {};
 			this.formSettings = this.config.formSettings || {};
 			this.whiteLabelDomain = this.config.whiteLabelDomain || '';
@@ -32,8 +32,8 @@
 			if (this.whiteLabelDomain) {
 				try {
 					const domain = new URL(this.whiteLabelDomain).hostname;
-					if (domain && !this.ghlDomains.includes(domain)) {
-						this.ghlDomains.push(domain);
+					if (domain && !this.synclyDomains.includes(domain)) {
+						this.synclyDomains.push(domain);
 				}
 			} catch (e) {
 				}
@@ -71,7 +71,7 @@
 			}
 
 			// Check if src contains any known GHL domain
-			return this.ghlDomains.some(domain => src.includes(domain));
+			return this.synclyDomains.some(domain => src.includes(domain));
 		}
 
 	/**
@@ -272,7 +272,7 @@
 	}
 
 	// Initialize auto-fill when script loads
-	const autoFill = new GHLFormAutoFill();
+	const autoFill = new SynclyFormAutoFill();
 	autoFill.init();
 
 	// Expose for manual testing

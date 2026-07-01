@@ -490,8 +490,8 @@ class RestAPIController {
 		$sanitized_ip        = sanitize_key( $client_ip );
 		$sanitized_ip        = $sanitized_ip ?: 'unknown';
 
-		$transient_key = 'ghl_rest_api_rate_' . $sanitized_ip;
-		$lock_key      = 'ghl_rest_api_rate_lock_' . $sanitized_ip;
+		$transient_key = 'syncly_rest_api_rate_' . $sanitized_ip;
+		$lock_key      = 'syncly_rest_api_rate_lock_' . $sanitized_ip;
 
 		if ( ! $this->acquire_rate_limit_lock( $lock_key ) ) {
 			return new \WP_Error(

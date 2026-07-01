@@ -415,12 +415,12 @@ class FileLogger {
 	/**
 	 * Check whether file-based debug logging is enabled.
 	 *
-	 * Enabled when the bootstrap constant GHLBRIDGE_LOG is truthy.
+	 * Enabled when the bootstrap constant SYNCLY_BRIDGE_LOG is truthy.
 	 *
 	 * @return bool
 	 */
 	private function is_logging_enabled(): bool {
-		return defined( 'GHLBRIDGE_LOG' ) && GHLBRIDGE_LOG;
+		return defined( 'SYNCLY_BRIDGE_LOG' ) && SYNCLY_BRIDGE_LOG;
 	}
 
 	/**

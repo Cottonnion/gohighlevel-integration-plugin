@@ -105,8 +105,8 @@ class MaintenanceHandler {
 				"DELETE FROM {$wpdb->options} 
 				WHERE (option_name LIKE %s OR option_name LIKE %s)
 				AND option_name LIKE %s",
-				$wpdb->esc_like( '_transient_ghl_tags_' ) . '%',
-				$wpdb->esc_like( '_transient_timeout_ghl_tags_' ) . '%',
+				$wpdb->esc_like( '_transient_syncly_tags_' ) . '%',
+				$wpdb->esc_like( '_transient_timeout_syncly_tags_' ) . '%',
 				'%' . $wpdb->esc_like( '_site_' . (string) $site_id )
 			)
 		);

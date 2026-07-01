@@ -214,7 +214,7 @@
 			});
 
 			// Collect all available GHL fields from global JSON
-			const ghlFields = Object.keys(window.GHL_FIELDS || {}).filter(function(k) { return k !== ''; });
+			const ghlFields = Object.keys(window.Syncly_FIELDS || {}).filter(function(k) { return k !== ''; });
 
 			$.ajax({
 				url: ajaxurl,
@@ -339,7 +339,7 @@
 					const $lazySelect = $input.siblings('.ghl-lazy-select');
 					if ($lazySelect.length) {
 						$lazySelect.attr('data-value', details.ghl_field);
-						const label = (window.GHL_FIELDS || {})[details.ghl_field] || details.ghl_field;
+						const label = (window.Syncly_FIELDS || {})[details.ghl_field] || details.ghl_field;
 						$lazySelect.find('.ghl-lazy-select__text').text(label);
 					}
 					
@@ -409,8 +409,8 @@
 		// Initialize duplicate check on page load
 		checkDuplicateMappings();
 
-		if (window.GHL_FieldMapping && typeof window.GHL_FieldMapping.bindLazyDropdowns === 'function') {
-			window.GHL_FieldMapping.bindLazyDropdowns();
+		if (window.Syncly_FieldMapping && typeof window.Syncly_FieldMapping.bindLazyDropdowns === 'function') {
+			window.Syncly_FieldMapping.bindLazyDropdowns();
 		}
 	}
 
@@ -425,11 +425,11 @@
 			const data = JSON.parse(dataElement.textContent || '{}');
 
 			if (data.fields && typeof data.fields === 'object') {
-				window.GHL_FIELDS = data.fields;
+				window.Syncly_FIELDS = data.fields;
 			}
 
 			if (data.savedMappings && typeof data.savedMappings === 'object') {
-				window.GHL_SAVED_MAPPINGS = data.savedMappings;
+				window.Syncly_SAVED_MAPPINGS = data.savedMappings;
 			}
 		} catch (error) {
 			console.error('Failed to parse field mapping data:', error);
@@ -449,7 +449,7 @@
  *
  * Instead of rendering hundreds of <select> elements (one per row) each
  * containing all GHL fields, we render a lightweight <div> trigger per row.
- * The full searchable dropdown is built from window.GHL_FIELDS only when
+ * The full searchable dropdown is built from window.Syncly_FIELDS only when
  * the user clicks a trigger — one dropdown at a time.
  */
 (function($) {
@@ -461,7 +461,7 @@
 
 	function getDisplayText(value) {
 		if (!value) return '— Do Not Sync —';
-		var fields = window.GHL_FIELDS || {};
+		var fields = window.Syncly_FIELDS || {};
 		return fields[value] || value;
 	}
 
@@ -476,7 +476,7 @@
 		closeDropdown();
 
 		var currentValue = $trigger.attr('data-value') || '';
-		var fields = window.GHL_FIELDS || {};
+		var fields = window.Syncly_FIELDS || {};
 
 		// Build dropdown DOM
 		var $dropdown = $('<div class="ghl-lazy-dropdown"></div>');
@@ -654,9 +654,9 @@
 
 	/* -------------------------------------------------- global API (SPA compat) */
 
-	window.GHL_FieldMapping = window.GHL_FieldMapping || {};
+	window.Syncly_FieldMapping = window.Syncly_FieldMapping || {};
 
-	window.GHL_FieldMapping.bindLazyDropdowns = function() {
+	window.Syncly_FieldMapping.bindLazyDropdowns = function() {
 		$('.ghl-lazy-select:not(.ghl-lazy-select--disabled)')
 			.off('click.ghlLazySelect')
 			.on('click.ghlLazySelect', function(e) {
@@ -676,12 +676,12 @@
 	 * No-op — kept for SPA-router backward compatibility.
 	 * Select2 is no longer used; dropdowns are lazy.
 	 */
-	window.GHL_FieldMapping.initSelect2 = window.GHL_FieldMapping.bindLazyDropdowns;
+	window.Syncly_FieldMapping.initSelect2 = window.Syncly_FieldMapping.bindLazyDropdowns;
 
 	/**
 	 * Update row highlighting based on mapped status
 	 */
-	window.GHL_FieldMapping.updateMappedRows = function() {
+	window.Syncly_FieldMapping.updateMappedRows = function() {
 		$('input[type="hidden"][name^="ghl_field_"]').each(function() {
 			var $input = $(this);
 			var $row   = $input.closest('tr');
@@ -696,7 +696,7 @@
 	/* -------------------------------------------------- doc-ready */
 
 	$(document).ready(function() {
-		window.GHL_FieldMapping.bindLazyDropdowns();
+		window.Syncly_FieldMapping.bindLazyDropdowns();
 
 		// Add data-label attributes for mobile responsive card layout
 		$('.syncly-field-mapping .ghl-table tbody tr').each(function() {
@@ -707,11 +707,11 @@
 		});
 
 		// Initial row highlighting
-		window.GHL_FieldMapping.updateMappedRows();
+		window.Syncly_FieldMapping.updateMappedRows();
 
 		// Re-highlight on change
 		$(document).on('change', 'input[name^="ghl_field_"]', function() {
-			window.GHL_FieldMapping.updateMappedRows();
+			window.Syncly_FieldMapping.updateMappedRows();
 		});
 	});
 

@@ -72,7 +72,7 @@ class StatsProvider {
 			'system_health'          => $this->get_system_health_metrics(),
 			'recent_activity'        => $this->get_recent_activity(),
 			'links'                  => $this->get_dashboard_links(),
-			'debug_raw_ghl_response' => get_transient( 'ghl_raw_contacts_response' ),
+			'debug_raw_ghl_response' => get_transient( 'syncly_raw_contacts_response' ),
 		];
 	}
 
@@ -269,7 +269,7 @@ class StatsProvider {
 	 */
 	private function get_total_ghl_contacts(): int {
 		// Try to get from cache first (5 minute cache)
-		$cache_key = 'ghl_total_contacts_count';
+		$cache_key = 'syncly_total_contacts_count';
 		$cached    = get_transient( $cache_key );
 
 		if ( false !== $cached ) {
@@ -289,7 +289,7 @@ class StatsProvider {
 			);
 
 			// Store raw response for debugging
-			set_transient( 'ghl_raw_contacts_response', $response, 5 * MINUTE_IN_SECONDS );
+			set_transient( 'syncly_raw_contacts_response', $response, 5 * MINUTE_IN_SECONDS );
 
 			// GHL API returns total count in response
 			if ( isset( $response['meta']['total'] ) ) {
@@ -308,7 +308,7 @@ class StatsProvider {
 			}
 		} catch ( \Exception $e ) {
 			// API call failed - use fallback
-			set_transient( 'ghl_raw_contacts_response', [ 'error' => $e->getMessage() ], 5 * MINUTE_IN_SECONDS );
+			set_transient( 'syncly_raw_contacts_response', [ 'error' => $e->getMessage() ], 5 * MINUTE_IN_SECONDS );
 		}
 
 		// Ultimate fallback: count of synced users

@@ -128,7 +128,7 @@
                     url: ajaxurl,
                     type: 'POST',
                     data: {
-                        action: 'ghl_save_logs_per_page',
+                        action: 'syncly_save_logs_per_page',
                         per_page: perPage,
                         nonce: syncly_sync_logs_js_data.nonce
                     },
@@ -332,7 +332,7 @@
                     url: ajaxurl,
                     type: 'POST',
                     data: {
-                        action: 'ghl_delete_old_logs',
+                        action: 'syncly_delete_old_logs',
                         nonce: syncly_sync_logs_js_data.nonce
                     },
                     success: function (response) {
@@ -392,7 +392,7 @@
                     url: ajaxurl,
                     type: 'POST',
                     data: {
-                        action: 'ghl_clear_all_logs',
+                        action: 'syncly_clear_all_logs',
                         nonce: syncly_sync_logs_js_data.nonce
                     },
                     success: function (response) {
@@ -482,7 +482,7 @@
                 url: ajaxurl,
                 type: 'POST',
                 data: {
-                    action: 'ghl_get_logs',
+                    action: 'syncly_get_logs',
                     nonce: syncly_sync_logs_js_data.nonce,
                     page: page,
                     status: status,

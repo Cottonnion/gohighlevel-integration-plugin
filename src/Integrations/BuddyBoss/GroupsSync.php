@@ -109,7 +109,7 @@ class GroupsSync {
 		add_action( 'before_delete_post', [ $this, 'handle_group_type_delete' ], 10, 2 );
 
 		// Bulk sync action
-		add_action( 'wp_ajax_ghl_buddyboss_bulk_sync', [ $this, 'handle_bulk_sync' ] );
+		add_action( 'wp_ajax_syncly_buddyboss_bulk_sync', [ $this, 'handle_bulk_sync' ] );
 
 		// Queue processor filters
 		add_filter( 'syncly_execute_sync', [ $this, 'execute_buddyboss_sync' ], 10, 5 );
@@ -636,13 +636,13 @@ class GroupsSync {
 	 */
 	public function handle_bulk_sync(): void {
 		// Verify nonce and capabilities
-		check_ajax_referer( 'ghl_buddyboss_bulk_sync', 'nonce' );
+		check_ajax_referer( 'syncly_buddyboss_bulk_sync', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( esc_html__( 'Insufficient permissions', 'syncly' ) );
 		}
 
-		$sync_type = sanitize_text_field( $_POST['sync_type'] ?? '' );
+		$sync_type = isset( $_POST['sync_type'] ) ? sanitize_text_field( wp_unslash( $_POST['sync_type'] ) ) : '';
 
 		switch ( $sync_type ) {
 			case 'all_groups':
