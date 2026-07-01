@@ -181,7 +181,7 @@ jobs:
               -x "${PLUGIN_SLUG}/*.map" \
               -x "*.DS_Store"
           )
-          unzip -l "${DIST_DIR}/${{ steps.release_tag.outputs.zip_name }}" > "${DIST_DIR}/zip-contents.txt"
+          unzip -Z1 "${DIST_DIR}/${{ steps.release_tag.outputs.zip_name }}" > "${DIST_DIR}/zip-contents.txt"
           ls -lah "${DIST_DIR}"
 
       - name: Validate release artifact

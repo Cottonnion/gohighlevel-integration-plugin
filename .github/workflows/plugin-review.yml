@@ -168,7 +168,7 @@ jobs:
         run: |
           set -euo pipefail
           ZIP_FILE="${DIST_DIR}/${PLUGIN_SLUG}-wordpress-org.zip"
-          unzip -l "${ZIP_FILE}" > "${DIST_DIR}/zip-contents.txt"
+          unzip -Z1 "${ZIP_FILE}" > "${DIST_DIR}/zip-contents.txt"
 
           grep -q "${PLUGIN_SLUG}/syncly.php" "${DIST_DIR}/zip-contents.txt"
           grep -q "${PLUGIN_SLUG}/readme.txt" "${DIST_DIR}/zip-contents.txt"
