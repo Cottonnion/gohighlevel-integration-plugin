@@ -289,7 +289,39 @@ class FormWidget extends \Elementor\Widget_Base {
 		);
 
 		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		echo wp_kses_post( $output );
+		echo wp_kses( $output, $this->get_allowed_form_html() );
+	}
+
+	/**
+	 * Get allowed HTML for the rendered form embed.
+	 *
+	 * @return array<string, array<string, bool>>
+	 */
+	private function get_allowed_form_html(): array {
+		return [
+			'div'    => [
+				'id'                    => true,
+				'class'                 => true,
+				'style'                 => true,
+				'data-loading'          => true,
+				'data-form-id'          => true,
+				'data-track-submission' => true,
+			],
+			'p'      => [
+				'class' => true,
+				'style' => true,
+			],
+			'strong' => [],
+			'iframe' => [
+				'src'          => true,
+				'style'        => true,
+				'scrolling'    => true,
+				'id'           => true,
+				'data-form-id' => true,
+				'title'        => true,
+				'onload'       => true,
+			],
+		];
 	}
 
 	/**

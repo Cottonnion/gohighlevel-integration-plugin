@@ -128,7 +128,7 @@ class ElementorIntegration {
 	 * @return bool
 	 */
 	public static function is_elementor_active(): bool {
-		return did_action( 'elementor/loaded' );
+		return did_action( 'elementor/loaded' ) > 0;
 	}
 
 	/**
