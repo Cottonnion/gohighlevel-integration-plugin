@@ -378,61 +378,6 @@ class AssetsManager {
 			true
 		);
 
-		// Sync Preview assets
-		$this->add_admin_asset(
-			'syncly-sync-preview-css',
-			[ 'toplevel_page_syncly-admin' ],
-			'sync-preview.css',
-			[ 'syncly-settings-css' ],
-			[],
-			SYNCLY_VERSION
-		);
-
-		$this->add_admin_asset(
-			'syncly-sync-preview-js',
-			[ 'toplevel_page_syncly-admin' ],
-			'sync-preview.js',
-			[ 'jquery', 'syncly-sweetalert2', 'syncly-select2' ],
-			[
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'syncly_admin' ),
-				'i18n'    => [
-					'searchPlaceholder'  => __( 'Search for a user...', 'syncly' ),
-					'missingInfo'        => __( 'Missing Information', 'syncly' ),
-					'selectUser'         => __( 'Please select a user from the dropdown', 'syncly' ),
-					'validatingUser'     => __( 'Validating User...', 'syncly' ),
-					'lookingUpUser'      => __( 'Looking up WordPress user...', 'syncly' ),
-					'connectingGHL'      => __( 'Connecting to GoHighLevel...', 'syncly' ),
-					'establishingAPI'    => __( 'Establishing API connection...', 'syncly' ),
-					'analyzingFields'    => __( 'Analyzing Field Mappings...', 'syncly' ),
-					'comparingData'      => __( 'Comparing WordPress and GHL data...', 'syncly' ),
-					'previewFailed'      => __( 'Preview Failed', 'syncly' ),
-					'unknownError'       => __( 'Unknown error occurred', 'syncly' ),
-					'requestFailed'      => __( 'Request Failed', 'syncly' ),
-					'connectionError'    => __( 'Could not connect to server. Please check your connection and try again.', 'syncly' ),
-					'totalFields'        => __( 'Total Fields', 'syncly' ),
-					'willChange'         => __( 'Will Change', 'syncly' ),
-					'alreadySynced'      => __( 'Already Synced', 'syncly' ),
-					'tagsWillApply'      => __( 'tags will be applied', 'syncly' ),
-					'updatingExisting'   => __( 'Updating existing contact:', 'syncly' ),
-					'conflictsDetected'  => __( 'Conflicts Detected', 'syncly' ),
-					'validationWarnings' => __( 'Validation Warnings', 'syncly' ),
-					'fieldMapping'       => __( 'Field Mapping Comparison', 'syncly' ),
-					'ghlField'           => __( 'GHL Field', 'syncly' ),
-					'currentGHL'         => __( 'Current in GHL', 'syncly' ),
-					'wpValue'            => __( 'WordPress Value', 'syncly' ),
-					'status'             => __( 'Status', 'syncly' ),
-					'willUpdate'         => __( 'WILL UPDATE', 'syncly' ),
-					'inSync'             => __( 'IN SYNC', 'syncly' ),
-					'tagsToApply'        => __( 'Tags to Apply', 'syncly' ),
-					'syncPreview'        => __( 'Sync Preview', 'syncly' ),
-					'gotIt'              => __( 'Got it!', 'syncly' ),
-				],
-			],
-			SYNCLY_VERSION,
-			true
-		);
-
 		// Global CSS for all admin pages (now includes tabbed main-settings page)
 		$this->add_admin_asset(
 			'syncly-globals-css',

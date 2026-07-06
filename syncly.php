@@ -3,7 +3,7 @@
  * Plugin Name:       Syncly for GoHighLevel
  * Plugin URI:        https://highlevelsync.com/
  * Description:       WordPress integration plugin that connects WordPress, WooCommerce, BuddyBoss, and LearnDash with GoHighLevel CRM for real-time two-way sync and automation.
- * Version:           1.4.3
+ * Version:           1.4.4
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            LabGenz Team
@@ -23,13 +23,30 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Define plugin constants
-define( 'SYNCLY_PLUGIN_NAME', 'Syncly for GoHighLevel' );
-define( 'SYNCLY_VERSION', '1.4.3' );
-define( 'SYNCLY_PATH', plugin_dir_path( __FILE__ ) );
-define( 'SYNCLY_URL', plugin_dir_url( __FILE__ ) );
-define( 'SYNCLY_BASENAME', plugin_basename( __FILE__ ) );
-define( 'SYNCLY_TEXTDOMAIN', 'syncly' );
+// Define plugin constants.
+if ( ! defined( 'SYNCLY_PLUGIN_NAME' ) ) {
+	define( 'SYNCLY_PLUGIN_NAME', 'Syncly for GoHighLevel' );
+}
+
+if ( ! defined( 'SYNCLY_VERSION' ) ) {
+	define( 'SYNCLY_VERSION', '1.4.4' );
+}
+
+if ( ! defined( 'SYNCLY_PATH' ) ) {
+	define( 'SYNCLY_PATH', plugin_dir_path( __FILE__ ) );
+}
+
+if ( ! defined( 'SYNCLY_URL' ) ) {
+	define( 'SYNCLY_URL', plugin_dir_url( __FILE__ ) );
+}
+
+if ( ! defined( 'SYNCLY_BASENAME' ) ) {
+	define( 'SYNCLY_BASENAME', plugin_basename( __FILE__ ) );
+}
+
+if ( ! defined( 'SYNCLY_TEXTDOMAIN' ) ) {
+	define( 'SYNCLY_TEXTDOMAIN', 'syncly' );
+}
 
 if ( ! defined( 'SYNCLY_BRIDGE_LOG' ) ) {
 	define( 'SYNCLY_BRIDGE_LOG', true );

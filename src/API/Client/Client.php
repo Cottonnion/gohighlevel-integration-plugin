@@ -31,7 +31,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - Scheduled background refresh via Action Scheduler (every 20 min, 12h window)
  * - Reactive refresh on 401/403 via request() retry
  * - Automatic retry with longer timeout (25s) on proxy cURL timeouts
- * - Circuit breaker after 5 consecutive failures (5-minute cooldown)
+ * - Short cooldown after temporary refresh/rate-limit failures
  * - Cross-process mutex lock prevents concurrent refresh races
  * - Reconnect API as emergency recovery when refresh proxy is unreachable
  *
@@ -52,7 +52,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Multisite:
  * - All token storage is multisite-aware via SettingsManager
- * - Circuit breaker uses per-site transients
+ * - Refresh cooldown uses per-site transients
  *
  * @package    Syncly
  * @subpackage API/Client
@@ -127,32 +127,16 @@ class Client implements ClientInterface {
 	 */
 	private int $access_token_expires_at = 0;
 
-	/**
-	 * Throttle repeated refresh attempts within a short window to avoid loops.
-	 *
-	 * @var int
-	 */
-	private static int $last_refresh_attempt_ts = 0;
-
-	/**
-	 * Store last refresh error message for reuse in throttling responses.
-	 *
-	 * @var string|null
-	 */
-	private static ?string $last_refresh_error = null;
-
 	// =========================================================================
-	// Constants — Circuit Breaker
+	// Constants — OAuth Cooldowns
 	// =========================================================================
 
 	/**
-	 * Transient key for tracking consecutive refresh failures.
-	 *
-	 * Stores an array with 'failures' count and 'last_failed' timestamp.
+	 * Transient key for pausing refresh attempts after a temporary failure.
 	 *
 	 * @var string
 	 */
-	private const CIRCUIT_BREAKER_KEY = 'syncly_refresh_circuit_breaker';
+	private const REFRESH_COOLDOWN_KEY = 'syncly_refresh_cooldown';
 
 	/**
 	 * Transient key for throttling global OAuth admin notices.
@@ -162,21 +146,18 @@ class Client implements ClientInterface {
 	private const OAUTH_NOTICE_THROTTLE_KEY = 'syncly_oauth_notice_throttle';
 
 	/**
-	 * Minutes to wait after hitting the failure threshold before retrying.
+	 * Transient key for throttling OAuth authorization-code exchange attempts.
 	 *
-	 * @var int
+	 * @var string
 	 */
-	private const CIRCUIT_BREAKER_COOLDOWN = 5;
+	private const TOKEN_EXCHANGE_COOLDOWN_KEY = 'syncly_token_exchange_cooldown';
 
 	/**
-	 * Max consecutive refresh failures before the circuit opens.
-	 *
-	 * Once opened, all refresh attempts are blocked until the cooldown expires
-	 * (except for the reconnect API recovery path).
+	 * Minutes to wait after a temporary OAuth refresh or exchange failure.
 	 *
 	 * @var int
 	 */
-	private const CIRCUIT_BREAKER_THRESHOLD = 5;
+	private const OAUTH_COOLDOWN_MINUTES = 5;
 
 	// =========================================================================
 	// Constants — Throttle & Locking
@@ -405,7 +386,7 @@ class Client implements ClientInterface {
 	 * Safety:
 	 * - Skips token/reconnect URLs to avoid infinite loops
 	 * - Respects skip_oauth_refresh flag for manual key testing
-	 * - Circuit breaker blocks frontend refreshes when proxy is failing
+	 * - Refresh cooldown blocks retry storms when proxy is failing
 	 *
 	 * @param array|\WP_Error $response HTTP response or WP_Error.
 	 * @param array           $args     HTTP request arguments.
@@ -669,17 +650,14 @@ class Client implements ClientInterface {
 						'location_id'             => $this->location_id ?? '(none)',
 						'access_token_expires_at' => $this->access_token_expires_at ?? 0,
 						'now'                     => time(),
-						'last_refresh_ts'         => self::$last_refresh_attempt_ts,
-						'last_refresh_error'      => self::$last_refresh_error,
 					],
 					'warning'
 				);
 				try {
 					// Only attempt to refresh if we have OAuth tokens
 					if ( ! empty( $this->refresh_token ) ) {
-						// Skip refresh on frontend if circuit breaker is open (avoid blocking page loads)
-						if ( ! is_admin() && $this->is_circuit_breaker_open() ) {
-							$this->log_oauth_event( 'Frontend refresh skipped: circuit breaker open' );
+						if ( $this->is_refresh_cooldown_active() ) {
+							$this->log_oauth_event( '401/403 refresh skipped: refresh cooldown active' );
 							return $response;
 						}
 
@@ -881,6 +859,15 @@ class Client implements ClientInterface {
 	 * @throws ApiException On network error or invalid response from proxy.
 	 */
 	public function exchange_code_for_token( string $code, string $redirect_uri ): array {
+		if ( get_transient( self::TOKEN_EXCHANGE_COOLDOWN_KEY ) ) {
+			$this->log_oauth_event( 'Exchange token blocked: cooldown active' );
+
+			throw new ApiException(
+				esc_html__( 'Token exchange is temporarily rate limited. Please wait a few minutes before reconnecting.', 'syncly' ),
+				429
+			);
+		}
+
 		$data = [
 			'code'         => $code,
 			'redirect_uri' => $redirect_uri,
@@ -900,7 +887,6 @@ class Client implements ClientInterface {
 		$this->log_oauth_event( 'Exchange token proxy response', [ 'status' => is_wp_error( $response ) ? 'error' : wp_remote_retrieve_response_code( $response ) ] );
 
 		if ( is_wp_error( $response ) ) {
-			self::$last_refresh_error = $response->get_error_message();
 			$this->log_oauth_event( 'Exchange token WP_Error', [ 'error' => $response->get_error_message() ] );
 			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception message is not rendered directly in browser output.
 			throw new ApiException(
@@ -925,6 +911,12 @@ class Client implements ClientInterface {
 
 		if ( $status_code !== 200 || empty( $decoded['access_token'] ) ) {
 			$decoded_array = $this->sanitize_response_payload( $decoded );
+
+			if ( 429 === $status_code ) {
+				set_transient( self::TOKEN_EXCHANGE_COOLDOWN_KEY, true, self::OAUTH_COOLDOWN_MINUTES * MINUTE_IN_SECONDS );
+				$this->log_oauth_event( 'Exchange token rate limited; cooldown started' );
+			}
+
 			throw new ApiException(
 				esc_html__( 'Failed to obtain access token from GoHighLevel', 'syncly' ),
 				(int) $status_code,
@@ -1056,11 +1048,12 @@ class Client implements ClientInterface {
 	/**
 	 * Ensure access token is still valid; refresh if close to expiry.
 	 *
-	 * This is a best-effort proactive refresh. If it fails (e.g. circuit breaker
-	 * is open, proxy is down), we let the request proceed with the current token.
-	 * The 401 handler will catch actual auth failures downstream.
+	 * This is best-effort only while the current token is still usable. If the
+	 * access token is already expired and refresh cannot happen, the request is
+	 * blocked before sending a guaranteed-401 API call.
 	 *
 	 * @return void
+	 * @throws ApiException When the access token is expired and refresh failed.
 	 */
 	private function ensure_fresh_access_token(): void {
 		// If we do not know expiry, skip pre-emptive refresh (will rely on 401 handler)
@@ -1070,6 +1063,10 @@ class Client implements ClientInterface {
 
 		// If a refresh already failed this request, don't try again (prevents cascade)
 		if ( $this->refresh_failed_this_request ) {
+			if ( time() >= $this->access_token_expires_at ) {
+				throw new ApiException( esc_html__( 'Access token is expired and refresh is temporarily unavailable. Please wait for the cooldown period or reconnect your GoHighLevel account.', 'syncly' ) );
+			}
+
 			return;
 		}
 
@@ -1083,7 +1080,20 @@ class Client implements ClientInterface {
 				$this->refresh_failed_this_request = false; // Reset on success
 			} catch ( \Exception $e ) {
 				$this->refresh_failed_this_request = true;
+				$this->update_oauth_health( 'refresh_failed', $e->getMessage() );
+				$this->queue_oauth_health_notice( $e->getMessage() );
 				$this->log_oauth_event( 'Proactive refresh failed (non-fatal)', [ 'error' => $e->getMessage() ] );
+
+				if ( time() >= $this->access_token_expires_at ) {
+					throw new ApiException(
+						sprintf(
+							/* translators: %s: refresh failure message */
+							esc_html__( 'Access token is expired and refresh failed: %s', 'syncly' ),
+							esc_html( $e->getMessage() )
+						),
+						(int) $e->getCode()
+					);
+				}
 			}
 		}
 	}
@@ -1149,7 +1159,7 @@ class Client implements ClientInterface {
 			return;
 		}
 
-		set_transient( $transient_key, true, self::CIRCUIT_BREAKER_COOLDOWN * MINUTE_IN_SECONDS );
+		set_transient( $transient_key, true, self::OAUTH_COOLDOWN_MINUTES * MINUTE_IN_SECONDS );
 
 		\Syncly\Core\AdminNotices::get_instance()->error(
 			__( 'GoHighLevel OAuth refresh is temporarily unhealthy. The plugin will retry automatically; reconnect your account if this persists.', 'syncly' ),
@@ -1160,85 +1170,54 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Check if circuit breaker is open (too many recent failures).
+	 * Check whether OAuth refresh is temporarily cooling down.
 	 *
-	 * @return bool True if circuit is open and refresh should not be attempted.
+	 * @return bool True if refresh attempts should be skipped for now.
 	 */
-	private function is_circuit_breaker_open(): bool {
-		$circuit_data = get_transient( self::CIRCUIT_BREAKER_KEY );
-		if ( ! $circuit_data ) {
-			return false;
-		}
-
-		$failures    = $circuit_data['failures'] ?? 0;
-		$last_failed = $circuit_data['last_failed'] ?? 0;
-
-		// Circuit is open if we hit threshold
-		if ( $failures >= self::CIRCUIT_BREAKER_THRESHOLD ) {
-			$cooldown_expires = $last_failed + ( self::CIRCUIT_BREAKER_COOLDOWN * MINUTE_IN_SECONDS );
-			if ( time() < $cooldown_expires ) {
-				return true;
-			}
-			// Cooldown expired, reset circuit
-			delete_transient( self::CIRCUIT_BREAKER_KEY );
-		}
-
-		return false;
+	private function is_refresh_cooldown_active(): bool {
+		return (bool) get_transient( self::REFRESH_COOLDOWN_KEY );
 	}
 
 	/**
-	 * Record a refresh failure in the circuit breaker.
+	 * Start a short cooldown before the next OAuth refresh attempt.
 	 *
 	 * @return void
 	 */
-	private function record_refresh_failure(): void {
-		$circuit_data = get_transient( self::CIRCUIT_BREAKER_KEY );
-		$failures     = isset( $circuit_data['failures'] ) ? (int) $circuit_data['failures'] + 1 : 1;
-
-		set_transient(
-			self::CIRCUIT_BREAKER_KEY,
-			[
-				'failures'    => $failures,
-				'last_failed' => time(),
-			],
-			self::CIRCUIT_BREAKER_COOLDOWN * MINUTE_IN_SECONDS
-		);
+	private function start_refresh_cooldown(): void {
+		set_transient( self::REFRESH_COOLDOWN_KEY, true, self::OAUTH_COOLDOWN_MINUTES * MINUTE_IN_SECONDS );
 	}
 
 	/**
-	 * Clear the circuit breaker after successful refresh.
+	 * Clear OAuth refresh cooldown after a successful refresh or disconnect.
 	 *
 	 * @return void
 	 */
-	private function reset_circuit_breaker(): void {
-		delete_transient( self::CIRCUIT_BREAKER_KEY );
+	private function clear_refresh_cooldown(): void {
+		delete_transient( self::REFRESH_COOLDOWN_KEY );
 	}
 
 	/**
 	 * Refresh the OAuth2 access token.
 	 *
-	 * Full refresh flow with multiple layers of protection:
+	 * Full refresh flow with minimal protection:
 	 *
 	 * 1. **Guard: no refresh token** — Aborts immediately.
-	 * 2. **Guard: circuit breaker open** — If ≥ 3 consecutive failures within
-	 *    the last 5 minutes, blocks the attempt. Falls through to reconnect
-	 *    API as an emergency recovery path.
-	 * 3. **Guard: in-process throttle** — Skips if another attempt was made
-	 *    less than 30 seconds ago (avoids hammering within one PHP process).
-	 * 4. **Guard: cross-process mutex** — If another PHP process holds the
+	 * 2. **Guard: refresh cooldown** — Blocks temporary retry storms after a
+	 *    rate limit, timeout, or proxy failure.
+	 * 3. **Guard: cross-process mutex** — If another PHP process holds the
 	 *    refresh lock, waits 0.5s then reloads settings from DB. If tokens
 	 *    are now fresh, returns immediately.
-	 * 5. **Primary path** — POSTs refresh_token to the proxy’s `/refresh-token`.
-	 * 6. **Fallback: reconnect API** — If the proxy returns an error or is
+	 * 4. **Primary path** — POSTs refresh_token to the proxy’s `/refresh-token`.
+	 * 5. **Fallback: reconnect API** — If the proxy returns an error or is
 	 *    unreachable, attempts the GHL reconnect endpoint to obtain a new
 	 *    authorization code, then exchanges it for fresh tokens.
-	 * 7. **Invalid grant** — If GHL returns `invalid_grant`, tokens are cleared
+	 * 6. **Invalid grant** — If GHL returns `invalid_grant`, tokens are cleared
 	 *    and the user must reconnect manually.
 	 *
 	 * On success:
 	 * - Updates in-memory access_token / refresh_token / expires_at
 	 * - Persists to DB via save_oauth_tokens()
-	 * - Resets circuit breaker
+	 * - Clears refresh cooldown
 	 * - Releases refresh lock
 	 *
 	 * Timeout:
@@ -1253,59 +1232,30 @@ class Client implements ClientInterface {
 		$this->log_oauth_event(
 			'Attempting token refresh',
 			[
-				'expires_in'           => ( $this->access_token_expires_at ?? 0 ) - time(),
-				'circuit_breaker_open' => $this->is_circuit_breaker_open(),
-				'pid'                  => getmypid(),
+				'expires_in'              => ( $this->access_token_expires_at ?? 0 ) - time(),
+				'refresh_cooldown_active' => $this->is_refresh_cooldown_active(),
+				'pid'                     => getmypid(),
 			]
 		);
 
 		if ( empty( $this->refresh_token ) ) {
-			// If circuit breaker is open but no tokens exist, clear it to avoid confusion
-			if ( $this->is_circuit_breaker_open() ) {
-				$this->reset_circuit_breaker();
-			}
+			$this->clear_refresh_cooldown();
 			$this->log_oauth_event( 'Refresh aborted: no refresh token stored' );
 			throw new ApiException( esc_html__( 'No refresh token available. Please reconnect your GoHighLevel account.', 'syncly' ) );
 		}
 
-		// Check circuit breaker (prevents hammering failing proxy)
-		if ( $this->is_circuit_breaker_open() ) {
-			$this->log_oauth_event( 'Refresh blocked: circuit breaker open (too many recent failures)' );
+		if ( $this->is_refresh_cooldown_active() ) {
+			$this->log_oauth_event( 'Refresh blocked: cooldown active' );
 			$this->update_oauth_health( 'cooldown', __( 'Token refresh is paused after repeated failures.', 'syncly' ) );
 
 			throw new ApiException(
 				sprintf(
 					/* translators: %d: cooldown minutes */
 					esc_html__( 'Token refresh temporarily disabled due to repeated failures. Please try again in %d minutes or reconnect your GoHighLevel account.', 'syncly' ),
-					absint( self::CIRCUIT_BREAKER_COOLDOWN )
+					absint( self::OAUTH_COOLDOWN_MINUTES )
 				)
 			);
 		}
-
-		// Throttle repeated attempts within 60 seconds to avoid hammering
-		$now = time();
-		if ( self::$last_refresh_attempt_ts && ( $now - self::$last_refresh_attempt_ts ) < 60 ) {
-			/* translators: %s: Last token refresh error. */
-			$throttle_message = self::$last_refresh_error
-				? sprintf(
-					/* translators: %s: Error details from the last OAuth token refresh attempt. */
-					esc_html__( 'Recent refresh attempt failed: %s', 'syncly' ),
-					self::$last_refresh_error
-				)
-				: esc_html__( 'Recent refresh attempt in progress or just failed. Reconnect required.', 'syncly' );
-			$this->log_oauth_event(
-				'Refresh skipped: throttled',
-				[
-					'seconds_since_last' => $now - self::$last_refresh_attempt_ts,
-					'last_error'         => self::$last_refresh_error,
-				]
-			);
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception message is handled by upstream error handling.
-			throw new ApiException( $throttle_message );
-		}
-
-		self::$last_refresh_attempt_ts = $now;
-		self::$last_refresh_error      = null;
 
 		// Cross-process mutex: if another process is already refreshing, wait and reload
 		$lock_owner = get_transient( self::REFRESH_LOCK_KEY );
@@ -1399,8 +1349,8 @@ class Client implements ClientInterface {
 		$this->log_oauth_event( 'Refresh token proxy response', [ 'status' => is_wp_error( $response ) ? 'error' : wp_remote_retrieve_response_code( $response ) ] );
 
 		if ( is_wp_error( $response ) ) {
-			self::$last_refresh_error = $response->get_error_message();
-			$this->record_refresh_failure();
+			$this->start_refresh_cooldown();
+			$this->update_oauth_health( 'refresh_failed', $response->get_error_message() );
 			$this->log_oauth_event( 'Refresh token WP_Error', [ 'error' => $response->get_error_message() ] );
 
 			// Proxy timed out or is unreachable - try reconnect API as fallback
@@ -1414,7 +1364,7 @@ class Client implements ClientInterface {
 					$expires_at                    = time() + ( $token_payload['expires_in'] ?? 3600 );
 					$this->access_token_expires_at = $expires_at;
 					$this->save_oauth_tokens( $expires_at );
-					$this->reset_circuit_breaker();
+					$this->clear_refresh_cooldown();
 					$this->log_oauth_event( 'Reconnect succeeded after proxy timeout', [ 'expires_at' => $expires_at ] );
 
 					return $token_payload;
@@ -1448,9 +1398,9 @@ class Client implements ClientInterface {
 			$decoded_array            = is_array( $decoded ) ? $decoded : [];
 			$error_message            = $decoded_array['message'] ?? ( is_string( $body ) ? $body : 'unknown' );
 			$error_text               = strtolower( (string) $error_message );
-			self::$last_refresh_error = sprintf( 'Refresh HTTP %d: %s', $status_code, sanitize_text_field( (string) $error_message ) );
-			$this->record_refresh_failure();
-			$this->update_oauth_health( 429 === $status_code ? 'rate_limited' : 'refresh_failed', self::$last_refresh_error );
+			$refresh_error = sprintf( 'Refresh HTTP %d: %s', $status_code, sanitize_text_field( (string) $error_message ) );
+			$this->start_refresh_cooldown();
+			$this->update_oauth_health( 429 === $status_code ? 'rate_limited' : 'refresh_failed', $refresh_error );
 
 			if ( 429 === $status_code ) {
 				throw new ApiException(
@@ -1495,7 +1445,6 @@ class Client implements ClientInterface {
 
 					return $token_payload;
 				} catch ( ApiException $reconnect_error ) {
-					self::$last_refresh_error = $reconnect_error->getMessage();
 					$this->log_oauth_event(
 						'Reconnect attempt failed',
 						[
@@ -1517,10 +1466,10 @@ class Client implements ClientInterface {
 				}
 			}
 
-			self::$last_refresh_error = $decoded_array['message'] ?? 'Failed to refresh access token';
+			$refresh_error = $decoded_array['message'] ?? 'Failed to refresh access token';
 			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Message is sanitized and consumed by error handlers.
 			throw new ApiException(
-				esc_html( sanitize_text_field( self::$last_refresh_error ) ),
+				esc_html( sanitize_text_field( $refresh_error ) ),
 				(int) $status_code
 			);
 		}
@@ -1534,11 +1483,9 @@ class Client implements ClientInterface {
 		// Persist refreshed tokens and expiry so new requests use the latest values
 		$expires_at                    = time() + ( $decoded['expires_in'] ?? 3600 );
 		$this->access_token_expires_at = $expires_at;
-		self::$last_refresh_error      = null;
 		$this->save_oauth_tokens( $expires_at );
 
-		// Reset circuit breaker on successful refresh
-		$this->reset_circuit_breaker();
+		$this->clear_refresh_cooldown();
 		$this->mark_oauth_healthy();
 
 		// Release the refresh lock
@@ -1951,7 +1898,7 @@ class Client implements ClientInterface {
 	 * - Admin disconnects the account
 	 * - Refresh fails and tokens are genuinely expired
 	 *
-	 * Also resets the circuit breaker to avoid confusing
+	 * Also clears refresh cooldown to avoid confusing
 	 * "temporarily disabled" errors after a manual disconnect.
 	 *
 	 * @return void
@@ -1971,8 +1918,7 @@ class Client implements ClientInterface {
 		$settings_manager->update_setting( 'oauth_health_checked_at', current_time( 'mysql' ) );
 		$settings_manager->update_option( 'syncly_connection_verified', false );
 
-		// Clear circuit breaker when disconnecting to avoid confusing errors
-		$this->reset_circuit_breaker();
+		$this->clear_refresh_cooldown();
 
 		do_action( 'syncly_connection_status_changed', false, 'oauth_tokens_cleared' );
 

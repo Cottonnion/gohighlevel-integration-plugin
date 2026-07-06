@@ -208,7 +208,7 @@
 					}
 					
 					// Re-initialize sync preview functionality (for sync-preview tab)
-					if (typeof window.ghlSyncPreview.init === 'function') {
+					if (window.ghlSyncPreview && typeof window.ghlSyncPreview.init === 'function') {
 						window.ghlSyncPreview.init();
 					}
 					

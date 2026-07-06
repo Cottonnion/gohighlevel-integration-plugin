@@ -91,10 +91,6 @@ $settings_tabs = [
 		'label' => __( 'Role-Based Tags', 'syncly' ),
 		'icon'  => 'dashicons-tag',
 	],
-	'sync-preview'         => [
-		'label' => __( 'Sync Preview', 'syncly' ),
-		'icon'  => 'dashicons-visibility',
-	],
 	'personalization'      => [
 		'label' => __( 'Personalization', 'syncly' ),
 		'icon'  => 'dashicons-email-alt',

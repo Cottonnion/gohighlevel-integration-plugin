@@ -1137,20 +1137,11 @@ class SettingsManager {
 			wp_send_json_success( $preview_data );
 		}
 
-		wp_send_json_success(
+		wp_send_json_error(
 			[
-				'action'          => 'update',
-				'user_name'       => $user->display_name,
-				'user_email'      => $user->user_email,
-				'fields_to_sync'  => [
-					[ 'ghl_field' => 'email', 'wp_value' => $user->user_email, 'ghl_value' => '', 'status' => 'preview' ],
-					[ 'ghl_field' => 'first_name', 'wp_value' => get_user_meta( $user->ID, 'first_name', true ), 'ghl_value' => '', 'status' => 'preview' ],
-					[ 'ghl_field' => 'last_name', 'wp_value' => get_user_meta( $user->ID, 'last_name', true ), 'ghl_value' => '', 'status' => 'preview' ],
-				],
-				'fields_changed' => [],
-				'tags_to_add'    => [],
-				'warnings'       => [ __( 'Preview generated locally without writing data to GoHighLevel.', 'syncly' ) ],
-			]
+				'message' => __( 'Sync Preview is available in Syncly Pro.', 'syncly' ),
+			],
+			403
 		);
 	}
 
