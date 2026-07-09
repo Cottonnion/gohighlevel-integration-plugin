@@ -298,10 +298,10 @@ class RoleTagsManager {
 	 * @return array
 	 */
 	private function get_location_global_tags_config(): array {
-		$global_tags = $this->settings_manager->get_location_global_tags();
+		$global_tags = apply_filters( 'syncly_resolve_global_tags', null, $this->settings_manager );
 
-		if ( empty( $global_tags ) ) {
-			$global_tags = $this->settings_manager->get_setting( 'global_tags', [] );
+		if ( null === $global_tags ) {
+			return [];
 		}
 
 		return $this->parse_tags( $global_tags );

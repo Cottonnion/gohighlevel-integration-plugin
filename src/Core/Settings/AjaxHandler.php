@@ -564,64 +564,6 @@ class AjaxHandler {
 	}
 
 	/**
-	 * Get field mapping suggestions using pattern matching
-	 *
-	 * @return void
-	 */
-	public static function get_field_suggestions(): void {
-		self::verify_field_mapping_nonce();
-
-		try {
-			if ( ! current_user_can( 'manage_options' ) ) {
-				wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
-				return;
-			}
-
-			// Get unmapped WP fields from request.
-			$wp_fields_raw = isset( $_POST['wp_fields'] ) ? wp_unslash( $_POST['wp_fields'] ) : array();
-			if ( ! is_array( $wp_fields_raw ) ) {
-				wp_send_json_error( [ 'message' => __( 'Invalid field data', 'syncly' ) ], 400 );
-				return;
-			}
-
-			$wp_fields = array_map( 'sanitize_text_field', $wp_fields_raw );
-
-			// Get GHL fields from request.
-			$syncly_fields_raw = isset( $_POST['ghl_fields'] ) ? wp_unslash( $_POST['ghl_fields'] ) : array();
-			if ( ! is_array( $syncly_fields_raw ) ) {
-				wp_send_json_error( [ 'message' => __( 'Invalid GHL field data', 'syncly' ) ], 400 );
-				return;
-			}
-
-			$ghl_fields = array_map( 'sanitize_text_field', $syncly_fields_raw );
-
-			/**
-			 * Delegate field suggestions to Pro add-on.
-			 *
-			 * @since 1.0.0
-			 *
-			 * @param array|null $result     Null by default; Pro returns suggestions array.
-			 * @param array      $wp_fields  Sanitized WordPress field keys.
-			 * @param array      $ghl_fields Sanitized GoHighLevel field keys.
-			 */
-			$result = apply_filters( 'syncly_field_suggestions_result', null, $wp_fields, $ghl_fields );
-
-			if ( null !== $result ) {
-				wp_send_json_success( $result );
-				return;
-			}
-
-			wp_send_json_error(
-				[ 'message' => __( 'AI-assisted field suggestions are unavailable in this plugin.', 'syncly' ) ],
-				403
-			);
-
-		} catch ( \Exception $e ) {
-			wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
-		}
-	}
-
-	/**
 	 * Save setup wizard settings
 	 * Handles saving settings collected during the setup wizard flow
 	 *

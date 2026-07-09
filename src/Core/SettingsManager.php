@@ -143,9 +143,6 @@ class SettingsManager {
 		add_action( 'wp_ajax_syncly_clear_all_logs', [ $this, 'handle_clear_all_logs' ] );
 		add_action( 'wp_ajax_syncly_save_logs_per_page', [ $this, 'handle_save_logs_per_page' ] );
 
-		// Field Mapping Suggestions (delegated to AjaxHandler).
-		add_action( 'wp_ajax_syncly_get_field_suggestions', [ $this, 'handle_get_field_suggestions' ] );
-
 		// Purge caches when connection status changes (location switch, OAuth, disconnect).
 		add_action( 'syncly_connection_status_changed', [ $this, 'purge_location_caches' ] );
 	}
@@ -1077,16 +1074,6 @@ class SettingsManager {
 	public function handle_bulk_import_from_ghl(): void {
 		// Delegate to AjaxHandler (nonce and permissions checked there)
 		AjaxHandler::bulk_import_from_ghl();
-	}
-
-	/**
-	 * Handle get field suggestions AJAX request
-	 *
-	 * @return void
-	 */
-	public function handle_get_field_suggestions(): void {
-		// Delegate to AjaxHandler (nonce and permissions checked there)
-		AjaxHandler::get_field_suggestions();
 	}
 
 	/**

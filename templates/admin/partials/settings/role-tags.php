@@ -17,10 +17,6 @@ $wp_roles_list = wp_roles()->get_names();
 
 // Load saved role tag mappings (location-specific)
 $role_tags       = $settings_manager->get_location_role_tags();
-$global_tags_raw = $settings_manager->get_location_global_tags();
-// Convert array to comma-separated string for display, or keep as is if string
-$global_tags            = is_array( $global_tags_raw ) ? implode( ',', $global_tags_raw ) : $global_tags_raw;
-$global_tags_pro_active = (bool) apply_filters( 'syncly_global_tags_enabled', false );
 $upgrade_url            = apply_filters( 'syncly_upgrade_url', 'https://highlevelsync.com/' );
 ?>
 
@@ -141,53 +137,29 @@ $upgrade_url            = apply_filters( 'syncly_upgrade_url', 'https://highleve
 
 		<table class="form-table" role="presentation">
 			<tbody>
-				<tr>
-					<th scope="row">
-						<label<?php echo $global_tags_pro_active ? ' for="global_tags"' : ''; ?>>
-							<?php esc_html_e( 'Global Tags', 'syncly' ); ?>
-							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'These tags are applied to EVERY contact synced from WordPress to GoHighLevel, regardless of their role.', 'syncly' ); ?>">?</span>
-						</label>
-					</th>
-					<td>
-						<?php if ( $global_tags_pro_active ) : ?>
-							<select 
-								id="global_tags" 
-								name="global_tags[]" 
-								multiple 
-								class="ghl-role-tags-select"
-								style="width: 100%; max-width: 600px;"
-								data-placeholder="<?php esc_attr_e( 'Select or type tags to apply to all synced contacts...', 'syncly' ); ?>">
-								<?php
-								if ( ! empty( $global_tags ) ) {
-									$global_tags_array = array_map( 'trim', explode( ',', $global_tags ) );
-									foreach ( $global_tags_array as $tag_name ) {
-										if ( ! empty( $tag_name ) ) {
-											?>
-											<option value="<?php echo esc_attr( $tag_name ); ?>" selected="selected">
-												<?php echo esc_html( $tag_name ); ?>
-											</option>
-											<?php
-										}
-									}
-								}
-								?>
-							</select>
-							<p class="description" style="margin-top: 8px;">
-								<?php esc_html_e( 'Tags to apply to all synced contacts regardless of role.', 'syncly' ); ?>
-							</p>
-						<?php else : ?>
+				<?php if ( has_action( 'syncly_render_global_tags_settings' ) ) : ?>
+					<?php do_action( 'syncly_render_global_tags_settings', $settings_manager ); ?>
+				<?php else : ?>
+					<tr>
+						<th scope="row">
+							<label>
+								<?php esc_html_e( 'Global Tags', 'syncly' ); ?>
+								<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'These tags are applied to EVERY contact synced from WordPress to GoHighLevel, regardless of their role.', 'syncly' ); ?>">?</span>
+							</label>
+						</th>
+						<td>
 							<div style="max-width: 620px; padding: 16px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
 								<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px;">
 									<div>
 										<span style="display: inline-flex; padding: 2px 8px; border-radius: 999px; background: #eef2ff; border: 1px solid #c7d2fe; color: #3730a3; font-size: 11px; font-weight: 700; text-transform: uppercase;"><?php esc_html_e( 'Syncly Pro', 'syncly' ); ?></span>
-										<p style="margin: 8px 0 0; color: #475569;"><?php esc_html_e( 'Apply location-wide tags to every synced contact without configuring each role separately.', 'syncly' ); ?></p>
+										<p style="margin: 8px 0 0; color: #475569;"><?php esc_html_e( 'Global Tags are available in Syncly Pro. They apply location-wide tags to every synced contact.', 'syncly' ); ?></p>
 									</div>
-											<a href="<?php echo esc_url( $upgrade_url ); ?>" class="ghl-button ghl-button-secondary" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Learn More', 'syncly' ); ?></a>
+									<a href="<?php echo esc_url( $upgrade_url ); ?>" class="ghl-button ghl-button-secondary" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Learn More', 'syncly' ); ?></a>
 								</div>
 							</div>
-						<?php endif; ?>
-					</td>
-				</tr>
+						</td>
+					</tr>
+				<?php endif; ?>
 
 			</tbody>
 		</table>

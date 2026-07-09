@@ -231,13 +231,16 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 			<span class="dashicons dashicons-update" style="margin-top: 3px;"></span>
 			<?php esc_html_e( 'Reload Fields from GoHighLevel', 'syncly' ); ?>
 		</a>
-		<?php if ( apply_filters( 'syncly_field_suggestions_enabled', false ) ) : ?>
-		<button type="button" id="ghl-auto-suggest-mappings" class="ghl-button ghl-button-secondary">
-			<span class="dashicons dashicons-lightbulb" style="margin-top: 3px;"></span>
-			<?php esc_html_e( 'Auto-Suggest Mappings', 'syncly' ); ?>
-		</button>
-		<?php endif; ?>
+		<?php do_action( 'syncly_render_field_mapping_actions' ); ?>
 	</div>
+
+	<?php if ( ! $is_pro_active ) : ?>
+		<div class="notice notice-info" style="margin: 0 0 15px;">
+			<p>
+				<?php esc_html_e( 'AI-Assisted Field Suggestions are available in Syncly Pro. They analyze unmapped WordPress fields and suggest likely GoHighLevel field matches.', 'syncly' ); ?>
+			</p>
+		</div>
+	<?php endif; ?>
 
 	<?php if ( $refresh_fields ) : ?>
 		<div class="notice notice-success is-dismissible" style="margin: 0 0 15px;">

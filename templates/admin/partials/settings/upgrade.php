@@ -26,7 +26,7 @@ $pro_features = [
 	[
 		'icon'        => 'dashicons-visibility',
 		'title'       => __( 'Sync Preview, supercharged', 'syncly' ),
-		'description' => __( 'Richer dry-run previews with full field-by-field comparisons and conflict detection beyond the built-in free preview.', 'syncly' ),
+		'description' => __( 'Richer dry-run previews with full field-by-field comparisons and conflict detection for safer sync validation.', 'syncly' ),
 	],
 	[
 		'icon'        => 'dashicons-groups',

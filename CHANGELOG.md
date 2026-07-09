@@ -4,20 +4,18 @@ All notable changes to Syncly will be documented in this file.
 
 ## [Unreleased]
 
----
+
+## [1.4.5] - 2026-07-09
+
+### Changed
+
+
 
 ## [1.4.1] - 2026-06-23
 
 ### Removed
 
-- Remaining locked/mockup screens in the free plugin (Forms add-on preview, Sync Logs detail preview), replaced with plain upgrade notices.
-- Family Relationships and Login Sync settings tabs moved to the Pro plugin; free no longer ships a disabled preview of either.
-- Remaining legacy `GHL_CRM` branding (including camelCase identifiers) from the free and Pro plugins.
-- Non-system font reference in the admin UI in favor of WordPress's own font stack.
-
-### Added
-
-- A single "Upgrade to Pro" settings tab listing Pro-only features, automatically hidden once Pro is active and licensed.
+- **Global Tags** — Moved to Pro; free plugin shows an informational notice and delegates rendering/resolution via extension hooks.
 - A shared plugin-name constant used everywhere the plugin's display name appears.
 
 ---
@@ -214,7 +212,7 @@ All notable changes to Syncly will be documented in this file.
 - **Elementor Widget Conditions** — Moved to Pro; free plugin fires `ghl_crm_init_elementor_conditions` action.
 - **Archive & REST API Protection** — Moved to Pro; free plugin fires `ghl_crm_register_advanced_restriction_hooks` action.
 - **Restriction Override Settings** — Admin bypass and allowed-tag overrides are available in the free plugin.
-- **Global Tags** — Global role tag configuration is available in the free plugin.
+- **Global Tags** — Moved to Pro; free plugin shows an informational notice and delegates rendering/resolution via extension hooks.
 - **Analytics Dashboard** — Chart visualizations moved to Pro via `ghl_crm_render_analytics_tab` action; free shows upgrade CTA.
 
 ### Added
