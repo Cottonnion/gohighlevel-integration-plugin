@@ -240,7 +240,6 @@ class AssetsManager {
 			[
 				'ajaxUrl'            => admin_url( 'admin-ajax.php' ),
 				'nonce'              => wp_create_nonce( 'syncly_admin' ),
-				'manualConnectNonce' => wp_create_nonce( 'syncly_manual_connect' ),
 				'disconnectNonce'    => wp_create_nonce( 'syncly_oauth_disconnect' ),
 				'manualQueueNonce'   => wp_create_nonce( 'syncly_manual_queue' ),
 				'settingsNonce'      => wp_create_nonce( 'syncly_settings_nonce' ),
@@ -580,7 +579,6 @@ class AssetsManager {
 		$settings         = $settings_manager->get_settings_array();
 		$location_id      = $settings['location_id'] ?? $settings['oauth_location_id'] ?? '';
 		$oauth_token      = $settings['oauth_access_token'] ?? '';
-		$api_token        = $settings['api_token'] ?? '';
 
 		// Get current setting values for pre-population
 		$enable_user_sync              = $settings['enable_user_sync'] ?? false;
@@ -608,7 +606,7 @@ class AssetsManager {
 				'oauthUrl'     => admin_url( 'admin.php?page=syncly-oauth-connect' ),
 				'settingsUrl'  => admin_url( 'admin.php?page=syncly-admin#/settings' ),
 				'dashboardUrl' => admin_url( 'admin.php?page=syncly-admin' ),
-				'isConnected'  => ( ! empty( $oauth_token ) || ! empty( $api_token ) ) ? '1' : '0',
+				'isConnected'  => ! empty( $oauth_token ) ? '1' : '0',
 				'tags'         => $ghl_tags,
 				'settings'     => [
 					'enable_user_sync'              => $enable_user_sync,

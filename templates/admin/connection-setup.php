@@ -1,7 +1,7 @@
 <?php
 /**
  * Connection Setup Template
- * Handles both OAuth and API Key connection methods
+ * Handles OAuth connection setup
  *
  * @package Syncly
  */
@@ -22,12 +22,6 @@ $oauth_handler = $oauth_handler ?? new \Syncly\API\OAuth\OAuthHandler();
 			<span class="dashicons dashicons-cloud"></span>
 			<?php esc_html_e( 'OAuth Connection (Recommended)', 'syncly' ); ?>
 		</button>
-		<?php if( false): ?> 
-		<button type="button" class="ghl-tab-button" data-tab="manual">
-			<span class="dashicons dashicons-admin-network"></span>
-			<?php esc_html_e( 'API Key', 'syncly' ); ?>
-		</button>
-		<?php endif; ?>
 	</div>
 
 	<!-- OAuth Tab (Recommended) -->
@@ -47,7 +41,7 @@ $oauth_handler = $oauth_handler ?? new \Syncly\API\OAuth\OAuthHandler();
 					<li><?php esc_html_e( 'One-click connection to GoHighLevel', 'syncly' ); ?></li>
 					<li><?php esc_html_e( 'Automatic token refresh (stays connected)', 'syncly' ); ?></li>
 					<li><?php esc_html_e( 'Works across multiple locations', 'syncly' ); ?></li>
-					<li><?php esc_html_e( 'More secure than manual API keys', 'syncly' ); ?></li>
+					<li><?php esc_html_e( 'Secure, standards-based authorization flow', 'syncly' ); ?></li>
 					<li><?php esc_html_e( 'No need to manually create integrations', 'syncly' ); ?></li>
 				</ul>
 			</div>

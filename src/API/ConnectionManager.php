@@ -52,55 +52,17 @@ class ConnectionManager {
 	}
 
 	/**
-	 * Save manual connection settings
+	 * Manual API key connections are intentionally unsupported.
 	 *
-	 * @param array $new_settings New settings to save.
-	 * @return array Result with success status and message.
+	 * @param array $new_settings Ignored.
+	 * @return array
 	 */
 	public function save_manual_connection_settings( array $new_settings ): array {
-		$current_settings = $this->settings_repository->get_settings_array();
-
-		// Merge new settings with current settings
-		$settings = array_merge(
-			$current_settings,
-			$new_settings,
-			[
-				'updated_at' => current_time( 'mysql' ),
-				'site_id'    => get_current_blog_id(),
-			]
-		);
-
-		// Validate API credentials if they're being set (but allow clearing for disconnect)
-		if ( isset( $new_settings['api_token'] ) || isset( $new_settings['location_id'] ) ) {
-			// Only validate if at least one is not empty (i.e., user is trying to set credentials)
-			$is_setting_credentials = ! empty( $new_settings['api_token'] ) || ! empty( $new_settings['location_id'] );
-
-			if ( $is_setting_credentials && ( empty( $settings['api_token'] ) || empty( $settings['location_id'] ) ) ) {
-				return [
-					'success' => false,
-					'message' => __( 'API Token and Location ID are required.', 'syncly' ),
-				];
-			}
-		}
-
-		// Save settings (multisite aware)
-		$saved = $this->settings_repository->save_site_settings( $settings );
-
-		if ( $saved ) {
-			// Mark connection as unverified if credentials changed
-			if ( isset( $new_settings['api_token'] ) || isset( $new_settings['location_id'] ) ) {
-				$this->mark_connection_unverified();
-			}
-
-			return [
-				'success' => true,
-				'message' => __( 'Settings saved successfully!', 'syncly' ),
-			];
-		}
+		unset( $new_settings );
 
 		return [
 			'success' => false,
-			'message' => __( 'Failed to save settings. Please try again.', 'syncly' ),
+			'message' => __( 'Manual API key connections are not supported. Please connect using OAuth.', 'syncly' ),
 		];
 	}
 
@@ -112,11 +74,9 @@ class ConnectionManager {
 	public function test_connection(): array {
 		$settings = $this->settings_repository->get_settings_array();
 
-		// Check for OAuth token OR manual API token
-		$has_oauth  = ! empty( $settings['oauth_access_token'] );
-		$has_manual = ! empty( $settings['api_token'] );
+		$has_oauth = ! empty( $settings['oauth_access_token'] );
 
-		if ( ! $has_oauth && ! $has_manual ) {
+		if ( ! $has_oauth ) {
 			return [
 				'success' => false,
 				'message' => __( 'Please connect your GoHighLevel account first.', 'syncly' ),
@@ -124,8 +84,7 @@ class ConnectionManager {
 			];
 		}
 
-		// Use OAuth token if available, otherwise use manual token
-		$auth_token = $has_oauth ? $settings['oauth_access_token'] : $settings['api_token'];
+		$auth_token = $settings['oauth_access_token'];
 
 		// For OAuth, location_id might be stored differently
 		$location_id = $settings['location_id'] ?? '';
@@ -217,7 +176,7 @@ class ConnectionManager {
 
 		if ( $result ) {
 			// Trigger action to notify other components that connection status has changed
-			do_action( 'syncly_connection_status_changed', true, 'manual' );
+			do_action( 'syncly_connection_status_changed', true, 'oauth' );
 		}
 
 		return $result;
@@ -243,24 +202,20 @@ class ConnectionManager {
 		$settings    = $this->settings_repository->get_settings_array( $site_id );
 		$is_verified = $this->is_connection_verified( $site_id );
 
-		// Check for OAuth OR manual credentials
 		$has_oauth       = ! empty( $settings['oauth_access_token'] );
-		$has_manual      = ! empty( $settings['api_token'] ) && ! empty( $settings['location_id'] );
-		$has_credentials = $has_oauth || $has_manual;
+		$has_credentials = $has_oauth;
 
-		// Show token preview (OAuth or manual)
+		// Show token preview (OAuth)
 		$token_preview = '';
 		if ( $has_oauth && ! empty( $settings['oauth_access_token'] ) ) {
 			$token_preview = substr( $settings['oauth_access_token'], 0, 10 ) . '... (OAuth)';
-		} elseif ( ! empty( $settings['api_token'] ) ) {
-			$token_preview = substr( $settings['api_token'], 0, 10 ) . '...';
 		}
 
 		return [
 			'has_credentials' => $has_credentials,
 			'is_verified'     => $is_verified,
 			'is_oauth'        => $has_oauth,
-			'api_token'       => $token_preview,
+			'token_preview'   => $token_preview,
 			'location_id'     => $settings['location_id'] ?? '',
 			'api_version'     => $settings['api_version'] ?? '2021-07-28',
 			'updated_at'      => $settings['updated_at'] ?? '',
@@ -281,7 +236,7 @@ class ConnectionManager {
 	public function disconnect( ?int $site_id = null ): bool {
 		$settings = $this->settings_repository->get_settings_array( $site_id );
 
-		// Clear BOTH OAuth and manual API credentials
+		// Clear OAuth credentials
 		$settings['api_token']           = '';
 		$settings['location_id']         = '';
 		$settings['oauth_access_token']  = '';
@@ -306,40 +261,19 @@ class ConnectionManager {
 	}
 
 	/**
-	 * Validate API credentials format
+	 * Manual API credential validation is intentionally unsupported.
 	 *
-	 * @param string $api_token API token to validate.
-	 * @param string $location_id Location ID to validate.
-	 * @return array Validation result.
+	 * @param string $api_token Ignored.
+	 * @param string $location_id Ignored.
+	 * @return array
 	 */
 	public function validate_credentials( string $api_token, string $location_id ): array {
-		$errors = [];
-
-		// Validate API token format
-		if ( empty( $api_token ) ) {
-			$errors[] = __( 'API Token is required.', 'syncly' );
-		} elseif ( strlen( $api_token ) < 20 ) {
-			$errors[] = __( 'API Token appears to be too short.', 'syncly' );
-		}
-
-		// Validate Location ID format
-		if ( empty( $location_id ) ) {
-			$errors[] = __( 'Location ID is required.', 'syncly' );
-		} elseif ( strlen( $location_id ) < 10 ) {
-			$errors[] = __( 'Location ID appears to be too short.', 'syncly' );
-		}
-
-		if ( ! empty( $errors ) ) {
-			return [
-				'valid'   => false,
-				'errors'  => $errors,
-				'message' => implode( ' ', $errors ),
-			];
-		}
+		unset( $api_token, $location_id );
 
 		return [
-			'valid'   => true,
-			'message' => __( 'Credentials format is valid.', 'syncly' ),
+			'valid'   => false,
+			'errors'  => [ __( 'Manual API key connections are not supported. Please use OAuth.', 'syncly' ) ],
+			'message' => __( 'Manual API key connections are not supported. Please use OAuth.', 'syncly' ),
 		];
 	}
 }

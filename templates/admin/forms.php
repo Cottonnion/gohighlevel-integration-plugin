@@ -18,7 +18,7 @@ $white_label_domain = $settings['ghl_white_label_domain'] ?? '';
 	<?php
 	$oauth_handler = new \Syncly\API\OAuth\OAuthHandler();
 	$oauth_status  = $oauth_handler->get_connection_status();
-	$is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
+	$is_connected  = $oauth_status['connected'];
 
 	if ( ! $is_connected ) :
 		?>

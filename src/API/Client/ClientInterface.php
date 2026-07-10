@@ -56,14 +56,6 @@ interface ClientInterface {
 	public function delete( string $endpoint ): array;
 
 	/**
-	 * Set API token
-	 *
-	 * @param string $token API token
-	 * @return void
-	 */
-	public function set_token( string $token ): void;
-
-	/**
 	 * Set location ID
 	 *
 	 * @param string $location_id Location ID

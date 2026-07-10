@@ -16,6 +16,10 @@
 *.tgz
 *.map
 
+# Generated minified assets (regenerated in CI release workflows).
+/assets/**/*.min.js
+/assets/**/*.min.css
+
 # PHPUnit, PHPCS, and local test output.
 /.phpunit.result.cache
 /coverage/

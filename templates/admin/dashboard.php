@@ -14,7 +14,7 @@ $oauth_handler = new \Syncly\API\OAuth\OAuthHandler();
 $oauth_status  = $oauth_handler->get_connection_status();
 $settings      = \Syncly\Core\SettingsManager::get_instance()->get_settings_array();
 
-$is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
+$is_connected  = $oauth_status['connected'];
 $is_pro_active = (bool) apply_filters( 'syncly_is_pro_active', false );
 $has_analytics = $is_pro_active && has_action( 'syncly_render_analytics_tab' );
 ?>

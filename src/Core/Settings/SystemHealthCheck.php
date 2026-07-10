@@ -181,8 +181,7 @@ class SystemHealthCheck {
 	 */
 	private function check_api_connection( array &$checks, array $settings, SettingsManager $settings_manager ): void {
 		$has_oauth          = ! empty( $settings['oauth_access_token'] );
-		$has_manual_api     = ! empty( $settings['api_token'] ) && ! empty( $settings['location_id'] );
-		$has_any_connection = $has_oauth || $has_manual_api;
+		$has_any_connection = $has_oauth;
 		$is_verified        = $settings_manager->is_connection_verified();
 
 		$checks['api_connection'] = [
@@ -191,7 +190,7 @@ class SystemHealthCheck {
 			'items'  => [
 				[
 					'label'  => __( 'Connection Type', 'syncly' ),
-					'value'  => $has_oauth ? __( 'OAuth', 'syncly' ) : ( $has_manual_api ? __( 'Manual API', 'syncly' ) : __( 'Not Connected', 'syncly' ) ),
+					'value'  => $has_oauth ? __( 'OAuth', 'syncly' ) : __( 'Not Connected', 'syncly' ),
 					'status' => $has_any_connection ? 'success' : 'error',
 				],
 				[

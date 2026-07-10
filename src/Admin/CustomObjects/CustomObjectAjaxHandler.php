@@ -77,7 +77,7 @@ class CustomObjectAjaxHandler {
 		$oauth_handler = new \Syncly\API\OAuth\OAuthHandler();
 		$oauth_status  = $oauth_handler->get_connection_status();
 		$settings      = SettingsManager::get_instance()->get_settings_array();
-		$is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
+		$is_connected  = $oauth_status['connected'];
 
 		if ( ! $is_connected ) {
 			wp_send_json_error(

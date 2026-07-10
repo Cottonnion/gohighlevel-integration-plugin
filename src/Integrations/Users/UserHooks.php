@@ -57,7 +57,7 @@ class UserHooks {
 		// Register hooks if sync is enabled
 		$this->register_hooks();
 
-		// Re-register hooks when connection status changes (OAuth completion, manual connection, etc.)
+		// Re-register hooks when OAuth connection status changes.
 		add_action( 'syncly_connection_status_changed', [ $this, 'register_hooks' ] );
 	}
 	/**
@@ -78,10 +78,8 @@ class UserHooks {
 		if ( ! $is_verified ) {
 			return;
 		}
-		// Check API credentials (OAuth or manual token)
 		$has_oauth = ! empty( $settings['oauth_access_token'] );
-		$has_token = ! empty( $settings['api_token'] );
-		if ( ! $has_oauth && ! $has_token ) {
+		if ( ! $has_oauth ) {
 			return;
 		}
 		if ( empty( $settings['location_id'] ) ) {

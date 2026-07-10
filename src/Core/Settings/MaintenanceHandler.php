@@ -126,7 +126,7 @@ class MaintenanceHandler {
 	/**
 	 * AJAX handler: Reset settings to defaults.
 	 *
-	 * Preserves OAuth connection and manual API connection credentials.
+	 * Preserves OAuth connection credentials.
 	 *
 	 * @return void
 	 */
@@ -145,7 +145,7 @@ class MaintenanceHandler {
 		$settings_manager = SettingsManager::get_instance();
 		$current_settings = $settings_manager->get_settings_array();
 
-		// Preserve ALL connection-related settings (OAuth + Manual API).
+		// Preserve OAuth connection-related settings.
 		$preserved_credentials = [
 			'oauth_access_token'  => $current_settings['oauth_access_token'] ?? '',
 			'oauth_refresh_token' => $current_settings['oauth_refresh_token'] ?? '',
@@ -155,7 +155,6 @@ class MaintenanceHandler {
 			'oauth_company_id'    => $current_settings['oauth_company_id'] ?? '',
 			'oauth_user_type'     => $current_settings['oauth_user_type'] ?? '',
 			'oauth_connected_at'  => $current_settings['oauth_connected_at'] ?? '',
-			'api_token'           => $current_settings['api_token'] ?? '',
 			'location_id'         => $current_settings['location_id'] ?? '',
 			'api_version'         => $current_settings['api_version'] ?? '2021-07-28',
 		];

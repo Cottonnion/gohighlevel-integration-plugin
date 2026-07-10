@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 $settings_manager = \Syncly\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
-$is_connected     = ! empty( $settings['oauth_access_token'] ) || ! empty( $settings['api_token'] );
+$is_connected     = ! empty( $settings['oauth_access_token'] );
 
 // Check which plugins are available
 $is_woocommerce_active = class_exists( 'WooCommerce' );
@@ -163,11 +163,7 @@ $enable_role_tags              = ! empty( $settings['role_tags'] ) && is_array( 
 									<strong><?php esc_html_e( 'Connected', 'syncly' ); ?></strong>
 									<span class="ghl-connection-type">
 										<?php
-										if ( ! empty( $settings['oauth_access_token'] ) ) {
-											esc_html_e( 'OAuth Connection', 'syncly' );
-										} else {
-											esc_html_e( 'API Key Connection', 'syncly' );
-										}
+										esc_html_e( 'OAuth Connection', 'syncly' );
 										?>
 									</span>
 								</div>

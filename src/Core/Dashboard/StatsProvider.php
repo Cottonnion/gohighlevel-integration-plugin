@@ -433,7 +433,7 @@ class StatsProvider {
 		$status        = $oauth_handler->get_connection_status();
 		$settings      = SettingsManager::get_instance()->get_settings_array();
 
-		return ! empty( $status['connected'] ) || ! empty( $settings['api_token'] );
+		return ! empty( $status['connected'] );
 	}
 
 	private function get_location_id(): string {

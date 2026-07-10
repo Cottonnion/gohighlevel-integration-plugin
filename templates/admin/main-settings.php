@@ -28,7 +28,7 @@ $settings         = $settings_manager->get_settings_array();
 // Get OAuth handler
 $oauth_handler = new \Syncly\API\OAuth\OAuthHandler();
 $oauth_status  = $oauth_handler->get_connection_status();
-$is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
+$is_connected  = $oauth_status['connected'];
 
 // Check for OAuth callback messages
 $oauth_message = '';
@@ -62,7 +62,7 @@ if ( isset( $_GET['oauth'] ) && 'disconnected' === sanitize_key( wp_unslash( $_G
 	$oauth_message = __( 'Successfully disconnected from GoHighLevel.', 'syncly' );
 	// Refresh connection status
 	$oauth_status = $oauth_handler->get_connection_status();
-	$is_connected = $oauth_status['connected'] || ! empty( $settings['api_token'] );
+	$is_connected = $oauth_status['connected'];
 }
 
 ?>

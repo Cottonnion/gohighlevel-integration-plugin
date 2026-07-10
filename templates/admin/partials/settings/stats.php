@@ -37,8 +37,8 @@ if ( $is_oauth_connected && ! empty( $expires_at_raw ) ) {
 	}
 }
 
-// Check if API is connected (via OAuth OR manual API token).
-$api_connected = $is_oauth_connected || ! empty( $settings['api_token'] );
+// Check if API is connected via OAuth.
+$api_connected = $is_oauth_connected;
 $location_id   = $oauth_status['location_id'] ?? '';
 
 // Fallback: Check if location_id exists (means was connected before, even if tokens expired)

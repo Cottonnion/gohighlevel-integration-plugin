@@ -20,7 +20,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Authentication Strategy:
  * - Primary: OAuth2 Bearer tokens obtained via labgenz.com proxy (keeps client secret server-side)
- * - Fallback: Manual Location API Key for simple setups
  *
  * GHL Token Lifetimes (per official docs):
  * - Access token:  24 hours
@@ -224,16 +223,6 @@ class Client implements ClientInterface {
 	 */
 	private string $refresh_token = '';
 
-	/**
-	 * Manual Location API Key (fallback when OAuth is not configured).
-	 *
-	 * If set and no OAuth access token exists, request() uses this for
-	 * Bearer authentication instead.
-	 *
-	 * @var string
-	 */
-	private string $token = '';
-
 	// =========================================================================
 	// Properties — Request State
 	// =========================================================================
@@ -271,7 +260,7 @@ class Client implements ClientInterface {
 	/**
 	 * When true, suppresses automatic OAuth token refresh on 401/403.
 	 *
-	 * Set during manual API key testing so a failing key doesn't trigger
+	 * Set during probe checks so a failing probe does not trigger
 	 * an unrelated refresh attempt on the OAuth tokens.
 	 *
 	 * @var bool
@@ -385,7 +374,7 @@ class Client implements ClientInterface {
 	 *
 	 * Safety:
 	 * - Skips token/reconnect URLs to avoid infinite loops
-	 * - Respects skip_oauth_refresh flag for manual key testing
+	 * - Respects skip_oauth_refresh flag for probe requests
 	 * - Refresh cooldown blocks retry storms when proxy is failing
 	 *
 	 * @param array|\WP_Error $response HTTP response or WP_Error.
@@ -609,7 +598,7 @@ class Client implements ClientInterface {
 
 			$error_message = $body_json['message'];
 
-			// Skip OAuth refresh if flag is set (e.g., during manual API key testing)
+			// Skip OAuth refresh if flag is set (e.g., during scope probes)
 			if ( $this->skip_oauth_refresh ) {
 				return $response;
 			}
@@ -674,7 +663,7 @@ class Client implements ClientInterface {
 
 						return $retry_response;
 					}
-					// If no refresh token (manual API key), just return the error response
+					// If no refresh token is available, just return the error response
 					return $response;
 
 				} catch ( \Exception $e ) {
@@ -711,7 +700,7 @@ class Client implements ClientInterface {
 	/**
 	 * Load settings from options (multisite-aware).
 	 *
-	 * Reads all OAuth tokens, manual API key, location ID, and API version
+	 * Reads all OAuth tokens, location ID, and API version
 	 * from SettingsManager. Called once during construction and again by
 	 * reload_settings() when another process may have refreshed tokens.
 	 *
@@ -733,11 +722,6 @@ class Client implements ClientInterface {
 
 		if ( ! empty( $settings['oauth_refresh_token'] ) ) {
 			$this->refresh_token = $settings['oauth_refresh_token'];
-		}
-
-		// Fallback to manual token if OAuth not configured
-		if ( ! empty( $settings['api_token'] ) ) {
-			$this->token = $settings['api_token'];
 		}
 
 		if ( ! empty( $settings['location_id'] ) ) {
@@ -762,16 +746,6 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Set API token
-	 *
-	 * @param string $token API token.
-	 * @return void
-	 */
-	public function set_token( string $token ): void {
-		$this->token = $token;
-	}
-
-	/**
 	 * Set location ID
 	 *
 	 * @param string $location_id Location ID.
@@ -782,7 +756,7 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Skip OAuth token refresh for manual API key testing
+	 * Skip OAuth token refresh for probe checks.
 	 *
 	 * @param bool $skip Whether to skip OAuth refresh.
 	 * @return void
@@ -1713,9 +1687,8 @@ class Client implements ClientInterface {
 	 * Core request engine used by all HTTP verb helpers (get/post/put/delete).
 	 *
 	 * Authentication:
-	 * - Prefers OAuth2 access token when available
-	 * - Falls back to manual Location API Key
-	 * - Throws AuthenticationException if neither is configured
+	 * - Uses OAuth2 access token
+	 * - Throws AuthenticationException if OAuth is not configured
 	 *
 	 * Token Lifecycle:
 	 * - Calls ensure_fresh_access_token() before sending (proactive refresh)
@@ -1740,15 +1713,11 @@ class Client implements ClientInterface {
 			$this->ensure_fresh_access_token();
 		}
 
-		// Determine which token to use (OAuth2 preferred)
-		$auth_token = '';
-		if ( $this->is_oauth_configured() ) {
-			$auth_token = $this->access_token;
-		} elseif ( ! empty( $this->token ) ) {
-			$auth_token = $this->token;
-		} else {
+		if ( ! $this->is_oauth_configured() ) {
 			throw new AuthenticationException( esc_html__( 'No authentication method configured. Please connect your GoHighLevel account.', 'syncly' ) );
 		}
+
+		$auth_token = $this->access_token;
 
 		// Build request arguments
 		$args = [
@@ -1924,108 +1893,6 @@ class Client implements ClientInterface {
 
 		// Unschedule background refresh since we no longer have tokens
 		self::unschedule_background_refresh();
-	}
-
-	// =========================================================================
-	// Connection Testing
-	// =========================================================================
-
-	/**
-	 * Test a manual API key connection.
-	 *
-	 * Performs a lightweight `GET /contacts/?limit=1` call using the provided
-	 * token and location ID to verify credentials without side effects.
-	 *
-	 * Validation:
-	 * - Rejects empty inputs
-	 * - Detects JWT (temporary) tokens and advises the user to use a
-	 *   permanent Location API Key instead
-	 *
-	 * @param string $api_token   The Location API Key to test.
-	 * @param string $location_id The GHL location (sub-account) ID.
-	 * @return array{success: bool, message: string, data?: array} Result with status and message.
-	 */
-	public function test_manual_connection( string $api_token, string $location_id ): array {
-		// Validate inputs
-		if ( empty( $api_token ) || empty( $location_id ) ) {
-			return [
-				'success' => false,
-				'message' => __( 'API Token and Location ID are required.', 'syncly' ),
-			];
-		}
-
-		// Check if token is JWT format (temporary token, not suitable for permanent integration)
-		if ( strpos( $api_token, 'eyJ' ) === 0 ) {
-			return [
-				'success' => false,
-				'message' => __( 'Invalid API Key Format: You appear to have entered a JWT token (temporary) instead of a Location API Key (permanent). Please get your Location API Key from: Settings → Private Integrations → API Key in your GoHighLevel location.', 'syncly' ),
-			];
-		}
-
-		// Test the connection with a simple API call
-		$test_url = self::BASE_URL . '/contacts/?locationId=' . $location_id . '&limit=1';
-
-		$response = wp_remote_get(
-			$test_url,
-			[
-				'headers' => [
-					'Authorization' => 'Bearer ' . $api_token,
-					'Content-Type'  => 'application/json',
-					'Version'       => $this->api_version,
-				],
-				'timeout' => 30,
-			]
-		);
-
-		if ( is_wp_error( $response ) ) {
-			return [
-				'success' => false,
-				'message' => sprintf(
-					/* translators: %s: Error message */
-					__( 'Connection failed: %s', 'syncly' ),
-					$response->get_error_message()
-				),
-			];
-		}
-
-		$status_code = wp_remote_retrieve_response_code( $response );
-		$body        = wp_remote_retrieve_body( $response );
-
-		if ( $status_code === 200 ) {
-			return [
-				'success' => true,
-				'message' => __( 'Successfully connected to GoHighLevel!', 'syncly' ),
-				'data'    => [
-					'status_code' => $status_code,
-					'preview'     => substr( $body, 0, 200 ),
-				],
-			];
-		}
-
-		// Handle authentication errors
-		if ( $status_code === 401 ) {
-			return [
-				'success' => false,
-				'message' => __( 'Authentication failed. Please verify your API key is correct and has not expired.', 'syncly' ),
-			];
-		}
-
-		if ( $status_code === 403 ) {
-			return [
-				'success' => false,
-				'message' => __( 'Access denied. Please verify your API key has access to this location.', 'syncly' ),
-			];
-		}
-
-		// Generic error
-		return [
-			'success' => false,
-			'message' => sprintf(
-				/* translators: %d: HTTP status code */
-				__( 'Connection failed with status code: %d', 'syncly' ),
-				$status_code
-			),
-		];
 	}
 
 	// =========================================================================

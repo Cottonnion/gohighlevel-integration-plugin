@@ -5,6 +5,12 @@ All notable changes to Syncly will be documented in this file.
 ## [Unreleased]
 
 
+## [1.4.6] - 2026-07-10
+
+### Changed
+
+
+
 ## [1.4.5] - 2026-07-09
 
 ### Changed

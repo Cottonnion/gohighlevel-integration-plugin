@@ -63,7 +63,7 @@ $settings_manager = \Syncly\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
 $oauth_handler    = new \Syncly\API\OAuth\OAuthHandler();
 $oauth_status     = $oauth_handler->get_connection_status();
-$is_connected     = $oauth_status['connected'] || ! empty( $settings['api_token'] );
+$is_connected     = $oauth_status['connected'];
 
 // Define available settings tabs
 $settings_tabs = [

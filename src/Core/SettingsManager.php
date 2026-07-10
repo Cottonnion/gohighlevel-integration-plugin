@@ -216,11 +216,9 @@ class SettingsManager {
 						$new_settings[ $key ] = sanitize_text_field( wp_unslash( $value ) );
 					}
 
-					// Check if API credentials changed
-					if ( in_array( $key, [ 'api_token', 'location_id' ], true ) ) {
-						if ( isset( $current_settings[ $key ] ) && $current_settings[ $key ] !== $new_settings[ $key ] ) {
-							$credentials_changed = true;
-						}
+					// Check if location_id changed.
+					if ( 'location_id' === $key && isset( $current_settings[ $key ] ) && $current_settings[ $key ] !== $new_settings[ $key ] ) {
+						$credentials_changed = true;
 					}
 				}
 			}
@@ -236,22 +234,6 @@ class SettingsManager {
 			);
 
 			$settings = $this->prepare_location_scoped_settings_for_storage( $settings );
-
-			// Validate critical fields only if user is actively trying to set up manual API connection
-			// Don't validate on imports or when only location_id is present
-			$is_setting_manual_api = isset( $new_settings['api_token'] ) && ! empty( $new_settings['api_token'] );
-
-			if ( $is_setting_manual_api ) {
-				// User is trying to set manual API token - require location_id too
-				if ( empty( $settings['location_id'] ) ) {
-					wp_send_json_error(
-						[
-							'message' => __( 'Location ID is required when setting API Token.', 'syncly' ),
-						],
-						400
-					);
-				}
-			}
 
 			// Save settings (multisite aware) - use repository
 			$repository = \Syncly\Core\Settings\SettingsRepository::get_instance();
@@ -326,20 +308,6 @@ class SettingsManager {
 	}
 
 	/**
-	 * Save manual connection settings programmatically
-	 *
-	 * This method is used for internal/programmatic settings updates
-	 * and does NOT require nonce verification. Used by MenuManager for manual API key connections.
-	 *
-	 * @param array $new_settings Settings array to merge with existing settings.
-	 * @return array Result array with 'success' boolean and 'message' string.
-	 */
-	public function save_manual_connection_settings( array $new_settings ): array {
-		$connection_manager = \Syncly\API\ConnectionManager::get_instance();
-		return $connection_manager->save_manual_connection_settings( $new_settings );
-	}
-
-	/**
 	 * Get settings via AJAX
 	 *
 	 * @return void
@@ -362,7 +330,7 @@ class SettingsManager {
 		$settings      = $this->get_settings_array();
 		$oauth_handler = new \Syncly\API\OAuth\OAuthHandler();
 		$oauth_status  = $oauth_handler->get_connection_status();
-		$is_connected  = $oauth_status['connected'] || ! empty( $settings['api_token'] );
+		$is_connected  = $oauth_status['connected'];
 
 		wp_send_json_success(
 			[
