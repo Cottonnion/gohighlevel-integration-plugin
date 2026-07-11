@@ -177,21 +177,9 @@ class UserHooks {
 		// Add registration tags if configured
 		$register_tags = $this->settings_manager->get_location_register_tags();
 
-		// Get role-based tags
-		// During user creation, WordPress hasn't assigned the role to the database yet
-		// We need to read it from $_POST['role'] for admin-created users
+		// Get role-based tags from persisted user role only.
 		$role_tags_manager = RoleTagsManager::get_instance();
-		$role_based_tags   = [];
-
-		// Check if this is an admin-created user (role in POST data)
-		if ( ! empty( $_POST['role'] ) && is_string( $_POST['role'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- WordPress core handles this
-			// Admin is creating user with specific role - use POST data
-			$assigned_role   = sanitize_text_field( wp_unslash( $_POST['role'] ) );
-			$role_based_tags = $role_tags_manager->get_tags_for_role( $assigned_role );
-		} else {
-			// Regular registration or role already assigned - read from user object
-			$role_based_tags = $role_tags_manager->get_user_role_tags( $user_id );
-		}
+		$role_based_tags   = $role_tags_manager->get_user_role_tags( $user_id );
 
 		// Combine registration tags with role-based tags
 		$all_tags = array_merge( $register_tags, $role_based_tags );

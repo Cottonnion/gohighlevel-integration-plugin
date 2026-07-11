@@ -5,6 +5,15 @@ All notable changes to Syncly will be documented in this file.
 ## [Unreleased]
 
 
+## [1.4.7] - 2026-07-11
+
+### Changed
+
+- Security hardening: removed registration-time trust of request role input and now uses persisted user role data for role-tag sync.
+- Security hardening: strengthened admin AJAX guards by enforcing capability checks alongside nonce validation.
+- Security hardening: required admin capability for OAuth admin callback handling before processing query parameters.
+
+
 ## [1.4.6] - 2026-07-10
 
 ### Changed

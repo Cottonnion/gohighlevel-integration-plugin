@@ -38,6 +38,15 @@ class AjaxHandler {
 				403
 			);
 		}
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'Permission denied.', 'syncly' ),
+				],
+				403
+			);
+		}
 	}
 
 	/**
@@ -52,6 +61,15 @@ class AjaxHandler {
 			wp_send_json_error(
 				[
 					'message' => __( 'Security check failed. Please reload the page and try again.', 'syncly' ),
+				],
+				403
+			);
+		}
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'Permission denied.', 'syncly' ),
 				],
 				403
 			);

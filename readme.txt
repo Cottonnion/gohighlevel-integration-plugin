@@ -4,7 +4,7 @@ Tags: gohighlevel, crm, woocommerce, buddyboss, learndash, webhooks
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.4.6
+Stable tag: 1.4.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -53,6 +53,11 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
 == Changelog ==
+
+= 1.4.7 =
+* Security hardening: removed registration-time trust of request role input and now uses persisted user role data for role-tag sync.
+* Security hardening: strengthened admin AJAX guards by enforcing capability checks alongside nonce validation.
+* Security hardening: required admin capability for OAuth admin callback handling before processing query parameters.
 
 = 1.4.6 =
 * Removed legacy manual API-key connection pathways from runtime client flow and kept OAuth-only auth handling.

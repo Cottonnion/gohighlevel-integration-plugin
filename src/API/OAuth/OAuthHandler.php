@@ -159,6 +159,10 @@ class OAuthHandler {
 	 * @return void
 	 */
 	public function handle_admin_oauth_callback(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
 		// Check if this is an OAuth callback - look for 'code' parameter on syncly-admin page
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 
