@@ -323,10 +323,16 @@ jobs:
           VERSION="${{ steps.release_tag.outputs.version }}"
           TAG_URL="${SVN_URL}/tags/${VERSION}"
 
-          if ! svn ls "${TAG_URL}" --username "${WPORG_USERNAME}" --password "${WPORG_SVN_PASSWORD}" --non-interactive > /dev/null 2>&1; then
-            svn copy "${SVN_URL}/trunk" "${TAG_URL}" \
+          # Always delete and recreate the tag so it reflects the exact trunk that was just committed
+          if svn ls "${TAG_URL}" --username "${WPORG_USERNAME}" --password "${WPORG_SVN_PASSWORD}" --non-interactive > /dev/null 2>&1; then
+            svn delete "${TAG_URL}" \
               --username "${WPORG_USERNAME}" \
               --password "${WPORG_SVN_PASSWORD}" \
               --non-interactive \
-              --message "Tagging version ${VERSION}"
+              --message "Remove stale ${VERSION} tag before recreating"
           fi
+          svn copy "${SVN_URL}/trunk" "${TAG_URL}" \
+            --username "${WPORG_USERNAME}" \
+            --password "${WPORG_SVN_PASSWORD}" \
+            --non-interactive \
+            --message "Tagging version ${VERSION}"
