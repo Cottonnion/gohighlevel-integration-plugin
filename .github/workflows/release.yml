@@ -159,6 +159,7 @@ jobs:
               -x "${PLUGIN_SLUG}/docs/*" \
               -x "${PLUGIN_SLUG}/tests/*" \
               -x "${PLUGIN_SLUG}/dist/*" \
+              -x "${PLUGIN_SLUG}/dist-local-check/*" \
               -x "${PLUGIN_SLUG}/build/*" \
               -x "${PLUGIN_SLUG}/node_modules/*" \
               -x "${PLUGIN_SLUG}/vendor/bin/*" \
@@ -271,6 +272,7 @@ jobs:
             --exclude 'docs/' \
             --exclude 'tests/' \
             --exclude 'dist/' \
+            --exclude 'dist-local-check/' \
             --exclude 'build/' \
             --exclude 'node_modules/' \
             --exclude 'vendor/' \
