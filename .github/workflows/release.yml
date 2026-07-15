@@ -213,3 +213,121 @@ jobs:
             dist/${{ steps.release_tag.outputs.zip_name }}
             dist/zip-contents.txt
           generate_release_notes: true
+
+  deploy-wporg:
+    name: Deploy to WordPress.org SVN
+    needs: build-release
+    runs-on: ubuntu-latest
+    env:
+      PLUGIN_SLUG: syncly
+      WPORG_USERNAME: yahyadeved
+      SVN_URL: https://plugins.svn.wordpress.org/syncly
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve release tag
+        id: release_tag
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            RELEASE_TAG="${{ inputs.tag }}"
+          else
+            RELEASE_TAG="${GITHUB_REF_NAME}"
+          fi
+          echo "tag=${RELEASE_TAG}" >> "${GITHUB_OUTPUT}"
+          echo "version=${RELEASE_TAG#v}" >> "${GITHUB_OUTPUT}"
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          tools: composer:v2
+          coverage: none
+
+      - name: Install production Composer dependencies
+        run: composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader --classmap-authoritative
+
+      - name: Install SVN
+        run: sudo apt-get update -q && sudo apt-get install -y subversion
+
+      - name: Checkout SVN trunk
+        run: |
+          set -euo pipefail
+          svn checkout --depth immediates "${SVN_URL}" /tmp/svn-repo
+          svn update --set-depth infinity /tmp/svn-repo/trunk
+          svn update --set-depth infinity /tmp/svn-repo/assets || true
+
+      - name: Sync plugin files to SVN trunk
+        run: |
+          set -euo pipefail
+          STAGING="${RUNNER_TEMP}/syncly-svn"
+          mkdir -p "${STAGING}"
+
+          rsync -a --delete ./ "${STAGING}/" \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude 'docs/' \
+            --exclude 'tests/' \
+            --exclude 'dist/' \
+            --exclude 'build/' \
+            --exclude 'node_modules/' \
+            --exclude 'vendor/' \
+            --exclude '.gitignore' \
+            --exclude '.gitattributes' \
+            --exclude '.editorconfig' \
+            --exclude '.phpunit.result.cache' \
+            --exclude 'phpunit.xml' \
+            --exclude 'phpunit.xml.dist' \
+            --exclude 'phpcs.xml' \
+            --exclude 'phpcs.xml.dist' \
+            --exclude 'build-minify.php' \
+            --exclude 'check' \
+            --exclude 'fix' \
+            --exclude 'zip-exclude.txt' \
+            --exclude 'zip-excludes.txt' \
+            --exclude 'README.md' \
+            --exclude 'DEV_CHANGELOG.md' \
+            --exclude 'FEATURES-AND-BENEFITS.md' \
+            --exclude 'PRODUCTION-BUILD.md' \
+            --exclude '*.zip' \
+            --exclude '*.map' \
+            --exclude '.DS_Store'
+
+          # Re-install production-only vendor
+          composer install --working-dir="${STAGING}" --no-dev --prefer-dist --no-interaction --optimize-autoloader --classmap-authoritative
+
+          rsync -a --delete "${STAGING}/" /tmp/svn-repo/trunk/ \
+            --exclude '.svn/'
+
+      - name: Stage SVN changes (add new / remove deleted)
+        run: |
+          cd /tmp/svn-repo
+          svn status | grep '^?' | awk '{print $2}' | xargs -r svn add --force
+          svn status | grep '^!'  | awk '{print $2}' | xargs -r svn delete --force
+
+      - name: Create SVN tag for this version
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.release_tag.outputs.version }}"
+          TAG_URL="${SVN_URL}/tags/${VERSION}"
+
+          # Only create if not already present
+          if ! svn ls "${TAG_URL}" > /dev/null 2>&1; then
+            svn copy /tmp/svn-repo/trunk "${TAG_URL}" \
+              --parents \
+              --message "Tagging version ${VERSION}"
+          fi
+
+      - name: Commit to SVN
+        env:
+          WPORG_SVN_PASSWORD: ${{ secrets.WPORG_SVN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          cd /tmp/svn-repo
+          svn commit \
+            --username "${WPORG_USERNAME}" \
+            --password "${WPORG_SVN_PASSWORD}" \
+            --non-interactive \
+            --message "Release ${{ steps.release_tag.outputs.tag }}"

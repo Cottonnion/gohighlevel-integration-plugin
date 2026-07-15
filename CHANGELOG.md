@@ -5,6 +5,17 @@ All notable changes to Syncly will be documented in this file.
 ## [Unreleased]
 
 
+## [1.4.8] - 2026-07-15
+
+### Fixed
+
+- Dropdown and tag selector styling no longer conflicts with LearnDash, WooCommerce, or other plugins, Syncly's styles now only apply inside Syncly's own admin pages.
+
+### Added
+
+- Releases are now automatically published to the WordPress.org plugin directory when a new version is tagged.
+
+
 ## [1.4.7] - 2026-07-11
 
 ### Changed
