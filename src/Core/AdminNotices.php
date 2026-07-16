@@ -257,6 +257,9 @@ class AdminNotices {
 	 * @return void
 	 */
 	public function display_global_notices(): void {
+		// TEMP: deploy verification notice — remove after confirming deploy works.
+		echo '<div class="notice notice-success"><p><strong>Syncly deploy test ✓</strong> — v1.4.8 deployed successfully via GitHub Actions. You can remove this notice.</p></div>';
+
 		// Only show global notices
 		$notices = $this->get_stored_notices();
 
