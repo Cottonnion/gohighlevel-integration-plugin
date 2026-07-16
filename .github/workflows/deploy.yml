@@ -30,4 +30,13 @@ jobs:
               cd "${DEPLOY_PATH}"
             fi
 
-            composer install --no-dev --optimize-autoloader --no-interaction
+            # Resolve composer — cPanel servers often have it under a versioned path
+            if command -v composer &>/dev/null; then
+              COMPOSER="composer"
+            elif [ -f /usr/local/bin/composer ]; then
+              COMPOSER="/usr/local/bin/composer"
+            else
+              COMPOSER=$(find /opt /usr/local /home -name 'composer' -type f 2>/dev/null | head -1)
+            fi
+
+            ${COMPOSER} install --no-dev --optimize-autoloader --no-interaction
