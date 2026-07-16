@@ -17,6 +17,17 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            cd ${{ secrets.SSH_PATH }}
-            git pull https://Cottonnion:${{ secrets.GH_TOKEN }}@github.com/Cottonnion/syncly.git ${{ github.ref_name }}
+            DEPLOY_PATH="${{ secrets.SSH_PATH }}"
+            REPO_URL="https://Cottonnion:${{ secrets.GH_TOKEN }}@github.com/Cottonnion/gohighlevel-integration-plugin.git"
+
+            if [ -d "${DEPLOY_PATH}/.git" ]; then
+              cd "${DEPLOY_PATH}"
+              git fetch origin
+              git reset --hard origin/main
+            else
+              rm -rf "${DEPLOY_PATH}"
+              git clone "${REPO_URL}" "${DEPLOY_PATH}"
+              cd "${DEPLOY_PATH}"
+            fi
+
             composer install --no-dev --optimize-autoloader --no-interaction
