@@ -74,8 +74,20 @@ class AdminNotices {
 		// Display notices on all admin pages (for global notices)
 		add_action( 'admin_notices', [ $this, 'display_global_notices' ] );
 
+		// TEMP: deploy verification notice.
+		add_action( 'admin_notices', [ $this, 'display_deploy_test_notice' ] );
+
 		// AJAX handler for dismissing optional notices.
 		add_action( 'wp_ajax_syncly_dismiss_upgrade_notice', [ $this, 'ajax_dismiss_upgrade_notice' ] );
+	}
+
+	/**
+	 * Temporary deploy verification notice — remove after confirming deploy works.
+	 *
+	 * @return void
+	 */
+	public function display_deploy_test_notice(): void {
+		echo '<div class="notice notice-success is-dismissible"><p><strong>Syncly deploy test ✓</strong> — v1.4.8 deployed via GitHub Actions.</p></div>';
 	}
 
 	/**
@@ -257,9 +269,6 @@ class AdminNotices {
 	 * @return void
 	 */
 	public function display_global_notices(): void {
-		// TEMP: deploy verification notice — remove after confirming deploy works.
-		echo '<div class="notice notice-success"><p><strong>Syncly deploy test ✓</strong> — v1.4.8 deployed successfully via GitHub Actions. You can remove this notice.</p></div>';
-
 		// Only show global notices
 		$notices = $this->get_stored_notices();
 
