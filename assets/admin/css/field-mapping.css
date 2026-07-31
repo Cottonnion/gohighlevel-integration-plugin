@@ -185,6 +185,24 @@
 	color: #fff;
 }
 
+.ghl-lazy-dropdown__option--create {
+	color: #2271b1;
+	border-top: 1px solid #dcdcde;
+	font-style: italic;
+}
+
+.ghl-lazy-dropdown__option--create:hover,
+.ghl-lazy-dropdown__option--create.ghl-lazy-dropdown__option--focused {
+	background-color: #e8f0fe;
+	color: #135e96;
+}
+
+.ghl-lazy-select--creating {
+	opacity: 0.6;
+	pointer-events: none;
+	cursor: default;
+}
+
 .ghl-toggle-button {
 	margin-top: 8px;
 	display: inline-flex;

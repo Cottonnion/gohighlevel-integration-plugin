@@ -52,6 +52,7 @@ class MetadataService {
 		add_action( 'wp_ajax_syncly_get_tags', [ $this, 'get_tags' ] );
 		add_action( 'wp_ajax_syncly_get_custom_fields', [ $this, 'get_custom_fields' ] );
 		add_action( 'wp_ajax_syncly_refresh_metadata', [ $this, 'refresh_metadata' ] );
+		add_action( 'wp_ajax_syncly_create_custom_field', [ $this, 'create_custom_field' ] );
 	}
 
 	/**
@@ -381,6 +382,82 @@ class MetadataService {
 			'source'      => __( 'Source', 'syncly' ),
 			'dateOfBirth' => __( 'Date of Birth', 'syncly' ),
 		];
+	}
+
+	/**
+	 * AJAX handler: Create a new custom field in GHL and return its key/label.
+	 *
+	 * Calls POST /locations/{locationId}/customFields with dataType TEXT.
+	 * On success, busts the fields transient so the new field appears on
+	 * the next server-side render, then returns { key, label } to the JS.
+	 *
+	 * @return void
+	 */
+	public function create_custom_field(): void {
+		check_ajax_referer( 'syncly_field_mapping_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( [ 'message' => __( 'You do not have permission to create custom fields.', 'syncly' ) ], 403 );
+		}
+
+		$field_name = isset( $_POST['field_name'] ) ? sanitize_text_field( wp_unslash( $_POST['field_name'] ) ) : '';
+
+		if ( '' === $field_name || mb_strlen( $field_name ) > 255 ) {
+			wp_send_json_error( [ 'message' => __( 'Invalid field name.', 'syncly' ) ], 400 );
+		}
+
+		$settings_manager = SettingsManager::get_instance();
+		$settings         = $settings_manager->get_settings_array();
+		$location_id      = $settings['location_id'] ?? '';
+
+		if ( empty( $location_id ) ) {
+			wp_send_json_error( [ 'message' => __( 'Location ID not configured. Please connect to GoHighLevel first.', 'syncly' ) ], 400 );
+		}
+
+		try {
+			$client   = \Syncly\API\Client\Client::get_instance();
+			// Pass false so locationId is not added to body or query — it is already in the path.
+			$response = $client->post(
+				'locations/' . $location_id . '/customFields',
+				[
+					'name'     => $field_name,
+					'dataType' => 'TEXT',
+				],
+				false
+			);
+
+			$field = $response['customField'] ?? [];
+			$id    = $field['id'] ?? '';
+			$name  = isset( $field['name'] ) ? sanitize_text_field( $field['name'] ) : $field_name;
+
+			if ( empty( $id ) ) {
+				wp_send_json_error( [ 'message' => __( 'GoHighLevel did not return a field ID.', 'syncly' ) ], 500 );
+			}
+
+			// Bust the fields transient so the new field is included on next server-side render.
+			$site_id       = get_current_blog_id();
+			$transient_key = 'syncly_fields_' . $location_id . '_site_' . $site_id;
+			delete_transient( $transient_key );
+
+			wp_send_json_success(
+				[
+					'key'   => 'custom.' . sanitize_key( $id ),
+					'label' => $name . ' (Custom)',
+				]
+			);
+
+		} catch ( \Exception $e ) {
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: error message */
+						__( 'Failed to create custom field: %s', 'syncly' ),
+						$e->getMessage()
+					),
+				],
+				500
+			);
+		}
 	}
 
 	/** Prevent cloning. */

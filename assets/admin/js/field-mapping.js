@@ -314,6 +314,10 @@
 			);
 		}
 
+		// Create-new-field option — revealed when the user types a non-matching query.
+		var $createOption = $('<div class="ghl-lazy-dropdown__option ghl-lazy-dropdown__option--create" data-create="true" style="display:none;"></div>');
+		$list.append($createOption);
+
 		$dropdown.append($search).append($list);
 
 		// Append dropdown to body so it is never clipped by overflow:hidden ancestors
@@ -336,17 +340,30 @@
 
 		// Live search filtering
 		$search.on('input', function() {
-			var query = this.value.toLowerCase();
-			$list.find('.ghl-lazy-dropdown__option').each(function() {
+			var query = this.value.trim();
+			var queryLower = query.toLowerCase();
+			$list.find('.ghl-lazy-dropdown__option:not(.ghl-lazy-dropdown__option--create)').each(function() {
 				var text = this.textContent.toLowerCase();
 				var val  = (this.getAttribute('data-value') || '').toLowerCase();
-				this.style.display = (text.indexOf(query) !== -1 || val.indexOf(query) !== -1) ? '' : 'none';
+				this.style.display = (text.indexOf(queryLower) !== -1 || val.indexOf(queryLower) !== -1) ? '' : 'none';
 			});
+			if (query.length >= 1) {
+				$createOption.text('+ Create new GHL field: "' + query + '"').attr('data-create-name', query).show();
+			} else {
+				$createOption.hide();
+			}
 		});
 
 		// Option click
 		$list.on('click', '.ghl-lazy-dropdown__option', function(e) {
 			e.stopPropagation();
+			if ($(this).attr('data-create') === 'true') {
+				var fieldName = $(this).attr('data-create-name') || '';
+				if (fieldName) {
+					createNewCustomField($trigger, fieldName);
+				}
+				return;
+			}
 			selectValue($trigger, $(this).attr('data-value') || '');
 			closeDropdown();
 		});
@@ -386,6 +403,93 @@
 				if ($focused.length) {
 					$focused.trigger('click');
 				}
+			}
+		});
+	}
+
+	/**
+	 * Call the server to create a new GHL custom field, then select it on the trigger.
+	 *
+	 * @param {jQuery} $trigger   The .ghl-lazy-select element that initiated the action.
+	 * @param {string} fieldName  Human-readable name for the new field.
+	 */
+	function createNewCustomField($trigger, fieldName) {
+		closeDropdown();
+
+		var $text       = $trigger.find('.ghl-lazy-select__text');
+		var originalText = $text.text();
+		$text.text('Creating…');
+		$trigger.addClass('ghl-lazy-select--creating');
+
+		var nonce = (typeof syncly_field_mapping_js_data !== 'undefined') ? syncly_field_mapping_js_data.nonce : '';
+
+		$.ajax({
+			url: window.ajaxurl,
+			type: 'POST',
+			data: {
+				action: 'syncly_create_custom_field',
+				nonce: nonce,
+				field_name: fieldName
+			},
+			success: function(response) {
+				if (response.success) {
+					var key   = response.data.key;
+					var label = response.data.label;
+
+					// Register in local cache so it shows in future dropdowns.
+					window.Syncly_FIELDS = window.Syncly_FIELDS || {};
+					window.Syncly_FIELDS[key] = label;
+
+					selectValue($trigger, key);
+
+					if (typeof Swal !== 'undefined') {
+						Swal.fire({
+							icon: 'success',
+							title: 'Field Created',
+							text: '"' + label + '" was created in GoHighLevel.',
+							toast: true,
+							position: 'top-end',
+							showConfirmButton: false,
+							timer: 3000,
+							timerProgressBar: true,
+							customClass: { popup: 'ghl-swal-top-toast' }
+						});
+					}
+				} else {
+					$text.text(originalText);
+					if (typeof Swal !== 'undefined') {
+						Swal.fire({
+							icon: 'error',
+							title: 'Error',
+							text: (response.data && response.data.message) ? response.data.message : 'Failed to create custom field.',
+							toast: true,
+							position: 'top-end',
+							showConfirmButton: false,
+							timer: 5000,
+							timerProgressBar: true,
+							customClass: { popup: 'ghl-swal-top-toast' }
+						});
+					}
+				}
+			},
+			error: function() {
+				$text.text(originalText);
+				if (typeof Swal !== 'undefined') {
+					Swal.fire({
+						icon: 'error',
+						title: 'Error',
+						text: 'Network error. Failed to create custom field.',
+						toast: true,
+						position: 'top-end',
+						showConfirmButton: false,
+						timer: 5000,
+						timerProgressBar: true,
+						customClass: { popup: 'ghl-swal-top-toast' }
+					});
+				}
+			},
+			complete: function() {
+				$trigger.removeClass('ghl-lazy-select--creating');
 			}
 		});
 	}

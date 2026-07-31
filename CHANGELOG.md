@@ -5,6 +5,17 @@ All notable changes to Syncly will be documented in this file.
 ## [Unreleased]
 
 
+## [1.4.9] - 2026-07-31
+
+### Added
+
+- Field Mapping: users can now create a brand-new GoHighLevel custom field directly from the mapping dropdown. Type a name that doesn't match any existing field and a **"+ Create new GHL field: …"** option appears; selecting it calls the GHL custom fields API (TEXT type), registers the returned field ID in the local cache, and selects it immediately — no page reload required.
+
+### Changed
+
+- Field Mapping lazy dropdown search now excludes the "create" option from the standard filter loop, so it is always visible while the user is typing.
+
+
 ## [1.4.8] - 2026-07-15
 
 ### Fixed
