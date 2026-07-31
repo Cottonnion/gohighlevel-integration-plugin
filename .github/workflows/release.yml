@@ -218,6 +218,7 @@ jobs:
   deploy-wporg:
     name: Deploy to WordPress.org SVN
     needs: build-release
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
       PLUGIN_SLUG: syncly
