@@ -4,7 +4,7 @@ Tags: gohighlevel, crm, woocommerce, buddyboss, learndash
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.4.9
+Stable tag: 1.4.10
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -53,6 +53,12 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
 == Changelog ==
+
+= 1.4.10 =
+* Queue processing cadence reduced from 10 seconds to 5 minutes to lower continuous background load on production sites.
+* Added one-time queue schedule migration to remove legacy high-frequency sync schedule entries.
+* Action Scheduler bootstrap hardened: Syncly now loads bundled Action Scheduler only when no provider is already available.
+* Preserved standalone compatibility for sites without WooCommerce while reducing duplicate-loader risk.
 
 = 1.4.7 =
 * Security hardening: removed registration-time trust of request role input and now uses persisted user role data for role-tag sync.

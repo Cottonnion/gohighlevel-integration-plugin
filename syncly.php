@@ -3,7 +3,7 @@
  * Plugin Name:       Syncly for GoHighLevel
  * Plugin URI:        https://highlevelsync.com/
  * Description:       WordPress integration plugin that connects WordPress, WooCommerce, BuddyBoss, and LearnDash with GoHighLevel CRM for real-time two-way sync and automation.
- * Version:           1.4.9
+ * Version:           1.4.10
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            LabGenz Team
@@ -29,7 +29,7 @@ if ( ! defined( 'SYNCLY_PLUGIN_NAME' ) ) {
 }
 
 if ( ! defined( 'SYNCLY_VERSION' ) ) {
-	define( 'SYNCLY_VERSION', '1.4.9' );
+	define( 'SYNCLY_VERSION', '1.4.10' );
 }
 
 if ( ! defined( 'SYNCLY_PATH' ) ) {
@@ -78,15 +78,28 @@ if ( file_exists( SYNCLY_PATH . 'vendor/autoload.php' ) ) {
 	return;
 }
 
-// Initialize Action Scheduler
-if ( file_exists( SYNCLY_PATH . 'vendor/woocommerce/action-scheduler/action-scheduler.php' ) ) {
-	require_once SYNCLY_PATH . 'vendor/woocommerce/action-scheduler/action-scheduler.php';
-}
-
 // Initialize the plugin
 function syncly_init() {
 	return \Syncly\Core\Loader::get_instance();
 }
+
+/**
+ * Load bundled Action Scheduler only when no other provider has loaded it.
+ *
+ * @return void
+ */
+function syncly_maybe_load_action_scheduler(): void {
+	if ( function_exists( 'as_schedule_recurring_action' ) || class_exists( 'ActionScheduler', false ) || class_exists( 'ActionScheduler_Versions', false ) ) {
+		return;
+	}
+
+	$action_scheduler_file = SYNCLY_PATH . 'vendor/woocommerce/action-scheduler/action-scheduler.php';
+	if ( file_exists( $action_scheduler_file ) ) {
+		require_once $action_scheduler_file;
+	}
+}
+
+add_action( 'plugins_loaded', 'syncly_maybe_load_action_scheduler', 1 );
 
 // Start the plugin
 syncly_init();

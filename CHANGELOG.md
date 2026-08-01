@@ -4,6 +4,14 @@ All notable changes to Syncly will be documented in this file.
 
 ## [Unreleased]
 
+## [1.4.10] - 2026-08-01
+
+### Changed
+
+- Queue processing cadence now runs every 5 minutes instead of every 10 seconds to reduce constant background churn and server pressure.
+- Added a one-time schedule migration that clears legacy high-frequency `syncly_process_queue` jobs and re-seeds with the new cadence.
+- Action Scheduler loading is now conditional: Syncly loads its bundled copy only when no Action Scheduler provider is already available.
+
 
 ## [1.4.9] - 2026-07-31
 

@@ -157,6 +157,11 @@ class Loader {
 	 * @return array Modified schedules.
 	 */
 	public function add_cron_schedules( array $schedules ): array {
+		$schedules['syncly_5min'] = array(
+			'interval' => 5 * MINUTE_IN_SECONDS,
+			'display'  => 'Every 5 Minutes',
+		);
+
 		$schedules['syncly_15min'] = array(
 			'interval' => 15 * MINUTE_IN_SECONDS,
 			'display'  => 'Every 15 Minutes',

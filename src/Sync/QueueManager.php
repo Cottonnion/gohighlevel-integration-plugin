@@ -38,7 +38,12 @@ class QueueManager {
 	/**
 	 * Queue processing interval in seconds
 	 */
-	private const PROCESSING_INTERVAL = 10;
+	private const PROCESSING_INTERVAL = 5 * MINUTE_IN_SECONDS;
+
+	/**
+	 * Queue schedule schema version
+	 */
+	private const QUEUE_SCHEDULE_VERSION = 2;
 
 	/**
 	 * Singleton instance
@@ -121,8 +126,8 @@ class QueueManager {
 	 * is fully loaded.
 	 *
 	 * Scheduling Strategy:
-	 * - Primary: Action Scheduler with 10-second interval (PROCESSING_INTERVAL constant)
-	 * - Fallback: WP-Cron with 1-minute interval (if Action Scheduler unavailable)
+	 * - Primary: Action Scheduler with 5-minute interval (PROCESSING_INTERVAL constant)
+	 * - Fallback: WP-Cron with 5-minute interval (if Action Scheduler unavailable)
 	 *
 	 * Action Scheduler Benefits:
 	 * - More reliable than WP-Cron (doesn't require site traffic)
@@ -137,7 +142,9 @@ class QueueManager {
 	 * @return void
 	 */
 	public function schedule_queue_processor(): void {
-		// Schedule recurring action via Action Scheduler (runs every 10 seconds)
+		$this->maybe_migrate_queue_schedule();
+
+		// Schedule recurring action via Action Scheduler (runs every 5 minutes)
 		if ( function_exists( 'as_next_scheduled_action' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {
 			$next_scheduled = as_next_scheduled_action( 'syncly_process_queue' );
 
@@ -146,7 +153,37 @@ class QueueManager {
 			}
 		} elseif ( ! wp_next_scheduled( 'syncly_process_queue' ) ) {
 			// Fallback to WP-Cron if Action Scheduler not available or not yet initialized.
-			wp_schedule_event( time(), 'every_minute', 'syncly_process_queue' );
+			wp_schedule_event( time(), 'syncly_5min', 'syncly_process_queue' );
+		}
+	}
+
+	/**
+	 * One-time migration to replace older high-frequency schedules.
+	 *
+	 * @return void
+	 */
+	private function maybe_migrate_queue_schedule(): void {
+		$stored_version = (int) get_option( 'syncly_queue_schedule_version', 0 );
+		if ( $stored_version >= self::QUEUE_SCHEDULE_VERSION ) {
+			return;
+		}
+
+		$did_unschedule = false;
+
+		if ( function_exists( 'as_unschedule_all_actions' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {
+			as_unschedule_all_actions( 'syncly_process_queue', [], 'syncly' );
+			$did_unschedule = true;
+		}
+
+		$timestamp = wp_next_scheduled( 'syncly_process_queue' );
+		while ( $timestamp ) {
+			wp_unschedule_event( $timestamp, 'syncly_process_queue' );
+			$timestamp      = wp_next_scheduled( 'syncly_process_queue' );
+			$did_unschedule = true;
+		}
+
+		if ( $did_unschedule || ! function_exists( 'as_unschedule_all_actions' ) ) {
+			update_option( 'syncly_queue_schedule_version', self::QUEUE_SCHEDULE_VERSION, false );
 		}
 	}
 
@@ -267,7 +304,7 @@ class QueueManager {
 	}
 
 	/**
-	 * Process queue (run by Action Scheduler every 10 seconds)
+	 * Process queue (run by scheduler every 5 minutes)
 	 *
 	 * Main queue processor that runs on a recurring schedule. This is the entry point
 	 * for all background sync operations.
@@ -1169,7 +1206,7 @@ class QueueManager {
 	 * - System resources are constrained
 	 * - Integration failures are accumulating
 	 *
-	 * Called automatically by process_queue() on every run (every 10 seconds).
+	 * Called automatically by process_queue() on every run (every 5 minutes).
 	 *
 	 * Threshold:
 	 * - Default: 1000 pending items

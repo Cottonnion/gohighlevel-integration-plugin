@@ -4,6 +4,25 @@ Internal changelog with full technical details. **Not included in release zips.*
 
 ---
 
+## [1.4.10] - 2026-08-01
+
+### Queue and Scheduler Hardening
+
+- `src/Sync/QueueManager.php`
+  - Changed `PROCESSING_INTERVAL` from 10 seconds to `5 * MINUTE_IN_SECONDS`.
+  - Added one-time queue schedule migration (`syncly_queue_schedule_version`) to unschedule legacy high-frequency `syncly_process_queue` jobs before re-seeding with the new cadence.
+  - Updated WP-Cron fallback to use a 5-minute schedule slug (`syncly_5min`) instead of `every_minute`.
+
+- `src/Core/Loader.php`
+  - Registered `syncly_5min` in `add_cron_schedules()` for fallback scheduling consistency.
+
+- `syncly.php`
+  - Replaced unconditional Action Scheduler bootstrap with `syncly_maybe_load_action_scheduler()`.
+  - Syncly now loads bundled Action Scheduler only when no provider is already available (`as_schedule_recurring_action` / `ActionScheduler` / `ActionScheduler_Versions` checks), preserving standalone support while reducing duplicate-loader risk.
+
+- `composer.json`
+  - Kept `woocommerce/action-scheduler` as a dependency so non-WooCommerce installs remain supported.
+
 ## [1.2.0] - 2026-03-26
 
 ### Free / Pro Separation — Hook-Based Architecture
