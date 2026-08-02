@@ -4,7 +4,7 @@ Tags: gohighlevel, crm, woocommerce, buddyboss, learndash
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.4.10
+Stable tag: 1.4.12
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -53,6 +53,11 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
 == Changelog ==
+
+= 1.4.12 =
+* Added typed custom-field creation support (`DATE`, `NUMBER`, and `TEXT`) for shared field-mapping create flows used by Syncly Pro settings.
+* Added deferred create-option resolution in settings save so Login Sync field selections can create missing GHL custom fields reliably on save.
+* Improved user profile contact ID display resolution to prefer location-scoped contact meta and safely fall back to legacy contact keys.
 
 = 1.4.10 =
 * Queue processing cadence reduced from 10 seconds to 5 minutes to lower continuous background load on production sites.

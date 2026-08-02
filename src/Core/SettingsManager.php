@@ -223,6 +223,11 @@ class SettingsManager {
 				}
 			}
 
+			$new_settings = $this->resolve_deferred_login_sync_custom_fields(
+				$new_settings,
+				$current_settings
+			);
+
 			// Merge with current settings to preserve unmodified fields
 			$settings = array_merge(
 				$current_settings,
@@ -593,6 +598,143 @@ class SettingsManager {
 		}
 
 		return $sanitized;
+	}
+
+	/**
+	 * Create pending Login Sync custom fields selected from Select2 create options.
+	 *
+	 * @param array $new_settings     Settings from the current POST request.
+	 * @param array $current_settings Existing hydrated settings.
+	 * @return array Settings with pending create values replaced by raw GHL custom field IDs.
+	 * @throws \Exception When GHL cannot create the requested field.
+	 */
+	private function resolve_deferred_login_sync_custom_fields( array $new_settings, array $current_settings ): array {
+		$login_field_types = [
+			'login_last_login_field_id' => 'DATE',
+			'login_count_field_id'      => 'NUMBER',
+		];
+
+		foreach ( $login_field_types as $setting_key => $field_type ) {
+			if ( empty( $new_settings[ $setting_key ] ) || ! is_string( $new_settings[ $setting_key ] ) ) {
+				continue;
+			}
+
+			$field_name = $this->get_deferred_custom_field_name( $new_settings[ $setting_key ] );
+			if ( '' === $field_name ) {
+				continue;
+			}
+
+			$new_settings[ $setting_key ] = $this->resolve_or_create_custom_field_id(
+				$field_name,
+				$field_type,
+				array_merge( $current_settings, $new_settings )
+			);
+		}
+
+		return $new_settings;
+	}
+
+	/**
+	 * Extract the field name from a deferred Select2 create value.
+	 *
+	 * @param string $value Submitted setting value.
+	 * @return string Field name, or empty string when value is not deferred.
+	 */
+	private function get_deferred_custom_field_name( string $value ): string {
+		$prefix = '__create__:';
+		if ( 0 !== strpos( $value, $prefix ) ) {
+			return '';
+		}
+
+		return trim( substr( $value, strlen( $prefix ) ) );
+	}
+
+	/**
+	 * Find an existing GHL custom field by name, or create it with the requested type.
+	 *
+	 * @param string $field_name Field name to find or create.
+	 * @param string $field_type GHL custom field data type.
+	 * @param array  $settings   Hydrated settings for resolving the active location.
+	 * @return string Raw GHL custom field ID.
+	 * @throws \Exception When validation fails or GHL does not return an ID.
+	 */
+	private function resolve_or_create_custom_field_id( string $field_name, string $field_type, array $settings ): string {
+		$field_name = sanitize_text_field( wp_unslash( $field_name ) );
+		if ( '' === $field_name || mb_strlen( $field_name ) > 255 ) {
+			throw new \Exception( __( 'Invalid custom field name.', 'syncly' ) );
+		}
+
+		$location_id = $this->get_location_id_from_settings( $settings );
+		if ( '' === $location_id ) {
+			throw new \Exception( __( 'Location ID not configured. Please connect to GoHighLevel first.', 'syncly' ) );
+		}
+
+		$fields_data    = \Syncly\Core\Settings\MetadataService::get_instance()->get_syncly_fields_cached( true );
+		$existing_field = $this->find_matching_custom_field_id( $field_name, $fields_data );
+		if ( '' !== $existing_field ) {
+			return $existing_field;
+		}
+
+		$client   = \Syncly\API\Client\Client::get_instance();
+		$response = $client->post(
+			'locations/' . $location_id . '/customFields',
+			[
+				'name'     => $field_name,
+				'dataType' => $field_type,
+			],
+			false
+		);
+
+		$field = $response['customField'] ?? [];
+		$id    = isset( $field['id'] ) ? sanitize_text_field( (string) $field['id'] ) : '';
+
+		if ( '' === $id ) {
+			throw new \Exception( __( 'GoHighLevel did not return a field ID.', 'syncly' ) );
+		}
+
+		$transient_key = 'syncly_fields_' . $location_id . '_site_' . get_current_blog_id();
+		delete_transient( $transient_key );
+
+		return $id;
+	}
+
+	/**
+	 * Find a matching custom field ID in cached GHL field data.
+	 *
+	 * @param string $field_name Requested custom field name.
+	 * @param array  $fields_data Cached fields payload.
+	 * @return string Raw GHL custom field ID, or empty string.
+	 */
+	private function find_matching_custom_field_id( string $field_name, array $fields_data ): string {
+		$normalized_name = $this->normalize_custom_field_name( $field_name );
+		if ( '' === $normalized_name ) {
+			return '';
+		}
+
+		foreach ( $fields_data['fields'] ?? [] as $key => $label ) {
+			if ( strpos( (string) $key, 'custom.' ) !== 0 ) {
+				continue;
+			}
+
+			$existing_label = str_replace( ' (Custom)', '', (string) $label );
+			if ( $this->normalize_custom_field_name( $existing_label ) === $normalized_name ) {
+				return substr( (string) $key, 7 );
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Normalize a custom field name for loose matching.
+	 *
+	 * @param string $value Raw field name or label.
+	 * @return string Normalized string.
+	 */
+	private function normalize_custom_field_name( string $value ): string {
+		$value = strtolower( trim( preg_replace( '/\s+/', ' ', $value ) ) );
+		$value = preg_replace( '/[^a-z0-9]+/', '', $value ) ?? '';
+		return $value;
 	}
 
 	/**

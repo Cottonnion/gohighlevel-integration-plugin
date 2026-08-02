@@ -239,6 +239,44 @@ class UserProfileFields {
 	}
 
 	/**
+	 * Resolve the contact ID to use for profile display and links.
+	 *
+	 * Prefers the location-scoped meta value for the current location and only
+	 * falls back to the legacy global key when no scoped value is present.
+	 *
+	 * @param int         $user_id     WordPress user ID.
+	 * @param string|null $location_id GHL location ID.
+	 * @return string
+	 */
+	private function resolve_contact_id_for_display( int $user_id, ?string $location_id = null ): string {
+		$location_id = trim( (string) $location_id );
+		$tag_manager  = $this->get_tag_manager();
+		$meta_keys    = [];
+
+		if ( '' !== $location_id ) {
+			$meta_keys[] = $tag_manager->get_user_contact_id_meta_key( $location_id );
+		}
+
+		$meta_keys[] = TagManager::LEGACY_CONTACT_META_KEY;
+
+		foreach ( $meta_keys as $meta_key ) {
+			if ( '' === $meta_key ) {
+				continue;
+			}
+
+			$contact_id = get_user_meta( $user_id, $meta_key, true );
+			if ( is_scalar( $contact_id ) ) {
+				$contact_id = trim( (string) $contact_id );
+				if ( '' !== $contact_id ) {
+					return $contact_id;
+				}
+			}
+		}
+
+		return '';
+	}
+
+	/**
 	 * Register assets via AssetsManager for user profile screens.
 	 */
 	private function register_assets(): void {
@@ -318,7 +356,7 @@ class UserProfileFields {
 
 		// Get GHL data
 		$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
-		$contact_id  = \Syncly\Sync\TagManager::get_instance()->get_user_contact_id( $user->ID, $location_id );
+		$contact_id  = $this->resolve_contact_id_for_display( $user->ID, $location_id );
 
 		// Only show sync timestamps when the user actually has a contact on this location.
 		$last_sync       = $contact_id ? get_user_meta( $user->ID, '_ghl_last_sync', true ) : '';

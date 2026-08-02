@@ -443,6 +443,12 @@ class MetadataService {
 		}
 
 		$field_name = isset( $_POST['field_name'] ) ? sanitize_text_field( wp_unslash( $_POST['field_name'] ) ) : '';
+		$field_type = isset( $_POST['field_type'] ) ? sanitize_text_field( wp_unslash( $_POST['field_type'] ) ) : '';
+		$allowed_field_types = [ 'TEXT', 'NUMBER', 'DATE', 'DATETIME', 'CHECKBOX', 'DROPDOWN', 'MULTI_SELECT' ];
+		$field_type = strtoupper( $field_type );
+		if ( ! in_array( $field_type, $allowed_field_types, true ) ) {
+			$field_type = 'TEXT';
+		}
 
 		if ( '' === $field_name || mb_strlen( $field_name ) > 255 ) {
 			wp_send_json_error( [ 'message' => __( 'Invalid field name.', 'syncly' ) ], 400 );
@@ -476,7 +482,7 @@ class MetadataService {
 				'locations/' . $location_id . '/customFields',
 				[
 					'name'     => $field_name,
-					'dataType' => 'TEXT',
+					'dataType' => $field_type,
 				],
 				false
 			);
@@ -496,11 +502,12 @@ class MetadataService {
 
 			wp_send_json_success(
 				[
-					'key'     => 'custom.' . sanitize_key( $id ),
-					'label'   => $name . ' (Custom)',
-					'created' => true,
-					'existing' => false,
-					'message' => __( 'Custom field created successfully.', 'syncly' ),
+					'key'       => 'custom.' . sanitize_key( $id ),
+					'label'     => $name . ' (Custom)',
+					'created'   => true,
+					'existing'  => false,
+					'field_type' => $field_type,
+					'message'   => __( 'Custom field created successfully.', 'syncly' ),
 				]
 			);
 

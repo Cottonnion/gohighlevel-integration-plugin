@@ -505,6 +505,18 @@
 	 * @param {jQuery} $select
 	 * @param {string} fieldName
 	 */
+	function getFieldTypeForContext($context) {
+		var $row = $context && $context.closest ? $context.closest('tr') : null;
+		var $select = $row && $row.find ? $row.find('.ghl-custom-field-type-select').first() : null;
+		var typeValue = '';
+
+		if ($select && $select.length) {
+			typeValue = String($select.val() || '').trim().toUpperCase();
+		}
+
+		return typeValue || 'TEXT';
+	}
+
 	function createCustomFieldForSelect($select, fieldName) {
 		if (!$select || !$select.length || !fieldName) {
 			return;
@@ -514,6 +526,7 @@
 
 		var nonce = (typeof syncly_field_mapping_js_data !== 'undefined') ? syncly_field_mapping_js_data.nonce : '';
 		var existingKey = findExistingFieldKey(fieldName);
+		var fieldType = getFieldTypeForContext($select);
 
 		if (existingKey) {
 			window.Syncly_FIELDS = window.Syncly_FIELDS || {};
@@ -534,7 +547,8 @@
 			data: {
 				action: 'syncly_create_custom_field',
 				nonce: nonce,
-				field_name: fieldName
+				field_name: fieldName,
+				field_type: fieldType
 			},
 			success: function(response) {
 				if (response.success) {
@@ -574,6 +588,7 @@
 		closeDropdown();
 
 		var $text       = $trigger.find('.ghl-lazy-select__text');
+		var fieldType   = getFieldTypeForContext($trigger);
 		var originalText = $text.text();
 		$text.text('Creating…');
 		$trigger.addClass('ghl-lazy-select--creating');
@@ -610,7 +625,8 @@
 			data: {
 				action: 'syncly_create_custom_field',
 				nonce: nonce,
-				field_name: fieldName
+				field_name: fieldName,
+				field_type: fieldType
 			},
 			success: function(response) {
 				if (response.success) {

@@ -276,9 +276,10 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 		<table class="ghl-table" role="presentation">
 			<thead>
 				<tr>
-					<th style="width: 30%;"><?php esc_html_e( 'WordPress Field', 'syncly' ); ?></th>
+					<th style="width: 25%;"><?php esc_html_e( 'WordPress Field', 'syncly' ); ?></th>
 					<th style="width: 35%;"><?php esc_html_e( 'GoHighLevel Field', 'syncly' ); ?></th>
-					<th style="width: 35%;"><?php esc_html_e( 'Sync Direction', 'syncly' ); ?></th>
+					<th style="width: 20%;"><?php esc_html_e( 'Field Type', 'syncly' ); ?></th>
+					<th style="width: 20%;"><?php esc_html_e( 'Sync Direction', 'syncly' ); ?></th>
 				</tr>
 			</thead>
 			<tbody>
@@ -336,6 +337,17 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 							<?php endif; ?>
 						</td>
 						<td>
+							<select class="ghl-custom-field-type-select" data-default-type="TEXT" aria-label="<?php esc_attr_e( 'GoHighLevel field type', 'syncly' ); ?>">
+								<option value="TEXT" selected><?php esc_html_e( 'Text', 'syncly' ); ?></option>
+								<option value="NUMBER"><?php esc_html_e( 'Number', 'syncly' ); ?></option>
+								<option value="DATE"><?php esc_html_e( 'Date', 'syncly' ); ?></option>
+								<option value="DATETIME"><?php esc_html_e( 'Date & Time', 'syncly' ); ?></option>
+								<option value="CHECKBOX"><?php esc_html_e( 'Checkbox', 'syncly' ); ?></option>
+								<option value="DROPDOWN"><?php esc_html_e( 'Dropdown', 'syncly' ); ?></option>
+								<option value="MULTI_SELECT"><?php esc_html_e( 'Multi Select', 'syncly' ); ?></option>
+							</select>
+						</td>
+						<td>
 							<select name="sync_direction_<?php echo esc_attr( $key ); ?>" class="ghl-select" <?php echo $is_email_field ? 'disabled' : ''; ?>>
 								<option value="both" <?php selected( $saved_direction, 'both' ); ?>><?php esc_html_e( '↔ Both Ways', 'syncly' ); ?></option>
 								<option value="to_ghl" <?php selected( $saved_direction, 'to_ghl' ); ?>><?php esc_html_e( '→ To GoHighLevel Only', 'syncly' ); ?></option>
@@ -369,9 +381,10 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 			<table class="ghl-table" role="presentation">
 				<thead>
 					<tr>
-						<th style="width: 30%;"><?php esc_html_e( 'BuddyBoss Field', 'syncly' ); ?></th>
+						<th style="width: 25%;"><?php esc_html_e( 'BuddyBoss Field', 'syncly' ); ?></th>
 						<th style="width: 35%;"><?php esc_html_e( 'GoHighLevel Field', 'syncly' ); ?></th>
-						<th style="width: 35%;"><?php esc_html_e( 'Sync Direction', 'syncly' ); ?></th>
+						<th style="width: 20%;"><?php esc_html_e( 'Field Type', 'syncly' ); ?></th>
+						<th style="width: 20%;"><?php esc_html_e( 'Sync Direction', 'syncly' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -393,6 +406,17 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 									<span class="ghl-lazy-select__arrow">&#9662;</span>
 								</div>
 								<input type="hidden" name="ghl_field_<?php echo esc_attr( $key ); ?>" value="<?php echo esc_attr( $saved_ghl_field ); ?>">
+							</td>
+							<td>
+								<select class="ghl-custom-field-type-select" data-default-type="TEXT" aria-label="<?php esc_attr_e( 'GoHighLevel field type', 'syncly' ); ?>">
+									<option value="TEXT" selected><?php esc_html_e( 'Text', 'syncly' ); ?></option>
+									<option value="NUMBER"><?php esc_html_e( 'Number', 'syncly' ); ?></option>
+									<option value="DATE"><?php esc_html_e( 'Date', 'syncly' ); ?></option>
+									<option value="DATETIME"><?php esc_html_e( 'Date & Time', 'syncly' ); ?></option>
+									<option value="CHECKBOX"><?php esc_html_e( 'Checkbox', 'syncly' ); ?></option>
+									<option value="DROPDOWN"><?php esc_html_e( 'Dropdown', 'syncly' ); ?></option>
+									<option value="MULTI_SELECT"><?php esc_html_e( 'Multi Select', 'syncly' ); ?></option>
+								</select>
 							</td>
 							<td>
 								<select name="sync_direction_<?php echo esc_attr( $key ); ?>" class="ghl-select">
@@ -425,9 +449,10 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 			<table class="ghl-table" role="presentation">
 				<thead>
 					<tr>
-						<th style="width: 30%;"><?php esc_html_e( 'WooCommerce Field', 'syncly' ); ?></th>
+						<th style="width: 25%;"><?php esc_html_e( 'WooCommerce Field', 'syncly' ); ?></th>
 						<th style="width: 35%;"><?php esc_html_e( 'GoHighLevel Field', 'syncly' ); ?></th>
-						<th style="width: 35%;"><?php esc_html_e( 'Sync Direction', 'syncly' ); ?></th>
+						<th style="width: 20%;"><?php esc_html_e( 'Field Type', 'syncly' ); ?></th>
+						<th style="width: 20%;"><?php esc_html_e( 'Sync Direction', 'syncly' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -449,6 +474,17 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 									<span class="ghl-lazy-select__arrow">&#9662;</span>
 								</div>
 								<input type="hidden" name="ghl_field_<?php echo esc_attr( $key ); ?>" value="<?php echo esc_attr( $saved_ghl_field ); ?>">
+							</td>
+							<td>
+								<select class="ghl-custom-field-type-select" data-default-type="TEXT" aria-label="<?php esc_attr_e( 'GoHighLevel field type', 'syncly' ); ?>">
+									<option value="TEXT" selected><?php esc_html_e( 'Text', 'syncly' ); ?></option>
+									<option value="NUMBER"><?php esc_html_e( 'Number', 'syncly' ); ?></option>
+									<option value="DATE"><?php esc_html_e( 'Date', 'syncly' ); ?></option>
+									<option value="DATETIME"><?php esc_html_e( 'Date & Time', 'syncly' ); ?></option>
+									<option value="CHECKBOX"><?php esc_html_e( 'Checkbox', 'syncly' ); ?></option>
+									<option value="DROPDOWN"><?php esc_html_e( 'Dropdown', 'syncly' ); ?></option>
+									<option value="MULTI_SELECT"><?php esc_html_e( 'Multi Select', 'syncly' ); ?></option>
+								</select>
 							</td>
 							<td>
 								<select name="sync_direction_<?php echo esc_attr( $key ); ?>" class="ghl-select">
@@ -475,9 +511,10 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 			<table class="ghl-table" role="presentation">
 				<thead>
 					<tr>
-						<th style="width: 30%;"><?php esc_html_e( 'LearnDash Field', 'syncly' ); ?></th>
+						<th style="width: 25%;"><?php esc_html_e( 'LearnDash Field', 'syncly' ); ?></th>
 						<th style="width: 35%;"><?php esc_html_e( 'GoHighLevel Field', 'syncly' ); ?></th>
-						<th style="width: 35%;"><?php esc_html_e( 'Sync Direction', 'syncly' ); ?></th>
+						<th style="width: 20%;"><?php esc_html_e( 'Field Type', 'syncly' ); ?></th>
+						<th style="width: 20%;"><?php esc_html_e( 'Sync Direction', 'syncly' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -499,6 +536,17 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 									<span class="ghl-lazy-select__arrow">&#9662;</span>
 								</div>
 								<input type="hidden" name="ghl_field_<?php echo esc_attr( $key ); ?>" value="<?php echo esc_attr( $saved_ghl_field ); ?>">
+							</td>
+							<td>
+								<select class="ghl-custom-field-type-select" data-default-type="TEXT" aria-label="<?php esc_attr_e( 'GoHighLevel field type', 'syncly' ); ?>">
+									<option value="TEXT" selected><?php esc_html_e( 'Text', 'syncly' ); ?></option>
+									<option value="NUMBER"><?php esc_html_e( 'Number', 'syncly' ); ?></option>
+									<option value="DATE"><?php esc_html_e( 'Date', 'syncly' ); ?></option>
+									<option value="DATETIME"><?php esc_html_e( 'Date & Time', 'syncly' ); ?></option>
+									<option value="CHECKBOX"><?php esc_html_e( 'Checkbox', 'syncly' ); ?></option>
+									<option value="DROPDOWN"><?php esc_html_e( 'Dropdown', 'syncly' ); ?></option>
+									<option value="MULTI_SELECT"><?php esc_html_e( 'Multi Select', 'syncly' ); ?></option>
+								</select>
 							</td>
 							<td>
 								<select name="sync_direction_<?php echo esc_attr( $key ); ?>" class="ghl-select">
@@ -536,9 +584,10 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 			<table class="ghl-table" role="presentation">
 				<thead>
 					<tr>
-						<th style="width: 30%;"><?php esc_html_e( 'WordPress Field', 'syncly' ); ?></th>
+						<th style="width: 25%;"><?php esc_html_e( 'WordPress Field', 'syncly' ); ?></th>
 						<th style="width: 35%;"><?php esc_html_e( 'GoHighLevel Field', 'syncly' ); ?></th>
-						<th style="width: 35%;"><?php esc_html_e( 'Sync Direction', 'syncly' ); ?></th>
+						<th style="width: 20%;"><?php esc_html_e( 'Field Type', 'syncly' ); ?></th>
+						<th style="width: 20%;"><?php esc_html_e( 'Sync Direction', 'syncly' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -559,6 +608,17 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 									<span class="ghl-lazy-select__arrow">&#9662;</span>
 								</div>
 								<input type="hidden" name="ghl_field_<?php echo esc_attr( $key ); ?>" value="<?php echo esc_attr( $saved_ghl_field ); ?>">
+							</td>
+							<td>
+								<select class="ghl-custom-field-type-select" data-default-type="TEXT" aria-label="<?php esc_attr_e( 'GoHighLevel field type', 'syncly' ); ?>">
+									<option value="TEXT" selected><?php esc_html_e( 'Text', 'syncly' ); ?></option>
+									<option value="NUMBER"><?php esc_html_e( 'Number', 'syncly' ); ?></option>
+									<option value="DATE"><?php esc_html_e( 'Date', 'syncly' ); ?></option>
+									<option value="DATETIME"><?php esc_html_e( 'Date & Time', 'syncly' ); ?></option>
+									<option value="CHECKBOX"><?php esc_html_e( 'Checkbox', 'syncly' ); ?></option>
+									<option value="DROPDOWN"><?php esc_html_e( 'Dropdown', 'syncly' ); ?></option>
+									<option value="MULTI_SELECT"><?php esc_html_e( 'Multi Select', 'syncly' ); ?></option>
+								</select>
 							</td>
 							<td>
 								<select name="sync_direction_<?php echo esc_attr( $key ); ?>" class="ghl-select">

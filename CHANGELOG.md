@@ -4,6 +4,14 @@ All notable changes to Syncly will be documented in this file.
 
 ## [Unreleased]
 
+## [1.4.12] - 2026-08-02
+
+### Changed
+
+- Added typed custom-field creation support (`DATE`, `NUMBER`, and `TEXT`) for shared field-mapping create flows used by Syncly Pro settings.
+- Added deferred create-option resolution in settings save so Login Sync field selections can create missing GHL custom fields reliably on save.
+- Improved user profile contact ID display resolution to prefer location-scoped contact meta and safely fall back to legacy contact keys.
+
 ## [1.4.11] - 2026-08-02
 
 ### Changed
