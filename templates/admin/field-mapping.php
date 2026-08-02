@@ -339,12 +339,20 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 						<td>
 							<select class="ghl-custom-field-type-select" data-default-type="TEXT" aria-label="<?php esc_attr_e( 'GoHighLevel field type', 'syncly' ); ?>">
 								<option value="TEXT" selected><?php esc_html_e( 'Text', 'syncly' ); ?></option>
-								<option value="NUMBER"><?php esc_html_e( 'Number', 'syncly' ); ?></option>
-								<option value="DATE"><?php esc_html_e( 'Date', 'syncly' ); ?></option>
-								<option value="DATETIME"><?php esc_html_e( 'Date & Time', 'syncly' ); ?></option>
+								<option value="LARGE_TEXT"><?php esc_html_e( 'Large Text', 'syncly' ); ?></option>
+								<option value="NUMERICAL"><?php esc_html_e( 'Numerical', 'syncly' ); ?></option>
+								<option value="PHONE"><?php esc_html_e( 'Phone', 'syncly' ); ?></option>
+								<option value="MONETORY"><?php esc_html_e( 'Monetory', 'syncly' ); ?></option>
 								<option value="CHECKBOX"><?php esc_html_e( 'Checkbox', 'syncly' ); ?></option>
-								<option value="DROPDOWN"><?php esc_html_e( 'Dropdown', 'syncly' ); ?></option>
-								<option value="MULTI_SELECT"><?php esc_html_e( 'Multi Select', 'syncly' ); ?></option>
+								<option value="SINGLE_OPTIONS"><?php esc_html_e( 'Single Options', 'syncly' ); ?></option>
+								<option value="MULTIPLE_OPTIONS"><?php esc_html_e( 'Multiple Options', 'syncly' ); ?></option>
+								<option value="FLOAT"><?php esc_html_e( 'Float', 'syncly' ); ?></option>
+								<option value="TIME"><?php esc_html_e( 'Time', 'syncly' ); ?></option>
+								<option value="DATE"><?php esc_html_e( 'Date', 'syncly' ); ?></option>
+								<option value="TEXTBOX_LIST"><?php esc_html_e( 'Textbox List', 'syncly' ); ?></option>
+								<option value="FILE_UPLOAD"><?php esc_html_e( 'File Upload', 'syncly' ); ?></option>
+								<option value="SIGNATURE"><?php esc_html_e( 'Signature', 'syncly' ); ?></option>
+								<option value="RADIO"><?php esc_html_e( 'Radio', 'syncly' ); ?></option>
 							</select>
 						</td>
 						<td>
@@ -410,12 +418,20 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 							<td>
 								<select class="ghl-custom-field-type-select" data-default-type="TEXT" aria-label="<?php esc_attr_e( 'GoHighLevel field type', 'syncly' ); ?>">
 									<option value="TEXT" selected><?php esc_html_e( 'Text', 'syncly' ); ?></option>
-									<option value="NUMBER"><?php esc_html_e( 'Number', 'syncly' ); ?></option>
-									<option value="DATE"><?php esc_html_e( 'Date', 'syncly' ); ?></option>
-									<option value="DATETIME"><?php esc_html_e( 'Date & Time', 'syncly' ); ?></option>
+									<option value="LARGE_TEXT"><?php esc_html_e( 'Large Text', 'syncly' ); ?></option>
+									<option value="NUMERICAL"><?php esc_html_e( 'Numerical', 'syncly' ); ?></option>
+									<option value="PHONE"><?php esc_html_e( 'Phone', 'syncly' ); ?></option>
+									<option value="MONETORY"><?php esc_html_e( 'Monetory', 'syncly' ); ?></option>
 									<option value="CHECKBOX"><?php esc_html_e( 'Checkbox', 'syncly' ); ?></option>
-									<option value="DROPDOWN"><?php esc_html_e( 'Dropdown', 'syncly' ); ?></option>
-									<option value="MULTI_SELECT"><?php esc_html_e( 'Multi Select', 'syncly' ); ?></option>
+									<option value="SINGLE_OPTIONS"><?php esc_html_e( 'Single Options', 'syncly' ); ?></option>
+									<option value="MULTIPLE_OPTIONS"><?php esc_html_e( 'Multiple Options', 'syncly' ); ?></option>
+									<option value="FLOAT"><?php esc_html_e( 'Float', 'syncly' ); ?></option>
+									<option value="TIME"><?php esc_html_e( 'Time', 'syncly' ); ?></option>
+									<option value="DATE"><?php esc_html_e( 'Date', 'syncly' ); ?></option>
+									<option value="TEXTBOX_LIST"><?php esc_html_e( 'Textbox List', 'syncly' ); ?></option>
+									<option value="FILE_UPLOAD"><?php esc_html_e( 'File Upload', 'syncly' ); ?></option>
+									<option value="SIGNATURE"><?php esc_html_e( 'Signature', 'syncly' ); ?></option>
+									<option value="RADIO"><?php esc_html_e( 'Radio', 'syncly' ); ?></option>
 								</select>
 							</td>
 							<td>
@@ -478,12 +494,20 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 							<td>
 								<select class="ghl-custom-field-type-select" data-default-type="TEXT" aria-label="<?php esc_attr_e( 'GoHighLevel field type', 'syncly' ); ?>">
 									<option value="TEXT" selected><?php esc_html_e( 'Text', 'syncly' ); ?></option>
-									<option value="NUMBER"><?php esc_html_e( 'Number', 'syncly' ); ?></option>
-									<option value="DATE"><?php esc_html_e( 'Date', 'syncly' ); ?></option>
-									<option value="DATETIME"><?php esc_html_e( 'Date & Time', 'syncly' ); ?></option>
+									<option value="LARGE_TEXT"><?php esc_html_e( 'Large Text', 'syncly' ); ?></option>
+									<option value="NUMERICAL"><?php esc_html_e( 'Numerical', 'syncly' ); ?></option>
+									<option value="PHONE"><?php esc_html_e( 'Phone', 'syncly' ); ?></option>
+									<option value="MONETORY"><?php esc_html_e( 'Monetory', 'syncly' ); ?></option>
 									<option value="CHECKBOX"><?php esc_html_e( 'Checkbox', 'syncly' ); ?></option>
-									<option value="DROPDOWN"><?php esc_html_e( 'Dropdown', 'syncly' ); ?></option>
-									<option value="MULTI_SELECT"><?php esc_html_e( 'Multi Select', 'syncly' ); ?></option>
+									<option value="SINGLE_OPTIONS"><?php esc_html_e( 'Single Options', 'syncly' ); ?></option>
+									<option value="MULTIPLE_OPTIONS"><?php esc_html_e( 'Multiple Options', 'syncly' ); ?></option>
+									<option value="FLOAT"><?php esc_html_e( 'Float', 'syncly' ); ?></option>
+									<option value="TIME"><?php esc_html_e( 'Time', 'syncly' ); ?></option>
+									<option value="DATE"><?php esc_html_e( 'Date', 'syncly' ); ?></option>
+									<option value="TEXTBOX_LIST"><?php esc_html_e( 'Textbox List', 'syncly' ); ?></option>
+									<option value="FILE_UPLOAD"><?php esc_html_e( 'File Upload', 'syncly' ); ?></option>
+									<option value="SIGNATURE"><?php esc_html_e( 'Signature', 'syncly' ); ?></option>
+									<option value="RADIO"><?php esc_html_e( 'Radio', 'syncly' ); ?></option>
 								</select>
 							</td>
 							<td>
@@ -540,12 +564,20 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 							<td>
 								<select class="ghl-custom-field-type-select" data-default-type="TEXT" aria-label="<?php esc_attr_e( 'GoHighLevel field type', 'syncly' ); ?>">
 									<option value="TEXT" selected><?php esc_html_e( 'Text', 'syncly' ); ?></option>
-									<option value="NUMBER"><?php esc_html_e( 'Number', 'syncly' ); ?></option>
-									<option value="DATE"><?php esc_html_e( 'Date', 'syncly' ); ?></option>
-									<option value="DATETIME"><?php esc_html_e( 'Date & Time', 'syncly' ); ?></option>
+									<option value="LARGE_TEXT"><?php esc_html_e( 'Large Text', 'syncly' ); ?></option>
+									<option value="NUMERICAL"><?php esc_html_e( 'Numerical', 'syncly' ); ?></option>
+									<option value="PHONE"><?php esc_html_e( 'Phone', 'syncly' ); ?></option>
+									<option value="MONETORY"><?php esc_html_e( 'Monetory', 'syncly' ); ?></option>
 									<option value="CHECKBOX"><?php esc_html_e( 'Checkbox', 'syncly' ); ?></option>
-									<option value="DROPDOWN"><?php esc_html_e( 'Dropdown', 'syncly' ); ?></option>
-									<option value="MULTI_SELECT"><?php esc_html_e( 'Multi Select', 'syncly' ); ?></option>
+									<option value="SINGLE_OPTIONS"><?php esc_html_e( 'Single Options', 'syncly' ); ?></option>
+									<option value="MULTIPLE_OPTIONS"><?php esc_html_e( 'Multiple Options', 'syncly' ); ?></option>
+									<option value="FLOAT"><?php esc_html_e( 'Float', 'syncly' ); ?></option>
+									<option value="TIME"><?php esc_html_e( 'Time', 'syncly' ); ?></option>
+									<option value="DATE"><?php esc_html_e( 'Date', 'syncly' ); ?></option>
+									<option value="TEXTBOX_LIST"><?php esc_html_e( 'Textbox List', 'syncly' ); ?></option>
+									<option value="FILE_UPLOAD"><?php esc_html_e( 'File Upload', 'syncly' ); ?></option>
+									<option value="SIGNATURE"><?php esc_html_e( 'Signature', 'syncly' ); ?></option>
+									<option value="RADIO"><?php esc_html_e( 'Radio', 'syncly' ); ?></option>
 								</select>
 							</td>
 							<td>
@@ -612,12 +644,20 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 							<td>
 								<select class="ghl-custom-field-type-select" data-default-type="TEXT" aria-label="<?php esc_attr_e( 'GoHighLevel field type', 'syncly' ); ?>">
 									<option value="TEXT" selected><?php esc_html_e( 'Text', 'syncly' ); ?></option>
-									<option value="NUMBER"><?php esc_html_e( 'Number', 'syncly' ); ?></option>
-									<option value="DATE"><?php esc_html_e( 'Date', 'syncly' ); ?></option>
-									<option value="DATETIME"><?php esc_html_e( 'Date & Time', 'syncly' ); ?></option>
+									<option value="LARGE_TEXT"><?php esc_html_e( 'Large Text', 'syncly' ); ?></option>
+									<option value="NUMERICAL"><?php esc_html_e( 'Numerical', 'syncly' ); ?></option>
+									<option value="PHONE"><?php esc_html_e( 'Phone', 'syncly' ); ?></option>
+									<option value="MONETORY"><?php esc_html_e( 'Monetory', 'syncly' ); ?></option>
 									<option value="CHECKBOX"><?php esc_html_e( 'Checkbox', 'syncly' ); ?></option>
-									<option value="DROPDOWN"><?php esc_html_e( 'Dropdown', 'syncly' ); ?></option>
-									<option value="MULTI_SELECT"><?php esc_html_e( 'Multi Select', 'syncly' ); ?></option>
+									<option value="SINGLE_OPTIONS"><?php esc_html_e( 'Single Options', 'syncly' ); ?></option>
+									<option value="MULTIPLE_OPTIONS"><?php esc_html_e( 'Multiple Options', 'syncly' ); ?></option>
+									<option value="FLOAT"><?php esc_html_e( 'Float', 'syncly' ); ?></option>
+									<option value="TIME"><?php esc_html_e( 'Time', 'syncly' ); ?></option>
+									<option value="DATE"><?php esc_html_e( 'Date', 'syncly' ); ?></option>
+									<option value="TEXTBOX_LIST"><?php esc_html_e( 'Textbox List', 'syncly' ); ?></option>
+									<option value="FILE_UPLOAD"><?php esc_html_e( 'File Upload', 'syncly' ); ?></option>
+									<option value="SIGNATURE"><?php esc_html_e( 'Signature', 'syncly' ); ?></option>
+									<option value="RADIO"><?php esc_html_e( 'Radio', 'syncly' ); ?></option>
 								</select>
 							</td>
 							<td>

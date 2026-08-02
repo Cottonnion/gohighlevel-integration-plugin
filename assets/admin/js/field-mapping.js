@@ -15,6 +15,7 @@
 	 */
 	function initFieldMapping() {
 		hydrateFieldMappingData();
+		applySavedFieldTypes();
 
 		const $customToggle = $('#ghl-toggle-custom-fields');
 		const $customWrapper = $('#ghl-custom-fields-wrapper');
@@ -132,10 +133,13 @@
 				if (ghlField && ghlField !== '') {
 					const directionSelect = $('select[name="sync_direction_' + fieldName + '"]');
 					const direction = directionSelect.val() || 'both';
+					const fieldTypeSelect = $input.closest('tr').find('.ghl-custom-field-type-select').first();
+					const fieldType = fieldTypeSelect.length ? String(fieldTypeSelect.val() || 'TEXT').toUpperCase() : 'TEXT';
 
 					mappings[fieldName] = {
 						ghl_field: ghlField,
-						direction: direction
+						direction: direction,
+						field_type: fieldType
 					};
 				}
 			});
@@ -204,7 +208,7 @@
 		});
 
 		// Visual feedback when changing mappings (listen on hidden inputs + sync direction selects)
-		$(document).on('change', 'input[name^="ghl_field_"], select[name^="sync_direction_"]', function () {
+		$(document).on('change', 'input[name^="ghl_field_"], select[name^="sync_direction_"], .ghl-custom-field-type-select', function () {
 			const $row = $(this).closest('tr');
 			$row.addClass('ghl-field-changed');
 			
@@ -247,6 +251,31 @@
 		} catch (error) {
 			console.error('Failed to parse field mapping data:', error);
 		}
+	}
+
+	function applySavedFieldTypes() {
+		const savedMappings = window.Syncly_SAVED_MAPPINGS || {};
+
+		$('input[type="hidden"][name^="ghl_field_"]').each(function () {
+			const $input = $(this);
+			const fieldName = String($input.attr('name') || '').replace('ghl_field_', '');
+			const mapping = savedMappings[fieldName];
+
+			if (!mapping || !mapping.field_type) {
+				return;
+			}
+
+			const savedType = String(mapping.field_type).toUpperCase();
+			const $typeSelect = $input.closest('tr').find('.ghl-custom-field-type-select').first();
+
+			if (!$typeSelect.length) {
+				return;
+			}
+
+			if ($typeSelect.find('option[value="' + savedType + '"]').length) {
+				$typeSelect.val(savedType);
+			}
+		});
 	}
 
 	// Export to global scope for SPA to call

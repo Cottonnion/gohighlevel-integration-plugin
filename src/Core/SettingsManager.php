@@ -495,13 +495,20 @@ class SettingsManager {
 
 		// Process and sanitize field mappings
 		$sanitized_mappings = [];
+		$allowed_field_types = [ 'TEXT', 'LARGE_TEXT', 'NUMERICAL', 'PHONE', 'MONETORY', 'CHECKBOX', 'SINGLE_OPTIONS', 'MULTIPLE_OPTIONS', 'FLOAT', 'TIME', 'DATE', 'TEXTBOX_LIST', 'FILE_UPLOAD', 'SIGNATURE', 'RADIO' ];
 		foreach ( $field_mappings as $wp_field => $mapping_data ) {
 			$wp_field = sanitize_text_field( $wp_field );
 
 			if ( is_array( $mapping_data ) ) {
+				$field_type = isset( $mapping_data['field_type'] ) ? strtoupper( sanitize_text_field( $mapping_data['field_type'] ) ) : 'TEXT';
+				if ( ! in_array( $field_type, $allowed_field_types, true ) ) {
+					$field_type = 'TEXT';
+				}
+
 				$sanitized_mappings[ $wp_field ] = [
 					'ghl_field' => isset( $mapping_data['ghl_field'] ) ? sanitize_text_field( $mapping_data['ghl_field'] ) : '',
 					'direction' => isset( $mapping_data['direction'] ) ? sanitize_text_field( $mapping_data['direction'] ) : 'both',
+					'field_type' => $field_type,
 				];
 			}
 		}
@@ -611,7 +618,7 @@ class SettingsManager {
 	private function resolve_deferred_login_sync_custom_fields( array $new_settings, array $current_settings ): array {
 		$login_field_types = [
 			'login_last_login_field_id' => 'DATE',
-			'login_count_field_id'      => 'NUMBER',
+			'login_count_field_id'      => 'NUMERICAL',
 		];
 
 		foreach ( $login_field_types as $setting_key => $field_type ) {

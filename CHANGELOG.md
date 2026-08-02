@@ -4,6 +4,17 @@ All notable changes to Syncly will be documented in this file.
 
 ## [Unreleased]
 
+## [1.4.13] - 2026-08-02
+
+### Fixed
+
+- Field Mapping now persists each row's selected GHL field data type and restores it correctly after page reload instead of defaulting back to `TEXT`.
+- Registration date mapping now syncs correctly for `DATE` custom fields by including `user_registered` in mapped user source data and normalizing date values to `Y-m-d` before sending to GoHighLevel.
+
+### Changed
+
+- Updated custom-field type allowlists and Field Mapping type selectors to the current GoHighLevel-supported values: `TEXT`, `LARGE_TEXT`, `NUMERICAL`, `PHONE`, `MONETORY`, `CHECKBOX`, `SINGLE_OPTIONS`, `MULTIPLE_OPTIONS`, `FLOAT`, `TIME`, `DATE`, `TEXTBOX_LIST`, `FILE_UPLOAD`, `SIGNATURE`, `RADIO`.
+
 ## [1.4.12] - 2026-08-02
 
 ### Changed

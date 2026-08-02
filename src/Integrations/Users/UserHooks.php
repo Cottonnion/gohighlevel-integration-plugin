@@ -613,6 +613,7 @@ class UserHooks {
 			'display_name' => $user->display_name,
 			'user_login'   => $user->user_login,
 			'user_url'     => $user->user_url,
+			'user_registered' => $user->user_registered,
 			'description'  => $user->description,
 		];
 
@@ -633,6 +634,7 @@ class UserHooks {
 			}
 
 			$ghl_field = $mapping['ghl_field'];
+			$field_type = strtoupper( (string) ( $mapping['field_type'] ?? 'TEXT' ) );
 			$value     = null;
 
 			// Check if it's a standard user property
@@ -648,6 +650,8 @@ class UserHooks {
 			if ( empty( $value ) ) {
 				$value = apply_filters( 'syncly_resolve_field_value', $value, $wp_field, $user->ID );
 			}
+
+			$value = $this->normalize_mapped_value_for_type( $value, $field_type );
 
 			// Only add non-empty values
 			if ( ! empty( $value ) ) {
@@ -680,6 +684,46 @@ class UserHooks {
 		}
 
 		return $contact_data;
+	}
+
+	/**
+	 * Normalize mapped values for GHL custom field data types.
+	 *
+	 * @param mixed  $value      Raw field value.
+	 * @param string $field_type GHL field data type.
+	 * @return mixed Normalized value.
+	 */
+	private function normalize_mapped_value_for_type( $value, string $field_type ) {
+		if ( null === $value ) {
+			return $value;
+		}
+
+		if ( 'DATE' !== $field_type ) {
+			return $value;
+		}
+
+		if ( is_numeric( $value ) ) {
+			$timestamp = (int) $value;
+			if ( $timestamp > 0 ) {
+				return wp_date( 'Y-m-d', $timestamp );
+			}
+		}
+
+		$date_value = trim( (string) $value );
+		if ( '' === $date_value ) {
+			return $date_value;
+		}
+
+		if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date_value ) ) {
+			return $date_value;
+		}
+
+		$timestamp = strtotime( $date_value );
+		if ( false !== $timestamp ) {
+			return wp_date( 'Y-m-d', $timestamp );
+		}
+
+		return $date_value;
 	}
 	/**
 	 * Maybe add tags based on action

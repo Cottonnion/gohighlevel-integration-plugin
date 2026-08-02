@@ -429,7 +429,7 @@ class MetadataService {
 	/**
 	 * AJAX handler: Create a new custom field in GHL and return its key/label.
 	 *
-	 * Calls POST /locations/{locationId}/customFields with dataType TEXT.
+	 * Calls POST /locations/{locationId}/customFields with an allowed dataType.
 	 * On success, busts the fields transient so the new field appears on
 	 * the next server-side render, then returns { key, label } to the JS.
 	 *
@@ -444,7 +444,7 @@ class MetadataService {
 
 		$field_name = isset( $_POST['field_name'] ) ? sanitize_text_field( wp_unslash( $_POST['field_name'] ) ) : '';
 		$field_type = isset( $_POST['field_type'] ) ? sanitize_text_field( wp_unslash( $_POST['field_type'] ) ) : '';
-		$allowed_field_types = [ 'TEXT', 'NUMBER', 'DATE', 'DATETIME', 'CHECKBOX', 'DROPDOWN', 'MULTI_SELECT' ];
+		$allowed_field_types = [ 'TEXT', 'LARGE_TEXT', 'NUMERICAL', 'PHONE', 'MONETORY', 'CHECKBOX', 'SINGLE_OPTIONS', 'MULTIPLE_OPTIONS', 'FLOAT', 'TIME', 'DATE', 'TEXTBOX_LIST', 'FILE_UPLOAD', 'SIGNATURE', 'RADIO' ];
 		$field_type = strtoupper( $field_type );
 		if ( ! in_array( $field_type, $allowed_field_types, true ) ) {
 			$field_type = 'TEXT';

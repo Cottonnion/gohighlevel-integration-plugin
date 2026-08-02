@@ -4,7 +4,7 @@ Tags: gohighlevel, crm, woocommerce, buddyboss, learndash
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.4.12
+Stable tag: 1.4.13
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -53,6 +53,11 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
 == Changelog ==
+
+= 1.4.13 =
+* Fixed Field Mapping persistence so selected GHL field types are saved and restored correctly on reload.
+* Fixed registration date mapping to DATE fields by including user_registered and normalizing values to Y-m-d before sync.
+* Updated available custom field data types to match current GoHighLevel-supported values used by field creation and mapping.
 
 = 1.4.12 =
 * Added typed custom-field creation support (`DATE`, `NUMBER`, and `TEXT`) for shared field-mapping create flows used by Syncly Pro settings.
