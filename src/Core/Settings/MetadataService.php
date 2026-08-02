@@ -385,6 +385,48 @@ class MetadataService {
 	}
 
 	/**
+	 * Normalize a field name for duplicate matching.
+	 *
+	 * @param string $value Raw field name or label.
+	 * @return string Normalized string.
+	 */
+	private function normalize_custom_field_name( string $value ): string {
+		$value = strtolower( trim( preg_replace( '/\s+/', ' ', $value ) ) );
+		$value = preg_replace( '/[^a-z0-9]+/', '', $value ) ?? '';
+		return $value;
+	}
+
+	/**
+	 * Find an existing custom field with the same name in the currently loaded GHL field set.
+	 *
+	 * @param string $field_name Requested custom field name.
+	 * @param array  $fields_data Cached fields payload from MetadataService.
+	 * @return array{key:string,label:string}|null Matching field details, if any.
+	 */
+	private function find_matching_custom_field( string $field_name, array $fields_data ): ?array {
+		$normalized_name = $this->normalize_custom_field_name( $field_name );
+		if ( '' === $normalized_name ) {
+			return null;
+		}
+
+		foreach ( $fields_data['fields'] ?? [] as $key => $label ) {
+			if ( strpos( $key, 'custom.' ) !== 0 ) {
+				continue;
+			}
+
+			$existing_label = str_replace( ' (Custom)', '', (string) $label );
+			if ( $this->normalize_custom_field_name( $existing_label ) === $normalized_name ) {
+				return [
+					'key'   => $key,
+					'label' => $existing_label,
+				];
+			}
+		}
+
+		return null;
+	}
+
+	/**
 	 * AJAX handler: Create a new custom field in GHL and return its key/label.
 	 *
 	 * Calls POST /locations/{locationId}/customFields with dataType TEXT.
@@ -415,6 +457,19 @@ class MetadataService {
 		}
 
 		try {
+			$existing_field = $this->find_matching_custom_field( $field_name, $this->get_syncly_fields_cached( true ) );
+			if ( null !== $existing_field ) {
+				wp_send_json_success(
+					[
+						'key'      => $existing_field['key'],
+						'label'    => $existing_field['label'] . ' (Custom)',
+						'existing' => true,
+						'created'  => false,
+						'message'  => __( 'That custom field already exists in GoHighLevel.', 'syncly' ),
+					]
+				);
+			}
+
 			$client   = \Syncly\API\Client\Client::get_instance();
 			// Pass false so locationId is not added to body or query — it is already in the path.
 			$response = $client->post(
@@ -441,8 +496,11 @@ class MetadataService {
 
 			wp_send_json_success(
 				[
-					'key'   => 'custom.' . sanitize_key( $id ),
-					'label' => $name . ' (Custom)',
+					'key'     => 'custom.' . sanitize_key( $id ),
+					'label'   => $name . ' (Custom)',
+					'created' => true,
+					'existing' => false,
+					'message' => __( 'Custom field created successfully.', 'syncly' ),
 				]
 			);
 

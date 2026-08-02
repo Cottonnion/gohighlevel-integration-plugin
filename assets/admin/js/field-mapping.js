@@ -408,6 +408,46 @@
 	}
 
 	/**
+	 * Normalize a field name for duplicate matching.
+	 *
+	 * @param {string} value
+	 * @returns {string}
+	 */
+	function normalizeFieldName(value) {
+		return String(value || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '');
+	}
+
+	/**
+	 * Check whether a field with the same name already exists in the local cache.
+	 *
+	 * @param {string} fieldName
+	 * @returns {string}
+	 */
+	function findExistingFieldKey(fieldName) {
+		var fields = window.Syncly_FIELDS || {};
+		var normalizedName = normalizeFieldName(fieldName);
+		if (!normalizedName) {
+			return '';
+		}
+
+		var keys = Object.keys(fields);
+		for (var i = 0; i < keys.length; i++) {
+			var key = keys[i];
+			if (!key || key === '') {
+				continue;
+			}
+
+			var label = String(fields[key] || '');
+			var normalizedLabel = normalizeFieldName(label.replace(/\s*\(Custom\)\s*$/i, ''));
+			if (normalizedLabel === normalizedName || normalizeFieldName(key) === normalizedName) {
+				return key;
+			}
+		}
+
+		return '';
+	}
+
+	/**
 	 * Call the server to create a new GHL custom field, then select it on the trigger.
 	 *
 	 * @param {jQuery} $trigger   The .ghl-lazy-select element that initiated the action.
@@ -422,6 +462,30 @@
 		$trigger.addClass('ghl-lazy-select--creating');
 
 		var nonce = (typeof syncly_field_mapping_js_data !== 'undefined') ? syncly_field_mapping_js_data.nonce : '';
+		var existingKey = findExistingFieldKey(fieldName);
+
+		if (existingKey) {
+			window.Syncly_FIELDS = window.Syncly_FIELDS || {};
+			window.Syncly_FIELDS[existingKey] = window.Syncly_FIELDS[existingKey] || fieldName + ' (Custom)';
+			selectValue($trigger, existingKey);
+
+			if (typeof Swal !== 'undefined') {
+				Swal.fire({
+					icon: 'info',
+					title: 'Field Selected',
+					text: 'A matching GoHighLevel custom field already exists. The existing field was selected.',
+					toast: true,
+					position: 'top-end',
+					showConfirmButton: false,
+					timer: 3000,
+					timerProgressBar: true,
+					customClass: { popup: 'ghl-swal-top-toast' }
+				});
+			}
+
+			$trigger.removeClass('ghl-lazy-select--creating');
+			return;
+		}
 
 		$.ajax({
 			url: window.ajaxurl,
@@ -433,20 +497,23 @@
 			},
 			success: function(response) {
 				if (response.success) {
-					var key   = response.data.key;
-					var label = response.data.label;
+					var key   = response.data && response.data.key ? response.data.key : '';
+					var label = response.data && response.data.label ? response.data.label : (fieldName + ' (Custom)');
+					var existing = !!(response.data && response.data.existing);
 
-					// Register in local cache so it shows in future dropdowns.
-					window.Syncly_FIELDS = window.Syncly_FIELDS || {};
-					window.Syncly_FIELDS[key] = label;
+					if (key) {
+						// Register in local cache so it shows in future dropdowns.
+						window.Syncly_FIELDS = window.Syncly_FIELDS || {};
+						window.Syncly_FIELDS[key] = label;
 
-					selectValue($trigger, key);
+						selectValue($trigger, key);
+					}
 
 					if (typeof Swal !== 'undefined') {
 						Swal.fire({
-							icon: 'success',
-							title: 'Field Created',
-							text: '"' + label + '" was created in GoHighLevel.',
+							icon: existing ? 'info' : 'success',
+							title: existing ? 'Field Selected' : 'Field Created',
+							text: existing ? (response.data.message || 'A matching field already exists in GoHighLevel.') : '"' + label + '" was created in GoHighLevel.',
 							toast: true,
 							position: 'top-end',
 							showConfirmButton: false,
