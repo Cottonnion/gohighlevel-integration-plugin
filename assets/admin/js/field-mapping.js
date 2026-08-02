@@ -448,6 +448,123 @@
 	}
 
 	/**
+	 * Show a consistent toast notice for field creation / selection.
+	 *
+	 * @param {string} message
+	 * @param {string} type
+	 * @param {string} title
+	 */
+	function showFieldCreationNotice(message, type, title) {
+		if (typeof Swal === 'undefined') {
+			return;
+		}
+
+		Swal.fire({
+			icon: type === 'success' ? 'success' : (type === 'info' ? 'info' : 'error'),
+			title: title || (type === 'success' ? 'Field Created' : (type === 'info' ? 'Field Selected' : 'Error')),
+			text: message,
+			toast: true,
+			position: 'top-end',
+			showConfirmButton: false,
+			timer: type === 'success' ? 3000 : 5000,
+			timerProgressBar: true,
+			customClass: { popup: 'ghl-swal-top-toast' }
+		});
+	}
+
+	/**
+	 * Populate the field cache from the current options in a select element.
+	 *
+	 * @param {jQuery} $select
+	 */
+	function populateFieldCacheFromSelect($select) {
+		if (!$select || !$select.length) {
+			return;
+		}
+
+		window.Syncly_FIELDS = window.Syncly_FIELDS || {};
+
+		$select.find('option').each(function () {
+			var $option = $(this);
+			var value = String($option.attr('value') || '').trim();
+			var label = String($option.text() || '').trim();
+
+			if (!value || !label || value === '' || /^—\s*/.test(label)) {
+				return;
+			}
+
+			if (!window.Syncly_FIELDS[value]) {
+				window.Syncly_FIELDS[value] = label;
+			}
+		});
+	}
+
+	/**
+	 * Create a new GHL custom field and select it in a normal select element.
+	 *
+	 * @param {jQuery} $select
+	 * @param {string} fieldName
+	 */
+	function createCustomFieldForSelect($select, fieldName) {
+		if (!$select || !$select.length || !fieldName) {
+			return;
+		}
+
+		populateFieldCacheFromSelect($select);
+
+		var nonce = (typeof syncly_field_mapping_js_data !== 'undefined') ? syncly_field_mapping_js_data.nonce : '';
+		var existingKey = findExistingFieldKey(fieldName);
+
+		if (existingKey) {
+			window.Syncly_FIELDS = window.Syncly_FIELDS || {};
+			window.Syncly_FIELDS[existingKey] = window.Syncly_FIELDS[existingKey] || fieldName + ' (Custom)';
+
+			if ($select.find('option[value="' + existingKey + '"]').length === 0) {
+				$select.append('<option value="' + existingKey + '">' + (window.Syncly_FIELDS[existingKey] || fieldName) + '</option>');
+			}
+
+			$select.val(existingKey).trigger('change');
+			showFieldCreationNotice('A matching GoHighLevel custom field already exists. The existing field was selected.', 'info', 'Field Selected');
+			return;
+		}
+
+		$.ajax({
+			url: window.ajaxurl,
+			type: 'POST',
+			data: {
+				action: 'syncly_create_custom_field',
+				nonce: nonce,
+				field_name: fieldName
+			},
+			success: function(response) {
+				if (response.success) {
+					var key = response.data && response.data.key ? response.data.key : '';
+					var label = response.data && response.data.label ? response.data.label : (fieldName + ' (Custom)');
+					var existing = !!(response.data && response.data.existing);
+
+					if (key) {
+						window.Syncly_FIELDS = window.Syncly_FIELDS || {};
+						window.Syncly_FIELDS[key] = label;
+
+						if ($select.find('option[value="' + key + '"]').length === 0) {
+							$select.append('<option value="' + key + '">' + label + '</option>');
+						}
+
+						$select.val(key).trigger('change');
+					}
+
+					showFieldCreationNotice(existing ? (response.data.message || 'A matching field already exists in GoHighLevel.') : ('"' + label + '" was created in GoHighLevel.'), existing ? 'info' : 'success', existing ? 'Field Selected' : 'Field Created');
+				} else {
+					showFieldCreationNotice((response.data && response.data.message) ? response.data.message : 'Failed to create custom field.', 'error', 'Error');
+				}
+			},
+			error: function() {
+				showFieldCreationNotice('Network error. Failed to create custom field.', 'error', 'Error');
+			}
+		});
+	}
+
+	/**
 	 * Call the server to create a new GHL custom field, then select it on the trigger.
 	 *
 	 * @param {jQuery} $trigger   The .ghl-lazy-select element that initiated the action.
@@ -634,6 +751,33 @@
 		if (activeDropdown && !$(e.target).closest('.ghl-lazy-select--open').length && !$(e.target).closest('.ghl-lazy-dropdown').length) {
 			closeDropdown();
 		}
+	});
+
+	// Create a new custom field from standard select-style controls (used by Pro settings screens)
+	$(document).on('click', '.ghl-create-custom-field-btn', function (event) {
+		event.preventDefault();
+
+		var targetId = $(this).data('target') || '';
+		if (!targetId) {
+			return;
+		}
+
+		var $select = $('#' + targetId);
+		if (!$select.length || !$select.is('select')) {
+			return;
+		}
+
+		var fieldName = window.prompt('Enter the new GoHighLevel custom field name:', '');
+		if (!fieldName) {
+			return;
+		}
+
+		fieldName = String(fieldName).trim();
+		if (!fieldName) {
+			return;
+		}
+
+		createCustomFieldForSelect($select, fieldName);
 	});
 
 	/* -------------------------------------------------- global API (SPA compat) */

@@ -4,6 +4,14 @@ All notable changes to Syncly will be documented in this file.
 
 ## [Unreleased]
 
+## [1.4.11] - 2026-08-02
+
+### Changed
+
+- Unified custom-field creation behavior so Pro settings screens now use the free plugin's existing field-mapping custom-field creation and existing-field selection flow.
+- Added support in the shared field-mapping script for Pro-style standard select controls triggered by `.ghl-create-custom-field-btn`.
+- Removed dependency on a separate Pro-only custom-field creator script to prevent duplicated logic.
+
 ## [1.4.10] - 2026-08-01
 
 ### Changed
