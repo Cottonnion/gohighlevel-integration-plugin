@@ -4,6 +4,14 @@ All notable changes to Syncly will be documented in this file.
 
 ## [Unreleased]
 
+## [1.4.14] - 2026-08-04
+
+### Added
+
+- Added a GoHighLevel Tags filter to the WordPress Users table.
+- Scoped the Users table tag filter to the active GoHighLevel location by querying only the location-scoped stored contact tag meta.
+- Added Select2 enhancement for the Users tag filter so admins can search large tag lists without extra API requests.
+
 ## [1.4.13] - 2026-08-02
 
 ### Fixed

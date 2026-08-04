@@ -4,7 +4,7 @@ Tags: gohighlevel, crm, woocommerce, buddyboss, learndash
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.4.13
+Stable tag: 1.4.14
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -53,6 +53,11 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
 == Changelog ==
+
+= 1.4.14 =
+* Added a GoHighLevel Tags filter to the WordPress Users table.
+* Scoped the Users tag filter to the active GoHighLevel location only.
+* Added searchable Select2 support for the Users tag filter without adding extra API requests.
 
 = 1.4.13 =
 * Fixed Field Mapping persistence so selected GHL field types are saved and restored correctly on reload.

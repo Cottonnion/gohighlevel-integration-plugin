@@ -77,6 +77,11 @@ class UserColumns {
 		// Handle sorting
 		add_action( 'pre_get_users', [ $this, 'handle_column_sorting' ] );
 
+		// Add and apply active-location tag filter on users table.
+		add_action( 'restrict_manage_users', [ $this, 'render_tag_filter' ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_tag_filter_assets' ] );
+		add_action( 'admin_footer-users.php', [ $this, 'render_tag_filter_init_script' ] );
+
 		// Add custom styles for columns
 		add_action( 'admin_head-users.php', [ $this, 'add_column_styles' ] );
 	}
@@ -254,6 +259,8 @@ class UserColumns {
 			return;
 		}
 
+		$this->apply_tag_filter( $query );
+
 		$orderby = $query->get( 'orderby' );
 
 		switch ( $orderby ) {
@@ -267,6 +274,207 @@ class UserColumns {
 				$query->set( 'orderby', 'meta_value_num' );
 				break;
 		}
+	}
+
+	/**
+	 * Render location-scoped GHL tags filter in users table.
+	 *
+	 * @param string $which Position of filter controls. 'top' or 'bottom'.
+	 * @return void
+	 */
+	public function render_tag_filter( string $which ): void {
+		if ( 'top' !== $which || ! $this->is_users_screen() ) {
+			return;
+		}
+
+		$location_id = $this->get_active_location_id();
+		if ( '' === $location_id ) {
+			return;
+		}
+
+		$selected_tag_ids = $this->get_selected_filter_tag_ids();
+		$tags             = \Syncly\Sync\TagManager::get_instance()->get_tags();
+
+		if ( empty( $tags ) ) {
+			return;
+		}
+
+		usort(
+			$tags,
+			static function ( array $left, array $right ): int {
+				$left_name  = isset( $left['name'] ) ? (string) $left['name'] : '';
+				$right_name = isset( $right['name'] ) ? (string) $right['name'] : '';
+
+				return strcasecmp( $left_name, $right_name );
+			}
+		);
+
+		echo '<label class="screen-reader-text" for="syncly-ghl-tags-filter">' . esc_html__( 'Filter by GoHighLevel tags', 'syncly' ) . '</label>';
+		echo '<select name="syncly_ghl_tags[]" id="syncly-ghl-tags-filter" multiple="multiple" data-placeholder="' . esc_attr__( 'Tags', 'syncly' ) . '" style="max-width: 280px; min-width: 220px; margin-right: 6px;">';
+
+		foreach ( $tags as $tag ) {
+			$tag_id   = isset( $tag['id'] ) ? (string) $tag['id'] : '';
+			$tag_name = isset( $tag['name'] ) ? (string) $tag['name'] : '';
+
+			if ( '' === $tag_id || '' === $tag_name ) {
+				continue;
+			}
+
+			printf(
+				'<option value="%1$s" %2$s>%3$s</option>',
+				esc_attr( $tag_id ),
+				selected( in_array( $tag_id, $selected_tag_ids, true ), true, false ),
+				esc_html( $tag_name )
+			);
+		}
+
+		echo '</select>';
+	}
+
+	/**
+	 * Apply location-scoped GHL tags filter to the users query.
+	 *
+	 * @param \WP_User_Query $query User query object.
+	 * @return void
+	 */
+	private function apply_tag_filter( \WP_User_Query $query ): void {
+		if ( ! $this->is_users_screen() ) {
+			return;
+		}
+
+		$selected_tag_ids = $this->get_selected_filter_tag_ids();
+		if ( empty( $selected_tag_ids ) ) {
+			return;
+		}
+
+		$location_id = $this->get_active_location_id();
+		if ( '' === $location_id ) {
+			return;
+		}
+
+		$meta_key       = \Syncly\Sync\TagManager::get_instance()->get_user_tags_meta_key( $location_id );
+		$meta_query     = (array) $query->get( 'meta_query' );
+		$tag_conditions = [];
+
+		foreach ( $selected_tag_ids as $tag_id ) {
+			$tag_conditions[] = [
+				'key'     => $meta_key,
+				'value'   => '"' . $tag_id . '"',
+				'compare' => 'LIKE',
+			];
+		}
+
+		if ( 1 === count( $tag_conditions ) ) {
+			$meta_query[] = $tag_conditions[0];
+		} else {
+			$meta_query[] = array_merge(
+				[ 'relation' => 'AND' ],
+				$tag_conditions
+			);
+		}
+
+		$query->set( 'meta_query', $meta_query );
+	}
+
+	/**
+	 * Get currently selected tag IDs from users table filter request.
+	 *
+	 * @return array<int, string>
+	 */
+	private function get_selected_filter_tag_ids(): array {
+		$raw_selected = $_GET['syncly_ghl_tags'] ?? []; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin list table filtering.
+
+		if ( is_string( $raw_selected ) ) {
+			$raw_selected = explode( ',', $raw_selected );
+		}
+
+		if ( ! is_array( $raw_selected ) ) {
+			return [];
+		}
+
+		$selected = array_map(
+			static function ( $tag_id ): string {
+				return sanitize_text_field( wp_unslash( (string) $tag_id ) );
+			},
+			$raw_selected
+		);
+
+		$selected = array_values(
+			array_unique(
+				array_filter(
+					$selected,
+					static function ( string $tag_id ): bool {
+						return '' !== $tag_id;
+					}
+				)
+			)
+		);
+
+		return $selected;
+	}
+
+	/**
+	 * Get active location ID using the plugin's existing fallback logic.
+	 *
+	 * @return string
+	 */
+	private function get_active_location_id(): string {
+		return (string) ( $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' ) );
+	}
+
+	/**
+	 * Determine if the current admin screen is the users list table.
+	 *
+	 * @return bool
+	 */
+	private function is_users_screen(): bool {
+		global $pagenow;
+
+		return 'users.php' === $pagenow;
+	}
+
+	/**
+	 * Enqueue Select2 assets for the users tags filter.
+	 *
+	 * @return void
+	 */
+	public function enqueue_tag_filter_assets(): void {
+		if ( ! $this->is_users_screen() ) {
+			return;
+		}
+
+		wp_enqueue_style( 'syncly-select2-css' );
+		wp_enqueue_script( 'syncly-select2' );
+	}
+
+	/**
+	 * Initialize Select2 for the users tags filter.
+	 *
+	 * @return void
+	 */
+	public function render_tag_filter_init_script(): void {
+		if ( ! $this->is_users_screen() ) {
+			return;
+		}
+
+		?>
+		<script>
+			jQuery(function($) {
+				var $filter = $('#syncly-ghl-tags-filter');
+
+				if (!$filter.length || typeof $filter.select2 !== 'function') {
+					return;
+				}
+
+				$filter.select2({
+					placeholder: $filter.data('placeholder') || 'Tags',
+					allowClear: true,
+					closeOnSelect: false,
+					width: '220px'
+				});
+			});
+		</script>
+		<?php
 	}
 
 	/**
@@ -305,6 +513,9 @@ class UserColumns {
 			}
 			.ghl-column-empty {
 				color: #a0a5aa;
+			}
+			#syncly-ghl-tags-filter {
+				vertical-align: top;
 			}
 			'
 		);
