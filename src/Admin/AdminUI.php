@@ -6,6 +6,7 @@ namespace Syncly\Admin;
 use Syncly\Admin\Columns\UserColumns;
 use Syncly\Admin\Profile\UserProfileFields;
 use Syncly\Admin\Users\UserBulkActions;
+use Syncly\Admin\Users\UserTagFilter;
 use Syncly\Core\SettingsManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -80,6 +81,9 @@ class AdminUI {
 
 		// Initialize user bulk actions (adds GHL tag assignment bulk actions)
 		UserBulkActions::init();
+
+		// Initialize user tag filter (adds GHL tag dropdown filter to users table)
+		UserTagFilter::init();
 		// Future: Initialize other admin components
 		// PostColumns::init();
 		// OrderColumns::init();

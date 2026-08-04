@@ -153,7 +153,12 @@ class AssetsManager {
 	public function define_admin_assets(): void {
 		$settings           = SettingsManager::get_instance()->get_settings_array();
 		$white_label_domain = $settings['ghl_white_label_domain'] ?? '';
-		$ghl_tags           = TagManager::get_instance()->get_tags_for_localization();
+
+		// Lazy-load tags: only fetch from API/transient when the asset is actually
+		// enqueued on a plugin admin page, not on every WordPress page load.
+		$ghl_tags = static function (): array {
+			return TagManager::get_instance()->get_tags_for_localization();
+		};
 
 		// Tooltip System (loads on all GHL admin pages)
 		$this->add_admin_asset(
@@ -748,10 +753,18 @@ class AssetsManager {
 
 			// Add localization if provided
 			if ( ! empty( $localize ) ) {
+				// Resolve any callable values so that expensive data (e.g. tag lists)
+				// is only fetched when the script is actually enqueued on the right page.
+				$resolved_localize = array_map(
+					static function ( $value ) {
+						return is_callable( $value ) ? $value() : $value;
+					},
+					$localize
+				);
 				wp_localize_script(
 					$handle,
 					str_replace( '-', '_', $handle . '_data' ),
-					$localize
+					$resolved_localize
 				);
 			}
 		}
