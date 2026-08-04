@@ -89,6 +89,7 @@ class Loader {
 
 			// Admin UI components
 			'admin.ui'                             => \Syncly\Admin\AdminUI::class,
+			'admin.users.table_filter'             => \Syncly\Admin\Users\UserTableFilter::class,
 
 			// API components
 			'api.oauth'                            => \Syncly\API\OAuth\OAuthHandler::class,
