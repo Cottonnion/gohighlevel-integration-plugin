@@ -4,7 +4,7 @@ Tags: gohighlevel, crm, woocommerce, buddyboss, learndash
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.4.14
+Stable tag: 1.4.15
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -53,6 +53,11 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
 == Changelog ==
+
+= 1.4.15 =
+- Fixed a sync loop issue where updates coming from GoHighLevel could sometimes trigger the same update again in WordPress.
+- This now protects user creation, profile updates, user deletion, and tag updates so they do not bounce back and forth between systems.
+- Fixed the Webhooks settings buttons so Copy URL, Copy Token, Regenerate Token, and Test Webhook all work reliably again.
 
 = 1.4.14 =
 * Added a GoHighLevel Tags filter to the WordPress Users table.

@@ -95,62 +95,68 @@ class GHLToWordPressSync {
 	 * @return int|\WP_Error User ID or error
 	 */
 	public function sync_contact_to_wordpress( string $contact_id, array $contact_data = [] ) {
-		// If contact data not provided, fetch from API
-		if ( empty( $contact_data ) ) {
-			try {
-				$response     = $this->contact_resource->get( $contact_id );
-				$contact_data = $response['contact'] ?? [];
-			} catch ( \Exception $e ) {
-				$this->logger->log(
-					'user',
-					0,
-					'ghl_to_wp',
-					'failed',
-					'Failed to fetch contact from GHL',
-					[ 'error' => $e->getMessage() ],
-					$contact_id
-				);
-				return new \WP_Error( 'fetch_failed', $e->getMessage() );
-			}
-		}
+		$this->tag_manager->begin_inbound_sync_guard();
 
-		// If tags are missing/empty in webhook payload, hydrate from API to avoid dropping tags
-		if ( empty( $contact_data['tags'] ) || ! is_array( $contact_data['tags'] ) ) {
-			try {
-				$response      = $this->contact_resource->get( $contact_id );
-				$fresh_contact = $response['contact'] ?? [];
-
-				if ( ! empty( $fresh_contact ) ) {
-					$contact_data = array_merge( $fresh_contact, $contact_data );
+		try {
+			// If contact data not provided, fetch from API
+			if ( empty( $contact_data ) ) {
+				try {
+					$response     = $this->contact_resource->get( $contact_id );
+					$contact_data = $response['contact'] ?? [];
+				} catch ( \Exception $e ) {
+					$this->logger->log(
+						'user',
+						0,
+						'ghl_to_wp',
+						'failed',
+						'Failed to fetch contact from GHL',
+						[ 'error' => $e->getMessage() ],
+						$contact_id
+					);
+					return new \WP_Error( 'fetch_failed', $e->getMessage() );
 				}
-			} catch ( \Exception $e ) {
-				$this->logger->log(
-					'user',
-					0,
-					'ghl_to_wp',
-					'failed',
-					'Failed to hydrate tags from GHL',
-					[ 'error' => $e->getMessage() ],
-					$contact_id
-				);
 			}
+
+			// If tags are missing/empty in webhook payload, hydrate from API to avoid dropping tags
+			if ( empty( $contact_data['tags'] ) || ! is_array( $contact_data['tags'] ) ) {
+				try {
+					$response      = $this->contact_resource->get( $contact_id );
+					$fresh_contact = $response['contact'] ?? [];
+
+					if ( ! empty( $fresh_contact ) ) {
+						$contact_data = array_merge( $fresh_contact, $contact_data );
+					}
+				} catch ( \Exception $e ) {
+					$this->logger->log(
+						'user',
+						0,
+						'ghl_to_wp',
+						'failed',
+						'Failed to hydrate tags from GHL',
+						[ 'error' => $e->getMessage() ],
+						$contact_id
+					);
+				}
+			}
+
+			// Validate contact data
+			if ( empty( $contact_data['email'] ) ) {
+				return new \WP_Error( 'missing_email', __( 'Contact email is required', 'syncly' ) );
+			}
+
+			// Check if user exists by email or GHL ID
+			$user = $this->find_wordpress_user( $contact_data );
+
+			if ( $user ) {
+				// Update existing user
+				return $this->update_wordpress_user( $user->ID, $contact_data, $contact_id );
+			}
+
+			// Create new user
+			return $this->create_wordpress_user( $contact_data, $contact_id );
+		} finally {
+			$this->tag_manager->end_inbound_sync_guard();
 		}
-
-		// Validate contact data
-		if ( empty( $contact_data['email'] ) ) {
-			return new \WP_Error( 'missing_email', __( 'Contact email is required', 'syncly' ) );
-		}
-
-		// Check if user exists by email or GHL ID
-		$user = $this->find_wordpress_user( $contact_data );
-
-		if ( $user ) {
-			// Update existing user
-			return $this->update_wordpress_user( $user->ID, $contact_data, $contact_id );
-		}
-
-		// Create new user
-		return $this->create_wordpress_user( $contact_data, $contact_id );
 	}
 
 	/**
@@ -473,7 +479,13 @@ class GHLToWordPressSync {
 		if ( ! empty( $tags ) && is_array( $tags ) ) {
 			// Use TagManager to store tags with the correct location-scoped meta key
 			// and automatically fire the syncly_user_tags_updated hook on change.
-			\Syncly\Sync\TagManager::get_instance()->store_user_tags( $user_id, $tags );
+			$tag_manager = \Syncly\Sync\TagManager::get_instance();
+			$tag_manager->suppress_user_tags_updated_once( $user_id );
+			try {
+				$tag_manager->store_user_tags( $user_id, $tags );
+			} finally {
+				$tag_manager->clear_user_tags_updated_suppression( $user_id );
+			}
 		}
 	}
 

@@ -160,6 +160,10 @@ class UserHooks {
 	 * @return void
 	 */
 	public function on_user_register( int $user_id ): void {
+		if ( \Syncly\Sync\TagManager::get_instance()->is_inbound_sync_guard_active() ) {
+			return;
+		}
+
 		// Check if already synced to prevent duplicates
 		$already_synced = get_user_meta( $user_id, '_ghl_synced_on_register', true );
 		if ( $already_synced ) {
@@ -285,6 +289,10 @@ class UserHooks {
 	 * @return void
 	 */
 	public function on_user_update( int $user_id, \WP_User $old_user_data ): void {
+		if ( \Syncly\Sync\TagManager::get_instance()->is_inbound_sync_guard_active() ) {
+			return;
+		}
+
 		// Skip if update was triggered by inbound GHL sync to avoid log spam and ping-pong
 		$skip = get_user_meta( $user_id, '_ghl_skip_profile_update_sync', true );
 		if ( $skip ) {
@@ -442,6 +450,10 @@ class UserHooks {
 	 * @return void
 	 */
 	public function on_user_delete( int $user_id ): void {
+		if ( \Syncly\Sync\TagManager::get_instance()->is_inbound_sync_guard_active() ) {
+			return;
+		}
+
 		// Skip if deletion was triggered by inbound GHL webhook to prevent ping-pong
 		$skip = get_user_meta( $user_id, '_ghl_skip_delete_sync', true );
 		if ( $skip ) {
@@ -485,6 +497,10 @@ class UserHooks {
 	 * @return void
 	 */
 	public function on_user_remove_from_blog( int $user_id, int $blog_id ): void {
+		if ( \Syncly\Sync\TagManager::get_instance()->is_inbound_sync_guard_active() ) {
+			return;
+		}
+
 		// Only process if this is the current site
 		if ( get_current_blog_id() !== $blog_id ) {
 			return;

@@ -976,7 +976,12 @@ class UserProfileFields {
 			if ( ! empty( $contact['tags'] ) && is_array( $contact['tags'] ) ) {
 				$raw_tags = $contact['tags'];
 			}
-			$tag_manager->store_user_tags( $user_id, $raw_tags );
+			$tag_manager->suppress_user_tags_updated_once( $user_id );
+			try {
+				$tag_manager->store_user_tags( $user_id, $raw_tags );
+			} finally {
+				$tag_manager->clear_user_tags_updated_suppression( $user_id );
+			}
 
 			// Update contact type if available
 			if ( ! empty( $contact['type'] ) ) {
@@ -1034,7 +1039,12 @@ class UserProfileFields {
 				$raw_tags = $contact['tags'];
 			}
 			$normalized           = $tag_manager->normalize_tag_input( $raw_tags );
-			$tag_ids              = $tag_manager->store_user_tags( $user_id, $raw_tags );
+			$tag_manager->suppress_user_tags_updated_once( $user_id );
+			try {
+				$tag_ids = $tag_manager->store_user_tags( $user_id, $raw_tags );
+			} finally {
+				$tag_manager->clear_user_tags_updated_suppression( $user_id );
+			}
 			$tag_pairs            = $this->build_tag_pairs( $raw_tags, $tag_ids, $normalized['pairs'] );
 			$tag_names            = array_map(
 				static function ( array $pair ): string {

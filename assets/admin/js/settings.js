@@ -386,6 +386,138 @@
 			}
 		});
 	}
+
+		/**
+		 * Handle webhook URL copy button.
+		 */
+		$(document).off('click.ghlWebhookCopyUrl', '#copy-webhook-url')
+			.on('click.ghlWebhookCopyUrl', '#copy-webhook-url', function(e) {
+			e.preventDefault();
+
+			const urlField = document.getElementById('webhook_url');
+			if (!urlField || !navigator.clipboard) {
+				alert('Could not copy URL. Please copy manually.');
+				return;
+			}
+
+			const $button = $(this);
+			const originalHtml = $button.html();
+
+			navigator.clipboard.writeText(urlField.value).then(function() {
+				$button.html('<span class="dashicons dashicons-yes"></span> Copied!');
+				setTimeout(function() {
+					$button.html(originalHtml);
+				}, 2000);
+			}).catch(function() {
+				alert('Could not copy URL. Please copy manually.');
+			});
+		});
+
+		/**
+		 * Handle webhook secret copy button.
+		 */
+		$(document).off('click.ghlWebhookCopySecret', '#copy-webhook-secret')
+			.on('click.ghlWebhookCopySecret', '#copy-webhook-secret', function(e) {
+			e.preventDefault();
+
+			const secretField = document.getElementById('webhook-secret-field');
+			if (!secretField || !navigator.clipboard) {
+				alert('Could not copy token. Please copy manually.');
+				return;
+			}
+
+			const $button = $(this);
+			const originalHtml = $button.html();
+
+			navigator.clipboard.writeText(secretField.value).then(function() {
+				$button.html('<span class="dashicons dashicons-yes"></span> Copied!');
+				setTimeout(function() {
+					$button.html('<span class="dashicons dashicons-clipboard"></span> Copy Token');
+				}, 2000);
+			}).catch(function() {
+				alert('Could not copy token. Please copy manually.');
+			});
+		});
+
+		/**
+		 * Handle webhook secret regeneration.
+		 */
+		$(document).off('click.ghlWebhookRegenerate', '#regenerate-webhook-secret')
+			.on('click.ghlWebhookRegenerate', '#regenerate-webhook-secret', function(e) {
+			e.preventDefault();
+
+			if (!confirm('Regenerate the token? You must update your GoHighLevel automation immediately after rotating it.')) {
+				return;
+			}
+
+			const $button = $(this);
+			const originalHtml = $button.html();
+
+			$button.prop('disabled', true).html('<span class="dashicons dashicons-update ghl-spin"></span> Rotating...');
+
+			$.ajax({
+				url: ajaxurl,
+				type: 'POST',
+				data: {
+					action: 'syncly_regenerate_webhook_secret',
+					nonce: $('input[name="syncly_nonce"]').val() || $('#syncly_nonce').val() || ''
+				},
+				success: function(response) {
+					if (response.success && response.data) {
+						$('#webhook-secret-field').val(response.data.webhook_secret || '');
+
+						if (response.data.header) {
+							$('#webhook-secret-header-text').text(response.data.header);
+						}
+
+						alert(response.data.message || 'Token regenerated. Update your GoHighLevel automation.');
+					} else {
+						alert((response.data && response.data.message) ? response.data.message : 'Could not regenerate token.');
+					}
+
+					$button.prop('disabled', false).html(originalHtml);
+				},
+				error: function() {
+					alert('Token regeneration failed. Please try again.');
+					$button.prop('disabled', false).html(originalHtml);
+				}
+			});
+		});
+
+		/**
+		 * Handle webhook endpoint test.
+		 */
+		$(document).off('click.ghlWebhookTest', '#ghl-test-webhook')
+			.on('click.ghlWebhookTest', '#ghl-test-webhook', function(e) {
+			e.preventDefault();
+
+			const $button = $(this);
+			const originalHtml = $button.html();
+
+			$button.prop('disabled', true).html('<span class="dashicons dashicons-update ghl-spin"></span> Testing...');
+
+			$.ajax({
+				url: ajaxurl,
+				type: 'POST',
+				data: {
+					action: 'syncly_test_webhook',
+					nonce: $('input[name="syncly_nonce"]').val() || $('#syncly_nonce').val() || ''
+				},
+				success: function(response) {
+					if (response.success) {
+						alert('Test successful! Webhook endpoint is working correctly.');
+					} else {
+						alert('Test failed: ' + (response.data ? response.data.message : 'Unknown error'));
+					}
+
+					$button.prop('disabled', false).html(originalHtml);
+				},
+				error: function(xhr, status, error) {
+					alert('Test failed. Please check your server configuration.\n\n' + error);
+					$button.prop('disabled', false).html(originalHtml);
+				}
+			});
+		});
 	
 	/**
 	 * Handle System Health Check button click

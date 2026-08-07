@@ -27,6 +27,19 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @subpackage Core
  */
 class TagManager {
+	/**
+	 * Meta key used to suppress the next syncly_user_tags_updated fire.
+	 *
+	 * @var string
+	 */
+	private const SKIP_USER_TAGS_UPDATED_META_KEY = '_ghl_skip_tags_sync';
+
+	/**
+	 * Whether inbound GHL sync is currently muting outbound hooks.
+	 *
+	 * @var bool
+	 */
+	private bool $inbound_sync_guard = false;
 
 	/**
 	 * Legacy contact ID user meta key (global, non-location scoped).
@@ -102,6 +115,33 @@ class TagManager {
 		}
 
 		return self::$instance;
+	}
+
+	/**
+	 * Start muting outbound hooks during inbound GHL sync.
+	 *
+	 * @return void
+	 */
+	public function begin_inbound_sync_guard(): void {
+		$this->inbound_sync_guard = true;
+	}
+
+	/**
+	 * Stop muting outbound hooks during inbound GHL sync.
+	 *
+	 * @return void
+	 */
+	public function end_inbound_sync_guard(): void {
+		$this->inbound_sync_guard = false;
+	}
+
+	/**
+	 * Check whether inbound sync guard is active.
+	 *
+	 * @return bool
+	 */
+	public function is_inbound_sync_guard_active(): bool {
+		return $this->inbound_sync_guard;
 	}
 
 	// =========================================================================
@@ -906,6 +946,7 @@ class TagManager {
 		$meta_key   = $this->get_user_tags_meta_key( $location_id );
 		$normalized = $this->normalize_tag_input( $tags );
 		$ids        = $normalized['ids'];
+		$skip_hook  = (bool) get_user_meta( $user_id, self::SKIP_USER_TAGS_UPDATED_META_KEY, true );
 
 		// Capture previous tag IDs for change detection.
 		$old_ids = get_user_meta( $user_id, $meta_key, true );
@@ -916,7 +957,7 @@ class TagManager {
 		update_user_meta( $user_id, $meta_key, $ids );
 
 		// Fire hook when tags changed so integrations can react.
-		if ( $ids !== $old_ids ) {
+		if ( $ids !== $old_ids && ! $skip_hook && ! $this->inbound_sync_guard ) {
 			/**
 			 * Fires after a user's GHL tags are updated.
 			 *
@@ -927,6 +968,26 @@ class TagManager {
 		}
 
 		return $ids;
+	}
+
+	/**
+	 * Suppress the next syncly_user_tags_updated action for a user.
+	 *
+	 * @param int $user_id WordPress user ID.
+	 * @return void
+	 */
+	public function suppress_user_tags_updated_once( int $user_id ): void {
+		update_user_meta( $user_id, self::SKIP_USER_TAGS_UPDATED_META_KEY, 1 );
+	}
+
+	/**
+	 * Clear any pending suppression for syncly_user_tags_updated.
+	 *
+	 * @param int $user_id WordPress user ID.
+	 * @return void
+	 */
+	public function clear_user_tags_updated_suppression( int $user_id ): void {
+		delete_user_meta( $user_id, self::SKIP_USER_TAGS_UPDATED_META_KEY );
 	}
 
 	/**

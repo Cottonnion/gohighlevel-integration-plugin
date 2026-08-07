@@ -96,14 +96,20 @@ class UserMetaSync {
 		$this->tag_manager->store_user_contact_id( $user_id, (string) $contact_id );
 		update_user_meta( $user_id, '_ghl_last_sync', time() );
 
-		// Flush pending tags (queued before contact existed).
-		$this->flush_pending_tags( $user_id, $contact_id, $item );
+		$this->tag_manager->suppress_user_tags_updated_once( $user_id );
 
-		// Store/merge tags from result or payload.
-		$this->sync_tags( $user_id, $item, $result, $payload );
+		try {
+			// Flush pending tags (queued before contact existed).
+			$this->flush_pending_tags( $user_id, $contact_id, $item );
 
-		// For add_tags / remove_tags / update — full refresh from GHL.
-		$this->maybe_refresh_from_ghl( $user_id, $contact_id, $item );
+			// Store/merge tags from result or payload.
+			$this->sync_tags( $user_id, $item, $result, $payload );
+
+			// For add_tags / remove_tags / update — full refresh from GHL.
+			$this->maybe_refresh_from_ghl( $user_id, $contact_id, $item );
+		} finally {
+			$this->tag_manager->clear_user_tags_updated_suppression( $user_id );
+		}
 	}
 
 	// ------------------------------------------------------------------

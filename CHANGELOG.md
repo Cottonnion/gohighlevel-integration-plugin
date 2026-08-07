@@ -4,6 +4,18 @@ All notable changes to Syncly will be documented in this file.
 
 ## [Unreleased]
 
+## [1.4.15] - 2026-08-07
+
+### Fixed
+
+- Fixed a sync loop issue where updates coming from GoHighLevel could sometimes trigger the same update again in WordPress.
+- This now protects user creation, profile updates, user deletion, and tag updates so they do not bounce back and forth between systems.
+- Fixed the Webhooks settings buttons so Copy URL, Copy Token, Regenerate Token, and Test Webhook all work reliably again.
+
+### Changed
+
+- The Webhooks settings page now uses the shared admin script for its button behavior, which makes it more reliable and easier to maintain.
+
 ## [1.4.14] - 2026-08-04
 
 ### Added
