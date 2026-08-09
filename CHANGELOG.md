@@ -4,6 +4,12 @@ All notable changes to Syncly will be documented in this file.
 
 ## [Unreleased]
 
+## [1.4.19] - 2026-08-09
+
+### Changed
+
+- Added Tag Rules, a single page that shows all tag automations on the site in one place so admins can quickly review what happens when a contact has a given tag.
+
 ## [1.4.18] - 2026-08-09
 
 ### Changed

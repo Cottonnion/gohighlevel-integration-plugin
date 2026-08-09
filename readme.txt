@@ -4,7 +4,7 @@ Tags: gohighlevel, crm, woocommerce, buddyboss, learndash
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.4.18
+Stable tag: 1.4.19
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -53,6 +53,9 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
 == Changelog ==
+
+= 1.4.19 =
+- Added Tag Rules, a single page that shows all tag automations on the site in one place so admins can quickly review what happens when a contact has a given tag.
 
 = 1.4.18 =
 - Refreshed the Upgrade to Pro page to highlight the latest Syncly Pro automation features for roles, memberships, subscriptions, and content access.
