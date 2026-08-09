@@ -215,7 +215,19 @@ class Restrictions {
 		// Check if user has access
 		if ( ! $this->access_control->user_has_access( $user_id, $post_id ) ) {
 			$this->handle_access_denial( $post_id, 'insufficient_permissions' );
+			return;
 		}
+
+		/**
+		 * Fires when a logged-in user successfully views a restricted post.
+		 *
+		 * Allows Pro to apply a GHL tag as an engagement signal.
+		 *
+		 * @since 1.4.16
+		 * @param int $post_id Restricted post ID.
+		 * @param int $user_id WordPress user ID granted access.
+		 */
+		do_action( 'syncly_content_access_granted', $post_id, $user_id );
 	}
 
 	/**
@@ -226,6 +238,20 @@ class Restrictions {
 	 * @return void
 	 */
 	private function handle_access_denial( int $post_id, string $reason ): void {
+		/**
+		 * Fires whenever a visitor is denied access to a restricted post.
+		 *
+		 * Fires regardless of the syncly_should_deny_access override below, so Pro can
+		 * apply a GHL tag as a lead-gen/retargeting signal even if the denial itself is
+		 * bypassed. $user_id is 0 for the 'not_logged_in' reason (no WP user to tag yet).
+		 *
+		 * @since 1.4.16
+		 * @param int    $post_id Restricted post ID.
+		 * @param string $reason  Denial reason: 'not_logged_in'|'insufficient_permissions'.
+		 * @param int    $user_id WordPress user ID, or 0 if not logged in.
+		 */
+		do_action( 'syncly_content_access_denied', $post_id, $reason, is_user_logged_in() ? get_current_user_id() : 0 );
+
 		// Allow plugins to modify behavior
 		$should_deny = apply_filters( 'syncly_should_deny_access', true, $post_id, $reason );
 

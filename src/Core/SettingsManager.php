@@ -72,6 +72,7 @@ class SettingsManager {
 		'wc_customer_tag',
 		'wc_abandoned_cart_tag',
 		'wc_abandoned_cart_recovery_tag',
+		'role_tag_auto_assign',
 	];
 
 	/**
@@ -253,6 +254,18 @@ class SettingsManager {
 			if ( ! $saved ) {
 				throw new \Exception( __( 'Failed to save settings. Please try again.', 'syncly' ) );
 			}
+
+			/**
+			 * Fires after settings are successfully saved.
+			 *
+			 * Allows Pro or third-party code to react to specific keys changing
+			 * (e.g. reprocess existing users when a tag-based automation mapping changes).
+			 *
+			 * @since 1.4.16
+			 * @param array $settings         Newly saved settings (merged, full array).
+			 * @param array $current_settings Settings as they were before this save.
+			 */
+			do_action( 'syncly_settings_saved', $settings, $current_settings );
 
 				// Build response settings and include location-specific tag configurations
 				$response_settings = $this->get_settings_array();

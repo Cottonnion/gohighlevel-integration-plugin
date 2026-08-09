@@ -62,6 +62,16 @@ $upgrade_url            = apply_filters( 'syncly_upgrade_url', 'https://highleve
 							<?php esc_html_e( 'Remove on Role Change', 'syncly' ); ?>
 							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'When enabled, these tags are removed from the contact when the user loses this role. Useful for access-based tags. Keep disabled if you want to preserve role history in tags.', 'syncly' ); ?>">?</span>
 						</th>
+						<?php
+						/**
+						 * Fires inside the Role Tags table header row, after the built-in columns.
+						 *
+						 * Allows Pro to add extra header cells (e.g. reverse tag-to-role automation).
+						 *
+						 * @since 1.4.16
+						 */
+						do_action( 'syncly_role_tags_table_header_extra' );
+						?>
 					</tr>
 				</thead>
 				<tbody>
@@ -116,13 +126,26 @@ $upgrade_url            = apply_filters( 'syncly_upgrade_url', 'https://highleve
 								/>
 							</td>
 							<td style="text-align: center;">
-								<input 
-									type="checkbox" 
-									name="role_tags[<?php echo esc_attr( $role_key ); ?>][remove_on_change]" 
-									value="1" 
+								<input
+									type="checkbox"
+									name="role_tags[<?php echo esc_attr( $role_key ); ?>][remove_on_change]"
+									value="1"
 									<?php checked( $remove_on_change ); ?>
 								/>
 							</td>
+							<?php
+							/**
+							 * Fires inside each Role Tags table row, after the built-in columns.
+							 *
+							 * Allows Pro to add extra cells for the same role (e.g. reverse
+							 * tag-to-role automation config).
+							 *
+							 * @since 1.4.16
+							 * @param string $role_key  WordPress role slug.
+							 * @param array  $role_data Existing saved role_tags config for this role.
+							 */
+							do_action( 'syncly_role_tags_table_row_extra', $role_key, $role_data );
+							?>
 						</tr>
 					<?php endforeach; ?>
 				</tbody>

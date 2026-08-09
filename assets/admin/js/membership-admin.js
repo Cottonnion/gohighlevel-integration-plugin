@@ -18,36 +18,49 @@
         },
 
         /**
-         * Initialize Select2 for tags
+         * Initialize Select2 for tags.
+         *
+         * Applies to every `.ghl-tags-select` on the screen — the built-in
+         * Required Tags field plus any Pro-added fields (e.g. content-access
+         * granted/denied tags), not just a single hardcoded element.
          */
         initSelect2: function() {
-            const $tagsSelect = $('#ghl_required_tags');
-            
-            if ($tagsSelect.length === 0) {
+            const $tagsSelects = $('.ghl-tags-select');
+
+            if ($tagsSelects.length === 0) {
                 return;
             }
 
-            // Pre-populate options from localized tags (already selected tags are in HTML)
             var allTags = (typeof synclyMembership !== 'undefined' && synclyMembership.tags) ? synclyMembership.tags : [];
-            var selectedIds = $tagsSelect.find('option').map(function() {
-                return $(this).val();
-            }).get();
 
-            allTags.forEach(function(tag) {
-                var label = String(tag.name || tag.id || '');
-                if (label && selectedIds.indexOf(label) === -1) {
-                    $tagsSelect.append(new Option(label, label, false, false));
+            $tagsSelects.each(function() {
+                var $tagsSelect = $(this);
+
+                if ($tagsSelect.hasClass('select2-hidden-accessible')) {
+                    return; // Already initialized.
                 }
-            });
 
-            $tagsSelect.select2({
-                tags: true,
-                tokenSeparators: [','],
-                placeholder: $tagsSelect.data('placeholder'),
-                closeOnSelect: false,
-                allowClear: true,
-                width: '100%',
-                scrollAfterSelect: false
+                // Pre-populate options from localized tags (already selected tags are in HTML)
+                var selectedIds = $tagsSelect.find('option').map(function() {
+                    return $(this).val();
+                }).get();
+
+                allTags.forEach(function(tag) {
+                    var label = String(tag.name || tag.id || '');
+                    if (label && selectedIds.indexOf(label) === -1) {
+                        $tagsSelect.append(new Option(label, label, false, false));
+                    }
+                });
+
+                $tagsSelect.select2({
+                    tags: true,
+                    tokenSeparators: [','],
+                    placeholder: $tagsSelect.data('placeholder'),
+                    closeOnSelect: false,
+                    allowClear: true,
+                    width: '100%',
+                    scrollAfterSelect: false
+                });
             });
         },
 

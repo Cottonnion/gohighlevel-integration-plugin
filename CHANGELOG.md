@@ -4,6 +4,16 @@ All notable changes to Syncly will be documented in this file.
 
 ## [Unreleased]
 
+## [1.4.16] - 2026-08-09
+
+### Added
+
+- Added clearer in-app Pro upsell messaging in Role Tags settings for approve/deny automation capabilities.
+
+### Changed
+
+- Updated role/tag and membership settings flows for improved admin configuration reliability.
+
 ## [1.4.15] - 2026-08-07
 
 ### Fixed

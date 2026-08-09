@@ -4,7 +4,7 @@ Tags: gohighlevel, crm, woocommerce, buddyboss, learndash
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.4.15
+Stable tag: 1.4.16
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -53,6 +53,10 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
 == Changelog ==
+
+= 1.4.16 =
+- Added page-view outcome tagging controls so contacts can be tagged when access to a protected page is approved or denied.
+- Added bidirectional tag/role sync support so GoHighLevel tags can automatically assign matching WordPress roles.
 
 = 1.4.15 =
 - Fixed a sync loop issue where updates coming from GoHighLevel could sometimes trigger the same update again in WordPress.

@@ -293,6 +293,34 @@ class MetaBoxes {
 					</p>
 				</div>
 			</details>
+
+			<?php
+			/**
+			 * Fires inside the membership restriction meta box, after the built-in fields.
+			 *
+			 * Allows Pro to render additional per-post fields (e.g. reverse content-access
+			 * tagging on grant/denial).
+			 *
+			 * @since 1.4.16
+			 * @param \WP_Post $post Current post being edited.
+			 */
+			if ( has_action( 'syncly_render_membership_restriction_extra_fields' ) ) {
+				do_action( 'syncly_render_membership_restriction_extra_fields', $post );
+			} else {
+				$notice_title = __( 'Turn Views and Denials Into GoHighLevel Tags', 'syncly' );
+				$description  = __( 'Know exactly who\'s engaging with your gated content and who\'s hitting the paywall. Tag contacts automatically on every view or denial so you can retarget, nurture, or upsell them in GoHighLevel — no manual list-building required.', 'syncly' );
+				$features     = [
+					__( 'Tag contacts the moment they view restricted content', 'syncly' ),
+					__( 'Tag contacts the moment they\'re denied access', 'syncly' ),
+					__( 'Each tag applies once per contact — no duplicate noise', 'syncly' ),
+				];
+				$cta_text = __( 'Unlock Content-Access Tagging', 'syncly' );
+				$cta_url  = apply_filters( 'syncly_upgrade_url', 'https://highlevelsync.com/' );
+				$style    = 'box';
+
+				include SYNCLY_PATH . 'templates/admin/partials/pro-upgrade-notice.php';
+			}
+			?>
 		</div>
 		<?php
 	}
@@ -338,6 +366,17 @@ class MetaBoxes {
 		// Save redirect URL
 		$redirect_url = isset( $_POST['ghl_redirect_url'] ) ? esc_url_raw( wp_unslash( $_POST['ghl_redirect_url'] ) ) : '';
 		update_post_meta( $post_id, '_ghl_redirect_url', $redirect_url );
+
+		/**
+		 * Fires after the built-in membership restriction fields are saved.
+		 *
+		 * Allows Pro to save additional per-post fields. Nonce and capability checks
+		 * for this post have already passed by this point.
+		 *
+		 * @since 1.4.16
+		 * @param int $post_id Post ID being saved.
+		 */
+		do_action( 'syncly_save_membership_restriction_extra_fields', $post_id );
 	}
 
 	/**
