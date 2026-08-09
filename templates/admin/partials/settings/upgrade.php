@@ -50,6 +50,16 @@ $pro_features = [
 	],
 	[
 		'icon'        => 'dashicons-randomize',
+		'title'       => __( 'Reverse Role Sync', 'syncly' ),
+		'description' => __( 'Automatically assign WordPress roles when a matching GoHighLevel tag is added, with optional cleanup when that tag is removed.', 'syncly' ),
+	],
+	[
+		'icon'        => 'dashicons-yes-alt',
+		'title'       => __( 'Approve and Deny Access Tagging', 'syncly' ),
+		'description' => __( 'Trigger different GoHighLevel tags when a user is approved for protected content or denied access, so your follow-up automations stay in sync.', 'syncly' ),
+	],
+	[
+		'icon'        => 'dashicons-randomize',
 		'title'       => __( 'Extended Field Mapping', 'syncly' ),
 		'description' => __( 'Map WooCommerce, BuddyBoss, LearnDash, and custom user fields, plus AI-assisted auto-suggested mappings.', 'syncly' ),
 	],
@@ -62,6 +72,16 @@ $pro_features = [
 		'icon'        => 'dashicons-cart',
 		'title'       => __( 'WooCommerce Add-on', 'syncly' ),
 		'description' => __( 'Tag contacts on product purchase, track abandoned carts, sync opportunities, and convert customers automatically.', 'syncly' ),
+	],
+	[
+		'icon'        => 'dashicons-groups',
+		'title'       => __( 'Membership Plan Tag Automation', 'syncly' ),
+		'description' => __( 'Grant WooCommerce Membership plans from GoHighLevel tags and optionally revoke automation-granted access when qualifying tags are removed.', 'syncly' ),
+	],
+	[
+		'icon'        => 'dashicons-update',
+		'title'       => __( 'Subscription Tag Automation', 'syncly' ),
+		'description' => __( 'Auto-create and cancel WooCommerce Subscriptions from GoHighLevel tags, including batch reprocessing for existing users.', 'syncly' ),
 	],
 	[
 		'icon'        => 'dashicons-welcome-learn-more',
@@ -98,7 +118,7 @@ $pro_features = [
 				<?php esc_html_e( 'Upgrade to Syncly Pro', 'syncly' ); ?>
 			</h2>
 			<p class="description" style="max-width: 520px; margin: 0 auto 24px; font-size: 14px; color: var(--ghl-text-secondary, #6b7280); line-height: 1.6;">
-				<?php esc_html_e( 'Syncly is fully functional on its own. Syncly Pro adds the features below for stores, membership sites, and teams that need more.', 'syncly' ); ?>
+				<?php esc_html_e( 'Syncly is fully functional on its own. Syncly Pro adds deeper automation for memberships, WooCommerce, role sync, and content-access follow-up workflows.', 'syncly' ); ?>
 			</p>
 			<a href="<?php echo esc_url( $upgrade_url ); ?>" class="ghl-button ghl-button-primary ghl-button-large" target="_blank" rel="noopener noreferrer">
 				<?php esc_html_e( 'View Pricing', 'syncly' ); ?>
