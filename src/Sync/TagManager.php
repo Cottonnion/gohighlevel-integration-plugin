@@ -242,6 +242,148 @@ class TagManager {
 	}
 
 	/**
+	 * Ensure the given tag names exist in GoHighLevel, creating any that don't.
+	 *
+	 * Tag pickers across the plugin (product tags, role tags, membership tags,
+	 * etc.) let an admin type a brand-new tag as free text via Select2. Until
+	 * that tag is actually applied to a contact, GHL never creates it — so it
+	 * never shows up in *other* tag pickers, which all read from the same
+	 * cached tag list. This closes that gap the same way custom fields are
+	 * created on first use (see MetadataService::create_custom_field()):
+	 * create it in GHL immediately and bust the cache so every other screen
+	 * picks it up on next load.
+	 *
+	 * Best-effort — a failed creation is skipped, not fatal, since the tag
+	 * still works locally as free text and will simply be (re-)attempted the
+	 * next time it's saved somewhere.
+	 *
+	 * @since 1.4.17
+	 * @param array<int,string> $tag_names Tag names to ensure exist.
+	 * @return array<int,string> Names of tags that were newly created.
+	 */
+	public function ensure_tags_exist( array $tag_names ): array {
+		$tag_names = array_values(
+			array_unique(
+				array_filter(
+					array_map(
+						static function ( $name ) {
+							return sanitize_text_field( (string) $name );
+						},
+						$tag_names
+					)
+				)
+			)
+		);
+
+		if ( empty( $tag_names ) ) {
+			return [];
+		}
+
+		$location_id = $this->settings_manager->get_setting( 'location_id' );
+		if ( empty( $location_id ) ) {
+			return [];
+		}
+
+		$existing_tags = $this->get_tags();
+		$known_lower   = array_map(
+			static function ( array $tag ): string {
+				return strtolower( (string) ( $tag['name'] ?? '' ) );
+			},
+			$existing_tags
+		);
+
+		$created     = [];
+		$new_entries = [];
+
+		foreach ( $tag_names as $name ) {
+			if ( '' === $name || in_array( strtolower( $name ), $known_lower, true ) ) {
+				continue;
+			}
+
+			try {
+				$client   = Client::get_instance();
+				// A non-throwing POST means GHL accepted the request. Client::post()
+				// already throws on non-2xx responses (see Client::request()), so we
+				// don't need to find a specific field in the response body to know it
+				// worked — some GHL "create" endpoints return 201 with an empty body,
+				// and guessing at the response shape here previously meant a
+				// successfully-created tag could still be treated as "not created" and
+				// silently skip the cache update below.
+				$response = $client->post( 'locations/' . $location_id . '/tags', [ 'name' => $name ], false );
+
+				$created[]     = $name;
+				$known_lower[] = strtolower( $name );
+				$new_entries[] = [
+					'id'   => (string) ( $response['tag']['id'] ?? $response['id'] ?? '' ),
+					'name' => $name,
+				];
+			} catch ( \Throwable $e ) {
+				// Best-effort — leave it as free text locally; nothing further to do here.
+				continue;
+			}
+		}
+
+		if ( ! empty( $new_entries ) ) {
+			// Merge the newly created tags directly into the cache instead of
+			// re-fetching from GHL: some GHL list/search endpoints lag behind a
+			// create by a moment (read-after-write isn't instant), so an immediate
+			// re-fetch can still come back without the tag we JUST created — which
+			// looks identical to "the cache never cleared". Appending what we
+			// already know locally sidesteps that race entirely; a later natural
+			// refresh reconciles it with the authoritative GHL record regardless.
+			$this->merge_tags_into_cache( $existing_tags, $new_entries );
+		}
+
+		return $created;
+	}
+
+	/**
+	 * Merge newly created tags into the transient cache and the in-memory index.
+	 *
+	 * @since 1.4.17
+	 * @param array<int,array{id:string,name:string}> $existing_tags Tags already in the cache.
+	 * @param array<int,array{id:string,name:string}> $new_entries   Newly created tags to add.
+	 * @return void
+	 */
+	private function merge_tags_into_cache( array $existing_tags, array $new_entries ): void {
+		$location_id = (string) ( $this->settings_manager->get_setting( 'location_id' ) ?? '' );
+		if ( '' === $location_id ) {
+			return;
+		}
+
+		$site_id       = get_current_blog_id();
+		$transient_key = sprintf( 'syncly_tags_%s_site_%d', $location_id, $site_id );
+
+		// Re-read the transient right before merging (not the copy captured earlier
+		// in ensure_tags_exist()) in case something else refreshed it in between.
+		$current = get_transient( $transient_key );
+		$current = is_array( $current ) ? $current : $existing_tags;
+
+		$known_lower = array_map(
+			static function ( array $tag ): string {
+				return strtolower( (string) ( $tag['name'] ?? '' ) );
+			},
+			$current
+		);
+
+		foreach ( $new_entries as $entry ) {
+			if ( in_array( strtolower( $entry['name'] ), $known_lower, true ) ) {
+				continue;
+			}
+			$current[]     = $entry;
+			$known_lower[] = strtolower( $entry['name'] );
+		}
+
+		$cache_duration = (int) $this->settings_manager->get_setting( 'cache_duration', HOUR_IN_SECONDS );
+		set_transient( $transient_key, $current, $cache_duration );
+
+		// Reset the in-memory ID-keyed index so the current request's TagManager
+		// instance reflects the merge immediately too, not just future requests.
+		$this->tag_cache       = [];
+		$this->tag_cache_lower = [];
+	}
+
+	/**
 	 * Check whether the most recent get_tags() call was served from cache.
 	 *
 	 * Useful for diagnostics and health checks.

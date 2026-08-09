@@ -255,6 +255,8 @@ class SettingsManager {
 				throw new \Exception( __( 'Failed to save settings. Please try again.', 'syncly' ) );
 			}
 
+			$this->ensure_settings_tags_exist( $settings );
+
 			/**
 			 * Fires after settings are successfully saved.
 			 *
@@ -618,6 +620,72 @@ class SettingsManager {
 		}
 
 		return $sanitized;
+	}
+
+	/**
+	 * Ensure any brand-new tag names typed into settings-array tag pickers
+	 * (Role Tags, Global Tags, Restriction Allowed Tags, etc.) actually exist
+	 * in GoHighLevel, the same way a new custom field is created on first use.
+	 *
+	 * Without this, a tag typed into one of these free-text Select2 fields is
+	 * only ever local text — it never appears in *other* tag pickers (e.g. the
+	 * user profile) until GHL happens to create it via some unrelated contact
+	 * update.
+	 *
+	 * @since 1.4.17
+	 * @param array $settings Settings about to be persisted (or just persisted).
+	 * @return void
+	 */
+	private function ensure_settings_tags_exist( array $settings ): void {
+		// Keys whose value is a flat array of tag name strings.
+		$flat_tag_keys = [ 'global_tags', 'restrictions_allowed_tags', 'user_register_tags' ];
+
+		// Keys whose value is { role_key: { tags: [...], ... } }.
+		$nested_tag_keys = [ 'role_tags', 'role_tag_auto_assign' ];
+
+		$tag_names = [];
+
+		foreach ( $settings as $key => $value ) {
+			if ( ! is_array( $value ) ) {
+				continue;
+			}
+
+			$base_key = preg_replace( '/_[A-Za-z0-9]+$/', '', (string) $key );
+
+			if ( in_array( $key, $flat_tag_keys, true ) || in_array( $base_key, $flat_tag_keys, true ) ) {
+				foreach ( $value as $tag ) {
+					if ( is_string( $tag ) || is_numeric( $tag ) ) {
+						$tag_names[] = (string) $tag;
+					}
+				}
+				continue;
+			}
+
+			if ( in_array( $key, $nested_tag_keys, true ) || in_array( $base_key, $nested_tag_keys, true ) ) {
+				foreach ( $value as $role_config ) {
+					if ( ! is_array( $role_config ) || empty( $role_config['tags'] ) ) {
+						continue;
+					}
+
+					$tags = is_array( $role_config['tags'] ) ? $role_config['tags'] : [ $role_config['tags'] ];
+					foreach ( $tags as $tag ) {
+						if ( is_string( $tag ) || is_numeric( $tag ) ) {
+							$tag_names[] = (string) $tag;
+						}
+					}
+				}
+			}
+		}
+
+		if ( empty( $tag_names ) ) {
+			return;
+		}
+
+		try {
+			TagManager::get_instance()->ensure_tags_exist( $tag_names );
+		} catch ( \Throwable $e ) {
+			// Best-effort — never block a settings save over this.
+		}
 	}
 
 	/**

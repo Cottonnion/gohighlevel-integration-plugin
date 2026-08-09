@@ -361,6 +361,13 @@ class MetaBoxes {
 		$required_tags = isset( $_POST['ghl_required_tags'] ) && is_array( $_POST['ghl_required_tags'] )
 			? array_map( 'sanitize_text_field', wp_unslash( $_POST['ghl_required_tags'] ) )
 			: [];
+
+		if ( ! empty( $required_tags ) ) {
+			// Create any brand-new tags in GHL now, so they're available in every
+			// other tag picker (e.g. the user profile) — not just here.
+			\Syncly\Sync\TagManager::get_instance()->ensure_tags_exist( $required_tags );
+		}
+
 		update_post_meta( $post_id, \Syncly\Sync\TagManager::scoped_meta_key( '_ghl_required_tags' ), $required_tags );
 
 		// Save redirect URL

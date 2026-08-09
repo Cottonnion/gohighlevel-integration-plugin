@@ -4,10 +4,13 @@ All notable changes to Syncly will be documented in this file.
 
 ## [Unreleased]
 
-## [1.4.16] - 2026-08-09
+## [1.4.17] - 2026-08-09
 
 ### Added
 
+- Added support for creating a GoHighLevel tag directly from the tag selector when an entered tag does not already exist in the connected GoHighLevel account.
+- Added page-view outcome tagging controls so contacts can be tagged when access to a protected page is approved or denied.
+- Added bidirectional tag-to-role sync so GoHighLevel tags can automatically assign matching WordPress roles.
 - Added clearer in-app Pro upsell messaging in Role Tags settings for approve/deny automation capabilities.
 
 ### Changed
