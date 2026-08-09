@@ -206,7 +206,12 @@
 					if (typeof window.initPersonalizationSettings === 'function') {
 						window.initPersonalizationSettings();
 					}
-					
+
+					// Re-initialize tag rules search (for tag-rules tab)
+					if (typeof window.initTagRules === 'function') {
+						window.initTagRules();
+					}
+
 					// Re-initialize sync preview functionality (for sync-preview tab)
 					if (window.ghlSyncPreview && typeof window.ghlSyncPreview.init === 'function') {
 						window.ghlSyncPreview.init();

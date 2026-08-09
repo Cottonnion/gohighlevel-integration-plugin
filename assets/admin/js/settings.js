@@ -1426,6 +1426,72 @@
 		});
 	}
 
+	/**
+	 * Tag Rules tab — client-side filter over the already-rendered rule list.
+	 * Delegated on document so it keeps working after the SPA swaps tab content.
+	 */
+	function initTagRules() {
+		const $list    = $('#syncly-tag-rules-list');
+		const $noMatch = $('#syncly-tag-rules-no-results');
+		const $count   = $('#syncly-tag-rules-count');
+
+		if (!$list.length) {
+			return;
+		}
+
+		function applyFilter(term) {
+			term = term.trim().toLowerCase();
+
+			let visibleRows = 0;
+
+			$list.find('.syncly-tag-rules-group').each(function() {
+				const $group = $(this);
+				let groupHasMatch = false;
+
+				$group.find('.syncly-tag-rule-row').each(function() {
+					const $row   = $(this);
+					const search = $row.data('search') ? String($row.data('search')) : '';
+					const tag    = $group.data('tag') ? String($group.data('tag')) : '';
+					const matches = '' === term || search.indexOf(term) !== -1 || tag.indexOf(term) !== -1;
+
+					$row.toggle(matches);
+
+					if (matches) {
+						groupHasMatch = true;
+						visibleRows++;
+					}
+				});
+
+				$group.toggle(groupHasMatch);
+			});
+
+			$noMatch.toggle(0 === visibleRows);
+
+			if ($count.length) {
+				$count.text(
+					visibleRows === 1
+						? syncly_tag_rules_i18n.one.replace('%d', visibleRows)
+						: syncly_tag_rules_i18n.many.replace('%d', visibleRows)
+				);
+			}
+		}
+
+		// Namespaced + delegated: safe to call again after every tab reload.
+		$(document)
+			.off('input.synclyTagRules', '#syncly-tag-rules-search')
+			.on('input.synclyTagRules', '#syncly-tag-rules-search', function() {
+				applyFilter($(this).val() || '');
+			});
+
+		applyFilter($('#syncly-tag-rules-search').val() || '');
+	}
+
+	// Minimal i18n strings for the rule counter (avoids a dedicated PHP localization call).
+	const syncly_tag_rules_i18n = {
+		one: (typeof synclyTagRulesI18n !== 'undefined' && synclyTagRulesI18n.one) || '%d rule shown',
+		many: (typeof synclyTagRulesI18n !== 'undefined' && synclyTagRulesI18n.many) || '%d rules shown'
+	};
+
 	// Export to global scope for SPA to call
 	window.initSettings = initSettings;
 	window.cleanupSettings = cleanupSettings;
@@ -1434,6 +1500,7 @@
 	window.initRoleTags = initRoleTags;
 	window.initFamilyAccounts = initFamilyAccounts;
 	window.initPersonalizationSettings = initPersonalizationSettings;
+	window.initTagRules = initTagRules;
 
 	// Initialize on document ready (for non-SPA page loads)
 	$(document).ready(function() {
@@ -1443,6 +1510,7 @@
 		initFamilyAccounts();
 		initPersonalizationSettings();
 		initSettings();
+		initTagRules();
 	});
 
 })(jQuery, window);
