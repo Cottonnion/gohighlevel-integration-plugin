@@ -4,8 +4,10 @@
  *
  * A plain-English, site-wide index of every automation tied to a GoHighLevel
  * tag — who/what a tag applies to, and what happens on the site when a
- * contact has it — gathered from Role-Based Tags, Content Restrictions, and
- * (when Pro is active) WooCommerce Memberships/Subscriptions and LearnDash.
+ * contact has it — gathered from Role-Based Tags, Content Restrictions,
+ * Elementor, Gutenberg, and Contact Form 7, plus (when Pro is active)
+ * WooCommerce Memberships/Subscriptions/Abandoned Cart, LearnDash, Login
+ * Sync, Conditional Menus, and Family Accounts.
  *
  * @package    Syncly
  * @subpackage Syncly/templates/admin/partials/settings
@@ -15,7 +17,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$rules = \Syncly\Core\TagRules\TagRulesProvider::get_instance()->get_rules();
+$tag_rules_provider = \Syncly\Core\TagRules\TagRulesProvider::get_instance();
+$rules               = $tag_rules_provider->get_rules();
+$safety_warnings     = $tag_rules_provider->get_safety_warnings();
 
 // Group flat rule rows by tag name for display.
 $grouped = [];
@@ -28,14 +32,13 @@ foreach ( $rules as $rule ) {
 }
 ksort( $grouped, SORT_NATURAL | SORT_FLAG_CASE );
 
-$badge_class_map = [
-	'role-tags'        => 'ghl-field-badge--default',
-	'restrictions'     => 'ghl-field-badge--custom',
-	'wc-membership'    => 'ghl-field-badge--woocommerce',
-	'wc-subscription'  => 'ghl-field-badge--woocommerce',
-	'learndash-course' => 'ghl-field-badge--learndash',
-	'learndash-group'  => 'ghl-field-badge--learndash',
-];
+// Tags with a hazard rule (currently: restriction-bypass), for the group-header badge.
+$hazard_tags = [];
+foreach ( $rules as $rule ) {
+	if ( ! empty( $rule['hazard'] ) && '' !== $rule['tag'] ) {
+		$hazard_tags[ strtolower( $rule['tag'] ) ] = true;
+	}
+}
 ?>
 
 <div class="ghl-settings-wrapper">
@@ -50,12 +53,28 @@ $badge_class_map = [
 			<p class="description">
 				<?php
 				esc_html_e(
-					'Every automation configured anywhere on this site that is tied to a GoHighLevel tag, in one place. Role-Based Tags, page/post restrictions, and (with Pro) WooCommerce and LearnDash tag automations are normally configured on separate screens — this page answers "what happens when a contact has tag X?" without hunting through each of them.',
+					'Every automation configured anywhere on this site that is tied to a GoHighLevel tag, in one place. Role-Based Tags, page/post restrictions, Elementor and Gutenberg conditions, Contact Form 7 forms, and (with Pro) WooCommerce, LearnDash, Login Sync, Conditional Menus, and Family Accounts are normally configured on separate screens — this page answers "what happens when a contact has tag X?" without hunting through each of them.',
 					'syncly'
 				);
 				?>
 			</p>
 		</div>
+
+		<?php if ( ! empty( $safety_warnings ) ) : ?>
+			<div class="syncly-tag-safety-warnings">
+				<h4>
+					<span class="dashicons dashicons-warning"></span>
+					<?php esc_html_e( 'Safety Warnings', 'syncly' ); ?>
+				</h4>
+				<ul>
+					<?php foreach ( $safety_warnings as $warning ) : ?>
+						<li class="<?php echo 'high' === $warning['severity'] ? 'syncly-tag-safety-warning--high' : ''; ?>">
+							<?php echo esc_html( $warning['message'] ); ?>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			</div>
+		<?php endif; ?>
 
 		<hr>
 
@@ -99,17 +118,24 @@ $badge_class_map = [
 								);
 								?>
 							</span>
+							<?php if ( isset( $hazard_tags[ strtolower( $tag_name ) ] ) ) : ?>
+								<span class="syncly-tag-hazard-badge">
+									<span class="dashicons dashicons-warning"></span>
+									<?php esc_html_e( 'Bypasses restrictions', 'syncly' ); ?>
+								</span>
+							<?php endif; ?>
 						</div>
 						<table class="ghl-table syncly-tag-rules-table">
 							<tbody>
 								<?php foreach ( $tag_rules as $rule ) : ?>
 									<?php
-									$badge_class = $badge_class_map[ $rule['source'] ] ?? 'ghl-field-badge--default';
-									$direction   = 'produces' === $rule['direction']
+										$badge_class = \Syncly\Core\TagRules\TagRulesProvider::get_badge_class( $rule['source'] );
+										$direction   = 'produces' === $rule['direction']
 										? __( 'Contact gets this tag when…', 'syncly' )
 										: __( 'When a contact has this tag…', 'syncly' );
+										$row_class   = 'syncly-tag-rule-row' . ( ! empty( $rule['hazard'] ) ? ' syncly-tag-rule-row--hazard' : '' );
 									?>
-									<tr class="syncly-tag-rule-row" data-search="<?php echo esc_attr( strtolower( $tag_name . ' ' . $rule['action'] . ' ' . $rule['source_label'] ) ); ?>">
+									<tr class="<?php echo esc_attr( $row_class ); ?>" data-search="<?php echo esc_attr( strtolower( $tag_name . ' ' . $rule['action'] . ' ' . $rule['source_label'] ) ); ?>">
 										<td class="syncly-tag-rule-direction">
 											<span class="syncly-tag-rule-direction-label"><?php echo esc_html( $direction ); ?></span>
 										</td>

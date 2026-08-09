@@ -4,6 +4,14 @@ All notable changes to Syncly will be documented in this file.
 
 ## [Unreleased]
 
+## [1.4.20] - 2026-08-09
+
+### Added
+
+- Added a Tag Rules Impact panel to the user profile screen that shows which site automations apply to that user's current GoHighLevel tags.
+- Added Contact Form 7, Elementor, and Gutenberg tag automations to the Tag Rules page so every free-tier tag rule is listed in one place.
+- Added Rule Safety warnings that highlight tag configurations which can unintentionally bypass content restrictions.
+
 ## [1.4.19] - 2026-08-09
 
 ### Changed

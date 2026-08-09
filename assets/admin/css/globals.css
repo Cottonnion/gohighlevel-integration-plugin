@@ -484,6 +484,36 @@ textarea.ghl-input {
 	color: #0054a6;
 }
 
+.ghl-field-badge--login-sync {
+	background-color: #ccfbf1;
+	color: #0f766e;
+}
+
+.ghl-field-badge--menus {
+	background-color: #e0e7ff;
+	color: #4338ca;
+}
+
+.ghl-field-badge--forms {
+	background-color: #fce7f3;
+	color: #be185d;
+}
+
+.ghl-field-badge--elementor {
+	background-color: #ffe4e6;
+	color: #e11d48;
+}
+
+.ghl-field-badge--gutenberg {
+	background-color: #d1fae5;
+	color: #047857;
+}
+
+.ghl-field-badge--family {
+	background-color: #ffedd5;
+	color: #c2410c;
+}
+
 /* Field section headers */
 .ghl-field-section-header {
 	margin-top: var(--ghl-spacing-2xl);

@@ -477,6 +477,8 @@ class UserProfileFields {
 				</select>
 			</div>
 
+			<?php $this->render_tag_impact_panel( $user, $current_tag_map ); ?>
+
 			<!-- Actions -->
 			<div class="ghl-actions">
 				<?php if ( ! empty( $contact_id ) ) : ?>
@@ -665,6 +667,152 @@ class UserProfileFields {
 			</div>
 
 			<?php wp_nonce_field( 'syncly_save_user_data', 'syncly_user_nonce' ); ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render the "Tag Rules Impact" panel: cross-references this user's
+	 * current GHL tags against every tag rule known to the site (see
+	 * TagRulesProvider) so an admin can see, without leaving the profile
+	 * screen, which Role-Based Tags / Content Restrictions (and, with Pro,
+	 * WooCommerce/LearnDash) automations reference tags this contact
+	 * already carries.
+	 *
+	 * Always renders (even when the contact has no tags yet, or isn't
+	 * synced at all) so the `syncly_user_tag_impact_panel_after` hook below
+	 * reliably fires — Pro's Tag Impact Simulator hangs off it and is most
+	 * useful for exactly that case: previewing a tag before it's applied.
+	 *
+	 * @param \WP_User             $user            The profile's user.
+	 * @param array<string,string> $current_tag_map Tag ID => tag name for this user's current tags.
+	 * @return void
+	 */
+	private function render_tag_impact_panel( \WP_User $user, array $current_tag_map ): void {
+		$tag_names = array_values( array_unique( $current_tag_map ) );
+		$grouped   = \Syncly\Core\TagRules\TagRulesProvider::get_instance()->get_rules_for_tags( $tag_names );
+		ksort( $grouped, SORT_NATURAL | SORT_FLAG_CASE );
+
+		$tag_rules_url = admin_url( 'admin.php?page=syncly-admin&settings_tab=tag-rules#tag-rules' );
+		?>
+		<div class="ghl-tag-impact-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e5e5;">
+			<h3 style="margin-top:0px;">
+				<span class="dashicons dashicons-networking" style="color: #2271b1;"></span>
+				<?php esc_html_e( 'Tag Rules Impact', 'syncly' ); ?>
+			</h3>
+			<p class="description">
+				<?php
+				esc_html_e(
+					'Which of this contact\'s current tags are tied to an automation configured on this site — Role-Based Tags, page/post restrictions, Elementor/Gutenberg conditions, Contact Form 7, and (with Pro) WooCommerce, LearnDash, Login Sync, Conditional Menus, and more.',
+					'syncly'
+				);
+				?>
+			</p>
+
+			<?php if ( empty( $current_tag_map ) ) : ?>
+				<div class="syncly-tag-rules-empty">
+					<span class="dashicons dashicons-info-outline"></span>
+					<p>
+						<?php esc_html_e( 'This contact doesn\'t have any tags yet, so there\'s nothing to check against configured rules.', 'syncly' ); ?>
+					</p>
+				</div>
+			<?php elseif ( empty( $grouped ) ) : ?>
+				<div class="syncly-tag-rules-empty">
+					<span class="dashicons dashicons-info-outline"></span>
+					<p>
+						<?php esc_html_e( 'None of this contact\'s current tags match a configured tag rule.', 'syncly' ); ?>
+						<a href="<?php echo esc_url( $tag_rules_url ); ?>"><?php esc_html_e( 'View all Tag Rules', 'syncly' ); ?></a>
+					</p>
+				</div>
+			<?php else : ?>
+				<div class="syncly-tag-rules-list">
+					<?php foreach ( $grouped as $tag_name => $tag_rules ) : ?>
+						<div class="syncly-tag-rules-group">
+							<div class="syncly-tag-rules-group-header">
+								<span class="dashicons dashicons-tag"></span>
+								<strong><?php echo esc_html( $tag_name ); ?></strong>
+								<span class="syncly-tag-rules-group-count">
+									<?php
+									printf(
+										/* translators: %d: number of rules for this tag. */
+										esc_html( _n( '%d rule', '%d rules', count( $tag_rules ), 'syncly' ) ),
+										count( $tag_rules )
+									);
+									?>
+								</span>
+								<?php if ( array_filter( $tag_rules, static fn( array $rule ): bool => ! empty( $rule['hazard'] ) ) ) : ?>
+									<span class="syncly-tag-hazard-badge">
+										<span class="dashicons dashicons-warning"></span>
+										<?php esc_html_e( 'Bypasses restrictions', 'syncly' ); ?>
+									</span>
+								<?php endif; ?>
+							</div>
+							<table class="ghl-table syncly-tag-rules-table">
+								<tbody>
+									<?php foreach ( $tag_rules as $rule ) : ?>
+										<?php
+										$badge_class = \Syncly\Core\TagRules\TagRulesProvider::get_badge_class( $rule['source'] );
+										$direction   = 'produces' === $rule['direction']
+											? __( 'Contact gets this tag when…', 'syncly' )
+											: __( 'Because this contact has this tag…', 'syncly' );
+										$row_class   = 'syncly-tag-rule-row' . ( ! empty( $rule['hazard'] ) ? ' syncly-tag-rule-row--hazard' : '' );
+										?>
+										<tr class="<?php echo esc_attr( $row_class ); ?>">
+											<td class="syncly-tag-rule-direction">
+												<span class="syncly-tag-rule-direction-label"><?php echo esc_html( $direction ); ?></span>
+											</td>
+											<td>
+												<?php echo esc_html( $rule['action'] ); ?>
+												<div>
+													<span class="ghl-field-badge <?php echo esc_attr( $badge_class ); ?>">
+														<?php echo esc_html( $rule['source_label'] ); ?>
+													</span>
+												</div>
+											</td>
+											<td class="syncly-tag-rule-edit">
+												<?php if ( ! empty( $rule['edit_url'] ) ) : ?>
+													<a href="<?php echo esc_url( $rule['edit_url'] ); ?>" class="ghl-button ghl-button-secondary">
+														<?php esc_html_e( 'Edit', 'syncly' ); ?>
+													</a>
+												<?php endif; ?>
+											</td>
+										</tr>
+									<?php endforeach; ?>
+								</tbody>
+							</table>
+						</div>
+					<?php endforeach; ?>
+				</div>
+			<?php endif; ?>
+
+			<?php
+			/**
+			 * Fires after the free-tier Tag Rules Impact panel on the user
+			 * profile screen. Pro hooks here to render the Tag Impact
+			 * Simulator (pick any tag, preview every effect it would trigger
+			 * before actually applying it — the same "preview before it
+			 * happens" pattern as Sync Preview, applied to tags).
+			 *
+			 * @param \WP_User             $user            The profile's user.
+			 * @param array<string,string> $current_tag_map Tag ID => tag name for this user's current tags.
+			 */
+			if ( has_action( 'syncly_user_tag_impact_panel_after' ) ) {
+				do_action( 'syncly_user_tag_impact_panel_after', $user, $current_tag_map );
+			} else {
+				$notice_title = __( 'Preview Any Tag Before You Apply It', 'syncly' );
+				$description  = __( 'Pick any tag on your site and see every rule it would trigger for this contact — role grants, content access, WooCommerce, LearnDash, and more — before it\'s actually applied.', 'syncly' );
+				$features     = [
+					__( 'Simulate any tag, not just ones this contact already has', 'syncly' ),
+					__( 'See every matching rule across all sources at once', 'syncly' ),
+					__( 'Nothing is applied — purely a preview', 'syncly' ),
+				];
+				$cta_text = __( 'Unlock the Tag Impact Simulator', 'syncly' );
+				$cta_url  = apply_filters( 'syncly_upgrade_url', 'https://highlevelsync.com/' );
+				$style    = 'banner';
+
+				include SYNCLY_PATH . 'templates/admin/partials/pro-upgrade-notice.php';
+			}
+			?>
 		</div>
 		<?php
 	}

@@ -1075,3 +1075,72 @@ select.ghl-tags-select {
 	color: var(--ghl-text-secondary);
 	padding: var(--ghl-spacing-lg) 0;
 }
+
+/* Safety warnings callout (top of the Tag Rules page) */
+.syncly-tag-safety-warnings {
+	margin-bottom: var(--ghl-spacing-lg);
+	padding: var(--ghl-spacing-base) var(--ghl-spacing-lg);
+	background-color: var(--ghl-warning-light);
+	border: 1px solid var(--ghl-warning);
+	border-radius: var(--ghl-radius-md);
+}
+
+.syncly-tag-safety-warnings h4 {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin: 0 0 8px;
+	font-size: var(--ghl-font-size-sm);
+	font-weight: var(--ghl-font-weight-semibold, 600);
+	color: var(--ghl-warning-dark);
+}
+
+.syncly-tag-safety-warnings ul {
+	margin: 0;
+	padding-left: 22px;
+}
+
+.syncly-tag-safety-warnings li {
+	font-size: var(--ghl-font-size-sm);
+	color: var(--ghl-text-primary);
+	margin-bottom: 6px;
+}
+
+.syncly-tag-safety-warnings li:last-child {
+	margin-bottom: 0;
+}
+
+.syncly-tag-safety-warnings li.syncly-tag-safety-warning--high {
+	color: var(--ghl-error-dark);
+	font-weight: var(--ghl-font-weight-medium);
+}
+
+/* Hazard styling for individual rule rows (currently: restriction-bypass tags) */
+.syncly-tag-rule-row--hazard {
+	background-color: var(--ghl-error-light);
+}
+
+.syncly-tag-hazard-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 8px;
+	margin-left: 6px;
+	font-size: var(--ghl-font-size-xs);
+	font-weight: var(--ghl-font-weight-medium);
+	color: var(--ghl-error-dark);
+	background-color: var(--ghl-error-light);
+	border: 1px solid var(--ghl-error);
+	border-radius: var(--ghl-radius-full);
+	vertical-align: middle;
+}
+
+.syncly-tag-hazard-badge .dashicons {
+	font-size: 12px;
+	width: 12px;
+	height: 12px;
+}
+
+.syncly-tag-rules-group-header .syncly-tag-hazard-badge {
+	margin-left: 4px;
+}

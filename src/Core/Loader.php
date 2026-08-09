@@ -86,6 +86,7 @@ class Loader {
 			'core.notifications'                   => \Syncly\Admin\NotificationManager::class,
 			'core.contact_id_ajax'                 => \Syncly\Admin\ContactIdAjaxHandler::class,
 			'core.form_settings'                   => \Syncly\Integrations\Forms\FormSettings::class,
+			'core.tag_rules'                       => \Syncly\Core\TagRules\TagRulesProvider::class,
 
 			// Admin UI components
 			'admin.ui'                             => \Syncly\Admin\AdminUI::class,
