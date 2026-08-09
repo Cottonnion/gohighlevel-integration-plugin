@@ -205,6 +205,56 @@ class TagRulesProvider {
 	}
 
 	/**
+	 * Filter the full rule set down to rules that reference any of the given
+	 * tag names, grouped by tag name (in the casing the matching rule uses).
+	 *
+	 * Matching is case-insensitive since tag casing can drift slightly
+	 * between where a rule was configured and how GHL returns the tag on a
+	 * contact.
+	 *
+	 * @param array<int, string> $tag_names Tag names to match against, e.g. a user's current tags.
+	 * @return array<string, array<int, array<string, string>>>
+	 */
+	public function get_rules_for_tags( array $tag_names ): array {
+		$wanted = array_filter( array_map( 'strtolower', array_map( 'trim', $tag_names ) ), 'strlen' );
+		if ( empty( $wanted ) ) {
+			return [];
+		}
+
+		$grouped = [];
+		foreach ( $this->get_rules() as $rule ) {
+			$tag_name = $rule['tag'] ?? '';
+			if ( '' === $tag_name || ! in_array( strtolower( $tag_name ), $wanted, true ) ) {
+				continue;
+			}
+			$grouped[ $tag_name ][] = $rule;
+		}
+
+		return $grouped;
+	}
+
+	/**
+	 * Badge CSS class for a rule's source, kept in one place so every screen
+	 * that renders tag rules (the Tag Rules settings tab, the per-user Tag
+	 * Rules Impact panel) stays visually consistent.
+	 *
+	 * @param string $source Machine key from a rule row's 'source' field.
+	 * @return string
+	 */
+	public static function get_badge_class( string $source ): string {
+		$badge_class_map = [
+			'role-tags'        => 'ghl-field-badge--default',
+			'restrictions'     => 'ghl-field-badge--custom',
+			'wc-membership'    => 'ghl-field-badge--woocommerce',
+			'wc-subscription'  => 'ghl-field-badge--woocommerce',
+			'learndash-course' => 'ghl-field-badge--learndash',
+			'learndash-group'  => 'ghl-field-badge--learndash',
+		];
+
+		return $badge_class_map[ $source ] ?? 'ghl-field-badge--default';
+	}
+
+	/**
 	 * Normalize a stored tag value (array or comma-separated string) into a
 	 * flat, trimmed, de-duplicated list of tag names.
 	 *
