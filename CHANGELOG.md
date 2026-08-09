@@ -4,6 +4,12 @@ All notable changes to Syncly will be documented in this file.
 
 ## [Unreleased]
 
+## [1.4.18] - 2026-08-09
+
+### Changed
+
+- Refreshed the Upgrade to Pro page to highlight the latest Syncly Pro automation features for roles, memberships, subscriptions, and content access.
+
 ## [1.4.17] - 2026-08-09
 
 ### Added
