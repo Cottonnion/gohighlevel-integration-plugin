@@ -4,6 +4,12 @@ All notable changes to Syncly will be documented in this file.
 
 ## [Unreleased]
 
+## [1.4.21] - 2026-08-11
+
+### Fixed
+
+- Removed outdated Opportunities and Workflows OAuth scopes from the GoHighLevel connection flow so the plugin uses the current app permissions required by the integration.
+
 ## [1.4.20] - 2026-08-09
 
 ### Added

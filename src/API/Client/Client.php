@@ -797,9 +797,6 @@ class Client implements ClientInterface {
 					'locations/tags.write',             // Edit Tags
 					'locations/customFields.readonly',  // View Custom Fields
 					'locations/customFields.write',     // Edit Custom Fields
-					'opportunities.readonly',           // View Opportunities
-					'opportunities.write',              // Edit Opportunities
-					'workflows.readonly',               // View Workflows
 					'forms.readonly',                   // View Forms
 					'forms.write',                      // Edit Forms
 					'objects/schema.readonly',          // View Objects Schema
