@@ -127,7 +127,12 @@ class GroupsSync {
 	 */
 	private function is_integration_enabled(): bool {
 		$settings = $this->settings_manager->get_settings_array();
-		return ! empty( $settings['buddyboss_groups_enabled'] );
+
+		$integration_enabled = ! empty( $settings['buddyboss_groups_enabled'] );
+		$custom_sync_enabled = ! array_key_exists( 'buddyboss_custom_object_sync_enabled', $settings )
+			|| ! empty( $settings['buddyboss_custom_object_sync_enabled'] );
+
+		return $integration_enabled && $custom_sync_enabled;
 	}
 
 	/**
@@ -351,6 +356,51 @@ class GroupsSync {
 				'association_id' => $association_id,
 			]
 		);
+	}
+
+	/**
+	 * Queue association creation for all current members of a group.
+	 *
+	 * @param int    $group_id       BuddyBoss group ID.
+	 * @param string $record_id      GHL custom object record ID.
+	 * @param string $association_id GHL association definition ID.
+	 * @return void
+	 */
+	private function queue_member_associations( int $group_id, string $record_id, string $association_id ): void {
+		if ( $group_id <= 0 || '' === $record_id || '' === $association_id || ! function_exists( 'groups_get_group_members' ) ) {
+			return;
+		}
+
+		$members = groups_get_group_members(
+			array(
+				'group_id'            => $group_id,
+				'exclude_admins_mods' => false,
+			)
+		);
+
+		if ( empty( $members['members'] ) || ! is_array( $members['members'] ) ) {
+			return;
+		}
+
+		foreach ( $members['members'] as $member ) {
+			$user_id = isset( $member->ID ) ? absint( $member->ID ) : 0;
+
+			if ( $user_id <= 0 ) {
+				continue;
+			}
+
+			$this->queue_manager->add_to_queue(
+				'buddyboss_member_association',
+				$user_id,
+				'create_association',
+				array(
+					'user_id'        => $user_id,
+					'group_id'       => $group_id,
+					'record_id'      => $record_id,
+					'association_id' => $association_id,
+				)
+			);
+		}
 	}
 
 	/**

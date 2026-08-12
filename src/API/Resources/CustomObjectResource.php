@@ -170,6 +170,37 @@ class CustomObjectResource extends AbstractResource {
 	}
 
 	/**
+	 * Delete a custom object schema.
+	 *
+	 * @param string $schema_id Schema ID.
+	 * @return bool True when deleted.
+	 * @throws \Exception If deletion fails.
+	 */
+	public function delete_schema( string $schema_id ): bool {
+		try {
+			if ( '' === $schema_id ) {
+				throw new \Exception( 'Schema ID is required' );
+			}
+
+			$endpoint = 'objects/' . rawurlencode( $schema_id );
+			$this->client->delete( $endpoint, false );
+
+			$this->clear_cache();
+
+			return true;
+		} catch ( \Exception $e ) {
+			$reason = $this->sanitize_exception_message( $e->getMessage() );
+			throw new \Exception(
+				sprintf(
+					/* translators: %s: error reason */
+					esc_html__( 'Failed to delete custom object schema: %s', 'syncly' ),
+					esc_html( $reason )
+				)
+			);
+		}
+	}
+
+	/**
 	 * Create a custom object record
 	 *
 	 * @param string $schema_id Schema ID (not key)
@@ -344,6 +375,9 @@ class CustomObjectResource extends AbstractResource {
 	 * @throws \Exception If association fails
 	 */
 	public function associate_with_contact( string $record_id, string $contact_id, string $schema_key, string $association_id, ?string $direction = null ): array {
+		$first_id  = '';
+		$second_id = '';
+
 		try {
 			// CORRECT GHL API endpoint: POST /associations/relations
 			// Documentation: https://marketplace.gohighlevel.com/docs/ghl/associations/create-relation

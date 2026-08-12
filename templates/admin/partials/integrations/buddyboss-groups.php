@@ -49,6 +49,9 @@ $is_buddyboss_active = function_exists( 'bp_is_active' ) && bp_is_active( 'group
 		<?php
 		$missing_contact_strategy = $settings['buddyboss_missing_contact_strategy'] ?? 'skip';
 		$default_group_type       = $settings['buddyboss_default_group_type'] ?? '';
+		$custom_object_sync_enabled = ! array_key_exists( 'buddyboss_custom_object_sync_enabled', $settings )
+			? true
+			: ! empty( $settings['buddyboss_custom_object_sync_enabled'] );
 		$group_type_suggestions   = function_exists( 'bp_groups_get_group_types' ) ? bp_groups_get_group_types( [], 'objects' ) : [];
 
 		if ( ! is_array( $group_type_suggestions ) ) {
@@ -120,10 +123,28 @@ $is_buddyboss_active = function_exists( 'bp_is_active' ) && bp_is_active( 'group
 		<div class="ghl-form-section" style="margin-bottom: 24px;">
 			<h3 style="margin: 0 0 16px; font-size: 18px; font-weight: 600; color: #1e293b; display: flex; align-items: center; gap: 8px;">
 				<?php esc_html_e( 'Custom Object Management', 'syncly' ); ?>
-				<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'When you enable the BuddyBoss Groups Integration master toggle above, the plugin automatically creates Custom Object schemas in GoHighLevel for each BuddyBoss group type (e.g., "Schools", "Communities", "Classrooms"). Individual group records are then created and synced whenever groups are added, updated, or removed in BuddyBoss. This happens automatically in the background—no manual setup required.', 'syncly' ); ?>">?</span>
+				<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Use the toggle below to enable or disable BuddyBoss group-to-Custom-Object sync independently from the master BuddyBoss integration switch. When enabled, schemas and group records sync in the background.', 'syncly' ); ?>">?</span>
 			</h3>
 
 			<div class="ghl-checkbox-group" style="display: flex; flex-direction: column; gap: 12px;">
+				<label class="ghl-checkbox <?php echo $custom_object_sync_enabled ? 'is-checked' : ''; ?>" style="display: flex; align-items: center; gap: 8px; margin: 0;">
+					<input
+						type="checkbox"
+						class="ghl-checkbox-original"
+						id="buddyboss_custom_object_sync_enabled"
+						name="buddyboss_custom_object_sync_enabled"
+						value="1"
+						<?php checked( $custom_object_sync_enabled ); ?>
+					>
+					<span class="ghl-checkbox-input <?php echo $custom_object_sync_enabled ? 'is-checked' : ''; ?>">
+						<span class="ghl-checkbox-inner"></span>
+					</span>
+					<span class="ghl-checkbox-label">
+						<?php esc_html_e( 'Enable BuddyBoss group Custom Object sync', 'syncly' ); ?>
+						<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Turn off if you only want BuddyBoss integration features but do not want groups pushed as GoHighLevel Custom Objects.', 'syncly' ); ?>">?</span>
+					</span>
+				</label>
+
 				<label class="ghl-checkbox <?php echo ! empty( $settings['buddyboss_auto_delete_custom_objects'] ) ? 'is-checked' : ''; ?>" style="display: flex; align-items: center; gap: 8px; margin: 0;">
 					<input 
 						type="checkbox" 
@@ -143,6 +164,8 @@ $is_buddyboss_active = function_exists( 'bp_is_active' ) && bp_is_active( 'group
 				</label>
 			</div>
 		</div>
+
+		<div id="buddyboss-custom-object-settings-body" style="<?php echo ! $custom_object_sync_enabled ? 'display: none;' : ''; ?>">
 
 		<!-- Member Association Sync -->
 		<div class="ghl-form-section" style="margin-bottom: 24px;">
@@ -295,6 +318,7 @@ $is_buddyboss_active = function_exists( 'bp_is_active' ) && bp_is_active( 'group
 				<span class="spinner"></span>
 			</div>
 		</div>
+		</div><!-- #buddyboss-custom-object-settings-body -->
 		</div><!-- .ghl-settings-body -->
 	</div><!-- .ghl-settings-card -->
 
@@ -319,6 +343,17 @@ jQuery(document).ready(function($) {
 			$label.find('.ghl-checkbox-input').removeClass('is-checked');
 			$labelText.text('<?php echo esc_js( __( 'Disabled', 'syncly' ) ); ?>');
 			$settingsBody.slideUp(300);
+		}
+	});
+
+	$('#buddyboss_custom_object_sync_enabled').on('change', function() {
+		const $checkbox = $(this);
+		const $target = $('#buddyboss-custom-object-settings-body');
+
+		if ($checkbox.is(':checked')) {
+			$target.slideDown(250);
+		} else {
+			$target.slideUp(250);
 		}
 	});
 

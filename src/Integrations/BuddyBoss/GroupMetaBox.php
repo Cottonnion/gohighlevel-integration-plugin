@@ -140,7 +140,12 @@ class GroupMetaBox {
 	 */
 	private function is_integration_enabled(): bool {
 		$settings = $this->settings_manager->get_settings_array();
-		return ! empty( $settings['buddyboss_groups_enabled'] );
+
+		$integration_enabled = ! empty( $settings['buddyboss_groups_enabled'] );
+		$custom_sync_enabled = ! array_key_exists( 'buddyboss_custom_object_sync_enabled', $settings )
+			|| ! empty( $settings['buddyboss_custom_object_sync_enabled'] );
+
+		return $integration_enabled && $custom_sync_enabled;
 	}
 
 	/**

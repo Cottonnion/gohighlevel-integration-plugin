@@ -212,6 +212,7 @@ class AjaxHandler {
 			// BuddyBoss settings
 			if ( isset( $_POST['buddyboss_groups_enabled'] ) ) {
 				$integration_settings['buddyboss_groups_enabled']             = sanitize_text_field( wp_unslash( $_POST['buddyboss_groups_enabled'] ) ) === '1';
+				$integration_settings['buddyboss_custom_object_sync_enabled'] = isset( $_POST['buddyboss_custom_object_sync_enabled'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_custom_object_sync_enabled'] ) ) === '1';
 				$integration_settings['buddyboss_auto_delete_custom_objects'] = isset( $_POST['buddyboss_auto_delete_custom_objects'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_auto_delete_custom_objects'] ) ) === '1';
 				$integration_settings['buddyboss_field_length_limit']         = isset( $_POST['buddyboss_field_length_limit'] ) ? absint( wp_unslash( $_POST['buddyboss_field_length_limit'] ) ) : 250;
 				$integration_settings['buddyboss_sync_private_groups']        = isset( $_POST['buddyboss_sync_private_groups'] ) && sanitize_text_field( wp_unslash( $_POST['buddyboss_sync_private_groups'] ) ) === '1';
