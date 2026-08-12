@@ -787,6 +787,7 @@ class TagRulesProvider {
 			'wc-abandoned-cart' => 'ghl-field-badge--woocommerce',
 			'learndash-course'  => 'ghl-field-badge--learndash',
 			'learndash-group'   => 'ghl-field-badge--learndash',
+			'buddyboss-group'   => 'ghl-field-badge--buddyboss',
 			'login-sync'        => 'ghl-field-badge--login-sync',
 			'menus'             => 'ghl-field-badge--menus',
 			'forms'             => 'ghl-field-badge--forms',
