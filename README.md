@@ -941,7 +941,7 @@ GNU General Public License for more details.
 
 Need help with setup or custom development?
 - Email: yahyadard@gmail.com
-- Website: https://labgenz.com/
+- Website: http://synclyforgohighlevel.com/
 - Priority Support: Available for Pro users
 
 ## 🌟 Roadmap
@@ -1021,4 +1021,4 @@ Contact us for enterprise licensing:
 
 **Made with ❤️ for the WordPress and GoHighLevel communities**
 
-[Website](https://labgenz.com)  | [GitHub](https://github.com/Cottonnion/gohighlevel-integration-plugin)
+[Website](http://synclyforgohighlevel.com)  | [GitHub](https://github.com/Cottonnion/gohighlevel-integration-plugin)

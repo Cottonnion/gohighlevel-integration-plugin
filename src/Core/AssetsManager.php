@@ -496,7 +496,7 @@ class AssetsManager {
 			[
 				'nonce'             => wp_create_nonce( 'syncly_sync_logs_nonce' ),
 				'ajaxurl'           => admin_url( 'admin-ajax.php' ),
-				'upgradeUrl'        => apply_filters( 'syncly_upgrade_url', 'https://highlevelsync.com/' ),
+				'upgradeUrl'        => apply_filters( 'syncly_upgrade_url', 'http://synclyforgohighlevel.com/' ),
 				'upgradeNoticeHtml' => $this->get_sync_log_details_upgrade_notice_html(),
 			],
 			SYNCLY_VERSION,
@@ -514,7 +514,7 @@ class AssetsManager {
 		);
 
 		$is_pro_active = (bool) apply_filters( 'syncly_is_pro_active', false );
-		$upgrade_url   = apply_filters( 'syncly_upgrade_url', 'https://highlevelsync.com/' );
+		$upgrade_url   = apply_filters( 'syncly_upgrade_url', 'http://synclyforgohighlevel.com/' );
 
 		$this->add_admin_asset(
 			'syncly-forms-js',
@@ -1212,7 +1212,7 @@ class AssetsManager {
 			__( 'Faster troubleshooting of failed syncs', 'syncly' ),
 		];
 		$cta_text = __( 'Learn More', 'syncly' );
-		$cta_url  = apply_filters( 'syncly_upgrade_url', 'https://highlevelsync.com/' );
+		$cta_url  = apply_filters( 'syncly_upgrade_url', 'http://synclyforgohighlevel.com/' );
 		$style    = 'box';
 
 		ob_start();

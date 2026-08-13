@@ -569,7 +569,7 @@ Rendered by Pro via `ghl_crm_render_analytics_tab` action. Free plugin shows an 
 
 ## Telemetry & Reporting (Pro, Opt-in)
 
-- Opt-in telemetry: Pro batches events locally, dispatches to `highlevelsync.com`
+- Opt-in telemetry: Pro batches events locally, dispatches to `synclyforgohighlevel.com`
 - Batch size 50, 15-minute dispatch interval
 - Captures fatal errors on shutdown — filtered to only log errors from `syncly` or `syncly-pro` directories
 - Action Scheduler or WP-Cron fallback
@@ -688,7 +688,7 @@ GPL v2 or later
 **Yahya Eddaqqaq**
 - Website: [yahyadev.com](https://yahyadev.online/)
 - GitHub: [@Cottonnion](https://github.com/Cottonnion)
-- Company: [LabGenz](https://labgenz.com/)
+- Company: [Synly PLugin](http://synclyforgohighlevel.com/)
 
 ---
 

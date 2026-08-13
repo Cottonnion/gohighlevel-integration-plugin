@@ -2,12 +2,12 @@
 
 ## Overview
 
-To keep OAuth credentials secure and comply with WordPress.org guidelines, the GoHighLevel CRM Integration plugin uses a proxy server at **labgenz.com** to handle all OAuth token operations. This prevents the client secret from being exposed in the distributed plugin code.
+To keep OAuth credentials secure and comply with WordPress.org guidelines, the GoHighLevel CRM Integration plugin uses a proxy server at **synclyforgohighlevel.com** to handle all OAuth token operations. This prevents the client secret from being exposed in the distributed plugin code.
 
 ## Architecture
 
 ```
-User WordPress Site → labgenz.com Proxy → GoHighLevel API
+User WordPress Site → synclyforgohighlevel.com Proxy → GoHighLevel API
 ```
 
 **Benefits:**
@@ -19,7 +19,7 @@ User WordPress Site → labgenz.com Proxy → GoHighLevel API
 
 ## Required Proxy Endpoints
 
-You need to create three REST API endpoints on **labgenz.com**:
+You need to create three REST API endpoints on **synclyforgohighlevel.com**:
 
 ### 1. Exchange Authorization Code for Tokens
 
@@ -31,7 +31,7 @@ You need to create three REST API endpoints on **labgenz.com**:
 ```json
 {
   "code": "auth_code_from_callback",
-  "redirect_uri": "https://labgenz.com/wp-json/ghl/v1/callback"
+  "redirect_uri": "http://synclyforgohighlevel.com/wp-json/ghl/v1/callback"
 }
 ```
 
@@ -213,7 +213,7 @@ public function reconnect( WP_REST_Request $request ) {
 
 ## Complete Proxy Plugin Example
 
-Create a plugin on **labgenz.com** to register these endpoints:
+Create a plugin on **synclyforgohighlevel.com** to register these endpoints:
 
 ```php
 <?php
@@ -223,14 +223,14 @@ Create a plugin on **labgenz.com** to register these endpoints:
  * Version: 1.0.0
  */
 
-namespace LabGenz\GHL_Proxy;
+namespace Syncly\GHL_Proxy;
 
 defined( 'ABSPATH' ) || exit;
 
 class OAuth_Proxy {
     
-    private const CLIENT_ID     = '68ff9baa25051d0ca83341e9-mh9cljcg';
-    private const CLIENT_SECRET = '143kjd923c-13df-5398-8fyg8-067gsdgx784b2e99a'; // Store securely
+    private const CLIENT_ID     = '68ff9baa25051d0qeca83341e9-mh9cljcg';
+    private const CLIENT_SECRET = '143kjd923c-13df-qwe398-8fyg8-067gsdgx784b2e99a'; // Store securely
     
     public function __construct() {
         add_action( 'rest_api_init', [ $this, 'register_routes' ] );
@@ -428,17 +428,17 @@ Test each endpoint with cURL:
 
 ```bash
 # Test exchange token
-curl -X POST https://labgenz.com/wp-json/ghl-proxy/v1/exchange-token \
+curl -X POST http://synclyforgohighlevel.com/wp-json/ghl-proxy/v1/exchange-token \
   -H "Content-Type: application/json" \
-  -d '{"code":"test_code","redirect_uri":"https://labgenz.com/wp-json/ghl/v1/callback"}'
+  -d '{"code":"test_code","redirect_uri":"http://synclyforgohighlevel.com/wp-json/ghl/v1/callback"}'
 
 # Test refresh token
-curl -X POST https://labgenz.com/wp-json/ghl-proxy/v1/refresh-token \
+curl -X POST http://synclyforgohighlevel.com/wp-json/ghl-proxy/v1/refresh-token \
   -H "Content-Type: application/json" \
   -d '{"refresh_token":"def50200..."}'
 
 # Test reconnect
-curl -X POST https://labgenz.com/wp-json/ghl-proxy/v1/reconnect \
+curl -X POST http://synclyforgohighlevel.com/wp-json/ghl-proxy/v1/reconnect \
   -H "Content-Type: application/json" \
   -d '{"location_id":"xyz123"}'
 ```
@@ -459,7 +459,7 @@ Set up monitoring for:
 
 ### Rotating Client Secret
 1. Generate new secret in GoHighLevel
-2. Update on labgenz.com proxy
+2. Update on synclyforgohighlevel.com proxy
 3. No plugin code changes needed
 4. Existing users automatically use new secret on next refresh
 
@@ -475,4 +475,4 @@ add_filter( 'ghl_proxy_debug_mode', '__return_true' );
 
 For issues with the proxy setup, contact:
 - **Email:** yahyadard@gmail.com
-- **Website:** https://labgenz.com/
+- **Website:** http://synclyforgohighlevel.com/

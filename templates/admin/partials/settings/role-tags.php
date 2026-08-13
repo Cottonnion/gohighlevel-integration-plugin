@@ -17,7 +17,7 @@ $wp_roles_list = wp_roles()->get_names();
 
 // Load saved role tag mappings (location-specific)
 $role_tags       = $settings_manager->get_location_role_tags();
-$upgrade_url            = apply_filters( 'syncly_upgrade_url', 'https://highlevelsync.com/' );
+$upgrade_url            = apply_filters( 'syncly_upgrade_url', 'http://synclyforgohighlevel.com/' );
 ?>
 
 <div class="ghl-settings-wrapper">

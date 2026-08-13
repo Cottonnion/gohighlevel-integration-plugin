@@ -685,7 +685,7 @@ $saved_mappings = $settings['user_field_mapping'] ?? [];
 				__( 'Custom user meta fields', 'syncly' ),
 			];
 			$cta_text = __( 'Learn More', 'syncly' );
-			$cta_url  = apply_filters( 'syncly_upgrade_url', 'https://highlevelsync.com/' );
+			$cta_url  = apply_filters( 'syncly_upgrade_url', 'http://synclyforgohighlevel.com/' );
 			$style    = 'banner';
 			include SYNCLY_PATH . 'templates/admin/partials/pro-upgrade-notice.php';
 			?>

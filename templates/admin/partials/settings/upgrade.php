@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$upgrade_url = apply_filters( 'syncly_upgrade_url', 'https://highlevelsync.com/' );
+$upgrade_url = apply_filters( 'syncly_upgrade_url', 'http://synclyforgohighlevel.com/' );
 
 $pro_features = [
 	[

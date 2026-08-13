@@ -70,8 +70,8 @@ jobs:
 
       - name: Verify external service URLs
         run: |
-          curl --fail --location --silent --show-error --head https://labgenz.com/terms-of-service/ >/dev/null
-          curl --fail --location --silent --show-error --head https://labgenz.com/privacy-policy/ >/dev/null
+          curl --fail --location --silent --show-error --head http://synclyforgohighlevel.com/terms-of-service/ >/dev/null
+          curl --fail --location --silent --show-error --head http://synclyforgohighlevel.com/privacy-policy/ >/dev/null
 
       - name: Check review-flagged patterns
         run: |
@@ -81,8 +81,8 @@ jobs:
           ! grep -RInE "persist_guest_contact\( \$contact_id \);" -- src/Frontend/ContactIdHandler.php
           grep -F "Tested up to: 7.0" readme.txt
           test -d languages
-          grep -F "https://labgenz.com/terms-of-service/" readme.txt
-          grep -F "https://labgenz.com/privacy-policy/" readme.txt
+          grep -F "http://synclyforgohighlevel.com/terms-of-service/" readme.txt
+          grep -F "http://synclyforgohighlevel.com/privacy-policy/" readme.txt
 
       - name: Stage production plugin files
         run: |

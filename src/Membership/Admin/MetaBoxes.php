@@ -315,7 +315,7 @@ class MetaBoxes {
 					__( 'Each tag applies once per contact — no duplicate noise', 'syncly' ),
 				];
 				$cta_text = __( 'Unlock Content-Access Tagging', 'syncly' );
-				$cta_url  = apply_filters( 'syncly_upgrade_url', 'https://highlevelsync.com/' );
+				$cta_url  = apply_filters( 'syncly_upgrade_url', 'http://synclyforgohighlevel.com/' );
 				$style    = 'box';
 
 				include SYNCLY_PATH . 'templates/admin/partials/pro-upgrade-notice.php';

@@ -25,7 +25,7 @@ $notice_title = $notice_title ?? __( 'Syncly Pro', 'syncly' );
 $description = $description ?? '';
 $features    = $features ?? array();
 $cta_text    = $cta_text ?? __( 'Explore PRO', 'syncly' );
-$cta_url     = $cta_url ?? 'https://highlevelsync.com/';
+$cta_url     = $cta_url ?? 'http://synclyforgohighlevel.com/';
 $style       = $style ?? 'box';
 
 ?>

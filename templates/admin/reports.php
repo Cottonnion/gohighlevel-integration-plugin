@@ -307,8 +307,8 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 						<div style="font-size: 13px; font-weight: 600; color: #92400e; margin-bottom: 4px;">Need an implementation example?</div>
 						<div style="font-size: 12px; color: #78350f;">
 							See documentation examples:
-							<a href="<?php echo esc_url( 'https://highlevelsync.com/documentation/' ); ?>" target="_blank" rel="noopener noreferrer" style="color: #92400e; font-weight: 600; text-decoration: underline;">
-								highlevelsync.com/documentation
+							<a href="<?php echo esc_url( 'http://synclyforgohighlevel.com/documentation/' ); ?>" target="_blank" rel="noopener noreferrer" style="color: #92400e; font-weight: 600; text-decoration: underline;">
+								synclyforgohighlevel.com/documentation
 							</a>
 						</div>
 					</div>

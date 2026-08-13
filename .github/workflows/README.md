@@ -122,7 +122,7 @@ The version is used as the cache-busting string for all enqueued CSS/JS assets.
 
 ## Server Info
 
-- **Host:** highlevelsync.com
+- **Host:** synclyforgohighlevel.com
 - **Plugin path:** `/home/highlevelsync/public_html/wp-content/plugins/syncly`
 - **Setup:** Full `git clone` of this repo, SSH key in `~/.ssh/authorized_keys`
 - **Deploy method:** `appleboy/ssh-action` — SSHes in, runs `git pull` + `composer install`

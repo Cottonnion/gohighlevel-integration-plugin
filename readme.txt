@@ -4,7 +4,7 @@ Tags: gohighlevel, crm, woocommerce, buddyboss, learndash
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.4.21
+Stable tag: 1.4.24
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -26,9 +26,9 @@ GoHighLevel and LeadConnector APIs: The plugin sends CRM-related data such as co
 
 GoHighLevel service links: https://www.gohighlevel.com/terms-of-service and https://www.gohighlevel.com/privacy-policy
 
-LabGenz OAuth proxy: The plugin uses a LabGenz proxy endpoint during OAuth token exchange, token refresh, and reconnect flows so OAuth client credentials are not distributed inside the plugin. The proxy receives OAuth authorization codes, refresh tokens, location/account identifiers, and related token request metadata only when an administrator connects or refreshes the GoHighLevel connection.
+Syncly OAuth proxy: The plugin uses a Syncly proxy endpoint during OAuth token exchange, token refresh, and reconnect flows so OAuth client credentials are not distributed inside the plugin. The proxy receives OAuth authorization codes, refresh tokens, location/account identifiers, and related token request metadata only when an administrator connects or refreshes the GoHighLevel connection.
 
-LabGenz service links: https://labgenz.com/terms-of-service/ and https://labgenz.com/privacy-policy/
+Syncly service links: http://synclyforgohighlevel.com/terms-of-service/ and http://synclyforgohighlevel.com/privacy-policy/
 
 == Installation ==
 
@@ -53,6 +53,11 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
 == Changelog ==
+
+= 1.4.24 =
+- Updated the plugin’s runtime URLs and OAuth proxy/upgrade links.
+- Fixed remaining legacy branding references in the admin UI so the active plugin experience consistently points to the current Syncly site.
+- Kept the production release flow aligned with the current WordPress.org release pipeline and external service disclosures.
 
 = 1.4.21 =
 - Hotfix: removed outdated OAuth scopes for Opportunities and Workflows from the GoHighLevel connection, keeping the app permissions aligned with the current integration requirements.

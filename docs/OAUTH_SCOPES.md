@@ -214,7 +214,7 @@ These scopes are available in GoHighLevel but **not requested** by this plugin:
 3. **Click "Create New OAuth App"**
 4. **Fill in details:**
    - **App Name**: `WordPress CRM Integration`
-   - **Redirect URL**: `https://labgenz.com/` (or your actual redirect URL)
+   - **Redirect URL**: `http://synclyforgohighlevel.com/` (or your actual redirect URL)
    - **Scopes**: Select these 6 scopes:
      - ✅ `contacts.readonly`
      - ✅ `contacts.write`
@@ -239,12 +239,12 @@ These scopes are available in GoHighLevel but **not requested** by this plugin:
 
 **Redirect URL:**
 ```
-https://labgenz.com/
+http://synclyforgohighlevel.com/
 ```
 
 **Authorization URL:**
 ```
-https://marketplace.gohighlevel.com/oauth/chooselocation?response_type=code&redirect_uri=https%3A%2F%2Flabgenz.com%2F&client_id=68ff9baa25051d0ca83341e9-mh9cljcg&scope=contacts.readonly+contacts.write+locations%2Ftags.readonly+locations%2Ftags.write+locations%2FcustomFields.readonly+locations%2FcustomFields.write
+https://marketplace.gohighlevel.com/oauth/chooselocation?response_type=code&redirect_uri=https%3A%2F%2Fsynclyforgohighlevel.com%2F&client_id=68ff9baa25051d0ca83341e9-mh9cljcg&scope=contacts.readonly+contacts.write+locations%2Ftags.readonly+locations%2Ftags.write+locations%2FcustomFields.readonly+locations%2FcustomFields.write
 ```
 
 ---

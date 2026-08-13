@@ -4,6 +4,13 @@ All notable changes to Syncly will be documented in this file.
 
 ## [Unreleased]
 
+## [1.4.24] - 2026-08-13
+
+### Fixed
+
+- Removed lingering legacy branding references from the active admin UI and runtime code paths.
+- Kept the WordPress release workflow and external service documentation aligned with the current Syncly public site.
+
 ## [1.4.21] - 2026-08-11
 
 ### Fixed
@@ -285,7 +292,7 @@ All notable changes to Syncly will be documented in this file.
 
 ### Added
 
-- **Dashboard documentation shortcut** — Added a direct "Documentation" quick action link in the main plugin dashboard to `https://highlevelsync.com/documentation/`.
+- **Dashboard documentation shortcut** — Added a direct "Documentation" quick action link in the main plugin dashboard to `http://synclyforgohighlevel.com/documentation/`.
 
 ### Changed
 

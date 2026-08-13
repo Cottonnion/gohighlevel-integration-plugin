@@ -286,7 +286,7 @@
          */
         showProUpgradeNotice: function () {
             const data = window.syncly_sync_logs_js_data || {};
-            const upgradeUrl = data.upgradeUrl || 'https://highlevelsync.com/';
+            const upgradeUrl = data.upgradeUrl || 'http://synclyforgohighlevel.com/';
 
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
