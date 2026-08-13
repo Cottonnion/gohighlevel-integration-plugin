@@ -70,8 +70,8 @@ jobs:
 
       - name: Verify external service URLs
         run: |
-          curl --fail --location --silent --show-error --head http://synclyforgohighlevel.com/terms-of-service/ >/dev/null
-          curl --fail --location --silent --show-error --head http://synclyforgohighlevel.com/privacy-policy/ >/dev/null
+          curl --fail --location --silent --show-error -A 'Mozilla/5.0' https://synclyforgohighlevel.com/terms-of-service/ >/dev/null
+          curl --fail --location --silent --show-error -A 'Mozilla/5.0' https://synclyforgohighlevel.com/privacy-policy/ >/dev/null
 
       - name: Check review-flagged patterns
         run: |
