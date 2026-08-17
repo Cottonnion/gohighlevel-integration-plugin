@@ -1,16 +1,47 @@
 === Syncly for GoHighLevel ===
 Contributors: yahyadeved
-Tags: gohighlevel, crm, woocommerce, buddyboss, learndash
+Tags: gohighlevel, wpfusion, contact-sync, woocommerce, leadconnector
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.4.24
+Stable tag: 1.4.25
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Syncly connects WordPress with GoHighLevel CRM for contact sync, field mapping, webhooks, forms, and automation workflows.
+The most complete WordPress to GoHighLevel integration. Two-way contact sync, field mapping, WooCommerce, LearnDash, BuddyBoss, webhooks, and automation — all in one plugin.
 
 == Description ==
+
+**Syncly is the most complete WordPress ↔ GoHighLevel CRM integration available.** Whether you're migrating from WP Fusion, looking for a GoHighLevel-native alternative, or starting fresh, Syncly gives you deeper sync, smarter automation, and tighter control — at a fraction of the cost.
+
+= Why Syncly Outperforms Other WordPress CRM Plugins =
+
+Unlike generic CRM connectors, Syncly is built exclusively for GoHighLevel (HighLevel / LeadConnector). That means every feature — field mapping, tag automation, webhook sync, membership gating, WooCommerce sync, LearnDash course tracking — is optimized specifically for the GHL API and data model.
+
+* **True bi-directional sync** — push WordPress user data to GoHighLevel contacts AND pull GHL contact updates back into WordPress in real time
+* **Visual field mapper** — map any WordPress or BuddyBoss XProfile field to any GoHighLevel custom field with one click
+* **Role-based tag automation** — automatically assign or remove GoHighLevel tags when WordPress roles change
+* **WooCommerce CRM sync** — sync customers, orders, and purchase history to GoHighLevel contacts
+* **LearnDash course sync** — enroll, complete, and track courses as GoHighLevel contact activity
+* **BuddyBoss / BuddyPress profile sync** — map extended profile fields directly to GHL custom fields
+* **Membership content restrictions** — gate pages, posts, courses, and products by GoHighLevel tags
+* **Webhook automation** — receive real-time updates from GoHighLevel and act on them instantly in WordPress
+* **Embedded GoHighLevel forms** — drop GHL forms into any page or post with a shortcode or Gutenberg block
+* **Action Scheduler queue** — reliable background processing with automatic retry and rate-limit handling (100 req/10 s, 200k/day)
+* **OAuth2 only** — no API keys stored in the database; secure token exchange via the Syncly proxy
+
+= Common Use Cases =
+
+* Sync WordPress user registrations to GoHighLevel contacts automatically
+* Tag GoHighLevel contacts when a WooCommerce order is placed or a LearnDash course is completed
+* Restrict membership site content based on GoHighLevel tags assigned in your CRM pipelines
+* Replace WP Fusion with a GoHighLevel-first integration that needs no third-party middleware
+* Run marketing automation workflows in GoHighLevel triggered by WordPress events
+* Keep WooCommerce customer records and GoHighLevel contacts in sync without manual exports
+
+= Searched for any of these? Syncly is the answer. =
+
+gohighlevel wordpress plugin, wordpress gohighlevel integration, wp to gohighlevel, gohighlevel contact sync, highlevel wordpress, leadconnector wordpress, gohighlevel woocommerce, wordpress crm sync, gohighlevel field mapping, gohighlevel membership, wp fusion alternative gohighlevel, gohighlevel webhooks wordpress, gohighlevel learndash, buddyboss gohighlevel
 
 Syncly for GoHighLevel connects WordPress sites with GoHighLevel CRM. It helps site administrators synchronize WordPress users, WooCommerce customers and orders, BuddyBoss profile fields, LearnDash activity, tags, custom fields, embedded forms, and webhook events.
 
@@ -53,6 +84,11 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
 == Changelog ==
+
+= 1.4.25 =
+- Updated plugin directory listing with new icon and banner assets.
+- Improved readme.txt with clearer feature descriptions and SEO-optimised keyword coverage for WordPress.org search.
+- Hardened release workflow to deploy directory assets separately from plugin files.
 
 = 1.4.24 =
 - Updated the plugin’s runtime URLs and OAuth proxy/upgrade links.

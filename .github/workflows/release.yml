@@ -274,6 +274,7 @@ jobs:
           rsync -a --delete ./ "${STAGING}/" \
             --exclude '.git/' \
             --exclude '.github/' \
+            --exclude '.wordpress-org/' \
             --exclude 'docs/' \
             --exclude 'tests/' \
             --exclude 'dist/' \
@@ -306,6 +307,13 @@ jobs:
           composer install --working-dir="${STAGING}" --no-dev --prefer-dist --no-interaction --optimize-autoloader --classmap-authoritative
 
           rsync -a --delete "${STAGING}/" /tmp/svn-repo/trunk/ \
+            --exclude '.svn/'
+
+      - name: Sync .wordpress-org assets to SVN assets folder
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/svn-repo/assets
+          rsync -a --delete .wordpress-org/ /tmp/svn-repo/assets/ \
             --exclude '.svn/'
 
       - name: Stage SVN changes (add new / remove deleted)
