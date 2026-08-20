@@ -19,24 +19,6 @@ $is_learndash_active   = defined( 'LEARNDASH_VERSION' );
 // Check whether companion integration handlers are active.
 $is_pro_version = (bool) apply_filters( 'syncly_is_pro_active', false );
 
-// Determine which integrations to show
-$show_woocommerce = $is_pro_version && $is_woocommerce_active;
-// BuddyBoss: Available in free version if plugin is installed
-$show_buddyboss = $is_buddyboss_active;
-$show_learndash = $is_pro_version && $is_learndash_active;
-
-// Count available integrations
-$available_integrations = 0;
-if ( $show_woocommerce ) {
-	++$available_integrations;
-}
-if ( $show_buddyboss ) {
-	++$available_integrations;
-}
-if ( $show_learndash ) {
-	++$available_integrations;
-}
-
 // Get current settings for pre-population
 $enable_user_sync              = $settings['enable_user_sync'] ?? false;
 $user_sync_actions             = $settings['user_sync_actions'] ?? [];
@@ -47,14 +29,14 @@ $buddyboss_enabled             = $settings['buddyboss_enabled'] ?? false;
 $learndash_enabled             = $settings['learndash_enabled'] ?? false;
 $delete_contact_on_user_delete = $settings['delete_contact_on_user_delete'] ?? false;
 $enable_sync_logging           = $settings['enable_sync_logging'] ?? false;
-$enable_role_tags              = ! empty( $settings['role_tags'] ) && is_array( $settings['role_tags'] );
+$enable_telemetry_reporting    = $settings['enable_telemetry_reporting'] ?? false;
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
 	<meta charset="<?php bloginfo( 'charset' ); ?>">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title><?php esc_html_e( 'GoHighLevel CRM Setup', 'syncly' ); ?></title>
+	<title><?php printf( esc_html__( 'Setup %s', 'syncly' ), SYNCLY_PLUGIN_NAME ); ?></title>
 		<?php // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WordPress admin hook. ?>
 		<?php do_action( 'admin_print_styles' ); ?>
 		<?php // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WordPress admin hook. ?>
@@ -63,15 +45,18 @@ $enable_role_tags              = ! empty( $settings['role_tags'] ) && is_array( 
 		<?php do_action( 'admin_head' ); ?>
 </head>
 <body class="ghl-setup-wizard-body">
+<canvas id="ghl-confetti-canvas" aria-hidden="true"></canvas>
 <div class="ghl-setup-wizard">
 	<!-- Header -->
 	<div class="ghl-setup-header">
 		<div class="ghl-setup-logo">
-			<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-				<path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-				<path d="M2 17l10 5 10-5M2 12l10 5 10-5"></path>
-			</svg>
-			<h1><?php esc_html_e( 'GoHighLevel CRM', 'syncly' ); ?></h1>
+			<span class="ghl-setup-logo-icon">
+				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+					<path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+					<path d="M2 17l10 5 10-5M2 12l10 5 10-5"></path>
+				</svg>
+			</span>
+			<h1><?php esc_html_e( SYNCLY_PLUGIN_NAME, 'syncly' ); ?></h1>
 		</div>
 		<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin' ) ); ?>" class="ghl-setup-exit">
 			<?php esc_html_e( 'Exit Setup', 'syncly' ); ?>
@@ -116,7 +101,7 @@ $enable_role_tags              = ! empty( $settings['role_tags'] ) && is_array( 
 						<path d="M2 17l10 5 10-5M2 12l10 5 10-5"></path>
 					</svg>
 				</div>
-				<h2><?php esc_html_e( 'Welcome to GoHighLevel CRM', 'syncly' ); ?></h2>
+				<h2><?php printf( esc_html__( 'Welcome to %s', 'syncly' ), SYNCLY_PLUGIN_NAME ); ?></h2>
 				<p class="ghl-wizard-description">
 					<?php esc_html_e( 'Let\'s get your WordPress site connected to GoHighLevel in just a few simple steps. This should only take about 2 minutes.', 'syncly' ); ?>
 				</p>
@@ -300,107 +285,183 @@ $enable_role_tags              = ! empty( $settings['role_tags'] ) && is_array( 
 				<p class="ghl-wizard-description">
 					<?php esc_html_e( 'Select which plugins you want to integrate with GoHighLevel.', 'syncly' ); ?>
 				</p>
-				
-				<?php if ( $available_integrations > 0 ) : ?>
-					<div class="ghl-integrations-list">
-						<?php if ( $show_woocommerce ) : ?>
-							<label class="ghl-integration-item <?php echo ! $is_woocommerce_active ? 'ghl-integration-item--disabled' : ''; ?>">
-								<input 
-									type="checkbox" 
-									id="wizard_woocommerce" 
-									<?php checked( $wc_enabled ); ?>
-									<?php disabled( ! $is_woocommerce_active ); ?>
-								>
-								<div class="ghl-integration-content">
-									<div class="ghl-integration-icon">
-										<span class="dashicons dashicons-cart"></span>
-									</div>
-									<div class="ghl-integration-info">
-										<strong>
-											<?php esc_html_e( 'WooCommerce', 'syncly' ); ?>
-										</strong>
-										<span>
-											<?php
-											if ( ! $is_woocommerce_active ) {
-												esc_html_e( 'WooCommerce not installed', 'syncly' );
-											} else {
-												esc_html_e( 'Sync orders and customer data', 'syncly' );
-											}
-											?>
-										</span>
-									</div>
-								</div>
-							</label>
-						<?php endif; ?>
-						
-						<?php if ( $show_buddyboss ) : ?>
-							<label class="ghl-integration-item <?php echo ! $is_buddyboss_active ? 'ghl-integration-item--disabled' : ''; ?>">
-								<input 
-									type="checkbox" 
-									id="wizard_buddyboss" 
-									<?php checked( $buddyboss_enabled ); ?>
-									<?php disabled( ! $is_buddyboss_active ); ?>
-								>
-								<div class="ghl-integration-content">
-									<div class="ghl-integration-icon">
-										<span class="dashicons dashicons-groups"></span>
-									</div>
-									<div class="ghl-integration-info">
-										<strong><?php esc_html_e( 'BuddyBoss', 'syncly' ); ?></strong>
-										<span>
-											<?php
-											if ( ! $is_buddyboss_active ) {
-												esc_html_e( 'BuddyBoss not installed', 'syncly' );
-											} else {
-												esc_html_e( 'Sync community members and activity', 'syncly' );
-											}
-											?>
-										</span>
-									</div>
-								</div>
-							</label>
-						<?php endif; ?>
-						
-						<?php if ( $show_learndash ) : ?>
-							<label class="ghl-integration-item <?php echo ! $is_learndash_active ? 'ghl-integration-item--disabled' : ''; ?>">
-								<input 
-									type="checkbox" 
-									id="wizard_learndash" 
-									<?php checked( $learndash_enabled ); ?>
-									<?php disabled( ! $is_learndash_active ); ?>
-								>
-								<div class="ghl-integration-content">
-									<div class="ghl-integration-icon">
-										<span class="dashicons dashicons-welcome-learn-more"></span>
-									</div>
-									<div class="ghl-integration-info">
-										<strong>
-											<?php esc_html_e( 'LearnDash', 'syncly' ); ?>
-										</strong>
-										<span>
-											<?php
-											if ( ! $is_learndash_active ) {
-												esc_html_e( 'LearnDash not installed', 'syncly' );
-											} else {
-												esc_html_e( 'Sync course enrollments and progress', 'syncly' );
-											}
-											?>
-										</span>
-									</div>
-								</div>
-							</label>
-						<?php endif; ?>
-					</div>
-				<?php else : ?>
-					<!-- No integrations available -->
-					<div class="ghl-no-integrations-message">
-						<div class="ghl-empty-state">
-							<span class="dashicons dashicons-admin-plugins"></span>
-							<h3><?php esc_html_e( 'No Integration Plugins Found', 'syncly' ); ?></h3>
-							<p><?php esc_html_e( 'Install BuddyBoss to enable the available community integration.', 'syncly' ); ?></p>
+
+				<div class="ghl-integrations-list">
+					<!-- BuddyBoss (free tier) -->
+					<label class="ghl-integration-item <?php echo ! $is_buddyboss_active ? 'ghl-integration-item--disabled' : ''; ?>">
+						<input
+							type="checkbox"
+							id="wizard_buddyboss"
+							<?php checked( $buddyboss_enabled ); ?>
+							<?php disabled( ! $is_buddyboss_active ); ?>
+						>
+						<div class="ghl-integration-content">
+							<div class="ghl-integration-icon">
+								<span class="dashicons dashicons-groups"></span>
+							</div>
+							<div class="ghl-integration-info">
+								<strong><?php esc_html_e( 'BuddyBoss', 'syncly' ); ?></strong>
+								<span>
+									<?php
+									if ( ! $is_buddyboss_active ) {
+										esc_html_e( 'BuddyBoss not installed', 'syncly' );
+									} else {
+										esc_html_e( 'Sync community members and activity', 'syncly' );
+									}
+									?>
+								</span>
+							</div>
 						</div>
-					</div>
-				<?php endif; ?>
+					</label>
+
+					<!-- WooCommerce (Pro) -->
+					<?php if ( $is_pro_version && $is_woocommerce_active ) : ?>
+						<label class="ghl-integration-item">
+							<input type="checkbox" id="wizard_woocommerce" <?php checked( $wc_enabled ); ?>>
+							<div class="ghl-integration-content">
+								<div class="ghl-integration-icon">
+									<span class="dashicons dashicons-cart"></span>
+								</div>
+								<div class="ghl-integration-info">
+									<strong><?php esc_html_e( 'WooCommerce', 'syncly' ); ?></strong>
+									<span><?php esc_html_e( 'Sync orders and customer data', 'syncly' ); ?></span>
+								</div>
+							</div>
+						</label>
+					<?php elseif ( $is_pro_version ) : ?>
+						<label class="ghl-integration-item ghl-integration-item--disabled">
+							<input type="checkbox" disabled>
+							<div class="ghl-integration-content">
+								<div class="ghl-integration-icon">
+									<span class="dashicons dashicons-cart"></span>
+								</div>
+								<div class="ghl-integration-info">
+									<strong><?php esc_html_e( 'WooCommerce', 'syncly' ); ?></strong>
+									<span><?php esc_html_e( 'WooCommerce not installed', 'syncly' ); ?></span>
+								</div>
+							</div>
+						</label>
+					<?php else : ?>
+						<div class="ghl-integration-item ghl-integration-item--pro">
+							<div class="ghl-integration-content">
+								<div class="ghl-integration-icon">
+									<span class="dashicons dashicons-cart"></span>
+								</div>
+								<div class="ghl-integration-info">
+									<strong><?php esc_html_e( 'WooCommerce', 'syncly' ); ?> <span class="ghl-pro-badge"><?php esc_html_e( 'Pro', 'syncly' ); ?></span></strong>
+									<span><?php esc_html_e( 'Upgrade to Pro to sync orders and customer data', 'syncly' ); ?></span>
+								</div>
+							</div>
+							<div class="ghl-integration-lock"><span class="dashicons dashicons-lock"></span></div>
+						</div>
+					<?php endif; ?>
+
+					<!-- LearnDash (Pro) -->
+					<?php if ( $is_pro_version && $is_learndash_active ) : ?>
+						<label class="ghl-integration-item">
+							<input type="checkbox" id="wizard_learndash" <?php checked( $learndash_enabled ); ?>>
+							<div class="ghl-integration-content">
+								<div class="ghl-integration-icon">
+									<span class="dashicons dashicons-welcome-learn-more"></span>
+								</div>
+								<div class="ghl-integration-info">
+									<strong><?php esc_html_e( 'LearnDash', 'syncly' ); ?></strong>
+									<span><?php esc_html_e( 'Sync course enrollments and progress', 'syncly' ); ?></span>
+								</div>
+							</div>
+						</label>
+					<?php elseif ( $is_pro_version ) : ?>
+						<label class="ghl-integration-item ghl-integration-item--disabled">
+							<input type="checkbox" disabled>
+							<div class="ghl-integration-content">
+								<div class="ghl-integration-icon">
+									<span class="dashicons dashicons-welcome-learn-more"></span>
+								</div>
+								<div class="ghl-integration-info">
+									<strong><?php esc_html_e( 'LearnDash', 'syncly' ); ?></strong>
+									<span><?php esc_html_e( 'LearnDash not installed', 'syncly' ); ?></span>
+								</div>
+							</div>
+						</label>
+					<?php else : ?>
+						<div class="ghl-integration-item ghl-integration-item--pro">
+							<div class="ghl-integration-content">
+								<div class="ghl-integration-icon">
+									<span class="dashicons dashicons-welcome-learn-more"></span>
+								</div>
+								<div class="ghl-integration-info">
+									<strong><?php esc_html_e( 'LearnDash', 'syncly' ); ?> <span class="ghl-pro-badge"><?php esc_html_e( 'Pro', 'syncly' ); ?></span></strong>
+									<span><?php esc_html_e( 'Upgrade to Pro to sync course enrollments and progress', 'syncly' ); ?></span>
+								</div>
+							</div>
+							<div class="ghl-integration-lock"><span class="dashicons dashicons-lock"></span></div>
+						</div>
+					<?php endif; ?>
+
+					<?php
+					// Advanced Pro features — deep configuration lives on the main settings
+					// page, so these are shown as a locked preview (free) or a link out (Pro).
+					$pro_preview_features = [
+						[
+							'icon'  => 'database-view',
+							'label' => __( 'Custom Objects', 'syncly' ),
+							'desc'  => __( 'Sync any custom post type as a GoHighLevel custom object', 'syncly' ),
+							'url'   => admin_url( 'admin.php?page=syncly-admin#/custom-objects' ),
+						],
+						[
+							'icon'  => 'cart',
+							'label' => __( 'Abandoned Cart Recovery', 'syncly' ),
+							'desc'  => __( 'Automatically tag and follow up on abandoned WooCommerce carts', 'syncly' ),
+							'url'   => admin_url( 'admin.php?page=syncly-admin#/integrations' ),
+						],
+						[
+							'icon'  => 'rest-api',
+							'label' => __( 'Webhooks / Real-Time Sync', 'syncly' ),
+							'desc'  => __( 'Push instant updates between WordPress and GoHighLevel', 'syncly' ),
+							'url'   => admin_url( 'admin.php?page=syncly-admin#/settings' ),
+						],
+						[
+							'icon'  => 'shield-alt',
+							'label' => __( 'Login Sync', 'syncly' ),
+							'desc'  => __( 'Track logins, tag by activity, and redirect users based on GHL tags', 'syncly' ),
+							'url'   => admin_url( 'admin.php?page=syncly-admin#/settings' ),
+						],
+					];
+					foreach ( $pro_preview_features as $feature ) :
+						if ( $is_pro_version ) :
+							?>
+							<a href="<?php echo esc_url( $feature['url'] ); ?>" class="ghl-integration-item ghl-integration-item--link">
+								<div class="ghl-integration-content">
+									<div class="ghl-integration-icon">
+										<span class="dashicons dashicons-<?php echo esc_attr( $feature['icon'] ); ?>"></span>
+									</div>
+									<div class="ghl-integration-info">
+										<strong><?php echo esc_html( $feature['label'] ); ?></strong>
+										<span><?php echo esc_html( $feature['desc'] ); ?></span>
+									</div>
+								</div>
+								<div class="ghl-integration-link-arrow"><span class="dashicons dashicons-arrow-right-alt2"></span></div>
+							</a>
+							<?php
+						else :
+							?>
+							<div class="ghl-integration-item ghl-integration-item--pro">
+								<div class="ghl-integration-content">
+									<div class="ghl-integration-icon">
+										<span class="dashicons dashicons-<?php echo esc_attr( $feature['icon'] ); ?>"></span>
+									</div>
+									<div class="ghl-integration-info">
+										<strong><?php echo esc_html( $feature['label'] ); ?> <span class="ghl-pro-badge"><?php esc_html_e( 'Pro', 'syncly' ); ?></span></strong>
+										<span><?php echo esc_html( $feature['desc'] ); ?></span>
+									</div>
+								</div>
+								<div class="ghl-integration-lock"><span class="dashicons dashicons-lock"></span></div>
+							</div>
+							<?php
+						endif;
+					endforeach;
+					?>
+				</div>
 			</div>
 			
 			<div class="ghl-wizard-actions">
@@ -447,11 +508,11 @@ $enable_role_tags              = ! empty( $settings['role_tags'] ) && is_array( 
 					
 					<label class="ghl-setting-row">
 						<div class="ghl-setting-info">
-							<strong><?php esc_html_e( 'Enable Role-Based Tags', 'syncly' ); ?></strong>
-							<span class="ghl-setting-desc"><?php esc_html_e( 'Automatically tag contacts based on WordPress user roles', 'syncly' ); ?></span>
+							<strong><?php esc_html_e( 'Help Improve Syncly', 'syncly' ); ?></strong>
+							<span class="ghl-setting-desc"><?php esc_html_e( 'Share anonymous usage data to help us prioritize features and fix bugs faster', 'syncly' ); ?></span>
 						</div>
 						<div class="ghl-toggle-switch">
-							<input type="checkbox" id="wizard_enable_role_tags" <?php checked( $enable_role_tags ); ?>>
+							<input type="checkbox" id="wizard_enable_telemetry_reporting" <?php checked( $enable_telemetry_reporting ); ?>>
 							<span class="ghl-toggle-slider"></span>
 						</div>
 					</label>
@@ -480,6 +541,7 @@ $enable_role_tags              = ! empty( $settings['role_tags'] ) && is_array( 
 		<!-- Step 6: Complete -->
 		<div class="ghl-wizard-panel" data-step="6">
 			<div class="ghl-wizard-panel-content">
+				<div class="ghl-celebrate-badge">🎉 <?php esc_html_e( 'Setup Complete', 'syncly' ); ?></div>
 				<div class="ghl-wizard-icon ghl-wizard-success">
 					<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor">
 						<circle cx="12" cy="12" r="10"></circle>
@@ -493,24 +555,33 @@ $enable_role_tags              = ! empty( $settings['role_tags'] ) && is_array( 
 				
 				<div class="ghl-next-steps">
 					<h3><?php esc_html_e( 'What\'s Next?', 'syncly' ); ?></h3>
-					<ul>
-						<li>
-							<span class="dashicons dashicons-arrow-right-alt"></span>
-							<?php esc_html_e( 'Configure field mapping to customize data sync', 'syncly' ); ?>
-						</li>
-						<li>
-							<span class="dashicons dashicons-arrow-right-alt"></span>
-							<?php esc_html_e( 'Set up webhooks for real-time updates', 'syncly' ); ?>
-						</li>
-						<li>
-							<span class="dashicons dashicons-arrow-right-alt"></span>
-							<?php esc_html_e( 'Explore advanced sync options and automations', 'syncly' ); ?>
-						</li>
-					</ul>
+					<div class="ghl-next-steps-grid">
+						<div class="ghl-next-step-card">
+							<div class="ghl-next-step-icon">
+								<span class="dashicons dashicons-admin-generic"></span>
+							</div>
+							<strong><?php esc_html_e( 'Field Mapping', 'syncly' ); ?></strong>
+							<span><?php esc_html_e( 'Customize how data syncs between WordPress and GoHighLevel', 'syncly' ); ?></span>
+						</div>
+						<div class="ghl-next-step-card">
+							<div class="ghl-next-step-icon">
+								<span class="dashicons dashicons-rest-api"></span>
+							</div>
+							<strong><?php esc_html_e( 'Webhooks', 'syncly' ); ?></strong>
+							<span><?php esc_html_e( 'Set up real-time updates between both platforms', 'syncly' ); ?></span>
+						</div>
+						<div class="ghl-next-step-card">
+							<div class="ghl-next-step-icon">
+								<span class="dashicons dashicons-superhero"></span>
+							</div>
+							<strong><?php esc_html_e( 'Automations', 'syncly' ); ?></strong>
+							<span><?php esc_html_e( 'Explore advanced sync options and workflows', 'syncly' ); ?></span>
+						</div>
+					</div>
 				</div>
 			</div>
 			
-			<div class="ghl-wizard-actions">
+			<div class="ghl-wizard-actions ghl-wizard-actions--center">
 				<button class="ghl-button ghl-button-primary ghl-button-large ghl-wizard-finish">
 					<?php esc_html_e( 'Go to Dashboard', 'syncly' ); ?>
 					<span class="dashicons dashicons-arrow-right-alt2"></span>

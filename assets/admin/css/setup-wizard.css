@@ -82,7 +82,10 @@ html.wp-toolbar {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background: #f8f9fa;
+    background:
+        radial-gradient(circle at 15% 0%, rgba(99, 91, 255, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 100% 20%, rgba(16, 185, 129, 0.06) 0%, transparent 40%),
+        #f8f9fb;
 }
 
 /* Header */
@@ -99,19 +102,35 @@ html.wp-toolbar {
 .ghl-setup-logo {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
 }
 
-.ghl-setup-logo svg {
-    color: var(--ghl-primary);
+.ghl-setup-logo-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--ghl-primary) 0%, var(--ghl-primary-dark) 100%);
+    box-shadow: 0 4px 12px rgba(99, 91, 255, 0.35);
+}
+
+.ghl-setup-logo-icon svg {
+    color: white;
     stroke-width: 2;
+    width: 24px;
+    height: 24px;
 }
 
 .ghl-setup-logo h1 {
     margin: 0;
     font-size: 20px;
-    font-weight: 600;
-    color: var(--ghl-text-primary);
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--ghl-primary) 0%, var(--ghl-primary-dark) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .ghl-setup-exit {
@@ -154,13 +173,19 @@ html.wp-toolbar {
     top: 20px;
     left: 100%;
     width: 60px;
-    height: 2px;
+    height: 3px;
+    border-radius: 2px;
     background: var(--ghl-border-primary);
     transform: translateX(10px);
+    transition: background 0.4s ease;
 }
 
 .ghl-setup-step:last-child::after {
     display: none;
+}
+
+.ghl-setup-step.completed::after {
+    background: linear-gradient(90deg, var(--ghl-success) 0%, var(--ghl-primary) 100%);
 }
 
 .ghl-setup-step.active,
@@ -185,11 +210,21 @@ html.wp-toolbar {
 .ghl-setup-step.active .ghl-step-number {
     background: var(--ghl-primary);
     color: white;
+    box-shadow: 0 0 0 6px rgba(99, 91, 255, 0.15);
+    transform: scale(1.08);
 }
 
 .ghl-setup-step.completed .ghl-step-number {
     background: var(--ghl-success);
     color: white;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
+    animation: ghl-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ghl-setup-step.completed .ghl-step-number .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
 }
 
 .ghl-step-label {
@@ -213,12 +248,24 @@ html.wp-toolbar {
 
 .ghl-wizard-panel {
     display: none;
-    max-width: 1400px;
+    max-width: 1100px;
     width: 100%;
     background: var(--ghl-bg-primary);
-    border-radius: 12px;
+    border-radius: 16px;
     box-shadow: var(--ghl-shadow-md), var(--ghl-shadow-lg);
     animation: slideIn 0.4s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.ghl-wizard-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--ghl-primary) 0%, #8b5cf6 50%, var(--ghl-success) 100%);
 }
 
 .ghl-wizard-panel.active {
@@ -268,6 +315,13 @@ html.wp-toolbar {
 .ghl-wizard-icon {
     margin: 0 auto 24px;
     color: var(--ghl-primary);
+    width: 96px;
+    height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--ghl-primary-light);
 }
 
 .ghl-wizard-icon svg {
@@ -276,12 +330,68 @@ html.wp-toolbar {
 
 .ghl-wizard-icon.ghl-wizard-success {
     color: var(--ghl-success);
+    background: var(--ghl-success-light);
+    animation: ghl-pop-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+}
+
+.ghl-wizard-icon.ghl-wizard-success::before,
+.ghl-wizard-icon.ghl-wizard-success::after {
+    content: '';
+    position: absolute;
+    inset: -14px;
+    border-radius: 50%;
+    border: 2px solid var(--ghl-success);
+    opacity: 0;
+    animation: ghl-ring-pulse 2.2s ease-out infinite;
+}
+
+.ghl-wizard-icon.ghl-wizard-success::after {
+    animation-delay: 1.1s;
+}
+
+@keyframes ghl-ring-pulse {
+    0% { transform: scale(0.8); opacity: 0.6; }
+    100% { transform: scale(1.6); opacity: 0; }
 }
 
 .ghl-wizard-icon.ghl-wizard-success svg {
     fill: var(--ghl-success);
     stroke: white;
     stroke-width: 3;
+}
+
+@keyframes ghl-pop-in {
+    0% { transform: scale(0); opacity: 0; }
+    60% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); }
+}
+
+/* Celebration badge */
+.ghl-celebrate-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 auto 20px;
+    padding: 8px 18px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    animation: ghl-pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Confetti canvas */
+#ghl-confetti-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 999999;
 }
 
 /* Features List */
@@ -587,6 +697,31 @@ html.wp-toolbar {
     color: white;
 }
 
+/* Pro feature available — clickable link card (Pro active) */
+.ghl-integration-item--link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.ghl-integration-item--link:hover {
+    border-color: var(--ghl-primary);
+    background: var(--ghl-bg-secondary);
+}
+
+.ghl-integration-link-arrow {
+    margin-left: auto;
+    padding-left: 16px;
+    display: flex;
+    align-items: center;
+}
+
+.ghl-integration-link-arrow .dashicons {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: var(--ghl-primary);
+}
+
 /* No Integrations Message */
 .ghl-no-integrations-message {
     padding: 40px 20px;
@@ -692,37 +827,74 @@ html.wp-toolbar {
 .ghl-next-steps {
     text-align: left;
     background: #f9fafb;
-    padding: 24px;
-    border-radius: 8px;
+    padding: 28px;
+    border-radius: 12px;
     margin-top: 32px;
 }
 
 .ghl-next-steps h3 {
     font-size: 16px;
-    margin: 0 0 16px;
+    margin: 0 0 18px;
     color: #1a1a1a;
+    text-align: center;
 }
 
-.ghl-next-steps ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+.ghl-next-steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
 }
 
-.ghl-next-steps li {
+@media (max-width: 900px) {
+    .ghl-next-steps-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ghl-next-step-card {
+    background: white;
+    border: 1px solid var(--ghl-border-primary);
+    border-radius: 10px;
+    padding: 20px 18px;
+    text-align: left;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ghl-next-step-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--ghl-shadow-md);
+}
+
+.ghl-next-step-icon {
+    width: 40px;
+    height: 40px;
     display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 8px 0;
-    font-size: 14px;
-    color: #374151;
-    line-height: 1.6;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: var(--ghl-primary-light);
+    margin-bottom: 12px;
 }
 
-.ghl-next-steps .dashicons {
+.ghl-next-step-icon .dashicons {
     color: var(--ghl-primary);
-    margin-top: 2px;
-    flex-shrink: 0;
+}
+
+.ghl-next-step-card strong {
+    display: block;
+    font-size: 14px;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+}
+
+.ghl-next-step-card span {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.5;
+}
+
+.ghl-wizard-actions--center {
+    justify-content: center !important;
 }
 
 /* Actions Footer */

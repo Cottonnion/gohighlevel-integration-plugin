@@ -18,7 +18,7 @@
                     learndash: syncly_setup_wizard_js_data.settings.learndash,
                     delete_contact_on_user_delete: syncly_setup_wizard_js_data.settings.delete_contact_on_user_delete,
                     enable_sync_logging: syncly_setup_wizard_js_data.settings.enable_sync_logging,
-                    enable_role_tags: syncly_setup_wizard_js_data.settings.enable_role_tags
+                    enable_telemetry_reporting: syncly_setup_wizard_js_data.settings.enable_telemetry_reporting
                 };
             }
 
@@ -152,17 +152,28 @@
 
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if (step === this.totalSteps) {
+                this.celebrate();
+            }
         },
 
         updateStepIndicators: function () {
             $('.ghl-setup-step').each((index, el) => {
                 const stepNum = index + 1;
+                const $number = $(el).find('.ghl-step-number');
+
                 if (stepNum < this.currentStep) {
                     $(el).addClass('completed').removeClass('active');
+                    if (!$number.data('ghl-checked')) {
+                        $number.data('ghl-checked', true).html('<span class="dashicons dashicons-yes-alt"></span>');
+                    }
                 } else if (stepNum === this.currentStep) {
                     $(el).addClass('active').removeClass('completed');
+                    $number.data('ghl-checked', false).html(stepNum);
                 } else {
                     $(el).removeClass('active completed');
+                    $number.data('ghl-checked', false).html(stepNum);
                 }
             });
         },
@@ -182,7 +193,7 @@
                 case 5:
                     this.settings.delete_contact_on_user_delete = $('#wizard_delete_contact_on_user_delete').is(':checked');
                     this.settings.enable_sync_logging = $('#wizard_enable_sync_logging').is(':checked');
-                    this.settings.enable_role_tags = $('#wizard_enable_role_tags').is(':checked');
+                    this.settings.enable_telemetry_reporting = $('#wizard_enable_telemetry_reporting').is(':checked');
                     break;
             }
         },
@@ -206,7 +217,10 @@
                 },
                 success: (response) => {
                     if (response.success) {
-                        window.location.href = syncly_setup_wizard_js_data.dashboardUrl;
+                        this.celebrate();
+                        setTimeout(() => {
+                            window.location.href = syncly_setup_wizard_js_data.dashboardUrl;
+                        }, 1100);
                     } else {
                         this.showError(response.data.message || 'Failed to save settings');
                         button.prop('disabled', false).html(originalText);
@@ -231,6 +245,76 @@
             } else {
                 alert(message);
             }
+        },
+
+        celebrate: function () {
+            const canvas = document.getElementById('ghl-confetti-canvas');
+            if (!canvas || canvas.__ghlRunning) {
+                return;
+            }
+            canvas.__ghlRunning = true;
+
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const resize = () => {
+                canvas.width = window.innerWidth * dpr;
+                canvas.height = window.innerHeight * dpr;
+                canvas.style.width = window.innerWidth + 'px';
+                canvas.style.height = window.innerHeight + 'px';
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            };
+            resize();
+
+            const colors = ['#635bff', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#ec4899'];
+            const count = 220;
+            const particles = Array.from({ length: count }, (_, i) => {
+                // First wave falls from the top; remaining particles burst from bottom corners like cannons.
+                const fromCorner = i % 3 !== 0;
+                const originX = fromCorner ? (i % 2 === 0 ? 0 : window.innerWidth) : Math.random() * window.innerWidth;
+                const originY = fromCorner ? window.innerHeight * 0.85 : -20 - Math.random() * window.innerHeight * 0.3;
+                return {
+                    x: originX,
+                    y: originY,
+                    size: 6 + Math.random() * 6,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    speedY: fromCorner ? -(6 + Math.random() * 6) : 2 + Math.random() * 3,
+                    speedX: fromCorner ? (originX === 0 ? 1 : -1) * (2 + Math.random() * 4) : (Math.random() - 0.5) * 2,
+                    gravity: fromCorner ? 0.25 : 0,
+                    rotation: Math.random() * 360,
+                    rotationSpeed: (Math.random() - 0.5) * 10
+                };
+            });
+
+            const duration = 3200;
+            const start = performance.now();
+
+            function frame(now) {
+                const elapsed = now - start;
+                ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+                particles.forEach((p) => {
+                    p.speedY += p.gravity;
+                    p.x += p.speedX;
+                    p.y += p.speedY;
+                    p.rotation += p.rotationSpeed;
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate((p.rotation * Math.PI) / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+                    ctx.restore();
+                });
+
+                if (elapsed < duration) {
+                    requestAnimationFrame(frame);
+                } else {
+                    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+                    canvas.__ghlRunning = false;
+                }
+            }
+
+            requestAnimationFrame(frame);
         }
     };
 

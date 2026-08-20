@@ -59,6 +59,14 @@ class AccessControl {
 			return true;
 		}
 
+		if ( 'logged_in' === $restriction_type ) {
+			return $user_id > 0;
+		}
+
+		if ( 'logged_out' === $restriction_type ) {
+			return 0 === $user_id;
+		}
+
 		// Get required tags
 		$required_tags = get_post_meta( $post_id, \Syncly\Sync\TagManager::scoped_meta_key( '_ghl_required_tags' ), true );
 		if ( ! is_array( $required_tags ) || empty( $required_tags ) ) {

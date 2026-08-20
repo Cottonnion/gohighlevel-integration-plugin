@@ -4,7 +4,7 @@ Tags: gohighlevel, wpfusion, contact-sync, woocommerce, leadconnector
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.4.25
+Stable tag: 1.4.26
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -84,6 +84,17 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
 == Changelog ==
+
+= 1.4.26 =
+- Redesigned the setup wizard with a cleaner layout, better-looking buttons, and a bigger celebration screen when setup finishes.
+- Fixed a bug where the setup wizard could show a broken, overlapping "Back/Continue" bar on some steps.
+- Fixed a bug where the setup wizard sometimes showed a "failed to save" message even though your settings were actually saved.
+- Fixed a bug where a default tag entered during setup for new user registrations was not being saved.
+- The setup wizard now clearly shows which integrations (WooCommerce, LearnDash, Custom Objects, Abandoned Cart Recovery, Webhooks, Login Sync) require the Pro upgrade, instead of hiding them.
+- Removed a "Role-Based Tags" option from the setup wizard that didn't do anything on its own — that feature is configured from its own settings page instead.
+- Added an optional "Help Improve Syncly" toggle in setup so you can choose to share anonymous usage data.
+- Updated internal branding references so the Elementor and Gutenberg integration menus always show the current plugin name.
+- Updated the secure connection service used for GoHighLevel login to our new domain.
 
 = 1.4.25 =
 - Updated plugin directory listing with new icon and banner assets.

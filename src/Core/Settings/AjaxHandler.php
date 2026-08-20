@@ -649,18 +649,20 @@ class AjaxHandler {
 				$current_settings['user_sync_actions'] = array_values( $user_sync_actions );
 			}
 
-			// Update user registration tags (location-specific)
+			// Update user registration tags (location-specific).
+			// Write to the flat key only — SettingsManager::save_site_settings() will
+			// scope it to the active location via prepare_location_scoped_settings_for_storage().
+			// Writing directly to the scoped key here gets clobbered by that same method,
+			// which re-syncs the scoped key from this flat key on every save.
 			if ( isset( $wizard_settings['user_register_tags'] ) ) {
-				$location_id = $current_settings['location_id'] ?? ( $current_settings['oauth_location_id'] ?? '' );
-				$tags        = $wizard_settings['user_register_tags'];
-				$sanitized   = [];
+				$tags      = $wizard_settings['user_register_tags'];
+				$sanitized = [];
 				if ( is_array( $tags ) ) {
 					$sanitized = array_map( 'sanitize_text_field', $tags );
 				} elseif ( is_string( $tags ) ) {
 					$sanitized = array_map( 'trim', explode( ',', sanitize_text_field( $tags ) ) );
 				}
-				$register_key                      = $location_id ? 'user_register_tags_' . $location_id : 'user_register_tags';
-				$current_settings[ $register_key ] = $sanitized;
+				$current_settings['user_register_tags'] = $sanitized;
 			}
 
 			// Update integration settings
@@ -678,15 +680,8 @@ class AjaxHandler {
 			if ( isset( $wizard_settings['enable_sync_logging'] ) ) {
 				$current_settings['enable_sync_logging'] = (bool) $wizard_settings['enable_sync_logging'];
 			}
-			if ( isset( $wizard_settings['enable_role_tags'] ) ) {
-				// If enabling role tags and none exist, initialize with empty array
-				// Otherwise, preserve existing role_tags
-				if ( (bool) $wizard_settings['enable_role_tags'] ) {
-					if ( empty( $current_settings['role_tags'] ) || ! is_array( $current_settings['role_tags'] ) ) {
-						$current_settings['role_tags'] = [];
-					}
-				}
-				// Note: We don't disable role_tags here as user may want to keep their configuration
+			if ( isset( $wizard_settings['enable_telemetry_reporting'] ) ) {
+				$current_settings['enable_telemetry_reporting'] = (bool) $wizard_settings['enable_telemetry_reporting'];
 			}
 
 			// Mark wizard as completed
@@ -701,22 +696,22 @@ class AjaxHandler {
 
 			// Set option to prevent wizard redirect on future activations
 			update_option( 'syncly_setup_wizard_completed', true );
-					$location_id = $current_settings['location_id'] ?? ( $current_settings['oauth_location_id'] ?? '' );
-					$role_key    = $location_id ? 'role_tags_' . $location_id : 'role_tags';
 
-					// If enabling role tags and none exist for this location, initialize with empty array
-			if ( (bool) $wizard_settings['enable_role_tags'] ) {
-				if ( empty( $current_settings[ $role_key ] ) || ! is_array( $current_settings[ $role_key ] ) ) {
-					$current_settings[ $role_key ] = [];
+			// Best-effort: create any brand-new registration tag names in GoHighLevel
+			// so they immediately show up in other tag pickers too.
+			if ( ! empty( $current_settings['user_register_tags'] ) && is_array( $current_settings['user_register_tags'] ) ) {
+				try {
+					\Syncly\Sync\TagManager::get_instance()->ensure_tags_exist( $current_settings['user_register_tags'] );
+				} catch ( \Throwable $e ) {
+					// Never block wizard completion over this.
 				}
 			}
 
-					// When a location is present, drop legacy key to avoid duplicates
-			if ( ! empty( $location_id ) ) {
-				unset( $current_settings['role_tags'] );
-			}
-
-					// Note: We don't disable role_tags here as user may want to keep their configuration
+			wp_send_json_success(
+				[
+					'message' => __( 'Setup complete!', 'syncly' ),
+				]
+			);
 		} catch ( \Exception $e ) {
 			wp_send_json_error(
 				[

@@ -162,7 +162,7 @@ class BlocksManager {
 			[
 				[
 					'slug'  => 'syncly',
-					'title' => __( 'GoHighLevel CRM', 'syncly' ),
+					'title' => __( SYNCLY_PLUGIN_NAME, 'syncly' ),
 					'icon'  => 'admin-links',
 				],
 			],

@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Implements OAuth2 authentication with automatic token lifecycle management.
  *
  * Authentication Strategy:
- * - Primary: OAuth2 Bearer tokens obtained via synclyforgohighlevel.com proxy (keeps client secret server-side)
+ * - Primary: OAuth2 Bearer tokens obtained via labgenz.com proxy (keeps client secret server-side)
  *
  * GHL Token Lifetimes (per official docs):
  * - Access token:  24 hours
@@ -80,7 +80,7 @@ class Client implements ClientInterface {
 	private const OAUTH_AUTH_URL = 'https://marketplace.leadconnectorhq.com/oauth/chooselocation';
 
 	/**
-	 * OAuth proxy base URL (synclyforgohighlevel.com server).
+	 * OAuth proxy base URL (labgenz.com server).
 	 *
 	 * All token exchange/refresh requests route through this proxy so the
 	 * OAuth client secret is never exposed in plugin source or browser.
@@ -92,7 +92,7 @@ class Client implements ClientInterface {
 	 *
 	 * @var string
 	 */
-	private const OAUTH_PROXY_URL = 'http://synclyforgohighlevel.com/wp-json/ghl-proxy/v1';
+	private const OAUTH_PROXY_URL = 'https://labgenz.com/wp-json/ghl-proxy/v1';
 
 	/**
 	 * OAuth2 Client ID (Public - safe to expose)
@@ -769,7 +769,7 @@ class Client implements ClientInterface {
 	 * Generate the OAuth2 authorization URL.
 	 *
 	 * Builds the marketplace chooselocation URL with all required scopes.
-	 * The redirect_uri always points to synclyforgohighlevel.com/wp-json/ghl/v1/callback
+	 * The redirect_uri always points to labgenz.com/wp-json/ghl/v1/callback
 	 * (the proxy), which then forwards back to the WordPress site.
 	 *
 	 * Scopes requested:
@@ -778,6 +778,7 @@ class Client implements ClientInterface {
 	 * - locations/customFields.readonly / locations/customFields.write
 	 * - opportunities.readonly / opportunities.write
 	 * - workflows.readonly / forms.readonly / forms.write
+	 * - campaigns.readonly (Campaign Enrollment)
 	 * - objects/schema + record + associations (Custom Objects)
 	 *
 	 * @param string $redirect_uri Unused directly (proxy handles redirect).
@@ -787,7 +788,7 @@ class Client implements ClientInterface {
 	public function get_oauth_authorization_url( string $redirect_uri, string $return_url ): string {
 		$params = [
 			'client_id'     => self::OAUTH_CLIENT_ID,
-			'redirect_uri'  => 'http://synclyforgohighlevel.com/wp-json/ghl/v1/callback',
+			'redirect_uri'  => 'https://labgenz.com/wp-json/ghl/v1/callback',
 			'scope'         => implode(
 				' ',
 				[
@@ -799,6 +800,7 @@ class Client implements ClientInterface {
 					'locations/customFields.write',     // Edit Custom Fields
 					'forms.readonly',                   // View Forms
 					'forms.write',                      // Edit Forms
+					// 'campaigns.readonly',               // View Campaigns
 					'objects/schema.readonly',          // View Objects Schema
 					'objects/schema.write',             // Edit Objects Schema
 					'objects/record.readonly',          // View Objects Records
@@ -818,7 +820,7 @@ class Client implements ClientInterface {
 	/**
 	 * Exchange an authorization code for OAuth2 tokens.
 	 *
-	 * Sends the code to the synclyforgohighlevel.com proxy which pairs it with the
+	 * Sends the code to the labgenz.com proxy which pairs it with the
 	 * client secret and calls GHL’s `/oauth/token` endpoint.
 	 *
 	 * On success, both access_token and refresh_token are updated in-memory

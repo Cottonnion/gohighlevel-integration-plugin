@@ -110,5 +110,3 @@ $oauth_handler = $oauth_handler ?? new \Syncly\API\OAuth\OAuthHandler();
 	</div>
 
 </div>
-
-</div>

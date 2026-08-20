@@ -385,6 +385,7 @@ class AssetsManager {
 				'toplevel_page_syncly-admin',              // New SPA page
 				'syncly_page_syncly-sync-logs',
 				'toplevel_page_wpcf7',
+				'admin_page_syncly-setup-wizard',
 			],
 			'globals.css',
 			[],
@@ -559,7 +560,7 @@ class AssetsManager {
 			'syncly-setup-wizard-css',
 			[ 'admin_page_syncly-setup-wizard' ],
 			'setup-wizard.css',
-			[],
+			[ 'syncly-globals-css', 'syncly-select2-css' ],
 			[],
 			SYNCLY_VERSION
 		);
@@ -589,17 +590,13 @@ class AssetsManager {
 		$buddyboss_enabled             = $settings['buddyboss_enabled'] ?? false;
 		$delete_contact_on_user_delete = $settings['delete_contact_on_user_delete'] ?? false;
 		$enable_sync_logging           = $settings['enable_sync_logging'] ?? false;
-		$role_tags_config              = $settings_manager->get_location_role_tags( $location_id );
-		if ( empty( $role_tags_config ) && ! empty( $settings['role_tags'] ) && is_array( $settings['role_tags'] ) ) {
-			$role_tags_config = $settings['role_tags'];
-		}
-		$enable_role_tags = ! empty( $role_tags_config );
+		$enable_telemetry_reporting    = $settings['enable_telemetry_reporting'] ?? false;
 
 		$this->add_admin_asset(
 			'syncly-setup-wizard-js',
 			[ 'admin_page_syncly-setup-wizard' ],
 			'setup-wizard.js',
-			[ 'jquery', 'syncly-sweetalert2' ],
+			[ 'jquery', 'syncly-sweetalert2', 'syncly-select2' ],
 			[
 				'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
 				'nonce'        => wp_create_nonce( 'syncly_spa_nonce' ),
@@ -616,7 +613,7 @@ class AssetsManager {
 					'buddyboss'                     => $buddyboss_enabled,
 					'delete_contact_on_user_delete' => $delete_contact_on_user_delete,
 					'enable_sync_logging'           => $enable_sync_logging,
-					'enable_role_tags'              => $enable_role_tags,
+					'enable_telemetry_reporting'    => $enable_telemetry_reporting,
 				],
 			],
 			SYNCLY_VERSION,

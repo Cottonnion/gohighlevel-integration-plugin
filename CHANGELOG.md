@@ -4,6 +4,24 @@ All notable changes to Syncly will be documented in this file.
 
 ## [Unreleased]
 
+## [1.4.26] - 2026-08-20
+
+### Added
+
+- Redesigned the setup wizard with a cleaner layout, nicer buttons, and a bigger celebration when setup finishes.
+- The setup wizard now clearly shows Pro-only integrations (WooCommerce, LearnDash, Custom Objects, Abandoned Cart Recovery, Webhooks, Login Sync) so free users know what upgrading unlocks.
+- Added an optional "Help Improve Syncly" toggle in the setup wizard for sharing anonymous usage data.
+- Requested the GoHighLevel `campaigns.readonly` permission during OAuth and added a `campaigns` scope check, enabling campaign lookups for campaign enrollment features.
+
+### Fixed
+
+- Fixed a setup wizard layout bug that could show a broken, overlapping "Back/Continue" bar on some steps.
+- Fixed a bug where the setup wizard showed a "failed to save" message even when settings were saved successfully.
+- Fixed a bug where a default registration tag entered in the setup wizard was not being saved.
+- Removed a "Role-Based Tags" toggle from the setup wizard that had no real effect on its own; that feature is configured on its own settings page.
+- Fixed the Elementor widget category and Gutenberg block category to always show the current plugin name instead of an outdated hardcoded label.
+- Updated the OAuth connection proxy domain used for GoHighLevel authentication.
+
 ## [1.4.24] - 2026-08-13
 
 ### Fixed

@@ -99,7 +99,7 @@ class ElementorIntegration {
 		$elements_manager->add_category(
 			'syncly',
 			[
-				'title' => __( 'GoHighLevel CRM', 'syncly' ),
+				'title' => __( SYNCLY_PLUGIN_NAME, 'syncly' ),
 				'icon'  => 'fa fa-plug',
 			]
 		);

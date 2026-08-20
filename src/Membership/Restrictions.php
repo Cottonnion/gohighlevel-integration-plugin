@@ -204,17 +204,12 @@ class Restrictions {
 			return;
 		}
 
-		// Check if user is logged in
-		if ( ! is_user_logged_in() ) {
-			$this->handle_access_denial( $post_id, 'not_logged_in' );
-			return;
-		}
-
-		$user_id = get_current_user_id();
+		$user_id = is_user_logged_in() ? get_current_user_id() : 0;
 
 		// Check if user has access
 		if ( ! $this->access_control->user_has_access( $user_id, $post_id ) ) {
-			$this->handle_access_denial( $post_id, 'insufficient_permissions' );
+			$reason = $user_id > 0 ? 'insufficient_permissions' : 'not_logged_in';
+			$this->handle_access_denial( $post_id, $reason );
 			return;
 		}
 
@@ -357,16 +352,12 @@ class Restrictions {
 			return $content;
 		}
 
-		// Check if user is logged in
-		if ( ! is_user_logged_in() ) {
-			return $this->get_restricted_content_message( $post_id, 'not_logged_in' );
-		}
-
-		$user_id = get_current_user_id();
+		$user_id = is_user_logged_in() ? get_current_user_id() : 0;
 
 		// Check if user has access
 		if ( ! $this->access_control->user_has_access( $user_id, $post_id ) ) {
-			return $this->get_restricted_content_message( $post_id, 'insufficient_permissions' );
+			$reason = $user_id > 0 ? 'insufficient_permissions' : 'not_logged_in';
+			return $this->get_restricted_content_message( $post_id, $reason );
 		}
 
 		return $content;
@@ -445,7 +436,7 @@ class Restrictions {
 		$exclude_ids = [];
 
 		foreach ( $restricted_ids as $post_id ) {
-			if ( ! $user_id || ! $this->access_control->user_has_access( $user_id, (int) $post_id ) ) {
+			if ( ! $this->access_control->user_has_access( $user_id, (int) $post_id ) ) {
 				$exclude_ids[] = $post_id;
 			}
 		}
@@ -484,12 +475,7 @@ class Restrictions {
 			return true;
 		}
 
-		// Check if user is logged in
-		if ( ! is_user_logged_in() ) {
-			return false;
-		}
-
-		$user_id = get_current_user_id();
+		$user_id = is_user_logged_in() ? get_current_user_id() : 0;
 
 		return $this->access_control->user_has_access( $user_id, $post_id );
 	}
@@ -526,7 +512,7 @@ class Restrictions {
 		$exclude_ids = [];
 
 		foreach ( $restricted_ids as $post_id ) {
-			if ( ! $user_id || ! $this->access_control->user_has_access( $user_id, (int) $post_id ) ) {
+			if ( ! $this->access_control->user_has_access( $user_id, (int) $post_id ) ) {
 				$exclude_ids[] = $post_id;
 			}
 		}
