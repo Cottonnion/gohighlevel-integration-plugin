@@ -4,6 +4,19 @@ All notable changes to Syncly will be documented in this file.
 
 ## [Unreleased]
 
+## [1.4.27] - 2026-08-21
+
+### Added
+
+- Added Gravity Forms integration with a dedicated per-form Syncly settings tab.
+- Added field mapping, per-form tags, duplicate update behavior, source naming, configurable queue delay, spam-entry protection, optional contact timeline notes, sync history, and resend controls for Gravity Forms submissions.
+- Added Syncly Pro conditional submission rules for Gravity Forms.
+- Added Gravity Forms Automation to the centralized Upgrade to Pro feature list.
+
+### Changed
+
+- Gravity Forms synchronization uses the existing asynchronous Action Scheduler queue.
+
 ## [1.4.26] - 2026-08-20
 
 ### Added

@@ -146,6 +146,13 @@ class QueueProcessor {
 	 * @throws \Exception
 	 */
 	public function execute_sync( string $item_type, string $action, int $item_id, array $payload ) {
+		if ( ! empty( $payload['_syncly_gf_not_before'] ) && time() < absint( $payload['_syncly_gf_not_before'] ) ) {
+			return [
+				'success' => false,
+				'error'   => 'Waiting for configured form sync delay',
+				'skip'    => true,
+			];
+		}
 
 		$context = array(
 			'item_type' => $item_type,
@@ -491,6 +498,12 @@ class QueueProcessor {
 		// Extract internal flags before sending to API.
 		$update_exists = $payload['_update_exists'] ?? true;
 		unset( $payload['_update_exists'] );
+		unset(
+			$payload['_syncly_gf_entry_id'],
+			$payload['_syncly_gf_form_id'],
+			$payload['_syncly_gf_note'],
+			$payload['_syncly_gf_not_before']
+		);
 
 		// Check if contact_id is provided in payload (indicates UPDATE operation)
 		$provided_contact_id = $payload['contact_id'] ?? '';
@@ -869,12 +882,38 @@ class QueueProcessor {
 			case 'add_tags':
 				return $this->handle_add_tags( $contact_resource, $payload );
 
+			case 'gf_add_note':
+				return $this->handle_gf_add_note( $contact_resource, $payload );
+
 			case 'remove_tags':
 				return $this->handle_remove_tags( $contact_resource, $payload );
 
 			default:
 				throw new \Exception( esc_html( 'Unknown form action: ' . $action ) );
 		}
+	}
+
+	/**
+	 * Add a queued Gravity Forms submission note to the matching contact.
+	 *
+	 * @param object $contact_resource Contact resource.
+	 * @param array  $payload           Note payload.
+	 * @return array API response.
+	 * @throws \Exception When the contact cannot be found.
+	 */
+	private function handle_gf_add_note( $contact_resource, array $payload ): array {
+		$email = sanitize_email( (string) ( $payload['email'] ?? '' ) );
+		$note  = sanitize_textarea_field( (string) ( $payload['note'] ?? '' ) );
+		if ( '' === $email || '' === $note ) {
+			throw new \Exception( 'Gravity Forms note requires an email and note body' );
+		}
+
+		$contact = $contact_resource->find_by_email( $email );
+		if ( empty( $contact['id'] ) ) {
+			throw new \Exception( 'Contact not found for Gravity Forms note' );
+		}
+
+		return $contact_resource->add_note( (string) $contact['id'], $note );
 	}
 
 	/**

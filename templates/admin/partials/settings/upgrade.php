@@ -64,6 +64,11 @@ $pro_features = [
 		'description' => __( 'Map WooCommerce, BuddyBoss, LearnDash, and custom user fields, plus AI-assisted auto-suggested mappings.', 'syncly' ),
 	],
 	[
+		'icon'        => 'dashicons-feedback',
+		'title'       => __( 'Gravity Forms Automation', 'syncly' ),
+		'description' => __( 'Build multi-action Gravity Forms automations with conditional routing, opportunity mapping, assignment, lead scoring, conversation history, and submission replay.', 'syncly' ),
+	],
+	[
 		'icon'        => 'dashicons-chart-bar',
 		'title'       => __( 'Sync Analytics Dashboard', 'syncly' ),
 		'description' => __( 'Track sync volume, success rates, activity trends, and export performance reports.', 'syncly' ),

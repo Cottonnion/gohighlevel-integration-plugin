@@ -148,7 +148,8 @@ class ContactResource extends AbstractResource {
 	public function add_note( string $contact_id, string $note ): array {
 		return $this->client->post(
 			$this->build_endpoint( "{$contact_id}/notes" ),
-			[ 'body' => $note ]
+			[ 'body' => $note ],
+			false // The contact notes endpoint rejects locationId in the request body.
 		);
 	}
 

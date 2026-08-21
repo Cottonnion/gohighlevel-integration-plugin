@@ -112,6 +112,7 @@ class Loader {
 			'integrations.gutenberg'               => \Syncly\Integrations\Gutenberg\BlocksManager::class,
 
 			'integrations.forms.cf7'               => \Syncly\Integrations\Forms\CF7Handler::class,
+			'integrations.forms.gravityforms'      => \Syncly\Integrations\Forms\GFHandler::class,
 
 			// Membership components
 			'membership.metaboxes'                 => \Syncly\Membership\Admin\MetaBoxes::class,
