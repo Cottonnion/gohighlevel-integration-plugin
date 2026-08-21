@@ -232,7 +232,7 @@ class GFHandler {
 		$config    = $this->get_form_config( $form );
 		$gf_fields = $this->get_gf_form_fields( $form );
 		$resend_id = $this->maybe_resend_submission( $form_id );
-		$history   = $this->get_submission_history( $form_id );
+		$history   = \Syncly\Integrations\Forms\FormSettings::is_pro_active() ? $this->get_submission_history( $form_id ) : [];
 
 		\GFFormSettings::page_header();
 
@@ -247,8 +247,8 @@ class GFHandler {
 			<?php include SYNCLY_PATH . 'templates/admin/gf-ghl-panel.php'; ?>
 
 			<?php
-			// Allow Pro to append its settings sections (conditional logic, workflows).
-			do_action( 'syncly_gf_panel_after', $form_id, $config );
+			// Allow Pro to append its licensed automation settings.
+			do_action( 'syncly_gf_panel_after', $form_id, $config, $history );
 			?>
 
 			<p class="submit">
@@ -304,30 +304,10 @@ class GFHandler {
 			}
 		}
 
-		// Sanitize tags.
-		$tags = [];
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified above
-		if ( isset( $_POST['syncly_gf_tags'] ) && is_array( $_POST['syncly_gf_tags'] ) ) {
-			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing -- Sanitized in loop below, nonce verified above
-			$raw_tags = wp_unslash( $_POST['syncly_gf_tags'] );
-			foreach ( $raw_tags as $tag ) {
-				$tag_clean = sanitize_text_field( $tag );
-				if ( '' !== $tag_clean ) {
-					$tags[] = $tag_clean;
-				}
-			}
-		}
-
 		$config = [
 			'enabled'       => $enabled,
 			'field_mapping' => $field_mapping,
-			'tags'          => $tags,
 			'update_exists' => $update_exists,
-			'note_enabled'  => isset( $_POST['syncly_gf_note_enabled'] ) && '1' === $_POST['syncly_gf_note_enabled'],
-			'note_field'    => isset( $_POST['syncly_gf_note_field'] ) ? sanitize_text_field( wp_unslash( $_POST['syncly_gf_note_field'] ) ) : '',
-			'source_name'   => isset( $_POST['syncly_gf_source_name'] ) ? sanitize_text_field( wp_unslash( $_POST['syncly_gf_source_name'] ) ) : 'Gravity Forms: {form_title}',
-			'skip_spam'     => ! isset( $_POST['syncly_gf_skip_spam'] ) || '1' === $_POST['syncly_gf_skip_spam'],
-			'sync_delay'    => min( 1440, max( 0, absint( $_POST['syncly_gf_sync_delay'] ?? 0 ) ) ),
 		];
 
 		/**
@@ -408,13 +388,7 @@ class GFHandler {
 		$defaults = [
 			'enabled'       => false,
 			'field_mapping' => [],
-			'tags'          => [],
 			'update_exists' => true,
-			'note_enabled'  => false,
-			'note_field'    => '',
-			'source_name'   => 'Gravity Forms: {form_title}',
-			'skip_spam'     => true,
-			'sync_delay'    => 0,
 		];
 
 		/**
@@ -446,7 +420,7 @@ class GFHandler {
 			return;
 		}
 
-		if ( ! empty( $config['skip_spam'] ) && 'spam' === rgar( $entry, 'status' ) ) {
+		if ( \Syncly\Integrations\Forms\FormSettings::is_pro_active() && ! empty( $config['skip_spam'] ) && 'spam' === rgar( $entry, 'status' ) ) {
 			$this->save_entry_sync_meta( $entry_id, [ 'status' => 'skipped_spam' ] );
 			return;
 		}
@@ -496,19 +470,19 @@ class GFHandler {
 		}
 
 		// Add source.
-		$source_name          = (string) ( $config['source_name'] ?? 'Gravity Forms: {form_title}' );
+		$source_name          = \Syncly\Integrations\Forms\FormSettings::is_pro_active() ? (string) ( $config['source_name'] ?? 'Gravity Forms: {form_title}' ) : 'Gravity Forms: {form_title}';
 		$contact_data['source'] = sanitize_text_field( str_replace( '{form_title}', (string) ( $form['title'] ?? '' ), $source_name ) );
 		$contact_data['_syncly_gf_entry_id'] = $entry_id;
 		$contact_data['_syncly_gf_form_id']  = $form_id;
 
 		$note = '';
-		if ( ! empty( $config['note_enabled'] ) && ! empty( $config['note_field'] ) ) {
+		if ( \Syncly\Integrations\Forms\FormSettings::is_pro_active() && ! empty( $config['note_enabled'] ) && ! empty( $config['note_field'] ) ) {
 			$note = sanitize_textarea_field( (string) rgar( $entry, $config['note_field'] ) );
 		}
 		if ( '' !== $note ) {
 			$contact_data['_syncly_gf_note'] = $note;
 		}
-		if ( absint( $config['sync_delay'] ?? 0 ) > 0 ) {
+		if ( \Syncly\Integrations\Forms\FormSettings::is_pro_active() && absint( $config['sync_delay'] ?? 0 ) > 0 ) {
 			$contact_data['_syncly_gf_not_before'] = time() + absint( $config['sync_delay'] ) * MINUTE_IN_SECONDS;
 		}
 
@@ -523,7 +497,7 @@ class GFHandler {
 		);
 
 		// Queue tags separately — depends_on ensures the contact exists first.
-		if ( ! empty( $config['tags'] ) && $queue_id ) {
+		if ( \Syncly\Integrations\Forms\FormSettings::is_pro_active() && ! empty( $config['tags'] ) && $queue_id ) {
 			$queue_manager->add_to_queue(
 				'form',
 				$form_id,
@@ -536,7 +510,7 @@ class GFHandler {
 			);
 		}
 
-		if ( '' !== $note && $queue_id ) {
+		if ( \Syncly\Integrations\Forms\FormSettings::is_pro_active() && '' !== $note && $queue_id ) {
 			$queue_manager->add_to_queue(
 				'form',
 				$form_id,
@@ -640,7 +614,7 @@ class GFHandler {
 	 * @return int|false Requeued queue ID, or false.
 	 */
 	private function maybe_resend_submission( int $form_id ) {
-		if ( empty( $_POST['syncly_gf_resend'] ) || empty( $_POST['syncly_gf_resend_nonce'] ) ) {
+		if ( ! \Syncly\Integrations\Forms\FormSettings::is_pro_active() || empty( $_POST['syncly_gf_resend'] ) || empty( $_POST['syncly_gf_resend_nonce'] ) ) {
 			return false;
 		}
 
