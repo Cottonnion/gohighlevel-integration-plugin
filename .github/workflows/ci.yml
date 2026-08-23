@@ -27,8 +27,8 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-
 
-      - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist
+      - name: Install dev dependencies
+        run: composer install --dev --no-interaction --prefer-dist
 
       - name: Run PHPUnit
-        run: php -d memory_limit=512M ./vendor/bin/phpunit
+        run: composer test

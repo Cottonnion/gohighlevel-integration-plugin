@@ -96,6 +96,7 @@ jobs:
           rsync -a --delete ./ "${STAGING_DIR}/" \
             --exclude '.git/' \
             --exclude '.github/' \
+            --exclude '.wordpress-org/' \
             --exclude 'docs/' \
             --exclude 'tests/' \
             --exclude 'dist/' \
@@ -158,6 +159,7 @@ jobs:
             zip -r "${DIST_DIR}/${{ steps.release_tag.outputs.zip_name }}" "${PLUGIN_SLUG}" \
               -x "${PLUGIN_SLUG}/.git/*" \
               -x "${PLUGIN_SLUG}/.github/*" \
+              -x "${PLUGIN_SLUG}/.wordpress-org/*" \
               -x "${PLUGIN_SLUG}/docs/*" \
               -x "${PLUGIN_SLUG}/tests/*" \
               -x "${PLUGIN_SLUG}/dist/*" \
@@ -202,6 +204,7 @@ jobs:
           grep -q "${PLUGIN_SLUG}/assets/.*\.min\.css" "${DIST_DIR}/zip-contents.txt"
 
           ! grep -E "${PLUGIN_SLUG}/(\.git|\.github|docs|tests|dist|build|node_modules)/" "${DIST_DIR}/zip-contents.txt"
+          ! grep -E "${PLUGIN_SLUG}/\.wordpress-org/" "${DIST_DIR}/zip-contents.txt"
           ! grep -E "${PLUGIN_SLUG}/(\.gitignore|\.gitattributes|\.editorconfig|\.phpunit\.result\.cache|phpunit\.xml|phpunit\.xml\.dist|phpcs\.xml|phpcs\.xml\.dist|build-minify\.php|check|fix|zip-excludes?\.txt|README\.md|DEV_CHANGELOG\.md|FEATURES-AND-BENEFITS\.md|PRODUCTION-BUILD\.md)$" "${DIST_DIR}/zip-contents.txt"
           ! grep -E "${PLUGIN_SLUG}/vendor/bin/" "${DIST_DIR}/zip-contents.txt"
           ! grep -E "\.DS_Store|\.map$|\.zip$" "${DIST_DIR}/zip-contents.txt"
