@@ -2,7 +2,28 @@
 
 All notable changes to Syncly will be documented in this file.
 
-## [Unreleased]
+## [1.4.31] - 2026-08-23
+
+### Added
+
+- Added atomic OAuth refresh locking, safe transient API retries with request correlation, and shared-client connection verification.
+- Added webhook delivery deduplication, malformed-JSON rejection, and retryable failure responses.
+- Added atomic queue claims, atomic rate-limit reservation, stale final-attempt recovery, and short tag-fetch failure backoff.
+- Added regression coverage for API reliability, webhook validation, OAuth state binding, queue dependency waits, and log redaction.
+
+### Fixed
+
+- Fixed plugin activation and deactivation hooks so installation setup, database initialization, cleanup scheduling, and setup-wizard redirects run from the actual `syncly.php` bootstrap file.
+- Fixed dependency-waiting queue jobs so they return to `pending` without consuming a retry attempt.
+- Renew the queue-processing lock while a batch is actively being processed, preventing overlapping workers during slow remote API calls.
+- Stopped OAuth authorization codes and state values from being written to file logs; structured log context now redacts credentials defensively.
+- Require the same authenticated administrator who started OAuth to complete its callback.
+
+### Changed
+
+- File logging is now opt-in via `SYNCLY_BRIDGE_LOG` and includes IIS protection plus nginx deployment guidance.
+- CI now verifies the advertised PHP 7.4 minimum alongside PHP 8.1, validates Composer metadata, and runs a complete PHP syntax check.
+- Deployment workflow now deploys the tagged release rather than force-resetting production to the latest `main` branch.
 
 ## [1.4.27] - 2026-08-21
 

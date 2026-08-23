@@ -16,4 +16,4 @@
 - [ ] Branch is `feature/*` or `fix/*` branched off `develop`
 - [ ] No debug `error_log()` or `console.log()` left in
 - [ ] `CHANGELOG.md` `[Unreleased]` section updated
-- [ ] Version bump in plugin header + `gohighlevel-crm-integration.php` only if this is a release PR to `main`
+- [ ] Version bump in `syncly.php`, `readme.txt`, and `README.md` only if this is a release PR to `main`

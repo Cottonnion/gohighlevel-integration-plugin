@@ -84,8 +84,6 @@ class ConnectionManager {
 			];
 		}
 
-		$auth_token = $settings['oauth_access_token'];
-
 		// For OAuth, location_id might be stored differently
 		$location_id = $settings['location_id'] ?? '';
 
@@ -97,47 +95,33 @@ class ConnectionManager {
 			];
 		}
 
-		// Test the connection by fetching contacts (simple scope test)
-		$api_url = 'https://services.leadconnectorhq.com/contacts/?locationId=' . $location_id . '&limit=1';
+		try {
+			// Use the shared client so proactive/reactive token refresh is applied.
+			$client = \Syncly\API\Client\Client::get_instance();
+			$client->get( 'contacts/', [ 'limit' => 1 ] );
 
-		$response = wp_remote_get(
-			$api_url,
-			[
-				'headers' => [
-					'Authorization' => 'Bearer ' . $auth_token,
-					'Version'       => $settings['api_version'] ?? '2021-07-28',
-					'Content-Type'  => 'application/json',
-				],
-				'timeout' => 15,
-			]
-		);
-
-		if ( is_wp_error( $response ) ) {
-			return [
-				'success' => false,
-				'message' => sprintf(
-					/* translators: %s: Error message */
-					__( 'Connection failed: %s', 'syncly' ),
-					$response->get_error_message()
-				),
-				'code'    => 500,
-			];
-		}
-
-		$status_code = wp_remote_retrieve_response_code( $response );
-		$body        = json_decode( wp_remote_retrieve_body( $response ), true );
-
-		if ( $status_code === 200 ) {
-			// Mark connection as verified
 			$this->mark_connection_verified();
 
 			return [
 				'success'     => true,
 				'message'     => __( 'Connection successful! Your API credentials are working.', 'syncly' ),
-				'status_code' => $status_code,
+				'status_code' => 200,
 				'code'        => 200,
 			];
-		} else {
+		} catch ( \Syncly\API\Exceptions\ApiException $e ) {
+			$this->mark_connection_unverified();
+
+			return [
+				'success' => false,
+				'message' => sprintf(
+					/* translators: %s: Error message */
+					__( 'Connection failed: %s', 'syncly' ),
+					$e->getMessage()
+				),
+				'status_code' => $e->get_status_code(),
+				'code'        => $e->get_status_code(),
+			];
+		} catch ( \Throwable $e ) {
 			// Mark connection as not verified
 			$this->mark_connection_unverified();
 
@@ -145,12 +129,10 @@ class ConnectionManager {
 				'success'     => false,
 				'message'     => sprintf(
 					/* translators: %d: HTTP status code */
-					__( 'Connection failed with status code: %d', 'syncly' ),
-					$status_code
+					__( 'Connection failed: %s', 'syncly' ),
+					$e->getMessage()
 				),
-				'details'     => $body,
-				'status_code' => $status_code,
-				'code'        => $status_code,
+				'code' => 500,
 			];
 		}
 	}

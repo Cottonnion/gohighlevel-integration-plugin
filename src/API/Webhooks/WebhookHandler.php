@@ -16,58 +16,59 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Webhook Handler
  *
  * Handles incoming webhooks from GoHighLevel.
- * Users must manually set up webhooks in their GHL account using the provided URL.
  *
  * @package    Syncly
  * @subpackage API/Webhooks
  */
 class WebhookHandler {
+
 	/**
-	 * Header name for shared secret token
+	 * Header name for shared secret token.
 	 */
 	private const WEBHOOK_SECRET_HEADER = 'x-ghl-token';
 
 	/**
-	 * Maximum allowed webhook payload size (256KB)
+	 * Maximum allowed webhook payload size (256KB).
 	 */
 	private const MAX_WEBHOOK_BODY_BYTES = 262144;
+
 	/**
-	 * Settings Manager
+	 * Settings Manager.
 	 *
 	 * @var SettingsManager
 	 */
 	private SettingsManager $settings_manager;
 
 	/**
-	 * Queue Manager
+	 * Queue Manager.
 	 *
 	 * @var QueueManager
 	 */
 	private QueueManager $queue_manager;
 
 	/**
-	 * Sync Logger
+	 * Sync Logger.
 	 *
 	 * @var SyncLogger
 	 */
 	private SyncLogger $logger;
 
 	/**
-	 * GHL to WordPress Sync
+	 * GHL to WordPress Sync.
 	 *
 	 * @var GHLToWordPressSync
 	 */
 	private GHLToWordPressSync $ghl_sync;
 
 	/**
-	 * Singleton instance
+	 * Singleton instance.
 	 *
 	 * @var self|null
 	 */
 	private static ?self $instance = null;
 
 	/**
-	 * Get instance
+	 * Get instance.
 	 *
 	 * @return self
 	 */
@@ -75,11 +76,12 @@ class WebhookHandler {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
 		}
+
 		return self::$instance;
 	}
 
 	/**
-	 * Constructor
+	 * Constructor.
 	 */
 	private function __construct() {
 		$this->settings_manager = SettingsManager::get_instance();
@@ -91,7 +93,7 @@ class WebhookHandler {
 	}
 
 	/**
-	 * Initialize WordPress hooks
+	 * Initialize WordPress hooks.
 	 *
 	 * @return void
 	 */
@@ -103,7 +105,7 @@ class WebhookHandler {
 	}
 
 	/**
-	 * Register REST API endpoint for webhooks
+	 * Register REST API endpoint for webhooks.
 	 *
 	 * @return void
 	 */
@@ -120,7 +122,7 @@ class WebhookHandler {
 	}
 
 	/**
-	 * Get webhook URL
+	 * Get webhook URL.
 	 *
 	 * @return string
 	 */
@@ -129,9 +131,9 @@ class WebhookHandler {
 	}
 
 	/**
-	 * Verify webhook signature via shared secret header
+	 * Verify webhook signature via shared secret header.
 	 *
-	 * @param \WP_REST_Request $request Request object
+	 * @param \WP_REST_Request $request Request object.
 	 * @return bool|\WP_Error
 	 */
 	public function verify_webhook_signature( \WP_REST_Request $request ) {
@@ -146,32 +148,55 @@ class WebhookHandler {
 		}
 
 		$content_type = (string) $request->get_header( 'content-type' );
+
 		if ( '' === $content_type || false === stripos( $content_type, 'application/json' ) ) {
-			return new \WP_Error( 'invalid_content_type', __( 'Content-Type must be application/json', 'syncly' ), [ 'status' => 415 ] );
+			return new \WP_Error(
+				'invalid_content_type',
+				__( 'Content-Type must be application/json', 'syncly' ),
+				[ 'status' => 415 ]
+			);
 		}
 
 		$raw_body   = (string) $request->get_body();
 		$body_bytes = strlen( $raw_body );
+
 		if ( $body_bytes > self::MAX_WEBHOOK_BODY_BYTES ) {
-			return new \WP_Error( 'payload_too_large', __( 'Webhook payload exceeds the allowed size.', 'syncly' ), [ 'status' => 413 ] );
+			return new \WP_Error(
+				'payload_too_large',
+				__( 'Webhook payload exceeds the allowed size.', 'syncly' ),
+				[ 'status' => 413 ]
+			);
+		}
+
+		if ( ! is_array( $request->get_json_params() ) ) {
+			return new \WP_Error(
+				'invalid_webhook_payload',
+				__( 'Webhook payload must be a valid JSON object.', 'syncly' ),
+				[ 'status' => 400 ]
+			);
 		}
 
 		$provided_token = trim( (string) $request->get_header( self::WEBHOOK_SECRET_HEADER ) );
 
 		if ( '' === $provided_token || ! hash_equals( $secret, $provided_token ) ) {
-			return new \WP_Error( 'invalid_webhook_signature', __( 'Invalid or missing webhook token.', 'syncly' ), [ 'status' => 401 ] );
+			return new \WP_Error(
+				'invalid_webhook_signature',
+				__( 'Invalid or missing webhook token.', 'syncly' ),
+				[ 'status' => 401 ]
+			);
 		}
 
 		return true;
 	}
 
 	/**
-	 * Get existing webhook secret or generate one if missing
+	 * Get existing webhook secret or generate one if missing.
 	 *
 	 * @return string
 	 */
 	public function get_or_create_webhook_secret(): string {
 		$secret = (string) $this->settings_manager->get_setting( 'webhook_secret', '' );
+
 		if ( '' !== $secret ) {
 			return $secret;
 		}
@@ -180,44 +205,51 @@ class WebhookHandler {
 	}
 
 	/**
-	 * Generate and persist a new webhook secret
+	 * Generate and persist a new webhook secret.
 	 *
 	 * @return string
 	 */
 	private function generate_and_store_webhook_secret(): string {
 		$secret = wp_generate_password( 48, false, false );
+
 		$this->settings_manager->update_setting( 'webhook_secret', $secret );
+
 		return $secret;
 	}
 
 	/**
-	 * Get best-effort remote IP for logging
+	 * Get best-effort remote IP for logging.
 	 *
-	 * @param \WP_REST_Request $request Request object
+	 * @param \WP_REST_Request $request Request object.
 	 * @return string
 	 */
 	private function get_remote_ip( \WP_REST_Request $request ): string {
 		$ip = $request->get_header( 'x-forwarded-for' );
+
 		if ( is_string( $ip ) && '' !== $ip ) {
-			// Use first in list if multiple
 			$parts     = explode( ',', $ip );
 			$candidate = trim( $parts[0] );
+
 			if ( filter_var( $candidate, FILTER_VALIDATE_IP ) ) {
 				return $candidate;
 			}
 		}
 
 		$remote_addr = $request->get_header( 'remote_addr' );
+
 		if ( is_string( $remote_addr ) && '' !== $remote_addr ) {
 			$candidate = trim( $remote_addr );
+
 			if ( filter_var( $candidate, FILTER_VALIDATE_IP ) ) {
 				return $candidate;
 			}
 		}
 
 		$server_remote_addr = $_SERVER['REMOTE_ADDR'] ?? '';
+
 		if ( is_string( $server_remote_addr ) && '' !== $server_remote_addr ) {
 			$candidate = trim( $server_remote_addr );
+
 			if ( filter_var( $candidate, FILTER_VALIDATE_IP ) ) {
 				return $candidate;
 			}
@@ -227,7 +259,7 @@ class WebhookHandler {
 	}
 
 	/**
-	 * Handle AJAX request to regenerate the webhook secret
+	 * Handle AJAX request to regenerate the webhook secret.
 	 *
 	 * @return void
 	 */
@@ -235,7 +267,12 @@ class WebhookHandler {
 		check_ajax_referer( 'syncly_admin', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'syncly' ) ], 403 );
+			wp_send_json_error(
+				[
+					'message' => __( 'Permission denied.', 'syncly' ),
+				],
+				403
+			);
 		}
 
 		$secret = $this->generate_and_store_webhook_secret();
@@ -250,22 +287,21 @@ class WebhookHandler {
 	}
 
 	/**
-	 * Handle incoming webhook from GoHighLevel
+	 * Handle incoming webhook from GoHighLevel.
 	 *
-	 * Processes webhook according to GHL documentation:
-	 * - Accept POST with JSON payload
-	 * - Process data (type, data payload)
-	 * - Return 200 OK quickly for best performance
-	 *
-	 * @param \WP_REST_Request $request Request object
-	 * @return \WP_REST_Response
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function handle_webhook( \WP_REST_Request $request ) {
 		$body = $request->get_json_params();
 
-		// Process the webhook synchronously (WP-Cron might be disabled on live sites)
-		// The actual sync happens via queue processor, so this is just validation + queueing
-		$this->process_webhook_async( $body, $request->get_headers() );
+		if ( ! $this->process_webhook_async( $body, $request->get_headers() ) ) {
+			return new \WP_Error(
+				'webhook_processing_failed',
+				__( 'Webhook processing failed and should be retried.', 'syncly' ),
+				[ 'status' => 500 ]
+			);
+		}
 
 		return new \WP_REST_Response(
 			[
@@ -277,34 +313,40 @@ class WebhookHandler {
 	}
 
 	/**
-	 * Process webhook asynchronously
+	 * Process webhook asynchronously.
 	 *
-	 * @param array $body    Webhook payload
-	 * @param array $headers Request headers
-	 * @return void
+	 * @param array $body    Webhook payload.
+	 * @param array $headers Request headers.
+	 * @return bool
 	 */
-	public function process_webhook_async( array $body, array $headers ): void {
-		// Detect webhook format and normalize
+	public function process_webhook_async( array $body, array $headers ): bool {
 		$normalized = $this->normalize_webhook_payload( $body );
+		$event_key  = $this->get_webhook_event_key( $body, $normalized );
 
-		// Mark contact as inbound to prevent immediate outbound ping-pong
-		if ( isset( $normalized['data']['id'] ) && ! empty( $normalized['data']['id'] ) ) {
-			$contact_id = (string) $normalized['data']['id'];
-			set_transient( 'syncly_inbound_webhook_' . $contact_id, time(), 30 ); // short-lived guard
+		if ( ! $this->claim_webhook_event( $event_key ) ) {
+			return true;
 		}
 
-		// Skip contact events that have no email — these are social-media-only
-		// contacts (e.g. Instagram DM leads) that cannot be matched to a
-		// WordPress user. Logging them just pollutes the sync log with item_id 0.
+		if ( isset( $normalized['data']['id'] ) && ! empty( $normalized['data']['id'] ) ) {
+			$contact_id = (string) $normalized['data']['id'];
+
+			set_transient(
+				'syncly_inbound_webhook_' . $contact_id,
+				time(),
+				30
+			);
+		}
+
 		$event_type = $normalized['type'] ?? '';
+
 		if (
 			in_array( $event_type, [ 'ContactCreate', 'ContactUpdate' ], true ) &&
 			empty( $normalized['data']['email'] )
 		) {
-			return;
+			$this->complete_webhook_event( $event_key );
+			return true;
 		}
 
-		// Log webhook receipt
 		$this->logger->log(
 			'webhook',
 			0,
@@ -312,13 +354,12 @@ class WebhookHandler {
 			'success',
 			'Webhook received from GoHighLevel',
 			[
-				'type'               => $normalized['type'] ?? 'unknown',
-				'raw_payload'        => $body,
-				'normalized_payload' => $normalized,
+				'type'        => $normalized['type'] ?? 'unknown',
+				'event_key'   => $event_key,
+				'location_id' => $normalized['locationId'] ?? '',
 			]
 		);
 
-		// Validate payload
 		if ( empty( $normalized['type'] ) ) {
 			$this->logger->log(
 				'webhook',
@@ -328,13 +369,20 @@ class WebhookHandler {
 				'Webhook missing type field',
 				[ 'payload' => $body ]
 			);
-			return;
+
+			$this->release_webhook_event( $event_key );
+
+			return false;
 		}
 
-		// Enforce location scoping: ignore webhooks from a different sub-account
 		$active_location_id  = $this->settings_manager->get_setting( 'location_id', '' );
 		$webhook_location_id = $normalized['locationId'] ?? '';
-		if ( ! empty( $active_location_id ) && ! empty( $webhook_location_id ) && $webhook_location_id !== $active_location_id ) {
+
+		if (
+			! empty( $active_location_id ) &&
+			! empty( $webhook_location_id ) &&
+			$webhook_location_id !== $active_location_id
+		) {
 			$this->logger->log(
 				'webhook',
 				0,
@@ -347,22 +395,28 @@ class WebhookHandler {
 					'type'             => $normalized['type'] ?? 'unknown',
 				]
 			);
-			return;
+
+			$this->complete_webhook_event( $event_key );
+
+			return true;
 		}
 
-		// Route to appropriate handler
 		$result = $this->route_webhook_event( $normalized );
 
-		if ( is_wp_error( $result ) ) {
+		if ( is_wp_error( $result ) || false === $result ) {
+			$error_message = is_wp_error( $result )
+				? $result->get_error_message()
+				: __( 'Unknown webhook processing error.', 'syncly' );
+
 			$this->logger->log(
 				'webhook',
 				0,
 				'ghl_to_wp',
 				'error',
-				'Webhook processing failed: ' . $result->get_error_message(),
+				'Webhook processing failed: ' . $error_message,
 				[
 					'type'  => $normalized['type'] ?? 'unknown',
-					'error' => $result->get_error_message(),
+					'error' => $error_message,
 				]
 			);
 
@@ -373,60 +427,148 @@ class WebhookHandler {
 				[
 					'type'       => $normalized['type'] ?? 'unknown',
 					'locationId' => $normalized['locationId'] ?? '',
-					'error'      => $result->get_error_message(),
+					'error'      => $error_message,
 					'site_id'    => get_current_blog_id(),
 				],
 				'error'
 			);
-			return;
+
+			$this->release_webhook_event( $event_key );
+
+			return false;
+		}
+
+		$this->complete_webhook_event( $event_key );
+
+		return true;
+	}
+
+	/**
+	 * Build a stable durable deduplication key for a webhook delivery.
+	 *
+	 * @param array $body       Raw webhook body.
+	 * @param array $normalized Normalized webhook body.
+	 * @return string
+	 */
+	private function get_webhook_event_key( array $body, array $normalized ): string {
+		$event_id = $body['eventId']
+			?? $body['event_id']
+			?? $body['webhookId']
+			?? $body['webhook_id']
+			?? '';
+
+		$identity = is_scalar( $event_id ) && '' !== (string) $event_id
+			? (string) $event_id
+			: wp_json_encode( $normalized );
+
+		return 'syncly_webhook_' . md5( (string) $identity );
+	}
+
+	/**
+	 * Atomically claim a webhook event for processing.
+	 *
+	 * @param string $event_key Event key.
+	 * @return bool
+	 */
+	private function claim_webhook_event( string $event_key ): bool {
+		$lock_key = $event_key . '_lock';
+
+		if ( ! add_option( $lock_key, time(), '', 'no' ) ) {
+			return false;
+		}
+
+		try {
+			if ( get_transient( $event_key ) ) {
+				return false;
+			}
+
+			set_transient(
+				$event_key,
+				'processing',
+				10 * MINUTE_IN_SECONDS
+			);
+
+			return true;
+		} finally {
+			delete_option( $lock_key );
 		}
 	}
 
 	/**
-	 * Normalize webhook payload from GHL's actual format to our expected format
+	 * Mark webhook event as successfully processed.
 	 *
-	 * GHL sends data like: {contact_id, first_name, last_name, email, tags, ...}
-	 * We need it like: {type, data: {id, firstName, lastName, email, tags, ...}}
+	 * @param string $event_key Event key.
+	 * @return void
+	 */
+	private function complete_webhook_event( string $event_key ): void {
+		set_transient(
+			$event_key,
+			'completed',
+			7 * DAY_IN_SECONDS
+		);
+	}
+
+	/**
+	 * Release a failed event so the provider can retry it.
 	 *
-	 * @param array $payload Raw webhook payload from GHL
-	 * @return array Normalized payload
+	 * @param string $event_key Event key.
+	 * @return void
+	 */
+	private function release_webhook_event( string $event_key ): void {
+		delete_transient( $event_key );
+	}
+
+	/**
+	 * Normalize webhook payload from GHL to Syncly's expected format.
+	 *
+	 * @param array $payload Raw webhook payload.
+	 * @return array
 	 */
 	private function normalize_webhook_payload( array $payload ): array {
-		// If already in our format, return as-is
 		if ( isset( $payload['type'] ) && isset( $payload['data'] ) ) {
 			return $payload;
 		}
 
-		// Handle native GHL webhook shape (flat contact fields + location/opportunity/etc.)
 		$contact_id = $payload['contact_id']
 			?? $payload['contactId']
-			?? ( is_array( $payload['contact'] ?? null ) ? ( $payload['contact']['id'] ?? null ) : null )
-			?? ( isset( $payload['id'] ) && isset( $payload['email'] ) ? $payload['id'] : null );
+			?? (
+				is_array( $payload['contact'] ?? null )
+					? ( $payload['contact']['id'] ?? null )
+					: null
+			)
+			?? (
+				isset( $payload['id'], $payload['email'] )
+					? $payload['id']
+					: null
+			);
 
 		if ( $contact_id ) {
 			$type = 'ContactUpdate';
 
-			// If only a couple of fields are present, assume delete notification
 			$field_count = count( array_filter( $payload ) );
+
 			if ( $field_count <= 3 ) {
 				$type = 'ContactDelete';
 			}
 
 			$tags_raw = $payload['tags'] ?? null;
 			$tags     = [];
+
 			if ( is_array( $tags_raw ) ) {
 				$tags = $tags_raw;
 			} elseif ( is_string( $tags_raw ) && '' !== $tags_raw ) {
 				$tags = array_map( 'trim', explode( ',', $tags_raw ) );
 			}
 
-			$normalized = [
+			return [
 				'type'       => $type,
 				'locationId' => $payload['location']['id'] ?? '',
 				'data'       => [
 					'id'           => $contact_id,
 					'email'        => $payload['email'] ?? '',
-					'name'         => $payload['full_name'] ?? ( ( $payload['first_name'] ?? '' ) . ' ' . ( $payload['last_name'] ?? '' ) ),
+					'name'         => $payload['full_name'] ?? (
+						( $payload['first_name'] ?? '' ) . ' ' . ( $payload['last_name'] ?? '' )
+					),
 					'firstName'    => $payload['first_name'] ?? '',
 					'lastName'     => $payload['last_name'] ?? '',
 					'phone'        => $payload['phone'] ?? '',
@@ -437,18 +579,15 @@ class WebhookHandler {
 					'customFields' => $payload['customFields'] ?? $payload['customData'] ?? [],
 				],
 			];
-
-			return $normalized;
 		}
 
-		// Unknown format, return as-is and let it fail validation
 		return $payload;
 	}
 
 	/**
-	 * Route webhook event to appropriate handler
+	 * Route webhook event to appropriate handler.
 	 *
-	 * @param array $payload Webhook payload
+	 * @param array $payload Webhook payload.
 	 * @return bool|\WP_Error
 	 */
 	private function route_webhook_event( array $payload ) {
@@ -465,7 +604,6 @@ class WebhookHandler {
 				return $this->handle_contact_delete( $payload );
 
 			default:
-				// Log unsupported event type
 				$this->logger->log(
 					'webhook',
 					0,
@@ -474,14 +612,18 @@ class WebhookHandler {
 					"Unsupported webhook event: {$type}",
 					[ 'type' => $type ]
 				);
-				return new \WP_Error( 'unsupported_event', "Unsupported webhook event: {$type}" );
+
+				return new \WP_Error(
+					'unsupported_event',
+					"Unsupported webhook event: {$type}"
+				);
 		}
 	}
 
 	/**
-	 * Handle contact create webhook
+	 * Handle contact create webhook.
 	 *
-	 * @param array $payload Webhook payload
+	 * @param array $payload Webhook payload.
 	 * @return bool
 	 */
 	private function handle_contact_create( array $payload ): bool {
@@ -491,7 +633,6 @@ class WebhookHandler {
 			return false;
 		}
 
-		// Check if sync from GHL to WP is enabled
 		if ( ! $this->is_sync_direction_enabled( 'ghl_to_wp' ) ) {
 			$this->logger->log(
 				'webhook',
@@ -502,17 +643,18 @@ class WebhookHandler {
 				[ 'reason' => 'Sync direction disabled' ],
 				$contact_data['id']
 			);
+
 			return true;
 		}
 
-		// Skip if an external caller flagged this email before pushing the contact
-		// to GHL. Set this transient before your GHL upsert call to prevent the
-		// echo ContactCreate webhook from creating a WordPress user:
-		// set_transient( 'ghl_skip_inbound_create_' . md5( strtolower( $email ) ), 1, 120 );
 		if ( ! empty( $contact_data['email'] ) ) {
-			$guard_key = 'ghl_skip_inbound_create_' . md5( strtolower( trim( $contact_data['email'] ) ) );
+			$guard_key = 'ghl_skip_inbound_create_' . md5(
+				strtolower( trim( $contact_data['email'] ) )
+			);
+
 			if ( get_transient( $guard_key ) ) {
 				delete_transient( $guard_key );
+
 				$this->logger->log(
 					'webhook',
 					0,
@@ -524,24 +666,23 @@ class WebhookHandler {
 						'contact_id' => $contact_data['id'],
 					]
 				);
+
 				return true;
 			}
 		}
 
-		// Process synchronously instead of queueing for immediate feedback; pass webhook payload to avoid refetch
-		$result = $this->ghl_sync->sync_contact_to_wordpress( $contact_data['id'], $contact_data );
+		$result = $this->ghl_sync->sync_contact_to_wordpress(
+			$contact_data['id'],
+			$contact_data
+		);
 
-		if ( is_wp_error( $result ) ) {
-			return false;
-		}
-
-		return true;
+		return ! is_wp_error( $result );
 	}
 
 	/**
-	 * Handle contact update webhook
+	 * Handle contact update webhook.
 	 *
-	 * @param array $payload Webhook payload
+	 * @param array $payload Webhook payload.
 	 * @return bool
 	 */
 	private function handle_contact_update( array $payload ): bool {
@@ -551,7 +692,6 @@ class WebhookHandler {
 			return false;
 		}
 
-		// Check if sync from GHL to WP is enabled
 		if ( ! $this->is_sync_direction_enabled( 'ghl_to_wp' ) ) {
 			$this->logger->log(
 				'webhook',
@@ -562,23 +702,22 @@ class WebhookHandler {
 				[ 'reason' => 'Sync direction disabled' ],
 				$contact_data['id']
 			);
+
 			return true;
 		}
 
-		// Process synchronously instead of queueing for immediate feedback; pass webhook payload to avoid refetch
-		$result = $this->ghl_sync->sync_contact_to_wordpress( $contact_data['id'], $contact_data );
+		$result = $this->ghl_sync->sync_contact_to_wordpress(
+			$contact_data['id'],
+			$contact_data
+		);
 
-		if ( is_wp_error( $result ) ) {
-			return false;
-		}
-
-		return true;
+		return ! is_wp_error( $result );
 	}
 
 	/**
-	 * Handle contact delete webhook
+	 * Handle contact delete webhook.
 	 *
-	 * @param array $payload Webhook payload
+	 * @param array $payload Webhook payload.
 	 * @return bool
 	 */
 	private function handle_contact_delete( array $payload ): bool {
@@ -588,20 +727,19 @@ class WebhookHandler {
 			return false;
 		}
 
-		// Check if sync from GHL to WP is enabled
 		if ( ! $this->is_sync_direction_enabled( 'ghl_to_wp' ) ) {
 			return true;
 		}
 
-		// Process synchronously instead of queueing for immediate feedback
-		$result = $this->ghl_sync->delete_wordpress_user( $contact_data['id'] );
+		$result = $this->ghl_sync->delete_wordpress_user(
+			$contact_data['id']
+		);
 
 		return $result;
 	}
 
-
 	/**
-	 * Handle test webhook AJAX request
+	 * Handle test webhook AJAX request.
 	 *
 	 * @return void
 	 */
@@ -610,17 +748,36 @@ class WebhookHandler {
 			check_ajax_referer( 'syncly_admin', 'nonce' );
 
 			if ( ! current_user_can( 'manage_options' ) ) {
-				wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ] );
+				wp_send_json_error(
+					[
+						'message' => __( 'Permission denied', 'syncly' ),
+					]
+				);
 			}
 
-			$webhook_handler = self::get_instance();
-			$result          = $webhook_handler->test_webhook_endpoint();
+			$webhook_secret = isset( $_POST['webhook_secret'] )
+				? sanitize_text_field( wp_unslash( $_POST['webhook_secret'] ) )
+				: '';
+
+			if ( '' === $webhook_secret ) {
+				wp_send_json_error(
+					[
+						'message' => __( 'Webhook secret is required.', 'syncly' ),
+					]
+				);
+			}
+
+			$result = $this->test_webhook_endpoint( $webhook_secret );
 
 			if ( is_wp_error( $result ) ) {
-				wp_send_json_error( [ 'message' => $result->get_error_message() ] );
-			} else {
-				wp_send_json_success( $result );
+				wp_send_json_error(
+					[
+						'message' => $result->get_error_message(),
+					]
+				);
 			}
+
+			wp_send_json_success( $result );
 		} catch ( \Exception $e ) {
 			wp_send_json_error(
 				[
@@ -637,14 +794,14 @@ class WebhookHandler {
 	}
 
 	/**
-	 * Check if sync direction is enabled
+	 * Check if sync direction is enabled.
 	 *
-	 * @param string $direction Sync direction (wp_to_ghl, ghl_to_wp, bidirectional)
+	 * @param string $direction Sync direction.
 	 * @return bool
 	 */
 	private function is_sync_direction_enabled( string $direction ): bool {
 		$settings       = $this->settings_manager->get_settings_array();
-		$sync_direction = $settings['sync_direction'] ?? 'both'; // Changed default to 'both'
+		$sync_direction = $settings['sync_direction'] ?? 'both';
 
 		if ( 'both' === $sync_direction ) {
 			return true;
@@ -654,7 +811,7 @@ class WebhookHandler {
 	}
 
 	/**
-	 * Get webhook setup instructions for manual configuration
+	 * Get webhook setup instructions for manual configuration.
 	 *
 	 * @return array
 	 */
@@ -663,10 +820,10 @@ class WebhookHandler {
 		$webhook_secret = $this->get_or_create_webhook_secret();
 
 		return [
-			'webhook_url'      => $webhook_url,
-			'webhook_secret'   => $webhook_secret,
-			'webhook_header'   => self::WEBHOOK_SECRET_HEADER,
-			'instructions'     => [
+			'webhook_url'    => $webhook_url,
+			'webhook_secret' => $webhook_secret,
+			'webhook_header' => self::WEBHOOK_SECRET_HEADER,
+			'instructions'   => [
 				'title'       => 'Manual Webhook Setup in GoHighLevel',
 				'description' => 'Copy the webhook URL below and create an automation in your GoHighLevel account.',
 				'steps'       => [
@@ -728,15 +885,14 @@ class WebhookHandler {
 	}
 
 	/**
-	 * Test webhook endpoint to verify it's working
+	 * Test webhook endpoint to verify it's working.
 	 *
+	 * @param string $webhook_secret Webhook secret to use for the test.
 	 * @return array|\WP_Error
 	 */
-	public function test_webhook_endpoint() {
-		$webhook_url    = $this->get_webhook_url();
-		$webhook_secret = $this->get_or_create_webhook_secret();
+	public function test_webhook_endpoint( string $webhook_secret ) {
+		$webhook_url = $this->get_webhook_url();
 
-		// Sample contact create payload
 		$sample_payload = [
 			'type'       => 'ContactCreate',
 			'locationId' => 'test_location_123',
@@ -751,7 +907,6 @@ class WebhookHandler {
 		];
 
 		try {
-			// Test the endpoint
 			$response = wp_remote_post(
 				$webhook_url,
 				[
@@ -760,13 +915,16 @@ class WebhookHandler {
 						'User-Agent'   => 'GHL-Webhook-Test/1.0',
 						'X-GHL-Token'  => $webhook_secret,
 					],
-					'body'    => json_encode( $sample_payload ),
+					'body'    => wp_json_encode( $sample_payload ),
 					'timeout' => 30,
 				]
 			);
 
 			if ( is_wp_error( $response ) ) {
-				return new \WP_Error( 'webhook_test_failed', $response->get_error_message() );
+				return new \WP_Error(
+					'webhook_test_failed',
+					$response->get_error_message()
+				);
 			}
 
 			$status_code   = wp_remote_retrieve_response_code( $response );
@@ -776,7 +934,7 @@ class WebhookHandler {
 				'webhook',
 				0,
 				'system',
-				$status_code === 200 ? 'success' : 'warning',
+				200 === $status_code ? 'success' : 'warning',
 				'Webhook endpoint test completed',
 				[
 					'status_code' => $status_code,
@@ -786,49 +944,50 @@ class WebhookHandler {
 			);
 
 			return [
-				'success'     => $status_code === 200,
+				'success'     => 200 === $status_code,
 				'status_code' => $status_code,
 				'response'    => json_decode( $response_body, true ),
 				'url'         => $webhook_url,
-				'message'     => $status_code === 200 ? 'Webhook endpoint is working correctly!' : 'Webhook endpoint returned an error.',
+				'message'     => 200 === $status_code
+					? 'Webhook endpoint is working correctly!'
+					: 'Webhook endpoint returned an error.',
 			];
-
 		} catch ( \Exception $e ) {
-			return new \WP_Error( 'webhook_test_error', $e->getMessage() );
+			return new \WP_Error(
+				'webhook_test_error',
+				$e->getMessage()
+			);
 		}
 	}
 
 	/**
-	 * Test webhook endpoint to verify it's working /**
-	 * Check if webhook has been set up (basic validation)
+	 * Get webhook status.
 	 *
 	 * @return array
 	 */
 	public function get_webhook_status(): array {
 		$webhook_url = $this->get_webhook_url();
 
-		// Check if we've received any webhooks recently
 		global $wpdb;
+
 		$table_name = $wpdb->prefix . 'ghl_sync_log';
 
-		// Count recent webhook events (sync_type starting with 'webhook')
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Inspecting webhook activity in plugin log table.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		$recent_webhooks = $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM {$table_name} 
-				WHERE sync_type LIKE %s 
+				"SELECT COUNT(*) FROM {$table_name}
+				WHERE sync_type LIKE %s
 				AND created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)",
 				$wpdb->esc_like( 'webhook' ) . '%'
 			)
 		);
 
-		// Get last webhook received
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Retrieving latest webhook log entry for status overview.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		$last_webhook = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT * FROM {$table_name} 
-				WHERE sync_type LIKE %s 
-				ORDER BY created_at DESC 
+				"SELECT * FROM {$table_name}
+				WHERE sync_type LIKE %s
+				ORDER BY created_at DESC
 				LIMIT 1",
 				$wpdb->esc_like( 'webhook' ) . '%'
 			)
@@ -841,7 +1000,10 @@ class WebhookHandler {
 			'last_webhook_received' => $last_webhook ? $last_webhook->created_at : null,
 			'status'                => $recent_webhooks > 0 ? 'active' : 'not_configured',
 			'message'               => $recent_webhooks > 0
-				? sprintf( 'Webhook is active. Received %d webhooks in the last 24 hours.', $recent_webhooks )
+				? sprintf(
+					'Webhook is active. Received %d webhooks in the last 24 hours.',
+					$recent_webhooks
+				)
 				: 'No webhooks received. Please set up the webhook in your GoHighLevel account.',
 		];
 	}

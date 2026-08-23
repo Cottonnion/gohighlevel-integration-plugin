@@ -92,6 +92,17 @@ if ( ! class_exists('WP_REST_Request') ) {
         {
             return $this->body;
         }
+
+        public function get_json_params()
+        {
+            $decoded = json_decode($this->body, true);
+            return is_array($decoded) ? $decoded : null;
+        }
+
+        public function get_headers(): array
+        {
+            return $this->headers;
+        }
     }
 }
 

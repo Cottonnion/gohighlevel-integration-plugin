@@ -1,6 +1,6 @@
 # Production Build Guide
 
-How to prepare **GHL CRM Integration** (free) and **GHL CRM Integration Pro** for release.
+How to prepare **Syncly for GoHighLevel** for release.
 
 > **This file is excluded from production zips.**
 
@@ -18,13 +18,12 @@ How to prepare **GHL CRM Integration** (free) and **GHL CRM Integration Pro** fo
 
 ### Free Plugin (`syncly/`)
 
-Update the version in **three** places:
+Update the version in **two** places:
 
 | File | Location |
 |------|----------|
-| `gohighlevel-crm-integration.php` | Plugin header `Version:` line |
-| `gohighlevel-crm-integration.php` | `define( 'GHL_CRM_VERSION', '...' );` |
-| `README.md` | `Stable tag:` and badge URL |
+| `syncly.php` | Plugin header `Version:` line and `SYNCLY_VERSION` constant |
+| `readme.txt` and `README.md` | `Stable tag:` (and the README badge) |
 
 ### Pro Plugin (`syncly-pro/`)
 
@@ -39,12 +38,7 @@ Update the version in **two** places:
 
 ## 2. Update Changelogs
 
-Update **four** changelog files:
-
-- `syncly/CHANGELOG.md`
-- `syncly/DEV_CHANGELOG.md`
-- `syncly-pro/CHANGELOG.md`
-- `syncly-pro/DEV_CHANGELOG.md`
+Update `CHANGELOG.md` and `DEV_CHANGELOG.md`.
 
 Add a new section at the top with the version, date, and categorised changes (Added, Changed, Fixed, Improved).
 

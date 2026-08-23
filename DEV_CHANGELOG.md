@@ -4,6 +4,23 @@ Internal changelog with full technical details. **Not included in release zips.*
 
 ---
 
+## [1.4.31] - 2026-08-23
+
+### Reliability, Security, and Release Hardening
+
+- `Client`: added atomic OAuth refresh locking, bounded retries for safe transient failures, request correlation IDs, and redacted OAuth diagnostic data.
+- `ConnectionManager`: now verifies the connection through the shared API client so it benefits from token lifecycle handling.
+- `WebhookHandler`: validates JSON bodies, deduplicates deliveries for seven days, returns retryable errors on failed processing, and avoids logging full payloads.
+- `QueueManager` and `RateLimiter`: added atomic job claims, refreshed processing locks, safe dependency waits, terminal stale-job handling, and atomic API-rate reservations.
+- `Loader`, `OAuthHandler`, and `FileLogger`: fixed plugin lifecycle hooks, bound OAuth callbacks to the initiating administrator, redacted sensitive structured logs, and made file logging opt-in.
+- Release tooling: aligned version/release documentation, added PHP 7.4 + 8.1 CI coverage, and changed production deployment to deploy the tagged release.
+
+### Verification
+
+- `composer validate --strict --no-check-publish`
+- `composer lint`
+- `composer test` (110 tests, 34,369 assertions)
+
 ## [1.4.10] - 2026-08-01
 
 ### Queue and Scheduler Hardening

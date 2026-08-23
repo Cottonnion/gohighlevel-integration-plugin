@@ -195,6 +195,7 @@ class TagManager {
 
 		$site_id       = get_current_blog_id();
 		$transient_key = sprintf( 'syncly_tags_%s_site_%d', $location_id, $site_id );
+		$failure_key   = $transient_key . '_failure';
 
 		if ( ! $force_refresh ) {
 			$cached = get_transient( $transient_key );
@@ -204,6 +205,10 @@ class TagManager {
 			}
 		}
 
+		if ( get_transient( $failure_key ) ) {
+			return [];
+		}
+
 		try {
 			$client   = Client::get_instance();
 			$response = $client->get( 'locations/' . $location_id . '/tags' );
@@ -211,10 +216,12 @@ class TagManager {
 			if ( isset( $response['tags'] ) && is_array( $response['tags'] ) ) {
 				$cache_duration = (int) $this->settings_manager->get_setting( 'cache_duration', HOUR_IN_SECONDS );
 				set_transient( $transient_key, $response['tags'], $cache_duration );
+				delete_transient( $failure_key );
 
 				return $response['tags'];
 			}
 		} catch ( \Throwable $e ) {
+			set_transient( $failure_key, true, MINUTE_IN_SECONDS );
 			// Attempt to fall back to cached tags if available.
 			$cached = get_transient( $transient_key );
 			if ( is_array( $cached ) ) {

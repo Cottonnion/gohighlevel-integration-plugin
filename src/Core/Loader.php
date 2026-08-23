@@ -133,8 +133,10 @@ class Loader {
 	 */
 	private function init_hooks(): void {
 		// Plugin activation/deactivation
-		register_activation_hook( SYNCLY_PATH . 'gohighlevel-crm-integration.php', array( self::class, 'activate' ) );
-		register_deactivation_hook( SYNCLY_PATH . 'gohighlevel-crm-integration.php', array( self::class, 'deactivate' ) );
+		// These hooks must use the real plugin bootstrap file. WordPress only fires
+		// activation/deactivation actions for the file used to activate the plugin.
+		register_activation_hook( SYNCLY_PATH . 'syncly.php', array( self::class, 'activate' ) );
+		register_deactivation_hook( SYNCLY_PATH . 'syncly.php', array( self::class, 'deactivate' ) );
 
 		// Initialize components on 'init' priority 0.
 		// Must run on 'init' (not 'plugins_loaded') so that:

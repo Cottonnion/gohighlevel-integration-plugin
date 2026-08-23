@@ -23,6 +23,7 @@ class RateLimiter {
 	private const RATE_LIMIT_BURST        = 100; // Max requests per 10 seconds
 	private const RATE_LIMIT_BURST_WINDOW = 10; // Seconds
 	private const RATE_LIMIT_DAILY        = 200000; // Max requests per day
+	private const COUNTER_LOCK_TTL        = 5;
 
 	/**
 	 * Singleton instance
@@ -73,6 +74,72 @@ class RateLimiter {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Atomically reserve one API request against the burst and daily limits.
+	 *
+	 * @param string|null $location_id GHL location ID.
+	 * @return bool True when the request may proceed.
+	 */
+	public function reserve_request( ?string $location_id = null ): bool {
+		if ( empty( $location_id ) ) {
+			return true;
+		}
+
+		$lock_key = 'syncly_rate_counter_lock_' . md5( $location_id );
+		$token    = wp_generate_uuid4();
+		$locked   = false;
+
+		for ( $attempt = 0; $attempt < 20; $attempt++ ) {
+			if ( is_multisite() ) {
+				$locked = add_site_option( $lock_key, [ 'token' => $token, 'created' => time() ] );
+			} else {
+				$locked = add_option( $lock_key, [ 'token' => $token, 'created' => time() ], '', 'no' );
+			}
+
+			if ( $locked ) {
+				break;
+			}
+
+			$current_lock = is_multisite() ? get_site_option( $lock_key, [] ) : get_option( $lock_key, [] );
+			if ( is_array( $current_lock ) && ! empty( $current_lock['created'] ) && time() - (int) $current_lock['created'] > self::COUNTER_LOCK_TTL ) {
+				if ( is_multisite() ) {
+					delete_site_option( $lock_key );
+				} else {
+					delete_option( $lock_key );
+				}
+				continue;
+			}
+
+			usleep( 10000 );
+		}
+
+		if ( ! $locked ) {
+			return false;
+		}
+
+		try {
+			$burst_key   = $this->get_burst_key( $location_id );
+			$daily_key   = $this->get_daily_key( $location_id );
+			$burst_count = (int) get_site_transient( $burst_key );
+			$daily_count = (int) get_site_transient( $daily_key );
+
+			if ( $burst_count >= self::RATE_LIMIT_BURST || $daily_count >= self::RATE_LIMIT_DAILY ) {
+				return false;
+			}
+
+			set_site_transient( $burst_key, $burst_count + 1, self::RATE_LIMIT_BURST_WINDOW );
+			$end_of_day = strtotime( 'tomorrow midnight' ) - time();
+			set_site_transient( $daily_key, $daily_count + 1, $end_of_day );
+			return true;
+		} finally {
+			if ( is_multisite() ) {
+				delete_site_option( $lock_key );
+			} else {
+				delete_option( $lock_key );
+			}
+		}
 	}
 
 	/**

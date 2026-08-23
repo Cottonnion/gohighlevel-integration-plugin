@@ -501,7 +501,8 @@
 				type: 'POST',
 				data: {
 					action: 'syncly_test_webhook',
-					nonce: $('input[name="syncly_nonce"]').val() || $('#syncly_nonce').val() || ''
+					webhook_secret: $('#webhook-secret-field').val(),
+					nonce: syncly_settings_js_data.nonce
 				},
 				success: function(response) {
 					if (response.success) {

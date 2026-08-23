@@ -117,6 +117,7 @@ class QueueManagerTest extends TestCase
 
         // --- Mock helper dependencies ---
         $this->rate_limiter = Mockery::mock('Syncly\\Sync\\RateLimiter');
+        $this->rate_limiter->shouldReceive('reserve_request')->andReturn(true)->byDefault();
         $this->rate_limiter->shouldReceive('check_limits')->andReturn(true)->byDefault();
         $this->rate_limiter->shouldReceive('track_request')->byDefault();
         $this->rate_limiter->shouldReceive('is_rate_limit_error')->andReturn(false)->byDefault();
@@ -271,6 +272,16 @@ class QueueManagerTest extends TestCase
         $this->assertSame(10, $result);
     }
 
+    public function test_atomic_claim_allows_only_the_first_worker(): void
+    {
+        $this->wpdb->shouldReceive('query')
+            ->twice()
+            ->andReturn(1, 0);
+
+        $this->assertTrue($this->callPrivate('claim_queue_item', 'wp_ghl_sync_queue', 42, 1));
+        $this->assertFalse($this->callPrivate('claim_queue_item', 'wp_ghl_sync_queue', 42, 1));
+    }
+
     public function test_add_to_queue_returns_false_when_queue_full(): void
     {
         // No duplicate, queue count = 10000 (at limit).
@@ -408,12 +419,32 @@ class QueueManagerTest extends TestCase
         $this->callPrivate('process_queue_item', $item);
     }
 
+    public function test_process_item_dependency_wait_releases_job_without_consuming_attempt(): void
+    {
+        $item = $this->makeQueueItem(1, 'user', 42, 'create', [], 1);
+        $this->processor->shouldReceive('execute_sync')->once()->andReturn([ 'success' => false, 'skip' => true ]);
+
+        $updates = [];
+        $this->wpdb->shouldReceive('update')->andReturnUsing(
+            function ( $table, $data ) use ( &$updates ) {
+                $updates[] = $data;
+                return true;
+            }
+        );
+
+        $this->callPrivate('process_queue_item', $item);
+
+        $release = end($updates);
+        $this->assertSame('pending', $release['status']);
+        $this->assertSame(1, $release['attempts']);
+    }
+
     public function test_process_item_daily_limit_sends_notification(): void
     {
         $item = $this->makeQueueItem(1, 'user', 42, 'create', [ 'email' => 'a@a.com' ], 0);
 
         // Rate limiter blocks (daily limit hit).
-        $this->rate_limiter->shouldReceive('check_limits')
+        $this->rate_limiter->shouldReceive('reserve_request')
             ->with('loc_test')
             ->andReturn(false);
 
@@ -444,7 +475,7 @@ class QueueManagerTest extends TestCase
         $item = $this->makeQueueItem(1, 'user', 42, 'create', [ 'email' => 'a@a.com' ], 0);
 
         // Rate limiter blocks (burst limit, not daily).
-        $this->rate_limiter->shouldReceive('check_limits')
+        $this->rate_limiter->shouldReceive('reserve_request')
             ->with('loc_test')
             ->andReturn(false);
 

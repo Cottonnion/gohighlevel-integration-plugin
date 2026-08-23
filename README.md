@@ -2,9 +2,9 @@
 Contributors: cottonnion
 Tags: gohighlevel, crm, woocommerce, buddyboss, learndash, membership, webhooks
 Requires at least: 5.8
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.4.21
+Stable tag: 1.4.31
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -16,7 +16,7 @@ A powerful WordPress plugin that seamlessly integrates GoHighLevel CRM with Word
 
 A powerful WordPress plugin that seamlessly integrates GoHighLevel CRM with WordPress, WooCommerce, BuddyBoss, and LearnDash. Features OAuth2 authentication, intelligent field mapping, automatic contact synchronization, role-based tagging, membership restrictions, webhook automation, custom objects, and comprehensive queue management.
 
-![Version](https://img.shields.io/badge/version-1.4.21-blue.svg)
+![Version](https://img.shields.io/badge/version-1.4.31-blue.svg)
 ![WordPress](https://img.shields.io/badge/wordpress-5.8%2B-brightgreen.svg)
 ![PHP](https://img.shields.io/badge/php-7.4%2B-purple.svg)
 ![License](https://img.shields.io/badge/license-GPL--2.0%2B-red.svg)
@@ -700,7 +700,7 @@ crm-integration/
 │   │   ├── css/              # Admin stylesheets
 │   │   └── js/               # Admin JavaScript
 │   └── public/               # Frontend assets (if needed)
-└── gohighlevel-crm-integration.php  # Main plugin file
+└── syncly.php                       # Main plugin file
 ```
 ├── templates/          # PHP templates
 ├── vendor/             # Composer dependencies
@@ -733,7 +733,9 @@ We welcome contributions! Please follow these steps:
 - Update documentation as needed
 - Ensure backward compatibility
 
-## 📝 Changelog
+## 📝 Historical changelog
+
+For the current release history, see [CHANGELOG.md](CHANGELOG.md). The entries below are retained as a historical archive through version 1.1.3.
 
 ### Version 1.1.3 - 2026-03-22
 

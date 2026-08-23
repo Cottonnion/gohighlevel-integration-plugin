@@ -158,6 +158,16 @@ class Client implements ClientInterface {
 	 */
 	private const OAUTH_COOLDOWN_MINUTES = 5;
 
+	/**
+	 * Maximum number of automatic retries for transient API failures.
+	 */
+	private const MAX_TRANSIENT_RETRIES = 3;
+
+	/**
+	 * Base delay for transient retries, in seconds.
+	 */
+	private const TRANSIENT_RETRY_BASE_DELAY = 1;
+
 	// =========================================================================
 	// Constants — Throttle & Locking
 	// =========================================================================
@@ -582,7 +592,7 @@ class Client implements ClientInterface {
 								sprintf(
 									'GHL Auto-Recovery failed for contact %s (email: %s): %s',
 									$old_contact_id,
-									$email,
+									'[redacted-email]',
 									$e->getMessage()
 								)
 							);
@@ -877,8 +887,8 @@ class Client implements ClientInterface {
 		$this->log_oauth_event(
 			'Exchange token proxy body',
 			[
-				'status' => $status_code,
-				'body'   => is_array( $decoded ) ? $decoded : $body,
+				'status'        => $status_code,
+				'response_keys' => is_array( $decoded ) ? array_keys( $decoded ) : [],
 			]
 		);
 
@@ -1230,45 +1240,31 @@ class Client implements ClientInterface {
 			);
 		}
 
-		// Cross-process mutex: if another process is already refreshing, wait and reload
-		$lock_owner = get_transient( self::REFRESH_LOCK_KEY );
-		if ( $lock_owner && getmypid() !== $lock_owner ) {
-			$this->log_oauth_event( 'Refresh deferred: another process holds the lock', [ 'lock_owner' => $lock_owner ] );
-			// Wait for the other process to finish, then reload tokens from DB
-			// Use progressive waits: 1s, then 2s, then check
+		// Acquire an atomic database-backed mutex. Transient read/set is not atomic
+		// and allows two workers to rotate the single-use refresh token together.
+		$lock_acquired = $this->acquire_refresh_lock();
+		if ( ! $lock_acquired ) {
 			for ( $wait_attempt = 0; $wait_attempt < 3; $wait_attempt++ ) {
-				usleep( ( $wait_attempt + 1 ) * 1000000 ); // 1s, 2s, 3s
+				usleep( ( $wait_attempt + 1 ) * 1000000 );
 				$this->reload_settings();
 
-				// If the other process succeeded, we now have fresh tokens
 				if ( $this->access_token_expires_at > time() + 60 ) {
-					$this->log_oauth_event( 'Refresh resolved by another process', [ 'expires_at' => $this->access_token_expires_at ] );
 					return [
 						'access_token'  => $this->access_token,
 						'refresh_token' => $this->refresh_token,
 					];
 				}
 
-				// Check if lock was released (other process finished)
-				if ( ! get_transient( self::REFRESH_LOCK_KEY ) ) {
+				if ( $this->acquire_refresh_lock() ) {
+					$lock_acquired = true;
 					break;
 				}
 			}
 
-			// After waiting, reload one more time to check
-			$this->reload_settings();
-			if ( $this->access_token_expires_at > time() + 60 ) {
-				$this->log_oauth_event( 'Refresh resolved by another process after wait', [ 'expires_at' => $this->access_token_expires_at ] );
-				return [
-					'access_token'  => $this->access_token,
-					'refresh_token' => $this->refresh_token,
-				];
+			if ( ! $lock_acquired ) {
+				throw new ApiException( esc_html__( 'Another token refresh is in progress. Please retry shortly.', 'syncly' ) );
 			}
-			// Other process may have failed — fall through and try ourselves
 		}
-
-		// Acquire the refresh lock for this process
-		set_transient( self::REFRESH_LOCK_KEY, getmypid(), self::REFRESH_LOCK_TTL );
 
 		try {
 
@@ -1362,8 +1358,8 @@ class Client implements ClientInterface {
 		$this->log_oauth_event(
 			'Refresh token endpoint body',
 			[
-				'status' => $status_code,
-				'body'   => is_array( $decoded ) ? $decoded : $body,
+				'status'        => $status_code,
+				'response_keys' => is_array( $decoded ) ? array_keys( $decoded ) : [],
 			]
 		);
 
@@ -1462,14 +1458,47 @@ class Client implements ClientInterface {
 		$this->mark_oauth_healthy();
 
 		// Release the refresh lock
-		delete_transient( self::REFRESH_LOCK_KEY );
+		$this->release_refresh_lock();
 
 		$this->log_oauth_event( 'Token refresh succeeded', [ 'expires_at' => $expires_at ] );
 
 		return $decoded;
 		} finally {
-			delete_transient( self::REFRESH_LOCK_KEY );
+			$this->release_refresh_lock();
 		}
+	}
+
+	/**
+	 * Atomically acquire the refresh mutex using add_option().
+	 *
+	 * @return bool True when this process owns the lock.
+	 */
+	private function acquire_refresh_lock(): bool {
+		$lock = [
+			'pid'     => getmypid(),
+			'created' => time(),
+		];
+
+		if ( add_option( self::REFRESH_LOCK_KEY, $lock, '', 'no' ) ) {
+			return true;
+		}
+
+		$current = get_option( self::REFRESH_LOCK_KEY, [] );
+		if ( is_array( $current ) && ! empty( $current['created'] ) && time() - (int) $current['created'] > self::REFRESH_LOCK_TTL ) {
+			delete_option( self::REFRESH_LOCK_KEY );
+			return add_option( self::REFRESH_LOCK_KEY, $lock, '', 'no' );
+		}
+
+		return false;
+	}
+
+	/**
+	 * Release the refresh mutex.
+	 *
+	 * @return void
+	 */
+	private function release_refresh_lock(): void {
+		delete_option( self::REFRESH_LOCK_KEY );
 	}
 
 	/**
@@ -1734,22 +1763,46 @@ class Client implements ClientInterface {
 			$args['body'] = wp_json_encode( $data );
 		}
 
-		// Execute request
-		$response = wp_remote_request( $url, $args );
-		$this->log_oauth_event(
-			'Request sent',
-			[
-				'method' => $method,
-				'url'    => $url,
-				'status' => is_wp_error( $response ) ? 'error' : wp_remote_retrieve_response_code( $response ),
-			]
-		);
+		$request_id = function_exists( 'wp_generate_uuid4' ) ? wp_generate_uuid4() : uniqid( 'syncly-', true );
+		$args['headers']['X-Syncly-Request-ID'] = $request_id;
+		$retry_count = 0;
 
-		// Check for WP errors
-		if ( is_wp_error( $response ) ) {
-			$error_msg = 'HTTP Request failed: ' . $response->get_error_message();
+		while ( true ) {
+			$response = wp_remote_request( $url, $args );
+			$this->log_oauth_event(
+				'Request sent',
+				[
+					'correlation_id' => $request_id,
+					'attempt'        => $retry_count + 1,
+					'method'         => $method,
+					'url'            => $url,
+					'status'         => is_wp_error( $response ) ? 'error' : wp_remote_retrieve_response_code( $response ),
+				]
+			);
 
-			throw new ApiException( esc_html( $error_msg ) );
+			if ( is_wp_error( $response ) ) {
+				if ( $retry_count < self::MAX_TRANSIENT_RETRIES && $this->is_safe_retry_method( $method ) ) {
+					$this->sleep_before_retry( $retry_count, $request_id, 'network_error' );
+					++$retry_count;
+					continue;
+				}
+
+				$error_msg = 'HTTP Request failed: ' . $response->get_error_message();
+				throw new ApiException( esc_html( $error_msg ) );
+			}
+
+			$status_code = wp_remote_retrieve_response_code( $response );
+			$response_headers = wp_remote_retrieve_headers( $response );
+			$this->last_response_headers = $response_headers->getAll();
+
+			if ( $retry_count < self::MAX_TRANSIENT_RETRIES && $this->is_retryable_http_failure( $method, $status_code ) ) {
+				$retry_after = 429 === $status_code ? $this->get_retry_after_seconds( $this->last_response_headers ) : null;
+				$this->sleep_before_retry( $retry_count, $request_id, 'http_' . $status_code, $retry_after );
+				++$retry_count;
+				continue;
+			}
+
+			break;
 		}
 
 		// Get response data
@@ -1830,6 +1883,78 @@ class Client implements ClientInterface {
 		return $decoded;
 	}
 
+	/**
+	 * Determine whether retrying the operation is safe without an idempotency key.
+	 *
+	 * @param string $method HTTP method.
+	 * @return bool
+	 */
+	private function is_safe_retry_method( string $method ): bool {
+		return in_array( strtoupper( $method ), [ 'GET', 'PUT', 'DELETE' ], true );
+	}
+
+	/**
+	 * Determine whether an HTTP response is transient and safe to retry.
+	 *
+	 * @param string $method HTTP method.
+	 * @param int    $status HTTP status code.
+	 * @return bool
+	 */
+	private function is_retryable_http_failure( string $method, int $status ): bool {
+		if ( 429 === $status ) {
+			return true;
+		}
+
+		return $this->is_safe_retry_method( $method ) && in_array( $status, [ 500, 502, 503, 504 ], true );
+	}
+
+	/**
+	 * Parse a Retry-After response header.
+	 *
+	 * @param array $headers Response headers.
+	 * @return int|null Delay in seconds, or null when absent/invalid.
+	 */
+	private function get_retry_after_seconds( array $headers ): ?int {
+		$value = $headers['retry-after'] ?? $headers['Retry-After'] ?? null;
+		if ( null === $value ) {
+			return null;
+		}
+
+		if ( is_numeric( $value ) ) {
+			return max( 0, (int) $value );
+		}
+
+		$timestamp = strtotime( (string) $value );
+		return false === $timestamp ? null : max( 0, $timestamp - time() );
+	}
+
+	/**
+	 * Apply bounded exponential backoff with jitter before a retry.
+	 *
+	 * @param int         $retry_count Current zero-based retry number.
+	 * @param string      $request_id  Correlation ID.
+	 * @param string      $reason      Retry reason.
+	 * @param int|null    $retry_after Provider-requested delay.
+	 * @return void
+	 */
+	private function sleep_before_retry( int $retry_count, string $request_id, string $reason, ?int $retry_after = null ): void {
+		$base_delay = self::TRANSIENT_RETRY_BASE_DELAY * ( 2 ** $retry_count );
+		$jitter     = random_int( 0, max( 1, $base_delay * 1000 ) ) / 1000;
+		$delay      = null !== $retry_after ? max( (float) $retry_after, $jitter ) : $base_delay + $jitter;
+
+		$this->log_oauth_event(
+			'Retrying API request',
+			[
+				'correlation_id' => $request_id,
+				'retry_number'   => $retry_count + 1,
+				'reason'         => $reason,
+				'delay_seconds'  => round( $delay, 3 ),
+			]
+		);
+
+		usleep( (int) round( $delay * 1000000 ) );
+	}
+
 	// =========================================================================
 	// Token Persistence (multisite-aware)
 	// =========================================================================
@@ -1887,7 +2012,12 @@ class Client implements ClientInterface {
 		$settings_manager->update_option( 'syncly_connection_verified', false );
 
 		$this->clear_refresh_cooldown();
-
+		/*
+		 * Trigger a custom action to notify other parts of the plugin that the connection status has changed.
+		 * This allows other components to react to the token clearance, such as disabling features or prompting for reconnection.
+		 * @param bool $is_connected Current connection status (false since tokens are cleared).
+		 * @param string $reason Reason for the status change ('oauth_tokens_cleared').
+		 */
 		do_action( 'syncly_connection_status_changed', false, 'oauth_tokens_cleared' );
 
 		// Unschedule background refresh since we no longer have tokens

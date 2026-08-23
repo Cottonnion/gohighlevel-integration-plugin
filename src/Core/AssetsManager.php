@@ -369,9 +369,10 @@ class AssetsManager {
 			'settings.js',
 			[ 'jquery', 'syncly-sweetalert2', 'syncly-select2' ],
 			[
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'syncly_admin' ),
-				'tags'    => $ghl_tags,
+				'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
+				'nonce'        => wp_create_nonce( 'syncly_admin' ),
+				'tags'         => $ghl_tags,
+				'webhookSecret' => SettingsManager::get_instance()->get_setting( 'webhook_secret', '' ),
 			],
 			SYNCLY_VERSION,
 			true

@@ -31,7 +31,7 @@ This is a WordPress plugin that integrates GoHighLevel CRM with WordPress, WooCo
 ### PHP Standards
 - Follow **WordPress Coding Standards** (WPCS)
 - Use **PSR-4 autoloading** for all classes
-- All classes must use proper **namespaces** under `GHL_CRM\`
+- All classes must use proper **namespaces** under `Syncly\`
 - Use **strict types** declaration: `declare(strict_types=1);`
 - Every PHP file must start with `defined('ABSPATH') || exit;` for security
 - Use **short array syntax**: `[]` instead of `array()`
@@ -40,7 +40,7 @@ This is a WordPress plugin that integrates GoHighLevel CRM with WordPress, WooCo
 ### Naming Conventions
 - **Classes**: PascalCase (e.g., `SettingsManager`, `OAuthClient`)
 - **Functions**: snake_case (WordPress convention)
-- **Constants**: UPPER_SNAKE_CASE with `GHL_CRM_` prefix
+- **Constants**: UPPER_SNAKE_CASE with `SYNCLY_` prefix
 - **Variables**: snake_case
 - **Global functions**: Prefix with `ghl_crm_`
 
@@ -103,7 +103,7 @@ gohighlevel-integration-plugin/
 ├── composer.json               # PHP dependencies
 ├── phpcs.xml                   # PHP CodeSniffer configuration
 ├── phpunit.xml.dist           # PHPUnit configuration
-└── gohighlevel-crm-integration.php  # Main plugin file
+└── syncly.php                       # Main plugin file
 ```
 
 ## Build and Testing

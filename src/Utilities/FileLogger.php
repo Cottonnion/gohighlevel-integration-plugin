@@ -198,13 +198,38 @@ class FileLogger {
 			return false;
 		}
 
-		// Build log line with context.
+		// Build log line with context. Credentials must never persist to a log,
+		// even when a caller accidentally includes an entire API payload.
+		$context = $this->redact_sensitive_context( $context );
 		$context_str = '';
 		if ( ! empty( $context ) ) {
 			$context_str = ' | ' . wp_json_encode( $context, JSON_UNESCAPED_SLASHES );
 		}
 
 		return $this->write_line( $channel, $level, $message . $context_str );
+	}
+
+	/**
+	 * Remove credentials and authentication artifacts from structured log data.
+	 *
+	 * @param array $context Log context.
+	 * @return array Sanitized context.
+	 */
+	private function redact_sensitive_context( array $context ): array {
+		$sensitive_key_pattern = '/(?:access[_-]?token|refresh[_-]?token|authorization|auth[_-]?code|client[_-]?secret|api[_-]?key|webhook[_-]?secret|password|cookie|\bcode\b|\bstate\b)/i';
+
+		foreach ( $context as $key => $value ) {
+			if ( is_string( $key ) && preg_match( $sensitive_key_pattern, $key ) ) {
+				$context[ $key ] = '[redacted]';
+				continue;
+			}
+
+			if ( is_array( $value ) ) {
+				$context[ $key ] = $this->redact_sensitive_context( $value );
+			}
+		}
+
+		return $context;
 	}
 
 	/**
@@ -321,6 +346,15 @@ class FileLogger {
 		if ( ! file_exists( $index ) ) {
 			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 			file_put_contents( $index, "<?php\n// Silence is golden.\n" );
+		}
+
+		// Protect the directory on IIS as well as Apache. Nginx rules cannot be
+		// created safely from a plugin, so the documentation includes the rule
+		// administrators should apply when file logging is enabled.
+		$web_config = $this->log_dir . '/web.config';
+		if ( ! file_exists( $web_config ) ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+			file_put_contents( $web_config, "<?xml version=\"1.0\" encoding=\"UTF-8\"?><configuration><system.webServer><authorization><deny users=\"*\" /></authorization></system.webServer></configuration>" );
 		}
 
 		$this->dir_initialised = true;

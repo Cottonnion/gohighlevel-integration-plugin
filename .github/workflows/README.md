@@ -107,13 +107,13 @@ git tag v1.2.3 && git push origin v1.2.3
 
 Plugin version is defined in two places — both must match the git tag:
 
-- `ghl-crm-integration.php` header: `* Version: 1.2.3`
-- `ghl-crm-integration.php` constant: `define( 'GHL_CRM_VERSION', '1.2.3' )`
+- `syncly.php` header: `* Version: 1.2.3`
+- `syncly.php` constant: `define( 'SYNCLY_VERSION', '1.2.3' )`
 
 The version is used as the cache-busting string for all enqueued CSS/JS assets.
 
 **Steps to ship a release:**
-1. Update version in `ghl-crm-integration.php` (both places)
+1. Update version in `syncly.php` (both places), `readme.txt`, and `README.md`
 2. Commit: `git commit -m "chore: bump version to 1.2.3"`
 3. Push: `git push origin main`
 4. Tag and deploy: `git tag v1.2.3 && git push origin v1.2.3`

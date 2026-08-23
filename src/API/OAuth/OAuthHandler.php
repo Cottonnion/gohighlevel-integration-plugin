@@ -178,7 +178,8 @@ class OAuthHandler {
 			}
 		}
 
-		$this->log_oauth_event( 'oauth_callback_admin_enter', [ 'query_args' => $sanitized_get ] );
+		// Do not write authorization codes or state values to logs.
+		$this->log_oauth_event( 'oauth_callback_admin_enter', [ 'query_arg_keys' => array_keys( $sanitized_get ) ] );
 
 		if ( ! isset( $_GET['code'] ) ) {
 			return;
@@ -223,7 +224,7 @@ class OAuthHandler {
 			exit;
 		}
 
-		$this->log_oauth_event( 'oauth_callback_admin_received', [ 'state' => $state ] );
+		$this->log_oauth_event( 'oauth_callback_admin_received' );
 
 		// Process the callback with state parameter
 		$result = $this->process_oauth_callback( $code, $state );
@@ -260,10 +261,10 @@ class OAuthHandler {
 	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function handle_oauth_rest_callback( $request ) {
-		$this->log_oauth_event( 'oauth_callback_rest_enter', [ 'params' => $request->get_params() ] );
+		$this->log_oauth_event( 'oauth_callback_rest_enter', [ 'param_keys' => array_keys( $request->get_params() ) ] );
 		$code  = sanitize_text_field( $request->get_param( 'code' ) );
 		$state = (string) $request->get_param( 'state' );
-		$this->log_oauth_event( 'oauth_callback_rest_received', [ 'state' => $state ] );
+		$this->log_oauth_event( 'oauth_callback_rest_received' );
 
 		$result = $this->process_oauth_callback( $code, $state );
 
@@ -315,10 +316,7 @@ class OAuthHandler {
 		$state_nonce = isset( $query_params['ghl_state'] ) ? sanitize_text_field( (string) $query_params['ghl_state'] ) : '';
 		$this->log_oauth_event(
 			'oauth_state_parsed',
-			[
-				'state_nonce'   => $state_nonce,
-				'decoded_state' => $decoded_state,
-			]
+			[ 'state_present' => '' !== $state_nonce ]
 		);
 
 		if ( empty( $state_nonce ) ) {
@@ -331,6 +329,11 @@ class OAuthHandler {
 		if ( empty( $stored_state ) ) {
 			$this->log_oauth_event( 'oauth_state_expired', [] );
 			return new \WP_Error( 'invalid_state', __( 'OAuth state expired. Please try again.', 'syncly' ) );
+		}
+
+		if ( ! $this->state_belongs_to_current_user( $stored_state ) ) {
+			$this->log_oauth_event( 'oauth_state_user_mismatch', [ 'state_user_id' => (int) $stored_state ] );
+			return new \WP_Error( 'invalid_state', __( 'OAuth state does not belong to the current user.', 'syncly' ) );
 		}
 
 		// Clean up state transient
@@ -390,7 +393,11 @@ class OAuthHandler {
 		];
 		$this->settings_manager->update_option( 'syncly_connection_verified', $verification_data );
 
-		// Trigger action to notify other components that connection status has changed
+		/*
+		* Trigger a custom action to notify other parts of the plugin that the connection status has changed.
+		* @param bool $is_connected Current connection status (true since tokens are saved).
+		* @param string $method Authentication method used ('oauth2').
+		*/
 		do_action( 'syncly_connection_status_changed', true, 'oauth2' );
 	}
 
@@ -423,7 +430,11 @@ class OAuthHandler {
 			self::$last_refresh_time  = 0;
 			self::$last_refresh_error = null;
 
-			// Trigger disconnection action
+			/*
+			* Trigger a custom action to notify other parts of the plugin that the connection status has changed.
+			* @param bool $is_connected Current connection status (false, most likely a manual disconnect).
+			* @param string $method Authentication method used ('oauth_disconnected').
+			*/
 			do_action( 'syncly_connection_status_changed', false, 'oauth_disconnected' );
 
 			return true;
@@ -445,8 +456,9 @@ class OAuthHandler {
 		$has_refresh_token = ! empty( $settings['oauth_refresh_token'] );
 		$has_location_id   = ! empty( $settings['location_id'] );
 		$token_is_current  = $expires > time();
+		$is_verified       = $this->settings_manager->is_connection_verified();
 
-		return $has_location_id && $has_access_token && ( $token_is_current || $has_refresh_token );
+		return $is_verified && $has_location_id && $has_access_token && ( $token_is_current || $has_refresh_token );
 	}
 
 	/**
@@ -470,6 +482,18 @@ class OAuthHandler {
 			'health_message' => $settings['oauth_health_message'] ?? '',
 			'health_checked_at' => $settings['oauth_health_checked_at'] ?? '',
 		];
+	}
+
+	/**
+	 * Verify that an OAuth state was initiated by the current user.
+	 *
+	 * @param mixed $stored_state User ID stored with the state nonce.
+	 * @return bool
+	 */
+	private function state_belongs_to_current_user( $stored_state ): bool {
+		$current_user_id = get_current_user_id();
+
+		return $current_user_id > 0 && (int) $stored_state === $current_user_id;
 	}
 
 	/**

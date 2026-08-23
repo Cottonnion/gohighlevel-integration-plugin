@@ -463,8 +463,44 @@ class QueueManager {
 		}
 
 		foreach ( $items as $item ) {
+			// Claim the row atomically so concurrent workers cannot process it twice.
+			if ( ! $this->claim_queue_item( $table_name, (int) $item->id, $current_site_id ) ) {
+				continue;
+			}
+
+			// A queue batch can legitimately outlive the initial lock TTL when the
+			// remote API is slow. Renew it as work progresses to prevent a second
+			// scheduler from entering the same batch mid-run.
+			set_site_transient( 'syncly_queue_processing', time(), 2 * MINUTE_IN_SECONDS );
+
+			$item->status = 'processing';
 			$this->process_queue_item( $item );
 		}
+	}
+
+	/**
+	 * Atomically claim one pending queue row for the current worker.
+	 *
+	 * @param string $table_name Queue table name.
+	 * @param int    $item_id   Queue item ID.
+	 * @param int    $site_id   Current site ID.
+	 * @return bool True only when this worker changed the row.
+	 */
+	private function claim_queue_item( string $table_name, int $item_id, int $site_id ): bool {
+		global $wpdb;
+
+		$claimed = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE {$table_name}
+				SET status = 'processing', updated_at = %s
+				WHERE id = %d AND site_id = %d AND status = 'pending'",
+				current_time( 'mysql' ),
+				$item_id,
+				$site_id
+			)
+		);
+
+		return 1 === (int) $claimed;
 	}
 
 	/**
@@ -509,8 +545,27 @@ class QueueManager {
 				WHERE status = 'processing' 
 				AND site_id = %d
 				AND updated_at < %s 
-				AND attempts > 0 
 				AND attempts < %d",
+				current_time( 'mysql' ),
+				$current_site_id,
+				gmdate( 'Y-m-d H:i:s', strtotime( '-5 minutes' ) ),
+				self::MAX_ATTEMPTS
+			)
+		);
+
+		// A worker can crash after its final attempt is claimed. Do not leave it
+		// permanently stuck in processing.
+		$wpdb->query(
+			$wpdb->prepare(
+				"UPDATE {$table_name}
+				SET status = 'failed',
+					error_message = %s,
+					updated_at = %s
+				WHERE status = 'processing'
+				AND site_id = %d
+				AND updated_at < %s
+				AND attempts >= %d",
+				'Maximum retry attempts reached while processing',
 				current_time( 'mysql' ),
 				$current_site_id,
 				gmdate( 'Y-m-d H:i:s', strtotime( '-5 minutes' ) ),
@@ -598,7 +653,12 @@ class QueueManager {
 		try {
 			// Check rate limits before processing (using RateLimiter helper)
 			$location_id = $this->get_ghl_location_id();
-			$rate_ok     = $location_id ? $this->rate_limiter->check_limits( $location_id ) : true;
+			$rate_ok = true;
+			if ( $location_id ) {
+				$rate_ok = method_exists( $this->rate_limiter, 'reserve_request' )
+					? $this->rate_limiter->reserve_request( $location_id )
+					: $this->rate_limiter->check_limits( $location_id );
+			}
 
 			if ( ! $rate_ok ) {
 				// If the daily limit specifically was hit, notify the admin (once per day).
@@ -647,11 +707,6 @@ class QueueManager {
 			$result         = $this->processor->execute_sync( $item->item_type, $item->action, (int) $item->item_id, $payload );
 			$last_php_error = error_get_last(); // Capture immediately — may reveal silent handler failures
 
-			// Track API request using RateLimiter helper
-			if ( $location_id ) {
-				$this->rate_limiter->track_request( $location_id );
-			}
-
 			// Check if result indicates success or should be skipped (dependency waiting)
 			// Some integrations return arrays with 'success' => false
 			$is_success  = false;
@@ -667,21 +722,30 @@ class QueueManager {
 
 			// If waiting for dependency, skip processing but don't fail
 			if ( $should_skip ) {
-				// Check if payload needs to be updated with dependency info
+				// A dependency wait is not an execution failure. Restore the claimed
+				// row to pending and undo this run's attempt increment so a job cannot
+				// fail merely because its prerequisite has not completed yet.
+				$update_data = [
+					'status'     => 'pending',
+					'attempts'   => max( 0, $item->attempts - 1 ),
+					'updated_at' => current_time( 'mysql' ),
+				];
+				$formats     = [ '%s', '%d', '%s' ];
+
 				if ( ! empty( $result['update_payload'] ) && is_array( $result['update_payload'] ) ) {
-					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Persisting updated dependency payload to queue table.
-					$wpdb->update(
-						$table_name,
-						[
-							'payload'    => wp_json_encode( $result['update_payload'] ),
-							'updated_at' => current_time( 'mysql' ),
-						],
-						[ 'id' => $item->id ],
-						[ '%s', '%s' ],
-						[ '%d' ]
-					);
+					$update_data['payload'] = wp_json_encode( $result['update_payload'] );
+					$formats[]              = '%s';
 				}
-				return; // Leave item pending, will retry later when dependency completes
+
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Releasing a claimed dependency-waiting job back to the plugin queue.
+				$wpdb->update(
+					$table_name,
+					$update_data,
+					[ 'id' => $item->id ],
+					$formats,
+					[ '%d' ]
+				);
+				return;
 			}
 
 			if ( $is_success ) {

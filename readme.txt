@@ -4,7 +4,7 @@ Tags: gohighlevel, wpfusion, contact-sync, woocommerce, leadconnector
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.4.30
+Stable tag: 1.4.31
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -63,6 +63,10 @@ Syncly OAuth proxy: The plugin uses a Syncly proxy endpoint during OAuth token e
 
 Syncly service links: http://synclyforgohighlevel.com/terms-of-service/ and http://synclyforgohighlevel.com/privacy-policy/
 
+= Debug logging =
+
+File logging is disabled by default. To enable temporary support logging, add `define( 'SYNCLY_BRIDGE_LOG', true );` to `wp-config.php`. Logs may contain operational metadata and must not be exposed publicly. Apache and IIS installations are protected automatically; nginx administrators must deny web access to `wp-content/uploads/syncly-logs/` before enabling logging.
+
 == Installation ==
 
 1. Upload the plugin folder to `/wp-content/plugins/syncly` or install the plugin ZIP through Plugins > Add New > Upload Plugin.
@@ -86,6 +90,15 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
 == Changelog ==
+
+= 1.4.31 =
+* Improved sync reliability with atomic OAuth token refresh locking, safe retries for transient API failures, request correlation, and shared token-refresh handling for connection tests.
+* Hardened webhook handling with JSON validation, durable delivery deduplication, safer retry responses, and privacy-conscious webhook logging.
+* Improved queue safety with atomic job claims, atomic rate-limit reservations, stale final-attempt recovery, dependency-wait retry protection, and temporary tag-fetch failure backoff.
+* Fixed plugin activation and deactivation setup, including database initialization and scheduled cleanup registration.
+* Strengthened OAuth callback binding, redacted sensitive logging data, and made file logging opt-in.
+* Improved the webhook test action so it uses the current settings nonce and configured secret.
+* Expanded automated regression coverage and CI validation for PHP 7.4 and PHP 8.1.
 
 = 1.4.27 =
 - Added Gravity Forms integration with a dedicated Per-form Syncly settings tab.
