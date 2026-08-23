@@ -79,7 +79,7 @@ jobs:
           ! grep -RInE --exclude-dir=.git --exclude-dir=.github --exclude-dir=docs --exclude-dir=vendor "hash_hmac\( 'sha256', \$contact_id, \$secret|HMAC_SHA256_SECRET_CONTACT_ID|YOUR_HMAC" .
           ! grep -RInE --exclude-dir=.git --exclude-dir=.github --exclude-dir=docs --exclude-dir=vendor "syncly_register_advanced_restriction_hooks|syncly_archive_protection_enabled|syncly_restriction_overrides_enabled|overrides_pro_active" .
           ! grep -RInE "persist_guest_contact\( \$contact_id \);" -- src/Frontend/ContactIdHandler.php
-          grep -F "Tested up to: 7.0" readme.txt
+          grep -F "Tested up to: 7.1" readme.txt
           test -d languages
           grep -F "http://synclyforgohighlevel.com/terms-of-service/" readme.txt
           grep -F "http://synclyforgohighlevel.com/privacy-policy/" readme.txt
@@ -102,6 +102,7 @@ jobs:
             --exclude 'dist/' \
             --exclude 'build/' \
             --exclude 'node_modules/' \
+            --exclude 'mu-plugins/' \
             --exclude 'vendor/' \
             --exclude '.gitignore' \
             --exclude '.gitattributes' \
@@ -166,6 +167,7 @@ jobs:
               -x "${PLUGIN_SLUG}/dist-local-check/*" \
               -x "${PLUGIN_SLUG}/build/*" \
               -x "${PLUGIN_SLUG}/node_modules/*" \
+              -x "${PLUGIN_SLUG}/mu-plugins/*" \
               -x "${PLUGIN_SLUG}/vendor/bin/*" \
               -x "${PLUGIN_SLUG}/.gitignore" \
               -x "${PLUGIN_SLUG}/.gitattributes" \
@@ -284,6 +286,7 @@ jobs:
             --exclude 'dist-local-check/' \
             --exclude 'build/' \
             --exclude 'node_modules/' \
+            --exclude 'mu-plugins/' \
             --exclude 'vendor/' \
             --exclude '.gitignore' \
             --exclude '.gitattributes' \

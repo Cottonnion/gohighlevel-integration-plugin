@@ -109,6 +109,24 @@ class SecurityTest extends TestCase
         $this->assertStringContainsString('objects/record.write', $query['scope']);
     }
 
+    public function test_load_generator_maps_mixed_events_to_queue_actions(): void
+    {
+        require_once dirname(__DIR__, 3) . '/mu-plugins/syncly-load-test.php';
+
+        $this->assertSame(
+            [ 'item_type' => 'user', 'action' => 'user_register' ],
+            syncly_load_test_event_action('mixed', 1)
+        );
+        $this->assertSame(
+            [ 'item_type' => 'wc_customer', 'action' => 'order_created' ],
+            syncly_load_test_event_action('mixed', 5)
+        );
+        $this->assertSame(
+            [ 'item_type' => 'user', 'action' => 'add_tags' ],
+            syncly_load_test_event_action('tag_sync', 1)
+        );
+    }
+
     private function makeWebhookHandler(string $secret): WebhookHandler
     {
         $settings = Mockery::mock(SettingsManager::class);
