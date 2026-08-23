@@ -102,7 +102,6 @@ jobs:
             --exclude 'dist/' \
             --exclude 'build/' \
             --exclude 'node_modules/' \
-            --exclude 'mu-plugins/' \
             --exclude 'vendor/' \
             --exclude '.gitignore' \
             --exclude '.gitattributes' \
@@ -167,7 +166,6 @@ jobs:
               -x "${PLUGIN_SLUG}/dist-local-check/*" \
               -x "${PLUGIN_SLUG}/build/*" \
               -x "${PLUGIN_SLUG}/node_modules/*" \
-              -x "${PLUGIN_SLUG}/mu-plugins/*" \
               -x "${PLUGIN_SLUG}/vendor/bin/*" \
               -x "${PLUGIN_SLUG}/.gitignore" \
               -x "${PLUGIN_SLUG}/.gitattributes" \
@@ -286,7 +284,6 @@ jobs:
             --exclude 'dist-local-check/' \
             --exclude 'build/' \
             --exclude 'node_modules/' \
-            --exclude 'mu-plugins/' \
             --exclude 'vendor/' \
             --exclude '.gitignore' \
             --exclude '.gitattributes' \
