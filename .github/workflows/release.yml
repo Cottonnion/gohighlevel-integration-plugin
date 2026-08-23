@@ -131,6 +131,9 @@ jobs:
           composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader --classmap-authoritative
           test -f vendor/autoload.php
           test ! -d vendor/bin
+          rm -f composer.json composer.lock
+          test ! -e composer.json
+          test ! -e composer.lock
 
       - name: Minify production assets
         run: |
@@ -168,6 +171,8 @@ jobs:
               -x "${PLUGIN_SLUG}/build/*" \
               -x "${PLUGIN_SLUG}/node_modules/*" \
               -x "${PLUGIN_SLUG}/vendor/bin/*" \
+              -x "${PLUGIN_SLUG}/composer.json" \
+              -x "${PLUGIN_SLUG}/composer.lock" \
               -x "${PLUGIN_SLUG}/.gitignore" \
               -x "${PLUGIN_SLUG}/.gitattributes" \
               -x "${PLUGIN_SLUG}/.editorconfig" \
@@ -208,6 +213,7 @@ jobs:
           ! grep -E "${PLUGIN_SLUG}/\.wordpress-org/" "${DIST_DIR}/zip-contents.txt"
           ! grep -E "${PLUGIN_SLUG}/(\.gitignore|\.gitattributes|\.editorconfig|\.phpunit\.result\.cache|phpunit\.xml|phpunit\.xml\.dist|phpcs\.xml|phpcs\.xml\.dist|build-minify\.php|check|fix|zip-excludes?\.txt|README\.md|DEV_CHANGELOG\.md|FEATURES-AND-BENEFITS\.md|PRODUCTION-BUILD\.md)$" "${DIST_DIR}/zip-contents.txt"
           ! grep -E "${PLUGIN_SLUG}/vendor/bin/" "${DIST_DIR}/zip-contents.txt"
+          ! grep -E "${PLUGIN_SLUG}/composer\.(json|lock)$" "${DIST_DIR}/zip-contents.txt"
           ! grep -E "\.DS_Store|\.map$|\.zip$" "${DIST_DIR}/zip-contents.txt"
           test -s "${ZIP_FILE}"
 
@@ -309,6 +315,9 @@ jobs:
 
           # Re-install production-only vendor
           composer install --working-dir="${STAGING}" --no-dev --prefer-dist --no-interaction --optimize-autoloader --classmap-authoritative
+          rm -f "${STAGING}/composer.json" "${STAGING}/composer.lock"
+          test ! -e "${STAGING}/composer.json"
+          test ! -e "${STAGING}/composer.lock"
 
           rsync -a --delete "${STAGING}/" /tmp/svn-repo/trunk/ \
             --exclude '.svn/'
