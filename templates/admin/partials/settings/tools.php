@@ -14,6 +14,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 $settings_manager = \Syncly\Core\SettingsManager::get_instance();
 $settings         = $settings_manager->get_settings_array();
+$tag_manager      = \Syncly\Sync\TagManager::get_instance();
+$ghl_tags         = $tag_manager->get_tags_for_localization();
 ?>
 
 <div class="ghl-settings-wrapper">
@@ -153,17 +155,48 @@ $settings         = $settings_manager->get_settings_array();
 				<tbody>
 					<tr>
 						<th scope="row">
-							<label><?php esc_html_e( 'Sync All Users', 'syncly' ); ?>
-							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Queues all WordPress users for synchronization to GoHighLevel. Processing happens in batches of 50 users to prevent timeouts. You can track progress in real-time.', 'syncly' ); ?>">?</span>
+							<label><?php esc_html_e( 'Sync Users to GHL', 'syncly' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Queues WordPress users for synchronization to GoHighLevel based on selected filters (role, sync status, user meta). Processing happens in batches of 50.', 'syncly' ); ?>">?</span>
 							</label>
 						</th>
 						<td>
+							<div class="ghl-filter-group" style="margin-bottom: 15px; padding: 12px; background: #f9f9f9; border: 1px solid #e5e5e5; border-radius: 4px;">
+								<p style="margin-top: 0; font-weight: 600;"><?php esc_html_e( 'Filter Users to Sync (Optional):', 'syncly' ); ?></p>
+								
+								<div style="margin-bottom: 10px;">
+									<label style="display: block; margin-bottom: 4px; font-weight: 500;"><?php esc_html_e( 'User Role:', 'syncly' ); ?></label>
+									<select id="bulk-sync-role-filter" class="regular-text">
+										<option value=""><?php esc_html_e( 'All Roles', 'syncly' ); ?></option>
+										<?php wp_dropdown_roles(); ?>
+									</select>
+								</div>
+								
+								<div style="margin-bottom: 10px;">
+									<label style="display: block; margin-bottom: 4px; font-weight: 500;"><?php esc_html_e( 'Sync Status:', 'syncly' ); ?></label>
+									<select id="bulk-sync-status-filter" class="regular-text">
+										<option value="all"><?php esc_html_e( 'All Users (Synced & Unsynced)', 'syncly' ); ?></option>
+										<option value="unsynced_only"><?php esc_html_e( 'Unsynced Users Only', 'syncly' ); ?></option>
+										<option value="synced_only"><?php esc_html_e( 'Already Synced Users Only', 'syncly' ); ?></option>
+									</select>
+								</div>
+
+								<div>
+									<label style="display: block; margin-bottom: 4px; font-weight: 500;"><?php esc_html_e( 'User Meta Filter:', 'syncly' ); ?></label>
+									<div style="display: flex; gap: 10px;">
+										<input type="text" id="bulk-sync-meta-key" placeholder="<?php esc_attr_e( 'Meta Key (e.g. vip_member)', 'syncly' ); ?>" class="regular-text" style="flex: 1;">
+										<input type="text" id="bulk-sync-meta-value" placeholder="<?php esc_attr_e( 'Meta Value (optional)', 'syncly' ); ?>" class="regular-text" style="flex: 1;">
+									</div>
+								</div>
+
+								<div id="bulk-sync-live-count" style="margin-top: 10px; padding: 6px 10px; background: #e7f5fb; border-left: 4px solid #2271b1; font-weight: 500; color: #1d2327; font-size: 0.9em; display: none;"></div>
+							</div>
+
 							<button type="button" class="ghl-button ghl-button-primary" id="bulk-sync-users-btn">
 								<span class="dashicons dashicons-groups"></span>
-								<?php esc_html_e( 'Sync All Users to GHL', 'syncly' ); ?>
+								<?php esc_html_e( 'Sync Filtered Users to GHL', 'syncly' ); ?>
 							</button>
 							<p class="description">
-								<?php esc_html_e( 'Queue all WordPress users for synchronization to GoHighLevel. Processing happens in batches to prevent timeouts.', 'syncly' ); ?>
+								<?php esc_html_e( 'Queue matching WordPress users for synchronization to GoHighLevel. Leave filters empty to sync all users.', 'syncly' ); ?>
 							</p>
 							<div id="bulk-sync-progress" style="display: none; margin-top: 15px;">
 								<div class="ghl-progress-bar-container">
@@ -177,16 +210,47 @@ $settings         = $settings_manager->get_settings_array();
 					<tr>
 						<th scope="row">
 							<label><?php esc_html_e( 'Import from GHL', 'syncly' ); ?>
-							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Fetches all contacts from your GoHighLevel location and creates WordPress users for each one with a valid email. Already-synced contacts are automatically skipped.', 'syncly' ); ?>">?</span>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Fetches contacts from your GoHighLevel location and creates or updates WordPress users. Apply filters to restrict which contacts to import.', 'syncly' ); ?>">?</span>
 							</label>
 						</th>
 						<td>
+							<div class="ghl-filter-group" style="margin-bottom: 15px; padding: 12px; background: #f9f9f9; border: 1px solid #e5e5e5; border-radius: 4px;">
+								<p style="margin-top: 0; font-weight: 600;"><?php esc_html_e( 'Filter Contacts to Import (Optional):', 'syncly' ); ?></p>
+								
+								<div style="margin-bottom: 10px;">
+									<label style="display: block; margin-bottom: 4px; font-weight: 500;"><?php esc_html_e( 'Search Query:', 'syncly' ); ?></label>
+									<input type="text" id="bulk-import-query-filter" placeholder="<?php esc_attr_e( 'Name, Email, or Phone query', 'syncly' ); ?>" class="regular-text">
+									<div id="bulk-import-live-preview" style="margin-top: 6px; padding: 6px 10px; background: #e7f5fb; border-left: 4px solid #2271b1; font-weight: 500; color: #1d2327; font-size: 0.9em; display: none;"></div>
+								</div>
+
+								<div style="margin-bottom: 10px;">
+									<label style="display: block; margin-bottom: 4px; font-weight: 500;"><?php esc_html_e( 'GHL Tag Filter:', 'syncly' ); ?></label>
+									<select id="bulk-import-tag-filter" class="regular-text syncly-select2" style="width: 100%;">
+										<option value=""><?php esc_html_e( 'All Tags (No Tag Filter)', 'syncly' ); ?></option>
+										<?php foreach ( $ghl_tags as $gtag ) : ?>
+											<option value="<?php echo esc_attr( $gtag['name'] ); ?>">
+												<?php echo esc_html( $gtag['name'] ); ?>
+											</option>
+										<?php endforeach; ?>
+									</select>
+								</div>
+
+								<div>
+									<label style="display: block; margin-bottom: 4px; font-weight: 500;"><?php esc_html_e( 'Import Mode:', 'syncly' ); ?></label>
+									<select id="bulk-import-mode-filter" class="regular-text">
+										<option value="all"><?php esc_html_e( 'All Contacts (Create New & Update Existing)', 'syncly' ); ?></option>
+										<option value="new_only"><?php esc_html_e( 'New Contacts Only (Skip Existing Users)', 'syncly' ); ?></option>
+										<option value="existing_only"><?php esc_html_e( 'Existing Users Only (Update Only)', 'syncly' ); ?></option>
+									</select>
+								</div>
+							</div>
+
 							<button type="button" class="ghl-button ghl-button-primary" id="bulk-import-ghl-btn">
 								<span class="dashicons dashicons-download"></span>
-								<?php esc_html_e( 'Import Contacts from GHL', 'syncly' ); ?>
+								<?php esc_html_e( 'Import Filtered Contacts from GHL', 'syncly' ); ?>
 							</button>
 							<p class="description">
-								<?php esc_html_e( 'Fetch all contacts from GoHighLevel and create WordPress users. Contacts without email and already-synced users are skipped.', 'syncly' ); ?>
+								<?php esc_html_e( 'Fetch contacts from GoHighLevel and create/update WordPress users. Contacts without email are skipped.', 'syncly' ); ?>
 								<br>
 								<span style="color: #dba617;">
 									<?php esc_html_e( 'Note: Uses the deprecated GET /contacts/ endpoint (v2). Will be updated when GHL provides a replacement.', 'syncly' ); ?>
@@ -200,6 +264,14 @@ $settings         = $settings_manager->get_settings_array();
 							</div>
 						</td>
 					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+
+	<!-- System Diagnostics Section -->
+	<div class="ghl-settings-section ghl-settings-card" style="margin-top: 20px;">
+		<div class="ghl-settings-header">
 			<h2>
 				<span class="dashicons dashicons-admin-tools"></span>
 				<?php esc_html_e( 'System Diagnostics', 'syncly' ); ?>

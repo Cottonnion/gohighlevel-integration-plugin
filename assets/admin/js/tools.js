@@ -33,16 +33,22 @@
         return;
       }
 
-      // Show confirmation directly
+      this.filters = {
+        role: jQuery('#bulk-sync-role-filter').val() || '',
+        sync_status: jQuery('#bulk-sync-status-filter').val() || 'all',
+        meta_key: jQuery('#bulk-sync-meta-key').val() || '',
+        meta_value: jQuery('#bulk-sync-meta-value').val() || '',
+      };
+
       Swal.fire({
-        title: "Sync All Users?",
-        html: '<p>This will queue all WordPress users for synchronization to GoHighLevel.</p><p style="color: #666; font-size: 0.9em;">Processing happens in batches of 50 users. Time required depends on total user count. You can monitor progress in real-time.</p>',
-        icon: "question",
+        title: 'Sync Filtered Users?',
+        html: '<p>This will queue WordPress users matching your selected filters for synchronization to GoHighLevel.</p><p style="color: #666; font-size: 0.9em;">Processing happens in batches of 50 users.</p>',
+        icon: 'question',
         showCancelButton: true,
-        confirmButtonText: "Yes, Sync All Users",
-        cancelButtonText: "Cancel",
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
+        confirmButtonText: 'Yes, Sync Users',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
       }).then((result) => {
         if (result.isConfirmed) {
           this.totalQueued = 0;
@@ -71,6 +77,10 @@
           action: "syncly_bulk_sync_users",
           nonce: syncly_tools_js_data.nonce,
           batch: batch,
+          role: this.filters ? this.filters.role : '',
+          sync_status: this.filters ? this.filters.sync_status : 'all',
+          meta_key: this.filters ? this.filters.meta_key : '',
+          meta_value: this.filters ? this.filters.meta_value : '',
         },
         success: (response) => {
           if (response.success) {
@@ -191,7 +201,7 @@
 
         Swal.fire({
           title: "Import Contacts from GHL",
-          html: "This will fetch all contacts from GoHighLevel and create or update WordPress users for each one that has an email address.<br><br><strong>Existing users will be updated with the latest data.</strong>",
+          html: "This will fetch contacts from GoHighLevel matching your selected filters and create or update WordPress users.",
           icon: "question",
           showCancelButton: true,
           confirmButtonText: "Start Import",
@@ -209,6 +219,11 @@
      */
     start() {
       this.reset();
+      this.filters = {
+        query: $("#bulk-import-query-filter").val() || "",
+        tag_filter: $("#bulk-import-tag-filter").val() || "",
+        mode_filter: $("#bulk-import-mode-filter").val() || "all",
+      };
       this.isRunning = true;
       $("#bulk-import-progress").show();
       $("#bulk-import-progress-bar")
@@ -251,6 +266,9 @@
         action: "syncly_bulk_import_from_ghl",
         nonce: syncly_tools_js_data.nonce,
         page: page,
+        query: this.filters ? this.filters.query : '',
+        tag_filter: this.filters ? this.filters.tag_filter : '',
+        mode_filter: this.filters ? this.filters.mode_filter : 'all',
       };
 
       if (cursor) {
@@ -396,9 +414,122 @@
     },
   };
 
+  /**
+   * Live User Counter (WP -> GHL)
+   */
+  const LiveUserCounter = {
+    timer: null,
+
+    init() {
+      $("#bulk-sync-role-filter, #bulk-sync-status-filter").on("change", () => this.update());
+      $("#bulk-sync-meta-key, #bulk-sync-meta-value").on("input keyup", () => this.debounceUpdate());
+      this.update();
+    },
+
+    debounceUpdate() {
+      clearTimeout(this.timer);
+      this.timer = setTimeout(() => this.update(), 300);
+    },
+
+    update() {
+      const role = $("#bulk-sync-role-filter").val() || "";
+      const syncStatus = $("#bulk-sync-status-filter").val() || "all";
+      const metaKey = $("#bulk-sync-meta-key").val() || "";
+      const metaValue = $("#bulk-sync-meta-value").val() || "";
+
+      $.ajax({
+        url: syncly_tools_js_data.ajaxUrl,
+        type: "POST",
+        data: {
+          action: "syncly_count_filtered_users",
+          nonce: syncly_tools_js_data.nonce,
+          role: role,
+          sync_status: syncStatus,
+          meta_key: metaKey,
+          meta_value: metaValue,
+        },
+        success: (response) => {
+          if (response.success && typeof response.data.total_users !== "undefined") {
+            const count = response.data.total_users;
+            let msg = `⚡ <strong>${count}</strong> WordPress user(s) match your current filter selection.`;
+            $("#bulk-sync-live-count").html(msg).show();
+          }
+        },
+      });
+    },
+  };
+
+  /**
+   * Live Contact Search (GHL -> WP)
+   */
+  const LiveContactSearch = {
+    timer: null,
+
+    init() {
+      $("#bulk-import-query-filter").on("input keyup", () => this.debounceSearch());
+    },
+
+    debounceSearch() {
+      clearTimeout(this.timer);
+      this.timer = setTimeout(() => this.search(), 400);
+    },
+
+    search() {
+      const query = ($("#bulk-import-query-filter").val() || "").trim();
+      const $container = $("#bulk-import-live-preview");
+
+      if (!query) {
+        $container.hide().empty();
+        return;
+      }
+
+      $.ajax({
+        url: syncly_tools_js_data.ajaxUrl,
+        type: "POST",
+        data: {
+          action: "syncly_search_ghl_contacts",
+          nonce: syncly_tools_js_data.nonce,
+          query: query,
+        },
+        success: (response) => {
+          if (response.success) {
+            const total = response.data.total || 0;
+            const contacts = response.data.contacts || [];
+
+            if (total === 0) {
+              $container.html(`🔍 No matching contacts found in GoHighLevel.`).show();
+            } else {
+              let html = `🔍 Found <strong>${total}</strong> contact(s) matching filter in GoHighLevel.`;
+              if (contacts.length > 0) {
+                const names = contacts
+                  .map((c) => (c.name ? `${c.name} (${c.email})` : c.email))
+                  .filter(Boolean)
+                  .slice(0, 3)
+                  .join(", ");
+                html += `<br><small style="color:#50575e;">Preview: ${names}${contacts.length > 3 ? "..." : ""}</small>`;
+              }
+              $container.html(html).show();
+            }
+          }
+        },
+      });
+    },
+  };
+
   function initToolsHandlers() {
     BulkSyncHandler.init();
     BulkImportHandler.init();
+    LiveUserCounter.init();
+    LiveContactSearch.init();
+
+    // Initialize Select2 on GHL Tag Filter if available
+    if ($.fn.select2) {
+      $("#bulk-import-tag-filter").select2({
+        placeholder: "Select GHL Tag (optional)",
+        allowClear: true,
+        width: "100%",
+      });
+    }
   }
 
   // Export for use in settings-menu.js

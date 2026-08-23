@@ -132,7 +132,7 @@ class BulkImportSync {
 	 * }
 	 * @throws \Exception On API failure.
 	 */
-	public function process_page( ?string $start_after = null, ?string $query = null, int $total_processed = 0, array $processed_ids = [] ): array {
+	public function process_page( ?string $start_after = null, ?string $query = null, int $total_processed = 0, array $processed_ids = [], ?string $tag_filter = null, string $mode_filter = 'all' ): array {
 
 		// Fetch one page of contacts from GHL
 		$response = $this->contact_resource->list_contacts( self::PER_PAGE, $start_after, $query );
@@ -145,27 +145,31 @@ class BulkImportSync {
 		// If the page came back empty, we're done
 		if ( empty( $contacts ) ) {
 			return [
-				'created'           => 0,
-				'updated'           => 0,
-				'skipped_no_email'  => 0,
-				'skipped_duplicate' => 0,
-				'failed'            => 0,
-				'processed'         => 0,
-				'has_more'          => false,
-				'next_cursor'       => null,
-				'total_contacts'    => $total_contacts,
-				'new_processed_ids' => [],
-				'errors'            => [],
+				'created'              => 0,
+				'updated'              => 0,
+				'skipped_no_email'     => 0,
+				'skipped_duplicate'    => 0,
+				'skipped_tag_filter'   => 0,
+				'skipped_mode_filter'  => 0,
+				'failed'               => 0,
+				'processed'            => 0,
+				'has_more'             => false,
+				'next_cursor'          => null,
+				'total_contacts'       => $total_contacts,
+				'new_processed_ids'    => [],
+				'errors'               => [],
 			];
 		}
 
-		$created           = 0;
-		$updated           = 0;
-		$skipped_no_email  = 0;
-		$skipped_duplicate = 0;
-		$failed            = 0;
-		$errors            = [];
-		$new_processed_ids = [];
+		$created              = 0;
+		$updated              = 0;
+		$skipped_no_email     = 0;
+		$skipped_duplicate    = 0;
+		$skipped_tag_filter   = 0;
+		$skipped_mode_filter  = 0;
+		$failed               = 0;
+		$errors               = [];
+		$new_processed_ids    = [];
 
 		// Build a lookup set from previously processed IDs for O(1) checks
 		$seen_ids = array_flip( $processed_ids );
@@ -184,10 +188,42 @@ class BulkImportSync {
 			$seen_ids[ $contact_id ] = true;
 			$new_processed_ids[]     = $contact_id;
 
+			// Tag filter check
+			if ( ! empty( $tag_filter ) ) {
+				$contact_tags = $contact['tags'] ?? [];
+				if ( is_string( $contact_tags ) ) {
+					$contact_tags = array_map( 'trim', explode( ',', $contact_tags ) );
+				}
+				$tag_matched = false;
+				foreach ( (array) $contact_tags as $ctag ) {
+					if ( false !== stripos( (string) $ctag, $tag_filter ) ) {
+						$tag_matched = true;
+						break;
+					}
+				}
+				if ( ! $tag_matched ) {
+					++$skipped_tag_filter;
+					continue;
+				}
+			}
+
 			// Skip contacts without email – can't create WP user
 			if ( empty( $email ) || ! is_email( $email ) ) {
 				++$skipped_no_email;
 				continue;
+			}
+
+			// Mode filter check ('new_only', 'existing_only', 'all')
+			if ( 'all' !== $mode_filter ) {
+				$existing_user = $this->find_linked_user( $contact_id, $email );
+				if ( 'new_only' === $mode_filter && $existing_user ) {
+					++$skipped_mode_filter;
+					continue;
+				}
+				if ( 'existing_only' === $mode_filter && ! $existing_user ) {
+					++$skipped_mode_filter;
+					continue;
+				}
 			}
 
 			try {
