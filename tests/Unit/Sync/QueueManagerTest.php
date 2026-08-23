@@ -84,6 +84,8 @@ class QueueManagerTest extends TestCase
         Functions\when('is_multisite')->justReturn(false);
         Functions\when('update_user_meta')->justReturn(true);
         Functions\when('get_user_meta')->justReturn('');
+        Functions\when('get_option')->justReturn(0);
+        Functions\when('update_option')->justReturn(true);
 
         // --- Mock $wpdb ---
         $this->wpdb         = Mockery::mock(\stdClass::class);
@@ -647,7 +649,7 @@ class QueueManagerTest extends TestCase
 
         Functions\when('get_transient')->alias(
             function ( $key ) {
-                return $key === 'ghl_crm_backlog_notified' ? true : false;
+                return $key === 'syncly_backlog_notified' ? true : false;
             }
         );
 

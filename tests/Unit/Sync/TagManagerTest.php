@@ -273,7 +273,7 @@ class TagManagerTest extends TestCase
         $hook_tags  = null;
         Functions\when('do_action')->alias(
             function ( $hook, ...$args ) use ( &$hook_fired, &$hook_user, &$hook_tags ) {
-                if ($hook === 'ghl_crm_user_tags_updated' ) {
+                if ($hook === 'syncly_user_tags_updated' ) {
                     $hook_fired = true;
                     $hook_user  = $args[0] ?? null;
                     $hook_tags  = $args[1] ?? null;
@@ -283,7 +283,7 @@ class TagManagerTest extends TestCase
 
         $stored = $this->tag_manager->store_user_tags(42, [ 'tag_001', 'tag_002' ]);
 
-        $this->assertTrue($hook_fired, 'ghl_crm_user_tags_updated should fire when tags change');
+        $this->assertTrue($hook_fired, 'syncly_user_tags_updated should fire when tags change');
         $this->assertSame(42, $hook_user);
         $this->assertContains('tag_001', $stored);
         $this->assertContains('tag_002', $stored);

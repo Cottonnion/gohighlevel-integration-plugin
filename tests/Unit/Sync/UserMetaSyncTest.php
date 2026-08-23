@@ -66,6 +66,8 @@ class UserMetaSyncTest extends TestCase
 
         // Create mock dependencies.
         $this->tag_manager_mock = Mockery::mock('Syncly\\Sync\\TagManager');
+        $this->tag_manager_mock->shouldReceive('suppress_user_tags_updated_once')->byDefault();
+        $this->tag_manager_mock->shouldReceive('clear_user_tags_updated_suppression')->byDefault();
         $this->tag_manager_mock->shouldReceive('store_user_contact_id')->byDefault();
         $this->tag_manager_mock->shouldReceive('store_user_tags')->andReturn([])->byDefault();
         $this->tag_manager_mock->shouldReceive('get_user_tag_ids')->andReturn([])->byDefault();

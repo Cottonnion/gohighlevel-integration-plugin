@@ -25,13 +25,13 @@ if (! defined('GHL_CRM_PATH') ) {
     define('GHL_CRM_PATH', dirname(__DIR__) . '/');
 }
 if (! defined('GHL_CRM_URL') ) {
-    define('GHL_CRM_URL', 'https://example.com/wp-content/plugins/ghl-crm-integration/');
+    define('GHL_CRM_URL', 'https://synclyforgohighlevel.com/wp-content/plugins/syncly/');
 }
 if (! defined('GHL_CRM_BASENAME') ) {
-    define('GHL_CRM_BASENAME', 'ghl-crm-integration/gohighlevel-crm-integration.php');
+    define('GHL_CRM_BASENAME', 'syncly/syncly.php');
 }
 if (! defined('GHL_CRM_TEXTDOMAIN') ) {
-    define('GHL_CRM_TEXTDOMAIN', 'ghl-crm-integration');
+    define('GHL_CRM_TEXTDOMAIN', 'syncly');
 }
 
 // WordPress time constants the plugin may reference.
@@ -43,6 +43,56 @@ if (! defined('HOUR_IN_SECONDS') ) {
 }
 if (! defined('DAY_IN_SECONDS') ) {
     define('DAY_IN_SECONDS', 86400);
+}
+
+if ( ! class_exists('WP_Error') ) {
+    class WP_Error
+    {
+        private $code;
+        private $message;
+        private $data;
+
+        public function __construct( $code = '', $message = '', $data = null )
+        {
+            $this->code    = $code;
+            $this->message = $message;
+            $this->data    = $data;
+        }
+
+        public function get_error_code()
+        {
+            return $this->code;
+        }
+
+        public function get_error_data()
+        {
+            return $this->data;
+        }
+    }
+}
+
+if ( ! class_exists('WP_REST_Request') ) {
+    class WP_REST_Request
+    {
+        private $headers;
+        private $body;
+
+        public function __construct( array $headers = [], string $body = '' )
+        {
+            $this->headers = array_change_key_case($headers, CASE_LOWER);
+            $this->body    = $body;
+        }
+
+        public function get_header( string $key )
+        {
+            return $this->headers[strtolower($key)] ?? '';
+        }
+
+        public function get_body(): string
+        {
+            return $this->body;
+        }
+    }
 }
 
 // Minimal WooCommerce stub so class_exists( 'WooCommerce' ) returns true

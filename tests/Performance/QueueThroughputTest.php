@@ -387,6 +387,7 @@ class QueueThroughputTest extends TestCase
         }
 
         $elapsed = ( hrtime(true) - $start ) / 1e9;
+        $this->assertGreaterThan(0, $elapsed);
         $this->record("PROCESS ({$count} items, 0ms API)", $count, $elapsed);
     }
 
@@ -422,6 +423,7 @@ class QueueThroughputTest extends TestCase
         }
 
         $elapsed = ( hrtime(true) - $start ) / 1e9;
+        $this->assertGreaterThan(0, $elapsed);
         $this->record("PROCESS ({$count} items, {$api_latency_ms}ms API)", $count, $elapsed);
     }
 
@@ -466,6 +468,7 @@ class QueueThroughputTest extends TestCase
         }
 
         $elapsed = ( hrtime(true) - $start ) / 1e9;
+        $this->assertGreaterThan(0, $elapsed);
         $this->record("MIXED WORKLOAD ({$count} items)", $count, $elapsed);
     }
 
@@ -496,6 +499,7 @@ class QueueThroughputTest extends TestCase
         }
 
         $elapsed = ( hrtime(true) - $start ) / 1e9;
+        $this->assertGreaterThan(0, $elapsed);
         $this->record("FAILURE STORM ({$count} items)", $count, $elapsed);
     }
 
