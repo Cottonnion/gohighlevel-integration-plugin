@@ -97,6 +97,7 @@ jobs:
             --exclude '.git/' \
             --exclude '.github/' \
             --exclude '.wordpress-org/' \
+            --exclude 'SECURITY.md' \
             --exclude 'docs/' \
             --exclude 'tests/' \
             --exclude 'dist/' \
@@ -183,6 +184,9 @@ jobs:
               -x "${PLUGIN_SLUG}/DEV_CHANGELOG.md" \
               -x "${PLUGIN_SLUG}/FEATURES-AND-BENEFITS.md" \
               -x "${PLUGIN_SLUG}/PRODUCTION-BUILD.md" \
+              -x "${PLUGIN_SLUG}/SECURITY.md" \
+              -x "${PLUGIN_SLUG}/composer.json" \
+              -x "${PLUGIN_SLUG}/composer.lock" \
               -x "${PLUGIN_SLUG}/*.zip" \
               -x "${PLUGIN_SLUG}/*.map" \
               -x "*.DS_Store"
@@ -203,7 +207,7 @@ jobs:
           grep -q "${PLUGIN_SLUG}/assets/.*\.min\.css" "${DIST_DIR}/zip-contents.txt"
 
           ! grep -E "${PLUGIN_SLUG}/(\.git|\.github|docs|tests|dist|build|node_modules)/" "${DIST_DIR}/zip-contents.txt"
-          ! grep -E "${PLUGIN_SLUG}/(\.gitignore|\.gitattributes|\.editorconfig|\.phpunit\.result\.cache|phpunit\.xml|phpunit\.xml\.dist|phpcs\.xml|phpcs\.xml\.dist|build-minify\.php|check|fix|zip-excludes?\.txt|README\.md|DEV_CHANGELOG\.md|FEATURES-AND-BENEFITS\.md|PRODUCTION-BUILD\.md)$" "${DIST_DIR}/zip-contents.txt"
+          ! grep -E "${PLUGIN_SLUG}/(\.gitignore|\.gitattributes|\.editorconfig|\.phpunit\.result\.cache|phpunit\.xml|phpunit\.xml\.dist|phpcs\.xml|phpcs\.xml\.dist|build-minify\.php|check|fix|zip-excludes?\.txt|README\.md|DEV_CHANGELOG\.md|FEATURES-AND-BENEFITS\.md|PRODUCTION-BUILD\.md|SECURITY\.md|composer\.json|composer\.lock)$" "${DIST_DIR}/zip-contents.txt"
           ! grep -E "${PLUGIN_SLUG}/vendor/bin/" "${DIST_DIR}/zip-contents.txt"
           ! grep -E "\.DS_Store|\.map$|\.zip$" "${DIST_DIR}/zip-contents.txt"
           test -s "${ZIP_FILE}"
@@ -276,6 +280,7 @@ jobs:
             --exclude '.git/' \
             --exclude '.github/' \
             --exclude '.wordpress-org/' \
+            --exclude 'SECURITY.md' \
             --exclude 'docs/' \
             --exclude 'tests/' \
             --exclude 'dist/' \
@@ -308,7 +313,9 @@ jobs:
           composer install --working-dir="${STAGING}" --no-dev --prefer-dist --no-interaction --optimize-autoloader --classmap-authoritative
 
           rsync -a --delete "${STAGING}/" /tmp/svn-repo/trunk/ \
-            --exclude '.svn/'
+            --exclude '.svn/' \
+            --exclude 'composer.json' \
+            --exclude 'composer.lock'
 
       - name: Stage SVN changes (add new / remove deleted)
         run: |
