@@ -96,6 +96,7 @@ jobs:
           rsync -a --delete ./ "${STAGING_DIR}/" \
             --exclude '.git/' \
             --exclude '.github/' \
+            --exclude '.wordpress-org/' \
             --exclude 'docs/' \
             --exclude 'tests/' \
             --exclude 'dist/' \
@@ -274,6 +275,7 @@ jobs:
           rsync -a --delete ./ "${STAGING}/" \
             --exclude '.git/' \
             --exclude '.github/' \
+            --exclude '.wordpress-org/' \
             --exclude 'docs/' \
             --exclude 'tests/' \
             --exclude 'dist/' \
