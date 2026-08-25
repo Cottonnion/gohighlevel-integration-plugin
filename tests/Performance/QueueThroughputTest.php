@@ -183,11 +183,15 @@ class QueueThroughputTest extends TestCase
         $sm = Mockery::mock(\Syncly\Core\SettingsManager::class);
         $sm->shouldReceive('get_setting')->andReturnUsing(
             function ( $key = null, $default = null ) {
-                return match ( $key ) {
-                    'location_id' => 'loc_bench',
-                    'batch_size'  => 50,
-                    default       => $default,
-                };
+                if ( 'location_id' === $key ) {
+                    return 'loc_bench';
+                }
+
+                if ( 'batch_size' === $key ) {
+                    return 50;
+                }
+
+                return $default;
             }
         )->byDefault();
         $sm->shouldReceive('is_connection_verified')->andReturn(true)->byDefault();
@@ -700,7 +704,12 @@ class QueueThroughputTest extends TestCase
         }
 
         // ── Section 2: Action Scheduler batch cycles ──
-        $as_cycles = array_filter(self::$results, fn( $d ) => ! empty($d['is_as_cycle']));
+        $as_cycles = array_filter(
+            self::$results,
+            static function ( $data ) {
+                return ! empty( $data['is_as_cycle'] );
+            }
+        );
 
         if (! empty($as_cycles) ) {
             fwrite(STDERR, "╠══════════════════════════════════════════════════════════════════════════════════════════╣\n");

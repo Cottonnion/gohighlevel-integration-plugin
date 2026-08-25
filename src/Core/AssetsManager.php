@@ -424,10 +424,11 @@ class AssetsManager {
 			'syncly-tools-js',
 			[ 'toplevel_page_syncly-admin' ],
 			'tools.js',
-			[ 'jquery', 'syncly-sweetalert2' ],
+			[ 'jquery', 'syncly-sweetalert2', 'syncly-select2' ],
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'syncly_admin' ),
+				'tags'    => TagManager::get_instance()->get_tags_for_localization(),
 			],
 			SYNCLY_VERSION,
 			true

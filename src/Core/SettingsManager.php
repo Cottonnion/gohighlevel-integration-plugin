@@ -131,6 +131,8 @@ class SettingsManager {
 		add_action( 'wp_ajax_syncly_save_wizard_settings', [ $this, 'handle_save_wizard_settings' ] );
 		add_action( 'wp_ajax_syncly_bulk_sync_users', [ $this, 'handle_bulk_sync_users' ] );
 		add_action( 'wp_ajax_syncly_bulk_import_from_ghl', [ $this, 'handle_bulk_import_from_ghl' ] );
+		add_action( 'wp_ajax_syncly_count_filtered_users', [ $this, 'handle_count_filtered_users' ] );
+		add_action( 'wp_ajax_syncly_search_ghl_contacts', [ $this, 'handle_search_ghl_contacts' ] );
 
 		// Integrations AJAX handlers (delegated to AjaxHandler).
 		add_action( 'wp_ajax_syncly_save_integrations', [ $this, 'handle_save_integrations' ] );
@@ -1272,6 +1274,24 @@ class SettingsManager {
 	public function handle_bulk_import_from_ghl(): void {
 		// Delegate to AjaxHandler (nonce and permissions checked there)
 		AjaxHandler::bulk_import_from_ghl();
+	}
+
+	/**
+	 * Handle count filtered users AJAX request
+	 *
+	 * @return void
+	 */
+	public function handle_count_filtered_users(): void {
+		AjaxHandler::count_filtered_users();
+	}
+
+	/**
+	 * Handle search GHL contacts AJAX request
+	 *
+	 * @return void
+	 */
+	public function handle_search_ghl_contacts(): void {
+		AjaxHandler::search_ghl_contacts();
 	}
 
 	/**

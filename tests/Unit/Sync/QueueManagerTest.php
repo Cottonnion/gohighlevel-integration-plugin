@@ -629,7 +629,9 @@ class QueueManagerTest extends TestCase
         $this->assertNotEmpty(
             array_filter(
                 $status['warnings'],
-                fn( $w ) => str_contains($w, 'failure')
+                static function ( $warning ) {
+                    return false !== strpos( $warning, 'failure' );
+                }
             )
         );
     }
