@@ -908,12 +908,25 @@ class QueueProcessor {
 			throw new \Exception( 'Gravity Forms note requires an email and note body' );
 		}
 
-		$contact = $contact_resource->find_by_email( $email );
-		if ( empty( $contact['id'] ) ) {
+		// Try the contact cache first (populated by handle_user_register_update
+		// during gf_submission). This avoids GHL's eventually-consistent search API.
+		$contact_id = null;
+		$cached      = $this->contact_cache->get( $email );
+		if ( $cached ) {
+			$contact_id = $cached['id'] ?? null;
+		}
+
+		// Cache miss — fall back to GHL search.
+		if ( empty( $contact_id ) ) {
+			$contact = $contact_resource->find_by_email( $email );
+			$contact_id = $contact['id'] ?? null;
+		}
+
+		if ( empty( $contact_id ) ) {
 			throw new \Exception( 'Contact not found for Gravity Forms note' );
 		}
 
-		return $contact_resource->add_note( (string) $contact['id'], $note );
+		return $contact_resource->add_note( (string) $contact_id, $note );
 	}
 
 	/**
