@@ -4,7 +4,7 @@ Tags: gohighlevel, wpfusion, contact-sync, woocommerce, leadconnector
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.4.31
+Stable tag: 1.4.33
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -61,7 +61,7 @@ GoHighLevel service links: https://www.gohighlevel.com/terms-of-service and http
 
 Syncly OAuth proxy: The plugin uses a Syncly proxy endpoint during OAuth token exchange, token refresh, and reconnect flows so OAuth client credentials are not distributed inside the plugin. The proxy receives OAuth authorization codes, refresh tokens, location/account identifiers, and related token request metadata only when an administrator connects or refreshes the GoHighLevel connection.
 
-Syncly service links: http://synclyforgohighlevel.com/terms-of-service/ and http://synclyforgohighlevel.com/privacy-policy/
+Syncly service links: https://synclyforgohighlevel.com/terms-of-service/ and https://synclyforgohighlevel.com/privacy-policy/
 
 = Debug logging =
 
@@ -90,6 +90,13 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
 == Changelog ==
+
+= 1.4.33 =
+* Updated service URLs to synclyforgohighlevel.com.
+* Fixed release workflow to deploy WordPress.org assets only on manual dispatch.
+
+= 1.4.32 =
+* Fixed Gravity Forms note sometimes failing with "Contact not found" by using the in-memory contact cache instead of hitting GHL's eventually-consistent search API.
 
 = 1.4.31 =
 * Improved sync reliability with atomic OAuth token refresh locking, safe retries for transient API failures, request correlation, and shared token-refresh handling for connection tests.

@@ -1391,11 +1391,48 @@ class Client implements ClientInterface {
 			// clear tokens and force reconnect to avoid loops and stale state.
 			if ( $requires_reconnect || ( isset( $decoded_array['error'] ) && 'invalid_grant' === $decoded_array['error'] ) ) {
 				$this->log_oauth_event( 'Refresh token rejected by provider; clearing stored tokens', $decoded_array );
+				// Check if this is specifically a "Location is not active" error
+				$error_description = '';
+				if ( isset( $decoded_array['data']['response']['error_description'] ) ) {
+					$error_description = $decoded_array['data']['response']['error_description'];
+				} elseif ( isset( $decoded_array['error_description'] ) ) {
+					$error_description = $decoded_array['error_description'];
+				}
+
+				$is_location_inactive = false !== stripos( $error_description, 'location is not active' );
+
+				// Build a helpful error message
+				if ( $is_location_inactive ) {
+					// Get location name if available
+					$settings_manager = \Syncly\Core\SettingsManager::get_instance();
+					$location_name    = $settings_manager->get_setting( 'location_name', '' );
+
+					if ( ! empty( $location_name ) && ! empty( $this->location_id ) ) {
+						$user_message = sprintf(
+							/* translators: 1: Location name, 2: Location ID */
+							__( 'The GoHighLevel location "%1$s" (ID: %2$s) is not active. This location may have been paused, deleted, or deactivated in your GoHighLevel account. Please check your GHL dashboard and reconnect with an active location.', 'syncly' ),
+							esc_html( $location_name ),
+							esc_html( $this->location_id )
+						);
+					} elseif ( ! empty( $this->location_id ) ) {
+						$user_message = sprintf(
+							/* translators: %s: Location ID */
+							__( 'The GoHighLevel location (ID: %s) is not active. This location may have been paused, deleted, or deactivated in your GoHighLevel account. Please check your GHL dashboard and reconnect with an active location.', 'syncly' ),
+							esc_html( $this->location_id )
+						);
+					} else {
+						$user_message = __( 'The GoHighLevel location is not active. This location may have been paused, deleted, or deactivated in your GoHighLevel account. Please check your GHL dashboard and reconnect with an active location.', 'syncly' );
+					}
+				} else {
+					$user_message = __( 'GoHighLevel rejected the refresh token. Please reconnect your account.', 'syncly' );
+				}
+
+				$this->log_oauth_event( 'Refresh token rejected by provider; clearing stored tokens', $decoded_array );
 				$this->clear_oauth_tokens();
-				$this->update_oauth_health( 'reconnect_required', __( 'GoHighLevel rejected the refresh token. Please reconnect your account.', 'syncly' ) );
+				$this->update_oauth_health( 'reconnect_required', $user_message );
 				// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Third argument is machine-readable context, not HTML output.
 				throw new ApiException(
-					esc_html__( 'GoHighLevel rejected the refresh token. Please reconnect your account.', 'syncly' ),
+					$user_message,
 					(int) $status_code
 				);
 			}

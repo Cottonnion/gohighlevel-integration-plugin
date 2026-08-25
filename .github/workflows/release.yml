@@ -24,8 +24,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -65,14 +63,13 @@ jobs:
           find . \
             -path './vendor' -prune -o \
             -path './.git' -prune -o \
-            -path './tests' -prune -o \
             -name '*.php' -print0 \
             | xargs -0 -n1 php -l
 
       - name: Verify external service URLs
         run: |
-          curl --fail --location --silent --show-error -A 'Mozilla/5.0' https://synclyforgohighlevel.com/terms-of-service/ >/dev/null
-          curl --fail --location --silent --show-error -A 'Mozilla/5.0' https://synclyforgohighlevel.com/privacy-policy/ >/dev/null
+          curl --fail --location --silent --show-error --head https://synclyforgohighlevel.com/terms-of-service/ >/dev/null
+          curl --fail --location --silent --show-error --head https://synclyforgohighlevel.com/privacy-policy/ >/dev/null
 
       - name: Check review-flagged patterns
         run: |
@@ -82,8 +79,8 @@ jobs:
           ! grep -RInE "persist_guest_contact\( \$contact_id \);" -- src/Frontend/ContactIdHandler.php
           grep -F "Tested up to: 7.1" readme.txt
           test -d languages
-          grep -F "http://synclyforgohighlevel.com/terms-of-service/" readme.txt
-          grep -F "http://synclyforgohighlevel.com/privacy-policy/" readme.txt
+          grep -F "https://synclyforgohighlevel.com/terms-of-service/" readme.txt
+          grep -F "https://synclyforgohighlevel.com/privacy-policy/" readme.txt
 
       - name: Stage production plugin files
         run: |
@@ -97,7 +94,6 @@ jobs:
           rsync -a --delete ./ "${STAGING_DIR}/" \
             --exclude '.git/' \
             --exclude '.github/' \
-            --exclude '.wordpress-org/' \
             --exclude 'docs/' \
             --exclude 'tests/' \
             --exclude 'dist/' \
@@ -131,9 +127,6 @@ jobs:
           composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader --classmap-authoritative
           test -f vendor/autoload.php
           test ! -d vendor/bin
-          rm -f composer.json composer.lock
-          test ! -e composer.json
-          test ! -e composer.lock
 
       - name: Minify production assets
         run: |
@@ -163,7 +156,6 @@ jobs:
             zip -r "${DIST_DIR}/${{ steps.release_tag.outputs.zip_name }}" "${PLUGIN_SLUG}" \
               -x "${PLUGIN_SLUG}/.git/*" \
               -x "${PLUGIN_SLUG}/.github/*" \
-              -x "${PLUGIN_SLUG}/.wordpress-org/*" \
               -x "${PLUGIN_SLUG}/docs/*" \
               -x "${PLUGIN_SLUG}/tests/*" \
               -x "${PLUGIN_SLUG}/dist/*" \
@@ -171,8 +163,6 @@ jobs:
               -x "${PLUGIN_SLUG}/build/*" \
               -x "${PLUGIN_SLUG}/node_modules/*" \
               -x "${PLUGIN_SLUG}/vendor/bin/*" \
-              -x "${PLUGIN_SLUG}/composer.json" \
-              -x "${PLUGIN_SLUG}/composer.lock" \
               -x "${PLUGIN_SLUG}/.gitignore" \
               -x "${PLUGIN_SLUG}/.gitattributes" \
               -x "${PLUGIN_SLUG}/.editorconfig" \
@@ -210,10 +200,8 @@ jobs:
           grep -q "${PLUGIN_SLUG}/assets/.*\.min\.css" "${DIST_DIR}/zip-contents.txt"
 
           ! grep -E "${PLUGIN_SLUG}/(\.git|\.github|docs|tests|dist|build|node_modules)/" "${DIST_DIR}/zip-contents.txt"
-          ! grep -E "${PLUGIN_SLUG}/\.wordpress-org/" "${DIST_DIR}/zip-contents.txt"
           ! grep -E "${PLUGIN_SLUG}/(\.gitignore|\.gitattributes|\.editorconfig|\.phpunit\.result\.cache|phpunit\.xml|phpunit\.xml\.dist|phpcs\.xml|phpcs\.xml\.dist|build-minify\.php|check|fix|zip-excludes?\.txt|README\.md|DEV_CHANGELOG\.md|FEATURES-AND-BENEFITS\.md|PRODUCTION-BUILD\.md)$" "${DIST_DIR}/zip-contents.txt"
           ! grep -E "${PLUGIN_SLUG}/vendor/bin/" "${DIST_DIR}/zip-contents.txt"
-          ! grep -E "${PLUGIN_SLUG}/composer\.(json|lock)$" "${DIST_DIR}/zip-contents.txt"
           ! grep -E "\.DS_Store|\.map$|\.zip$" "${DIST_DIR}/zip-contents.txt"
           test -s "${ZIP_FILE}"
 
@@ -240,8 +228,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
 
       - name: Resolve release tag
         id: release_tag
@@ -284,7 +270,6 @@ jobs:
           rsync -a --delete ./ "${STAGING}/" \
             --exclude '.git/' \
             --exclude '.github/' \
-            --exclude '.wordpress-org/' \
             --exclude 'docs/' \
             --exclude 'tests/' \
             --exclude 'dist/' \
@@ -315,18 +300,8 @@ jobs:
 
           # Re-install production-only vendor
           composer install --working-dir="${STAGING}" --no-dev --prefer-dist --no-interaction --optimize-autoloader --classmap-authoritative
-          rm -f "${STAGING}/composer.json" "${STAGING}/composer.lock"
-          test ! -e "${STAGING}/composer.json"
-          test ! -e "${STAGING}/composer.lock"
 
           rsync -a --delete "${STAGING}/" /tmp/svn-repo/trunk/ \
-            --exclude '.svn/'
-
-      - name: Sync .wordpress-org assets to SVN assets folder
-        run: |
-          set -euo pipefail
-          mkdir -p /tmp/svn-repo/assets
-          rsync -a --delete .wordpress-org/ /tmp/svn-repo/assets/ \
             --exclude '.svn/'
 
       - name: Stage SVN changes (add new / remove deleted)
