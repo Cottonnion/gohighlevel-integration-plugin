@@ -61,7 +61,7 @@ GoHighLevel service links: https://www.gohighlevel.com/terms-of-service and http
 
 Syncly OAuth proxy: The plugin uses a Syncly proxy endpoint during OAuth token exchange, token refresh, and reconnect flows so OAuth client credentials are not distributed inside the plugin. The proxy receives OAuth authorization codes, refresh tokens, location/account identifiers, and related token request metadata only when an administrator connects or refreshes the GoHighLevel connection.
 
-Syncly service links: http://synclyforgohighlevel.com/terms-of-service/ and http://synclyforgohighlevel.com/privacy-policy/
+Syncly service links: https://synclyforgohighlevel.com/terms-of-service/ and https://synclyforgohighlevel.com/privacy-policy/
 
 = Debug logging =
 
