@@ -22,21 +22,6 @@ jobs:
       DIST_DIR: ${{ github.workspace }}/dist
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '7.4'
-          tools: composer:v2
-          coverage: none
-
-      - name: Setup Node.js for asset minification
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
       - name: Resolve release tag
         id: release_tag
         run: |
@@ -54,6 +39,23 @@ jobs:
 
           echo "tag=${RELEASE_TAG}" >> "${GITHUB_OUTPUT}"
           echo "zip_name=${PLUGIN_SLUG}-${RELEASE_TAG}.zip" >> "${GITHUB_OUTPUT}"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.release_tag.outputs.tag }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node.js for asset minification
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
       - name: Validate Composer metadata
         run: composer validate --strict --no-check-publish
@@ -226,9 +228,6 @@ jobs:
       SVN_URL: https://plugins.svn.wordpress.org/syncly
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Resolve release tag
         id: release_tag
         run: |
@@ -240,6 +239,11 @@ jobs:
           fi
           echo "tag=${RELEASE_TAG}" >> "${GITHUB_OUTPUT}"
           echo "version=${RELEASE_TAG#v}" >> "${GITHUB_OUTPUT}"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.release_tag.outputs.tag }}
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
