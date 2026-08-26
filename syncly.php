@@ -29,7 +29,7 @@ if ( ! defined( 'SYNCLY_PLUGIN_NAME' ) ) {
 }
 
 if ( ! defined( 'SYNCLY_VERSION' ) ) {
-	define( 'SYNCLY_VERSION', '1.4.32' );
+	define( 'SYNCLY_VERSION', '1.4.34' );
 }
 
 if ( ! defined( 'SYNCLY_PATH' ) ) {

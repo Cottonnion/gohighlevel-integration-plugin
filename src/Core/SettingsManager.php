@@ -461,9 +461,23 @@ class SettingsManager {
 		}
 
 		try {
-			// Get OAuth authorization URL
 			$oauth_handler = new \Syncly\API\OAuth\OAuthHandler();
-			$auth_url      = $oauth_handler->get_authorization_url();
+
+			// Try silent reconnect first (uses existing token via proxy reconnect endpoint).
+			$result = $oauth_handler->silent_reconnect();
+
+			if ( true === $result ) {
+				wp_send_json_success(
+					[
+						'message'    => __( 'Account reconnected successfully.', 'syncly' ),
+						'reconnected' => true,
+					]
+				);
+				return;
+			}
+
+			// Silent reconnect failed — fall back to full OAuth redirect.
+			$auth_url = $oauth_handler->get_authorization_url();
 
 			wp_send_json_success(
 				[

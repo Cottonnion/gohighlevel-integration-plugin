@@ -2,6 +2,22 @@
 
 All notable changes to Syncly will be documented in this file.
 
+## [1.4.34] - 2026-08-26
+
+### Fixed
+
+- Fixed OAuth proxy domain references from labgenz.com to synclyforgohighlevel.com in Client.php (proxy URL, redirect URI, and all docblock comments).
+- Fixed token refresh to send form-encoded data instead of JSON, matching what the proxy's `/refresh-token` endpoint expects.
+
+### Added
+
+- Added silent reconnect: "Reconnect Account" button now attempts a proxy token refresh before redirecting to GHL. Users with valid tokens get a fresh 24h token instantly without leaving WordPress.
+- Rewrote README.md to be plugin-focused with current integrations (Gravity Forms, Contact Form 7, Elementor), OAuth2 security architecture documentation, and future AWS Lambda plans.
+
+### Changed
+
+- Updated all admin menu references from "GHL CRM" to "Syncly".
+
 ## [1.4.31] - 2026-08-23
 
 ### Added
