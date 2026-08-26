@@ -444,6 +444,95 @@ class OAuthHandler {
 	}
 
 	/**
+	 * Attempt silent reconnection — no user interaction required.
+	 *
+	 * 1. If the access token is still valid, confirms the connection is healthy.
+	 * 2. If the token is expired, tries a proxy refresh (form-encoded, uses client_secret).
+	 * 3. If refresh fails, tries the proxy reconnect endpoint (gets fresh auth code).
+	 * 4. If everything fails, returns WP_Error so the caller can redirect to GHL.
+	 *
+	 * @return true|WP_Error True on success, WP_Error on failure.
+	 */
+	public function silent_reconnect() {
+		$settings    = $this->settings_manager->get_settings_array();
+		$location_id = $settings['location_id'] ?? '';
+		$expires     = isset( $settings['oauth_expires_at'] ) ? (int) $settings['oauth_expires_at'] : 0;
+		$has_token   = ! empty( $settings['oauth_refresh_token'] ) || ! empty( $settings['oauth_access_token'] );
+
+		if ( empty( $location_id ) || ! $has_token ) {
+			return new \WP_Error(
+				'insufficient_data',
+				__( 'No existing token or location ID available for silent reconnect.', 'syncly' )
+			);
+		}
+
+		// Always try proxy refresh to get a fresh token (even if current one is still valid).
+		$refresh_token = $settings['oauth_refresh_token'] ?? '';
+		if ( ! empty( $refresh_token ) ) {
+			$refresh_result = $this->try_proxy_refresh( $refresh_token );
+			if ( true === $refresh_result ) {
+				return true;
+			}
+		}
+
+		// Refresh failed — try proxy reconnect endpoint (gets fresh auth code).
+		try {
+			$auth_code = $this->client->reconnect_api();
+			$redirect_uri   = rest_url( 'ghl/v1/callback' );
+			$token_response = $this->client->exchange_code_for_token( $auth_code, $redirect_uri );
+			$this->save_oauth_credentials( $token_response, $location_id );
+			return true;
+		} catch ( \Exception $e ) {
+			return new \WP_Error(
+				'silent_reconnect_failed',
+				$e->getMessage()
+			);
+		}
+	}
+
+	/**
+	 * Attempt a token refresh directly through the proxy (form-encoded request).
+	 *
+	 * @param string $refresh_token The current refresh token.
+	 * @return true|WP_Error True on success, WP_Error on failure.
+	 */
+	private function try_proxy_refresh( string $refresh_token ) {
+		$proxy_url = 'https://synclyforgohighlevel.com/wp-json/ghl-proxy/v1/refresh-token';
+
+		$response = wp_remote_post(
+			$proxy_url,
+			[
+				'body'    => [
+					'refresh_token' => $refresh_token,
+				],
+				'headers' => [
+					'Content-Type' => 'application/x-www-form-urlencoded',
+				],
+				'timeout' => 15,
+			]
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return new \WP_Error( 'refresh_network_error', $response->get_error_message() );
+		}
+
+		$status     = wp_remote_retrieve_response_code( $response );
+		$body       = json_decode( wp_remote_retrieve_body( $response ), true );
+
+		if ( 200 !== $status || empty( $body['access_token'] ) ) {
+			$message = $body['message'] ?? $body['error'] ?? 'Refresh failed';
+			return new \WP_Error( 'refresh_failed', $message );
+		}
+
+		// Save the refreshed tokens.
+		$settings    = $this->settings_manager->get_settings_array();
+		$location_id = $settings['location_id'] ?? '';
+		$this->save_oauth_credentials( $body, $location_id );
+
+		return true;
+	}
+
+	/**
 	 * Check if OAuth is connected and valid
 	 *
 	 * @return bool

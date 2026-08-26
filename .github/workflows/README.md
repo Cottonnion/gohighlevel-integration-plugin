@@ -26,7 +26,7 @@ Daily work
 **Triggers:** Every pull request to `develop` or `main`
 
 **What it does:**
-- Sets up PHP 8.1
+- Sets up PHP 7.4 through 8.4 (7.4, 8.0, 8.1, 8.2, 8.3, 8.4)
 - Installs Composer dependencies (cached for speed)
 - Runs the full PHPUnit test suite with 512MB memory limit
 

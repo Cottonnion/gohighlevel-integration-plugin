@@ -104,7 +104,7 @@ class SecurityTest extends TestCase
 
         $this->assertSame('code', $query['response_type']);
         $this->assertSame('state-token', $query['state']);
-        $this->assertSame('https://labgenz.com/wp-json/ghl/v1/callback', $query['redirect_uri']);
+        $this->assertSame('https://synclyforgohighlevel.com/wp-json/ghl/v1/callback', $query['redirect_uri']);
         $this->assertStringContainsString('contacts.write', $query['scope']);
         $this->assertStringContainsString('objects/record.write', $query['scope']);
     }

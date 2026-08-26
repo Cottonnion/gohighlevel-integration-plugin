@@ -227,6 +227,9 @@
           },
           loadingText: "Reconnecting...",
           successMessage: function (response) {
+            if (response?.data?.reconnected) {
+              return response?.data?.message || "Account reconnected successfully.";
+            }
             return (
               response?.data?.message || "Redirecting to reconnect your account..."
             );
@@ -237,6 +240,12 @@
             );
           },
           onSuccess: function (response) {
+            // Silent reconnect succeeded — reload to refresh connection status UI.
+            if (response?.data?.reconnected) {
+              window.location.reload();
+              return;
+            }
+            // Fallback: redirect to GHL for full re-authorization.
             const redirectUrl = response?.data?.redirect_url;
             if (redirectUrl) {
               window.location.href = redirectUrl;

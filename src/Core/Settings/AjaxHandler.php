@@ -748,36 +748,84 @@ class AjaxHandler {
 		}
 
 		try {
-			$batch     = isset( $_POST['batch'] ) ? absint( $_POST['batch'] ) : 0;
+			$batch       = isset( $_POST['batch'] ) ? absint( $_POST['batch'] ) : 0;
+			$role        = isset( $_POST['role'] ) ? sanitize_text_field( wp_unslash( $_POST['role'] ) ) : '';
+			$sync_status = isset( $_POST['sync_status'] ) ? sanitize_text_field( wp_unslash( $_POST['sync_status'] ) ) : 'all';
+			$meta_key    = isset( $_POST['meta_key'] ) ? sanitize_text_field( wp_unslash( $_POST['meta_key'] ) ) : '';
+			$meta_value  = isset( $_POST['meta_value'] ) ? sanitize_text_field( wp_unslash( $_POST['meta_value'] ) ) : '';
+
 			$per_batch = 50; // Process 50 users per batch
 			$offset    = $batch * $per_batch;
 
+			$user_args = [
+				'number'  => $per_batch,
+				'offset'  => $offset,
+				'orderby' => 'ID',
+				'order'   => 'ASC',
+				'fields'  => [ 'ID', 'user_email' ],
+			];
+
+			if ( ! empty( $role ) ) {
+				$user_args['role'] = $role;
+			}
+
+			$tag_mgr          = \Syncly\Sync\TagManager::get_instance();
+			$contact_meta_key = $tag_mgr->get_user_contact_id_meta_key();
+
+			$meta_query = [];
+
+			if ( 'unsynced_only' === $sync_status ) {
+				$meta_query[] = [
+					'key'     => $contact_meta_key,
+					'compare' => 'NOT EXISTS',
+				];
+			} elseif ( 'synced_only' === $sync_status ) {
+				$meta_query[] = [
+					'key'     => $contact_meta_key,
+					'compare' => 'EXISTS',
+				];
+			}
+
+			if ( ! empty( $meta_key ) ) {
+				$single_meta_query = [ 'key' => $meta_key ];
+				if ( '' !== $meta_value ) {
+					$single_meta_query['value']   = $meta_value;
+					$single_meta_query['compare'] = '=';
+				} else {
+					$single_meta_query['compare'] = 'EXISTS';
+				}
+				$meta_query[] = $single_meta_query;
+			}
+
+			if ( ! empty( $meta_query ) ) {
+				if ( count( $meta_query ) > 1 ) {
+					$meta_query['relation'] = 'AND';
+				}
+				$user_args['meta_query'] = $meta_query;
+			}
+
 			// Get total user count on first batch
 			if ( 0 === $batch ) {
-				$total_users = count_users();
-				$total       = $total_users['total_users'];
+				$count_args                = $user_args;
+				$count_args['count_total'] = true;
+				unset( $count_args['number'], $count_args['offset'], $count_args['fields'] );
+				$user_query                = new \WP_User_Query( $count_args );
+				$total                     = (int) $user_query->get_total();
 
-				// Store total in transient for progress tracking
 				set_transient( 'syncly_bulk_sync_total', $total, HOUR_IN_SECONDS );
 			} else {
 				$total = get_transient( 'syncly_bulk_sync_total' );
 				if ( false === $total ) {
-					// Transient expired, recalculate
-					$total_users = count_users();
-					$total       = $total_users['total_users'];
+					$count_args                = $user_args;
+					$count_args['count_total'] = true;
+					unset( $count_args['number'], $count_args['offset'], $count_args['fields'] );
+					$user_query                = new \WP_User_Query( $count_args );
+					$total                     = (int) $user_query->get_total();
 				}
 			}
 
 			// Get users for this batch
-			$users = get_users(
-				[
-					'number'  => $per_batch,
-					'offset'  => $offset,
-					'orderby' => 'ID',
-					'order'   => 'ASC',
-					'fields'  => [ 'ID', 'user_email' ],
-				]
-			);
+			$users = get_users( $user_args );
 
 			$queued = 0;
 			$failed = 0;
@@ -837,6 +885,122 @@ class AjaxHandler {
 				],
 				500
 			);
+		}
+	}
+
+	/**
+	 * Count matching users for WP -> GHL sync filters (live count)
+	 *
+	 * @return void
+	 */
+	public static function count_filtered_users(): void {
+		self::verify_admin_nonce();
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'syncly' ) ], 403 );
+		}
+
+		$role        = isset( $_POST['role'] ) ? sanitize_text_field( wp_unslash( $_POST['role'] ) ) : '';
+		$sync_status = isset( $_POST['sync_status'] ) ? sanitize_text_field( wp_unslash( $_POST['sync_status'] ) ) : 'all';
+		$meta_key    = isset( $_POST['meta_key'] ) ? sanitize_text_field( wp_unslash( $_POST['meta_key'] ) ) : '';
+		$meta_value  = isset( $_POST['meta_value'] ) ? sanitize_text_field( wp_unslash( $_POST['meta_value'] ) ) : '';
+
+		$count_args = [
+			'count_total' => true,
+		];
+
+		if ( ! empty( $role ) ) {
+			$count_args['role'] = $role;
+		}
+
+		$tag_mgr          = \Syncly\Sync\TagManager::get_instance();
+		$contact_meta_key = $tag_mgr->get_user_contact_id_meta_key();
+
+		$meta_query = [];
+
+		if ( 'unsynced_only' === $sync_status ) {
+			$meta_query[] = [
+				'key'     => $contact_meta_key,
+				'compare' => 'NOT EXISTS',
+			];
+		} elseif ( 'synced_only' === $sync_status ) {
+			$meta_query[] = [
+				'key'     => $contact_meta_key,
+				'compare' => 'EXISTS',
+			];
+		}
+
+		if ( ! empty( $meta_key ) ) {
+			$single_meta_query = [ 'key' => $meta_key ];
+			if ( '' !== $meta_value ) {
+				$single_meta_query['value']   = $meta_value;
+				$single_meta_query['compare'] = '=';
+			} else {
+				$single_meta_query['compare'] = 'EXISTS';
+			}
+			$meta_query[] = $single_meta_query;
+		}
+
+		if ( ! empty( $meta_query ) ) {
+			if ( count( $meta_query ) > 1 ) {
+				$meta_query['relation'] = 'AND';
+			}
+			$count_args['meta_query'] = $meta_query;
+		}
+
+		$user_query  = new \WP_User_Query( $count_args );
+		$total_users = (int) $user_query->get_total();
+
+		wp_send_json_success( [ 'total_users' => $total_users ] );
+	}
+
+	/**
+	 * Search GHL contacts live for GHL -> WP import filters
+	 *
+	 * @return void
+	 */
+	public static function search_ghl_contacts(): void {
+		self::verify_admin_nonce();
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'syncly' ) ], 403 );
+		}
+
+		$query = isset( $_POST['query'] ) ? sanitize_text_field( wp_unslash( $_POST['query'] ) ) : '';
+
+		if ( empty( $query ) ) {
+			wp_send_json_success( [ 'total' => 0, 'contacts' => [] ] );
+		}
+
+		try {
+			$client           = \Syncly\API\Client\Client::get_instance();
+			$contact_resource = new \Syncly\API\Resources\ContactResource( $client );
+			$response         = $contact_resource->list_contacts( 5, null, $query );
+
+			$contacts       = $response['contacts'] ?? [];
+			$meta           = $response['meta'] ?? [];
+			$total_contacts = (int) ( $meta['total'] ?? count( $contacts ) );
+
+			$preview = array_map(
+				static function ( array $c ): array {
+					return [
+						'id'    => $c['id'] ?? '',
+						'name'  => trim( ( $c['firstName'] ?? '' ) . ' ' . ( $c['lastName'] ?? '' ) ),
+						'email' => $c['email'] ?? '',
+						'phone' => $c['phone'] ?? '',
+					];
+				},
+				$contacts
+			);
+
+			wp_send_json_success(
+				[
+					'total'    => $total_contacts,
+					'contacts' => $preview,
+				]
+			);
+		} catch ( \Exception $e ) {
+			wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
 		}
 	}
 
@@ -911,13 +1075,16 @@ class AjaxHandler {
 		}
 
 		try {
-			$cursor = isset( $_POST['cursor'] ) ? sanitize_text_field( wp_unslash( $_POST['cursor'] ) ) : '';
-			$query  = isset( $_POST['query'] ) ? sanitize_text_field( wp_unslash( $_POST['query'] ) ) : '';
-			$page   = isset( $_POST['page'] ) ? absint( $_POST['page'] ) : 1;
+			$cursor      = isset( $_POST['cursor'] ) ? sanitize_text_field( wp_unslash( $_POST['cursor'] ) ) : '';
+			$query       = isset( $_POST['query'] ) ? sanitize_text_field( wp_unslash( $_POST['query'] ) ) : '';
+			$tag_filter  = isset( $_POST['tag_filter'] ) ? sanitize_text_field( wp_unslash( $_POST['tag_filter'] ) ) : '';
+			$mode_filter = isset( $_POST['mode_filter'] ) ? sanitize_text_field( wp_unslash( $_POST['mode_filter'] ) ) : 'all';
+			$page        = isset( $_POST['page'] ) ? absint( $_POST['page'] ) : 1;
 
 			// Empty string → null for the sync class
-			$cursor = ! empty( $cursor ) ? $cursor : null;
-			$query  = ! empty( $query ) ? $query : null;
+			$cursor     = ! empty( $cursor ) ? $cursor : null;
+			$query      = ! empty( $query ) ? $query : null;
+			$tag_filter = ! empty( $tag_filter ) ? $tag_filter : null;
 
 			// Calculate running total from previous pages
 			$progress        = \Syncly\Sync\BulkImportSync::get_progress();
@@ -937,7 +1104,7 @@ class AjaxHandler {
 			}
 
 			$importer = \Syncly\Sync\BulkImportSync::get_instance();
-			$result   = $importer->process_page( $cursor, $query, $total_processed, $processed_ids );
+			$result   = $importer->process_page( $cursor, $query, $total_processed, $processed_ids, $tag_filter, $mode_filter );
 
 			// Accumulate totals via transient
 			if ( false === $progress || 1 === $page ) {
@@ -959,11 +1126,13 @@ class AjaxHandler {
 				$progress['total_contacts'] = $result['total_contacts'];
 			}
 
-			$progress['total_created']           += $result['created'];
-			$progress['total_updated']           += $result['updated'];
-			$progress['total_skipped_no_email']  += $result['skipped_no_email'];
-			$progress['total_skipped_duplicate'] += $result['skipped_duplicate'];
-			$progress['total_failed']            += $result['failed'];
+			$progress['total_created']              += $result['created'];
+			$progress['total_updated']              += $result['updated'];
+			$progress['total_skipped_no_email']     += $result['skipped_no_email'];
+			$progress['total_skipped_duplicate']    += $result['skipped_duplicate'];
+			$progress['total_skipped_tag_filter']   = ( $progress['total_skipped_tag_filter'] ?? 0 ) + $result['skipped_tag_filter'];
+			$progress['total_skipped_mode_filter']  = ( $progress['total_skipped_mode_filter'] ?? 0 ) + $result['skipped_mode_filter'];
+			$progress['total_failed']               += $result['failed'];
 
 			// Merge newly processed IDs for deduplication across pages
 			$progress['processed_ids'] = array_merge(
@@ -996,11 +1165,13 @@ class AjaxHandler {
 					'next_cursor'             => $result['next_cursor'],
 					'next_page'               => $page + 1,
 					'errors'                  => array_slice( $result['errors'], 0, 5 ),
-					'total_created'           => $progress['total_created'],
-					'total_updated'           => $progress['total_updated'],
-					'total_skipped_no_email'  => $progress['total_skipped_no_email'],
-					'total_skipped_duplicate' => $progress['total_skipped_duplicate'],
-					'total_failed'            => $progress['total_failed'],
+					'total_created'              => $progress['total_created'],
+					'total_updated'              => $progress['total_updated'],
+					'total_skipped_no_email'     => $progress['total_skipped_no_email'],
+					'total_skipped_duplicate'    => $progress['total_skipped_duplicate'],
+					'total_skipped_tag_filter'   => $progress['total_skipped_tag_filter'],
+					'total_skipped_mode_filter'  => $progress['total_skipped_mode_filter'],
+					'total_failed'               => $progress['total_failed'],
 					'total_contacts'          => $progress['total_contacts'] ?? 0,
 					'total_processed'         => $grand_total,
 					'pages_complete'          => $progress['pages'],
