@@ -91,6 +91,14 @@ Yes. Action Scheduler is included through Composer dependencies for background q
 
 == Changelog ==
 
+= 1.4.34 =
+* Added advanced bulk sync to GHL with filters: user role, sync status, and user meta key/value.
+* Added advanced bulk import from GHL with filters: search query (name, email, phone), GHL tag filter, and import mode (all, new only, existing only).
+* Added silent reconnect: "Reconnect Account" button now attempts a proxy token refresh before redirecting to GoHighLevel.
+* Fixed OAuth proxy domain references from labgenz.com to synclyforgohighlevel.com.
+* Fixed token refresh to send form-encoded data matching the proxy endpoint expectations.
+* Updated admin menu references from "GHL CRM" to "Syncly".
+
 = 1.4.32 =
 * Fixed Gravity Forms note sometimes failing with "Contact not found" by using the in-memory contact cache instead of hitting GHL's eventually-consistent search API.
 

@@ -4,15 +4,19 @@ All notable changes to Syncly will be documented in this file.
 
 ## [1.4.34] - 2026-08-26
 
+### Added
+
+- Added advanced bulk sync to GHL with filters: user role, sync status, and user meta key/value.
+- Added advanced bulk import from GHL with filters: search query (name, email, phone), GHL tag filter, and import mode (all, new only, existing only).
+- Added live user count preview when filtering bulk sync users.
+- Added live contact preview when filtering bulk import contacts.
+- Added silent reconnect: "Reconnect Account" button now attempts a proxy token refresh before redirecting to GHL. Users with valid tokens get a fresh 24h token instantly without leaving WordPress.
+
 ### Fixed
 
 - Fixed OAuth proxy domain references from labgenz.com to synclyforgohighlevel.com in Client.php (proxy URL, redirect URI, and all docblock comments).
 - Fixed token refresh to send form-encoded data instead of JSON, matching what the proxy's `/refresh-token` endpoint expects.
-
-### Added
-
-- Added silent reconnect: "Reconnect Account" button now attempts a proxy token refresh before redirecting to GHL. Users with valid tokens get a fresh 24h token instantly without leaving WordPress.
-- Rewrote README.md to be plugin-focused with current integrations (Gravity Forms, Contact Form 7, Elementor), OAuth2 security architecture documentation, and future AWS Lambda plans.
+- Fixed plugin header Version tag to match SVN release tag.
 
 ### Changed
 
