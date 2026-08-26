@@ -18,6 +18,22 @@ All notable changes to Syncly will be documented in this file.
 
 - Updated all admin menu references from "GHL CRM" to "Syncly".
 
+## [1.4.33] - 2026-08-24
+
+### Updated
+
+- Updated service URLs to synclyforgohighlevel.com.
+
+### Fixed
+
+- Fixed release workflow to deploy WordPress.org assets only on manual dispatch.
+
+## [1.4.32] - 2026-08-24
+
+### Fixed
+
+- Fixed Gravity Forms note sometimes failing with "Contact not found" by using the in-memory contact cache instead of hitting GHL's eventually-consistent search API.
+
 ## [1.4.31] - 2026-08-23
 
 ### Added
