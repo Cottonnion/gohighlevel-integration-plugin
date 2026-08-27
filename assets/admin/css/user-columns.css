@@ -1,0 +1,36 @@
+.column-ghl_contact_id {
+	width: 120px;
+}
+
+.column-ghl_sync_status {
+	width: 140px;
+}
+
+.ghl-contact-link {
+	text-decoration: none;
+}
+
+.ghl-contact-link:hover code {
+	color: #0073aa;
+}
+
+.ghl-sync-status {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 12px;
+}
+
+.ghl-sync-status .dashicons {
+	width: 16px;
+	height: 16px;
+	font-size: 16px;
+}
+
+.ghl-column-empty {
+	color: #a0a5aa;
+}
+
+#syncly-ghl-tags-filter {
+	vertical-align: top;
+}

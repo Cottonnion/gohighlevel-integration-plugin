@@ -41,17 +41,17 @@
 
 .ghl-form-loading p {
 	margin: 15px 0 0 0;
-	color: #666;
-	font-size: 14px;
+	color: var(--ghl-text-secondary);
+	font-size: var(--ghl-font-size-base);
 }
 
 /* Spinner Animation */
 .ghl-form-spinner {
 	width: 40px;
 	height: 40px;
-	border: 4px solid #f3f3f3;
-	border-top: 4px solid #3498db;
-	border-radius: 50%;
+	border: 4px solid var(--ghl-bg-tertiary);
+	border-top: 4px solid var(--ghl-info);
+	border-radius: var(--ghl-radius-full);
 	animation: ghl-spin 1s linear infinite;
 }
 
@@ -64,10 +64,10 @@
 .ghl-form-error {
 	padding: 20px;
 	margin: 20px 0;
-	background: #fee;
-	border: 1px solid #c33;
-	border-radius: 4px;
-	color: #c33;
+	background: var(--ghl-error-light);
+	border: 1px solid var(--ghl-error-dark);
+	border-radius: var(--ghl-radius-sm);
+	color: var(--ghl-error-dark);
 }
 
 .ghl-form-error strong {
@@ -107,6 +107,6 @@
 	}
 	
 	.ghl-form-loading p {
-		font-size: 13px;
+		font-size: var(--ghl-font-size-sm);
 	}
 }

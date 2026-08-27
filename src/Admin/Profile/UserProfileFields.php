@@ -355,7 +355,7 @@ class UserProfileFields {
 		}
 
 		// Get GHL data
-		$location_id = $this->settings_manager->get_setting( 'location_id' ) ?: $this->settings_manager->get_setting( 'oauth_location_id' );
+		$location_id = $this->settings_manager->get_active_location_id();
 		$contact_id  = $this->resolve_contact_id_for_display( $user->ID, $location_id );
 
 		// Only show sync timestamps when the user actually has a contact on this location.
@@ -364,14 +364,6 @@ class UserProfileFields {
 		$tag_manager     = $this->get_tag_manager();
 		$current_tag_ids = $contact_id ? $tag_manager->get_user_tag_ids( $user->ID ) : [];
 		$current_tag_map = $contact_id ? $tag_manager->map_ids_to_names( $current_tag_ids ) : [];
-
-		// Get settings
-		$settings           = $this->settings_manager->get_settings_array();
-		$location_id        = $settings['location_id'] ?? '';
-		$white_label_domain = $settings['ghl_white_label_domain'] ?? '';
-
-		// Determine base domain (white label or default)
-		$base_domain = ! empty( $white_label_domain ) ? rtrim( $white_label_domain, '/' ) : 'https://app.leadconnectorhq.com';
 
 		// Determine sync status
 		$is_synced = ! empty( $contact_id );
@@ -408,7 +400,7 @@ class UserProfileFields {
 					<label><?php esc_html_e( 'GHL Contact ID', 'syncly' ); ?></label>
 					<div class="value <?php echo empty( $contact_id ) ? 'empty' : ''; ?>">
 						<?php if ( ! empty( $contact_id ) && ! empty( $location_id ) ) : ?>
-							<a href="<?php echo esc_url( sprintf( 'https://app.leadconnectorhq.com/v2/location/%s/contacts/detail/%s', $location_id, $contact_id ) ); ?>" 
+							<a href="<?php echo esc_url( $this->settings_manager->get_ghl_contact_url( $contact_id ) ); ?>" 
 								target="_blank" 
 								rel="noopener noreferrer">
 								<?php echo esc_html( $contact_id ); ?>
@@ -504,7 +496,7 @@ class UserProfileFields {
 					<button 
 						type="button"
 						class="ghl-button ghl-button-secondary ghl-view-in-ghl-btn"
-						onclick="window.open('<?php echo esc_url( sprintf( '%s/v2/location/%s/contacts/detail/%s', $base_domain, $location_id, $contact_id ) ); ?>', '_blank', 'noopener,noreferrer')">
+						onclick="window.open('<?php echo esc_url( $this->settings_manager->get_ghl_contact_url( $contact_id ) ); ?>', '_blank', 'noopener,noreferrer')">
 						<span class="dashicons dashicons-external"></span>
 						<?php esc_html_e( 'View in GoHighLevel', 'syncly' ); ?>
 					</button>

@@ -21,14 +21,14 @@ $has_analytics = $is_pro_active && has_action( 'syncly_render_analytics_tab' );
 <div class="syncly-dashboard">
 	<?php if ( $is_connected ) : ?>
 		<!-- Tab Navigation -->
-		<div class="ghl-dashboard-tabs" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px 12px 0 0; padding: 0; margin-bottom: -1px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);">
-			<div style="display: flex; gap: 8px; padding: 16px 24px; border-bottom: 1px solid #e2e8f0;">
-				<button class="ghl-dashboard-tab active" data-tab="reports" style="padding: 10px 20px; border: none; background: #6366f1; color: white; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s;">
-					<span class="dashicons dashicons-dashboard" style="vertical-align: middle; margin-right: 6px;"></span>
+		<div class="ghl-dashboard-tabs">
+			<div class="ghl-dashboard-tabs-bar">
+				<button class="ghl-dashboard-tab active" data-tab="reports">
+					<span class="dashicons dashicons-dashboard"></span>
 					<?php esc_html_e( 'Dashboard', 'syncly' ); ?>
 				</button>
-				<button class="ghl-dashboard-tab" data-tab="analytics" style="padding: 10px 20px; border: none; background: transparent; color: #64748b; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s;">
-					<span class="dashicons dashicons-chart-area" style="vertical-align: middle; margin-right: 6px;"></span>
+				<button class="ghl-dashboard-tab" data-tab="analytics">
+					<span class="dashicons dashicons-chart-area"></span>
 					<?php esc_html_e( 'Analytics', 'syncly' ); ?>
 				</button>
 			</div>
@@ -42,7 +42,7 @@ $has_analytics = $is_pro_active && has_action( 'syncly_render_analytics_tab' );
 			</div>
 			
 			<!-- Analytics Tab -->
-			<div id="ghl-tab-analytics" class="ghl-tab-content" style="display: none;">
+			<div id="ghl-tab-analytics" class="ghl-tab-content">
 				<?php if ( $has_analytics ) : ?>
 					<?php do_action( 'syncly_render_analytics_tab' ); ?>
 				<?php else : ?>
@@ -55,7 +55,7 @@ $has_analytics = $is_pro_active && has_action( 'syncly_render_analytics_tab' );
 		<!-- Not Connected - Show Connection Setup -->
 		<div class="ghl-card">
 			<h2><?php esc_html_e( 'Connect to GoHighLevel', 'syncly' ); ?></h2>
-			<p class="description" style="margin-bottom: 20px;">
+			<p class="description">
 				<?php esc_html_e( 'Choose your preferred connection method to get started. Both methods are secure and fully supported.', 'syncly' ); ?>
 			</p>
 			

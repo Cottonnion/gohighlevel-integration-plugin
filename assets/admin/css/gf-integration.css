@@ -15,7 +15,7 @@
 .syncly-gf-panel .syncly-section {
 	margin-bottom: 30px;
 	padding-bottom: 20px;
-	border-bottom: 1px solid #ddd;
+	border-bottom: 1px solid var(--ghl-border-primary);
 }
 
 .syncly-gf-panel .syncly-section:last-child {
@@ -25,8 +25,8 @@
 .syncly-gf-panel .syncly-section h3 {
 	margin-top: 0;
 	margin-bottom: 10px;
-	font-size: 14px;
-	font-weight: 600;
+	font-size: var(--ghl-font-size-base);
+	font-weight: var(--ghl-font-weight-semibold);
 }
 
 /* Field mapping table */
@@ -35,25 +35,25 @@
 }
 
 .syncly-gf-panel .syncly-field-mapping th {
-	font-weight: 600;
-	background: #f9f9f9;
+	font-weight: var(--ghl-font-weight-semibold);
+	background: var(--ghl-bg-secondary);
 }
 
 .syncly-gf-panel .syncly-field-mapping td {
-	padding: 12px 10px;
+	padding: var(--ghl-spacing-md) 10px;
 }
 
 .syncly-gf-panel .syncly-field-mapping tbody tr:hover {
-	background-color: #f9f9f9;
+	background-color: var(--ghl-bg-secondary);
 }
 
 .syncly-gf-panel .syncly-field-mapping select:focus {
-	border-color: #0073aa;
-	box-shadow: 0 0 0 1px #0073aa;
+	border-color: var(--ghl-info-dark);
+	box-shadow: 0 0 0 1px var(--ghl-info-dark);
 }
 
 .syncly-gf-panel .field-type {
-	color: #666;
+	color: var(--ghl-text-secondary);
 	font-size: 0.9em;
 	font-style: italic;
 }
@@ -63,30 +63,70 @@
 	max-width: 300px;
 }
 
+/* GHL field mapping dropdowns (Select2) - branded to match ghl-select */
+.syncly-gf-panel .ghl-field-select + .select2-container {
+	width: 100% !important;
+	max-width: 300px;
+}
+
+.syncly-gf-panel .select2-container--default .select2-selection--single {
+	min-height: 40px;
+	padding: 4px 0;
+	border: 1px solid var(--ghl-border-primary);
+	border-radius: var(--ghl-radius-base);
+	background-color: var(--ghl-bg-primary);
+	box-shadow: var(--ghl-shadow-xs);
+}
+
+.syncly-gf-panel .select2-container--default .select2-selection--single:hover {
+	border-color: var(--ghl-border-secondary);
+}
+
+.syncly-gf-panel .select2-container--default.select2-container--focus .select2-selection--single {
+	border-color: var(--ghl-border-focus);
+	box-shadow: var(--ghl-shadow-focus);
+}
+
+.syncly-gf-panel .select2-container--default .select2-selection--single .select2-selection__rendered {
+	line-height: 28px;
+	padding-left: 12px;
+	color: var(--ghl-text-primary);
+}
+
+.syncly-gf-panel .select2-container--default .select2-selection--single .select2-selection__arrow {
+	height: 38px;
+}
+
+.syncly-gf-panel .select2-dropdown {
+	border-color: var(--ghl-border-primary);
+	border-radius: var(--ghl-radius-base);
+	box-shadow: var(--ghl-shadow-md);
+}
+
 /* Connection status notices */
 .syncly-gf-panel .syncly-status {
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: var(--ghl-spacing-sm);
 	padding: 10px;
-	border-radius: 4px;
+	border-radius: var(--ghl-radius-sm);
 	margin: 10px 0;
 }
 
 .syncly-gf-panel .syncly-status-connected {
-	background: #d4edda;
-	color: #155724;
-	border: 1px solid #c3e6cb;
+	background: var(--ghl-success-light);
+	color: var(--ghl-success-dark);
+	border: 1px solid var(--ghl-success-light);
 }
 
 .syncly-gf-panel .syncly-status-disconnected {
-	background: #fff3cd;
-	color: #856404;
-	border: 1px solid #ffeaa7;
+	background: var(--ghl-warning-light);
+	color: var(--ghl-warning-dark);
+	border: 1px solid var(--ghl-warning-light);
 }
 
 .syncly-gf-panel .syncly-status .dashicons {
-	font-size: 20px;
+	font-size: var(--ghl-font-size-2xl);
 	width: 20px;
 	height: 20px;
 }

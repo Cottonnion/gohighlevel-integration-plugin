@@ -2,6 +2,22 @@
 
 All notable changes to Syncly will be documented in this file.
 
+## [1.4.35] - 2026-08-28
+
+### Added
+
+- Added reusable GHL components to the global stylesheet (globals.css): checkbox toggles, buttons (ghl-button), form inputs (ghl-input/ghl-select), and Select2 dropdown styling.
+- Gravity Forms settings: the GHL field selector is now a searchable Select2 dropdown.
+
+### Changed
+
+- Consolidated admin, frontend, and public styling onto shared GHL design tokens (colors, spacing, typography, radii, shadows) for consistent branding across every screen.
+- Dashboard tab navigation now lives in dashboard.css (inline styles removed) and the active tab uses the brand accent color.
+- Roles/Permissions tag toggles ("Auto-apply tags", "Remove on change") now use the branded GHL checkbox switch.
+- Gravity Forms settings inputs/buttons and the conditional mapping row now use GHL component classes (ghl-input, ghl-select, ghl-button).
+- Refactored enqueueing for admin columns and user profile assets through AssetsManager; global design tokens now load on every Syncly admin screen.
+- "View in GHL" links in user columns and profile fields now respect the configured white-label brand setting.
+
 ## [1.4.34] - 2026-08-26
 
 ### Added

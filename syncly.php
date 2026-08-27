@@ -3,7 +3,7 @@
  * Plugin Name:       Syncly for GoHighLevel
  * Plugin URI:        http://synclyforgohighlevel.com/
  * Description:       WordPress integration plugin that connects WordPress, WooCommerce, BuddyBoss, and LearnDash with GoHighLevel CRM for real-time two-way sync and automation.
- * Version:           1.4.34
+ * Version:           1.4.35
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Syncly Team

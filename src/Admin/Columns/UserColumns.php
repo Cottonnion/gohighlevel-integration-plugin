@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Syncly\Admin\Columns;
 
 use Syncly\Core\SettingsManager;
+use Syncly\Sync\TagManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -79,11 +80,9 @@ class UserColumns {
 
 		// Add and apply active-location tag filter on users table.
 		add_action( 'restrict_manage_users', [ $this, 'render_tag_filter' ] );
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_tag_filter_assets' ] );
-		add_action( 'admin_footer-users.php', [ $this, 'render_tag_filter_init_script' ] );
 
-		// Add custom styles for columns
-		add_action( 'admin_head-users.php', [ $this, 'add_column_styles' ] );
+		// Enqueue asset files via AssetsManager (same pattern as UserProfileFields).
+		$this->register_assets();
 	}
 
 	/**
@@ -143,38 +142,23 @@ class UserColumns {
 	 * @return string Column HTML
 	 */
 	private function render_contact_id_column( int $user_id ): string {
-		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
-		$location_id      = $settings_manager->get_setting( 'location_id' ) ?: $settings_manager->get_setting( 'oauth_location_id' );
-		$contact_id       = \Syncly\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+		$contact_id = $this->resolve_contact_id_for_display( $user_id );
 
 		if ( empty( $contact_id ) ) {
 			return '<span class="ghl-no-contact">—</span>';
 		}
 
-		// Get location ID and white label domain from settings
-		$settings           = $this->settings_manager->get_settings_array();
-		$location_id        = $settings['location_id'] ?? '';
-		$white_label_domain = $settings['ghl_white_label_domain'] ?? '';
+		$ghl_url = $this->settings_manager->get_ghl_contact_url( $contact_id );
 
-		// Determine base domain (white label or default)
-		$base_domain = ! empty( $white_label_domain ) ? rtrim( $white_label_domain, '/' ) : 'https://app.leadconnectorhq.com';
-
-		if ( ! empty( $location_id ) ) {
+		if ( '' !== $ghl_url ) {
 			// Build link to GHL contact
-			$ghl_url = sprintf(
-				'%s/v2/location/%s/contacts/detail/%s',
-				$base_domain,
-				esc_attr( $location_id ),
-				esc_attr( $contact_id )
-			);
-
 			return sprintf(
 				'<a href="%s" target="_blank" rel="noopener noreferrer" class="ghl-contact-link" title="%s">
 					<code>%s</code>
 					<span class="dashicons dashicons-external" style="font-size: 12px; vertical-align: middle;"></span>
 				</a>',
 				esc_url( $ghl_url ),
-				esc_attr__( 'View in GoHighLevel', 'syncly' ),
+				esc_html__( 'View in GoHighLevel', 'syncly' ),
 				esc_html( substr( $contact_id, 0, 8 ) . '...' )
 			);
 		}
@@ -189,9 +173,7 @@ class UserColumns {
 	private function render_sync_status_column( int $user_id ): string {
 		$synced_on_register = get_user_meta( $user_id, '_ghl_synced_on_register', true );
 		$last_sync_time     = get_user_meta( $user_id, '_ghl_last_sync', true );
-		$settings_manager   = \Syncly\Core\SettingsManager::get_instance();
-		$location_id        = $settings_manager->get_setting( 'location_id' ) ?: $settings_manager->get_setting( 'oauth_location_id' );
-		$contact_id         = \Syncly\Sync\TagManager::get_instance()->get_user_contact_id( $user_id, $location_id );
+		$contact_id         = $this->resolve_contact_id_for_display( $user_id );
 
 		if ( empty( $contact_id ) ) {
 			// Not synced yet
@@ -265,7 +247,7 @@ class UserColumns {
 
 		switch ( $orderby ) {
 			case 'ghl_contact_id':
-				$query->set( 'meta_key', \Syncly\Sync\TagManager::get_instance()->get_user_contact_id_meta_key() );
+				$query->set( 'meta_key', TagManager::get_instance()->get_user_contact_id_meta_key( $this->get_active_location_id() ) );
 				$query->set( 'orderby', 'meta_value' );
 				break;
 
@@ -434,91 +416,59 @@ class UserColumns {
 	}
 
 	/**
-	 * Enqueue Select2 assets for the users tags filter.
+	 * Register the column + tag filter assets for the users list screen.
+	 *
+	 * All enqueueing goes through AssetsManager (same pattern as
+	 * UserProfileFields::register_assets()); no inline CSS/JS here.
 	 *
 	 * @return void
 	 */
-	public function enqueue_tag_filter_assets(): void {
-		if ( ! $this->is_users_screen() ) {
-			return;
-		}
+	private function register_assets(): void {
+		$assets_manager = \Syncly\Core\AssetsManager::get_instance();
+		$screens        = array( 'users' );
 
-		wp_enqueue_style( 'syncly-select2-css' );
-		wp_enqueue_script( 'syncly-select2' );
-	}
-
-	/**
-	 * Initialize Select2 for the users tags filter.
-	 *
-	 * @return void
-	 */
-	public function render_tag_filter_init_script(): void {
-		if ( ! $this->is_users_screen() ) {
-			return;
-		}
-
-		?>
-		<script>
-			jQuery(function($) {
-				var $filter = $('#syncly-ghl-tags-filter');
-
-				if (!$filter.length || typeof $filter.select2 !== 'function') {
-					return;
-				}
-
-				$filter.select2({
-					placeholder: $filter.data('placeholder') || 'Tags',
-					allowClear: true,
-					closeOnSelect: false,
-					width: '220px'
-				});
-			});
-		</script>
-		<?php
-	}
-
-	/**
-	 * Add custom styles for columns
-	 *
-	 * @return void
-	 */
-	public function add_column_styles(): void {
-		wp_register_style( 'syncly-user-columns-inline', false, [], SYNCLY_VERSION );
-		wp_enqueue_style( 'syncly-user-columns-inline' );
-		wp_add_inline_style(
-			'syncly-user-columns-inline',
-			'
-			.column-ghl_contact_id {
-				width: 120px;
-			}
-			.column-ghl_sync_status {
-				width: 140px;
-			}
-			.ghl-contact-link {
-				text-decoration: none;
-			}
-			.ghl-contact-link:hover code {
-				color: #0073aa;
-			}
-			.ghl-sync-status {
-				display: inline-flex;
-				align-items: center;
-				gap: 4px;
-				font-size: 12px;
-			}
-			.ghl-sync-status .dashicons {
-				width: 16px;
-				height: 16px;
-				font-size: 16px;
-			}
-			.ghl-column-empty {
-				color: #a0a5aa;
-			}
-			#syncly-ghl-tags-filter {
-				vertical-align: top;
-			}
-			'
+		$assets_manager->add_admin_asset(
+			'syncly-user-columns-css',
+			$screens,
+			'user-columns.css',
+			array( 'syncly-select2-css' ),
+			array(),
+			SYNCLY_VERSION,
+			false
 		);
+
+		$assets_manager->add_admin_asset(
+			'syncly-user-columns-js',
+			$screens,
+			'user-columns.js',
+			array( 'jquery', 'syncly-select2' ),
+			array(),
+			SYNCLY_VERSION
+		);
+	}
+
+	/**
+	 * Resolve the GHL contact ID for a user for list display and links.
+	 *
+	 * Mirrors UserProfileFields: prefers the location-scoped contact ID via
+	 * TagManager::get_user_contact_id() and only falls back to the legacy
+	 * global meta key when no scoped value is present.
+	 *
+	 * @param int $user_id WordPress user ID.
+	 * @return string
+	 */
+	private function resolve_contact_id_for_display( int $user_id ): string {
+		$location_id = $this->get_active_location_id();
+		$tag_manager = TagManager::get_instance();
+
+		$contact_id = $tag_manager->get_user_contact_id( $user_id, $location_id );
+		if ( null !== $contact_id && '' !== $contact_id ) {
+			return $contact_id;
+		}
+
+		$legacy = get_user_meta( $user_id, TagManager::LEGACY_CONTACT_META_KEY, true );
+
+		return is_scalar( $legacy ) ? trim( (string) $legacy ) : '';
 	}
 
 	/**

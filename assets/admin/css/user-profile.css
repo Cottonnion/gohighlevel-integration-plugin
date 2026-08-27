@@ -8,24 +8,24 @@
  */
 
 .ghl-profile-section {
-	background: #fff;
-	border: 1px solid #ccd0d4;
+	background: var(--ghl-bg-primary);
+	border: 1px solid var(--ghl-border-secondary);
 	padding: 20px;
 	margin-top: 20px;
-	border-radius: 4px;
+	border-radius: var(--ghl-radius-sm);
 }
 
 .ghl-profile-section h2 {
 	margin-top: 0;
 	padding-bottom: 10px;
-	border-bottom: 1px solid #e5e5e5;
+	border-bottom: 1px solid var(--ghl-border-primary);
 	display: flex;
 	align-items: center;
 	gap: 10px;
 }
 
 .ghl-profile-section h2 .dashicons {
-	color: #2271b1;
+	color: var(--ghl-info);
 }
 
 .ghl-data-grid {
@@ -41,27 +41,27 @@
 }
 
 .ghl-data-item label {
-	font-weight: 600;
+	font-weight: var(--ghl-font-weight-semibold);
 	margin-bottom: 5px;
-	color: #1d2327;
+	color: var(--ghl-text-primary);
 }
 
 .ghl-data-item .value {
-	color: #50575e;
-	font-family: monospace;
-	background: #f6f7f7;
-	padding: 8px 12px;
+	color: var(--ghl-text-secondary);
+	font-family: var(--ghl-font-family-mono);
+	background: var(--ghl-bg-secondary);
+	padding: var(--ghl-spacing-sm) var(--ghl-spacing-md);
 	border-radius: 3px;
-	border: 1px solid #dcdcde;
+	border: 1px solid var(--ghl-border-primary);
 }
 
 .ghl-data-item .value.empty {
-	color: #a0a5aa;
+	color: var(--ghl-text-tertiary);
 	font-style: italic;
 }
 
 .ghl-data-item .value a {
-	color: #2271b1;
+	color: var(--ghl-info);
 	text-decoration: none;
 }
 
@@ -73,25 +73,25 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
-	padding: 6px 12px;
+	padding: 6px var(--ghl-spacing-md);
 	border-radius: 3px;
-	font-size: 13px;
+	font-size: var(--ghl-font-size-sm);
 }
 
 .ghl-sync-status.synced {
-	background: #d4edda;
-	color: #155724;
-	border: 1px solid #c3e6cb;
+	background: var(--ghl-success-light);
+	color: var(--ghl-success-dark);
+	border: 1px solid var(--ghl-success-light);
 }
 
 .ghl-sync-status.not-synced {
-	background: #fff3cd;
-	color: #856404;
-	border: 1px solid #ffeeba;
+	background: var(--ghl-warning-light);
+	color: var(--ghl-warning-dark);
+	border: 1px solid var(--ghl-warning-light);
 }
 
 .ghl-sync-status .dashicons {
-	font-size: 16px;
+	font-size: var(--ghl-font-size-lg);
 	width: 16px;
 	height: 16px;
 }
@@ -130,17 +130,17 @@
 .ghl-activity-section {
 	margin-top: 20px;
 	padding-top: 20px;
-	border-top: 1px solid #e5e5e5;
+	border-top: 1px solid var(--ghl-border-primary);
 }
 
 .ghl-activity-header-wrapper {
 	padding: 10px 0;
-	border-radius: 4px;
-	transition: background-color 0.2s ease;
+	border-radius: var(--ghl-radius-sm);
+	transition: background-color var(--ghl-transition-base);
 }
 
 .ghl-activity-header-wrapper:hover {
-	background-color: #f6f7f7;
+	background-color: var(--ghl-bg-secondary);
 }
 
 .ghl-activity-count {
@@ -148,7 +148,7 @@
 }
 
 .ghl-activity-toggle {
-	font-size: 20px;
+	font-size: var(--ghl-font-size-2xl);
 	width: 20px;
 	height: 20px;
 }
@@ -156,19 +156,19 @@
 .ghl-activity-section h3 {
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: var(--ghl-spacing-sm);
 	margin-bottom: 10px;
 }
 
 .ghl-activity-timeline {
 	margin-top: 15px;
-	border-left: 2px solid #e5e5e5;
+	border-left: 2px solid var(--ghl-border-primary);
 	padding-left: 0;
 }
 
 .ghl-activity-item {
 	display: flex;
-	gap: 12px;
+	gap: var(--ghl-spacing-md);
 	margin-bottom: 20px;
 	position: relative;
 	padding-left: 20px;
@@ -182,57 +182,57 @@
 	flex-shrink: 0;
 	width: 32px;
 	height: 32px;
-	border-radius: 50%;
+	border-radius: var(--ghl-radius-full);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: #fff;
-	border: 2px solid #e5e5e5;
+	background: var(--ghl-bg-primary);
+	border: 2px solid var(--ghl-border-primary);
 	position: absolute;
 	left: -17px;
 	top: 0;
 }
 
 .ghl-activity-icon .dashicons {
-	font-size: 16px;
+	font-size: var(--ghl-font-size-lg);
 	width: 16px;
 	height: 16px;
-	color: #50575e;
+	color: var(--ghl-text-secondary);
 }
 
 .ghl-activity-success .ghl-activity-icon {
-	background: #d4edda;
-	border-color: #46b450;
+	background: var(--ghl-success-light);
+	border-color: var(--ghl-success);
 }
 
 .ghl-activity-success .ghl-activity-icon .dashicons {
-	color: #155724;
+	color: var(--ghl-success-dark);
 }
 
 .ghl-activity-failed .ghl-activity-icon {
-	background: #f8d7da;
-	border-color: #dc3232;
+	background: var(--ghl-error-light);
+	border-color: var(--ghl-error-dark);
 }
 
 .ghl-activity-failed .ghl-activity-icon .dashicons {
-	color: #721c24;
+	color: var(--ghl-error-dark);
 }
 
 .ghl-activity-pending .ghl-activity-icon {
-	background: #fff3cd;
-	border-color: #ffb900;
+	background: var(--ghl-warning-light);
+	border-color: var(--ghl-warning);
 }
 
 .ghl-activity-pending .ghl-activity-icon .dashicons {
-	color: #856404;
+	color: var(--ghl-warning-dark);
 }
 
 .ghl-activity-content {
 	flex: 1;
-	background: #f6f7f7;
-	padding: 12px;
-	border-radius: 4px;
-	border: 1px solid #dcdcde;
+	background: var(--ghl-bg-secondary);
+	padding: var(--ghl-spacing-md);
+	border-radius: var(--ghl-radius-sm);
+	border: 1px solid var(--ghl-border-primary);
 }
 
 .ghl-activity-header {
@@ -241,47 +241,47 @@
 	align-items: center;
 	margin-bottom: 6px;
 	flex-wrap: wrap;
-	gap: 8px;
+	gap: var(--ghl-spacing-sm);
 }
 
 .ghl-activity-header strong {
-	color: #1d2327;
-	font-size: 14px;
+	color: var(--ghl-text-primary);
+	font-size: var(--ghl-font-size-base);
 }
 
 .ghl-activity-status {
-	font-size: 12px;
-	padding: 3px 8px;
+	font-size: var(--ghl-font-size-xs);
+	padding: 3px var(--ghl-spacing-sm);
 	border-radius: 3px;
-	font-weight: 600;
+	font-weight: var(--ghl-font-weight-semibold);
 	text-transform: uppercase;
 }
 
 .ghl-status-success {
-	background: #d4edda;
-	color: #155724;
+	background: var(--ghl-success-light);
+	color: var(--ghl-success-dark);
 }
 
 .ghl-status-failed {
-	background: #f8d7da;
-	color: #721c24;
+	background: var(--ghl-error-light);
+	color: var(--ghl-error-dark);
 }
 
 .ghl-status-pending {
-	background: #fff3cd;
-	color: #856404;
+	background: var(--ghl-warning-light);
+	color: var(--ghl-warning-dark);
 }
 
 .ghl-activity-message {
-	color: #50575e;
-	font-size: 13px;
+	color: var(--ghl-text-secondary);
+	font-size: var(--ghl-font-size-sm);
 	margin-bottom: 6px;
-	line-height: 1.5;
+	line-height: var(--ghl-line-height-base);
 }
 
 .ghl-activity-time {
-	color: #a0a5aa;
-	font-size: 12px;
+	color: var(--ghl-text-tertiary);
+	font-size: var(--ghl-font-size-xs);
 	font-style: italic;
 }
 
@@ -290,12 +290,12 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
-	padding: 6px 12px;
-	font-size: 13px;
+	padding: 6px var(--ghl-spacing-md);
+	font-size: var(--ghl-font-size-sm);
 }
 
 .ghl-activity-pagination .ghl-button .dashicons {
-	font-size: 16px;
+	font-size: var(--ghl-font-size-lg);
 	width: 16px;
 	height: 16px;
 }

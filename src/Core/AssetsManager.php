@@ -142,6 +142,21 @@ class AssetsManager {
 			'4.1.0',
 			true
 		);
+
+		// Register globals.css (design tokens) so ANY screen can declare it as
+		// a dependency without AssetsManager having to know about that screen.
+		// Loaded by default on all Syncly admin pages; other pages (frontend
+		// forms, blocks, BuddyBoss/LearnDash/Woo/CF7/GF, WC orders, etc.) opt in
+		// by listing 'syncly-globals-css' in their stylesheet dependencies.
+		$globals_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG )
+			? 'globals.css'
+			: 'globals.min.css';
+		wp_register_style(
+			'syncly-globals-css',
+			SYNCLY_URL . 'assets/admin/css/' . $globals_file,
+			[],
+			SYNCLY_VERSION
+		);
 	}
 
 	/**
@@ -175,7 +190,7 @@ class AssetsManager {
 			'syncly-admin-menu-css',
 			[ 'toplevel_page_syncly-admin' ],
 			'admin-menu.css',
-			[],
+			[ 'syncly-globals-css' ],
 			[],
 			SYNCLY_VERSION
 		);
@@ -196,7 +211,7 @@ class AssetsManager {
 			'syncly-spa-css',
 			[ 'toplevel_page_syncly-admin' ],
 			'spa-app.css',
-			[],
+			[ 'syncly-globals-css' ],
 			[],
 			SYNCLY_VERSION
 		);
@@ -227,7 +242,7 @@ class AssetsManager {
 			'syncly-dashboard-css',
 			[ 'toplevel_page_syncly-admin' ],
 			'dashboard.css',
-			[],
+			[ 'syncly-globals-css' ],
 			[],
 			SYNCLY_VERSION
 		);
@@ -284,7 +299,7 @@ class AssetsManager {
 			'syncly-field-mapping-css',
 			[ 'toplevel_page_syncly-admin' ],
 			'field-mapping.css',
-			[],
+			[ 'syncly-globals-css' ],
 			[],
 			SYNCLY_VERSION
 		);
@@ -306,7 +321,7 @@ class AssetsManager {
 			'syncly-integrations-css',
 			[ 'toplevel_page_syncly-admin' ],
 			'integrations.css',
-			[],
+			[ 'syncly-globals-css' ],
 			[],
 			SYNCLY_VERSION
 		);
@@ -330,7 +345,7 @@ class AssetsManager {
 			'syncly-settings-css',
 			[ 'toplevel_page_syncly-admin' ],
 			'settings.css',
-			[ 'syncly-sweetalert2', 'syncly-select2-css' ],
+			[ 'syncly-globals-css', 'syncly-sweetalert2', 'syncly-select2-css' ],
 			[],
 			SYNCLY_VERSION
 		);
@@ -348,7 +363,7 @@ class AssetsManager {
 			'syncly-settings-menu-css',
 			[ 'toplevel_page_syncly-admin' ],
 			'settings-menu.css',
-			[],
+			[ 'syncly-globals-css' ],
 			[],
 			SYNCLY_VERSION
 		);
@@ -511,7 +526,7 @@ class AssetsManager {
 			'syncly-forms-css',
 			[ 'toplevel_page_syncly-admin' ],
 			'forms.css',
-			[],
+			[ 'syncly-globals-css' ],
 			[],
 			SYNCLY_VERSION
 		);
@@ -672,6 +687,15 @@ class AssetsManager {
 		}
 		$screen_id = $current_screen->id;
 		$post_type = isset( $current_screen->post_type ) ? $current_screen->post_type : null;
+
+		// Design tokens must be present on EVERY admin screen where Syncly can
+		// render UI — meta boxes on any post type, WooCommerce product/order
+		// panels, BuddyBoss/LearnDash group editors, user profiles, the settings
+		// SPA, etc. Enqueuing unconditionally here guarantees a meta box or panel
+		// never renders unstyled even if its own registration forgot to depend on
+		// 'syncly-globals-css'. The handle is registered by
+		// register_external_libraries() (priority 5, before this hook).
+		wp_enqueue_style( 'syncly-globals-css' );
 
 		// Enqueue WordPress editor assets on admin pages that might need them
 		if ( in_array( $screen_id, [ 'toplevel_page_syncly-admin', 'toplevel_page_syncly-settings' ], true ) ) {
@@ -845,7 +869,7 @@ class AssetsManager {
 		$this->add_public_asset(
 			'syncly-forms-frontend-css',
 			'forms.css',
-			[],
+			[ 'syncly-globals-css' ],
 			[],
 			SYNCLY_VERSION,
 			false
@@ -855,7 +879,7 @@ class AssetsManager {
 		$this->add_public_asset(
 			'syncly-restrictions',
 			'restrictions.css',
-			[],
+			[ 'syncly-globals-css' ],
 			[],
 			SYNCLY_VERSION,
 			false,
@@ -866,7 +890,7 @@ class AssetsManager {
 		$this->add_public_asset(
 			'syncly-blocks',
 			'blocks-frontend.css',
-			[],
+			[ 'syncly-globals-css' ],
 			[],
 			SYNCLY_VERSION,
 			false,

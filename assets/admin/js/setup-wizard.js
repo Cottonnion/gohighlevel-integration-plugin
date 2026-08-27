@@ -264,6 +264,7 @@
                 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             };
             resize();
+            canvas.style.display = 'block';
 
             const colors = ['#635bff', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#ec4899'];
             const count = 220;
@@ -310,6 +311,7 @@
                     requestAnimationFrame(frame);
                 } else {
                     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+                    canvas.style.display = 'none';
                     canvas.__ghlRunning = false;
                 }
             }

@@ -120,6 +120,48 @@
 
       // Re-check on any dropdown change
       $(".ghl-field-select").on("change", this.checkEmailMapping);
+
+      // Upgrade field-selectors to Select2 dropdowns
+      this.initFieldMappingsSelect2();
+    },
+
+    /**
+     * Initialize Select2 on the GHL field mapping dropdowns.
+     *
+     * The original <select> is kept in sync so the saved value and change
+     * events keep working exactly as before.
+     */
+    initFieldMappingsSelect2: function () {
+      const $selects = $(".ghl-field-select");
+      if (!$selects.length) {
+        return;
+      }
+
+      // Bail if the Select2 library was not enqueued (e.g. enqueue conflicts)
+      const first = $selects.first();
+      if (typeof first.select2 !== "function") {
+        return;
+      }
+
+      $selects.each(function () {
+        const $select = $(this);
+
+        // Never double-initialize a dropdown
+        if ($select.data("select2")) {
+          return;
+        }
+
+        $select.select2({
+          placeholder: $select.data("placeholder") || "— Do not sync —",
+          allowClear: true,
+          width: "100%",
+        });
+
+        // Keep email-notice in sync with the restored value
+        if ($select.val()) {
+          $select.trigger("change");
+        }
+      });
     },
 
     /**

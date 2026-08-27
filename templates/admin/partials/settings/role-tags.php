@@ -46,19 +46,19 @@ $upgrade_url            = apply_filters( 'syncly_upgrade_url', 'http://synclyfor
 		</div>
 
 		<div class="ghl-role-tag-mappings">
-			<table class="wp-list-table widefat fixed striped">
+			<table class="wp-list-table widefat striped">
 				<thead>
 					<tr>
-						<th style="width: 25%;"><?php esc_html_e( 'WordPress Role', 'syncly' ); ?></th>
-						<th style="width: 35%;">
+						<th class="ghl-th-role"><?php esc_html_e( 'WordPress Role', 'syncly' ); ?></th>
+						<th class="ghl-th-tags">
 							<?php esc_html_e( 'GoHighLevel Tags', 'syncly' ); ?>
 							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Enter one or more tags to apply to users with this role. Tags are synced to their GoHighLevel contact record. You can select existing tags from the dropdown below.', 'syncly' ); ?>">?</span>
 						</th>
-						<th style="width: 20%;">
+						<th>
 							<?php esc_html_e( 'Auto-Apply', 'syncly' ); ?>
 							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'When enabled, these tags are automatically applied when a user is assigned this role. Disable if you want to manually trigger tag assignment via bulk actions instead.', 'syncly' ); ?>">?</span>
 						</th>
-						<th style="width: 20%;">
+						<th>
 							<?php esc_html_e( 'Remove on Role Change', 'syncly' ); ?>
 							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'When enabled, these tags are removed from the contact when the user loses this role. Useful for access-based tags. Keep disabled if you want to preserve role history in tags.', 'syncly' ); ?>">?</span>
 						</th>
@@ -95,12 +95,10 @@ $upgrade_url            = apply_filters( 'syncly_upgrade_url', 'http://synclyfor
 								multiple
 								class="ghl-role-tags-select"
 								style="width: 100%;"
-								data-placeholder="
-								<?php
+								data-placeholder="<?php
 									/* translators: %s: user role name (e.g., administrator, editor) */
 									printf( esc_attr__( 'e.g., %s, member, active', 'syncly' ), esc_attr( strtolower( $role_name ) ) );
-								?>
-								">
+								?>">
 								<?php
 								if ( ! empty( $tags_value ) ) {
 									$tags_array = array_map( 'trim', explode( ',', $tags_value ) );
@@ -118,20 +116,28 @@ $upgrade_url            = apply_filters( 'syncly_upgrade_url', 'http://synclyfor
 							</select>
 							</td>
 							<td style="text-align: center;">
-								<input 
-									type="checkbox" 
-									name="role_tags[<?php echo esc_attr( $role_key ); ?>][auto_apply]" 
-									value="1" 
-									<?php checked( $auto_apply ); ?>
-								/>
+								<label class="ghl-checkbox" style="display: inline-flex; padding: 0; margin: 0;" title="<?php esc_attr_e( 'Automatically apply tags on registration', 'syncly' ); ?>">
+									<input
+										type="checkbox"
+										class="ghl-checkbox-original"
+										name="role_tags[<?php echo esc_attr( $role_key ); ?>][auto_apply]"
+										value="1"
+										<?php checked( $auto_apply ); ?>
+									/>
+									<span class="ghl-checkbox-input <?php echo $auto_apply ? 'is-checked' : ''; ?>"><span class="ghl-checkbox-inner"></span></span>
+								</label>
 							</td>
 							<td style="text-align: center;">
-								<input
-									type="checkbox"
-									name="role_tags[<?php echo esc_attr( $role_key ); ?>][remove_on_change]"
-									value="1"
-									<?php checked( $remove_on_change ); ?>
-								/>
+								<label class="ghl-checkbox" style="display: inline-flex; padding: 0; margin: 0;" title="<?php esc_attr_e( 'Remove tags when the role changes', 'syncly' ); ?>">
+									<input
+										type="checkbox"
+										class="ghl-checkbox-original"
+										name="role_tags[<?php echo esc_attr( $role_key ); ?>][remove_on_change]"
+										value="1"
+										<?php checked( $remove_on_change ); ?>
+									/>
+									<span class="ghl-checkbox-input <?php echo $remove_on_change ? 'is-checked' : ''; ?>"><span class="ghl-checkbox-inner"></span></span>
+								</label>
 							</td>
 							<?php
 							/**

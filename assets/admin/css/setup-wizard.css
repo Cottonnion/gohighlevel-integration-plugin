@@ -1,41 +1,9 @@
 /**
  * Setup Wizard Styles
- * Using design tokens from globals.css for consistency
+ * Using design tokens from globals.css for consistency.
+ * Note: design tokens are intentionally NOT re-declared here; they come from
+ * globals.css (enqueued as a dependency on the setup-wizard screen).
  */
-
-:root {
-	/* Color Palette */
-	--ghl-primary: #635bff;
-	--ghl-primary-hover: #4f46e5;
-	--ghl-primary-light: #f5f5ff;
-	--ghl-primary-dark: #4338ca;
-	
-	--ghl-secondary: #6b7280;
-	--ghl-secondary-hover: #4b5563;
-	
-	--ghl-success: #10b981;
-	--ghl-success-light: #f0fdf4;
-	
-	--ghl-error: #ef4444;
-	--ghl-error-light: #fef2f2;
-	
-	--ghl-text-primary: #111827;
-	--ghl-text-secondary: #6b7280;
-	--ghl-text-tertiary: #9ca3af;
-	--ghl-text-inverse: #ffffff;
-	
-	--ghl-bg-primary: #ffffff;
-	--ghl-bg-secondary: #f9fafb;
-	--ghl-bg-tertiary: #f3f4f6;
-	
-	--ghl-border-primary: #e5e7eb;
-	--ghl-border-secondary: #d1d5db;
-	
-	/* Shadows */
-	--ghl-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-	--ghl-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-	--ghl-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
 
 /* Hide WordPress Admin UI on Setup Wizard */
 .admin_page_syncly-setup-wizard #wpadminbar {
@@ -72,8 +40,8 @@ html.wp-toolbar {
 .ghl-setup-wizard-body {
     margin: 0;
     padding: 0;
-    background: #f8f9fa;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    background: var(--ghl-bg-secondary);
+    font-family: var(--ghl-font-family);
     overflow-x: hidden;
 }
 
@@ -85,7 +53,7 @@ html.wp-toolbar {
     background:
         radial-gradient(circle at 15% 0%, rgba(99, 91, 255, 0.08) 0%, transparent 45%),
         radial-gradient(circle at 100% 20%, rgba(16, 185, 129, 0.06) 0%, transparent 40%),
-        #f8f9fb;
+        var(--ghl-bg-secondary);
 }
 
 /* Header */
@@ -111,13 +79,13 @@ html.wp-toolbar {
     justify-content: center;
     width: 44px;
     height: 44px;
-    border-radius: 12px;
+    border-radius: var(--ghl-radius-lg);
     background: linear-gradient(135deg, var(--ghl-primary) 0%, var(--ghl-primary-dark) 100%);
     box-shadow: 0 4px 12px rgba(99, 91, 255, 0.35);
 }
 
 .ghl-setup-logo-icon svg {
-    color: white;
+    color: var(--ghl-text-inverse);
     stroke-width: 2;
     width: 24px;
     height: 24px;
@@ -125,8 +93,8 @@ html.wp-toolbar {
 
 .ghl-setup-logo h1 {
     margin: 0;
-    font-size: 20px;
-    font-weight: 700;
+    font-size: var(--ghl-font-size-2xl);
+    font-weight: var(--ghl-font-weight-bold);
     background: linear-gradient(135deg, var(--ghl-primary) 0%, var(--ghl-primary-dark) 100%);
     -webkit-background-clip: text;
     background-clip: text;
@@ -136,10 +104,10 @@ html.wp-toolbar {
 .ghl-setup-exit {
     color: var(--ghl-text-secondary);
     text-decoration: none;
-    font-size: 14px;
-    padding: 8px 16px;
-    border-radius: 6px;
-    transition: all 0.2s;
+    font-size: var(--ghl-font-size-base);
+    padding: var(--ghl-spacing-sm) var(--ghl-spacing-base);
+    border-radius: var(--ghl-radius-base);
+    transition: all var(--ghl-transition-base);
 }
 
 .ghl-setup-exit:hover {
@@ -164,7 +132,7 @@ html.wp-toolbar {
     gap: 8px;
     position: relative;
     opacity: 0.4;
-    transition: opacity 0.3s;
+    transition: opacity var(--ghl-transition-slow);
 }
 
 .ghl-setup-step::after {
@@ -202,35 +170,35 @@ html.wp-toolbar {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
-    font-size: 16px;
-    transition: all 0.3s;
+    font-weight: var(--ghl-font-weight-semibold);
+    font-size: var(--ghl-font-size-lg);
+    transition: all var(--ghl-transition-slow);
 }
 
 .ghl-setup-step.active .ghl-step-number {
     background: var(--ghl-primary);
-    color: white;
+    color: var(--ghl-text-inverse);
     box-shadow: 0 0 0 6px rgba(99, 91, 255, 0.15);
     transform: scale(1.08);
 }
 
 .ghl-setup-step.completed .ghl-step-number {
     background: var(--ghl-success);
-    color: white;
+    color: var(--ghl-text-inverse);
     box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
     animation: ghl-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .ghl-setup-step.completed .ghl-step-number .dashicons {
-    font-size: 18px;
+    font-size: var(--ghl-font-size-xl);
     width: 18px;
     height: 18px;
 }
 
 .ghl-step-label {
-    font-size: 13px;
+    font-size: var(--ghl-font-size-sm);
     color: var(--ghl-text-secondary);
-    font-weight: 500;
+    font-weight: var(--ghl-font-weight-medium);
 }
 
 .ghl-setup-step.active .ghl-step-label {
@@ -251,7 +219,7 @@ html.wp-toolbar {
     max-width: 1100px;
     width: 100%;
     background: var(--ghl-bg-primary);
-    border-radius: 16px;
+    border-radius: var(--ghl-radius-xl);
     box-shadow: var(--ghl-shadow-md), var(--ghl-shadow-lg);
     animation: slideIn 0.4s ease;
     position: relative;
@@ -265,7 +233,7 @@ html.wp-toolbar {
     left: 0;
     right: 0;
     height: 5px;
-    background: linear-gradient(90deg, var(--ghl-primary) 0%, #8b5cf6 50%, var(--ghl-success) 100%);
+    background: linear-gradient(90deg, var(--ghl-primary) 0%, var(--ghl-purple) 50%, var(--ghl-success) 100%);
 }
 
 .ghl-wizard-panel.active {
@@ -301,11 +269,11 @@ html.wp-toolbar {
     font-size: 28px;
     margin: 0 0 16px;
     color: var(--ghl-text-primary);
-    font-weight: 600;
+    font-weight: var(--ghl-font-weight-semibold);
 }
 
 .ghl-wizard-description {
-    font-size: 16px;
+    font-size: var(--ghl-font-size-lg);
     color: var(--ghl-text-secondary);
     line-height: 1.6;
     margin: 0 0 40px;
@@ -374,17 +342,18 @@ html.wp-toolbar {
     gap: 6px;
     margin: 0 auto 20px;
     padding: 8px 18px;
-    border-radius: 999px;
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    color: #92400e;
-    font-size: 13px;
-    font-weight: 700;
+    border-radius: var(--ghl-radius-full);
+    background: linear-gradient(135deg, var(--ghl-warning-light) 0%, var(--ghl-warning-light) 100%);
+    color: var(--ghl-warning-dark);
+    font-size: var(--ghl-font-size-sm);
+    font-weight: var(--ghl-font-weight-bold);
     letter-spacing: 0.02em;
     text-transform: uppercase;
     animation: ghl-pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Confetti canvas */
+/* Confetti canvas — hidden unless a celebration is running, so it never
+   floats above the wizard or renders as a blank white layer. */
 #ghl-confetti-canvas {
     position: fixed;
     inset: 0;
@@ -392,13 +361,15 @@ html.wp-toolbar {
     height: 100vh;
     pointer-events: none;
     z-index: 999999;
+    display: none;
+    background: transparent;
 }
 
 /* Features List */
 .ghl-wizard-features {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--ghl-spacing-base);
     text-align: left;
     max-width: 500px;
     margin: 0 auto;
@@ -407,14 +378,14 @@ html.wp-toolbar {
 .ghl-feature-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    font-size: 15px;
-    color: #374151;
+    gap: var(--ghl-spacing-md);
+    font-size: var(--ghl-font-size-md);
+    color: var(--ghl-text-primary);
 }
 
 .ghl-feature-item .dashicons {
     color: var(--ghl-success);
-    font-size: 24px;
+    font-size: var(--ghl-font-size-3xl);
     width: 24px;
     height: 24px;
 }
@@ -430,9 +401,9 @@ html.wp-toolbar {
 .ghl-connection-method {
     padding: 30px;
     border: 2px solid var(--ghl-border-primary);
-    border-radius: 8px;
+    border-radius: var(--ghl-radius-md);
     text-align: center;
-    transition: all 0.2s;
+    transition: all var(--ghl-transition-base);
 }
 
 .ghl-connection-method:hover {
@@ -452,14 +423,14 @@ html.wp-toolbar {
 }
 
 .ghl-connection-method h3 {
-    font-size: 18px;
+    font-size: var(--ghl-font-size-xl);
     margin: 0 0 8px;
-    color: #1a1a1a;
+    color: var(--ghl-text-primary);
 }
 
 .ghl-connection-method p {
-    font-size: 14px;
-    color: #6b7280;
+    font-size: var(--ghl-font-size-base);
+    color: var(--ghl-text-secondary);
     margin: 0 0 20px;
 }
 
@@ -467,16 +438,16 @@ html.wp-toolbar {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
-    color: #9ca3af;
-    font-weight: 600;
+    font-size: var(--ghl-font-size-base);
+    color: var(--ghl-text-tertiary);
+    font-weight: var(--ghl-font-weight-semibold);
 }
 
 /* Settings Group */
 .ghl-settings-group {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--ghl-spacing-base);
     margin-top: 40px;
 }
 
@@ -485,14 +456,14 @@ html.wp-toolbar {
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    background: #f9fafb;
-    border-radius: 8px;
+    background: var(--ghl-bg-secondary);
+    border-radius: var(--ghl-radius-md);
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background var(--ghl-transition-base);
 }
 
 .ghl-setting-row:hover {
-    background: #f3f4f6;
+    background: var(--ghl-bg-tertiary);
 }
 
 .ghl-setting-info {
@@ -502,15 +473,15 @@ html.wp-toolbar {
 
 .ghl-setting-info strong {
     display: block;
-    font-size: 15px;
-    color: #1a1a1a;
+    font-size: var(--ghl-font-size-md);
+    color: var(--ghl-text-primary);
     margin-bottom: 4px;
 }
 
 .ghl-setting-desc {
     display: block;
-    font-size: 13px;
-    color: #6b7280;
+    font-size: var(--ghl-font-size-sm);
+    color: var(--ghl-text-secondary);
 }
 
 /* Toggle Switch */
@@ -534,9 +505,9 @@ html.wp-toolbar {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #cbd5e1;
-    border-radius: 24px;
-    transition: 0.3s;
+    background-color: var(--ghl-border-secondary);
+    border-radius: var(--ghl-radius-2xl);
+    transition: var(--ghl-transition-slow);
 }
 
 .ghl-toggle-slider::before {
@@ -546,9 +517,9 @@ html.wp-toolbar {
     width: 20px;
     left: 2px;
     bottom: 2px;
-    background-color: white;
-    border-radius: 50%;
-    transition: 0.3s;
+    background-color: var(--ghl-text-inverse);
+    border-radius: var(--ghl-radius-full);
+    transition: var(--ghl-transition-slow);
 }
 
 .ghl-toggle-switch input:checked + .ghl-toggle-slider {
@@ -563,7 +534,7 @@ html.wp-toolbar {
 .ghl-integrations-list {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+    gap: var(--ghl-spacing-base);
     margin-top: 40px;
 }
 
@@ -578,9 +549,9 @@ html.wp-toolbar {
     align-items: center;
     padding: 20px;
     border: 2px solid var(--ghl-border-primary);
-    border-radius: 8px;
+    border-radius: var(--ghl-radius-md);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all var(--ghl-transition-base);
 }
 
 .ghl-integration-item:hover {
@@ -591,7 +562,7 @@ html.wp-toolbar {
 .ghl-integration-item input[type="checkbox"] {
     width: 20px;
     height: 20px;
-    margin: 0 16px 0 0;
+    margin: 0 var(--ghl-spacing-base) 0 0;
     cursor: pointer;
     flex-shrink: 0;
 }
@@ -599,7 +570,7 @@ html.wp-toolbar {
 .ghl-integration-content {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: var(--ghl-spacing-base);
     flex: 1;
 }
 
@@ -616,14 +587,14 @@ html.wp-toolbar {
 
 .ghl-integration-info strong {
     display: block;
-    font-size: 15px;
-    color: #1a1a1a;
+    font-size: var(--ghl-font-size-md);
+    color: var(--ghl-text-primary);
     margin-bottom: 2px;
 }
 
 .ghl-integration-info span {
-    font-size: 13px;
-    color: #6b7280;
+    font-size: var(--ghl-font-size-sm);
+    color: var(--ghl-text-secondary);
 }
 
 /* Disabled Integration */
@@ -637,7 +608,7 @@ html.wp-toolbar {
 }
 
 .ghl-integration-item--disabled .ghl-integration-info span {
-    color: #ef4444;
+    color: var(--ghl-error);
     font-style: italic;
 }
 
@@ -646,13 +617,13 @@ html.wp-toolbar {
     position: relative;
     opacity: 0.7;
     cursor: not-allowed;
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    border: 2px solid #f59e0b;
+    background: linear-gradient(135deg, var(--ghl-warning-light) 0%, var(--ghl-warning-light) 100%);
+    border: 2px solid var(--ghl-warning);
 }
 
 .ghl-integration-item--pro:hover {
-    border-color: #f59e0b;
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-color: var(--ghl-warning);
+    background: linear-gradient(135deg, var(--ghl-warning-light) 0%, var(--ghl-warning-light) 100%);
 }
 
 .ghl-integration-item--pro .ghl-integration-lock {
@@ -661,40 +632,40 @@ html.wp-toolbar {
 }
 
 .ghl-integration-item--pro .ghl-integration-lock .dashicons {
-    font-size: 24px;
+    font-size: var(--ghl-font-size-3xl);
     width: 24px;
     height: 24px;
-    color: #d97706;
+    color: var(--ghl-warning-dark);
 }
 
 .ghl-pro-badge {
     display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
+    padding: 2px var(--ghl-spacing-sm);
+    border-radius: var(--ghl-radius-sm);
     font-size: 10px;
-    font-weight: 700;
+    font-weight: var(--ghl-font-weight-bold);
     text-transform: uppercase;
     margin-left: 8px;
     vertical-align: middle;
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    color: white;
+    background: linear-gradient(135deg, var(--ghl-warning) 0%, var(--ghl-warning-dark) 100%);
+    color: var(--ghl-text-inverse);
 }
 
 /* Integration Badge */
 .ghl-integration-badge {
     display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 700;
+    padding: 2px var(--ghl-spacing-sm);
+    border-radius: var(--ghl-radius-sm);
+    font-size: var(--ghl-font-size-xs);
+    font-weight: var(--ghl-font-weight-bold);
     text-transform: uppercase;
     margin-left: 8px;
     vertical-align: middle;
 }
 
 .ghl-integration-badge--pro {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    color: white;
+    background: linear-gradient(135deg, var(--ghl-warning) 0%, var(--ghl-warning-dark) 100%);
+    color: var(--ghl-text-inverse);
 }
 
 /* Pro feature available — clickable link card (Pro active) */
@@ -716,7 +687,7 @@ html.wp-toolbar {
 }
 
 .ghl-integration-link-arrow .dashicons {
-    font-size: 20px;
+    font-size: var(--ghl-font-size-2xl);
     width: 20px;
     height: 20px;
     color: var(--ghl-primary);
@@ -737,19 +708,19 @@ html.wp-toolbar {
     font-size: 64px;
     width: 64px;
     height: 64px;
-    color: #d1d5db;
+    color: var(--ghl-text-disabled);
     margin-bottom: 20px;
 }
 
 .ghl-empty-state h3 {
-    font-size: 18px;
-    color: #374151;
+    font-size: var(--ghl-font-size-xl);
+    color: var(--ghl-text-primary);
     margin: 0 0 12px;
 }
 
 .ghl-empty-state p {
-    color: #6b7280;
-    font-size: 14px;
+    color: var(--ghl-text-secondary);
+    font-size: var(--ghl-font-size-base);
     line-height: 1.6;
     margin: 0;
 }
@@ -757,10 +728,10 @@ html.wp-toolbar {
 /* Upgrade Prompt */
 .ghl-upgrade-prompt {
     margin-top: 30px;
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    border: 2px solid #fbbf24;
-    border-radius: 12px;
-    padding: 24px;
+    background: linear-gradient(135deg, var(--ghl-warning-light) 0%, var(--ghl-warning-light) 100%);
+    border: 2px solid var(--ghl-warning);
+    border-radius: var(--ghl-radius-lg);
+    padding: var(--ghl-spacing-lg);
 }
 
 .ghl-upgrade-content {
@@ -777,9 +748,9 @@ html.wp-toolbar {
     font-size: 48px;
     width: 48px;
     height: 48px;
-    color: #f59e0b;
-    background: white;
-    border-radius: 50%;
+    color: var(--ghl-warning);
+    background: var(--ghl-bg-primary);
+    border-radius: var(--ghl-radius-full);
     padding: 8px;
 }
 
@@ -789,36 +760,36 @@ html.wp-toolbar {
 
 .ghl-upgrade-info strong {
     display: block;
-    font-size: 16px;
-    color: #92400e;
+    font-size: var(--ghl-font-size-lg);
+    color: var(--ghl-warning-dark);
     margin-bottom: 8px;
 }
 
 .ghl-upgrade-info p {
-    color: #78350f;
-    font-size: 14px;
+    color: var(--ghl-warning-dark);
+    font-size: var(--ghl-font-size-base);
     line-height: 1.6;
     margin: 0 0 16px;
 }
 
 .ghl-button-outline {
-    background: white;
-    color: #f59e0b;
-    border: 2px solid #f59e0b;
+    background: var(--ghl-bg-primary);
+    color: var(--ghl-warning);
+    border: 2px solid var(--ghl-warning);
 }
 
 .ghl-button-outline:hover {
-    background: #f59e0b;
-    color: white;
+    background: var(--ghl-warning);
+    color: var(--ghl-text-inverse);
 }
 
 .ghl-button-small {
-    padding: 8px 16px;
-    font-size: 14px;
+    padding: var(--ghl-spacing-sm) var(--ghl-spacing-base);
+    font-size: var(--ghl-font-size-base);
 }
 
 .ghl-button-small .dashicons {
-    font-size: 16px;
+    font-size: var(--ghl-font-size-lg);
     width: 16px;
     height: 16px;
 }
@@ -826,23 +797,23 @@ html.wp-toolbar {
 /* Next Steps */
 .ghl-next-steps {
     text-align: left;
-    background: #f9fafb;
+    background: var(--ghl-bg-secondary);
     padding: 28px;
-    border-radius: 12px;
+    border-radius: var(--ghl-radius-lg);
     margin-top: 32px;
 }
 
 .ghl-next-steps h3 {
-    font-size: 16px;
+    font-size: var(--ghl-font-size-lg);
     margin: 0 0 18px;
-    color: #1a1a1a;
+    color: var(--ghl-text-primary);
     text-align: center;
 }
 
 .ghl-next-steps-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
+    gap: var(--ghl-spacing-base);
 }
 
 @media (max-width: 900px) {
@@ -852,12 +823,12 @@ html.wp-toolbar {
 }
 
 .ghl-next-step-card {
-    background: white;
+    background: var(--ghl-bg-primary);
     border: 1px solid var(--ghl-border-primary);
-    border-radius: 10px;
+    border-radius: var(--ghl-radius-md);
     padding: 20px 18px;
     text-align: left;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform var(--ghl-transition-base), box-shadow var(--ghl-transition-base);
 }
 
 .ghl-next-step-card:hover {
@@ -871,7 +842,7 @@ html.wp-toolbar {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 10px;
+    border-radius: var(--ghl-radius-md);
     background: var(--ghl-primary-light);
     margin-bottom: 12px;
 }
@@ -882,15 +853,15 @@ html.wp-toolbar {
 
 .ghl-next-step-card strong {
     display: block;
-    font-size: 14px;
-    color: #1a1a1a;
+    font-size: var(--ghl-font-size-base);
+    color: var(--ghl-text-primary);
     margin-bottom: 4px;
 }
 
 .ghl-next-step-card span {
-    font-size: 13px;
-    color: #6b7280;
-    line-height: 1.5;
+    font-size: var(--ghl-font-size-sm);
+    color: var(--ghl-text-secondary);
+    line-height: var(--ghl-line-height-base);
 }
 
 .ghl-wizard-actions--center {
@@ -899,32 +870,32 @@ html.wp-toolbar {
 
 /* Actions Footer */
 .ghl-wizard-actions {
-    padding: 24px 60px;
+    padding: var(--ghl-spacing-lg) 60px;
     background: var(--ghl-bg-secondary);
     border-top: 1px solid var(--ghl-border-primary);
     display: flex;
     justify-content: space-between;
-    gap: 12px;
-    border-radius: 0 0 12px 12px;
+    gap: var(--ghl-spacing-md);
+    border-radius: 0 0 var(--ghl-radius-lg) var(--ghl-radius-lg);
 }
 
 /* Full-width Setting Row for Tags Input */
 .ghl-setting-row--full {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: var(--ghl-spacing-md);
     cursor: default;
 }
 
 .ghl-setting-row--full:hover {
-    background: #f9fafb;
+    background: var(--ghl-bg-secondary);
 }
 
 .ghl-setting-row--nested {
-    margin-top: 12px;
-    background: #ffffff;
+    margin-top: var(--ghl-spacing-md);
+    background: var(--ghl-bg-primary);
     border: 1px solid var(--ghl-border-primary);
-    padding: 16px;
+    padding: var(--ghl-spacing-base);
 }
 
 .ghl-tags-input-wrapper {
@@ -933,14 +904,14 @@ html.wp-toolbar {
 
 .ghl-tags-select {
     width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 14px;
-    line-height: 1.5;
-    color: #1f2937;
-    background-color: #ffffff;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    padding: var(--ghl-spacing-sm) var(--ghl-spacing-md);
+    border: 1px solid var(--ghl-border-secondary);
+    border-radius: var(--ghl-radius-base);
+    font-size: var(--ghl-font-size-base);
+    line-height: var(--ghl-line-height-base);
+    color: var(--ghl-text-primary);
+    background-color: var(--ghl-bg-primary);
+    transition: border-color var(--ghl-transition-fast), box-shadow var(--ghl-transition-fast);
 }
 
 .ghl-tags-select:focus {
@@ -960,53 +931,53 @@ html.wp-toolbar {
 
 .ghl-tab-nav {
     display: flex;
-    border-bottom: 2px solid #e5e7eb;
+    border-bottom: 2px solid var(--ghl-border-primary);
     margin-bottom: 0;
-    gap: 4px;
+    gap: var(--ghl-spacing-xs);
 }
 
 .ghl-tab-button {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
+    background: var(--ghl-bg-secondary);
+    border: 1px solid var(--ghl-border-primary);
     border-bottom: none;
     padding: 14px 24px;
     cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--ghl-font-size-base);
+    font-weight: var(--ghl-font-weight-semibold);
     display: flex;
     align-items: center;
-    gap: 8px;
-    transition: all 0.2s ease;
-    border-radius: 8px 8px 0 0;
-    color: #6b7280;
+    gap: var(--ghl-spacing-sm);
+    transition: all var(--ghl-transition-base);
+    border-radius: var(--ghl-radius-md) var(--ghl-radius-md) 0 0;
+    color: var(--ghl-text-secondary);
 }
 
 .ghl-tab-button:hover {
-    background: #fff;
-    color: #374151;
+    background: var(--ghl-bg-primary);
+    color: var(--ghl-text-primary);
 }
 
 .ghl-tab-button.active {
-    background: #fff;
-    border-bottom: 2px solid #fff;
+    background: var(--ghl-bg-primary);
+    border-bottom: 2px solid var(--ghl-bg-primary);
     margin-bottom: -2px;
     color: var(--ghl-primary);
-    border-color: #e5e7eb;
+    border-color: var(--ghl-border-primary);
 }
 
 .ghl-tab-button .dashicons {
-    font-size: 18px;
+    font-size: var(--ghl-font-size-xl);
     width: 18px;
     height: 18px;
 }
 
 .ghl-tab-content {
     display: none;
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    background: var(--ghl-bg-primary);
+    border: 1px solid var(--ghl-border-primary);
     border-top: none;
     padding: 0;
-    border-radius: 0 0 8px 8px;
+    border-radius: 0 0 var(--ghl-radius-md) var(--ghl-radius-md);
 }
 
 .ghl-tab-content.active {
@@ -1019,37 +990,37 @@ html.wp-toolbar {
 
 .ghl-tab-inner h3 {
     margin-top: 0;
-    margin-bottom: 12px;
-    font-size: 20px;
-    color: #111827;
+    margin-bottom: var(--ghl-spacing-md);
+    font-size: var(--ghl-font-size-2xl);
+    color: var(--ghl-text-primary);
 }
 
 .ghl-tab-inner .description {
-    color: #6b7280;
+    color: var(--ghl-text-secondary);
     margin-bottom: 25px;
     line-height: 1.6;
 }
 
 .ghl-info-box {
-    background: #eff6ff;
-    border-left: 4px solid #3b82f6;
+    background: var(--ghl-info-light);
+    border-left: 4px solid var(--ghl-info);
     padding: 20px;
     margin: 25px 0;
-    border-radius: 8px;
+    border-radius: var(--ghl-radius-md);
 }
 
 .ghl-info-box h4 {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--ghl-spacing-sm);
     margin-top: 0;
-    margin-bottom: 12px;
-    color: #1e40af;
+    margin-bottom: var(--ghl-spacing-md);
+    color: var(--ghl-info-dark);
 }
 
 .ghl-info-box ol {
-    margin: 12px 0 0 24px;
-    color: #1e3a8a;
+    margin: var(--ghl-spacing-md) 0 0 24px;
+    color: var(--ghl-info-dark);
     line-height: 1.8;
 }
 
@@ -1058,20 +1029,20 @@ html.wp-toolbar {
 }
 
 .ghl-oauth-scopes {
-    background: #fef3c7;
-    padding: 24px;
-    border-radius: 8px;
+    background: var(--ghl-warning-light);
+    padding: var(--ghl-spacing-lg);
+    border-radius: var(--ghl-radius-md);
     margin: 25px 0;
-    border: 1px solid #fbbf24;
+    border: 1px solid var(--ghl-warning);
 }
 
 .ghl-oauth-scopes h3 {
-    color: #92400e;
+    color: var(--ghl-warning-dark);
     font-size: 17px;
 }
 
 .ghl-oauth-scopes p {
-    color: #78350f;
+    color: var(--ghl-warning-dark);
     line-height: 1.6;
 }
 
@@ -1079,7 +1050,7 @@ html.wp-toolbar {
 .ghl-settings-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+    gap: var(--ghl-spacing-base);
     margin-top: 30px;
 }
 
@@ -1094,9 +1065,9 @@ html.wp-toolbar {
    =================================== */
 
 .ghl-connection-status-card {
-    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-    border: 2px solid #86efac;
-    border-radius: 12px;
+    background: linear-gradient(135deg, var(--ghl-success-light) 0%, var(--ghl-success-light) 100%);
+    border: 2px solid var(--ghl-success);
+    border-radius: var(--ghl-radius-lg);
     padding: 30px;
     margin-top: 30px;
     text-align: left;
@@ -1121,23 +1092,23 @@ html.wp-toolbar {
     font-size: 48px;
     width: 48px;
     height: 48px;
-    color: #22c55e;
-    background: white;
-    border-radius: 50%;
+    color: var(--ghl-success);
+    background: var(--ghl-bg-primary);
+    border-radius: var(--ghl-radius-full);
     padding: 8px;
 }
 
 .ghl-status-indicator strong {
     display: block;
-    font-size: 18px;
-    color: #166534;
+    font-size: var(--ghl-font-size-xl);
+    color: var(--ghl-success-dark);
     margin-bottom: 4px;
 }
 
 .ghl-connection-type {
     display: block;
-    font-size: 13px;
-    color: #15803d;
+    font-size: var(--ghl-font-size-sm);
+    color: var(--ghl-success-dark);
 }
 
 .ghl-location-id {
@@ -1146,24 +1117,24 @@ html.wp-toolbar {
 
 .ghl-location-id small {
     display: block;
-    font-size: 12px;
-    color: #15803d;
+    font-size: var(--ghl-font-size-xs);
+    color: var(--ghl-success-dark);
     margin-bottom: 4px;
 }
 
 .ghl-location-id code {
-    background: white;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 13px;
-    color: #166534;
-    border: 1px solid #86efac;
+    background: var(--ghl-bg-primary);
+    padding: 6px var(--ghl-spacing-md);
+    border-radius: var(--ghl-radius-base);
+    font-size: var(--ghl-font-size-sm);
+    color: var(--ghl-success-dark);
+    border: 1px solid var(--ghl-success);
 }
 
 /* Change Connection Collapse */
 .ghl-change-connection-wrapper {
     margin-top: 20px;
-    border-top: 1px solid #86efac;
+    border-top: 1px solid var(--ghl-success);
     padding-top: 20px;
 }
 
@@ -1172,34 +1143,34 @@ html.wp-toolbar {
     align-items: center;
     gap: 10px;
     width: 100%;
-    background: white;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
+    background: var(--ghl-bg-primary);
+    border: 1px solid var(--ghl-border-secondary);
+    border-radius: var(--ghl-radius-md);
     padding: 14px 18px;
-    font-size: 14px;
-    font-weight: 600;
-    color: #374151;
+    font-size: var(--ghl-font-size-base);
+    font-weight: var(--ghl-font-weight-semibold);
+    color: var(--ghl-text-primary);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all var(--ghl-transition-base);
 }
 
 .ghl-collapse-trigger:hover {
-    background: #f9fafb;
-    border-color: #9ca3af;
+    background: var(--ghl-bg-secondary);
+    border-color: var(--ghl-text-tertiary);
 }
 
 .ghl-collapse-trigger .dashicons:first-child {
-    font-size: 18px;
+    font-size: var(--ghl-font-size-xl);
     width: 18px;
     height: 18px;
 }
 
 .ghl-collapse-icon {
     margin-left: auto;
-    font-size: 16px;
+    font-size: var(--ghl-font-size-lg);
     width: 16px;
     height: 16px;
-    transition: transform 0.2s ease;
+    transition: transform var(--ghl-transition-base);
 }
 
 .ghl-collapse-trigger.active .ghl-collapse-icon {
@@ -1209,13 +1180,13 @@ html.wp-toolbar {
 .ghl-collapse-content {
     margin-top: 15px;
     padding: 20px;
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
+    background: var(--ghl-bg-primary);
+    border: 1px solid var(--ghl-border-primary);
+    border-radius: var(--ghl-radius-md);
 }
 
 .ghl-tags-select:disabled {
-    background-color: #f9fafb;
+    background-color: var(--ghl-bg-secondary);
     cursor: not-allowed;
 }
 
@@ -1225,12 +1196,12 @@ html.wp-toolbar {
 }
 
 .ghl-wizard-panel .select2-container--default .select2-selection--multiple {
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
+    border: 1px solid var(--ghl-border-secondary);
+    border-radius: var(--ghl-radius-base);
     min-height: 42px;
-    padding: 4px 8px;
-    background-color: #ffffff;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    padding: var(--ghl-spacing-xs) var(--ghl-spacing-sm);
+    background-color: var(--ghl-bg-primary);
+    transition: border-color var(--ghl-transition-fast), box-shadow var(--ghl-transition-fast);
 }
 
 .ghl-wizard-panel .select2-container--default.select2-container--focus .select2-selection--multiple {
@@ -1241,39 +1212,39 @@ html.wp-toolbar {
 .ghl-wizard-panel .select2-container--default .select2-selection--multiple .select2-selection__choice {
     background-color: var(--ghl-primary);
     border: none;
-    border-radius: 4px;
-    color: white;
-    padding: 4px 8px;
-    margin: 4px 4px 0 0;
-    font-size: 13px;
+    border-radius: var(--ghl-radius-sm);
+    color: var(--ghl-text-inverse);
+    padding: var(--ghl-spacing-xs) var(--ghl-spacing-sm);
+    margin: var(--ghl-spacing-xs) var(--ghl-spacing-xs) 0 0;
+    font-size: var(--ghl-font-size-sm);
 }
 
 .ghl-wizard-panel .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
     color: rgba(255, 255, 255, 0.8);
     margin-right: 6px;
-    font-size: 16px;
+    font-size: var(--ghl-font-size-lg);
     font-weight: bold;
 }
 
 .ghl-wizard-panel .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
-    color: white;
+    color: var(--ghl-text-inverse);
 }
 
 .ghl-wizard-panel .select2-container--default .select2-search--inline .select2-search__field {
-    font-size: 14px;
+    font-size: var(--ghl-font-size-base);
     padding: 4px;
     margin-top: 4px;
 }
 
 .ghl-wizard-panel .select2-dropdown {
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
+    border: 1px solid var(--ghl-border-secondary);
+    border-radius: var(--ghl-radius-base);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .ghl-wizard-panel .select2-results__option {
-    padding: 8px 12px;
-    font-size: 14px;
+    padding: var(--ghl-spacing-sm) var(--ghl-spacing-md);
+    font-size: var(--ghl-font-size-base);
 }
 
 .ghl-wizard-panel .select2-results__option--highlighted {
@@ -1281,25 +1252,25 @@ html.wp-toolbar {
 }
 
 .ghl-help-text {
-    font-size: 12px;
-    color: #6b7280;
+    font-size: var(--ghl-font-size-xs);
+    color: var(--ghl-text-secondary);
     margin: 8px 0 0 0;
 }
 
 /* Wizard Note */
 .ghl-wizard-note {
     display: flex;
-    gap: 12px;
-    padding: 16px;
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    border-radius: 8px;
-    margin-top: 24px;
+    gap: var(--ghl-spacing-md);
+    padding: var(--ghl-spacing-base);
+    background: var(--ghl-info-light);
+    border: 1px solid var(--ghl-info-light);
+    border-radius: var(--ghl-radius-md);
+    margin-top: var(--ghl-spacing-lg);
 }
 
 .ghl-wizard-note .dashicons {
-    color: #3b82f6;
-    font-size: 20px;
+    color: var(--ghl-info);
+    font-size: var(--ghl-font-size-2xl);
     width: 20px;
     height: 20px;
     flex-shrink: 0;
@@ -1308,16 +1279,16 @@ html.wp-toolbar {
 
 .ghl-wizard-note strong {
     display: block;
-    font-size: 14px;
-    color: #1e40af;
+    font-size: var(--ghl-font-size-base);
+    color: var(--ghl-info-dark);
     margin-bottom: 4px;
 }
 
 .ghl-wizard-note p {
-    font-size: 13px;
-    color: #1e3a8a;
+    font-size: var(--ghl-font-size-sm);
+    color: var(--ghl-info-dark);
     margin: 0;
-    line-height: 1.5;
+    line-height: var(--ghl-line-height-base);
 }
 
 /* Button Primary Variant */
@@ -1343,12 +1314,12 @@ html.wp-toolbar {
 }
 
 .ghl-button-large {
-    padding: 14px 32px;
-    font-size: 16px;
+    padding: 14px var(--ghl-spacing-xl);
+    font-size: var(--ghl-font-size-lg);
 }
 
 .ghl-button .dashicons {
-    font-size: 18px;
+    font-size: var(--ghl-font-size-xl);
     width: 18px;
     height: 18px;
 }
@@ -1376,7 +1347,7 @@ html.wp-toolbar {
     }
     
     .ghl-step-label {
-        font-size: 11px;
+        font-size: var(--ghl-font-size-xs);
     }
     
     .ghl-wizard-panel {
@@ -1391,7 +1362,7 @@ html.wp-toolbar {
     .ghl-wizard-actions {
         padding: 20px 25px;
         flex-direction: column-reverse;
-        gap: 12px;
+        gap: var(--ghl-spacing-md);
     }
     
     .ghl-wizard-actions .ghl-button {
@@ -1417,8 +1388,8 @@ html.wp-toolbar {
         flex: 1;
         justify-content: center;
         white-space: nowrap;
-        font-size: 13px;
-        padding: 12px 16px;
+        font-size: var(--ghl-font-size-sm);
+        padding: var(--ghl-spacing-md) var(--ghl-spacing-base);
     }
     
     .ghl-tab-inner {

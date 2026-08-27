@@ -49,7 +49,7 @@
 }
 
 .ghl-sync-value .dashicons {
-	font-size: 14px;
+	font-size: var(--ghl-font-size-base);
 	width: 14px;
 	height: 14px;
 	vertical-align: text-top;

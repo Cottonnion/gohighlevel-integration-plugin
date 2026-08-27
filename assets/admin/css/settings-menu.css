@@ -67,7 +67,7 @@
 	width: 20px;
 	height: 20px;
 	color: var(--ghl-sidemenu-icon);
-	font-size: 18px;
+	font-size: var(--ghl-font-size-xl);
 	flex-shrink: 0;
 }
 
@@ -132,13 +132,13 @@
 	z-index: 1000;
 	width: 56px;
 	height: 56px;
-	border-radius: 50%;
+	border-radius: var(--ghl-radius-full);
 	background: var(--ghl-primary);
-	color: #fff;
+	color: var(--ghl-text-inverse);
 	border: none;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 	cursor: pointer;
-	transition: all 0.3s ease;
+	transition: all var(--ghl-transition-slow);
 	align-items: center;
 	justify-content: center;
 }
@@ -153,7 +153,7 @@
 }
 
 .ghl-settings-menu-toggle .dashicons {
-	font-size: 24px;
+	font-size: var(--ghl-font-size-3xl);
 	width: 24px;
 	height: 24px;
 }
@@ -171,7 +171,7 @@
 		bottom: 0;
 		width: 60px;
 		z-index: 999;
-		transition: width 0.3s ease;
+		transition: width var(--ghl-transition-slow);
 		overflow: hidden;
 	}
 
@@ -188,12 +188,12 @@
 
 	.ghl-settings-nav .ghl-tab-label {
 		opacity: 0;
-		transition: opacity 0.2s ease;
+		transition: opacity var(--ghl-transition-base);
 	}
 
 	.ghl-settings-nav.expanded .ghl-tab-label {
 		opacity: 1;
-		transition: opacity 0.3s ease 0.1s;
+		transition: opacity var(--ghl-transition-slow) 0.1s;
 	}
 
 	.ghl-settings-nav .dashicons {
@@ -203,7 +203,7 @@
 	.ghl-settings-content {
 		margin-left: 60px;
 		width: calc(100% - 60px);
-		transition: margin-left 0.3s ease, width 0.3s ease;
+		transition: margin-left var(--ghl-transition-slow), width var(--ghl-transition-slow);
 	}
 
 	.ghl-settings-nav.expanded ~ .ghl-settings-content {

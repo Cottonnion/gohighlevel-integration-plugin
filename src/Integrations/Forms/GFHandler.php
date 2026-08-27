@@ -252,8 +252,8 @@ class GFHandler {
 			?>
 
 			<p class="submit">
-				<button type="submit" name="syncly_gf_save" value="1" class="button button-primary">
-					<?php esc_html_e( 'Save GHL CRM Settings', 'syncly' ); ?>
+				<button type="submit" name="syncly_gf_save" value="1" class="ghl-button ghl-button-primary">
+					<?php esc_html_e( 'Save Syncly Settings', 'syncly' ); ?>
 				</button>
 			</p>
 		</form>

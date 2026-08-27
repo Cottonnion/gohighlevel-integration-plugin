@@ -15,42 +15,42 @@
 
 /* Description Spacing */
 .ghl-description-spacing {
-	margin-top: 8px;
+	margin-top: var(--ghl-spacing-sm);
 }
 
 /* Logging Status - Active */
 .ghl-logging-status-active {
-	margin-top: 12px;
-	padding: 12px;
-	background: #ecfdf5;
-	border-left: 4px solid #10b981;
-	border-radius: 4px;
+	margin-top: var(--ghl-spacing-md);
+	padding: var(--ghl-spacing-md);
+	background: var(--ghl-success-light);
+	border-left: 4px solid var(--ghl-success);
+	border-radius: var(--ghl-radius-sm);
 }
 
 .ghl-logging-status-active p {
 	margin: 0;
-	font-size: 13px;
-	color: #065f46;
+	font-size: var(--ghl-font-size-sm);
+	color: var(--ghl-success-dark);
 }
 
 /* Logging Status - Disabled */
 .ghl-logging-status-disabled {
-	margin-top: 12px;
-	padding: 12px;
-	background: #fef3c7;
-	border-left: 4px solid #f59e0b;
-	border-radius: 4px;
+	margin-top: var(--ghl-spacing-md);
+	padding: var(--ghl-spacing-md);
+	background: var(--ghl-warning-light);
+	border-left: 4px solid var(--ghl-warning);
+	border-radius: var(--ghl-radius-sm);
 }
 
 .ghl-logging-status-disabled p {
 	margin: 0;
-	font-size: 13px;
-	color: #92400e;
+	font-size: var(--ghl-font-size-sm);
+	color: var(--ghl-warning-dark);
 }
 
 /* Family Accounts Section Spacing */
 .ghl-family-section {
-	margin-top: 24px;
+	margin-top: var(--ghl-spacing-lg);
 }
 
 /* Family Tag Select */
@@ -60,29 +60,29 @@
 
 /* Refresh Tags Button */
 .ghl-refresh-tags-btn {
-	margin-top: 8px;
+	margin-top: var(--ghl-spacing-sm);
 }
 
 /* Sync Families Progress */
 .ghl-sync-families-progress {
 	display: none;
-	margin-top: 12px;
-	padding: 12px;
-	background: #f0f9ff;
-	border-left: 4px solid #3b82f6;
-	border-radius: 4px;
+	margin-top: var(--ghl-spacing-md);
+	padding: var(--ghl-spacing-md);
+	background: var(--ghl-info-light);
+	border-left: 4px solid var(--ghl-info);
+	border-radius: var(--ghl-radius-sm);
 }
 
 .ghl-sync-families-details {
-	margin-top: 8px;
-	font-size: 13px;
-	color: #1e3a8a;
+	margin-top: var(--ghl-spacing-sm);
+	font-size: var(--ghl-font-size-sm);
+	color: var(--ghl-info-dark);
 }
 
 /* BuddyBoss Integration Notice */
 .ghl-buddyboss-notice {
 	margin: 0;
-	padding: 12px;
+	padding: var(--ghl-spacing-md);
 }
 
 .ghl-buddyboss-notice p {
@@ -93,95 +93,95 @@
 .ghl-family-stats-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-	gap: 16px;
-	margin-top: 8px;
+	gap: var(--ghl-spacing-base);
+	margin-top: var(--ghl-spacing-sm);
 }
 
 /* Family Stats Card - Total Families */
 .ghl-family-stat-total {
-	padding: 16px;
-	background: #f0f9ff;
-	border-left: 4px solid #3b82f6;
-	border-radius: 4px;
+	padding: var(--ghl-spacing-base);
+	background: var(--ghl-info-light);
+	border-left: 4px solid var(--ghl-info);
+	border-radius: var(--ghl-radius-sm);
 }
 
 .ghl-family-stat-total .ghl-stat-value {
-	font-size: 24px;
-	font-weight: 700;
-	color: #1e40af;
+	font-size: var(--ghl-font-size-3xl);
+	font-weight: var(--ghl-font-weight-bold);
+	color: var(--ghl-info-dark);
 }
 
 .ghl-family-stat-total .ghl-stat-label {
-	font-size: 13px;
-	color: #1e3a8a;
-	margin-top: 4px;
+	font-size: var(--ghl-font-size-sm);
+	color: var(--ghl-info-dark);
+	margin-top: var(--ghl-spacing-xs);
 }
 
 /* Family Stats Card - Parents */
 .ghl-family-stat-parents {
-	padding: 16px;
-	background: #ecfdf5;
-	border-left: 4px solid #10b981;
-	border-radius: 4px;
+	padding: var(--ghl-spacing-base);
+	background: var(--ghl-success-light);
+	border-left: 4px solid var(--ghl-success);
+	border-radius: var(--ghl-radius-sm);
 }
 
 .ghl-family-stat-parents .ghl-stat-value {
-	font-size: 24px;
-	font-weight: 700;
-	color: #065f46;
+	font-size: var(--ghl-font-size-3xl);
+	font-weight: var(--ghl-font-weight-bold);
+	color: var(--ghl-success-dark);
 }
 
 .ghl-family-stat-parents .ghl-stat-label {
-	font-size: 13px;
-	color: #064e3b;
-	margin-top: 4px;
+	font-size: var(--ghl-font-size-sm);
+	color: var(--ghl-success-dark);
+	margin-top: var(--ghl-spacing-xs);
 }
 
 /* Family Stats Card - Children */
 .ghl-family-stat-children {
-	padding: 16px;
-	background: #fef3c7;
-	border-left: 4px solid #f59e0b;
-	border-radius: 4px;
+	padding: var(--ghl-spacing-base);
+	background: var(--ghl-warning-light);
+	border-left: 4px solid var(--ghl-warning);
+	border-radius: var(--ghl-radius-sm);
 }
 
 .ghl-family-stat-children .ghl-stat-value {
-	font-size: 24px;
-	font-weight: 700;
-	color: #92400e;
+	font-size: var(--ghl-font-size-3xl);
+	font-weight: var(--ghl-font-weight-bold);
+	color: var(--ghl-warning-dark);
 }
 
 .ghl-family-stat-children .ghl-stat-label {
-	font-size: 13px;
-	color: #78350f;
-	margin-top: 4px;
+	font-size: var(--ghl-font-size-sm);
+	color: var(--ghl-warning-dark);
+	margin-top: var(--ghl-spacing-xs);
 }
 
 /* Usage Example Card */
 .ghl-family-usage-card {
-	margin-top: 24px;
+	margin-top: var(--ghl-spacing-lg);
 }
 
 /* Documentation Styles */
 .ghl-family-docs-card {
-	margin-top: 12px;
+	margin-top: var(--ghl-spacing-md);
 }
 
 .ghl-shortcode-example {
-	background: #f8f9fa;
-	padding: 16px;
-	border-radius: 4px;
-	border: 1px solid #dee2e6;
-	margin: 12px 0;
+	background: var(--ghl-bg-secondary);
+	padding: var(--ghl-spacing-base);
+	border-radius: var(--ghl-radius-sm);
+	border: 1px solid var(--ghl-border-primary);
+	margin: var(--ghl-spacing-md) 0;
 }
 
 .ghl-shortcode-example code {
-	font-size: 14px;
+	font-size: var(--ghl-font-size-base);
 	color: #d63384;
 }
 
 .ghl-docs-heading {
-	margin-top: 24px;
+	margin-top: var(--ghl-spacing-lg);
 }
 
 .ghl-docs-list {
@@ -190,25 +190,25 @@
 }
 
 .ghl-docs-description {
-	margin-top: 12px;
+	margin-top: var(--ghl-spacing-md);
 }
 
 .ghl-invite-url-example {
-	background: #f8f9fa;
-	padding: 4px 8px;
+	background: var(--ghl-bg-secondary);
+	padding: var(--ghl-spacing-xs) var(--ghl-spacing-sm);
 	border-radius: 3px;
-	font-size: 12px;
+	font-size: var(--ghl-font-size-xs);
 }
 
 .ghl-code-example {
 	background: #282c34;
 	color: #abb2bf;
-	padding: 16px;
-	border-radius: 4px;
-	font-family: monospace;
-	font-size: 13px;
+	padding: var(--ghl-spacing-base);
+	border-radius: var(--ghl-radius-sm);
+	font-family: var(--ghl-font-family-mono);
+	font-size: var(--ghl-font-size-sm);
 	line-height: 1.6;
-	margin: 12px 0;
+	margin: var(--ghl-spacing-md) 0;
 	overflow-x: auto;
 }
 

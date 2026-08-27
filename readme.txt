@@ -4,7 +4,7 @@ Tags: gohighlevel, wpfusion, contact-sync, woocommerce, leadconnector
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.4.34
+Stable tag: 1.4.35
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -90,6 +90,15 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
 == Changelog ==
+
+= 1.4.35 =
+* Consolidated admin styling into shared GHL design tokens (globals.css) so colors, spacing, and fonts stay consistent across every screen.
+* Added reusable GHL components to the global stylesheet: checkbox toggles, buttons (ghl-button), form inputs (ghl-input/ghl-select), and Select2 dropdowns.
+* Dashboard: moved the tab bar styling out of inline attributes into dashboard.css and matched the active tab to the brand accent color.
+* Settings: restyled the Roles/Permissions tag toggles ("Auto-apply tags", "Remove on change") as GHL checkboxes.
+* Gravity Forms: the GHL field selector is now a searchable Select2 dropdown; settings inputs and buttons use the GHL component styles.
+* Refactored admin column/profile assets into the shared asset manager so the global design tokens load on every Syncly screen.
+* "View in GHL" links in user columns and profiles now respect the configured white-label brand.
 
 = 1.4.34 =
 * Added advanced bulk sync to GHL with filters: user role, sync status, and user meta key/value.

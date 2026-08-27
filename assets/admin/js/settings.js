@@ -1001,7 +1001,8 @@
 		if (typeof $.fn.select2 !== 'undefined' && $('.ghl-role-tags-select').length > 0) {
 			var tags = (typeof syncly_settings_js_data !== 'undefined' && syncly_settings_js_data.tags) ? syncly_settings_js_data.tags : [];
 
-			// Pre-populate options from localized tags on each select
+			// Pre-populate options from localized tags and initialize select2
+			// per-select so each one's own data-placeholder attribute is honored.
 			$('.ghl-role-tags-select').each(function() {
 				var $select = $(this);
 				var existingVals = $select.find('option').map(function() { return $(this).val(); }).get();
@@ -1011,26 +1012,27 @@
 						$select.append(new Option(label, label, false, false));
 					}
 				});
-			});
 
-			$('.ghl-role-tags-select').select2({
-				tags: true,
-				tokenSeparators: [','],
-				allowClear: true,
-				width: '100%',
-				closeOnSelect: false,
-				scrollAfterSelect: false,
-				createTag: function(params) {
-					var term = $.trim(params.term);
-					if (term === '') {
-						return null;
+				$select.select2({
+					placeholder: $select.data('placeholder') || 'Select or type tags...',
+					tags: true,
+					tokenSeparators: [','],
+					allowClear: true,
+					width: '100%',
+					closeOnSelect: false,
+					scrollAfterSelect: false,
+					createTag: function(params) {
+						var term = $.trim(params.term);
+						if (term === '') {
+							return null;
+						}
+						return {
+							id: term,
+							text: term,
+							newTag: true
+						};
 					}
-					return {
-						id: term,
-						text: term,
-						newTag: true
-					};
-				}
+				});
 			});
 		}
 	}

@@ -46,7 +46,7 @@ defined( 'ABSPATH' ) || exit;
 						<?php foreach ( $gf_fields as $field ) : ?>
 							<tr>
 								<td><strong><?php echo esc_html( $field['label'] ); ?></strong> <span class="field-type">(<?php echo esc_html( $field['type'] ); ?> #<?php echo esc_html( $field['id'] ); ?>)</span></td>
-								<td><select name="syncly_gf_field_mapping[<?php echo esc_attr( $field['id'] ); ?>]" class="ghl-field-select" data-saved-value="<?php echo esc_attr( $config['field_mapping'][ $field['id'] ] ?? '' ); ?>"><option value=""><?php esc_html_e( '— Loading fields... —', 'syncly' ); ?></option></select></td>
+								<td><select name="syncly_gf_field_mapping[<?php echo esc_attr( $field['id'] ); ?>]" class="ghl-select ghl-field-select" data-placeholder="<?php esc_attr_e( 'Select a GoHighLevel contact field…', 'syncly' ); ?>" data-saved-value="<?php echo esc_attr( $config['field_mapping'][ $field['id'] ] ?? '' ); ?>"><option value=""><?php esc_html_e( '— Loading fields... —', 'syncly' ); ?></option></select></td>
 							</tr>
 						<?php endforeach; ?>
 					<?php else : ?>

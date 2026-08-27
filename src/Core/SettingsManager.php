@@ -923,6 +923,50 @@ class SettingsManager {
 	}
 
 	/**
+	 * Get the currently configured GHL location ID.
+	 *
+	 * Single source of truth for the plugin's "active location", replacing the
+	 * inline `location_id ?: oauth_location_id` fallback duplicated across
+	 * profile/column/integration code.
+	 *
+	 * @return string
+	 */
+	public function get_active_location_id(): string {
+		$settings = $this->get_settings_array();
+		return $this->get_location_id_from_settings( $settings );
+	}
+
+	/**
+	 * Build the GoHighLevel contact detail URL for a contact ID.
+	 *
+	 * Single source of truth for the white-label-aware contact link used by
+	 * user profiles, users list columns, WooCommerce order columns, etc.
+	 *
+	 * @param string $contact_id GHL contact ID.
+	 * @return string Absolute GHL contact URL, or empty when no location is configured.
+	 */
+	public function get_ghl_contact_url( string $contact_id ): string {
+		$location_id = $this->get_active_location_id();
+
+		if ( '' === $location_id || '' === trim( $contact_id ) ) {
+			return '';
+		}
+
+		$base_domain = $this->get_settings_array()['ghl_white_label_domain'] ?? '';
+
+		if ( empty( $base_domain ) ) {
+			$base_domain = 'https://app.leadconnectorhq.com';
+		}
+
+		return sprintf(
+			'%s/v2/location/%s/contacts/detail/%s',
+			rtrim( $base_domain, '/' ),
+			rawurlencode( $location_id ),
+			rawurlencode( trim( $contact_id ) )
+		);
+	}
+
+	/**
 	 * Get the location ID from a settings array without going through hydrated getters.
 	 *
 	 * @param array $settings Settings array.

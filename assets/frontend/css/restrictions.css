@@ -22,19 +22,19 @@
 }
 
 .ghl-restricted-notice {
-    font-size: 18px;
-    font-weight: 600;
-    color: #495057;
+    font-size: var(--ghl-font-size-xl);
+    font-weight: var(--ghl-font-weight-semibold);
+    color: var(--ghl-text-primary);
 }
 
 .ghl-restricted-content a {
-    color: #2271b1;
+    color: var(--ghl-info);
     text-decoration: none;
-    font-weight: 500;
+    font-weight: var(--ghl-font-weight-medium);
 }
 
 .ghl-restricted-content a:hover {
-    color: #135e96;
+    color: var(--ghl-info-dark);
     text-decoration: underline;
 }
 
@@ -46,6 +46,6 @@
     }
 
     .ghl-restricted-notice {
-        font-size: 16px;
+        font-size: var(--ghl-font-size-lg);
     }
 }

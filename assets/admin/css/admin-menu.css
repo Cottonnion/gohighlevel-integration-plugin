@@ -11,20 +11,20 @@
    Main Menu Container Styling
    =========================== */
 #adminmenu .toplevel_page_syncly-admin {
-    background: #2d3748;
+    background: var(--ghl-text-primary);
     margin: 0;
 }
 
 #adminmenu .toplevel_page_syncly-admin > a {
-    color: #e2e8f0 !important;
-    font-weight: 600;
-    font-size: 14px;
-    padding: 12px 15px !important;
+    color: var(--ghl-border-primary) !important;
+    font-weight: var(--ghl-font-weight-semibold);
+    font-size: var(--ghl-font-size-base);
+    padding: var(--ghl-spacing-md) 15px !important;
 }
 
 #adminmenu .toplevel_page_syncly-admin:hover > a,
 #adminmenu .toplevel_page_syncly-admin.wp-has-current-submenu > a {
-    color: #ffffff !important;
+    color: var(--ghl-text-inverse) !important;
 }
 
 /* Menu icon styling */
@@ -37,21 +37,21 @@
    Submenu Container Styling
    =========================== */
 #adminmenu .toplevel_page_syncly-admin .wp-submenu {
-    background: #2d3748 !important;
+    background: var(--ghl-text-primary) !important;
     padding: 0;
     margin: 0;
 }
 
 /* Remove default WordPress submenu styles */
 #adminmenu .toplevel_page_syncly-admin .wp-submenu a {
-    color: #a0aec0 !important;
-    padding: 12px 20px !important;
-    font-size: 14px;
-    font-weight: 400;
+    color: var(--ghl-text-tertiary) !important;
+    padding: var(--ghl-spacing-md) 20px !important;
+    font-size: var(--ghl-font-size-base);
+    font-weight: var(--ghl-font-weight-normal);
     background: transparent;
     border: none;
-    border-bottom: 1px solid #3a4556;
-    transition: all 0.15s ease;
+    border-bottom: 1px solid var(--ghl-text-primary);
+    transition: all var(--ghl-transition-fast);
 }
 
 /* Last submenu item - no bottom border */
@@ -61,15 +61,15 @@
 
 /* Submenu hover state */
 #adminmenu .toplevel_page_syncly-admin .wp-submenu a:hover {
-    background: #3a4556 !important;
-    color: #ffffff !important;
+    background: var(--ghl-text-primary) !important;
+    color: var(--ghl-text-inverse) !important;
 }
 
 /* Active submenu item - matches screenshot */
 #adminmenu .toplevel_page_syncly-admin .wp-submenu a.current {
-    background: #3a4556 !important;
-    color: #ffffff !important;
-    font-weight: 600;
+    background: var(--ghl-text-primary) !important;
+    color: var(--ghl-text-inverse) !important;
+    font-weight: var(--ghl-font-weight-semibold);
 }
 
 /* ===========================
@@ -77,7 +77,7 @@
    =========================== */
 /* Add thicker borders between major groups */
 #adminmenu .toplevel_page_syncly-admin .wp-submenu li.menu-group-separator {
-    border-bottom: 2px solid #3a4556 !important;
+    border-bottom: 2px solid var(--ghl-text-primary) !important;
 }
 
 #adminmenu .toplevel_page_syncly-admin .wp-submenu li.menu-group-separator a {
@@ -87,7 +87,7 @@
 /* Indented submenu items (for nested items like under Contacts) */
 #adminmenu .toplevel_page_syncly-admin .wp-submenu li.menu-indent a {
     padding-left: 35px !important;
-    font-size: 13px;
+    font-size: var(--ghl-font-size-sm);
 }
 
 /* ===========================
@@ -104,7 +104,7 @@
 @media screen and (max-width: 782px) {
     #adminmenu .toplevel_page_syncly-admin .wp-submenu a {
         padding: 14px 15px !important;
-        font-size: 16px;
+        font-size: var(--ghl-font-size-lg);
     }
     
     #adminmenu .toplevel_page_syncly-admin .wp-submenu li.menu-indent a {
@@ -118,6 +118,6 @@
 #adminmenu .toplevel_page_syncly-admin .wp-submenu a:focus {
     /* outline: 2px solid #7e3bd0; */
     outline-offset: -2px;
-    background: #3a4556 !important;
-    color: #ffffff !important;
+    background: var(--ghl-text-primary) !important;
+    color: var(--ghl-text-inverse) !important;
 }

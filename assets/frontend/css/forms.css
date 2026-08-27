@@ -21,10 +21,10 @@
 .ghl-form-error {
 	padding: 20px;
 	margin: 20px 0;
-	background: #fee;
-	border: 1px solid #c33;
-	border-radius: 4px;
-	color: #c33;
+	background: var(--ghl-error-light);
+	border: 1px solid var(--ghl-error-dark);
+	border-radius: var(--ghl-radius-sm);
+	color: var(--ghl-error-dark);
 }
 
 .ghl-form-error strong {
