@@ -48,6 +48,7 @@ jobs:
         env:
           WPORG_SVN_PASSWORD: ${{ secrets.WPORG_SVN_PASSWORD }}
         run: |
+          cd /tmp/svn-repo
           svn commit \
             --username "${WPORG_USERNAME}" \
             --password "${WPORG_SVN_PASSWORD}" \
