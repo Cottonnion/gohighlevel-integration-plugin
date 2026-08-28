@@ -1,0 +1,55 @@
+name: Deploy WordPress.org Assets
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-assets:
+    name: Deploy .wordpress-org assets to SVN
+    runs-on: ubuntu-latest
+    env:
+      PLUGIN_SLUG: syncly
+      WPORG_USERNAME: yahyadeved
+      SVN_URL: https://plugins.svn.wordpress.org/syncly
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install SVN
+        run: sudo apt-get update -q && sudo apt-get install -y subversion
+
+      - name: Checkout SVN assets
+        run: |
+          set -euo pipefail
+          svn checkout --depth immediates "${SVN_URL}" /tmp/svn-repo
+          svn update --set-depth infinity /tmp/svn-repo/assets || true
+
+      - name: Sync .wordpress-org to SVN assets
+        run: |
+          set -euo pipefail
+          rsync -a ./.wordpress-org/ /tmp/svn-repo/assets/
+
+      - name: Set binary MIME types for images
+        run: |
+          set -euo pipefail
+          cd /tmp/svn-repo/assets
+          find . -type f ! -path './.svn/*' -name '*.png' -exec svn propset svn:mime-type image/png {} +
+          find . -type f ! -path './.svn/*' -name '*.jpg' -exec svn propset svn:mime-type image/jpeg {} +
+          find . -type f ! -path './.svn/*' -name '*.svg' -exec svn propset svn:mime-type image/svg+xml {} +
+
+      - name: Stage SVN changes (add new / remove deleted)
+        run: |
+          cd /tmp/svn-repo
+          svn status | grep '^?' | awk '{print $2}' | xargs -r svn add --force
+          svn status | grep '^!' | awk '{print $2}' | xargs -r svn delete --force
+
+      - name: Commit assets to SVN
+        env:
+          WPORG_SVN_PASSWORD: ${{ secrets.WPORG_SVN_PASSWORD }}
+        run: |
+          svn commit \
+            --username "${WPORG_USERNAME}" \
+            --password "${WPORG_SVN_PASSWORD}" \
+            --non-interactive \
+            --message "Update wp.org assets (screenshots, banners, icons)"
