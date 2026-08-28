@@ -116,6 +116,16 @@ class MaintenanceHandler {
 			wp_cache_flush();
 		}
 
+		/**
+		 * Fires after the dashboard "Clear Cache" action has wiped plugin caches.
+		 *
+		 * Lets Pro (or third-party code) purge its own caches, e.g. the cached
+		 * GHL calendars and workflows used in the product auto-booking metabox.
+		 *
+		 * @since 1.4.18
+		 */
+		do_action( 'syncly_cache_cleared' );
+
 		wp_send_json_success(
 			[
 				'message' => __( 'Cache cleared successfully!', 'syncly' ),

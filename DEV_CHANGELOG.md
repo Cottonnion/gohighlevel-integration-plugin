@@ -4,6 +4,52 @@ Internal changelog with full technical details. **Not included in release zips.*
 
 ---
 
+## [1.4.36] - 2026-08-28
+
+### OAuth scope alignment for Calendar Appointments
+
+**File**: `src/API/Client/Client.php`
+
+- Added `calendars/events.write` scope (book/manage calendar appointments) and aligned the requested scope list with the GoHighLevel marketplace draft: `calendars.readonly`/`calendars.write`, `workflows.readonly`, `conversations.readonly`/`conversations.write`, `conversations/message.readonly`/`conversations/message.write`, `locations.readonly`, plus the existing contacts/tags/customFields/objects/opportunities scopes. Removed `forms.write` and the commented `campaigns.readonly`.
+- Added `set_api_version()` / `get_api_version()` so callers can switch the GHL API version header per request.
+
+**File**: `src/API/ScopeChecker.php`
+
+- Removed the legacy `campaigns` scope/endpoint entries.
+
+### Cache-clear action for Pro
+
+**Files**: `src/Core/Settings/MaintenanceHandler.php`, `src/Core/SettingsManager.php`
+
+- Added `do_action( 'syncly_cache_cleared' )` after the dashboard Clear Cache handler wipes caches and after `purge_location_caches()` runs on connection/location changes (gated to avoid firing during early bootstrap).
+- Syncly Pro listens on this action to purge its cached GHL calendars/workflows transients.
+
+### Contact API additions (public REST)
+
+**File**: `src/API/Resources/ContactResource.php`
+
+- `get_by_id( $contact_id )`: GET full-detail contact (includes tags + custom field values).
+- `update_custom_fields( $contact_id, $custom_fields )`: PUT `{contact}/customFields` with the `locationId` body flag disabled (that endpoint rejects it).
+
+### Manual sync trigger enhancements
+
+**File**: `src/API/RestAPIController.php`
+
+- `trigger_sync()` now lowercases/validates `type` against `all|users|contacts|forms` (400 with allowed list otherwise), calls `QueueManager::process_queue()` inline (same path as the scheduled auto-sync), and returns `processed` queue status in the response.
+- Pro registers additional public contact routes via the `syncly_register_public_rest_routes` action.
+
+### UI
+
+**File**: `templates/admin/partials/settings/webhooks.php`
+
+- Rebuilt the Webhook Setup screen on the GHL design-token components (`ghl-settings-wrapper/card/header`, status styling) and added the settings nonce field.
+
+**File**: `templates/admin/partials/settings/upgrade.php`
+
+- Added Pro feature cards for Auto-Book GHL Calendar and GHL Workflow Enrollment.
+
+---
+
 ## [1.4.31] - 2026-08-23
 
 ### Reliability, Security, and Release Hardening

@@ -2,6 +2,24 @@
 
 All notable changes to Syncly will be documented in this file.
 
+## [1.4.36] - 2026-08-28
+
+### Added
+
+- Added the `calendars/events.write` OAuth scope for GoHighLevel calendar appointment booking, used by Syncly Pro's product auto-booking feature.
+- Broadened the OAuth scope set to align with the GoHighLevel marketplace draft: calendars (read/write), workflows, conversations, and conversation messages.
+- Fired a new `syncly_cache_cleared` action when the dashboard "Clear Cache" button or a location/connection change purges caches, so Syncly Pro can clear its cached calendars and workflows too.
+- Added `ContactResource::get_by_id()` (full-detail contact including tags and custom fields) and `ContactResource::update_custom_fields()` for Syncly Pro's public REST endpoints.
+
+### Changed
+
+- The REST API manual sync trigger now accepts `all`, `users`, `contacts`, and `forms`; unknown types receive a 400 error.
+- The manual sync trigger now processes the queue immediately (the same code path as the scheduled auto-sync) and returns queue status in its response.
+- Added `Client::set_api_version()` / `get_api_version()` so API consumers can switch GHL API versions for individual requests.
+- Rebuilt the Webhook Setup settings screen on the GHL design-token styling.
+- Removed the obsolete Campaigns scope from OAuth and scope checking.
+- Added Upgrade page descriptions for two new Syncly Pro features: Auto-Book GHL Calendar and GHL Workflow Enrollment.
+
 ## [1.4.35] - 2026-08-28
 
 ### Added

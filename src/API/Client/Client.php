@@ -766,6 +766,30 @@ class Client implements ClientInterface {
 	}
 
 	/**
+	 * Set the API version header used for subsequent requests.
+	 *
+	 * Allows callers to temporarily switch to a specific GHL API version
+	 * (e.g. v3 routes) for a single request and restore the configured one.
+	 *
+	 * @param string $api_version API version header value.
+	 * @return void
+	 */
+	public function set_api_version( string $api_version ): void {
+		if ( '' !== trim( $api_version ) ) {
+			$this->api_version = $api_version;
+		}
+	}
+
+	/**
+	 * Get the current API version header value.
+	 *
+	 * @return string
+	 */
+	public function get_api_version(): string {
+		return $this->api_version;
+	}
+
+	/**
 	 * Skip OAuth token refresh for probe checks.
 	 *
 	 * @param bool $skip Whether to skip OAuth refresh.
@@ -782,14 +806,18 @@ class Client implements ClientInterface {
 	 * The redirect_uri always points to synclyforgohighlevel.com/wp-json/ghl/v1/callback
 	 * (the proxy), which then forwards back to the WordPress site.
 	 *
-	 * Scopes requested:
+	 * Scopes requested (aligned with the marketplace draft version):
 	 * - contacts.readonly / contacts.write
 	 * - locations/tags.readonly / locations/tags.write
 	 * - locations/customFields.readonly / locations/customFields.write
-	 * - opportunities.readonly / opportunities.write
-	 * - workflows.readonly / forms.readonly / forms.write
-	 * - campaigns.readonly (Campaign Enrollment)
+	 * - forms.readonly
 	 * - objects/schema + record + associations (Custom Objects)
+	 * - conversations / conversations/message (Conversations)
+	 * - locations.readonly
+	 * - workflows.readonly
+	 * - calendars.readonly / calendars.write
+	 * - calendars/events.write (Calendar Appointments)
+	 * - opportunities.readonly / opportunities.write
 	 *
 	 * @param string $redirect_uri Unused directly (proxy handles redirect).
 	 * @param string $return_url   The WP admin URL to return to after auth; passed as `state`.
@@ -809,15 +837,24 @@ class Client implements ClientInterface {
 					'locations/customFields.readonly',  // View Custom Fields
 					'locations/customFields.write',     // Edit Custom Fields
 					'forms.readonly',                   // View Forms
-					'forms.write',                      // Edit Forms
-					// 'campaigns.readonly',               // View Campaigns
 					'objects/schema.readonly',          // View Objects Schema
 					'objects/schema.write',             // Edit Objects Schema
 					'objects/record.readonly',          // View Objects Records
 					'objects/record.write',             // Edit Objects Records
-					'associations.readonly',            // View Associations
 					'associations.write',               // Write Associations
+					'associations.readonly',            // View Associations
 					'associations/relation.write',      // Write Associations Relations
+					'conversations.readonly',           // View Conversations
+					'conversations.write',              // Write Conversations
+					'conversations/message.readonly',   // View Conversation Messages
+					'conversations/message.write',      // Write Conversation Messages
+					'locations.readonly',               // View Location
+					'workflows.readonly',               // View Workflows
+					'calendars.readonly',               // View Calendars
+					'calendars.write',                  // Edit Calendars
+					'calendars/events.write',           // Book / manage Calendar Appointments
+					'opportunities.readonly',           // View Opportunities
+					'opportunities.write',              // Edit Opportunities
 				]
 			),
 			'response_type' => 'code',

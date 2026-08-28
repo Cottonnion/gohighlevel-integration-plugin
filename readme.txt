@@ -4,7 +4,7 @@ Tags: gohighlevel, wpfusion, contact-sync, woocommerce, leadconnector
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.4.35
+Stable tag: 1.4.36
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -90,6 +90,15 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
 == Changelog ==
+
+= 1.4.36 =
+* Calendar Appointments: added the calendars/events.write OAuth scope so Syncly Pro can book and manage GoHighLevel calendar appointments.
+* Broadened OAuth scopes to align with the GoHighLevel marketplace draft (calendars, workflows, conversations, messages, locations).
+* Clear Cache now also purges the cached GoHighLevel calendars and workflows used by Syncly Pro's product auto-booking settings.
+* REST API: the manual sync trigger now validates sync types, processes the sync queue immediately, and returns queue status.
+* Added full-detail contact lookup and custom-field update support to the contact API for Syncly Pro's public REST endpoints.
+* Rebuilt the Webhook Setup screen with the GHL design-token styling.
+* Removed the obsolete Campaigns scope; added Upgrade page cards for Syncly Pro's new calendar booking and workflow enrollment features.
 
 = 1.4.35 =
 * Consolidated admin styling into shared GHL design tokens (globals.css) so colors, spacing, and fonts stay consistent across every screen.

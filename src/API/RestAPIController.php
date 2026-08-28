@@ -409,16 +409,38 @@ class RestAPIController {
 	 */
 	public function trigger_sync( \WP_REST_Request $request ) {
 		$params    = $request->get_json_params();
-		$sync_type = $params['type'] ?? 'users';
+		$sync_type = strtolower( (string) ( $params['type'] ?? 'all' ) );
+
+		$allowed_types = [ 'all', 'users', 'contacts', 'forms' ];
+		if ( ! in_array( $sync_type, $allowed_types, true ) ) {
+			return new \WP_Error(
+				'invalid_sync_type',
+				sprintf(
+					/* translators: %s: Comma-separated list of valid types */
+					__( 'Invalid sync type. Allowed: %s', 'syncly' ),
+					implode( ', ', $allowed_types )
+				),
+				[ 'status' => 400 ]
+			);
+		}
 
 		try {
+			// Extension point for third parties.
 			do_action( 'syncly_trigger_manual_sync', $sync_type );
+
+			// Process the queue (both directions), same code path the
+			// maintenance runner uses for the scheduled auto-sync.
+			\Syncly\Sync\QueueManager::get_instance()->process_queue();
 
 			return new \WP_REST_Response(
 				[
 					'success' => true,
 					/* translators: %s: Type of sync (e.g., users, contacts) */
 					'message' => sprintf( __( '%s sync triggered successfully', 'syncly' ), ucfirst( $sync_type ) ),
+					'data'    => [
+						'type'      => $sync_type,
+						'processed' => \Syncly\Sync\QueueManager::get_instance()->get_queue_status(),
+					],
 				],
 				200
 			);

@@ -1561,6 +1561,16 @@ class SettingsManager {
 				// TagManager may not be fully initialized yet during early hooks — safe to ignore.
 			}
 		}
+
+		/**
+		 * Fires after location caches are purged (connection change).
+		 *
+		 * Lets Pro (or third-party code) purge its own caches, e.g. the cached
+		 * GHL calendars and workflows used in the product auto-booking metabox.
+		 *
+		 * @since 1.4.18
+		 */
+		do_action( 'syncly_cache_cleared' );
 	}
 
 	/**

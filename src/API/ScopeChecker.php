@@ -37,7 +37,6 @@ class ScopeChecker {
 		'custom_objects' => array( 'objects/schema.readonly', 'objects/records.readonly', 'objects/records.write' ),
 		'associations'   => array( 'associations.readonly', 'associations.write', 'associations/relations.readonly', 'associations/relations.write' ),
 		'forms'          => array( 'forms.readonly' ),
-		'campaigns'      => array( 'campaigns.readonly', 'contacts.write' ),
 		'locations'      => array( 'locations.readonly' ),
 		'tasks'          => array( 'locations/tasks.write' ),
 	);
@@ -199,12 +198,6 @@ class ScopeChecker {
 				'params' => array(
 					'locationId' => $location_id,
 					'limit'      => 1,
-				),
-			),
-			'campaigns'      => array(
-				'path'   => 'campaigns/',
-				'params' => array(
-					'locationId' => $location_id,
 				),
 			),
 			'locations'      => array(

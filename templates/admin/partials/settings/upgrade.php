@@ -79,6 +79,16 @@ $pro_features = [
 		'description' => __( 'Tag contacts on product purchase, track abandoned carts, sync opportunities, and convert customers automatically.', 'syncly' ),
 	],
 	[
+		'icon'        => 'dashicons-calendar-alt',
+		'title'       => __( 'Auto-Book GHL Calendar', 'syncly' ),
+		'description' => __( 'Automatically book the customer into the first free slot on a GoHighLevel calendar when an order changes status. Refunds and cancellations cancel the appointment (never delete it), freeing the slot again. Choose exactly which statuses book or cancel, and how many days ahead to start searching for a slot.', 'syncly' ),
+	],
+	[
+		'icon'        => 'dashicons-share-alt',
+		'title'       => __( 'GHL Workflow Enrollment', 'syncly' ),
+		'description' => __( 'Automatically enroll contacts in GoHighLevel workflows on purchase — on the order statuses you choose — and un-enroll them when an order is refunded or cancelled. Optionally re-enroll on every successful subscription renewal.', 'syncly' ),
+	],
+	[
 		'icon'        => 'dashicons-groups',
 		'title'       => __( 'Membership Plan Tag Automation', 'syncly' ),
 		'description' => __( 'Grant WooCommerce Membership plans from GoHighLevel tags and optionally revoke automation-granted access when qualifying tags are removed.', 'syncly' ),

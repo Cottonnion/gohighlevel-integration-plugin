@@ -58,6 +58,36 @@ class ContactResource extends AbstractResource {
 	}
 
 	/**
+	 * Get a single contact by ID.
+	 *
+	 * The full-detail endpoint returns the contact including its tags and
+	 * custom field values, which the list/search endpoints do not include.
+	 *
+	 * @param string $contact_id Contact ID.
+	 * @return array|null Contact data or null when not found.
+	 */
+	public function get_by_id( string $contact_id ): ?array {
+		$response = $this->client->get( $this->build_endpoint( $contact_id ) );
+
+		return $response['contact'] ?? $response['contacts'][0] ?? null;
+	}
+
+	/**
+	 * Update one or more custom fields on a contact.
+	 *
+	 * @param string $contact_id    Contact ID.
+	 * @param array  $custom_fields List of ['id' => ..., 'value' => ...] maps.
+	 * @return array Response data.
+	 */
+	public function update_custom_fields( string $contact_id, array $custom_fields ): array {
+		return $this->client->put(
+			$this->build_endpoint( "{$contact_id}/customFields" ),
+			[ 'customFields' => array_values( $custom_fields ) ],
+			false // The customFields endpoint rejects locationId in the body.
+		);
+	}
+
+	/**
 	 * Add tags to contact
 	 *
 	 * @param string $contact_id Contact ID
