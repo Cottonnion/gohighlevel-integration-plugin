@@ -237,6 +237,17 @@ class AssetsManager {
 			true
 		);
 
+		// Review notice (dismissible banner)
+		$this->add_admin_asset(
+			'syncly-review-notice-js',
+			[ 'toplevel_page_syncly-admin' ],
+			'review-notice.js',
+			[ 'jquery' ],
+			[],
+			SYNCLY_VERSION,
+			true
+		);
+
 		// Dashboard assets (loads on SPA page)
 		$this->add_admin_asset(
 			'syncly-dashboard-css',

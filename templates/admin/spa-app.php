@@ -81,6 +81,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	$admin_notices->render_upgrade_notice();
 	?>
 
+	<!-- Review Notice (dismissible banner) -->
+	<?php $admin_notices->render_review_notice(); ?>
+
 	<!-- SPA Application Container -->
 	<div id="syncly-app" class="ghl-spa-container">
 		<div class="ghl-spa-loading">

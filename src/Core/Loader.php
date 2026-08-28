@@ -237,6 +237,11 @@ class Loader {
 		// Flush rewrite rules
 		flush_rewrite_rules();
 
+		// Record activation date for review notice timing
+		if ( ! get_option( 'syncly_activation_date' ) ) {
+			update_option( 'syncly_activation_date', gmdate( 'Y-m-d' ) );
+		}
+
 		// Production code :
 		if ( ! get_option( 'syncly_setup_wizard_completed', false ) ) {
 			set_transient( 'syncly_activation_redirect', true, 60 );

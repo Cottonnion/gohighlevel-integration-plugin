@@ -4,6 +4,29 @@ Internal changelog with full technical details. **Not included in release zips.*
 
 ---
 
+## [1.4.37] - 2026-08-28
+
+### Review request banner
+
+**File**: `src/Core/AdminNotices.php`
+
+- Added `should_display_review_notice()` which shows the banner only after 3 days of plugin usage (`syncly_activation_date` option) and while the user has not dismissed it.
+- Added `render_review_notice()` rendering a dismissible banner (`.ghl-review-notice`) linking to `https://wordpress.org/support/plugin/syncly/reviews/#new-post`.
+- Added `ajax_dismiss_review_notice()` (action `syncly_dismiss_review_notice`, nonce-verified, `manage_options`-gated) storing dismissal in user meta `syncly_review_notice_dismissed`.
+- Added `is_review_notice_dismissed()` / `reset_review_notice()` helpers mirroring the existing upgrade-notice pattern.
+
+**Files**: `src/Core/Loader.php`, `templates/admin/spa-app.php`
+
+- `Loader::activate()` now records `syncly_activation_date` (first activation only) so the banner timing has a reference point.
+- `spa-app.php` renders the review banner beneath the upgrade notice.
+
+**Files**: `src/Core/AssetsManager.php`, `assets/admin/js/review-notice.js`, `assets/admin/css/spa-app.css`
+
+- Registered `syncly-review-notice-js` for the SPA admin page; the JS performs the nonce-authenticated dismissal AJAX and removes the banner.
+- The banner CSS uses the GHL `--ghl-amber*` accent for the star/left-border and `--ghl-primary` for the CTA button, matching the design-token system.
+
+---
+
 ## [1.4.36] - 2026-08-28
 
 ### OAuth scope alignment for Calendar Appointments

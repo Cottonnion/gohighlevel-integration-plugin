@@ -2,6 +2,13 @@
 
 All notable changes to Syncly will be documented in this file.
 
+## [1.4.37] - 2026-08-28
+
+### Added
+
+- Added a dismissible review-request banner on the Syncly admin dashboard that invites users to leave a review on WordPress.org after 3 days of plugin usage.
+- Recorded the plugin activation date on first activation so the review request can be timed appropriately.
+
 ## [1.4.36] - 2026-08-28
 
 ### Added

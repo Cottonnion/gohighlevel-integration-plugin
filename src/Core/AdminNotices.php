@@ -37,6 +37,11 @@ class AdminNotices {
 	private const UPGRADE_NOTICE_DISMISSED_KEY = 'syncly_upgrade_notice_dismissed';
 
 	/**
+	 * User meta key for storing dismissed review notice state
+	 */
+	private const REVIEW_NOTICE_DISMISSED_KEY = 'syncly_review_notice_dismissed';
+
+	/**
 	 * Singleton instance
 	 *
 	 * @var self|null
@@ -76,6 +81,9 @@ class AdminNotices {
 
 		// AJAX handler for dismissing optional notices.
 		add_action( 'wp_ajax_syncly_dismiss_upgrade_notice', [ $this, 'ajax_dismiss_upgrade_notice' ] );
+
+		// AJAX handler for dismissing review notice.
+		add_action( 'wp_ajax_syncly_dismiss_review_notice', [ $this, 'ajax_dismiss_review_notice' ] );
 	}
 
 	/**
@@ -388,5 +396,116 @@ class AdminNotices {
 	public function reset_upgrade_notice( ?int $user_id = null ): bool {
 		$user_id = $user_id ?? get_current_user_id();
 		return delete_user_meta( $user_id, self::UPGRADE_NOTICE_DISMISSED_KEY );
+	}
+
+	/**
+	 * Check if review notice is dismissed
+	 *
+	 * @return bool
+	 */
+	public function is_review_notice_dismissed(): bool {
+		$user_id = get_current_user_id();
+		return (bool) get_user_meta( $user_id, self::REVIEW_NOTICE_DISMISSED_KEY, true );
+	}
+
+	/**
+	 * Check if review notice should be displayed
+	 *
+	 * Shows the review notice after 3 days of plugin usage, if not yet dismissed.
+	 *
+	 * @return bool
+	 */
+	public function should_display_review_notice(): bool {
+		// Don't show if user dismissed it
+		if ( $this->is_review_notice_dismissed() ) {
+			return false;
+		}
+
+		// Only show after 3 days of plugin usage
+		$activation_date = get_option( 'syncly_activation_date' );
+		if ( ! $activation_date ) {
+			// Set activation date now if not yet set
+			update_option( 'syncly_activation_date', gmdate( 'Y-m-d' ) );
+			return false;
+		}
+
+		$days_active = (int) ( ( time() - strtotime( $activation_date ) ) / DAY_IN_SECONDS );
+		if ( $days_active < 3 ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Render review notice banner
+	 *
+	 * @return void
+	 */
+	public function render_review_notice(): void {
+		if ( ! $this->should_display_review_notice() ) {
+			return;
+		}
+
+		$review_url = 'https://wordpress.org/support/plugin/syncly/reviews/#new-post';
+		$nonce      = wp_create_nonce( 'syncly_dismiss_review_notice' );
+		?>
+		<div class="ghl-review-notice" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+			<div class="ghl-review-notice__content">
+				<span class="dashicons dashicons-star-filled ghl-review-notice__icon"></span>
+				<span class="ghl-review-notice__text">
+					<?php
+					printf(
+						/* translators: %s: Plugin name */
+						esc_html__( 'Enjoying %s? A quick review on WordPress.org helps us a lot!', 'syncly' ),
+						esc_html( SYNCLY_PLUGIN_NAME )
+					);
+					?>
+				</span>
+			</div>
+			<div class="ghl-review-notice__actions">
+				<a href="<?php echo esc_url( $review_url ); ?>"
+				   target="_blank"
+				   rel="noopener noreferrer"
+				   class="ghl-review-notice__link">
+					<?php esc_html_e( 'Leave a Review', 'syncly' ); ?>
+				</a>
+				<button type="button" class="ghl-dismiss-review-notice" aria-label="<?php esc_attr_e( 'Dismiss', 'syncly' ); ?>">
+					<span class="dashicons dashicons-dismiss"></span>
+				</button>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * AJAX handler to dismiss review notice
+	 *
+	 * @return void
+	 */
+	public function ajax_dismiss_review_notice(): void {
+		if ( ! check_ajax_referer( 'syncly_dismiss_review_notice', 'nonce', false ) ) {
+			wp_send_json_error( [ 'message' => __( 'Invalid security token.', 'syncly' ) ] );
+		}
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'syncly' ) ] );
+		}
+
+		$user_id = get_current_user_id();
+		update_user_meta( $user_id, self::REVIEW_NOTICE_DISMISSED_KEY, true );
+
+		wp_send_json_success( [ 'message' => __( 'Notice dismissed.', 'syncly' ) ] );
+	}
+
+	/**
+	 * Reset review notice dismissed state (for testing)
+	 *
+	 * @param int|null $user_id Optional user ID. Uses current user if not provided.
+	 * @return bool
+	 */
+	public function reset_review_notice( ?int $user_id = null ): bool {
+		$user_id = $user_id ?? get_current_user_id();
+		return delete_user_meta( $user_id, self::REVIEW_NOTICE_DISMISSED_KEY );
 	}
 }

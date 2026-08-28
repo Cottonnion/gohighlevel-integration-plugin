@@ -4,7 +4,7 @@ Tags: gohighlevel, wpfusion, contact-sync, woocommerce, leadconnector
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.4.36
+Stable tag: 1.4.37
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -90,6 +90,9 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
 == Changelog ==
+
+= 1.4.37 =
+* Added a dismissible review-request banner on the Syncly dashboard that invites you to leave a review on WordPress.org after you've been using the plugin for 3 days.
 
 = 1.4.36 =
 * Calendar Appointments: added the calendars/events.write OAuth scope so Syncly Pro can book and manage GoHighLevel calendar appointments.
