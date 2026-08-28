@@ -30,6 +30,12 @@ jobs:
           set -euo pipefail
           rsync -a ./.wordpress-org/ /tmp/svn-repo/assets/
 
+      - name: Stage SVN changes (add new / remove deleted)
+        run: |
+          cd /tmp/svn-repo
+          svn status | grep '^?' | awk '{print $2}' | xargs -r svn add --force
+          svn status | grep '^!' | awk '{print $2}' | xargs -r svn delete --force
+
       - name: Set binary MIME types for images
         run: |
           set -euo pipefail
@@ -37,12 +43,6 @@ jobs:
           find . -type f ! -path './.svn/*' -name '*.png' -exec svn propset svn:mime-type image/png {} +
           find . -type f ! -path './.svn/*' -name '*.jpg' -exec svn propset svn:mime-type image/jpeg {} +
           find . -type f ! -path './.svn/*' -name '*.svg' -exec svn propset svn:mime-type image/svg+xml {} +
-
-      - name: Stage SVN changes (add new / remove deleted)
-        run: |
-          cd /tmp/svn-repo
-          svn status | grep '^?' | awk '{print $2}' | xargs -r svn add --force
-          svn status | grep '^!' | awk '{print $2}' | xargs -r svn delete --force
 
       - name: Commit assets to SVN
         env:
