@@ -2,6 +2,12 @@
 
 All notable changes to Syncly will be documented in this file.
 
+## [1.4.38] - 2026-08-29
+
+### Fixed
+
+- Fixed user profile tags sometimes displaying as raw tag IDs (instead of names) and being synced to GoHighLevel as IDs when the OAuth connection was temporarily unhealthy. The plugin now persists a durable tag ID → name map on every successful tag fetch and falls back to it during API outages, so profile tag names and outbound sync payloads always use the real names.
+
 ## [1.4.37] - 2026-08-28
 
 ### Added

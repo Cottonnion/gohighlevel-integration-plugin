@@ -180,6 +180,10 @@ class TagManager {
 	 * (defaults to 1 hour).
 	 *
 	 * On API failure, the method falls back to the cached value if one exists.
+	 * If neither a live transient nor a network fetch is available (e.g. the
+	 * OAuth connection is unhealthy), it falls back to the last-known id→name
+	 * map persisted by persist_tag_names() so tag names remain resolvable
+	 * even while the connection is down.
 	 *
 	 * @param bool $force_refresh When true, bypass the transient cache and hit the API.
 	 * @return array<int, array{id: string, name: string}> Array of tag objects.
@@ -206,7 +210,12 @@ class TagManager {
 		}
 
 		if ( get_transient( $failure_key ) ) {
-			return [];
+			// The API is temporarily unhealthy — keep resolving names from the
+			// last-known tag map instead of returning nothing (which would turn
+			// stored tag IDs into raw IDs in names-only contexts).
+			$fallback             = $this->get_persisted_tag_names( $location_id, $site_id );
+			$this->last_cache_hit = ! empty( $fallback );
+			return $fallback;
 		}
 
 		try {
@@ -218,6 +227,10 @@ class TagManager {
 				set_transient( $transient_key, $response['tags'], $cache_duration );
 				delete_transient( $failure_key );
 
+				// Persist a durable id→name map so names survive a transient that
+				// expires while the OAuth connection is unhealthy.
+				$this->persist_tag_names( $location_id, $site_id, $response['tags'] );
+
 				return $response['tags'];
 			}
 		} catch ( \Throwable $e ) {
@@ -228,10 +241,99 @@ class TagManager {
 				$this->last_cache_hit = true;
 				return $cached;
 			}
-			return [];
+			// Fall back to the last-known tag map so names stay resolvable.
+			$fallback             = $this->get_persisted_tag_names( $location_id, $site_id );
+			$this->last_cache_hit = ! empty( $fallback );
+			return $fallback;
 		}
 
 		return [];
+	}
+
+	// =========================================================================
+	// Persisted Tag Name Map (durable offline fallback)
+	// =========================================================================
+
+	/**
+	 * Build the option key that stores the last-known id→name tag map.
+	 *
+	 * Kept separate from the transient so tag names remain resolvable after
+	 * the transient expires while the OAuth connection is unhealthy.
+	 *
+	 * @param string $location_id GHL location ID.
+	 * @param int    $site_id     Site (blog) ID.
+	 * @return string Option key.
+	 */
+	private function get_tag_names_option_key( string $location_id, int $site_id ): string {
+		return 'syncly_tag_names_' . $location_id . '_site_' . $site_id;
+	}
+
+	/**
+	 * Persist a durable id→name tag map for offline name resolution.
+	 *
+	 * Called whenever a fresh tag list is fetched from the API. Only stores
+	 * entries with a real human-readable name (never the raw ID as its own
+	 * name). The option is deliberately not autoloaded.
+	 *
+	 * @param string $location_id GHL location ID.
+	 * @param int    $site_id     Site (blog) ID.
+	 * @param array  $tags        Tag objects from the GHL API.
+	 * @return void
+	 */
+	private function persist_tag_names( string $location_id, int $site_id, array $tags ): void {
+		if ( empty( $tags ) ) {
+			return;
+		}
+
+		$map = [];
+		foreach ( $tags as $tag ) {
+			if ( ! is_array( $tag ) ) {
+				continue;
+			}
+
+			$id   = isset( $tag['id'] ) ? (string) $tag['id'] : '';
+			$name = isset( $tag['name'] ) ? (string) $tag['name'] : '';
+
+			if ( '' !== $id && '' !== $name && $name !== $id ) {
+				$map[ $id ] = $name;
+			}
+		}
+
+		if ( empty( $map ) ) {
+			return;
+		}
+
+		update_option( $this->get_tag_names_option_key( $location_id, $site_id ), $map, false );
+	}
+
+	/**
+	 * Retrieve the persisted id→name tag map as tag objects.
+	 *
+	 * @param string $location_id GHL location ID.
+	 * @param int    $site_id     Site (blog) ID.
+	 * @return array<int, array{id: string, name: string}> Tag objects.
+	 */
+	private function get_persisted_tag_names( string $location_id, int $site_id ): array {
+		$map = get_option( $this->get_tag_names_option_key( $location_id, $site_id ), [] );
+
+		if ( ! is_array( $map ) || empty( $map ) ) {
+			return [];
+		}
+
+		$entries = [];
+		foreach ( $map as $id => $name ) {
+			$id   = (string) $id;
+			$name = (string) $name;
+			if ( '' === $id || '' === $name ) {
+				continue;
+			}
+			$entries[] = [
+				'id'   => $id,
+				'name' => $name,
+			];
+		}
+
+		return $entries;
 	}
 
 	/**
@@ -420,6 +522,16 @@ class TagManager {
 		}
 
 		$tags = $this->get_tags();
+
+		// If the API list is unavailable (outage, expired transient, or an empty
+		// tag list got cached), fall back to the persisted id→name map so stored
+		// tag IDs still resolve to human-readable names.
+		if ( empty( $tags ) ) {
+			$location_id = (string) $this->settings_manager->get_setting( 'location_id' );
+			if ( '' !== $location_id ) {
+				$tags = $this->get_persisted_tag_names( $location_id, get_current_blog_id() );
+			}
+		}
 
 		foreach ( $tags as $tag ) {
 			if ( isset( $tag['id'] ) ) {

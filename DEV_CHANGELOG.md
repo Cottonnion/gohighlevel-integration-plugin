@@ -4,6 +4,23 @@ Internal changelog with full technical details. **Not included in release zips.*
 
 ---
 
+## [1.4.38] - 2026-08-29
+
+### Durable tag name resolution during OAuth/API outages
+
+**File**: `src/Sync/TagManager.php`
+
+- `get_tags()` now persists a durable, location- and site-scoped tag ID → name map to a non-autoloaded option (`syncly_tag_names_{location}_site_{site}`) on every successful tag-list fetch (`persist_tag_names()`), separate from the transient so it survives transient expiry.
+- When the API is unreachable — the `_failure` transient is set, an API call throws, or the tag list is empty — `get_tags()` now falls back to the persisted map (`get_persisted_tag_names()`) instead of returning an empty array, keeping ID → name resolution alive for the whole request.
+- `ensure_tag_cache()` was hardened to seed the in-memory cache from the persisted map when no API tag list is available (covers an empty cached transient too).
+- Impact: stale, per-user tag IDs stored in `_ghl_contact_tags_{location}` continue to resolve to human-readable names across every consumer — the admin profile tag picker (`UserProfileFields::render_ghl_section`), direct profile saves (`save_ghl_data` → `prepare_tags_for_payload`), the `profile_update` queue payload builder (`UserHooks::queue_user_profile_sync` via `convert_ids_to_names`), and the `syncly_add_tags_to_user` / `syncly_remove_tags_from_user` helpers. Previously these paths sent raw GHL tag IDs as tag names when the transient had expired while OAuth was down, which made GHL auto-create junk tags.
+
+**Files**: `src/Sync/TagManager.php`, `tests/Unit/Sync/TagManagerTest.php`
+
+- Added unit tests covering offline/unhealthy resolution: `convert_ids_to_names()`, `map_ids_to_names()`, `prepare_tags_for_payload()`, and `get_user_tag_names()` all resolve names from the persisted map, and the map is persisted after a successful API fetch.
+
+---
+
 ## [1.4.37] - 2026-08-28
 
 ### Review request banner

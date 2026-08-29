@@ -391,6 +391,122 @@ class TagManagerTest extends TestCase
     }
 
     // ------------------------------------------------------------------
+    //  Persisted tag name map (offline / unhealthy-OAuth fallback)
+    // ------------------------------------------------------------------
+
+    private function mockUnhealthyOAuthWithPersistedMap(): void
+    {
+        // No live transient for the tags list, but the failure flag is set
+        // (OAuth/API is down). A previously-persisted id→name map must still
+        // resolve stored tag IDs to their names.
+        Functions\when('get_transient')->alias(
+            function ( $key ) {
+                if ( false !== strpos( $key, '_failure' ) ) {
+                    return true;
+                }
+                return false;
+            }
+        );
+
+        Functions\when('get_option')->alias(
+            function ( $key, $default ) {
+                return [ 'tag_001' => 'VIP Customer', 'tag_002' => 'Newsletter' ];
+            }
+        );
+
+        Functions\when('update_option')->justReturn(true);
+        Functions\when('delete_transient')->justReturn(true);
+        Functions\when('set_transient')->justReturn(true);
+    }
+
+    public function test_convert_ids_to_names_uses_persisted_map_when_api_unavailable(): void
+    {
+        $this->mockUnhealthyOAuthWithPersistedMap();
+
+        $names = $this->tag_manager->convert_ids_to_names([ 'tag_001', 'tag_002' ]);
+
+        $this->assertSame([ 'VIP Customer', 'Newsletter' ], $names);
+    }
+
+    public function test_map_ids_to_names_uses_persisted_map_when_api_unavailable(): void
+    {
+        $this->mockUnhealthyOAuthWithPersistedMap();
+
+        $map = $this->tag_manager->map_ids_to_names([ 'tag_001', 'tag_002' ]);
+
+        $this->assertSame([ 'tag_001' => 'VIP Customer', 'tag_002' => 'Newsletter' ], $map);
+    }
+
+    public function test_prepare_tags_for_payload_does_not_send_ids_as_names_when_api_unavailable(): void
+    {
+        $this->mockUnhealthyOAuthWithPersistedMap();
+
+        $payload = $this->tag_manager->prepare_tags_for_payload([ 'tag_001', 'tag_002' ]);
+
+        $this->assertSame([ 'VIP Customer', 'Newsletter' ], $payload);
+    }
+
+    public function test_get_user_tag_names_uses_persisted_map_when_api_unavailable(): void
+    {
+        Functions\when('get_user_meta')->alias(
+            function ( $uid, $key, $single ) {
+                if ( $key === '_ghl_contact_tags_loc_abc123' ) {
+                    return [ 'tag_001', 'tag_002' ];
+                }
+                return '';
+            }
+        );
+
+        $this->mockUnhealthyOAuthWithPersistedMap();
+
+        $names = $this->tag_manager->get_user_tag_names(42);
+
+        $this->assertSame([ 'VIP Customer', 'Newsletter' ], $names);
+    }
+
+    public function test_persists_tag_name_map_after_successful_fetch(): void
+    {
+        // Force an API-fetch path: no transient, no failure flag.
+        Functions\when('get_transient')->alias(
+            function ( $key ) {
+                if ( false !== strpos( $key, '_failure' ) ) {
+                    return false;
+                }
+                return false;
+            }
+        );
+
+        $client_mock = Mockery::mock(\Syncly\API\Client\Client::class);
+        $client_mock->shouldReceive('get')
+            ->andReturn([ 'tags' => $this->getSampleTags() ]);
+        // Inject client singleton.
+        $client_ref  = new \ReflectionClass(\Syncly\API\Client\Client::class);
+        $client_prop = $client_ref->getProperty('instance');
+        $client_prop->setAccessible(true);
+        $client_prop->setValue(null, $client_mock);
+
+        $saved_option = null;
+        Functions\when('update_option')->alias(
+            function ( $key, $value, $autoload ) use ( &$saved_option ) {
+                if ( 0 === strpos( $key, 'syncly_tag_names_' ) ) {
+                    $saved_option = $value;
+                }
+                return true;
+            }
+        );
+        Functions\when('delete_transient')->justReturn(true);
+        Functions\when('set_transient')->justReturn(true);
+
+        $tags = $this->tag_manager->get_tags();
+
+        $this->assertCount(5, $tags);
+        $this->assertSame([ 'tag_001' => 'VIP Customer', 'tag_002' => 'Newsletter' ], array_slice($saved_option, 0, 2));
+
+        // Restore client singleton.
+        $client_prop->setValue(null, null);
+    }
+
+    // ------------------------------------------------------------------
     //  search_tags()
     // ------------------------------------------------------------------
 
