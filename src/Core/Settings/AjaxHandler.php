@@ -629,6 +629,11 @@ class AjaxHandler {
 				}
 			}
 
+			// Update simple/advanced display mode preference (per-user).
+			if ( isset( $wizard_settings['ui_mode'] ) ) {
+				\Syncly\Core\UiModeManager::set_mode( (string) $wizard_settings['ui_mode'] );
+			}
+
 			// Update user sync settings
 			if ( isset( $wizard_settings['enable_user_sync'] ) ) {
 				$current_settings['enable_user_sync'] = (bool) $wizard_settings['enable_user_sync'];

@@ -3,13 +3,14 @@
 
     const GHLWizard = {
         currentStep: 1,
-        totalSteps: 6,
+        totalSteps: 7,
         settings: {},
 
         init: function () {
             // Load existing settings from localized data
             if (syncly_setup_wizard_js_data.settings) {
                 this.settings = {
+                    ui_mode: syncly_setup_wizard_js_data.settings.ui_mode || 'simple',
                     enable_user_sync: syncly_setup_wizard_js_data.settings.enable_user_sync,
                     user_register: syncly_setup_wizard_js_data.settings.user_register,
                     user_register_tags: syncly_setup_wizard_js_data.settings.user_register_tags || [],
@@ -25,6 +26,14 @@
             this.initTagsSelect2();
             this.bindEvents();
             this.updateStepIndicators();
+
+            // Jump straight to a step when the URL asks for one (used when the
+            // OAuth flow bounces the user back to the wizard from the Connect step).
+            const urlStep = parseInt(new URLSearchParams(window.location.search).get('step'), 10);
+            if (urlStep >= 1 && urlStep <= this.totalSteps && urlStep !== this.currentStep) {
+                this.currentStep = urlStep;
+                this.showStep(this.currentStep);
+            }
         },
 
         initTagsSelect2: function () {
@@ -118,15 +127,19 @@
                 $content.slideToggle(300);
             });
 
+            // View mode selector cards
+            $('.ghl-mode-card').on('click', function () {
+                const $card = $(this);
+                $card.find('input[type="radio"]').prop('checked', true);
+                $('.ghl-mode-card').removeClass('selected');
+                $card.addClass('selected');
+            });
+
         },
 
         nextStep: function () {
-            // Check if on connection step and not connected
-            if (this.currentStep === 2 && !this.isConnected()) {
-                this.showError('Please connect to GoHighLevel first');
-                return;
-            }
-
+            // Connection is the last configuration step; it is never required to
+            // move through the wizard — the user can connect later from the dashboard.
             this.collectCurrentStepData();
 
             if (this.currentStep < this.totalSteps) {
@@ -180,17 +193,20 @@
 
         collectCurrentStepData: function () {
             switch (this.currentStep) {
-                case 3:
+                case 2:
+                    this.settings.ui_mode = $('input[name="wizard_ui_mode"]:checked').val() || 'simple';
+                    break;
+                case 4:
                     this.settings.enable_user_sync = $('#wizard_enable_user_sync').is(':checked');
                     this.settings.user_register = $('#wizard_user_register').is(':checked');
                     this.settings.user_register_tags = $('#wizard_user_register_tags').val() || [];
                     break;
-                case 4:
+                case 5:
                     this.settings.woocommerce = $('#wizard_woocommerce').is(':checked');
                     this.settings.buddyboss = $('#wizard_buddyboss').is(':checked');
                     this.settings.learndash = $('#wizard_learndash').is(':checked');
                     break;
-                case 5:
+                case 6:
                     this.settings.delete_contact_on_user_delete = $('#wizard_delete_contact_on_user_delete').is(':checked');
                     this.settings.enable_sync_logging = $('#wizard_enable_sync_logging').is(':checked');
                     this.settings.enable_telemetry_reporting = $('#wizard_enable_telemetry_reporting').is(':checked');

@@ -53,9 +53,28 @@ if ( ! defined( 'ABSPATH' ) ) {
 			 * Filter the admin navigation tabs.
 			 * Allows extensions (like Pro plugin) to add custom tabs.
 			 *
-			 * @param array $nav_tabs Array of navigation tabs with keys: route => array(label, icon)
+			 * @since 1.0.0
+			 * @param array  $nav_tabs Array of navigation tabs with keys: route => array(label, icon, mode)
+			 * @param string $ui_mode  Current display mode: 'simple' or 'advanced'
+			 *
+			 * @example
+			 * add_filter( 'syncly_admin_nav_tabs', function( $tabs, $ui_mode ) {
+			 *     // Add a tab that only shows in Advanced mode.
+			 *     if ( 'advanced' === $ui_mode ) {
+			 *         $tabs['automations'] = [
+			 *             'label' => __( 'Automations', 'my-plugin' ),
+			 *             'icon'  => 'dashicons-admin-generic',
+			 *             'mode'  => 'advanced', // Optional: auto-hidden in Simple mode
+			 *         ];
+			 *     }
+			 *     return $tabs;
+			 * }, 10, 2 );
 			 */
-			$nav_tabs = apply_filters( 'syncly_admin_nav_tabs', $nav_tabs );
+			$ui_mode    = \Syncly\Core\UiModeManager::get_mode();
+			$nav_tabs   = apply_filters( 'syncly_admin_nav_tabs', $nav_tabs, $ui_mode );
+
+			// Hide advanced-only views (e.g. Sync Logs) in simple mode.
+			$nav_tabs = \Syncly\Core\UiModeManager::filter_nav_tabs( $nav_tabs );
 
 			// Render navigation tabs
 			foreach ( $nav_tabs as $route => $tab_data ) {
@@ -73,6 +92,34 @@ if ( ! defined( 'ABSPATH' ) ) {
 			}
 			?>
 		</nav>
+
+		<!-- Simple / Advanced display mode toggle -->
+		<div class="ghl-ui-mode-toggle">
+			<span class="ghl-ui-mode-caption">
+				<span class="dashicons dashicons-visibility" aria-hidden="true"></span>
+				<?php esc_html_e( 'View:', 'syncly' ); ?>
+			</span>
+			<div class="ghl-ui-mode-segment" role="group" aria-label="<?php esc_attr_e( 'Dashboard display mode', 'syncly' ); ?>">
+				<button
+					type="button"
+					class="ghl-ui-mode-btn<?php echo \Syncly\Core\UiModeManager::MODE_SIMPLE === $ui_mode ? ' is-active' : ''; ?>"
+					data-mode="<?php echo esc_attr( \Syncly\Core\UiModeManager::MODE_SIMPLE ); ?>"
+					aria-pressed="<?php echo \Syncly\Core\UiModeManager::MODE_SIMPLE === $ui_mode ? 'true' : 'false'; ?>"
+					title="<?php esc_attr_e( 'Show the essentials only', 'syncly' ); ?>"
+				>
+					<?php esc_html_e( 'Simple', 'syncly' ); ?>
+				</button>
+				<button
+					type="button"
+					class="ghl-ui-mode-btn<?php echo \Syncly\Core\UiModeManager::MODE_ADVANCED === $ui_mode ? ' is-active' : ''; ?>"
+					data-mode="<?php echo esc_attr( \Syncly\Core\UiModeManager::MODE_ADVANCED ); ?>"
+					aria-pressed="<?php echo \Syncly\Core\UiModeManager::MODE_ADVANCED === $ui_mode ? 'true' : 'false'; ?>"
+					title="<?php esc_attr_e( 'Show all settings and sync logs', 'syncly' ); ?>"
+				>
+					<?php esc_html_e( 'Advanced', 'syncly' ); ?>
+				</button>
+			</div>
+		</div>
 	</div>
 
 	<!-- Upgrade Notice (dismissible banner) -->
@@ -113,6 +160,14 @@ wp_add_inline_script(
 					'integrations' => 'integrations',
 					'fieldMapping' => 'field-mapping',
 					'syncLogs'     => 'sync-logs',
+				],
+			],
+			'uiMode'   => [
+				'mode'    => $ui_mode,
+				'nonce'   => wp_create_nonce( 'syncly_ui_mode' ),
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'strings' => [
+					'error' => __( 'Could not switch UI mode. Please refresh the page and try again.', 'syncly' ),
 				],
 			],
 		]

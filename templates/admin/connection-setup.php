@@ -12,6 +12,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Get OAuth handler (expected to be passed from parent or instantiated here)
 $oauth_handler = $oauth_handler ?? new \Syncly\API\OAuth\OAuthHandler();
+
+// When rendered inside the setup wizard, OAuth must return to the wizard
+// instead of the main dashboard so the user can finish setup.
+$oauth_return_url = ! empty( $setup_wizard_return_url ) ? $setup_wizard_return_url : '';
 ?>
 
 <!-- Connection Setup -->
@@ -62,31 +66,10 @@ $oauth_handler = $oauth_handler ?? new \Syncly\API\OAuth\OAuthHandler();
 					</div>
 				</div>
 
-				<!-- Scopes List -->
+				<!-- Scopes List (single source of truth: Syncly\API\Client\Client::get_oauth_scopes) -->
 				<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;">
 					<?php
-					$required_scopes = array(
-						'contacts.readonly'               => __( 'View Contacts', 'syncly' ),
-						'contacts.write'                  => __( 'Edit Contacts', 'syncly' ),
-						'contacts/tags.readonly'          => __( 'View Tags', 'syncly' ),
-						'contacts/tags.write'             => __( 'Edit Tags', 'syncly' ),
-						'locations.readonly'              => __( 'View Locations', 'syncly' ),
-						'locations/customFields.readonly' => __( 'View Custom Fields', 'syncly' ),
-						'locations/customFields.write'    => __( 'Edit Custom Fields', 'syncly' ),
-						'objects/schema.readonly'         => __( 'View Objects Schema', 'syncly' ),
-						'objects/schema.write'            => __( 'Edit Objects Schema', 'syncly' ),
-						'objects/records.readonly'        => __( 'View Objects Record', 'syncly' ),
-						'objects/records.write'           => __( 'Edit Objects Record', 'syncly' ),
-						'associations.readonly'           => __( 'View Associations', 'syncly' ),
-						'associations.write'              => __( 'Write Associations', 'syncly' ),
-						'associations/relations.readonly' => __( 'View Associations Relation', 'syncly' ),
-						'associations/relations.write'    => __( 'Write Associations Relation', 'syncly' ),
-						'forms.readonly'                  => __( 'View Forms', 'syncly' ),
-						'conversations.readonly'          => __( 'View Conversations', 'syncly' ),
-						'conversations.write'             => __( 'Create/Update Conversations', 'syncly' ),
-						'conversations/message.readonly'  => __( 'View Messages', 'syncly' ),
-						'conversations/message.write'     => __( 'Send Messages', 'syncly' ),
-					);
+					$required_scopes = \Syncly\API\Client\Client::get_oauth_scopes();
 
 					foreach ( $required_scopes as $scope => $label ) :
 						?>
@@ -98,7 +81,7 @@ $oauth_handler = $oauth_handler ?? new \Syncly\API\OAuth\OAuthHandler();
 			</div>
 
 			<div style="text-align: center; padding: 20px;">
-				<a target='_blank' href="<?php echo esc_url( $oauth_handler->get_authorization_url() ); ?>" class="ghl-button ghl-button-primary" style="padding: 14px 36px; font-size: 16px; display: inline-flex; align-items: center; gap: 10px; text-decoration: none;">
+				<a target='_blank' href="<?php echo esc_url( $oauth_handler->get_authorization_url( $oauth_return_url ) ); ?>" class="ghl-button ghl-button-primary" style="padding: 14px 36px; font-size: 16px; display: inline-flex; align-items: center; gap: 10px; text-decoration: none;">
 					<span class="dashicons dashicons-cloud" style="margin-top: 5px;"></span>
 					<?php esc_html_e( 'Connect with GoHighLevel', 'syncly' ); ?>
 				</a>

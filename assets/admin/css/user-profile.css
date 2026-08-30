@@ -25,7 +25,7 @@
 }
 
 .ghl-profile-section h2 .dashicons {
-	color: var(--ghl-info);
+	color: var(--ghl-primary);
 }
 
 .ghl-data-grid {
@@ -61,7 +61,7 @@
 }
 
 .ghl-data-item .value a {
-	color: var(--ghl-info);
+	color: var(--ghl-primary);
 	text-decoration: none;
 }
 

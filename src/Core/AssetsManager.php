@@ -258,6 +258,26 @@ class AssetsManager {
 			SYNCLY_VERSION
 		);
 
+		// UI Mode (Simple/Advanced) toggle assets
+		$this->add_admin_asset(
+			'syncly-ui-mode-css',
+			[ 'toplevel_page_syncly-admin' ],
+			'ui-mode.css',
+			[ 'syncly-globals-css' ],
+			[],
+			SYNCLY_VERSION
+		);
+
+		$this->add_admin_asset(
+			'syncly-ui-mode-js',
+			[ 'toplevel_page_syncly-admin' ],
+			'ui-mode.js',
+			[ 'jquery' ],
+			[],
+			SYNCLY_VERSION,
+			true
+		);
+
 		$this->add_admin_asset(
 			'syncly-dashboard-js',
 			[ 'toplevel_page_syncly-admin' ],
@@ -634,6 +654,7 @@ class AssetsManager {
 				'isConnected'  => ! empty( $oauth_token ) ? '1' : '0',
 				'tags'         => $ghl_tags,
 				'settings'     => [
+					'ui_mode'                       => \Syncly\Core\UiModeManager::get_mode(),
 					'enable_user_sync'              => $enable_user_sync,
 					'user_register'                 => $user_register_enabled,
 					'user_register_tags'            => $user_register_tags,

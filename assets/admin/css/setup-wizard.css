@@ -1291,10 +1291,132 @@ html.wp-toolbar {
     line-height: var(--ghl-line-height-base);
 }
 
+/* View Mode Selector (Simple / Advanced) */
+.ghl-mode-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--ghl-spacing-lg);
+    margin-top: var(--ghl-spacing-lg);
+}
+
+.ghl-mode-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--ghl-spacing-sm);
+    min-height: 230px;
+    padding: var(--ghl-spacing-xl);
+    background: var(--ghl-bg-primary);
+    border: 2px solid var(--ghl-border-primary);
+    border-radius: var(--ghl-radius-lg);
+    cursor: pointer;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease, background-color 0.18s ease;
+    position: relative;
+}
+
+.ghl-mode-card input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.ghl-mode-card:hover {
+    border-color: var(--ghl-primary);
+    background: var(--ghl-bg-hover);
+    box-shadow: var(--ghl-shadow-md);
+    transform: translateY(-2px);
+}
+
+.ghl-mode-card.selected {
+    border-color: var(--ghl-primary);
+    background: var(--ghl-primary-light);
+    box-shadow: 0 0 0 3px rgba(232, 87, 26, 0.18), var(--ghl-shadow-md);
+}
+
+.ghl-mode-card:focus-within {
+    outline: 2px solid var(--ghl-border-focus);
+    outline-offset: 2px;
+}
+
+.ghl-mode-card-check {
+    position: absolute;
+    top: var(--ghl-spacing-md);
+    right: var(--ghl-spacing-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--ghl-border-secondary);
+    border-radius: var(--ghl-radius-full);
+    background: var(--ghl-bg-primary);
+    color: transparent;
+}
+
+.ghl-mode-card.selected .ghl-mode-card-check {
+    border-color: var(--ghl-primary);
+    background: var(--ghl-primary);
+    color: var(--ghl-text-inverse);
+}
+
+.ghl-mode-card-check .dashicons {
+    font-size: 17px;
+    width: 17px;
+    height: 17px;
+}
+
+.ghl-mode-icon {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ghl-bg-primary);
+    border: 1px solid var(--ghl-border-primary);
+    border-radius: var(--ghl-radius-md);
+    margin-bottom: var(--ghl-spacing-xs);
+}
+
+.ghl-mode-icon .dashicons {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    color: var(--ghl-primary);
+}
+
+.ghl-mode-card strong {
+    font-size: var(--ghl-font-size-lg);
+    color: var(--ghl-text-primary);
+}
+
+.ghl-mode-accent {
+    font-size: var(--ghl-font-size-xs);
+    font-weight: var(--ghl-font-weight-bold);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ghl-primary-dark);
+}
+
+.ghl-mode-card.selected .ghl-mode-accent {
+    color: var(--ghl-primary-dark);
+}
+
+.ghl-mode-desc {
+    font-size: var(--ghl-font-size-sm);
+    color: var(--ghl-text-secondary);
+    line-height: var(--ghl-line-height-base);
+}
+
+@media (max-width: 768px) {
+    .ghl-mode-selector {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Button Primary Variant */
 .ghl-button-primary {
 	background: var(--ghl-primary);
-	color: var(--ghl-text-inverse);
+	color: var(--ghl-text-inverse) !important;
 	border: 1px solid var(--ghl-primary);
 }
 

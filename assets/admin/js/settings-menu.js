@@ -70,7 +70,7 @@
 				// Only handle if it's a settings tab (use centralized config)
 				const settingsTabs = (typeof synclySpaConfig !== 'undefined' && synclySpaConfig.settings) 
 					? synclySpaConfig.settings.tabs 
-					: ['general', 'api', 'rest-api', 'webhooks', 'notifications', 'sync-options', 'role-tags', 'login-sync', 'personalization', 'conversations', 'advanced', 'stats'];
+					: ['general', 'restrictions-manager', 'webhooks', 'notifications', 'role-tags', 'tag-rules', 'personalization', 'advanced', 'tools', 'stats', 'upgrade'];
 				if (settingsTabs.includes(hash)) {
 					loadSettingsTab(hash);
 					// Update active state

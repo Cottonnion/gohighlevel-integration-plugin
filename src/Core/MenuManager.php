@@ -56,6 +56,7 @@ class MenuManager {
 		add_action( 'wp_ajax_syncly_spa_view', [ $this, 'handle_spa_view_request' ] );
 		add_action( 'wp_ajax_syncly_load_settings_tab', [ $this, 'handle_settings_tab_request' ] );
 		add_action( 'wp_ajax_syncly_oauth_disconnect', [ $this, 'handle_oauth_disconnect' ] );
+		add_action( 'wp_ajax_syncly_update_ui_mode', [ $this, 'handle_ui_mode_update' ] );
 		add_filter( 'admin_footer_text', [ $this, 'custom_admin_footer_text' ] );
 		add_action( 'admin_head', [ $this, 'adjust_admin_viewport' ] );
 		add_action( 'admin_head', [ $this, 'remove_notices_on_plugins_admin_pages' ] );
@@ -158,14 +159,17 @@ class MenuManager {
 			'__return_false'
 		);
 
-		add_submenu_page(
-			'syncly-admin',
-			__( 'Sync Logs', 'syncly' ),
-			__( 'Sync Logs', 'syncly' ),
-			'manage_options',
-			'syncly-admin#/sync-logs',
-			'__return_false'
-		);
+		// Sync Logs is only exposed on the menu when the user is in advanced mode.
+		if ( \Syncly\Core\UiModeManager::is_advanced() ) {
+			add_submenu_page(
+				'syncly-admin',
+				__( 'Sync Logs', 'syncly' ),
+				__( 'Sync Logs', 'syncly' ),
+				'manage_options',
+				'syncly-admin#/sync-logs',
+				'__return_false'
+			);
+		}
 
 		add_submenu_page(
 			'syncly-admin',
@@ -365,6 +369,22 @@ class MenuManager {
 			$raw_params = isset( $_POST['params'] ) ? wp_unslash( $_POST['params'] ) : [];
 			$params     = is_array( $raw_params ) ? array_map( 'sanitize_text_field', $raw_params ) : [];
 
+			// Views limited to advanced mode (e.g. Sync Logs) are not available
+			// in simple mode, even when reached via a direct URL.
+			if ( \Syncly\Core\UiModeManager::is_advanced_only_view( $view ) ) {
+				wp_send_json_error(
+					[
+						/* translators: %s: requested view */
+						'message' => sprintf(
+							__( 'The "%s" view is only available in Advanced mode. Switch to Advanced mode to access it.', 'syncly' ),
+							esc_html( $view )
+						),
+					],
+					404
+				);
+				return;
+			}
+
 			switch ( $view ) {
 				case 'dashboard':
 					$this->get_dashboard_data();
@@ -414,6 +434,43 @@ class MenuManager {
 				500
 			);
 		}
+	}
+
+	/**
+	 * Handle UI mode (Simple/Advanced) update request
+	 *
+	 * Persists the requested mode for the current user and returns the active mode.
+	 *
+	 * @return void Outputs JSON response and exits.
+	 */
+	public function handle_ui_mode_update(): void {
+		check_ajax_referer( 'syncly_ui_mode', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'You do not have permission to change the UI mode.', 'syncly' ),
+				],
+				403
+			);
+		}
+
+		$mode = isset( $_POST['mode'] ) ? sanitize_key( wp_unslash( $_POST['mode'] ) ) : '';
+
+		if ( ! \Syncly\Core\UiModeManager::set_mode( $mode ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'Invalid UI mode.', 'syncly' ),
+				],
+				400
+			);
+		}
+
+		wp_send_json_success(
+			[
+				'mode' => \Syncly\Core\UiModeManager::get_mode(),
+			]
+		);
 	}
 
 	/**
@@ -653,28 +710,49 @@ class MenuManager {
 	}
 
 	/**
-	 * Get valid settings tabs
+	 * The single source of truth for the settings tab registry.
+	 *
+	 * Used by the settings.php template, the SPA config and the settings tab
+	 * AJAX handler, so tabs only have to be defined once. Each tab entry can
+	 * carry a "mode" key ('simple' or 'advanced') to opt into the UI modes.
+	 *
+	 * @return array<string, array<string, mixed>> Settings tabs keyed by tab key.
+	 */
+	public static function get_all_settings_tabs(): array {
+		$settings_tabs = [
+			'general'              => [ 'label' => __( 'General', 'syncly' ), 'icon' => 'dashicons-admin-generic' ],
+			'restrictions-manager' => [ 'label' => __( 'Restrictions Manager', 'syncly' ), 'icon' => 'dashicons-lock' ],
+			'webhooks'             => [ 'label' => __( 'Webhooks', 'syncly' ), 'icon' => 'dashicons-admin-links', 'mode' => 'advanced' ],
+			'notifications'        => [ 'label' => __( 'Email Notifications', 'syncly' ), 'icon' => 'dashicons-email', 'mode' => 'advanced' ],
+			'role-tags'            => [ 'label' => __( 'Role-Based Tags', 'syncly' ), 'icon' => 'dashicons-tag'],
+			'tag-rules'            => [ 'label' => __( 'Tag Rules', 'syncly' ), 'icon' => 'dashicons-networking' ],
+			'personalization'      => [ 'label' => __( 'Personalization', 'syncly' ), 'icon' => 'dashicons-email-alt', 'mode' => 'advanced' ],
+			'advanced'             => [ 'label' => __( 'Advanced', 'syncly' ), 'icon' => 'dashicons-admin-tools', 'mode' => 'advanced' ],
+			'tools'                => [ 'label' => __( 'Tools', 'syncly' ), 'icon' => 'dashicons-admin-settings', 'mode' => 'advanced' ],
+			'stats'                => [ 'label' => __( 'System Status', 'syncly' ), 'icon' => 'dashicons-info', 'mode' => 'advanced' ],
+		];
+
+		// Hide the upsell tab once Pro is active and licensed — nothing left to upgrade to.
+		if ( ! apply_filters( 'syncly_is_pro_active', false ) ) {
+			$settings_tabs['upgrade'] = [
+				'label'               => __( 'Upgrade to Pro', 'syncly' ),
+				'icon'                => 'dashicons-star-filled',
+				'requires_connection' => false,
+			];
+		}
+
+		return $settings_tabs;
+	}
+
+	/**
+	 * Get valid settings tabs for the current user.
+	 *
+	 * Applies the `syncly_settings_tabs` filter and the active UI mode on top
+	 * of the single tab registry.
 	 *
 	 * @return array<string> List of valid settings tab names
 	 */
 	public static function get_valid_settings_tabs(): array {
-		// Get base tabs
-		$base_tabs = [
-			'general',
-			'restrictions-manager',
-			'webhooks',
-			'notifications',
-			'sync-options',
-			'role-tags',
-			'tag-rules',
-			'personalization',
-			// 'conversations',
-			'advanced',
-			'tools',
-			'stats',
-			'upgrade',
-		];
-
 		// Get settings manager to check connection status
 		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 		$settings         = $settings_manager->get_settings_array();
@@ -682,35 +760,20 @@ class MenuManager {
 		$oauth_status     = $oauth_handler->get_connection_status();
 		$is_connected     = $oauth_status['connected'];
 
-		// Build settings tabs array (same structure as in settings.php)
-		$settings_tabs = [
-			'general'              => [ 'label' => __( 'General', 'syncly' ) ],
-			'restrictions-manager' => [ 'label' => __( 'Restrictions Manager', 'syncly' ) ],
-			'webhooks'             => [ 'label' => __( 'Webhooks', 'syncly' ) ],
-			'notifications'        => [ 'label' => __( 'Email Notifications', 'syncly' ) ],
-			'role-tags'            => [ 'label' => __( 'Role-Based Tags', 'syncly' ) ],
-			'tag-rules'            => [ 'label' => __( 'Tag Rules', 'syncly' ) ],
-			'personalization'      => [ 'label' => __( 'Personalization', 'syncly' ) ],
-			// 'conversations'        => [ 'label' => __( 'Conversations', 'syncly' ) ],
-			'advanced'             => [ 'label' => __( 'Advanced', 'syncly' ) ],
-			'tools'                => [ 'label' => __( 'Tools', 'syncly' ) ],
-			'stats'                => [ 'label' => __( 'System Status', 'syncly' ) ],
-		];
-
-		// Hide the upsell tab once Pro is active and licensed — nothing left to upgrade to.
-		if ( ! apply_filters( 'syncly_is_pro_active', false ) ) {
-			$settings_tabs['upgrade'] = [ 'label' => __( 'Upgrade to Pro', 'syncly' ) ];
-		}
-
 		/**
-		 * Allow developers to add custom settings tabs
-		 * This filter is used in both settings.php template and AJAX handler
+		 * Allow developers to add custom settings tabs.
+		 * This filter is used in both settings.php template and AJAX handler.
 		 *
-		 * @param array $settings_tabs Array of settings tabs
-		 * @param bool  $is_connected  Whether the plugin is connected to GoHighLevel
-		 * @param array $settings      Current plugin settings
+		 * @param array  $settings_tabs Array of settings tabs
+		 * @param bool   $is_connected  Whether the plugin is connected to GoHighLevel
+		 * @param array  $settings      Current plugin settings
+		 * @param string $ui_mode       Current display mode: 'simple' or 'advanced'
 		 */
-		$settings_tabs = apply_filters( 'syncly_settings_tabs', $settings_tabs, $is_connected, $settings );
+		$ui_mode       = \Syncly\Core\UiModeManager::get_mode();
+		$settings_tabs = apply_filters( 'syncly_settings_tabs', self::get_all_settings_tabs(), $is_connected, $settings, $ui_mode );
+
+		// Hide advanced-only tabs when the current user is in simple mode.
+		$settings_tabs = \Syncly\Core\UiModeManager::filter_settings_tabs( $settings_tabs );
 
 		// Return just the tab keys
 		return array_keys( $settings_tabs );
@@ -761,28 +824,13 @@ class MenuManager {
 		$oauth_status     = $oauth_handler->get_connection_status();
 		$is_connected     = $oauth_status['connected'];
 
-		// Build full settings tabs array to get file path
-		$settings_tabs = [
-			'general'              => [ 'label' => __( 'General', 'syncly' ) ],
-			'restrictions-manager' => [ 'label' => __( 'Restrictions Manager', 'syncly' ) ],
-			'webhooks'             => [ 'label' => __( 'Webhooks', 'syncly' ) ],
-			'notifications'        => [ 'label' => __( 'Email Notifications', 'syncly' ) ],
-			'role-tags'            => [ 'label' => __( 'Role-Based Tags', 'syncly' ) ],
-			'tag-rules'            => [ 'label' => __( 'Tag Rules', 'syncly' ) ],
-			'personalization'      => [ 'label' => __( 'Personalization', 'syncly' ) ],
-			// 'conversations'        => [ 'label' => __( 'Conversations', 'syncly' ) ],
-			'advanced'             => [ 'label' => __( 'Advanced', 'syncly' ) ],
-			'tools'                => [ 'label' => __( 'Tools', 'syncly' ) ],
-			'stats'                => [ 'label' => __( 'System Status', 'syncly' ) ],
-		];
+		// Build full settings tabs array from the single registry to get file path
+		$settings_tabs    = self::get_all_settings_tabs();
+		$ui_mode          = \Syncly\Core\UiModeManager::get_mode();
+		$settings_tabs    = apply_filters( 'syncly_settings_tabs', $settings_tabs, $is_connected, $settings, $ui_mode );
 
-		// Hide the upsell tab once Pro is active and licensed — nothing left to upgrade to.
-		if ( ! apply_filters( 'syncly_is_pro_active', false ) ) {
-			$settings_tabs['upgrade'] = [ 'label' => __( 'Upgrade to Pro', 'syncly' ) ];
-		}
-
-		// Apply the same filter as settings.php
-		$settings_tabs = apply_filters( 'syncly_settings_tabs', $settings_tabs, $is_connected, $settings );
+		// Hide advanced-only tabs when the current user is in simple mode.
+		$settings_tabs = \Syncly\Core\UiModeManager::filter_settings_tabs( $settings_tabs );
 
 		// Check if tab has custom file path or callback
 		$tab_config = $settings_tabs[ $tab ] ?? [];

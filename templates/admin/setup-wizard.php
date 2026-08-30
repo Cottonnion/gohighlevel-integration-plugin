@@ -30,6 +30,9 @@ $learndash_enabled             = $settings['learndash_enabled'] ?? false;
 $delete_contact_on_user_delete = $settings['delete_contact_on_user_delete'] ?? false;
 $enable_sync_logging           = $settings['enable_sync_logging'] ?? false;
 $enable_telemetry_reporting    = $settings['enable_telemetry_reporting'] ?? false;
+
+// Current simple/advanced display mode preference.
+$ui_mode = \Syncly\Core\UiModeManager::get_mode();
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
@@ -70,22 +73,26 @@ $enable_telemetry_reporting    = $settings['enable_telemetry_reporting'] ?? fals
 		</div>
 		<div class="ghl-setup-step" data-step="2">
 			<span class="ghl-step-number">2</span>
-			<span class="ghl-step-label"><?php esc_html_e( 'Connect', 'syncly' ); ?></span>
+			<span class="ghl-step-label"><?php esc_html_e( 'View', 'syncly' ); ?></span>
 		</div>
 		<div class="ghl-setup-step" data-step="3">
 			<span class="ghl-step-number">3</span>
-			<span class="ghl-step-label"><?php esc_html_e( 'User Sync', 'syncly' ); ?></span>
+			<span class="ghl-step-label"><?php esc_html_e( 'Connect', 'syncly' ); ?></span>
 		</div>
 		<div class="ghl-setup-step" data-step="4">
 			<span class="ghl-step-number">4</span>
-			<span class="ghl-step-label"><?php esc_html_e( 'Integrations', 'syncly' ); ?></span>
+			<span class="ghl-step-label"><?php esc_html_e( 'User Sync', 'syncly' ); ?></span>
 		</div>
 		<div class="ghl-setup-step" data-step="5">
 			<span class="ghl-step-number">5</span>
-			<span class="ghl-step-label"><?php esc_html_e( 'Advanced', 'syncly' ); ?></span>
+			<span class="ghl-step-label"><?php esc_html_e( 'Integrations', 'syncly' ); ?></span>
 		</div>
 		<div class="ghl-setup-step" data-step="6">
 			<span class="ghl-step-number">6</span>
+			<span class="ghl-step-label"><?php esc_html_e( 'Advanced', 'syncly' ); ?></span>
+		</div>
+		<div class="ghl-setup-step" data-step="7">
+			<span class="ghl-step-number">7</span>
 			<span class="ghl-step-label"><?php esc_html_e( 'Complete', 'syncly' ); ?></span>
 		</div>
 	</div>
@@ -130,8 +137,66 @@ $enable_telemetry_reporting    = $settings['enable_telemetry_reporting'] ?? fals
 			</div>
 		</div>
 		
-		<!-- Step 2: Connection -->
+		<!-- Step 2: Choose Your View -->
 		<div class="ghl-wizard-panel" data-step="2">
+			<div class="ghl-wizard-panel-content">
+				<h2><?php esc_html_e( 'Choose Your View', 'syncly' ); ?></h2>
+				<p class="ghl-wizard-description">
+					<?php esc_html_e( 'Syncly can show you as much or as little as you need. Pick the view that fits how you work — you can switch at any time from the dashboard.', 'syncly' ); ?>
+				</p>
+
+				<div class="ghl-mode-selector" role="radiogroup" aria-label="<?php esc_attr_e( 'Choose your view', 'syncly' ); ?>">
+					<label class="ghl-mode-card <?php echo esc_attr( \Syncly\Core\UiModeManager::MODE_SIMPLE === $ui_mode ? 'selected' : '' ); ?>">
+						<input type="radio" name="wizard_ui_mode" value="<?php echo esc_attr( \Syncly\Core\UiModeManager::MODE_SIMPLE ); ?>" <?php checked( $ui_mode, \Syncly\Core\UiModeManager::MODE_SIMPLE ); ?>>
+						<span class="ghl-mode-card-check" aria-hidden="true"><span class="dashicons dashicons-yes"></span></span>
+						<span class="ghl-mode-icon"><span class="dashicons dashicons-admin-generic"></span></span>
+						<strong><?php esc_html_e( 'Simple View', 'syncly' ); ?></strong>
+						<span class="ghl-mode-accent"><?php esc_html_e( 'Recommended for most sites', 'syncly' ); ?></span>
+						<span class="ghl-mode-desc">
+							<?php esc_html_e( 'A clean, beginner-friendly dashboard with the essentials — connection health and core sync activity. Extra menus are hidden so nothing feels overwhelming.', 'syncly' ); ?>
+						</span>
+					</label>
+
+					<label class="ghl-mode-card <?php echo esc_attr( \Syncly\Core\UiModeManager::MODE_ADVANCED === $ui_mode ? 'selected' : '' ); ?>">
+						<input type="radio" name="wizard_ui_mode" value="<?php echo esc_attr( \Syncly\Core\UiModeManager::MODE_ADVANCED ); ?>" <?php checked( $ui_mode, \Syncly\Core\UiModeManager::MODE_ADVANCED ); ?>>
+						<span class="ghl-mode-card-check" aria-hidden="true"><span class="dashicons dashicons-yes"></span></span>
+						<span class="ghl-mode-icon"><span class="dashicons dashicons-admin-network"></span></span>
+						<strong><?php esc_html_e( 'Advanced View', 'syncly' ); ?></strong>
+						<span class="ghl-mode-accent"><?php esc_html_e( 'For full control', 'syncly' ); ?></span>
+						<span class="ghl-mode-desc">
+							<?php esc_html_e( 'The full Syncly experience — every dashboard widget, settings tab, field mapping, sync logs, custom objects, and advanced configuration.', 'syncly' ); ?>
+						</span>
+					</label>
+				</div>
+
+				<div class="ghl-wizard-note">
+					<span class="dashicons dashicons-info"></span>
+					<div>
+						<strong><?php esc_html_e( 'Note:', 'syncly' ); ?></strong>
+						<p><?php esc_html_e( 'This preference is saved per WordPress user. Advanced features are never hidden from simple view — they are just tucked away until you need them.', 'syncly' ); ?></p>
+					</div>
+				</div>
+			</div>
+
+			<div class="ghl-wizard-actions">
+				<button class="ghl-button ghl-button-secondary ghl-wizard-prev">
+					<span class="dashicons dashicons-arrow-left-alt2"></span>
+					<?php esc_html_e( 'Back', 'syncly' ); ?>
+				</button>
+				<button class="ghl-button ghl-button-primary ghl-wizard-next">
+					<?php esc_html_e( 'Continue', 'syncly' ); ?>
+					<span class="dashicons dashicons-arrow-right-alt2"></span>
+				</button>
+			</div>
+		</div>
+
+		<!-- Step 3: Connection -->
+		<div class="ghl-wizard-panel" data-step="3">
+			<?php
+			// Connecting from the wizard must return to the wizard afterwards so
+			// the user can finish setup instead of being dropped on the dashboard.
+			$setup_wizard_return_url = admin_url( 'admin.php?page=syncly-setup-wizard&step=3' );
+			?>
 			<div class="ghl-wizard-panel-content">
 				<?php if ( $is_connected ) : ?>
 					<!-- Already Connected -->
@@ -184,7 +249,7 @@ $enable_telemetry_reporting    = $settings['enable_telemetry_reporting'] ?? fals
 					<!-- Not Connected -->
 					<h2><?php esc_html_e( 'Connect to GoHighLevel', 'syncly' ); ?></h2>
 					<p class="ghl-wizard-description">
-						<?php esc_html_e( 'Choose your preferred connection method to get started.', 'syncly' ); ?>
+						<?php esc_html_e( 'Connect your GoHighLevel account to start syncing. You can also skip this step and connect later from the dashboard.', 'syncly' ); ?>
 					</p>
 					
 					<?php
@@ -202,21 +267,15 @@ $enable_telemetry_reporting    = $settings['enable_telemetry_reporting'] ?? fals
 					<span class="dashicons dashicons-arrow-left-alt2"></span>
 					<?php esc_html_e( 'Back', 'syncly' ); ?>
 				</button>
-				<?php if ( $is_connected ) : ?>
-					<button class="ghl-button ghl-button-primary ghl-wizard-next">
-						<?php esc_html_e( 'Continue', 'syncly' ); ?>
-						<span class="dashicons dashicons-arrow-right-alt2"></span>
-					</button>
-				<?php else : ?>
-					<p class="description" style="margin: 0; color: #6b7280;">
-						<?php esc_html_e( 'Connect to GoHighLevel to continue', 'syncly' ); ?>
-					</p>
-				<?php endif; ?>
+				<button class="ghl-button ghl-button-primary ghl-wizard-next">
+					<?php esc_html_e( 'Continue', 'syncly' ); ?>
+					<span class="dashicons dashicons-arrow-right-alt2"></span>
+				</button>
 			</div>
 		</div>
 		
-		<!-- Step 3: User Sync -->
-		<div class="ghl-wizard-panel" data-step="3">
+		<!-- Step 4: User Sync -->
+		<div class="ghl-wizard-panel" data-step="4">
 			<div class="ghl-wizard-panel-content">
 				<h2><?php esc_html_e( 'WordPress User Sync', 'syncly' ); ?></h2>
 				<p class="ghl-wizard-description">
@@ -278,8 +337,8 @@ $enable_telemetry_reporting    = $settings['enable_telemetry_reporting'] ?? fals
 				</button>
 			</div>
 		</div>
-		<!-- Step 4: Integrations -->
-		<div class="ghl-wizard-panel" data-step="4">
+		<!-- Step 5: Integrations -->
+		<div class="ghl-wizard-panel" data-step="5">
 			<div class="ghl-wizard-panel-content">
 				<h2><?php esc_html_e( 'Enable Integrations', 'syncly' ); ?></h2>
 				<p class="ghl-wizard-description">
@@ -475,8 +534,8 @@ $enable_telemetry_reporting    = $settings['enable_telemetry_reporting'] ?? fals
 				</button>
 			</div>
 		</div>
-		<!-- Step 5: Advanced Settings -->
-		<div class="ghl-wizard-panel" data-step="5">
+		<!-- Step 6: Advanced Settings -->
+		<div class="ghl-wizard-panel" data-step="6">
 			<div class="ghl-wizard-panel-content">
 				<h2><?php esc_html_e( 'Advanced Settings', 'syncly' ); ?></h2>
 				<p class="ghl-wizard-description">
@@ -538,8 +597,8 @@ $enable_telemetry_reporting    = $settings['enable_telemetry_reporting'] ?? fals
 				</button>
 			</div>
 		</div>
-		<!-- Step 6: Complete -->
-		<div class="ghl-wizard-panel" data-step="6">
+		<!-- Step 7: Complete -->
+		<div class="ghl-wizard-panel" data-step="7">
 			<div class="ghl-wizard-panel-content">
 				<div class="ghl-celebrate-badge">🎉 <?php esc_html_e( 'Setup Complete', 'syncly' ); ?></div>
 				<div class="ghl-wizard-icon ghl-wizard-success">
@@ -549,9 +608,15 @@ $enable_telemetry_reporting    = $settings['enable_telemetry_reporting'] ?? fals
 					</svg>
 				</div>
 				<h2><?php esc_html_e( 'All Set!', 'syncly' ); ?></h2>
-				<p class="ghl-wizard-description">
-					<?php esc_html_e( 'Your GoHighLevel CRM integration is configured and ready to use.', 'syncly' ); ?>
-				</p>
+				<?php if ( $is_connected ) : ?>
+					<p class="ghl-wizard-description">
+						<?php esc_html_e( 'Your GoHighLevel CRM integration is configured and ready to use.', 'syncly' ); ?>
+					</p>
+				<?php else : ?>
+					<p class="ghl-wizard-description">
+						<?php esc_html_e( 'Your settings are saved. Connect your GoHighLevel account anytime from the dashboard to start syncing.', 'syncly' ); ?>
+					</p>
+				<?php endif; ?>
 				
 				<div class="ghl-next-steps">
 					<h3><?php esc_html_e( 'What\'s Next?', 'syncly' ); ?></h3>

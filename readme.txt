@@ -4,18 +4,18 @@ Tags: gohighlevel, wpfusion, contact-sync, woocommerce, leadconnector
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.4.38
+Stable tag: 1.4.39
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 WordPress–GoHighLevel integration for contact sync, field mapping, Gravity Forms, WooCommerce, LearnDash, BuddyBoss, Elementor, webhooks & automation.
 == Description ==
 
-**Syncly is the most complete WordPress ↔ GoHighLevel CRM integration available.** Whether you're migrating from WP Fusion, looking for a GoHighLevel-native alternative, or starting fresh, Syncly gives you deeper sync, smarter automation, and tighter control — at a fraction of the cost.
+**Syncly is the most complete WordPress to GoHighLevel integration available.** Looking for a WordPress connection that turns your site into a GoHighLevel CRM automation hub? Syncly is the GoHighLevel WordPress plugin built exclusively for HighLevel (GoHighLevel / LeadConnector) — migrate from WP Fusion, or start fresh with deeper sync, smarter automation, and tighter control at a fraction of the cost.
 
 = Why Syncly Outperforms Other WordPress CRM Plugins =
 
-Unlike generic CRM connectors, Syncly is built exclusively for GoHighLevel (HighLevel / LeadConnector). That means every feature — field mapping, tag automation, webhook sync, membership gating, WooCommerce sync, LearnDash course tracking — is optimized specifically for the GHL API and data model.
+Unlike generic CRM connectors, Syncly is built exclusively for GoHighLevel (HighLevel / LeadConnector). That means every feature — GoHighLevel field mapping, tag automation, webhook sync, membership gating, WooCommerce sync, LearnDash course tracking — is optimized specifically for the GHL API and data model.
 
 * **True bi-directional sync** — push WordPress user data to GoHighLevel contacts AND pull GHL contact updates back into WordPress in real time
 * **Visual field mapper** — map any WordPress or BuddyBoss XProfile field to any GoHighLevel custom field with one click
@@ -43,11 +43,11 @@ Gravity Forms support includes a per-form GHL CRM settings tab with standard and
 
 = Searched for any of these? Syncly is the answer. =
 
-gohighlevel wordpress plugin, wordpress gohighlevel integration, wp to gohighlevel, gohighlevel contact sync, highlevel wordpress, leadconnector wordpress, gohighlevel woocommerce, wordpress crm sync, gohighlevel field mapping, gohighlevel membership, wp fusion alternative gohighlevel, gohighlevel webhooks wordpress, gohighlevel learndash, buddyboss gohighlevel
+gohighlevel wordpress plugin, wordpress gohighlevel integration, wp to gohighlevel, gohighlevel contact sync, highlevel wordpress, leadconnector wordpress, gohighlevel woocommerce, wordpress crm sync, gohighlevel field mapping, gohighlevel membership, wp fusion alternative gohighlevel, gohighlevel webhooks wordpress, gohighlevel learndash, buddyboss gohighlevel, wordpress to go high level, go high level contact sync
 
-Syncly for GoHighLevel connects WordPress sites with GoHighLevel CRM. It helps site administrators synchronize WordPress users, WooCommerce customers and orders, BuddyBoss profile fields, LearnDash activity, tags, custom fields, embedded forms, and webhook events.
+Syncly for GoHighLevel connects WordPress sites with GoHighLevel CRM. The best WordPress GoHighLevel integration for website owners who want their users, WooCommerce customers and orders, BuddyBoss profile fields, LearnDash activity, tags, custom fields, embedded forms, and webhook events to reach GoHighLevel automatically — with no manual exports, no middleware, and no Zapier-style mapping fees.
 
-The plugin includes OAuth2 connection handling, automatic token refresh, visual field mapping, contact synchronization, role-based tagging, membership content restrictions, webhook processing, queue management with Action Scheduler, and sync logs.
+The plugin includes OAuth2 connection handling, automatic token refresh, visual field mapping, contact synchronization, role-based tagging, membership content restrictions, webhook processing, queue management with Action Scheduler, and sync logs. Connect your GoHighLevel account, choose your preferred view in the setup wizard, and your WordPress site starts syncing to GoHighLevel immediately.
 
 This plugin is not affiliated with, endorsed by, or sponsored by GoHighLevel or HighLevel.
 
@@ -90,6 +90,13 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
 == Changelog ==
+
+= 1.4.39 =
+* Setup Wizard: reordered steps so you pick your preferred view (Simple or Advanced) before connecting, and connection no longer blocks setup — you can finish configuration and connect GoHighLevel at any point.
+* Added a Simple/Advanced display mode: choose a beginner-friendly dashboard or the full advanced interface with every settings tab and Sync Logs.
+* OAuth: the setup wizard now returns you to the exact step you connected from, and reconnecting after a failed session no longer kicks you out of the wizard to a generic page.
+* Connection screen now lists the exact GoHighLevel permissions (OAuth scopes) requested during authorization.
+* Consistency pass: user profile colors and links now use the shared GHL design tokens instead of hardcoded colors.
 
 = 1.4.38 =
 * Fixed user profile tags sometimes showing as raw tag IDs and being synced to GoHighLevel as IDs when the OAuth connection was unhealthy. The plugin now keeps a local tag ID → name map so tags are always synced by their real names, even during brief API outages.
@@ -253,5 +260,5 @@ Yes. Action Scheduler is included through Composer dependencies for background q
 = 1.3.17 =
 * Updated plugin branding for the Syncly slug.
 * Added WordPress.org external service disclosures.
-* Updated payment and upgrade links to the HighLevelSync home page.
+* Updated payment and upgrade links to the Syncly home page.
 * Improved review compliance for request sanitization and escaped filtered output.

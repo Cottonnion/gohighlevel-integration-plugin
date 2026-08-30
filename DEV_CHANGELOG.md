@@ -4,6 +4,47 @@ Internal changelog with full technical details. **Not included in release zips.*
 
 ---
 
+## [1.4.39] - 2026-08-30
+
+### Per-user Simple/Advanced display mode
+
+**Files**: `src/Core/UiModeManager.php` (new), `assets/admin/css/ui-mode.css` (new), `assets/admin/js/ui-mode.js` (new), `src/Core/Loader.php` (component registration), `src/Core/MenuManager.php`, `src/Core/AssetsManager.php`, `src/Core/Settings/AjaxHandler.php`, `templates/admin/spa-app.php`, `templates/admin/settings.php`, tests under `tests/Unit/Core/`.
+
+- New `Syncly\Core\UiModeManager` component: per-user mode stored in user meta `syncly_ui_mode`. `get_mode()` falls back to site default — existing installs that have already saved settings get `advanced`, fresh installs get `simple`. Valid modes `simple|advanced`; `set_mode()` validates before persisting.
+- `syncly_update_ui_mode` AJAX handler (action `wp_ajax_syncly_update_ui_mode`, nonce `syncly_ui_mode`) persists the mode and returns the active mode.
+- Simple mode hides advanced-only top-level SPA views (`syncly_admin_nav_tabs` filtering by `mode` key) and advanced-only settings tabs (`syncly_settings_tabs` filtering). Currently advanced-only: Webhooks, Email Notifications, Personalization, Advanced, Tools, System Status + Sync Logs menu/view. Pro's REST API tab opts in via `'mode' => 'advanced'` (see Pro DEV_CHANGELOG).
+- `setup-wizard.js` collects `wizard_ui_mode` and persists it during final save so the choice survives.
+
+### Setup Wizard rework
+
+**Files**: `templates/admin/setup-wizard.php`, `assets/admin/js/setup-wizard.js`, `assets/admin/css/setup-wizard.css` + `.min.css`
+
+- Wizard is now 7 steps: Welcome → View → Connect → User Sync → Integrations → Advanced → Complete. Connect moved to step 3 after the View selection.
+- View step redesigned with `ghl-mode-selector` / `ghl-mode-card` cards (role group, accent label, checkmark badge); `.selected` styling uses `--ghl-primary-light` bg + `rgba(232, 87, 22, 0.18)` ring from `--ghl-primary` warm palette in `globals.css`.
+- Connect is optional — Continue is always available, so OAuth no longer blocks setup. Wizard passes `admin.php?page=syncly-setup-wizard&step=3` as the OAuth return URL.
+
+### OAuth return-URL handling
+
+**File**: `src/API/OAuth/OAuthHandler.php`
+
+- Added `get_authorization_url( $return_url )`, `generate_state_token( $return_url )`, `get_state_return_url( $state )`: the post-authorization redirect target is baked into the state token, so both the admin callback and the wizard callback redirect to exactly where the connection started.
+- Both `syncly-admin` and `syncly-setup-wizard` `page` values are accepted by the admin callback.
+- Added `get_current_admin_return_url()`: returns `admin.php?page=syncly-setup-wizard&step=N` when the wizard page is active, otherwise the Syncly dashboard.
+
+### Connection scopes from single source
+
+**Files**: `src/API/Client/Client.php`, `templates/admin/connection-setup.php`
+
+- `Client::OAUTH_SCOPES` constant + `get_oauth_scopes()` are now the single source of truth; `get_authorization_url()` builds the auth URL from it and the connection screen lists the exact scopes requested.
+
+### Design-token audit on user profile
+
+**File**: `src/Admin/Profile/UserProfileFields.php`, `assets/admin/css/user-profile.css` + `.min.css`
+
+- Heading uses `SYNCLY_PLUGIN_NAME`; cloud icon + GHL link colors now use `--ghl-primary`; remaining hardcoded colors replaced with `--ghl-border-primary`, `--ghl-error-dark`, `--ghl-primary`, `--ghl-text-inverse`, `--ghl-bg-secondary`, `--ghl-text-secondary`.
+
+---
+
 ## [1.4.38] - 2026-08-29
 
 ### Durable tag name resolution during OAuth/API outages

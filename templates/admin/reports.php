@@ -18,6 +18,8 @@ $oauth_reconnect_url = admin_url( 'admin.php?page=syncly-oauth-connect' );
 $ghl_settings        = \Syncly\Core\SettingsManager::get_instance()->get_settings_array();
 $ghl_white_label     = $ghl_settings['ghl_white_label_domain'] ?? '';
 $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/' ) : 'https://app.gohighlevel.com';
+
+$ui_mode_advanced = \Syncly\Core\UiModeManager::is_advanced();
 ?>
 
 <div class="ghl-reports-dashboard">
@@ -36,18 +38,20 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 				<span class="dashicons dashicons-admin-site" style="font-size: 16px;"></span>
 				Test Connection
 			</button>
-			<button type="button" class="ghl-button ghl-button-secondary" id="ghl-clear-cache" style="display: flex; align-items: center; gap: 6px;">
-				<span class="dashicons dashicons-trash" style="font-size: 16px;"></span>
-				Clear Cache
-			</button>
-			<button type="button" class="ghl-button ghl-button-secondary" id="ghl-refresh-tags-fields" style="display: flex; align-items: center; gap: 6px;">
-				<span class="dashicons dashicons-update-alt" style="font-size: 16px;"></span>
-				Refresh Tags &amp; Fields
-			</button>
-			<button type="button" class="ghl-button ghl-button-secondary" id="ghl-reconnect-account" style="display: flex; align-items: center; gap: 6px;">
-				<span class="dashicons dashicons-shield" style="font-size: 16px;"></span>
-				Reconnect Account
-			</button>
+			<?php if ( $ui_mode_advanced ) : ?>
+				<button type="button" class="ghl-button ghl-button-secondary" id="ghl-clear-cache" style="display: flex; align-items: center; gap: 6px;">
+					<span class="dashicons dashicons-trash" style="font-size: 16px;"></span>
+					Clear Cache
+				</button>
+				<button type="button" class="ghl-button ghl-button-secondary" id="ghl-refresh-tags-fields" style="display: flex; align-items: center; gap: 6px;">
+					<span class="dashicons dashicons-update-alt" style="font-size: 16px;"></span>
+					Refresh Tags &amp; Fields
+				</button>
+				<button type="button" class="ghl-button ghl-button-secondary" id="ghl-reconnect-account" style="display: flex; align-items: center; gap: 6px;">
+					<span class="dashicons dashicons-shield" style="font-size: 16px;"></span>
+					Reconnect Account
+				</button>
+			<?php endif; ?>
 			<a href="<?php echo esc_url( $ghl_base_domain ); ?>" class="ghl-button ghl-button-secondary" style="display: flex; align-items: center; gap: 6px; text-decoration: none;" target="_blank" rel="noopener noreferrer">
 				<span class="dashicons dashicons-external" style="font-size: 16px;"></span>
 				Go To GoHlighLevel
@@ -56,6 +60,7 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 	</div>
 
 	<!-- System Health Status -->
+	<?php if ( $ui_mode_advanced ) : ?>
 	<div style="background: white; border: 1px solid #e2e8f0; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 24px;">
 		<h3 style="margin: 0 0 20px; font-size: 18px; font-weight: 600; color: #1e293b; display: flex; align-items: center; gap: 8px;">
 			<span class="dashicons dashicons-heart" style="color: #10b981;"></span>
@@ -80,6 +85,7 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 			</div>
 		</div>
 	</div>
+	<?php endif; ?>
 
 	<!-- Stats Overview Cards -->
 	<div class="ghl-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px;">
@@ -115,9 +121,11 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 			</div>
 			<div style="font-size: 32px; font-weight: 700; margin-bottom: 4px; color: #1e293b;"><?php echo number_format( $report_data['contacts']['synced'] ); ?></div>
 			<div style="font-size: 14px; color: #64748b; margin-bottom: 8px;">Synced Contacts</div>
-			<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin#/sync-logs' ) ); ?>" style="font-size: 12px; color: #10b981; text-decoration: none; font-weight: 500;">
-				View Sync Details →
-			</a>
+			<?php if ( $ui_mode_advanced ) : ?>
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin#/sync-logs' ) ); ?>" style="font-size: 12px; color: #10b981; text-decoration: none; font-weight: 500;">
+					View Sync Details →
+				</a>
+			<?php endif; ?>
 		</div>
 
 		<!-- Pending/Failed -->
@@ -138,9 +146,11 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 			</div>
 			<div style="font-size: 32px; font-weight: 700; margin-bottom: 4px; color: #1e293b;"><?php echo number_format( $pending_total ); ?></div>
 			<div style="font-size: 14px; color: #64748b; margin-bottom: 8px;"><?php echo esc_html__( 'Failed + Pending', 'syncly' ); ?></div>
-			<a href="<?php echo esc_url( $link_url ); ?>" style="font-size: 12px; color: <?php echo esc_attr( $link_color ); ?>; text-decoration: none; font-weight: 500;">
-				<?php echo esc_html( $link_text ); ?>
-			</a>
+			<?php if ( $ui_mode_advanced ) : ?>
+				<a href="<?php echo esc_url( $link_url ); ?>" style="font-size: 12px; color: <?php echo esc_attr( $link_color ); ?>; text-decoration: none; font-weight: 500;">
+					<?php echo esc_html( $link_text ); ?>
+				</a>
+			<?php endif; ?>
 		</div>
 	</div>
 
@@ -155,9 +165,11 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 						<span class="dashicons dashicons-clock" style="color: #6366f1;"></span>
 						Recent Sync Activity
 					</h3>
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin#/sync-logs' ) ); ?>" style="font-size: 13px; color: #6366f1; text-decoration: none; font-weight: 500;">
-						View All →
-					</a>
+					<?php if ( $ui_mode_advanced ) : ?>
+						<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin#/sync-logs' ) ); ?>" style="font-size: 13px; color: #6366f1; text-decoration: none; font-weight: 500;">
+							View All →
+						</a>
+					<?php endif; ?>
 				</div>
 				
 				<div style="display: flex; flex-direction: column; gap: 12px;">
@@ -256,18 +268,20 @@ $ghl_base_domain     = ! empty( $ghl_white_label ) ? rtrim( $ghl_white_label, '/
 						<span class="dashicons dashicons-editor-table" style="color: #6366f1; font-size: 16px;"></span>
 						Field Mapping
 					</a>
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin#/custom-objects' ) ); ?>" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #f1f5f9;">
-						<span class="dashicons dashicons-database" style="color: #6366f1; font-size: 16px;"></span>
-						Custom Objects
-					</a>
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin#/sync-logs/status/success' ) ); ?>" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #f1f5f9;">
-						<span class="dashicons dashicons-yes-alt" style="color: #10b981; font-size: 16px;"></span>
-						View Successful Syncs
-					</a>
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin#/sync-logs/status/failed' ) ); ?>" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #f1f5f9;">
-						<span class="dashicons dashicons-warning" style="color: #f59e0b; font-size: 16px;"></span>
-						View Failed Syncs
-					</a>
+					<?php if ( $ui_mode_advanced ) : ?>
+						<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin#/custom-objects' ) ); ?>" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #f1f5f9;">
+							<span class="dashicons dashicons-database" style="color: #6366f1; font-size: 16px;"></span>
+							Custom Objects
+						</a>
+						<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin#/sync-logs/status/success' ) ); ?>" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #f1f5f9;">
+							<span class="dashicons dashicons-yes-alt" style="color: #10b981; font-size: 16px;"></span>
+							View Successful Syncs
+						</a>
+						<a href="<?php echo esc_url( admin_url( 'admin.php?page=syncly-admin#/sync-logs/status/failed' ) ); ?>" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #f1f5f9;">
+							<span class="dashicons dashicons-warning" style="color: #f59e0b; font-size: 16px;"></span>
+							View Failed Syncs
+						</a>
+					<?php endif; ?>
 					<a href="<?php echo esc_url( admin_url( 'users.php' ) ); ?>" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 6px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #f1f5f9;">
 						<span class="dashicons dashicons-admin-users" style="color: #6366f1; font-size: 16px;"></span>
 						WordPress Users

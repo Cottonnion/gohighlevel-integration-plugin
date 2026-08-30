@@ -103,14 +103,18 @@ class OAuthHandler {
 	/**
 	 * Generate OAuth authorization URL
 	 *
+	 * @param string $return_url Optional. Admin URL to return to after auth.
+	 *                           When empty, the main Syncly dashboard is used.
+	 *                           The setup wizard passes its own URL so users
+	 *                           are sent back to the wizard after connecting.
 	 * @return string Authorization URL
 	 */
-	public function get_authorization_url(): string {
+	public function get_authorization_url( string $return_url = '' ): string {
 		// Use REST API callback as primary method (it proxies to admin page)
 		$redirect_uri = rest_url( 'ghl/v1/callback' );
 
 		// Generate and persist a nonce-backed state token to prevent CSRF
-		$state = $this->generate_state_token();
+		$state = $this->generate_state_token( $return_url );
 
 		return $this->client->get_oauth_authorization_url( $redirect_uri, $state );
 	}
@@ -119,15 +123,20 @@ class OAuthHandler {
 	 * Generate and store OAuth state token to prevent CSRF while preserving proxy return URL flow.
 	 * State contains the return URL plus a nonce query parameter (`ghl_state`) that we validate on callback.
 	 *
+	 * @param string $return_url Optional. URL to return to after auth. Defaults to the Syncly dashboard.
 	 * @return string Encoded state value (URL-encoded return URL with nonce)
 	 */
-	private function generate_state_token(): string {
+	private function generate_state_token( string $return_url = '' ): string {
 		$state_nonce = wp_generate_password( 32, false, false );
+
+		if ( '' === $return_url ) {
+			$return_url = admin_url( 'admin.php?page=syncly-admin' );
+		}
 
 		$return_url = add_query_arg(
 			'ghl_state',
 			$state_nonce,
-			admin_url( 'admin.php?page=syncly-admin' )
+			$return_url
 		);
 
 		// Bind state to nonce (not path) to keep compatibility with proxy redirect logic
@@ -163,10 +172,12 @@ class OAuthHandler {
 			return;
 		}
 
-		// Check if this is an OAuth callback - look for 'code' parameter on syncly-admin page
+		// Check if this is an OAuth callback - look for 'code' parameter on a Syncly page.
+		// Accept the setup wizard as well so connections started from the wizard's
+		// Connect step are processed there and return the user to the wizard.
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 
-		if ( 'syncly-admin' !== $page ) {
+		if ( ! in_array( $page, [ 'syncly-admin', 'syncly-setup-wizard' ], true ) ) {
 			return;
 		}
 
@@ -197,7 +208,7 @@ class OAuthHandler {
 				add_query_arg(
 					'ghl_state',
 					$state_nonce,
-					admin_url( 'admin.php?page=syncly-admin' )
+					$this->get_current_admin_return_url()
 				)
 			);
 			$this->log_oauth_event(
@@ -209,6 +220,8 @@ class OAuthHandler {
 			);
 		}
 
+		$fallback_url = $this->get_current_admin_return_url();
+
 		// If still empty, fail early with clear error
 		if ( empty( $state ) ) {
 			$this->log_oauth_event( 'oauth_state_missing_after_rebuild', [] );
@@ -218,7 +231,7 @@ class OAuthHandler {
 						'oauth'   => 'error',
 						'message' => urlencode( __( 'Missing state parameter. OAuth cancelled for security.', 'syncly' ) ),
 					],
-					admin_url( 'admin.php?page=syncly-admin' )
+					$fallback_url
 				)
 			);
 			exit;
@@ -228,6 +241,11 @@ class OAuthHandler {
 
 		// Process the callback with state parameter
 		$result = $this->process_oauth_callback( $code, $state );
+
+		// Resolve where to send the user back to — the return URL was baked into
+		// the state when the flow started (dashboard by default, setup wizard when
+		// the connection step initiated it).
+		$redirect_url = $this->get_state_return_url( $state );
 
 		// Redirect with result
 		if ( is_wp_error( $result ) ) {
@@ -244,14 +262,59 @@ class OAuthHandler {
 						'oauth'   => 'error',
 						'message' => urlencode( $result->get_error_message() ),
 					],
-					admin_url( 'admin.php?page=syncly-admin' )
+					$redirect_url
 				)
 			);
 		} else {
 			$this->log_oauth_event( 'oauth_callback_success', [ 'source' => 'admin' ] );
-			wp_safe_redirect( add_query_arg( 'oauth', 'success', admin_url( 'admin.php?page=syncly-admin' ) ) );
+			wp_safe_redirect( add_query_arg( 'oauth', 'success', $redirect_url ) );
 		}
 		exit;
+	}
+
+	/**
+	 * Extract the post-auth return URL from an encoded OAuth state value.
+	 *
+	 * The `ghl_state` nonce is removed from the query so the user lands on a
+	 * clean page (`page`, `step` params are preserved). Falls back to the main
+	 * Syncly dashboard when no valid return URL can be derived.
+	 *
+	 * @param string $state Encoded state value (URL-encoded return URL + nonce).
+	 * @return string URL to redirect the user to after the OAuth round-trip.
+	 */
+	private function get_state_return_url( string $state ): string {
+		$default = admin_url( 'admin.php?page=syncly-admin' );
+
+		if ( '' === $state ) {
+			return $default;
+		}
+
+		$decoded = rawurldecode( $state );
+		$url     = remove_query_arg( 'ghl_state', $decoded );
+
+		if ( empty( $url ) || ! is_string( $url ) ) {
+			return $default;
+		}
+
+		return $url;
+	}
+
+	private function get_current_admin_return_url(): string {
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+
+		if ( 'syncly-setup-wizard' === $page ) {
+			$args = [ 'page' => 'syncly-setup-wizard' ];
+			if ( isset( $_GET['step'] ) ) {
+				$step = absint( wp_unslash( $_GET['step'] ) );
+				if ( $step > 0 ) {
+					$args['step'] = $step;
+				}
+			}
+
+			return admin_url( add_query_arg( $args, 'admin.php' ) );
+		}
+
+		return admin_url( 'admin.php?page=syncly-admin' );
 	}
 
 	/**
@@ -268,6 +331,8 @@ class OAuthHandler {
 
 		$result = $this->process_oauth_callback( $code, $state );
 
+		$redirect_url = $this->get_state_return_url( $state );
+
 		if ( is_wp_error( $result ) ) {
 			$this->log_oauth_event(
 				'oauth_callback_error',
@@ -282,12 +347,12 @@ class OAuthHandler {
 						'oauth'   => 'error',
 						'message' => urlencode( $result->get_error_message() ),
 					],
-					admin_url( 'admin.php?page=syncly-settings' )
+					$redirect_url
 				)
 			);
 		} else {
 			$this->log_oauth_event( 'oauth_callback_success', [ 'source' => 'rest' ] );
-			wp_safe_redirect( add_query_arg( 'oauth', 'success', admin_url( 'admin.php?page=syncly-settings' ) ) );
+			wp_safe_redirect( add_query_arg( 'oauth', 'success', $redirect_url ) );
 		}
 		exit;
 	}

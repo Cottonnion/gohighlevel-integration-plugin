@@ -800,13 +800,85 @@ class Client implements ClientInterface {
 	}
 
 	/**
+	 * OAuth2 scopes requested from GoHighLevel.
+	 *
+	 * Single source of truth for the scopes bundled into the authorization URL
+	 * as well as the scopes listed to users in the UI (dashboard + setup wizard).
+	 * Keys are the raw GHL scope strings, values are human-readable labels.
+	 *
+	 * @var array<string, string>
+	 */
+	private const OAUTH_SCOPES = [
+		'contacts.readonly'               => 'View Contacts',
+		'contacts.write'                  => 'Edit Contacts',
+		'locations/tags.readonly'         => 'View Tags',
+		'locations/tags.write'            => 'Edit Tags',
+		'locations/customFields.readonly' => 'View Custom Fields',
+		'locations/customFields.write'    => 'Edit Custom Fields',
+		'forms.readonly'                  => 'View Forms',
+		'objects/schema.readonly'         => 'View Objects Schema',
+		'objects/schema.write'            => 'Edit Objects Schema',
+		'objects/record.readonly'         => 'View Object Records',
+		'objects/record.write'            => 'Edit Object Records',
+		'associations.write'              => 'Write Associations',
+		'associations.readonly'           => 'View Associations',
+		'associations/relation.write'     => 'Write Association Relations',
+		'conversations.readonly'          => 'View Conversations',
+		'conversations.write'             => 'Write Conversations',
+		'conversations/message.readonly'  => 'View Conversation Messages',
+		'conversations/message.write'     => 'Write Conversation Messages',
+		'locations.readonly'              => 'View Location',
+		'workflows.readonly'              => 'View Workflows',
+		'calendars.readonly'              => 'View Calendars',
+		'calendars.write'                 => 'Edit Calendars',
+		'calendars/events.write'          => 'Manage Calendar Appointments',
+		'opportunities.readonly'          => 'View Opportunities',
+		'opportunities.write'             => 'Edit Opportunities',
+	];
+
+	/**
+	 * Get the OAuth scopes requested from GoHighLevel.
+	 *
+	 * @return array<string, string> Map of raw scope string to human-readable label.
+	 */
+	public static function get_oauth_scopes(): array {
+		return [
+			'contacts.readonly'               => __( 'View Contacts', 'syncly' ),
+			'contacts.write'                  => __( 'Edit Contacts', 'syncly' ),
+			'locations/tags.readonly'         => __( 'View Tags', 'syncly' ),
+			'locations/tags.write'            => __( 'Edit Tags', 'syncly' ),
+			'locations/customFields.readonly' => __( 'View Custom Fields', 'syncly' ),
+			'locations/customFields.write'    => __( 'Edit Custom Fields', 'syncly' ),
+			'forms.readonly'                  => __( 'View Forms', 'syncly' ),
+			'objects/schema.readonly'         => __( 'View Objects Schema', 'syncly' ),
+			'objects/schema.write'            => __( 'Edit Objects Schema', 'syncly' ),
+			'objects/record.readonly'         => __( 'View Object Records', 'syncly' ),
+			'objects/record.write'            => __( 'Edit Object Records', 'syncly' ),
+			'associations.write'              => __( 'Write Associations', 'syncly' ),
+			'associations.readonly'           => __( 'View Associations', 'syncly' ),
+			'associations/relation.write'     => __( 'Write Association Relations', 'syncly' ),
+			'conversations.readonly'          => __( 'View Conversations', 'syncly' ),
+			'conversations.write'             => __( 'Write Conversations', 'syncly' ),
+			'conversations/message.readonly'  => __( 'View Conversation Messages', 'syncly' ),
+			'conversations/message.write'     => __( 'Write Conversation Messages', 'syncly' ),
+			'locations.readonly'              => __( 'View Location', 'syncly' ),
+			'workflows.readonly'              => __( 'View Workflows', 'syncly' ),
+			'calendars.readonly'              => __( 'View Calendars', 'syncly' ),
+			'calendars.write'                 => __( 'Edit Calendars', 'syncly' ),
+			'calendars/events.write'          => __( 'Manage Calendar Appointments', 'syncly' ),
+			'opportunities.readonly'          => __( 'View Opportunities', 'syncly' ),
+			'opportunities.write'             => __( 'Edit Opportunities', 'syncly' ),
+		];
+	}
+
+	/**
 	 * Generate the OAuth2 authorization URL.
 	 *
 	 * Builds the marketplace chooselocation URL with all required scopes.
 	 * The redirect_uri always points to synclyforgohighlevel.com/wp-json/ghl/v1/callback
 	 * (the proxy), which then forwards back to the WordPress site.
 	 *
-	 * Scopes requested (aligned with the marketplace draft version):
+	 * Scopes requested (aligned with the OAUTH_SCOPES constant):
 	 * - contacts.readonly / contacts.write
 	 * - locations/tags.readonly / locations/tags.write
 	 * - locations/customFields.readonly / locations/customFields.write
@@ -827,36 +899,7 @@ class Client implements ClientInterface {
 		$params = [
 			'client_id'     => self::OAUTH_CLIENT_ID,
 			'redirect_uri'  => 'https://synclyforgohighlevel.com/wp-json/ghl/v1/callback',
-			'scope'         => implode(
-				' ',
-				[
-					'contacts.readonly',                // View Contacts
-					'contacts.write',                   // Edit Contacts
-					'locations/tags.readonly',          // View Tags
-					'locations/tags.write',             // Edit Tags
-					'locations/customFields.readonly',  // View Custom Fields
-					'locations/customFields.write',     // Edit Custom Fields
-					'forms.readonly',                   // View Forms
-					'objects/schema.readonly',          // View Objects Schema
-					'objects/schema.write',             // Edit Objects Schema
-					'objects/record.readonly',          // View Objects Records
-					'objects/record.write',             // Edit Objects Records
-					'associations.write',               // Write Associations
-					'associations.readonly',            // View Associations
-					'associations/relation.write',      // Write Associations Relations
-					'conversations.readonly',           // View Conversations
-					'conversations.write',              // Write Conversations
-					'conversations/message.readonly',   // View Conversation Messages
-					'conversations/message.write',      // Write Conversation Messages
-					'locations.readonly',               // View Location
-					'workflows.readonly',               // View Workflows
-					'calendars.readonly',               // View Calendars
-					'calendars.write',                  // Edit Calendars
-					'calendars/events.write',           // Book / manage Calendar Appointments
-					'opportunities.readonly',           // View Opportunities
-					'opportunities.write',              // Edit Opportunities
-				]
-			),
+			'scope'         => implode( ' ', array_keys( self::OAUTH_SCOPES ) ),
 			'response_type' => 'code',
 			'state'         => $return_url,
 		];

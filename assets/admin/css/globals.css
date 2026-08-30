@@ -1099,7 +1099,7 @@ select.ghl-role-tags-select + .select2-container--default .select2-selection--si
 
 .ghl-button-primary {
 	background: var(--ghl-primary);
-	color: var(--ghl-text-inverse);
+	color: var(--ghl-text-inverse) !important;
 	border: 1px solid var(--ghl-primary);
 }
 

@@ -1,0 +1,129 @@
+/**
+ * GoHighLevel CRM Integration - UI Mode Toggle
+ *
+ * Styles for the Simple/Advanced display mode switch in the admin header.
+ *
+ * @package    Syncly
+ * @subpackage Syncly/assets/admin/css
+ */
+
+/* Layout: push the toggle to the right of the nav tabs */
+.ghl-header-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.ghl-nav-tabs {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.ghl-ui-mode-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+    padding: 0 0 0 20px;
+}
+
+.ghl-ui-mode-caption {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--ghl-font-size-sm);
+    font-weight: var(--ghl-font-weight-medium);
+    color: var(--ghl-text-tertiary);
+    white-space: nowrap;
+}
+
+.ghl-ui-mode-caption .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.ghl-ui-mode-segment {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px;
+    background: var(--ghl-bg-secondary);
+    border: 1px solid var(--ghl-border-primary);
+    border-radius: 999px;
+    box-sizing: border-box;
+}
+
+.ghl-ui-mode-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 14px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ghl-text-secondary);
+    font-family: inherit;
+    font-size: var(--ghl-font-size-sm);
+    font-weight: var(--ghl-font-weight-semibold);
+    line-height: 1.4;
+    cursor: pointer;
+    transition: color 0.15s ease, background-color 0.15s ease;
+    white-space: nowrap;
+}
+
+.ghl-ui-mode-btn:hover {
+    color: var(--ghl-text-primary);
+}
+
+.ghl-ui-mode-btn.is-active {
+    background: var(--ghl-primary);
+    color: var(--ghl-text-inverse);
+}
+
+.ghl-ui-mode-btn.is-active:hover {
+    background: var(--ghl-primary-hover);
+    color: var(--ghl-text-inverse);
+}
+
+.ghl-ui-mode-btn.is-disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.ghl-ui-mode-btn:focus-visible {
+    outline: 2px solid var(--ghl-border-focus);
+    outline-offset: 1px;
+}
+
+/* Accessibility: reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .ghl-ui-mode-btn {
+        transition: none;
+    }
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 960px) {
+    .ghl-ui-mode-toggle {
+        padding-left: 12px;
+        gap: 6px;
+    }
+
+    .ghl-ui-mode-caption {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .ghl-header-nav {
+        flex-wrap: wrap;
+        padding-right: 12px;
+    }
+
+    .ghl-ui-mode-toggle {
+        padding: 8px 0 10px;
+        width: 100%;
+        justify-content: flex-end;
+    }
+}

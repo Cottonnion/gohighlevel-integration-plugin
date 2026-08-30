@@ -48,11 +48,6 @@
 	color: var(--ghl-warning-dark);
 }
 
-/* Family Accounts Section Spacing */
-.ghl-family-section {
-	margin-top: var(--ghl-spacing-lg);
-}
-
 /* Family Tag Select */
 .ghl-family-tag-select {
 	min-width: 300px;

@@ -373,7 +373,7 @@ class UserProfileFields {
 		<div class="ghl-profile-section">
 			<h2>
 				<span class="dashicons dashicons-cloud"></span>
-				<?php esc_html_e( 'GoHighLevel Integration', 'syncly' ); ?>
+				<?php echo esc_html( SYNCLY_PLUGIN_NAME ); ?>
 			</h2>
 
 			<div class="ghl-data-grid">
@@ -507,7 +507,7 @@ class UserProfileFields {
 
 			<!-- Auto Login Section (Admin Only) -->
 			<?php if ( current_user_can( 'manage_options' ) && $user->ID !== get_current_user_id() ) : ?>
-				<div class="ghl-autologin-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e5e5;">
+				<div class="ghl-autologin-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--ghl-border-primary);">
 					<h3 style="margin-top:0px;"><?php esc_html_e( 'Admin Tools', 'syncly' ); ?></h3>
 					<p class="description">
 						<?php esc_html_e( 'Generate a secure one-time login link to access this user account. Link expires in 15 minutes.', 'syncly' ); ?>
@@ -536,7 +536,7 @@ class UserProfileFields {
 								<span class="dashicons dashicons-clipboard"></span>
 								<?php esc_html_e( 'Copy', 'syncly' ); ?>
 							</button>
-							<p class="description" style="color: #d63638; margin-top: 10px;">
+							<p class="description" style="color: var(--ghl-error-dark); margin-top: 10px;">
 								<strong><?php esc_html_e( 'Warning:', 'syncly' ); ?></strong>
 								<?php esc_html_e( 'This link grants full access to this user account. Expires in 15 minutes or after one use.', 'syncly' ); ?>
 							</p>
@@ -546,7 +546,7 @@ class UserProfileFields {
 			<?php endif; ?>
 
 			<!-- User Activity Log Section -->
-			<div class="ghl-activity-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e5e5;">
+			<div class="ghl-activity-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--ghl-border-primary);">
 				<?php
 				$activity_data = $this->get_user_activity_logs( $user->ID, 50 );
 				$activity_logs = $activity_data['logs'];
@@ -555,15 +555,15 @@ class UserProfileFields {
 				
 				<div class="ghl-activity-header-wrapper" style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;" data-toggle="ghl-activity-timeline">
 					<h3 style="margin:0; display: flex; align-items: center; gap: 8px;">
-						<span class="dashicons dashicons-clock" style="color: #2271b1;"></span>
+						<span class="dashicons dashicons-clock" style="color: var(--ghl-primary);"></span>
 						<?php esc_html_e( 'Activity Timeline', 'syncly' ); ?>
 						<?php if ( $total_logs > 0 ) : ?>
-							<span class="ghl-activity-count" style="background: #2271b1; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 600;">
+							<span class="ghl-activity-count" style="background: var(--ghl-primary); color: var(--ghl-text-inverse); padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 600;">
 								<?php echo esc_html( number_format( $total_logs ) ); ?>
 							</span>
 						<?php endif; ?>
 					</h3>
-					<span class="dashicons dashicons-arrow-down-alt2 ghl-activity-toggle" style="color: #2271b1; transition: transform 0.3s ease;"></span>
+					<span class="dashicons dashicons-arrow-down-alt2 ghl-activity-toggle" style="color: var(--ghl-primary); transition: transform 0.3s ease;"></span>
 				</div>
 				
 				<div class="ghl-activity-content-wrapper" style="display: none; margin-top: 15px;">
@@ -629,12 +629,12 @@ class UserProfileFields {
 						</div>
 						
 						<?php if ( $total_pages > 1 ) : ?>
-							<div class="ghl-activity-pagination" style="margin-top: 20px; display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f6f7f7; border-radius: 4px;">
+							<div class="ghl-activity-pagination" style="margin-top: 20px; display: flex; align-items: center; justify-content: space-between; padding: 10px; background: var(--ghl-bg-secondary); border-radius: var(--ghl-radius-sm);">
 								<button type="button" class="ghl-button ghl-button-small ghl-button-secondary ghl-activity-prev" style="display: none;">
 									<span class="dashicons dashicons-arrow-left-alt2"></span>
 									<?php esc_html_e( 'Previous', 'syncly' ); ?>
 								</button>
-								<span class="ghl-activity-page-info" style="color: #50575e; font-size: 13px;">
+								<span class="ghl-activity-page-info" style="color: var(--ghl-text-secondary); font-size: 13px;">
 									<?php
 									printf(
 										/* translators: 1: Current page, 2: Total pages */
@@ -687,9 +687,9 @@ class UserProfileFields {
 
 		$tag_rules_url = admin_url( 'admin.php?page=syncly-admin&settings_tab=tag-rules#tag-rules' );
 		?>
-		<div class="ghl-tag-impact-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e5e5;">
+		<div class="ghl-tag-impact-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--ghl-border-primary);">
 			<h3 style="margin-top:0px;">
-				<span class="dashicons dashicons-networking" style="color: #2271b1;"></span>
+				<span class="dashicons dashicons-networking" style="color: var(--ghl-primary);"></span>
 				<?php esc_html_e( 'Tag Rules Impact', 'syncly' ); ?>
 			</h3>
 			<p class="description">

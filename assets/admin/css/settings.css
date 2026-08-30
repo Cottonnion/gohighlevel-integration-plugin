@@ -353,7 +353,7 @@ select.ghl-tags-select {
 /* Button Primary Variant */
 .ghl-button-primary {
 	background: var(--ghl-primary);
-	color: var(--ghl-text-inverse);
+	color: var(--ghl-text-inverse) !important;
 	border: 1px solid var(--ghl-primary);
 }
 

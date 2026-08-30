@@ -65,77 +65,20 @@ $oauth_handler    = new \Syncly\API\OAuth\OAuthHandler();
 $oauth_status     = $oauth_handler->get_connection_status();
 $is_connected     = $oauth_status['connected'];
 
-// Define available settings tabs
-$settings_tabs = [
-	'general'              => [
-		'label' => __( 'General', 'syncly' ),
-		'icon'  => 'dashicons-admin-generic',
-	],
-	'restrictions-manager' => [
-		'label' => __( 'Restrictions Manager', 'syncly' ),
-		'icon'  => 'dashicons-lock',
-	],
-	'webhooks'             => [
-		'label' => __( 'Webhooks', 'syncly' ),
-		'icon'  => 'dashicons-admin-links',
-	],
-	'notifications'        => [
-		'label' => __( 'Email Notifications', 'syncly' ),
-		'icon'  => 'dashicons-email',
-	],
-	// 'sync-options' => [
-	// 'label' => __( 'Sync Options', 'syncly' ),
-	// 'icon'  => 'dashicons-update',
-	// ],
-	'role-tags'            => [
-		'label' => __( 'Role-Based Tags', 'syncly' ),
-		'icon'  => 'dashicons-tag',
-	],
-	'tag-rules'            => [
-		'label' => __( 'Tag Rules', 'syncly' ),
-		'icon'  => 'dashicons-networking',
-	],
-	'personalization'      => [
-		'label' => __( 'Personalization', 'syncly' ),
-		'icon'  => 'dashicons-email-alt',
-	],
-	// 'conversations' => [
-	// 'label' => __( 'Conversations', 'syncly' ),
-	// 'icon'  => 'dashicons-format-chat',
-	// ],
-	'advanced'             => [
-		'label' => __( 'Advanced', 'syncly' ),
-		'icon'  => 'dashicons-admin-tools',
-	],
-	'tools'                => [
-		'label' => __( 'Tools', 'syncly' ),
-		'icon'  => 'dashicons-admin-settings',
-	],
-	'stats'                => [
-		'label' => __( 'System Status', 'syncly' ),
-		'icon'  => 'dashicons-info',
-	],
-];
-
-// Hide the upsell tab once Pro is active and licensed — nothing left to upgrade to.
-if ( ! apply_filters( 'syncly_is_pro_active', false ) ) {
-	$settings_tabs['upgrade'] = [
-		'label'               => __( 'Upgrade to Pro', 'syncly' ),
-		'icon'                => 'dashicons-star-filled',
-		'requires_connection' => false,
-	];
-}
+// Pull the shared settings tab registry (single source of truth).
+$settings_tabs = \Syncly\Core\MenuManager::get_all_settings_tabs();
 
 /**
  * Allow developers to add custom settings tabs
  *
  * @since 1.0.0
- * @param array $settings_tabs Array of settings tabs
- * @param bool  $is_connected  Whether the plugin is connected to GoHighLevel
- * @param array $settings      Current plugin settings
+ * @param array  $settings_tabs Array of settings tabs
+ * @param bool   $is_connected  Whether the plugin is connected to GoHighLevel
+ * @param array  $settings      Current plugin settings
+ * @param string $ui_mode       Current display mode: 'simple' or 'advanced'
  *
  * @example
- * add_filter( 'syncly_settings_tabs', function( $tabs, $is_connected, $settings ) {
+ * add_filter( 'syncly_settings_tabs', function( $tabs, $is_connected, $settings, $ui_mode ) {
  *     $tabs['my_custom_tab'] = [
  *         'label'    => __( 'My Custom Tab', 'my-plugin' ),
  *         'icon'     => 'dashicons-admin-customizer',
@@ -143,11 +86,16 @@ if ( ! apply_filters( 'syncly_is_pro_active', false ) ) {
  *         'file'     => '/path/to/my/custom/tab.php', // Optional: custom file path
  *         'requires_connection' => true, // Optional: whether tab requires GHL connection (default: true)
  *         'capability' => 'manage_options', // Optional: required capability (default: manage_options)
+ *         'mode'     => 'advanced', // Optional: show only in Advanced mode
  *     ];
  *     return $tabs;
- * }, 10, 3 );
+ * }, 10, 4 );
  */
-$settings_tabs = apply_filters( 'syncly_settings_tabs', $settings_tabs, $is_connected, $settings );
+$ui_mode = \Syncly\Core\UiModeManager::get_mode();
+$settings_tabs = apply_filters( 'syncly_settings_tabs', $settings_tabs, $is_connected, $settings, $ui_mode );
+
+// Hide advanced-only tabs when the current user is in simple mode.
+$settings_tabs = \Syncly\Core\UiModeManager::filter_settings_tabs( $settings_tabs );
 
 foreach ( $settings_tabs as $tab_key => $tab_data ) {
 	if ( empty( $tab_data['pro'] ) ) {

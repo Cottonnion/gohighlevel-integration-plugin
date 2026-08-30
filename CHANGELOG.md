@@ -2,6 +2,24 @@
 
 All notable changes to Syncly will be documented in this file.
 
+## [1.4.39] - 2026-08-30
+
+### Added
+
+- Added a per-user Simple/Advanced display mode. New installs default to a beginner-friendly Simple dashboard; existing installs keep the full Advanced interface (every settings tab, Sync Logs, etc.). The choice is offered in the Setup Wizard and switchable anytime from the dashboard.
+- The Setup Wizard now asks you to pick your preferred view (Simple or Advanced) before connecting, with redesigned mode cards.
+- The connection screen now lists the exact GoHighLevel permissions (OAuth scopes) the plugin will request, sourced from the single `Client::OAUTH_SCOPES` definition.
+
+### Changed
+
+- Reordered the Setup Wizard steps so connecting to GoHighLevel is no longer a blocker — the Continue button is always available, and the connection step moved to step 3 (after the View selection).
+
+### Fixed
+
+- OAuth returns now honor the location the connection started from: the Setup Wizard returns you to the exact step you left (`step=3`), and admin connections return to the Syncly dashboard instead of a generic admin URL — so reconnecting no longer abandons the wizard.
+- `OAuthHandler::get_authorization_url()`, `generate_state_token()`, and `get_state_return_url()` now route the post-authorization redirect correctly.
+- Replaced remaining hardcoded colors in the user profile screen with the shared GHL design tokens so branding stays consistent.
+
 ## [1.4.38] - 2026-08-29
 
 ### Fixed
