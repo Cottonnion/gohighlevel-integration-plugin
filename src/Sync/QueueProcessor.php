@@ -407,14 +407,32 @@ class QueueProcessor {
 			throw new \Exception( 'Contact ID and tags are required' );
 		}
 
-		// Fetch existing tags to merge (don't overwrite)
-		$client_factory  = $this->client_factory;
-		$client          = $client_factory();
-		$contact_details = $client->get( "contacts/{$contact_id}" );
+		try {
+			// Fetch existing tags to merge (don't overwrite)
+			$client_factory  = $this->client_factory;
+			$client          = $client_factory();
+			$contact_details = $client->get( "contacts/{$contact_id}" );
 
-		$existing_tags = [];
-		if ( ! empty( $contact_details['contact']['tags'] ) && is_array( $contact_details['contact']['tags'] ) ) {
-			$existing_tags = $contact_details['contact']['tags'];
+			$existing_tags = [];
+			if ( ! empty( $contact_details['contact']['tags'] ) && is_array( $contact_details['contact']['tags'] ) ) {
+				$existing_tags = $contact_details['contact']['tags'];
+			}
+		} catch ( \Exception $e ) {
+			if ( false !== stripos( $e->getMessage(), 'not found' ) ) {
+				if ( ! empty( $payload['email'] ) ) {
+					$user = get_user_by( 'email', $payload['email'] );
+					if ( $user ) {
+						\Syncly\Sync\TagManager::get_instance()
+							->delete_user_contact_id( $user->ID );
+					}
+				}
+				return [
+					'success' => true,
+					'skipped' => true,
+					'reason'  => 'Contact not found in GHL — tag addition skipped',
+				];
+			}
+			throw $e;
 		}
 
 		// Merge existing + new tags, remove duplicates
@@ -452,11 +470,40 @@ class QueueProcessor {
 		$contact_id = $payload['contact_id'] ?? '';
 		$tags       = $payload['tags'] ?? [];
 
+		// Resolve contact_id from email via cache when stale or missing
+		// (e.g., contact deleted/merged in GHL leaving orphaned user meta).
+		if ( empty( $contact_id ) && ! empty( $payload['email'] ) ) {
+			$cached = $this->contact_cache->get( $payload['email'] );
+			if ( $cached ) {
+				$contact_id = $cached['id'] ?? '';
+			}
+		}
+
 		if ( empty( $contact_id ) || empty( $tags ) ) {
 			throw new \Exception( 'Contact ID and tags are required' );
 		}
 
-		$result = $contact_resource->remove_tags( $contact_id, $tags );
+		try {
+			$result = $contact_resource->remove_tags( $contact_id, $tags );
+		} catch ( \Exception $e ) {
+			// Contact doesn't exist in GHL — tag removal is idempotent.
+			if ( false !== stripos( $e->getMessage(), 'not found' ) ) {
+				// Clean up stale contact_id from WP user meta.
+				if ( ! empty( $payload['email'] ) ) {
+					$user = get_user_by( 'email', $payload['email'] );
+					if ( $user ) {
+						\Syncly\Sync\TagManager::get_instance()
+							->delete_user_contact_id( $user->ID );
+					}
+				}
+				return [
+					'success' => true,
+					'skipped' => true,
+					'reason'  => 'Contact not found in GHL, tag removal skipped',
+				];
+			}
+			throw $e;
+		}
 
 		if ( ! empty( $result ) ) {
 			return [
@@ -531,7 +578,17 @@ class QueueProcessor {
 					];
 				}
 			} catch ( \Exception $e ) {
-				throw $e;
+				// Contact was deleted/merged in GHL — fall through to CREATE.
+				if ( false !== stripos( $e->getMessage(), 'not found' ) ) {
+					$this->contact_cache->delete( $email );
+					$user = get_user_by( 'email', $email );
+					if ( $user ) {
+						\Syncly\Sync\TagManager::get_instance()
+							->delete_user_contact_id( $user->ID );
+					}
+				} else {
+					throw $e;
+				}
 			}
 		}
 
@@ -547,16 +604,30 @@ class QueueProcessor {
 				];
 			}
 
-			$result = $contact_resource->update( $cached_contact['id'], $payload );
+			try {
+				$result = $contact_resource->update( $cached_contact['id'], $payload );
 
-			if ( ! empty( $result ) ) {
-				return $result;
-			} else {
-				return [
-					'success' => true,
-					'skipped' => true,
-					'reason'  => 'Empty result from GHL API update (cached contact)',
-				];
+				if ( ! empty( $result ) ) {
+					return $result;
+				} else {
+					return [
+						'success' => true,
+						'skipped' => true,
+						'reason'  => 'Empty result from GHL API update (cached contact)',
+					];
+				}
+			} catch ( \Exception $e ) {
+				// Stale cache — contact deleted/merged in GHL. Clean up and fall through.
+				if ( false !== stripos( $e->getMessage(), 'not found' ) ) {
+					$this->contact_cache->delete( $email );
+					$user = get_user_by( 'email', $email );
+					if ( $user ) {
+						\Syncly\Sync\TagManager::get_instance()
+							->delete_user_contact_id( $user->ID );
+					}
+				} else {
+					throw $e;
+				}
 			}
 		}
 
@@ -635,16 +706,48 @@ class QueueProcessor {
 		$contact_id = $payload['contact_id'] ?? '';
 		$email      = $payload['email'] ?? '';
 
-		// Prefer the stored contact ID (exact match); fall back to email search.
+		// Try cache first before hitting GHL search API.
 		if ( empty( $contact_id ) && ! empty( $email ) ) {
-			$existing = $client->get( 'contacts/', [ 'query' => $email ] );
-			if ( ! empty( $existing['contacts'][0]['id'] ) ) {
-				$contact_id = $existing['contacts'][0]['id'];
+			$cached = $this->contact_cache->get( $email );
+			if ( $cached ) {
+				$contact_id = $cached['id'] ?? '';
+			}
+		}
+
+		// Fall back to GHL search.
+		if ( empty( $contact_id ) && ! empty( $email ) ) {
+			try {
+				$existing = $client->get( 'contacts/', [ 'query' => $email ] );
+				if ( ! empty( $existing['contacts'][0]['id'] ) ) {
+					$contact_id = $existing['contacts'][0]['id'];
+				}
+			} catch ( \Exception $e ) {
+				// Search failed — contact may not exist.
 			}
 		}
 
 		if ( ! empty( $contact_id ) ) {
-			$contact_resource->delete( $contact_id );
+			try {
+				$contact_resource->delete( $contact_id );
+			} catch ( \Exception $e ) {
+				// Contact already deleted — idempotent success.
+				if ( false !== stripos( $e->getMessage(), 'not found' ) ) {
+					if ( ! empty( $email ) ) {
+						$this->contact_cache->delete( $email );
+						$user = get_user_by( 'email', $email );
+						if ( $user ) {
+							\Syncly\Sync\TagManager::get_instance()
+								->delete_user_contact_id( $user->ID );
+						}
+					}
+					return [
+						'deleted'    => true,
+						'contact_id' => $contact_id,
+						'message'    => 'Contact already deleted in GHL',
+					];
+				}
+				throw $e;
+			}
 			if ( ! empty( $email ) ) {
 				$this->contact_cache->delete( $email );
 			}
@@ -918,15 +1021,34 @@ class QueueProcessor {
 
 		// Cache miss — fall back to GHL search.
 		if ( empty( $contact_id ) ) {
-			$contact = $contact_resource->find_by_email( $email );
-			$contact_id = $contact['id'] ?? null;
+			try {
+				$contact    = $contact_resource->find_by_email( $email );
+				$contact_id = $contact['id'] ?? null;
+			} catch ( \Exception $e ) {
+				// Search failed — treat as not found.
+			}
 		}
 
 		if ( empty( $contact_id ) ) {
-			throw new \Exception( 'Contact not found for Gravity Forms note' );
+			return [
+				'success' => true,
+				'skipped' => true,
+				'reason'  => 'Contact not found for Gravity Forms note',
+			];
 		}
 
-		return $contact_resource->add_note( (string) $contact_id, $note );
+		try {
+			return $contact_resource->add_note( (string) $contact_id, $note );
+		} catch ( \Exception $e ) {
+			if ( false !== stripos( $e->getMessage(), 'not found' ) ) {
+				return [
+					'success' => true,
+					'skipped' => true,
+					'reason'  => 'Contact not found in GHL — note skipped',
+				];
+			}
+			throw $e;
+		}
 	}
 
 	/**

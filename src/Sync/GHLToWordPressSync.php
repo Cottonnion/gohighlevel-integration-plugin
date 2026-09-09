@@ -166,12 +166,14 @@ class GHLToWordPressSync {
 	 * @return \WP_User|null
 	 */
 	private function find_wordpress_user( array $contact_data ): ?\WP_User {
-		// First, try to find by stored GHL contact ID
+		$incoming_id = $contact_data['id'] ?? '';
+
+		// First, try to find by stored GHL contact ID (exact match).
 		// phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 		$users = get_users(
 			[
 				'meta_key'   => $this->contact_meta_key,
-				'meta_value' => $contact_data['id'],
+				'meta_value' => $incoming_id,
 				'number'     => 1,
 			]
 		);
@@ -181,10 +183,36 @@ class GHLToWordPressSync {
 			return $users[0];
 		}
 
-		// Fallback: find by email
+		// Fallback: find by email.
 		$user = get_user_by( 'email', $contact_data['email'] );
 
-		return $user ?: null;
+		if ( ! $user ) {
+			return null;
+		}
+
+		// Email matched but the incoming contact ID differs from the stored
+		// one.  This indicates a different GHL contact (e.g. someone submitted
+		// a form with the same email creating a duplicate contact).  Reject the
+		// update to prevent overwriting the real user's name and profile data.
+		$stored_id = $this->tag_manager->get_user_contact_id( $user->ID );
+		if ( ! empty( $stored_id ) && $stored_id !== $incoming_id ) {
+			$this->logger->log(
+				'user',
+				$user->ID,
+				'ghl_to_wp',
+				'skipped',
+				'Inbound update rejected: contact ID mismatch (possible duplicate)',
+				[
+					'stored_contact_id'   => $stored_id,
+					'incoming_contact_id' => $incoming_id,
+					'email'               => $contact_data['email'],
+				],
+				$incoming_id
+			);
+			return null;
+		}
+
+		return $user;
 	}
 
 	/**

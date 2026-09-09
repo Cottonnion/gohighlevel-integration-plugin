@@ -4,7 +4,7 @@ Tags: gohighlevel, wpfusion, contact-sync, woocommerce, leadconnector
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.4.39
+Stable tag: 1.4.40
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -90,6 +90,16 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
 == Changelog ==
+
+= 1.4.40 =
+* Fixed all queue action handlers (add_tags, remove_tags, user_register, profile_update, delete_user, gf_add_note) to handle contacts that were deleted or merged in GoHighLevel. Stale contact IDs are now cleaned up and operations return graceful success instead of burning through retry attempts.
+* Fixed inbound webhook sync overwriting a WordPress user's name when a duplicate contact with the same email but different GHL contact ID triggers an update.
+* Fixed UserMetaSync leaving stale contact IDs in user meta when the GHL contact no longer exists.
+* Custom Objects: added ability to create new custom object schemas directly from the WordPress admin.
+* Custom Objects: added per-object association lookup for more reliable association loading.
+* Custom Objects: expanded post type list to include show_ui types, with a `syncly_supported_post_types` filter for extensions.
+* Custom Objects: background queue processing and sync logging are now always enabled for all mappings.
+* Custom Objects: added pattern field to field mappings for transform support.
 
 = 1.4.39 =
 * Setup Wizard: reordered steps so you pick your preferred view (Simple or Advanced) before connecting, and connection no longer blocks setup — you can finish configuration and connect GoHighLevel at any point.

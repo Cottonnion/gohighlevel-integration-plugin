@@ -49,6 +49,7 @@ class CustomObjectAjaxHandler {
 	 */
 	public function init(): void {
 		add_action( 'wp_ajax_syncly_get_custom_objects', [ $this, 'get_custom_objects' ] );
+		add_action( 'wp_ajax_syncly_create_custom_object_schema', [ $this, 'create_custom_object_schema' ] );
 		add_action( 'wp_ajax_syncly_get_schema_details', [ $this, 'get_schema_details' ] );
 		add_action( 'wp_ajax_syncly_get_post_types', [ $this, 'get_post_types' ] );
 		add_action( 'wp_ajax_syncly_get_cpt_fields', [ $this, 'get_cpt_fields' ] );
@@ -118,6 +119,84 @@ class CustomObjectAjaxHandler {
 						__( 'Failed to fetch Custom Objects: %s', 'syncly' ),
 						$e->getMessage()
 					),
+				],
+				500
+			);
+		}
+	}
+
+	/**
+	 * AJAX handler: Create a new custom object schema in GHL.
+	 *
+	 * @return void
+	 */
+	public function create_custom_object_schema(): void {
+		check_ajax_referer( 'syncly_custom_objects', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
+		}
+
+		$singular   = isset( $_POST['singular_name'] ) ? sanitize_text_field( wp_unslash( $_POST['singular_name'] ) ) : '';
+		$plural     = isset( $_POST['plural_name'] ) ? sanitize_text_field( wp_unslash( $_POST['plural_name'] ) ) : '';
+		$raw_key    = isset( $_POST['object_key'] ) ? sanitize_key( wp_unslash( $_POST['object_key'] ) ) : '';
+		$desc       = isset( $_POST['description'] ) ? sanitize_text_field( wp_unslash( $_POST['description'] ) ) : '';
+		$prop_label = isset( $_POST['primary_property_label'] ) ? sanitize_text_field( wp_unslash( $_POST['primary_property_label'] ) ) : 'Title';
+		$prop_key   = isset( $_POST['primary_property_key'] ) ? sanitize_key( wp_unslash( $_POST['primary_property_key'] ) ) : 'title';
+
+		if ( empty( $singular ) ) {
+			wp_send_json_error( [ 'message' => __( 'Singular object name is required.', 'syncly' ) ], 400 );
+		}
+
+		if ( empty( $plural ) ) {
+			$plural = $singular . 's';
+		}
+
+		if ( empty( $raw_key ) ) {
+			$raw_key = sanitize_key( $singular );
+		}
+
+		// Ensure prefix custom_objects. without duplication
+		$clean_slug = preg_replace( '/^custom_objects\.?/', '', $raw_key );
+		$key        = 'custom_objects.' . $clean_slug;
+
+		$settings    = SettingsManager::get_instance()->get_settings_array();
+		$location_id = $settings['location_id'] ?? '';
+
+		if ( empty( $location_id ) ) {
+			wp_send_json_error( [ 'message' => __( 'Location ID is missing in plugin settings.', 'syncly' ) ], 400 );
+		}
+
+		$schema_data = [
+			'key'                           => $key,
+			'locationId'                    => $location_id,
+			'labels'                        => [
+				'singular' => $singular,
+				'plural'   => $plural,
+			],
+			'description'                   => $desc,
+			'primaryDisplayPropertyDetails' => [
+				'name'     => $prop_label,
+				'key'      => $prop_key,
+				'dataType' => 'TEXT',
+			],
+		];
+
+		try {
+			$client                 = \Syncly\API\Client\Client::get_instance();
+			$custom_object_resource = new \Syncly\API\Resources\CustomObjectResource( $client );
+			$schema                 = $custom_object_resource->create_schema( $schema_data );
+
+			wp_send_json_success(
+				[
+					'schema'  => $schema,
+					'message' => __( 'Custom Object created successfully in GoHighLevel!', 'syncly' ),
+				]
+			);
+		} catch ( \Exception $e ) {
+			wp_send_json_error(
+				[
+					'message' => $e->getMessage(),
 				],
 				500
 			);
@@ -263,14 +342,34 @@ class CustomObjectAjaxHandler {
 			wp_send_json_error( [ 'message' => __( 'Permission denied', 'syncly' ) ], 403 );
 		}
 
-		$post_types = get_post_types( [ 'public' => true ], 'objects' );
+		$public_pts = get_post_types( [ 'public' => true ], 'objects' );
+		$ui_pts     = get_post_types( [ 'show_ui' => true ], 'objects' );
+		$post_types = array_merge( $public_pts, $ui_pts );
 		$filtered   = [];
 
+		$excluded = [
+			'attachment',
+			'nav_menu_item',
+			'revision',
+			'custom_css',
+			'customize_changeset',
+			'oembed_cache',
+			'user_request',
+			'wp_block',
+			'wp_template',
+			'wp_template_part',
+			'wp_navigation',
+			'wp_font_family',
+			'wp_font_face',
+		];
+
 		foreach ( $post_types as $key => $post_type ) {
-			if ( ! in_array( $key, [ 'attachment', 'nav_menu_item' ], true ) ) {
-				$filtered[ $key ] = $post_type->label;
+			if ( ! in_array( $key, $excluded, true ) ) {
+				$filtered[ $key ] = ! empty( $post_type->label ) ? $post_type->label : $key;
 			}
 		}
+
+		$filtered = apply_filters( 'syncly_supported_post_types', $filtered );
 
 		wp_send_json_success( [ 'post_types' => $filtered ] );
 	}
@@ -339,8 +438,10 @@ class CustomObjectAjaxHandler {
 			'associations'        => [],
 
 			'field_mappings'      => [],
-			'enable_batch_sync'   => isset( $_POST['enable_batch_sync'] ) && 'true' === sanitize_key( wp_unslash( $_POST['enable_batch_sync'] ) ),
-			'log_sync_operations' => isset( $_POST['log_sync_operations'] ) && 'true' === sanitize_key( wp_unslash( $_POST['log_sync_operations'] ) ),
+
+			// Locked ON: background queue processing and sync logging are always enabled.
+			'enable_batch_sync'   => true,
+			'log_sync_operations' => true,
 			'created_at'          => $mapping_id ? null : current_time( 'mysql' ),
 			'updated_at'          => current_time( 'mysql' ),
 		];
@@ -374,11 +475,12 @@ class CustomObjectAjaxHandler {
 			foreach ( $field_mappings as $field_map ) {
 				$crm_field = $field_map['syncly_field'] ?? ( $field_map['ghl_field'] ?? '' );
 				$mapping_data['field_mappings'][] = [
-					'wp_field'      => sanitize_text_field( $field_map['wp_field'] ?? '' ),
-					'wp_field_name' => sanitize_text_field( $field_map['wp_field_name'] ?? '' ),
-					'ghl_field'     => sanitize_text_field( $crm_field ),
-					'transform'     => sanitize_text_field( $field_map['transform'] ?? 'none' ),
-				];
+				'wp_field'      => sanitize_text_field( $field_map['wp_field'] ?? '' ),
+				'wp_field_name' => sanitize_text_field( $field_map['wp_field_name'] ?? '' ),
+				'ghl_field'     => sanitize_text_field( $crm_field ),
+				'transform'     => sanitize_text_field( $field_map['transform'] ?? 'none' ),
+				'pattern'       => sanitize_text_field( $field_map['pattern'] ?? '' ),
+			];
 			}
 		}
 
@@ -422,6 +524,16 @@ class CustomObjectAjaxHandler {
 		}
 
 		$mappings = SettingsManager::get_instance()->get_option( 'syncly_custom_object_mappings', [] );
+
+		// Background Queue Processing and Sync Logging are locked ON for all mappings.
+		$mappings = array_map(
+			function ( $mapping ) {
+				$mapping['enable_batch_sync']   = true;
+				$mapping['log_sync_operations'] = true;
+				return $mapping;
+			},
+			(array) $mappings
+		);
 
 		wp_send_json_success( [ 'mappings' => $mappings ] );
 	}

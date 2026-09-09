@@ -358,6 +358,10 @@ class UserMetaSync {
 				}
 			}
 		} catch ( \Throwable $e ) {
+			// Clean up stale contact_id when the contact no longer exists in GHL.
+			if ( false !== stripos( $e->getMessage(), 'not found' ) ) {
+				$this->tag_manager->delete_user_contact_id( $user_id );
+			}
 			do_action( 'syncly_log_event', 'user_meta_sync_failed', $e->getMessage(), [ 'user_id' => $user_id ?? 0 ], 'error' );
 		}
 	}

@@ -2,6 +2,30 @@
 
 All notable changes to Syncly will be documented in this file.
 
+## [1.4.40] - 2026-09-09
+
+### Fixed
+
+- Fixed `remove_tags` failing with "Contact not found" when a contact was deleted or merged in GoHighLevel. Tag removal on a non-existent contact is now treated as idempotent (already done), and the stale contact ID is cleaned up from WordPress user meta.
+- Fixed `add_tags` failing permanently when a cached contact was deleted or merged in GHL — now returns a graceful skip and cleans up stale meta.
+- Fixed `user_register` / `profile_update` failing permanently when the provided or cached contact ID was stale — now falls through to create a new contact in GHL.
+- Fixed `delete_user` failing permanently when the contact was already deleted in GHL — now returns idempotent success and cleans up stale meta.
+- Fixed `gf_add_note` failing permanently when the contact no longer exists — now returns a graceful skip.
+- Fixed `UserMetaSync` leaving stale contact IDs in user meta when the GHL contact no longer exists — now cleans up on "not found".
+- Fixed inbound webhook sync overwriting a WordPress user's name when a duplicate contact with the same email but different GHL contact ID triggers an update. The plugin now rejects inbound updates from unrecognized contact IDs to prevent data overwrites.
+- Client auto-recovery now returns immediate success for DELETE requests on non-existent contacts, even when the request body doesn't contain an email for merged-contact lookup.
+
+### Added
+
+- Custom Objects: added ability to create new custom object schemas directly from the WordPress admin via `CustomObjectAjaxHandler::create_custom_object_schema()`.
+- Custom Objects: added `CustomObjectResource::get_associations_for_object()` for per-object association lookup.
+- Custom Objects: expanded the post type list to include `show_ui` types with a `syncly_supported_post_types` filter for extensions.
+
+### Changed
+
+- Custom Objects: background queue processing (`enable_batch_sync`) and sync logging (`log_sync_operations`) are now always enabled for all mappings — the toggle has been removed.
+- Custom Objects: field mappings now include a `pattern` field for transform support.
+
 ## [1.4.39] - 2026-08-30
 
 ### Added

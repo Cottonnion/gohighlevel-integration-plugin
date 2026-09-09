@@ -465,6 +465,16 @@ class Client implements ClientInterface {
 
 			// Only attempt recovery for PUT/DELETE requests (updates/deletes on existing contacts)
 			if ( in_array( $args['method'], [ 'PUT', 'DELETE' ], true ) ) {
+				// DELETE on a non-existent contact is idempotent, succeed silently.
+				// This covers tag removal, workflow removal, etc. where the body
+				// may not contain an email for a merged-contact lookup.
+				if ( 'DELETE' === $args['method'] ) {
+					return [
+						'success' => true,
+						'message' => 'Contact already deleted',
+					];
+				}
+
 				// Extract email from request body for lookup
 				$request_body = json_decode( $args['body'] ?? '{}', true );
 				$email        = $request_body['email'] ?? null;
@@ -574,16 +584,6 @@ class Client implements ClientInterface {
 									}
 
 									return $create_response;
-								}
-
-								// For DELETE requests on non-existent contacts, succeed silently
-								if ( 'DELETE' === $args['method'] ) {
-
-									// Return fake success response
-									return [
-										'success' => true,
-										'message' => 'Contact already deleted',
-									];
 								}
 							}
 						} catch ( \Exception $e ) {

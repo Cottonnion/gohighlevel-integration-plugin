@@ -319,6 +319,38 @@ class CustomObjectResource extends AbstractResource {
 	}
 
 	/**
+	 * Get associations that involve a specific custom object key.
+	 *
+	 * Scoped lookup is more reliable than paging through every association in the
+	 * location via get_associations().
+	 *
+	 * @param string $object_key Custom object schema key (e.g., 'custom_objects.schools')
+	 * @return array Array of associations
+	 * @throws \Exception If fetch fails
+	 */
+	public function get_associations_for_object( string $object_key ): array {
+		try {
+			if ( empty( $object_key ) ) {
+				return [];
+			}
+
+			$endpoint = 'associations/objectKey/' . $object_key;
+			$response = $this->client->get( $endpoint, [], true );
+
+			return $response['associations'] ?? ( is_array( $response ) ? $response : [] );
+		} catch ( \Exception $e ) {
+			$reason = $this->sanitize_exception_message( $e->getMessage() );
+			throw new \Exception(
+				sprintf(
+					/* translators: %s: error reason */
+					esc_html__( 'Failed to get associations for object: %s', 'syncly' ),
+					esc_html( $reason )
+				)
+			);
+		}
+	}
+
+	/**
 	 * Create an association definition between a custom object and contacts
 	 * This defines the relationship type (e.g., "School has many Students")
 	 *
