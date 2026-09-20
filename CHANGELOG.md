@@ -7,6 +7,7 @@ All notable changes to Syncly will be documented in this file.
 ### Added
 
 - Added "Inbound Contact Actions" setting in Webhooks tab with three modes: Create & Update (default), Create Only, and Update Only. Admins can now control whether incoming GoHighLevel webhooks create new WordPress users, update existing users, or both.
+- Bulk Sync to GHL: user meta key filter is now a searchable dropdown that lists existing user meta keys, and the meta value filter offers all stored values for the chosen key with multi-select and custom value support.
 
 ### Fixed
 

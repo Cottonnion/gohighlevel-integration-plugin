@@ -182,11 +182,11 @@ $ghl_tags         = $tag_manager->get_tags_for_localization();
 
 								<div>
 									<label style="display: block; margin-bottom: 4px; font-weight: 500;"><?php esc_html_e( 'User Meta Filter:', 'syncly' ); ?></label>
-									<div style="display: flex; gap: 10px;">
-										<select id="bulk-sync-meta-key" class="regular-text syncly-select2" style="flex: 1;">
+									<div style="display: flex; flex-direction: column; gap: 10px;">
+										<select id="bulk-sync-meta-key" class="regular-text syncly-select2" style="width: 100%;">
 											<option value=""><?php esc_html_e( 'Select a meta key...', 'syncly' ); ?></option>
 										</select>
-										<input type="text" id="bulk-sync-meta-value" placeholder="<?php esc_attr_e( 'Meta Value (optional)', 'syncly' ); ?>" class="regular-text" style="flex: 1;">
+										<select id="bulk-sync-meta-value" class="regular-text" style="width: 100%;" multiple></select>
 									</div>
 								</div>
 

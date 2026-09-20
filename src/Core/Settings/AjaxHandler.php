@@ -77,6 +77,31 @@ class AjaxHandler {
 	}
 
 	/**
+	 * Extract and sanitize user meta value filter from POST.
+	 *
+	 * Supports both a single scalar value and an array (multiselect).
+	 *
+	 * @return string[]
+	 */
+	private static function extract_meta_values(): array {
+		if ( ! isset( $_POST['meta_value'] ) ) {
+			return [];
+		}
+
+		$raw = wp_unslash( $_POST['meta_value'] );
+
+		if ( is_array( $raw ) ) {
+			$values = array_map( 'sanitize_text_field', $raw );
+		} else {
+			$values = [ sanitize_text_field( $raw ) ];
+		}
+
+		return array_values( array_filter( $values, static function ( string $value ): bool {
+			return '' !== $value;
+		} ) );
+	}
+
+	/**
 	 * Save integration settings
 	 * Handles WooCommerce, BuddyBoss, and LearnDash integration settings
 	 *
@@ -757,7 +782,7 @@ class AjaxHandler {
 			$role        = isset( $_POST['role'] ) ? sanitize_text_field( wp_unslash( $_POST['role'] ) ) : '';
 			$sync_status = isset( $_POST['sync_status'] ) ? sanitize_text_field( wp_unslash( $_POST['sync_status'] ) ) : 'all';
 			$meta_key    = isset( $_POST['meta_key'] ) ? sanitize_text_field( wp_unslash( $_POST['meta_key'] ) ) : '';
-			$meta_value  = isset( $_POST['meta_value'] ) ? sanitize_text_field( wp_unslash( $_POST['meta_value'] ) ) : '';
+			$meta_values = self::extract_meta_values();
 
 			$per_batch = 50; // Process 50 users per batch
 			$offset    = $batch * $per_batch;
@@ -793,9 +818,14 @@ class AjaxHandler {
 
 			if ( ! empty( $meta_key ) ) {
 				$single_meta_query = [ 'key' => $meta_key ];
-				if ( '' !== $meta_value ) {
-					$single_meta_query['value']   = $meta_value;
-					$single_meta_query['compare'] = '=';
+				if ( ! empty( $meta_values ) ) {
+					if ( 1 === count( $meta_values ) ) {
+						$single_meta_query['value']   = $meta_values[0];
+						$single_meta_query['compare'] = '=';
+					} else {
+						$single_meta_query['value']   = $meta_values;
+						$single_meta_query['compare'] = 'IN';
+					}
 				} else {
 					$single_meta_query['compare'] = 'EXISTS';
 				}
@@ -908,7 +938,7 @@ class AjaxHandler {
 		$role        = isset( $_POST['role'] ) ? sanitize_text_field( wp_unslash( $_POST['role'] ) ) : '';
 		$sync_status = isset( $_POST['sync_status'] ) ? sanitize_text_field( wp_unslash( $_POST['sync_status'] ) ) : 'all';
 		$meta_key    = isset( $_POST['meta_key'] ) ? sanitize_text_field( wp_unslash( $_POST['meta_key'] ) ) : '';
-		$meta_value  = isset( $_POST['meta_value'] ) ? sanitize_text_field( wp_unslash( $_POST['meta_value'] ) ) : '';
+		$meta_values = self::extract_meta_values();
 
 		$count_args = [
 			'count_total' => true,
@@ -937,9 +967,14 @@ class AjaxHandler {
 
 		if ( ! empty( $meta_key ) ) {
 			$single_meta_query = [ 'key' => $meta_key ];
-			if ( '' !== $meta_value ) {
-				$single_meta_query['value']   = $meta_value;
-				$single_meta_query['compare'] = '=';
+			if ( ! empty( $meta_values ) ) {
+				if ( 1 === count( $meta_values ) ) {
+					$single_meta_query['value']   = $meta_values[0];
+					$single_meta_query['compare'] = '=';
+				} else {
+					$single_meta_query['value']   = $meta_values;
+					$single_meta_query['compare'] = 'IN';
+				}
 			} else {
 				$single_meta_query['compare'] = 'EXISTS';
 			}

@@ -23,6 +23,7 @@
     */
    init() {
      $("#bulk-sync-users-btn").on("click", () => this.start());
+     this.initMetaValueSelect2();
      this.initMetaKeySelect2();
    },
 
@@ -38,7 +39,6 @@
      }
 
      $select.select2({
-       width: "100%",
        ajax: {
          url: syncly_tools_js_data.ajaxUrl,
          type: "POST",
@@ -61,6 +61,80 @@
        placeholder: "Search or select a meta key...",
        allowClear: true,
      });
+
+     $select.on("change", () => {
+       const metaKey = $select.val() || "";
+       this.refreshMetaValueOptions(metaKey);
+     });
+   },
+
+   /**
+    * Initialize Select2 tags dropdown for user meta value
+    */
+   initMetaValueSelect2() {
+     const $select = $("#bulk-sync-meta-value");
+     if (!$select.length) return;
+
+     if ($select.data("select2")) {
+       $select.select2("destroy");
+     }
+
+     $select.select2({
+       multiple: true,
+       tags: true,
+       allowClear: true,
+       placeholder: "Select values or type custom ones...",
+       minimumInputLength: 0,
+       ajax: {
+         url: syncly_tools_js_data.ajaxUrl,
+         type: "POST",
+         dataType: "json",
+         delay: 250,
+         data: (params) => {
+           return {
+             action: "syncly_get_user_meta_values",
+             nonce: syncly_tools_js_data.nonce,
+             meta_key: $("#bulk-sync-meta-key").val() || "",
+             q: params.term || "",
+           };
+         },
+         processResults: (data) => {
+           return {
+             results: data.data?.results || [],
+           };
+         },
+       },
+       createTag: (params) => {
+         const term = $.trim(params.term);
+         if (term === "") return null;
+         return {
+           id: term,
+           text: term,
+           isNew: true,
+         };
+       },
+       templateResult: (data) => {
+         if (!data || !data.text) return data;
+         return $("<span/>").text(data.text);
+       },
+       templateSelection: (data) => {
+         if (!data || !data.text) return data;
+         return $("<span/>").text(data.text);
+       },
+     });
+   },
+
+   /**
+    * Clear meta value selection when a meta key is selected.
+    * The AJAX source reads the current key from the DOM, so the next
+    * dropdown open will fetch values for the newly selected key.
+    */
+   refreshMetaValueOptions(metaKey) {
+     const $select = $("#bulk-sync-meta-value");
+     if (!$select.length || !metaKey) {
+       return;
+     }
+     $select.val([]).trigger("change");
    },
 
     /**
@@ -460,7 +534,8 @@
 
     init() {
       $("#bulk-sync-role-filter, #bulk-sync-status-filter").on("change", () => this.update());
-      $("#bulk-sync-meta-key, #bulk-sync-meta-value").on("input keyup", () => this.debounceUpdate());
+      $("#bulk-sync-meta-key").on("change", () => this.debounceUpdate());
+      $("#bulk-sync-meta-value").on("change", () => this.debounceUpdate());
       this.update();
     },
 

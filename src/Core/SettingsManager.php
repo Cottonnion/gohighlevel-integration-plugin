@@ -132,6 +132,7 @@ class SettingsManager {
 		add_action( 'wp_ajax_syncly_bulk_sync_users', [ $this, 'handle_bulk_sync_users' ] );
 		add_action( 'wp_ajax_syncly_bulk_import_from_ghl', [ $this, 'handle_bulk_import_from_ghl' ] );
 		add_action( 'wp_ajax_syncly_get_user_meta_keys', [ $this, 'handle_get_user_meta_keys' ] );
+		add_action( 'wp_ajax_syncly_get_user_meta_values', [ $this, 'handle_get_user_meta_values' ] );
 		add_action( 'wp_ajax_syncly_count_filtered_users', [ $this, 'handle_count_filtered_users' ] );
 		add_action( 'wp_ajax_syncly_search_ghl_contacts', [ $this, 'handle_search_ghl_contacts' ] );
 
@@ -1597,9 +1598,10 @@ class SettingsManager {
 			$wpdb->prepare(
 				"SELECT DISTINCT meta_key FROM {$wpdb->usermeta} 
 				WHERE meta_key LIKE %s 
-				AND meta_key NOT LIKE '_%%' 
+				AND meta_key NOT LIKE %s 
 				ORDER BY meta_key ASC LIMIT 100",
-				'%' . $wpdb->esc_like( $query ) . '%'
+				'%' . $wpdb->esc_like( $query ) . '%',
+				'\_%'
 			)
 		);
 
@@ -1611,6 +1613,73 @@ class SettingsManager {
 				];
 			},
 			$results
+		);
+
+		wp_send_json_success( [ 'results' => $options ] );
+	}
+
+	/**
+	 * Get user meta values for a given meta key AJAX handler.
+	 *
+	 * @return void
+	 */
+	public function handle_get_user_meta_values(): void {
+		check_ajax_referer( 'syncly_admin', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				[ 'message' => __( 'Permission denied.', 'syncly' ) ],
+				403
+			);
+		}
+
+		$meta_key = isset( $_POST['meta_key'] ) ? sanitize_text_field( wp_unslash( $_POST['meta_key'] ) ) : '';
+
+		if ( '' === $meta_key ) {
+			wp_send_json_success( [ 'results' => [] ] );
+		}
+
+		global $wpdb;
+		$query = isset( $_POST['q'] ) ? sanitize_text_field( wp_unslash( $_POST['q'] ) ) : '';
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+		$results = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT meta_value 
+				FROM {$wpdb->usermeta} 
+				WHERE meta_key = %s 
+				AND meta_value <> '' 
+				AND meta_value LIKE %s 
+				ORDER BY meta_value ASC 
+				LIMIT 100",
+				$meta_key,
+				'%' . $wpdb->esc_like( $query ) . '%'
+			)
+		);
+
+		$options = array_filter(
+			array_map(
+				function ( $value ) {
+					$value = maybe_unserialize( $value );
+
+					return is_scalar( $value ) ? (string) $value : '';
+				},
+				$results
+			)
+		);
+
+		$options = array_values(
+			array_unique(
+				array_map(
+					function ( $value ) {
+						return [
+							'id'   => $value,
+							'text' => $value,
+						];
+					},
+					$options
+				)
+			)
 		);
 
 		wp_send_json_success( [ 'results' => $options ] );
