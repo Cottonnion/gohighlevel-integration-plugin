@@ -178,6 +178,7 @@ class MaintenanceHandler {
 			'delete_contact_on_user_delete' => false,
 			'user_field_mapping'            => [],
 			'restrictions_enabled'          => true,
+			'webhook_inbound_mode'          => 'both',
 			'updated_at'                    => current_time( 'mysql' ),
 			'site_id'                       => get_current_blog_id(),
 		];

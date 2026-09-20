@@ -2,6 +2,17 @@
 
 All notable changes to Syncly will be documented in this file.
 
+## [1.4.41] - 2026-09-20
+
+### Added
+
+- Added "Inbound Contact Actions" setting in Webhooks tab with three modes: Create & Update (default), Create Only, and Update Only. Admins can now control whether incoming GoHighLevel webhooks create new WordPress users, update existing users, or both.
+
+### Fixed
+
+- Fixed duplicate email error when inbound webhook tries to create a WordPress user with an existing email address. The plugin now logs these as "skipped" instead of "failed" and returns the existing user ID gracefully.
+- Fixed ContactCreate and ContactUpdate webhooks attempting to create users when email already exists in WordPress, even with different GoHighLevel contact IDs. Now returns existing user without error.
+
 ## [1.4.40] - 2026-09-09
 
 ### Fixed

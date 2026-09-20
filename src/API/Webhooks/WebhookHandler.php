@@ -647,6 +647,24 @@ class WebhookHandler {
 			return true;
 		}
 
+		$inbound_mode = $this->settings_manager->get_setting( 'webhook_inbound_mode', 'both' );
+
+		if ( 'update_only' === $inbound_mode ) {
+			$this->logger->log(
+				'webhook',
+				0,
+				'ghl_to_wp',
+				'info',
+				'ContactCreate webhook skipped: inbound mode set to update only',
+				[
+					'email'      => $contact_data['email'] ?? '',
+					'contact_id' => $contact_data['id'],
+				]
+			);
+
+			return true;
+		}
+
 		if ( ! empty( $contact_data['email'] ) ) {
 			$guard_key = 'ghl_skip_inbound_create_' . md5(
 				strtolower( trim( $contact_data['email'] ) )
@@ -671,9 +689,16 @@ class WebhookHandler {
 			}
 		}
 
+		$allow_create = 'create_only' === $inbound_mode || 'both' === $inbound_mode;
+		$allow_update = 'both' === $inbound_mode;
+
 		$result = $this->ghl_sync->sync_contact_to_wordpress(
 			$contact_data['id'],
-			$contact_data
+			$contact_data,
+			[
+				'allow_create' => $allow_create,
+				'allow_update' => $allow_update,
+			]
 		);
 
 		return ! is_wp_error( $result );
@@ -706,9 +731,34 @@ class WebhookHandler {
 			return true;
 		}
 
+		$inbound_mode = $this->settings_manager->get_setting( 'webhook_inbound_mode', 'both' );
+
+		if ( 'create_only' === $inbound_mode ) {
+			$this->logger->log(
+				'webhook',
+				0,
+				'ghl_to_wp',
+				'info',
+				'ContactUpdate webhook skipped: inbound mode set to create only',
+				[
+					'email'      => $contact_data['email'] ?? '',
+					'contact_id' => $contact_data['id'],
+				]
+			);
+
+			return true;
+		}
+
+		$allow_create = 'both' === $inbound_mode;
+		$allow_update = 'update_only' === $inbound_mode || 'both' === $inbound_mode;
+
 		$result = $this->ghl_sync->sync_contact_to_wordpress(
 			$contact_data['id'],
-			$contact_data
+			$contact_data,
+			[
+				'allow_create' => $allow_create,
+				'allow_update' => $allow_update,
+			]
 		);
 
 		return ! is_wp_error( $result );

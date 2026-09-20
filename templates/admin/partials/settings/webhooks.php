@@ -263,6 +263,34 @@ $settings           = \Syncly\Core\SettingsManager::get_instance()->get_settings
 					</div>
 				</div>
 
+				<?php $webhook_inbound_mode = $settings['webhook_inbound_mode'] ?? 'both'; ?>
+				<div class="ghl-form-item">
+					<div class="ghl-form-item-content ghl-form-item-content--column">
+						<label for="webhook_inbound_mode" class="ghl-form-label">
+							<?php esc_html_e( 'Inbound Contact Actions', 'syncly' ); ?>
+							<span class="ghl-tooltip-icon" data-ghl-tooltip="<?php esc_attr_e( 'Choose whether incoming GoHighLevel webhooks can create new WordPress users, update existing users, or both.', 'syncly' ); ?>">?</span>
+						</label>
+						<select
+							id="webhook_inbound_mode"
+							name="webhook_inbound_mode"
+							class="ghl-select"
+						>
+							<option value="both" <?php selected( $webhook_inbound_mode, 'both' ); ?>>
+								<?php esc_html_e( 'Create & Update', 'syncly' ); ?>
+							</option>
+							<option value="create_only" <?php selected( $webhook_inbound_mode, 'create_only' ); ?>>
+								<?php esc_html_e( 'Create Only', 'syncly' ); ?>
+							</option>
+							<option value="update_only" <?php selected( $webhook_inbound_mode, 'update_only' ); ?>>
+								<?php esc_html_e( 'Update Only', 'syncly' ); ?>
+							</option>
+						</select>
+						<p class="description ghl-form-description">
+							<?php esc_html_e( 'Create & Update adds new WordPress users and updates existing ones. Create Only skips users that already exist. Update Only never creates new WordPress users.', 'syncly' ); ?>
+						</p>
+					</div>
+				</div>
+
 				<div class="ghl-form-item">
 					<div class="ghl-form-item-content">
 						<label class="ghl-form-label" for="allow_user_deletion">

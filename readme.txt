@@ -4,7 +4,7 @@ Tags: gohighlevel, wpfusion, contact-sync, woocommerce, leadconnector
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.4.40
+Stable tag: 1.4.41
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -90,6 +90,11 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
 == Changelog ==
+
+= 1.4.41 =
+- Added "Inbound Contact Actions" setting in Webhooks tab with three modes: Create & Update (default), Create Only, and Update Only.
+- Fixed duplicate email error when inbound webhook tries to create a WordPress user with an existing email address. Now logs as "skipped" instead of "failed".
+- Fixed ContactCreate and ContactUpdate webhooks attempting to create users when email already exists in WordPress with different GoHighLevel contact IDs.
 
 = 1.4.40 =
 * Fixed all queue action handlers (add_tags, remove_tags, user_register, profile_update, delete_user, gf_add_note) to handle contacts that were deleted or merged in GoHighLevel. Stale contact IDs are now cleaned up and operations return graceful success instead of burning through retry attempts.

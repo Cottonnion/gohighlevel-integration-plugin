@@ -90,11 +90,17 @@ class GHLToWordPressSync {
 	/**
 	 * Sync contact from GHL to WordPress
 	 *
-	 * @param string $contact_id GHL contact ID
+	 * @param string $contact_id   GHL contact ID
 	 * @param array  $contact_data Optional contact data (from webhook)
+	 * @param array  $options      {
+	 *     Optional sync flags.
+	 *
+	 *     @type bool $allow_create Whether to create a WordPress user when none exists.
+	 *     @type bool $allow_update Whether to update an existing WordPress user.
+	 * }
 	 * @return int|\WP_Error User ID or error
 	 */
-	public function sync_contact_to_wordpress( string $contact_id, array $contact_data = [] ) {
+	public function sync_contact_to_wordpress( string $contact_id, array $contact_data = [], array $options = [] ) {
 		$this->tag_manager->begin_inbound_sync_guard();
 
 		try {
@@ -144,15 +150,67 @@ class GHLToWordPressSync {
 				return new \WP_Error( 'missing_email', __( 'Contact email is required', 'syncly' ) );
 			}
 
+			$allow_create = $options['allow_create'] ?? true;
+			$allow_update = $options['allow_update'] ?? true;
+
 			// Check if user exists by email or GHL ID
 			$user = $this->find_wordpress_user( $contact_data );
 
 			if ( $user ) {
-				// Update existing user
+				if ( ! $allow_update ) {
+					$this->logger->log(
+						'user',
+						$user->ID,
+						'ghl_to_wp',
+						'skipped',
+						'Inbound sync skipped: WordPress user already exists (create only)',
+						[
+							'user_id' => $user->ID,
+							'email'   => $contact_data['email'],
+						],
+						$contact_id
+					);
+
+					return $user->ID;
+				}
+
 				return $this->update_wordpress_user( $user->ID, $contact_data, $contact_id );
 			}
 
-			// Create new user
+			$existing_by_email = get_user_by( 'email', $contact_data['email'] );
+
+			if ( $existing_by_email ) {
+				$this->logger->log(
+					'user',
+					$existing_by_email->ID,
+					'ghl_to_wp',
+					'skipped',
+					'Inbound sync skipped: WordPress email already in use',
+					[
+						'user_id'             => $existing_by_email->ID,
+						'email'               => $contact_data['email'],
+						'incoming_contact_id' => $contact_id,
+					],
+					$contact_id
+				);
+
+				return $existing_by_email->ID;
+			}
+
+			if ( ! $allow_create ) {
+				$this->logger->log(
+					'user',
+					0,
+					'ghl_to_wp',
+					'skipped',
+					'Inbound sync skipped: WordPress user not found (update only)',
+					[ 'email' => $contact_data['email'] ],
+					$contact_id
+				);
+
+				return 0;
+			}
+
 			return $this->create_wordpress_user( $contact_data, $contact_id );
 		} finally {
 			$this->tag_manager->end_inbound_sync_guard();
@@ -269,6 +327,25 @@ class GHLToWordPressSync {
 		$user_id = wp_insert_user( $user_data );
 
 		if ( is_wp_error( $user_id ) ) {
+			if ( 'existing_user_email' === $user_id->get_error_code() ) {
+				$existing_user = get_user_by( 'email', $user_data['user_email'] );
+
+				$this->logger->log(
+					'user',
+					$existing_user ? $existing_user->ID : 0,
+					'ghl_to_wp',
+					'skipped',
+					'Inbound sync skipped: WordPress email already in use',
+					[
+						'user_id' => $existing_user ? $existing_user->ID : 0,
+						'email'   => $user_data['user_email'],
+					],
+					$contact_id
+				);
+
+				return $existing_user ? $existing_user->ID : 0;
+			}
+
 			$this->logger->log(
 				'user',
 				0,

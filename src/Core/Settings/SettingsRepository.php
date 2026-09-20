@@ -110,6 +110,7 @@ class SettingsRepository {
 				'user_field_mapping'            => [],
 				'enable_sync_logging'           => true, // Default to enabled for logging
 				'enable_telemetry_reporting'    => false,
+				'webhook_inbound_mode'          => 'both',
 				'updated_at'                    => '',
 				'site_id'                       => get_current_blog_id(),
 			]
