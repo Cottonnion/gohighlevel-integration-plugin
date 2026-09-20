@@ -33,7 +33,12 @@
      const $select = $("#bulk-sync-meta-key");
      if (!$select.length) return;
 
+     if ($select.data("select2")) {
+       $select.select2("destroy");
+     }
+
      $select.select2({
+       width: "100%",
        ajax: {
          url: syncly_tools_js_data.ajaxUrl,
          type: "POST",
@@ -55,33 +60,6 @@
        minimumInputLength: 0,
        placeholder: "Search or select a meta key...",
        allowClear: true,
-       templateResult: (option) => {
-         if (!option.id) return option.text;
-         return $("<span/>").text(option.text);
-       },
-       templateSelection: (option) => {
-         if (!option.id) return "Select a meta key...";
-         return $("<span/>").text(option.text);
-       },
-     });
-
-     $select.on("select2:opening", (e) => {
-       if (!$select.data("select2").dropdown.$search) return;
-       $.ajax({
-         url: syncly_tools_js_data.ajaxUrl,
-         type: "POST",
-         data: {
-           action: "syncly_get_user_meta_keys",
-           nonce: syncly_tools_js_data.nonce,
-           q: "",
-         },
-         success: (response) => {
-           if (response.data?.results) {
-             $select.select2("close");
-             $select.select2("open");
-           }
-         },
-       });
      });
    },
 
