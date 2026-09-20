@@ -131,6 +131,7 @@ class SettingsManager {
 		add_action( 'wp_ajax_syncly_save_wizard_settings', [ $this, 'handle_save_wizard_settings' ] );
 		add_action( 'wp_ajax_syncly_bulk_sync_users', [ $this, 'handle_bulk_sync_users' ] );
 		add_action( 'wp_ajax_syncly_bulk_import_from_ghl', [ $this, 'handle_bulk_import_from_ghl' ] );
+		add_action( 'wp_ajax_syncly_get_user_meta_keys', [ $this, 'handle_get_user_meta_keys' ] );
 		add_action( 'wp_ajax_syncly_count_filtered_users', [ $this, 'handle_count_filtered_users' ] );
 		add_action( 'wp_ajax_syncly_search_ghl_contacts', [ $this, 'handle_search_ghl_contacts' ] );
 
@@ -1574,7 +1575,48 @@ class SettingsManager {
 	}
 
 	/**
-	 * Prevent unserializing
+	 * Get user meta keys AJAX handler.
+	 *
+	 * @return void
+	 */
+	public function handle_get_user_meta_keys(): void {
+		check_ajax_referer( 'syncly_admin', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				[ 'message' => __( 'Permission denied.', 'syncly' ) ],
+				403
+			);
+		}
+
+		global $wpdb;
+		$query = isset( $_POST['q'] ) ? sanitize_text_field( wp_unslash( $_POST['q'] ) ) : '';
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		$results = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT meta_key FROM {$wpdb->usermeta} 
+				WHERE meta_key LIKE %s 
+				AND meta_key NOT LIKE '_%%' 
+				ORDER BY meta_key ASC LIMIT 100",
+				'%' . $wpdb->esc_like( $query ) . '%'
+			)
+		);
+
+		$options = array_map(
+			function ( $key ) {
+				return [
+					'id'   => $key,
+					'text' => $key,
+				];
+			},
+			$results
+		);
+
+		wp_send_json_success( [ 'results' => $options ] );
+	}
+
+	/*
 	 *
 	 * @throws \Exception When attempting to unserialize.
 	 */

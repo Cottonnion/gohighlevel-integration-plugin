@@ -18,12 +18,72 @@
     totalQueued: 0,
     totalFailed: 0,
 
-    /**
-     * Initialize bulk sync
-     */
-    init() {
-      $("#bulk-sync-users-btn").on("click", () => this.start());
-    },
+   /**
+    * Initialize bulk sync and Select2 for meta keys
+    */
+   init() {
+     $("#bulk-sync-users-btn").on("click", () => this.start());
+     this.initMetaKeySelect2();
+   },
+
+   /**
+    * Initialize Select2 for user meta key dropdown
+    */
+   initMetaKeySelect2() {
+     const $select = $("#bulk-sync-meta-key");
+     if (!$select.length) return;
+
+     $select.select2({
+       ajax: {
+         url: syncly_tools_js_data.ajaxUrl,
+         type: "POST",
+         dataType: "json",
+         delay: 250,
+         data: (params) => {
+           return {
+             action: "syncly_get_user_meta_keys",
+             nonce: syncly_tools_js_data.nonce,
+             q: params.term || "",
+           };
+         },
+         processResults: (data) => {
+           return {
+             results: data.data?.results || [],
+           };
+         },
+       },
+       minimumInputLength: 0,
+       placeholder: "Search or select a meta key...",
+       allowClear: true,
+       templateResult: (option) => {
+         if (!option.id) return option.text;
+         return $("<span/>").text(option.text);
+       },
+       templateSelection: (option) => {
+         if (!option.id) return "Select a meta key...";
+         return $("<span/>").text(option.text);
+       },
+     });
+
+     $select.on("select2:opening", (e) => {
+       if (!$select.data("select2").dropdown.$search) return;
+       $.ajax({
+         url: syncly_tools_js_data.ajaxUrl,
+         type: "POST",
+         data: {
+           action: "syncly_get_user_meta_keys",
+           nonce: syncly_tools_js_data.nonce,
+           q: "",
+         },
+         success: (response) => {
+           if (response.data?.results) {
+             $select.select2("close");
+             $select.select2("open");
+           }
+         },
+       });
+     });
+   },
 
     /**
      * Start bulk sync process
