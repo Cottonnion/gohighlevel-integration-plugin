@@ -2,6 +2,14 @@
 
 All notable changes to Syncly will be documented in this file.
 
+## [1.4.43] - 2026-09-30
+
+### Fixed
+
+- Fixed User Meta Filter dropdowns in Bulk Sync tools not loading or initializing Select2 in production environments due to stale minified assets.
+- Fixed CSS syntax error in sync-logs styles during asset minification.
+- Added full asset minification to WordPress.org SVN release deployment pipeline.
+
 ## [1.4.42] - 2026-09-30
 
 ### Fixed

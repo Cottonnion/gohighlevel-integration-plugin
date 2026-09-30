@@ -4,7 +4,7 @@ Tags: gohighlevel, wpfusion, contact-sync, woocommerce, leadconnector
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.4.42
+Stable tag: 1.4.43
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -90,6 +90,11 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
 == Changelog ==
+
+= 1.4.43 =
+- Fixed User Meta Filter dropdowns in Bulk Sync tools not loading in production environments.
+- Updated all minified CSS and JS build assets, including Select2 AJAX meta key/value handlers.
+- Enhanced deployment workflows to build fresh minified assets prior to SVN releases.
 
 = 1.4.42 =
 - Fixed a 404 after submitting an embedded GoHighLevel form whose redirect URL points back to WordPress. GHL appends `name` as a query arg, which WordPress treats as a post slug.

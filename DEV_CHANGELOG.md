@@ -4,6 +4,20 @@ Internal changelog with full technical details. **Not included in release zips.*
 
 ---
 
+## [1.4.43] - 2026-09-30
+
+### Minified Assets & User Meta Filter Fix
+
+**Files**: `assets/admin/js/tools.js`, `assets/admin/js/tools.min.js`, `assets/admin/css/sync-logs.css`, `assets/admin/css/sync-logs.min.css`, `.github/workflows/release.yml`, and all `assets/**/*.min.{js,css}`
+
+- Fixed stale `tools.min.js` which lacked `initMetaKeySelect2()` and `initMetaValueSelect2()`, causing `#bulk-sync-meta-key` and `#bulk-sync-meta-value` to fail initialization in production mode (`SCRIPT_DEBUG` false).
+- Added `width: '100%'` to select2 configs in `tools.js` to ensure proper layout sizing.
+- Fixed unclosed CSS rule in `assets/admin/css/sync-logs.css`.
+- Recompiled all JS and CSS minified bundles via `terser` and `cleancss`.
+- Added Node.js + Terser/CleanCSS build step to `deploy-wporg` in `.github/workflows/release.yml` so production SVN deployment always receives clean compiled minified assets.
+
+---
+
 ## [1.4.42] - 2026-09-30
 
 ### Form auto-fill post-submission redirect 404

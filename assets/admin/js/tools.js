@@ -60,6 +60,7 @@
        minimumInputLength: 0,
        placeholder: "Search or select a meta key...",
        allowClear: true,
+       width: "100%",
      });
 
      $select.on("change", () => {
@@ -85,6 +86,7 @@
        allowClear: true,
        placeholder: "Select values or type custom ones...",
        minimumInputLength: 0,
+       width: "100%",
        ajax: {
          url: syncly_tools_js_data.ajaxUrl,
          type: "POST",

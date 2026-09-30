@@ -259,6 +259,11 @@ jobs:
           tools: composer:v2
           coverage: none
 
+      - name: Setup Node.js for asset minification
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Install production Composer dependencies
         run: composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader --classmap-authoritative
 
@@ -314,6 +319,22 @@ jobs:
 
           # Re-install production-only vendor
           composer install --working-dir="${STAGING}" --no-dev --prefer-dist --no-interaction --optimize-autoloader --classmap-authoritative
+
+          # Minify production assets
+          npm_config_yes=true npx --package terser terser --version
+          npm_config_yes=true npx --package clean-css-cli cleancss --version
+
+          while IFS= read -r -d '' file; do
+            output="${file%.js}.min.js"
+            echo "Minifying ${file} -> ${output}"
+            npm_config_yes=true npx --package terser terser "${file}" --compress --mangle --comments false --output "${output}"
+          done < <(find "${STAGING}/assets" -type f -name '*.js' ! -name '*.min.js' -print0)
+
+          while IFS= read -r -d '' file; do
+            output="${file%.css}.min.css"
+            echo "Minifying ${file} -> ${output}"
+            npm_config_yes=true npx --package clean-css-cli cleancss -O2 --format breakWith=lf --output "${output}" "${file}"
+          done < <(find "${STAGING}/assets" -type f -name '*.css' ! -name '*.min.css' -print0)
 
           rsync -a --delete "${STAGING}/" /tmp/svn-repo/trunk/ \
             --exclude '.svn/' \
