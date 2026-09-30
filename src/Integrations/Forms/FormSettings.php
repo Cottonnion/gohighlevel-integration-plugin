@@ -58,6 +58,23 @@ class FormSettings {
 		add_action( 'wp_ajax_syncly_get_forms', [ $this, 'handle_get_forms' ] );
 		add_action( 'wp_ajax_syncly_save_form_settings', [ $this, 'ajax_save_form_settings' ] );
 		add_action( 'wp_ajax_syncly_get_form_settings', [ $this, 'ajax_get_form_settings' ] );
+		add_action( 'parse_request', [ $this, 'strip_autofill_query_conflicts' ] );
+	}
+
+	/**
+	 * GHL form redirects echo auto-fill data as query args. `name` is a WP
+	 * public query var, so /?name=Jane+Doe 404s. Strip it when the request
+	 * also carries `email` (the auto-fill payload signature).
+	 *
+	 * @return void
+	 */
+	public function strip_autofill_query_conflicts(): void {
+		if ( is_admin() || empty( $_GET['name'] ) || empty( $_GET['email'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			return;
+		}
+
+		unset( $_GET['name'] );
+		unset( $GLOBALS['wp']->query_vars['name'] );
 	}
 
 	/**

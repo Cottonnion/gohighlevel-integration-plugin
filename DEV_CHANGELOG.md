@@ -4,6 +4,16 @@ Internal changelog with full technical details. **Not included in release zips.*
 
 ---
 
+## [1.4.42] - 2026-09-30
+
+### Form auto-fill post-submission redirect 404
+
+**File**: `src/Integrations/Forms/FormSettings.php`
+
+- GHL form redirects echo auto-fill data as query args. `name` is a WP public query var, so `/?name=Jane+Doe` 404s. `FormSettings::strip_autofill_query_conflicts()` unsets `name` on `parse_request` when `email` is also present (the auto-fill payload signature), so a lone `?name=slug` permalink is left alone.
+
+---
+
 ## [1.4.39] - 2026-08-30
 
 ### Per-user Simple/Advanced display mode

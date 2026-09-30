@@ -2,6 +2,12 @@
 
 All notable changes to Syncly will be documented in this file.
 
+## [1.4.42] - 2026-09-30
+
+### Fixed
+
+- Fixed a 404 after submitting an embedded GoHighLevel form whose redirect URL points back to WordPress. GHL appends `name` as a query arg, which WordPress treats as a post slug.
+
 ## [1.4.41] - 2026-09-20
 
 ### Added
