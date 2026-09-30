@@ -1599,7 +1599,7 @@ class SettingsManager {
 				"SELECT DISTINCT meta_key FROM {$wpdb->usermeta} 
 				WHERE meta_key LIKE %s 
 				AND meta_key NOT LIKE %s 
-				ORDER BY meta_key ASC LIMIT 100",
+				ORDER BY meta_key ASC",
 				'%' . $wpdb->esc_like( $query ) . '%',
 				'\_%'
 			)
@@ -1649,37 +1649,45 @@ class SettingsManager {
 				FROM {$wpdb->usermeta} 
 				WHERE meta_key = %s 
 				AND meta_value <> '' 
-				AND meta_value LIKE %s 
-				ORDER BY meta_value ASC 
-				LIMIT 100",
-				$meta_key,
-				'%' . $wpdb->esc_like( $query ) . '%'
+				ORDER BY meta_value ASC",
+				$meta_key
 			)
 		);
 
-		$options = array_filter(
-			array_map(
-				function ( $value ) {
-					$value = maybe_unserialize( $value );
+		$extracted_values = [];
+		foreach ( $results as $raw_value ) {
+			$unserialized = maybe_unserialize( $raw_value );
+			if ( is_array( $unserialized ) ) {
+				foreach ( $unserialized as $item ) {
+					if ( is_scalar( $item ) && '' !== (string) $item ) {
+						$extracted_values[] = (string) $item;
+					}
+				}
+			} elseif ( is_scalar( $unserialized ) && '' !== (string) $unserialized ) {
+				$extracted_values[] = (string) $unserialized;
+			}
+		}
 
-					return is_scalar( $value ) ? (string) $value : '';
-				},
-				$results
-			)
-		);
+		if ( '' !== $query ) {
+			$extracted_values = array_filter(
+				$extracted_values,
+				function ( $val ) use ( $query ) {
+					return false !== stripos( $val, $query );
+				}
+			);
+		}
 
-		$options = array_values(
-			array_unique(
-				array_map(
-					function ( $value ) {
-						return [
-							'id'   => $value,
-							'text' => $value,
-						];
-					},
-					$options
-				)
-			)
+		$unique_values = array_values( array_unique( $extracted_values ) );
+		natcasesort( $unique_values );
+
+		$options = array_map(
+			function ( $value ) {
+				return [
+					'id'   => (string) $value,
+					'text' => (string) $value,
+				];
+			},
+			array_values( $unique_values )
 		);
 
 		wp_send_json_success( [ 'results' => $options ] );

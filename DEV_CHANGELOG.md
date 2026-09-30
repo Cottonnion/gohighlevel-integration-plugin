@@ -4,6 +4,17 @@ Internal changelog with full technical details. **Not included in release zips.*
 
 ---
 
+## [1.4.44] - 2026-09-30
+
+### Meta Filter Unlimited Results & Array Parsing
+
+**File**: `src/Core/SettingsManager.php`
+
+- Removed `LIMIT 100` from `handle_get_user_meta_keys()` and `handle_get_user_meta_values()`.
+- Unpacked serialized arrays in `handle_get_user_meta_values()` so each nested scalar option is returned individually in the values multiselect.
+
+---
+
 ## [1.4.43] - 2026-09-30
 
 ### Minified Assets & User Meta Filter Fix

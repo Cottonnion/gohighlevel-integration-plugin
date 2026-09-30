@@ -2,6 +2,13 @@
 
 All notable changes to Syncly will be documented in this file.
 
+## [1.4.44] - 2026-09-30
+
+### Improved
+
+- Removed the 100-result limit on User Meta Key and Value dropdowns in Bulk Sync tools so all available meta keys and values are listed.
+- Enhanced meta value parser to unpack serialized arrays and list all individual scalar values.
+
 ## [1.4.43] - 2026-09-30
 
 ### Fixed
