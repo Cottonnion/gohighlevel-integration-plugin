@@ -256,6 +256,20 @@ class QueueManagerTest extends TestCase
         $this->assertSame(42, $result);
     }
 
+    public function test_distinct_form_submissions_bypass_pending_item_merge(): void
+    {
+        // Only the queue-size query runs; no duplicate lookup or payload update.
+        $this->wpdb->shouldReceive('get_var')->twice()->andReturn(5);
+        $this->wpdb->shouldReceive('update')->never();
+        $this->wpdb->shouldReceive('insert')->twice()->andReturnUsing(function () {
+            $this->wpdb->insert_id++;
+            return true;
+        });
+        $first = $this->qm->add_to_queue('form', 815, 'wpforms_submission', ['email' => 'first@example.com'], null, false);
+        $second = $this->qm->add_to_queue('form', 815, 'wpforms_submission', ['email' => 'second@example.com'], null, false);
+        $this->assertNotSame($first, $second);
+    }
+
     public function test_add_to_queue_updates_existing_duplicate(): void
     {
         // Existing pending row with ID 10.

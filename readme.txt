@@ -4,11 +4,11 @@ Tags: gohighlevel, wpfusion, contact-sync, woocommerce, leadconnector
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.4.44
+Stable tag: 1.4.45
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-WordPress–GoHighLevel integration for contact sync, field mapping, Gravity Forms, WooCommerce, LearnDash, BuddyBoss, Elementor, webhooks & automation.
+Connect WordPress to GoHighLevel: contact sync, field mapping, WPForms, Gravity Forms, WooCommerce, LearnDash, BuddyBoss, and webhooks.
 == Description ==
 
 **Syncly is the most complete WordPress to GoHighLevel integration available.** Looking for a WordPress connection that turns your site into a GoHighLevel CRM automation hub? Syncly is the GoHighLevel WordPress plugin built exclusively for HighLevel (GoHighLevel / LeadConnector) — migrate from WP Fusion, or start fresh with deeper sync, smarter automation, and tighter control at a fraction of the cost.
@@ -23,6 +23,7 @@ Unlike generic CRM connectors, Syncly is built exclusively for GoHighLevel (High
 * **WooCommerce CRM sync** — sync customers, orders, and purchase history to GoHighLevel contacts
 * **LearnDash course sync** — enroll, complete, and track courses as GoHighLevel contact activity
 * **BuddyBoss / BuddyPress profile sync** — map extended profile fields directly to GHL custom fields
+* **WPForms CRM sync** — map standard and custom GoHighLevel contact fields, apply tags, and choose whether to update existing contacts; works with WPForms Lite and Pro
 * **Gravity Forms CRM sync** — map form fields to GHL contacts, apply tags, skip spam entries, delay delivery, add submission notes to the contact timeline, track sync history, and resend completed or failed submissions
 * **Membership content restrictions** — gate pages, posts, courses, and products by GoHighLevel tags
 * **Webhook automation** — receive real-time updates from GoHighLevel and act on them instantly in WordPress
@@ -32,8 +33,11 @@ Unlike generic CRM connectors, Syncly is built exclusively for GoHighLevel (High
 
 Gravity Forms support includes a per-form GHL CRM settings tab with standard and custom field mapping, contact tags, update-or-skip duplicate behavior, source naming with the form title, configurable queue delay, spam-awareness, optional contact timeline notes, recent submission status history, and manual resend controls. Syncly Pro adds conditional submission rules so contacts sync only when selected form answers match configured operators, plus expanded Gravity Forms automation for routing, assignment, opportunity mapping, lead scoring, conversation history, and submission replay.
 
+WPForms support includes a per-form Syncly settings panel in the form builder, searchable contact field mapping, contact tags, and update-or-skip behavior for matching email addresses. Submissions run through the background queue and appear in Sync Logs. Syncly Pro adds conditional rules, custom contact source labels, configurable delivery delays, contact timeline notes, and GoHighLevel workflow enrollment after contact sync succeeds.
+
 = Common Use Cases =
 
+* Send WPForms and Gravity Forms submissions to GoHighLevel contacts with mapped fields and tags
 * Sync WordPress user registrations to GoHighLevel contacts automatically
 * Tag GoHighLevel contacts when a WooCommerce order is placed or a LearnDash course is completed
 * Restrict membership site content based on GoHighLevel tags assigned in your CRM pipelines
@@ -55,7 +59,7 @@ This plugin is not affiliated with, endorsed by, or sponsored by GoHighLevel or 
 
 This plugin connects to external services to provide CRM synchronization and OAuth authentication. These services are required for the plugin to connect WordPress data with a GoHighLevel account.
 
-GoHighLevel and LeadConnector APIs: The plugin sends CRM-related data such as contact names, email addresses, phone numbers, WordPress user profile data, tag names, custom field values, WooCommerce customer/order data when enabled, BuddyBoss profile data when enabled, LearnDash activity when enabled, webhook payloads, and form identifiers. Data is sent when an administrator connects the plugin, runs sync actions, saves mapping/settings that require metadata lookup, users register or update profiles, connected ecommerce/community/LMS events occur, webhooks are received, or embedded GoHighLevel forms are displayed.
+GoHighLevel and LeadConnector APIs: The plugin sends CRM-related data such as contact names, email addresses, phone numbers, WordPress user profile data, tag names, custom field values, WooCommerce customer/order data when enabled, BuddyBoss profile data when enabled, LearnDash activity when enabled, webhook payloads, mapped form answers, and form identifiers. Data is sent when an administrator connects the plugin, runs sync actions, saves mapping/settings that require metadata lookup, users register or update profiles, connected ecommerce/community/LMS events occur, enabled WPForms or Gravity Forms submissions are processed, webhooks are received, or embedded GoHighLevel forms are displayed.
 
 GoHighLevel service links: https://www.gohighlevel.com/terms-of-service and https://www.gohighlevel.com/privacy-policy
 
@@ -89,7 +93,36 @@ No. Syncly for GoHighLevel is an independent plugin and is not affiliated with, 
 
 Yes. Action Scheduler is included through Composer dependencies for background queue processing.
 
+= Does WPForms integration work with WPForms Lite? =
+
+Yes. Both WPForms Lite and WPForms Pro can send submissions to GoHighLevel. Open your form in the WPForms builder, go to Settings > Syncly, enable the integration, and map at least an email field. Add contact tags and choose whether matching contacts should be updated. Background queue processing sends the submission; check Syncly > Sync Logs for the result.
+
+= Which WPForms features require Syncly Pro? =
+
+Field mapping, contact tags, and update-or-skip behavior are included in the free plugin. Conditional sync rules, custom source labels, delivery delays, contact timeline notes, and workflow enrollment require the separate Syncly Pro add-on.
+
+== Screenshots ==
+
+1. Syncly dashboard with connection health, queue status, and quick actions.
+2. Sync analytics showing activity and success rates.
+3. General settings for connection branding and user data synchronization.
+4. WooCommerce integration settings with Syncly Pro.
+5. Visual mapping of WordPress fields to GoHighLevel contact fields.
+6. Gravity Forms contact field mapping and existing-contact behavior.
+7. Gravity Forms submission behavior, notes, and conditional rules with Syncly Pro.
+8. Embedded GoHighLevel forms and available embed options.
+9. LearnDash course tag and campaign automation with Syncly Pro.
+10. LearnDash course progress field mapping with Syncly Pro.
+11. WPForms integration with contact field mapping, tags, and existing-contact update settings.
+
 == Changelog ==
+
+= 1.4.45 =
+* Added WPForms Lite and Pro integration with per-form contact field mapping, tags, and update-or-skip behavior.
+* Improved WPForms builder asset loading and searchable dropdowns, including delayed panel rendering.
+* Preserved separate queued form submissions and added support for Syncly Pro WPForms automation.
+* Fixed the dashboard manual-sync button when controls are rendered after page load.
+
 
 = 1.4.44 =
 - Removed query limit on user meta keys and values dropdowns in Bulk Sync tools to display all available options.

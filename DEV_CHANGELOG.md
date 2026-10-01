@@ -4,6 +4,27 @@ Internal changelog with full technical details. **Not included in release zips.*
 
 ---
 
+## [1.4.45] - 2026-10-01
+
+### Added
+
+- Added WPForms Lite and Pro integration with per-form standard/custom contact field mapping, contact tags, and update-or-skip behavior.
+- Added shared upgrade messaging for the Syncly Pro WPForms automation toolkit and a new directory screenshot.
+
+### Fixed
+
+- Centralized WPForms assets and bundled Select2 dependencies in AssetsManager; dropdowns now work inside the builder and initialize after delayed panel rendering.
+- Corrected WPForms submission argument handling and processed field values.
+- Preserved distinct queued submissions for the same form and added dependent note, delay, and workflow support for Syncly Pro.
+- Fixed the dashboard manual-sync click handler when controls render after document ready.
+
+### Validation
+
+- Live form 815 testing confirmed conditional exclusion, delayed contact delivery, tags, notes, and successful workflow enrollment; test settings were restored.
+- Added regression coverage for WPForms settings, field processing, rule operators, queue dependencies, and workflow idempotency.
+
+---
+
 ## [1.4.44] - 2026-09-30
 
 ### Meta Filter Unlimited Results & Array Parsing

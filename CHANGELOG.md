@@ -2,6 +2,20 @@
 
 All notable changes to Syncly will be documented in this file.
 
+## [1.4.45] - 2026-10-01
+
+### Added
+
+- Added WPForms Lite and Pro integration with per-form standard/custom contact field mapping, contact tags, and update-or-skip behavior.
+- Added shared upgrade messaging for the Syncly Pro WPForms automation toolkit and a new directory screenshot.
+
+### Fixed
+
+- Centralized WPForms assets and bundled Select2 dependencies in AssetsManager; dropdowns now work inside the builder and initialize after delayed panel rendering.
+- Corrected WPForms submission argument handling and processed field values.
+- Preserved distinct queued submissions for the same form and added dependent note, delay, and workflow support for Syncly Pro.
+- Fixed the dashboard manual-sync click handler when controls render after document ready.
+
 ## [1.4.44] - 2026-09-30
 
 ### Improved

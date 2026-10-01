@@ -211,9 +211,10 @@ class QueueManager {
 	 * @param string   $action            Action to perform (create, update, delete, add_tags, remove_tags)
 	 * @param array    $payload           Data payload containing sync details (contacts, tags, metadata)
 	 * @param int|null $depends_on_queue_id Optional queue ID this task depends on (waits for completion)
+	 * @param bool     $deduplicate        Merge pending tasks for the same object; false for distinct submissions.
 	 * @return int|false Queue item ID on success, false if queue full or database error
 	 */
-	public function add_to_queue( string $item_type, int $item_id, string $action, array $payload, ?int $depends_on_queue_id = null ) {
+	public function add_to_queue( string $item_type, int $item_id, string $action, array $payload, ?int $depends_on_queue_id = null, bool $deduplicate = true ) {
 		global $wpdb;
 
 		$table_name      = $this->get_queue_table_name();
@@ -221,7 +222,7 @@ class QueueManager {
 
 		// Check for existing pending item
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Inspecting queue table for duplicate pending entry.
-		$existing = $wpdb->get_var(
+		$existing = $deduplicate ? $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT id FROM {$table_name} 
 				WHERE item_type = %s 
@@ -235,7 +236,7 @@ class QueueManager {
 				$action,
 				$current_site_id
 			)
-		);
+		) : null;
 
 		// If duplicate exists, UPDATE payload with latest data (don't create new row)
 		if ( $existing ) {

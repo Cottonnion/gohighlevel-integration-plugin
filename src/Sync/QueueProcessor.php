@@ -146,7 +146,8 @@ class QueueProcessor {
 	 * @throws \Exception
 	 */
 	public function execute_sync( string $item_type, string $action, int $item_id, array $payload ) {
-		if ( ! empty( $payload['_syncly_gf_not_before'] ) && time() < absint( $payload['_syncly_gf_not_before'] ) ) {
+		$not_before = max( absint( $payload['_syncly_gf_not_before'] ?? 0 ), absint( $payload['_syncly_wpforms_not_before'] ?? 0 ) );
+		if ( time() < $not_before ) {
 			return [
 				'success' => false,
 				'error'   => 'Waiting for configured form sync delay',
@@ -549,7 +550,11 @@ class QueueProcessor {
 			$payload['_syncly_gf_entry_id'],
 			$payload['_syncly_gf_form_id'],
 			$payload['_syncly_gf_note'],
-			$payload['_syncly_gf_not_before']
+			$payload['_syncly_gf_not_before'],
+			$payload['_syncly_wpforms_entry_id'],
+			$payload['_syncly_wpforms_not_before'],
+			$payload['_syncly_wpforms_workflow'],
+			$payload['_syncly_wpforms_form_id']
 		);
 
 		// Check if contact_id is provided in payload (indicates UPDATE operation)
@@ -980,11 +985,13 @@ class QueueProcessor {
 		switch ( $action ) {
 			case 'cf7_submission':
 			case 'gf_submission':
+			case 'wpforms_submission':
 				return $this->handle_user_register_update( $client, $contact_resource, $payload );
 
 			case 'add_tags':
 				return $this->handle_add_tags( $contact_resource, $payload );
 
+			case 'wpforms_add_note':
 			case 'gf_add_note':
 				return $this->handle_gf_add_note( $contact_resource, $payload );
 
@@ -1008,7 +1015,7 @@ class QueueProcessor {
 		$email = sanitize_email( (string) ( $payload['email'] ?? '' ) );
 		$note  = sanitize_textarea_field( (string) ( $payload['note'] ?? '' ) );
 		if ( '' === $email || '' === $note ) {
-			throw new \Exception( 'Gravity Forms note requires an email and note body' );
+			throw new \Exception( 'Form note requires an email and note body' );
 		}
 
 		// Try the contact cache first (populated by handle_user_register_update
@@ -1033,7 +1040,7 @@ class QueueProcessor {
 			return [
 				'success' => true,
 				'skipped' => true,
-				'reason'  => 'Contact not found for Gravity Forms note',
+				'reason'  => 'Contact not found for form note',
 			];
 		}
 

@@ -128,27 +128,8 @@ class GFHandler {
 
 		$base_url = SYNCLY_URL . 'assets/admin/';
 
-		// Register these locally because GF pages do not load Syncly's global
-		// admin asset bundle, which normally registers these dependencies.
-		wp_register_style(
-			'syncly-globals-css',
-			$base_url . 'css/globals.css',
-			[],
-			SYNCLY_VERSION
-		);
-		wp_register_style(
-			'syncly-select2-css',
-			$base_url . 'css/select2.min.css',
-			[],
-			'4.1.0'
-		);
-		wp_register_script(
-			'syncly-select2',
-			$base_url . 'js/select2.min.js',
-			[ 'jquery' ],
-			'4.1.0',
-			true
-		);
+		// Share the manager's bundled dependencies with the other integrations.
+		AssetsManager::get_instance()->register_external_libraries();
 
 		wp_enqueue_style( 'syncly-globals-css' );
 		wp_enqueue_style( 'syncly-select2-css' );

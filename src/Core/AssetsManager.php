@@ -753,6 +753,19 @@ class AssetsManager {
 	}
 
 	/**
+	 * Enqueue an admin asset from a host plugin's own enqueue hook.
+	 *
+	 * @param string $handle Asset handle registered via add_admin_asset().
+	 * @param string $page   Admin page ID or host-specific asset group.
+	 * @return void
+	 */
+	public function enqueue_admin_asset( string $handle, string $page ): void {
+		if ( isset( $this->admin_assets[ $page ][ $handle ] ) ) {
+			$this->enqueue_asset( $handle, $this->admin_assets[ $page ][ $handle ], 'admin' );
+		}
+	}
+
+	/**
 	 * Enqueue a single asset (style or script)
 	 *
 	 * @param string $handle Asset handle.

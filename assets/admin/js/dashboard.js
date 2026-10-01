@@ -70,15 +70,15 @@
         ? ajaxurl
         : syncly_dashboard_js_data.ajaxUrl;
 
-    const $manualSyncBtn = jQuery("#ghl-trigger-sync");
     const $clearCacheBtn = jQuery("#ghl-clear-cache");
     const $testConnBtn = jQuery("#ghl-test-connection");
     const $refreshMetaBtn = jQuery("#ghl-refresh-tags-fields");
     const $reconnectBtn = jQuery("#ghl-reconnect-account");
     const i18n = syncly_dashboard_js_data.i18n || {};
 
-    if ($manualSyncBtn.length) {
-      $manualSyncBtn.on("click", function (event) {
+    // The SPA renders dashboard controls after document ready.
+    $(document).off("click.synclyManualQueue", "#ghl-trigger-sync")
+      .on("click.synclyManualQueue", "#ghl-trigger-sync", function (event) {
         event.preventDefault();
         handleQuickAction(jQuery(this), {
           action: "syncly_manual_queue_trigger",
@@ -115,7 +115,6 @@
           ajaxUrl: ajaxEndpoint,
         });
       });
-    }
 
     if ($clearCacheBtn.length) {
       $clearCacheBtn.on("click", function (event) {

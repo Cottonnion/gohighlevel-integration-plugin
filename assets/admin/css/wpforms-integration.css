@@ -1,0 +1,161 @@
+/**
+ * WPForms Syncly Integration - Admin Styles
+ *
+ * Styles for the "Syncly" section of the WPForms builder settings panel.
+ * Base toggle/checkbox styles are provided by globals.css (ghl-checkbox).
+ * Select2 tag styles are provided by the Select2 library.
+ */
+
+/* Base panel styles */
+.syncly-wpforms-panel {
+	padding: 20px 0;
+	max-width: 900px;
+}
+
+.syncly-wpforms-panel .syncly-section {
+	margin-bottom: 30px;
+	padding-bottom: 20px;
+	border-bottom: 1px solid var(--ghl-border-primary);
+}
+
+.syncly-wpforms-panel .syncly-section:last-child {
+	border-bottom: none;
+}
+
+.syncly-wpforms-panel .syncly-section h3 {
+	margin-top: 0;
+	margin-bottom: 10px;
+	font-size: var(--ghl-font-size-base);
+	font-weight: var(--ghl-font-weight-semibold);
+}
+
+/* Field mapping table */
+.syncly-wpforms-panel .syncly-field-mapping {
+	margin-top: 15px;
+}
+
+.syncly-wpforms-panel .syncly-field-mapping th {
+	font-weight: var(--ghl-font-weight-semibold);
+	background: var(--ghl-bg-secondary);
+}
+
+.syncly-wpforms-panel .syncly-field-mapping td {
+	padding: var(--ghl-spacing-md) 10px;
+}
+
+.syncly-wpforms-panel .syncly-field-mapping tbody tr:hover {
+	background-color: var(--ghl-bg-secondary);
+}
+
+.syncly-wpforms-panel .syncly-field-mapping select:focus {
+	border-color: var(--ghl-info-dark);
+	box-shadow: 0 0 0 1px var(--ghl-info-dark);
+}
+
+.syncly-wpforms-panel .field-type {
+	color: var(--ghl-text-secondary);
+	font-size: 0.9em;
+	font-style: italic;
+}
+
+.syncly-wpforms-panel .ghl-field-select {
+	width: 100%;
+	max-width: 300px;
+}
+
+/* GHL field mapping dropdowns (Select2) - branded to match ghl-select */
+.syncly-wpforms-panel .ghl-field-select + .select2-container {
+	width: 100% !important;
+	max-width: 300px;
+}
+
+.syncly-wpforms-panel .select2-container--default .select2-selection--single {
+	min-height: 40px;
+	padding: 4px 0;
+	border: 1px solid var(--ghl-border-primary);
+	border-radius: var(--ghl-radius-base);
+	background-color: var(--ghl-bg-primary);
+	box-shadow: var(--ghl-shadow-xs);
+}
+
+.syncly-wpforms-panel .select2-container--default .select2-selection--single:hover {
+	border-color: var(--ghl-border-secondary);
+}
+
+.syncly-wpforms-panel .select2-container--default.select2-container--focus .select2-selection--single {
+	border-color: var(--ghl-border-focus);
+	box-shadow: var(--ghl-shadow-focus);
+}
+
+.syncly-wpforms-panel .select2-container--default .select2-selection--single .select2-selection__rendered {
+	line-height: 28px;
+	padding-left: 12px;
+	color: var(--ghl-text-primary);
+}
+
+.syncly-wpforms-panel .select2-container--default .select2-selection--single .select2-selection__arrow {
+	height: 38px;
+}
+
+/* Dropdowns live outside the fixed, scrolling builder (z-index: 100099).
+ * Only Syncly Select2 instances use this portal. */
+.syncly-wpforms-dropdowns {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 0;
+	height: 0;
+	z-index: 100100;
+}
+
+.syncly-wpforms-dropdowns .select2-dropdown {
+	background: var(--ghl-bg-primary, #fff);
+	border: 1px solid var(--ghl-border-primary, #aaa);
+	border-radius: var(--ghl-radius-base, 4px);
+	color: var(--ghl-text-primary, #333);
+}
+
+.syncly-wpforms-dropdowns .select2-search__field {
+	box-sizing: border-box;
+	width: 100%;
+	min-height: 32px;
+}
+
+.syncly-wpforms-panel .select2-selection--multiple {
+	min-height: 40px;
+	border: 1px solid var(--ghl-border-primary, #aaa);
+}
+
+.syncly-wpforms-panel .select2-search--inline .select2-search__field {
+	min-height: 24px;
+	margin-top: 5px;
+}
+
+/* Connection status notices */
+.syncly-wpforms-panel .syncly-status {
+	display: flex;
+	align-items: center;
+	gap: var(--ghl-spacing-sm);
+	padding: 10px;
+	border-radius: var(--ghl-radius-sm);
+	margin: 10px 0;
+}
+
+.syncly-wpforms-panel .syncly-status-connected {
+	background: var(--ghl-success-light);
+	color: var(--ghl-success-dark);
+	border: 1px solid var(--ghl-success-light);
+}
+
+.syncly-wpforms-panel .syncly-status-disconnected {
+	background: var(--ghl-warning-light);
+	color: var(--ghl-warning-dark);
+	border: 1px solid var(--ghl-warning-light);
+}
+
+.syncly-wpforms-panel .syncly-status .dashicons {
+	font-size: var(--ghl-font-size-2xl);
+	width: 20px;
+	height: 20px;
+}
+
