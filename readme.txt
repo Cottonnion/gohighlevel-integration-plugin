@@ -4,11 +4,11 @@ Tags: gohighlevel, wpfusion, contact-sync, woocommerce, leadconnector
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.4.45
+Stable tag: 1.4.46
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Connect WordPress to GoHighLevel: contact sync, field mapping, WPForms, Gravity Forms, WooCommerce, LearnDash, BuddyBoss, and webhooks.
+WordPress GoHighLevel integration for bi-directional contact sync, field mapping, forms, tags, and membership gating.
 == Description ==
 
 **Syncly is the most complete WordPress to GoHighLevel integration available.** Looking for a WordPress connection that turns your site into a GoHighLevel CRM automation hub? Syncly is the GoHighLevel WordPress plugin built exclusively for HighLevel (GoHighLevel / LeadConnector) — migrate from WP Fusion, or start fresh with deeper sync, smarter automation, and tighter control at a fraction of the cost.
@@ -45,9 +45,9 @@ WPForms support includes a per-form Syncly settings panel in the form builder, s
 * Run marketing automation workflows in GoHighLevel triggered by WordPress events
 * Keep WooCommerce customer records and GoHighLevel contacts in sync without manual exports
 
-= Searched for any of these? Syncly is the answer. =
+= Built for GoHighLevel, not bolted on =
 
-gohighlevel wordpress plugin, wordpress gohighlevel integration, wp to gohighlevel, gohighlevel contact sync, highlevel wordpress, leadconnector wordpress, gohighlevel woocommerce, wordpress crm sync, gohighlevel field mapping, gohighlevel membership, wp fusion alternative gohighlevel, gohighlevel webhooks wordpress, gohighlevel learndash, buddyboss gohighlevel, wordpress to go high level, go high level contact sync
+Most WordPress CRM connectors treat GoHighLevel as an afterthought. Syncly is the opposite: it is built exclusively for GoHighLevel (HighLevel / LeadConnector), so contact sync, field mapping, tag automation, membership gating, and webhooks all speak the GHL API and data model natively. Whether you are migrating from WP Fusion, comparing LeadConnector WordPress plugins, or wiring up WordPress CRM sync for the first time, Syncly gives you a GoHighLevel-first WordPress plugin experience without middleware or per-mapping fees.
 
 Syncly for GoHighLevel connects WordPress sites with GoHighLevel CRM. The best WordPress GoHighLevel integration for website owners who want their users, WooCommerce customers and orders, BuddyBoss profile fields, LearnDash activity, tags, custom fields, embedded forms, and webhook events to reach GoHighLevel automatically — with no manual exports, no middleware, and no Zapier-style mapping fees.
 
@@ -101,6 +101,22 @@ Yes. Both WPForms Lite and WPForms Pro can send submissions to GoHighLevel. Open
 
 Field mapping, contact tags, and update-or-skip behavior are included in the free plugin. Conditional sync rules, custom source labels, delivery delays, contact timeline notes, and workflow enrollment require the separate Syncly Pro add-on.
 
+= What is included in the free plugin versus Syncly Pro? =
+
+The free plugin includes the OAuth2 connection, WordPress user and GoHighLevel contact sync, visual field mapping, role-based tag automation, membership content restrictions, inbound webhooks, WPForms, Gravity Forms, Contact Form 7, embedded GHL forms, and background queue processing with Action Scheduler. Syncly Pro adds WooCommerce order and customer sync, LearnDash course tracking, family relationships, login sync, conditional form rules, and advanced automation. Free-tier features are not disabled behind a paywall — Pro simply adds more destinations and triggers.
+
+= How does Syncly handle privacy and data protection? =
+
+Syncly sends only the data required for the features you enable, such as contact names, email addresses, phone numbers, mapped field values, and tag names. OAuth client credentials live on the Syncly proxy server and are never distributed inside the plugin. File logging is off by default and can be enabled temporarily for support. See the External services section above for the full data-flow disclosure, and review GoHighLevel's own privacy policy for how HighLevel stores your CRM data. Site owners remain responsible for obtaining any consent required in their jurisdiction.
+
+= What happens if I hit the GoHighLevel API rate limit? =
+
+Syncly throttles requests automatically (100 requests per 10 seconds, 200,000 per day) and moves large operations into the background queue with automatic retries. You can monitor queue status on the Syncly dashboard and retry any failed items there. No action is usually required.
+
+= Does Syncly work as a WP Fusion alternative for GoHighLevel? =
+
+Yes. If you use WP Fusion to connect WordPress to GoHighLevel, Syncly offers comparable tag-based access control and field mapping on a GoHighLevel-first engine, with bi-directional sync, visual mapping, native webhooks, and OAuth2 security — without third-party middleware or per-mapping fees.
+
 == Screenshots ==
 
 1. Syncly dashboard with connection health, queue status, and quick actions.
@@ -115,7 +131,18 @@ Field mapping, contact tags, and update-or-skip behavior are included in the fre
 10. LearnDash course progress field mapping with Syncly Pro.
 11. WPForms integration with contact field mapping, tags, and existing-contact update settings.
 
+== Upgrade Notice ==
+
+= 1.4.46 =
+Documentation and listing refresh: clearer feature descriptions, new FAQs, corrected free vs Pro boundaries, and updated links. No functional changes to syncing.
+
 == Changelog ==
+
+= 1.4.46 =
+* Refreshed the WordPress.org listing with a clearer short description, natural keyword coverage, and a new "Built for GoHighLevel" section.
+* Added FAQ entries covering free vs Syncly Pro, privacy and data protection, API rate limits, and WP Fusion migration.
+* Clarified free vs Syncly Pro feature boundaries across the readme and documentation, and corrected Pro-gated feature claims.
+* Updated plugin and documentation links to HTTPS and corrected stale internal feature metadata.
 
 = 1.4.45 =
 * Added WPForms Lite and Pro integration with per-form contact field mapping, tags, and update-or-skip behavior.

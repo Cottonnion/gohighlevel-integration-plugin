@@ -4,6 +4,22 @@ Internal changelog with full technical details. **Not included in release zips.*
 
 ---
 
+## [1.4.46] - 2026-10-09
+
+### Documentation
+
+- Reworked `readme.txt`: replaced the keyword-stuffed "Searched for any of these?" section with natural prose, updated the short description, added FAQ entries (free vs Pro, privacy/data protection, rate limits, WP Fusion migration), and added an Upgrade Notice and the 1.4.46 changelog entry.
+- `README.md`: converted the WordPress.org-style header to Markdown, added a Free vs Pro callout, marked WooCommerce/LearnDash/custom objects as Pro, corrected the architecture tree, and replaced the personal security email with GitHub Security Advisories.
+- `FEATURES-AND-BENEFITS.md`: reframed the stale header (1.3.15 / 10 tags) as an internal-only document to prevent accidental WordPress.org submission.
+- `syncly.php`: switched Plugin URI and Author URI to HTTPS; bumped `SYNCLY_VERSION` to 1.4.46.
+
+### Validation
+
+- `php -l` clean; readme `Tested up to: 7.1` and external service URLs unchanged and present.
+- No runtime code paths modified.
+
+---
+
 ## [1.4.45] - 2026-10-01
 
 ### Added

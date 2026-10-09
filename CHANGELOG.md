@@ -2,6 +2,15 @@
 
 All notable changes to Syncly will be documented in this file.
 
+## [1.4.46] - 2026-10-09
+
+### Changed
+
+- Refreshed the WordPress.org readme with a clearer short description, natural keyword coverage, and a new "Built for GoHighLevel" section in place of the keyword list.
+- Added FAQ entries for free vs Syncly Pro, privacy and data protection, API rate limits, and WP Fusion migration; added an Upgrade Notice section.
+- Clarified free vs Syncly Pro feature boundaries in the GitHub README and corrected Pro-gated feature claims.
+- Fixed stale internal feature metadata, the README architecture tree, the license and security-reporting links, and switched plugin/documentation links to HTTPS.
+
 ## [1.4.45] - 2026-10-01
 
 ### Added

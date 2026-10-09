@@ -1,22 +1,12 @@
-=== Syncly for GoHighLevel ===
-Contributors: cottonnion
-Tags: gohighlevel, crm, woocommerce, buddyboss, learndash, membership, webhooks
-Requires at least: 5.8
-Tested up to: 7.1
-Requires PHP: 7.4
-Stable tag: 1.4.45
-License: GPLv2 or later
-License URI: https://www.gnu.org/licenses/gpl-2.0.html
-
-Sync WordPress users, WooCommerce orders, BuddyBoss profiles, LearnDash activity, and form submissions to GoHighLevel CRM via OAuth2 — with tag-based membership restrictions, webhooks, and background queue processing.
-
-== Description ==
-
 # Syncly for GoHighLevel
 
-A WordPress plugin that connects your site to GoHighLevel CRM. Sync users, orders, courses, community profiles, and form submissions automatically — and restrict content based on GoHighLevel contact tags.
+A WordPress plugin that connects your site to GoHighLevel CRM (HighLevel / LeadConnector) over OAuth2. Sync WordPress users and form submissions automatically, map fields both ways, and restrict content based on GoHighLevel contact tags — with inbound webhooks and background queue processing. No middleware, no per-mapping fees.
 
-![Version](https://img.shields.io/badge/version-1.4.45-blue.svg)
+> **Free vs Pro:** The free plugin includes the OAuth2 connection, WordPress user sync, visual field mapping, role-based tags, membership content restrictions, WPForms, Gravity Forms, Contact Form 7, embedded GHL forms, and the Action Scheduler queue. WooCommerce order/customer sync, LearnDash course tracking, custom objects, family relationships, login sync, and advanced conditional automation require the separate **Syncly Pro** add-on.
+
+> **Published listing:** The WordPress.org directory listing lives in [`readme.txt`](readme.txt). Tags and metadata there take precedence for the plugin directory.
+
+![Version](https://img.shields.io/badge/version-1.4.46-blue.svg)
 ![WordPress](https://img.shields.io/badge/wordpress-5.8%2B-brightgreen.svg)
 ![PHP](https://img.shields.io/badge/php-7.4%2B-purple.svg)
 ![License](https://img.shields.io/badge/license-GPL--2.0%2B-red.svg)
@@ -25,15 +15,15 @@ A WordPress plugin that connects your site to GoHighLevel CRM. Sync users, order
 ## What it does
 
 - **Sync WordPress users** to GoHighLevel contacts on registration, profile update, or login
-- **Sync WooCommerce orders** and customer data automatically
-- **Sync BuddyBoss profiles** and groups to GoHighLevel custom objects
-- **Sync LearnDash course enrollment**, progress, and quiz results
-- **Sync form submissions** from Gravity Forms and Contact Form 7
+- **Sync WooCommerce orders** and customer data automatically _(Pro)_
+- **Sync BuddyBoss profiles** and groups to GoHighLevel contacts and custom fields
+- **Sync LearnDash course enrollment**, progress, and quiz results _(Pro)_
+- **Sync form submissions** from WPForms, Gravity Forms, and Contact Form 7
 - **Tag-based content restrictions** — gate pages, posts, courses, or custom post types behind GoHighLevel tags
 - **Role-based tagging** — auto-assign or remove tags when users gain/lose WordPress roles
 - **Bidirectional webhooks** — receive GoHighLevel contact changes in real time
 - **Background queue** — reliable bulk operations via Action Scheduler with rate limiting
-- **Elementor integration** — tag-driven page conditions and GHL form widget
+- **Elementor integration** — GHL form widget with tag-driven conditions on Pro
 
 ## OAuth2 connection
 
@@ -126,9 +116,9 @@ Go to **Syncly → Settings → Integrations** to enable:
 - **Contact Form 7** — per-form sync with tag assignment
 - **Elementor Forms** — drag a connected form into any Elementor layout
 
-### 8. Custom objects
+### 8. Custom objects (Pro)
 
-Go to **Syncly → Custom Objects** to map and sync GoHighLevel custom objects (forms, surveys, BuddyBoss groups, etc.) to WordPress.
+Go to **Syncly → Custom Objects** to map and sync GoHighLevel custom objects (forms, surveys, BuddyBoss groups, etc.) to WordPress. This requires **Syncly Pro**.
 
 ## Usage
 
@@ -172,23 +162,31 @@ Go to **Syncly → Custom Objects** to map and sync GoHighLevel custom objects (
 
 ### Reporting vulnerabilities
 
-Email yahyadard@gmail.com. Do not open public GitHub issues for security reports.
+Report vulnerabilities privately through GitHub's [Security Advisories](https://github.com/Cottonnion/gohighlevel-integration-plugin/security/advisories/new). Do not open public GitHub issues for security reports.
 
 ## Architecture
 
 ```
 syncly/
 ├── src/
-│   ├── Core/                  # Plugin bootstrap, menus, assets, AJAX
+│   ├── Core/                  # Bootstrap, menus, assets, settings, database
 │   ├── API/
-│   │   ├── Client/            # HTTP client (talks to proxy)
+│   │   ├── Client/            # HTTP client (talks to the OAuth proxy)
 │   │   ├── OAuth/             # Token storage, refresh, reconnect
+│   │   ├── Webhooks/          # Inbound GHL webhook handling
 │   │   └── Resources/         # GoHighLevel API resource classes
+│   ├── Sync/                  # Queue, processors, tag manager, logging
 │   ├── Integrations/
 │   │   ├── Users/             # WordPress user sync
-│   │   ├── WooCommerce/       # Order & customer sync
+│   │   ├── Forms/             # WPForms, Gravity Forms, Contact Form 7
+│   │   ├── Elementor/         # Form widget and conditions
+│   │   ├── Gutenberg/         # Form and restricted-content blocks
 │   │   └── BuddyBoss/         # XProfile field sync
-│   └── Utilities/             # Helpers, logging
+│   ├── Membership/            # Tag-based content restrictions
+│   ├── Auth/                  # One-time auto-login links
+│   ├── Admin/                 # Admin UI, columns, profile fields
+│   ├── Frontend/              # Shortcodes and contact ID handling
+│   └── Utilities/             # Helpers, file logging
 ├── templates/admin/           # Admin page templates
 ├── assets/admin/              # CSS & JS
 └── syncly.php                 # Main plugin file
@@ -235,7 +233,7 @@ See [CHANGELOG.md](CHANGELOG.md) for full release history.
 
 ## License
 
-GPL v2 or later. See [LICENSE](LICENSE).
+GPL v2 or later. See the [GNU GPL v2 license](https://www.gnu.org/licenses/gpl-2.0.html).
 
 ## Credits
 
@@ -243,4 +241,4 @@ GPL v2 or later. See [LICENSE](LICENSE).
 
 ---
 
-[Website](http://synclyforgohighlevel.com) · [GitHub](https://github.com/Cottonnion/gohighlevel-integration-plugin)
+[Website](https://synclyforgohighlevel.com) · [GitHub](https://github.com/Cottonnion/gohighlevel-integration-plugin)

@@ -1,18 +1,13 @@
-=== Syncly for GoHighLevel ===
-Contributors: cottonnion
-Tags: gohighlevel, crm, woocommerce, buddyboss, learndash, membership, webhooks, automation, oauth2, forms
-Requires at least: 5.8
-Tested up to: 6.8
-Requires PHP: 7.4
-Stable tag: 1.3.15
-License: GPLv2 or later
-License URI: https://www.gnu.org/licenses/gpl-2.0.html
+# Syncly — Features & Benefits (internal reference)
+
+> **Not the WordPress.org readme.** This is an internal positioning and feature-matrix reference.
+> The published directory listing lives in [`readme.txt`](readme.txt), and the GitHub overview lives in [`README.md`](README.md). Do not submit this file to WordPress.org.
+
+**Current version:** 1.4.46 · **Requires at least:** 5.8 · **Tested up to:** 7.1 · **Requires PHP:** 7.4 · **License:** GPLv2 or later
 
 The most powerful GoHighLevel integration for WordPress. Deep WooCommerce, BuddyBoss, and LearnDash integrations with custom objects, family relationships, conditional menus, forms, webhooks, and complete automation.
 
-== Description ==
-
-# Syncly for GoHighLevel - WordPress CRM Automation
+## Syncly for GoHighLevel - WordPress CRM Automation
 
 Transform your WordPress site into a fully automated CRM powerhouse with the most comprehensive GoHighLevel integration available. While other plugins offer basic contact sync, this plugin delivers enterprise-level automation with deep integrations across your entire WordPress ecosystem.
 
@@ -688,7 +683,7 @@ GPL v2 or later
 **Yahya Eddaqqaq**
 - Website: [yahyadev.com](https://yahyadev.online/)
 - GitHub: [@Cottonnion](https://github.com/Cottonnion)
-- Company: [Synly PLugin](http://synclyforgohighlevel.com/)
+- Company: [Syncly](https://synclyforgohighlevel.com/)
 
 ---
 
