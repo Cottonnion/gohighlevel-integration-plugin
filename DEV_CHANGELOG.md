@@ -4,6 +4,27 @@ Internal changelog with full technical details. **Not included in release zips.*
 
 ---
 
+## [1.4.47] - 2026-10-10
+
+### OAuth reliability
+
+- Added `OAuthFailure` for nested response normalization, safe error categories/messages, persistent backoff policy, and legacy queue authentication-error classification.
+- Added `OptionMutex` for atomic option leases, conditional expired-owner replacement, ownership-safe release, and acquisition after stale cached lock deletion.
+- Added `RecurringSchedule` for serialized version-3 migrations, exact hook/args/group checks, unique Action Scheduler recurring jobs, and WP-Cron fallback.
+- Added encrypted `syncly_oauth_state` bundle storage with lazy legacy migration and revision-checked conditional SQL updates. General settings writes cannot replace OAuth-owned fields; encryption failure no longer falls back to plaintext writes.
+- Reworked Client refresh, authorization-code exchange, token persistence, disconnect, circuit gating, scheduled refresh registration, notices, and Site Health. Refresh requests supply request ID, plugin version, and circuit-state headers.
+- Routed OAuthHandler silent reconnect through Client refresh and removed direct proxy refresh/reconnect fallback. Callback metadata no longer rewrites token fields.
+- Gated QueueManager processing on OAuth health/backoff and retained recoverable authentication-blocked items.
+- OAuth proxy repository was unavailable: central idempotency, response replay, and proxy observability were not changed.
+
+### Validation
+
+- Full suites passed on PHP 7.4 and PHP 8.5: 173 tests and 34,584 assertions per runtime before the release metadata update.
+- PHP syntax, Composer metadata, whitespace, and coding-standard checks for the new helper classes and regression file passed.
+- Concurrency tests use simulated workers; no production database or live OAuth endpoints were exercised.
+
+---
+
 ## [1.4.46] - 2026-10-09
 
 ### Documentation

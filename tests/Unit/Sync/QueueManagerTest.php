@@ -712,9 +712,13 @@ class QueueManagerTest extends TestCase
     //  process and function_exists() returns true permanently.
     // ==========================================
 
-    public function test_schedule_falls_back_to_wp_cron(): void
-    {
-        // as_next_scheduled_action is NOT defined → falls through to WP-Cron.
+    public function test_schedule_falls_back_to_wp_cron(): void {
+        \ActionScheduler::$initialized = false;
+        Functions\when('wp_generate_uuid4')->justReturn('schedule-lock');
+        Functions\when('add_option')->justReturn(true);
+        Functions\when('wp_cache_delete')->justReturn(true);
+        Functions\when('wp_clear_scheduled_hook')->justReturn(0);
+        $this->wpdb->options = 'wp_options';
         $cron_scheduled = false;
         Functions\when('wp_schedule_event')->alias(
             function () use ( &$cron_scheduled ) {
@@ -722,27 +726,33 @@ class QueueManagerTest extends TestCase
                 return true;
             }
         );
-
-        $this->qm->schedule_queue_processor();
-
-        $this->assertTrue($cron_scheduled, 'Should fall back to WP-Cron');
+        try {
+            $this->qm->schedule_queue_processor();
+            $this->assertTrue($cron_scheduled, 'Should fall back to WP-Cron');
+        } finally {
+            \ActionScheduler::$initialized = true;
+        }
     }
 
-    public function test_schedule_uses_action_scheduler_when_available(): void
-    {
-        // Define AS functions to make function_exists() return true.
+    public function test_schedule_uses_action_scheduler_when_available(): void {
         Functions\when('as_next_scheduled_action')->justReturn(false);
-
+        Functions\when('as_has_scheduled_action')->justReturn(false);
+        Functions\when('as_get_scheduled_actions')->justReturn([]);
+        Functions\when('wp_clear_scheduled_hook')->justReturn(0);
+        Functions\when('wp_generate_uuid4')->justReturn('schedule-lock');
+        Functions\when('add_option')->justReturn(true);
+        Functions\when('wp_cache_delete')->justReturn(true);
+        $this->wpdb->options = 'wp_options';
         $scheduled = false;
         Functions\when('as_schedule_recurring_action')->alias(
-            function () use ( &$scheduled ) {
+            function ( $time, $interval, $hook, $args, $group, $unique ) use ( &$scheduled ) {
+                $this->assertSame('syncly', $group);
+                $this->assertTrue($unique);
                 $scheduled = true;
                 return 1;
             }
         );
-
         $this->qm->schedule_queue_processor();
-
         $this->assertTrue($scheduled, 'Should schedule via Action Scheduler');
     }
 

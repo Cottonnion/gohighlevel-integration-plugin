@@ -191,6 +191,11 @@ class Client implements ClientInterface {
 	 *
 	 * @var string
 	 */
+	/** @var \Syncly\API\OAuth\OptionMutex|null Owned refresh lease. */
+	private ?\Syncly\API\OAuth\OptionMutex $refresh_mutex = null;
+	/** @var int Credential revision originally loaded. */
+	private int $oauth_revision                           = 0;
+
 	private const REFRESH_LOCK_KEY = 'syncly_token_refresh_lock';
 
 	/**
@@ -198,7 +203,7 @@ class Client implements ClientInterface {
 	 *
 	 * @var int
 	 */
-	private const REFRESH_LOCK_TTL = 30;
+	private const REFRESH_LOCK_TTL = 120;
 
 	/**
 	 * Seconds before token expiry to trigger proactive refresh.
@@ -327,6 +332,36 @@ class Client implements ClientInterface {
 	private function __construct() {
 		$this->load_settings();
 		$this->init_hooks();
+		add_filter(
+			'cron_schedules',
+			static function ( array $schedules ): array {
+				$schedules['syncly_oauth_20min'] = [
+					'interval' => self::SCHEDULED_REFRESH_INTERVAL,
+					'display'  => __( 'Syncly OAuth refresh', 'syncly' ),
+				];
+				return $schedules;
+			}
+		);
+		add_action( 'init', [ $this, 'maybe_schedule_background_refresh' ], 999 );
+		add_action(
+			'admin_init',
+			function (): void {
+				$state = \Syncly\Core\Settings\SettingsRepository::get_instance()->get_oauth_state();
+				if ( 'reconnect_required' === ( $state['oauth_health_status'] ?? '' ) ) {
+					$this->queue_oauth_health_notice( 'Please reconnect your GoHighLevel account.' );
+				}
+			}
+		);
+		add_filter(
+			'site_status_tests',
+			static function ( array $tests ): array {
+				$tests['direct']['syncly_server_cron'] = [
+					'label' => __( 'Syncly background scheduling', 'syncly' ),
+					'test'  => [ self::class, 'get_oauth_cron_health' ],
+				];
+				return $tests;
+			}
+		);
 
 		// Defer scheduling to when Action Scheduler is fully initialized.
 		// AS fires 'action_scheduler_init' on `init` priority 1, but the Client
@@ -337,6 +372,30 @@ class Client implements ClientInterface {
 		} else {
 			add_action( 'action_scheduler_init', [ $this, 'maybe_schedule_background_refresh' ] );
 		}
+	}
+
+	/**
+	 * Recommend a server cron when the refresh job is overdue.
+	 *
+	 * @return array WordPress Site Health result.
+	 */
+	public static function get_oauth_cron_health(): array {
+		$next = wp_next_scheduled( self::SCHEDULED_REFRESH_HOOK, [] );
+		if ( function_exists( 'as_next_scheduled_action' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {
+			$next = as_next_scheduled_action( self::SCHEDULED_REFRESH_HOOK, [], 'syncly' );
+		}
+		$overdue = is_int( $next ) && $next < time() - 2 * self::SCHEDULED_REFRESH_INTERVAL;
+		return [
+			'label'       => $overdue ? __( 'Syncly refresh is overdue; check server cron', 'syncly' ) : __( 'Syncly has no overdue refresh job', 'syncly' ),
+			'status'      => $overdue ? 'recommended' : 'good',
+			'badge'       => [
+				'label' => 'Syncly',
+				'color' => 'blue',
+			],
+			'description' => '<p>' . esc_html__( 'WordPress cron and Action Scheduler need requests to run. Configure a real server cron to invoke WordPress cron regularly on low-traffic sites; PHP cannot guarantee execution with no requests.', 'syncly' ) . '</p>',
+			'actions'     => '',
+			'test'        => 'syncly_server_cron',
+		];
 	}
 
 	/**
@@ -632,7 +691,6 @@ class Client implements ClientInterface {
 			}
 
 			if ( $is_token_error ) {
-				$this->update_oauth_health( 'token_rejected', $error_message );
 
 				// If refresh already failed this request, don't attempt again from this filter
 				if ( $this->refresh_failed_this_request ) {
@@ -644,7 +702,7 @@ class Client implements ClientInterface {
 					[
 						'url'                     => $url,
 						'response_code'           => $response_code,
-						'error_message'           => $error_message,
+						'error_category'          => 'api_auth_rejected',
 						'has_refresh_token'       => ! empty( $this->refresh_token ),
 						'location_id'             => $this->location_id ?? '(none)',
 						'access_token_expires_at' => $this->access_token_expires_at ?? 0,
@@ -677,7 +735,7 @@ class Client implements ClientInterface {
 					return $response;
 
 				} catch ( \Exception $e ) {
-					$this->update_oauth_health( 'refresh_failed', $e->getMessage() );
+					$this->refresh_failed_this_request = true;
 					$this->queue_oauth_health_notice( $e->getMessage() );
 
 					// Log failure context for debugging
@@ -687,7 +745,6 @@ class Client implements ClientInterface {
 							'url'    => $url,
 							'error'  => $e->getMessage(),
 							'status' => $response_code,
-							'body'   => $body_json,
 						]
 					);
 
@@ -721,22 +778,12 @@ class Client implements ClientInterface {
 		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
 		$settings         = $settings_manager->get_settings_array();
 
-		// OAuth2 tokens from settings
-		if ( ! empty( $settings['oauth_access_token'] ) ) {
-			$this->access_token = $settings['oauth_access_token'];
-		}
+		$this->access_token            = (string) ( $settings['oauth_access_token'] ?? '' );
+		$this->refresh_token           = (string) ( $settings['oauth_refresh_token'] ?? '' );
+		$this->access_token_expires_at = (int) ( $settings['oauth_expires_at'] ?? 0 );
+		$this->oauth_revision          = (int) ( $settings['oauth_revision'] ?? 0 );
 
-		if ( ! empty( $settings['oauth_expires_at'] ) ) {
-			$this->access_token_expires_at = (int) $settings['oauth_expires_at'];
-		}
-
-		if ( ! empty( $settings['oauth_refresh_token'] ) ) {
-			$this->refresh_token = $settings['oauth_refresh_token'];
-		}
-
-		if ( ! empty( $settings['location_id'] ) ) {
-			$this->location_id = $settings['location_id'];
-		}
+		$this->location_id = (string) ( $settings['location_id'] ?? '' );
 
 		if ( ! empty( $settings['api_version'] ) ) {
 			$this->api_version = $settings['api_version'];
@@ -914,7 +961,7 @@ class Client implements ClientInterface {
 	 * client secret and calls GHL’s `/oauth/token` endpoint.
 	 *
 	 * On success, both access_token and refresh_token are updated in-memory
-	 * (caller is responsible for persisting via save_oauth_tokens).
+	 * Credentials and successful health are persisted together under the refresh lease.
 	 *
 	 * @param string $code         Authorization code from the OAuth callback.
 	 * @param string $redirect_uri Redirect URI that was used during authorization.
@@ -922,6 +969,28 @@ class Client implements ClientInterface {
 	 * @throws ApiException On network error or invalid response from proxy.
 	 */
 	public function exchange_code_for_token( string $code, string $redirect_uri ): array {
+		if ( ! $this->acquire_refresh_lock() ) {
+			throw new AuthenticationException( 'Another token refresh is in progress.' );
+		}
+		try {
+			$this->reload_settings();
+			$result = $this->perform_code_exchange( $code, $redirect_uri );
+			$this->save_oauth_tokens( time() + (int) ( $result['expires_in'] ?? 3600 ) );
+			$this->maybe_schedule_background_refresh();
+			return $result;
+		} finally {
+			$this->release_refresh_lock();
+		}
+	}
+
+	/**
+	 * Exchange an authorization code while the caller holds the refresh lease.
+	 *
+	 * @param string $code Authorization code.
+	 * @param string $redirect_uri OAuth callback URL.
+	 * @return array Token payload.
+	 */
+	private function perform_code_exchange( string $code, string $redirect_uri ): array {
 		if ( get_transient( self::TOKEN_EXCHANGE_COOLDOWN_KEY ) ) {
 			$this->log_oauth_event( 'Exchange token blocked: cooldown active' );
 
@@ -1010,9 +1079,8 @@ class Client implements ClientInterface {
 	/**
 	 * Schedule a recurring background task to refresh the OAuth token.
 	 *
-	 * Uses Action Scheduler to run every 20 minutes. This ensures the token
-	 * is refreshed even if no user-facing API requests happen near expiry,
-	 * which was the root cause of disconnections on low-traffic sites.
+	 * Uses Action Scheduler to run every 20 minutes. Execution depends on WordPress cron
+	 * being invoked, through traffic or a real server cron on idle sites.
 	 *
 	 * Only schedules if:
 	 * - Action Scheduler is available
@@ -1022,30 +1090,9 @@ class Client implements ClientInterface {
 	 * @return void
 	 */
 	public function maybe_schedule_background_refresh(): void {
-		// Only schedule if we have OAuth tokens and Action Scheduler is available
-		if ( empty( $this->refresh_token ) || ! function_exists( 'as_has_scheduled_action' ) ) {
-			return;
-		}
-
-		// Check if ActionScheduler is initialized (avoid premature scheduling)
-		if ( ! class_exists( 'ActionScheduler' ) || ! \ActionScheduler::is_initialized() ) {
-			return;
-		}
-
-		// Schedule recurring refresh if not already scheduled
-		if ( ! as_has_scheduled_action( self::SCHEDULED_REFRESH_HOOK, [], 'syncly' ) ) {
-			as_schedule_recurring_action(
-				time() + self::SCHEDULED_REFRESH_INTERVAL,
-				self::SCHEDULED_REFRESH_INTERVAL,
-				self::SCHEDULED_REFRESH_HOOK,
-				[],
-				'syncly'
-			);
-			$this->log_oauth_event(
-				'Scheduled background token refresh',
-				[ 'interval_min' => self::SCHEDULED_REFRESH_INTERVAL / MINUTE_IN_SECONDS ]
-			);
-		}
+		$state   = \Syncly\Core\Settings\SettingsRepository::get_instance()->get_oauth_state();
+		$enabled = ! empty( $state['oauth_refresh_token'] ) && ! in_array( $state['oauth_health_status'] ?? '', [ 'reconnect_required', 'permanently_invalid' ], true );
+		\Syncly\API\OAuth\RecurringSchedule::ensure( self::SCHEDULED_REFRESH_HOOK, self::SCHEDULED_REFRESH_INTERVAL, 'syncly_oauth_20min', $enabled );
 	}
 
 	/**
@@ -1103,6 +1150,7 @@ class Client implements ClientInterface {
 	 * @return void
 	 */
 	public static function unschedule_background_refresh(): void {
+		wp_clear_scheduled_hook( self::SCHEDULED_REFRESH_HOOK );
 		if ( function_exists( 'as_unschedule_all_actions' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {
 			as_unschedule_all_actions( self::SCHEDULED_REFRESH_HOOK, [], 'syncly' );
 		}
@@ -1119,6 +1167,10 @@ class Client implements ClientInterface {
 	 * @throws ApiException When the access token is expired and refresh failed.
 	 */
 	private function ensure_fresh_access_token(): void {
+		$state = \Syncly\Core\Settings\SettingsRepository::get_instance()->get_oauth_state();
+		if ( ! \Syncly\API\OAuth\OAuthFailure::allows_attempt( $state ) ) {
+			throw new AuthenticationException( 'OAuth circuit is open. Please reconnect your account or wait for backoff.' );
+		}
 		// If we do not know expiry, skip pre-emptive refresh (will rely on 401 handler)
 		if ( $this->access_token_expires_at <= 0 ) {
 			return;
@@ -1143,7 +1195,6 @@ class Client implements ClientInterface {
 				$this->refresh_failed_this_request = false; // Reset on success
 			} catch ( \Exception $e ) {
 				$this->refresh_failed_this_request = true;
-				$this->update_oauth_health( 'refresh_failed', $e->getMessage() );
 				$this->queue_oauth_health_notice( $e->getMessage() );
 				$this->log_oauth_event( 'Proactive refresh failed (non-fatal)', [ 'error' => $e->getMessage() ] );
 
@@ -1174,39 +1225,6 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Persist lightweight OAuth health state for admin/status UI consumers.
-	 *
-	 * @param string $status  Health status slug.
-	 * @param string $message Human-readable health message.
-	 * @return void
-	 */
-	private function update_oauth_health( string $status, string $message = '' ): void {
-		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
-		$settings_manager->update_setting( 'oauth_health_status', $status );
-		$settings_manager->update_setting( 'oauth_health_message', sanitize_text_field( $message ) );
-		$settings_manager->update_setting( 'oauth_health_checked_at', current_time( 'mysql' ) );
-	}
-
-	/**
-	 * Mark the stored OAuth connection as healthy after successful token recovery.
-	 *
-	 * @return void
-	 */
-	private function mark_oauth_healthy(): void {
-		$this->update_oauth_health( 'healthy', '' );
-
-		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
-		$settings_manager->update_option(
-			'syncly_connection_verified',
-			[
-				'verified'    => true,
-				'verified_at' => current_time( 'mysql' ),
-				'method'      => 'oauth2',
-			]
-		);
-	}
-
-	/**
 	 * Queue one stable admin notice for OAuth health issues.
 	 *
 	 * @param string $error_message Detailed error message for logs.
@@ -1222,10 +1240,12 @@ class Client implements ClientInterface {
 			return;
 		}
 
-		set_transient( $transient_key, true, self::OAUTH_COOLDOWN_MINUTES * MINUTE_IN_SECONDS );
+		set_transient( $transient_key, true, DAY_IN_SECONDS );
 
 		\Syncly\Core\AdminNotices::get_instance()->error(
-			__( 'GoHighLevel OAuth refresh is temporarily unhealthy. The plugin will retry automatically; reconnect your account if this persists.', 'syncly' ),
+			\Syncly\API\OAuth\OAuthFailure::allows_attempt( \Syncly\Core\Settings\SettingsRepository::get_instance()->get_oauth_state() )
+				? __( 'GoHighLevel refresh is temporarily unavailable. The plugin will retry after backoff.', 'syncly' )
+				: __( 'GoHighLevel connection needs attention. Automatic refresh is paused until backoff ends or you reconnect with an active location.', 'syncly' ),
 			true
 		);
 
@@ -1242,15 +1262,6 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Start a short cooldown before the next OAuth refresh attempt.
-	 *
-	 * @return void
-	 */
-	private function start_refresh_cooldown(): void {
-		set_transient( self::REFRESH_COOLDOWN_KEY, true, self::OAUTH_COOLDOWN_MINUTES * MINUTE_IN_SECONDS );
-	}
-
-	/**
 	 * Clear OAuth refresh cooldown after a successful refresh or disconnect.
 	 *
 	 * @return void
@@ -1260,326 +1271,84 @@ class Client implements ClientInterface {
 	}
 
 	/**
-	 * Refresh the OAuth2 access token.
+	 * Refresh rotating credentials using a fresh read under the site lease.
+	 * Permanent failures require manual authorization; transient outcomes back off.
+	 * Ambiguous network outcomes are never retried immediately.
 	 *
-	 * Full refresh flow with minimal protection:
-	 *
-	 * 1. **Guard: no refresh token** — Aborts immediately.
-	 * 2. **Guard: refresh cooldown** — Blocks temporary retry storms after a
-	 *    rate limit, timeout, or proxy failure.
-	 * 3. **Guard: cross-process mutex** — If another PHP process holds the
-	 *    refresh lock, waits 0.5s then reloads settings from DB. If tokens
-	 *    are now fresh, returns immediately.
-	 * 4. **Primary path** — POSTs refresh_token to the proxy’s `/refresh-token`.
-	 * 5. **Fallback: reconnect API** — If the proxy returns an error or is
-	 *    unreachable, attempts the GHL reconnect endpoint to obtain a new
-	 *    authorization code, then exchanges it for fresh tokens.
-	 * 6. **Invalid grant** — If GHL returns `invalid_grant`, tokens are cleared
-	 *    and the user must reconnect manually.
-	 *
-	 * On success:
-	 * - Updates in-memory access_token / refresh_token / expires_at
-	 * - Persists to DB via save_oauth_tokens()
-	 * - Clears refresh cooldown
-	 * - Releases refresh lock
-	 *
-	 * Timeout:
-	 * - Admin / cron / CLI context: 15s
-	 * - Frontend context: 8s (avoids blocking page loads)
-	 * - Auto-retry on cURL timeout: 25s (catches slow shared hosts)
-	 *
-	 * @return array Decoded token payload from proxy.
-	 * @throws ApiException On all recovery paths exhausted.
+	 * @return array Token payload.
+	 * @throws AuthenticationException When refresh cannot proceed.
 	 */
 	public function refresh_access_token(): array {
-		$this->log_oauth_event(
-			'Attempting token refresh',
-			[
-				'expires_in'              => ( $this->access_token_expires_at ?? 0 ) - time(),
-				'refresh_cooldown_active' => $this->is_refresh_cooldown_active(),
-				'pid'                     => getmypid(),
-			]
-		);
-
-		if ( empty( $this->refresh_token ) ) {
-			$this->clear_refresh_cooldown();
-			$this->log_oauth_event( 'Refresh aborted: no refresh token stored' );
-			throw new ApiException( esc_html__( 'No refresh token available. Please reconnect your GoHighLevel account.', 'syncly' ) );
-		}
-
-		if ( $this->is_refresh_cooldown_active() ) {
-			$this->log_oauth_event( 'Refresh blocked: cooldown active' );
-			$this->update_oauth_health( 'cooldown', __( 'Token refresh is paused after repeated failures.', 'syncly' ) );
-
-			throw new ApiException(
-				sprintf(
-					/* translators: %d: cooldown minutes */
-					esc_html__( 'Token refresh temporarily disabled due to repeated failures. Please try again in %d minutes or reconnect your GoHighLevel account.', 'syncly' ),
-					absint( self::OAUTH_COOLDOWN_MINUTES )
-				)
-			);
-		}
-
-		// Acquire an atomic database-backed mutex. Transient read/set is not atomic
-		// and allows two workers to rotate the single-use refresh token together.
-		$lock_acquired = $this->acquire_refresh_lock();
-		if ( ! $lock_acquired ) {
-			for ( $wait_attempt = 0; $wait_attempt < 3; $wait_attempt++ ) {
-				usleep( ( $wait_attempt + 1 ) * 1000000 );
-				$this->reload_settings();
-
-				if ( $this->access_token_expires_at > time() + 60 ) {
-					return [
-						'access_token'  => $this->access_token,
-						'refresh_token' => $this->refresh_token,
-					];
-				}
-
-				if ( $this->acquire_refresh_lock() ) {
-					$lock_acquired = true;
-					break;
-				}
+		$previous_token = $this->access_token;
+		if ( ! $this->acquire_refresh_lock() ) {
+			$this->reload_settings();
+			if ( $this->access_token !== $previous_token && $this->access_token_expires_at > time() + 60 ) {
+				return [
+					'access_token'  => $this->access_token,
+					'refresh_token' => $this->refresh_token,
+				];
 			}
-
-			if ( ! $lock_acquired ) {
-				throw new ApiException( esc_html__( 'Another token refresh is in progress. Please retry shortly.', 'syncly' ) );
-			}
+			throw new AuthenticationException( 'Another token refresh is in progress.' );
 		}
-
 		try {
-
-		// Handle edge case where refresh token might be corrupted (not a string)
-		if ( ! is_string( $this->refresh_token ) ) {
-			// Try reconnect API as fallback
-			try {
-				$auth_code = $this->reconnect_api();
-				// Exchange auth code for new tokens
-				$redirect_uri = admin_url( 'admin.php?page=syncly-admin' );
-				return $this->exchange_code_for_token( $auth_code, $redirect_uri );
-			} catch ( ApiException $e ) {
-				$this->log_oauth_event( 'Refresh token corrupted and reconnect failed', [ 'error' => $e->getMessage() ] );
-				throw new ApiException(
-					esc_html__( 'Refresh token is invalid and reconnect failed', 'syncly' )
-				);
+			$this->reload_settings();
+			$repository = \Syncly\Core\Settings\SettingsRepository::get_instance();
+			$state      = $repository->get_oauth_state();
+			if ( ! \Syncly\API\OAuth\OAuthFailure::allows_attempt( $state ) ) {
+				throw new AuthenticationException( 'OAuth circuit is open. Please reconnect your account or wait for backoff.' );
 			}
-		}
-
-		$this->log_oauth_event( 'Attempting token refresh', [ 'expires_in' => $this->access_token_expires_at - time() ] );
-
-		$data = [
-			'refresh_token' => $this->refresh_token,
-		];
-
-		// Use longer timeout for admin, cron, and CLI contexts where blocking is acceptable.
-		// Frontend gets a shorter timeout to avoid blocking page loads.
-		$is_background = is_admin() || wp_doing_cron() || ( defined( 'WP_CLI' ) && constant( 'WP_CLI' ) );
-		$timeout       = $is_background ? 15 : 8;
-
-		$args = [
-			'method'  => 'POST',
-			'headers' => [
-				'Content-Type' => 'application/x-www-form-urlencoded',
-			],
-			'body'    => $data,
-			'timeout' => $timeout,
-		];
-
-		$proxy_url = self::OAUTH_PROXY_URL . '/refresh-token';
-		$response  = wp_remote_request( $proxy_url, $args );
-
-		// If the first attempt timed out, retry once with a longer timeout (25s).
-		// Some shared hosts need more time to reach the proxy, especially under load.
-		if ( is_wp_error( $response ) && false !== strpos( $response->get_error_message(), 'cURL error 28' ) && $timeout < 25 ) {
-			$this->log_oauth_event( 'Proxy timed out, retrying with 25s timeout', [ 'original_timeout' => $timeout ] );
-			$args['timeout'] = 25;
-			$response        = wp_remote_request( $proxy_url, $args );
-		}
-
-		$this->log_oauth_event( 'Refresh token proxy response', [ 'status' => is_wp_error( $response ) ? 'error' : wp_remote_retrieve_response_code( $response ) ] );
-
-		if ( is_wp_error( $response ) ) {
-			$this->start_refresh_cooldown();
-			$this->update_oauth_health( 'refresh_failed', $response->get_error_message() );
-			$this->log_oauth_event( 'Refresh token WP_Error', [ 'error' => $response->get_error_message() ] );
-
-			// Proxy timed out or is unreachable - try reconnect API as fallback
-			// Reconnect uses a different GHL endpoint and may succeed even when refresh proxy times out
-			if ( ! empty( $this->location_id ) ) {
-				try {
-					$this->log_oauth_event( 'Proxy unreachable, attempting reconnect fallback', [ 'location_id' => $this->location_id ] );
-					$auth_code                     = $this->reconnect_api();
-					$redirect_uri                  = $this->get_oauth_callback_redirect_uri();
-					$token_payload                 = $this->exchange_code_for_token( $auth_code, $redirect_uri );
-					$expires_at                    = time() + ( $token_payload['expires_in'] ?? 3600 );
-					$this->access_token_expires_at = $expires_at;
-					$this->save_oauth_tokens( $expires_at );
-					$this->clear_refresh_cooldown();
-					$this->log_oauth_event( 'Reconnect succeeded after proxy timeout', [ 'expires_at' => $expires_at ] );
-
-					return $token_payload;
-				} catch ( \Exception $reconnect_error ) {
-					$this->log_oauth_event( 'Reconnect also failed after proxy timeout', [ 'error' => $reconnect_error->getMessage() ] );
-					// Fall through to throw original error
-				}
+			// A winner refreshed since this object loaded; do not rotate its new token again.
+			if ( $this->access_token !== $previous_token && $this->access_token_expires_at > time() + 60 ) {
+				return [
+					'access_token'  => $this->access_token,
+					'refresh_token' => $this->refresh_token,
+				];
 			}
-
-			throw new ApiException(
-				sprintf(
-					/* translators: %s: Error message */
-					esc_html__( 'Token refresh failed: %s', 'syncly' ),
-					esc_html( $response->get_error_message() )
-				)
+			if ( empty( $this->refresh_token ) ) {
+				throw new AuthenticationException( 'No refresh token available. Please reconnect your account.' );
+			}
+			$response = wp_remote_request(
+				self::OAUTH_PROXY_URL . '/refresh-token',
+				[
+					'method'  => 'POST',
+					'headers' => [
+						'X-Syncly-Request-ID'    => wp_generate_uuid4(),
+						'Content-Type'           => 'application/x-www-form-urlencoded',
+						'X-Syncly-Version'       => defined( 'SYNCLY_VERSION' ) ? SYNCLY_VERSION : 'unknown',
+						'X-Syncly-Circuit-State' => $state['oauth_health_status'] ?? 'unknown',
+					],
+					'body'    => [ 'refresh_token' => $this->refresh_token ],
+					'timeout' => 25,
+				]
 			);
-		}
-
-		$status_code = wp_remote_retrieve_response_code( $response );
-		$body        = wp_remote_retrieve_body( $response );
-		$decoded     = json_decode( $body, true );
-		$this->log_oauth_event(
-			'Refresh token endpoint body',
-			[
-				'status'        => $status_code,
-				'response_keys' => is_array( $decoded ) ? array_keys( $decoded ) : [],
-			]
-		);
-
-		if ( $status_code !== 200 || empty( $decoded['access_token'] ) ) {
-			$decoded_array            = is_array( $decoded ) ? $decoded : [];
-			$error_message            = $decoded_array['message'] ?? ( is_string( $body ) ? $body : 'unknown' );
-			$error_text               = strtolower( (string) $error_message );
-			$refresh_error = sprintf( 'Refresh HTTP %d: %s', $status_code, sanitize_text_field( (string) $error_message ) );
-			$this->start_refresh_cooldown();
-			$this->update_oauth_health( 429 === $status_code ? 'rate_limited' : 'refresh_failed', $refresh_error );
-
-			if ( 429 === $status_code ) {
-				throw new ApiException(
-					esc_html__( 'Token refresh is rate limited. The plugin will retry after the cooldown period.', 'syncly' ),
-					(int) $status_code
-				);
-			}
-
-			$requires_reconnect = ( 401 === $status_code || 403 === $status_code ) && (
-				false !== strpos( $error_text, 'invalid refresh token' ) ||
-				false !== strpos( $error_text, 'invalid_grant' ) ||
-				false !== strpos( $error_text, 'unauthorized' ) ||
-				false !== strpos( $error_text, 'invalid jwt' ) ||
-				false !== strpos( $error_text, 'revoked' ) ||
-				false !== strpos( $error_text, 'expired' )
-			);
-
-			// If refresh token is invalid or the provider rejected the auth flow,
-			// clear tokens and force reconnect to avoid loops and stale state.
-			if ( $requires_reconnect || ( isset( $decoded_array['error'] ) && 'invalid_grant' === $decoded_array['error'] ) ) {
-				$this->log_oauth_event( 'Refresh token rejected by provider; clearing stored tokens', $decoded_array );
-				// Check if this is specifically a "Location is not active" error
-				$error_description = '';
-				if ( isset( $decoded_array['data']['response']['error_description'] ) ) {
-					$error_description = $decoded_array['data']['response']['error_description'];
-				} elseif ( isset( $decoded_array['error_description'] ) ) {
-					$error_description = $decoded_array['error_description'];
-				}
-
-				$is_location_inactive = false !== stripos( $error_description, 'location is not active' );
-
-				// Build a helpful error message
-				if ( $is_location_inactive ) {
-					// Get location name if available
-					$settings_manager = \Syncly\Core\SettingsManager::get_instance();
-					$location_name    = $settings_manager->get_setting( 'location_name', '' );
-
-					if ( ! empty( $location_name ) && ! empty( $this->location_id ) ) {
-						$user_message = sprintf(
-							/* translators: 1: Location name, 2: Location ID */
-							__( 'The GoHighLevel location "%1$s" (ID: %2$s) is not active. This location may have been paused, deleted, or deactivated in your GoHighLevel account. Please check your GHL dashboard and reconnect with an active location.', 'syncly' ),
-							esc_html( $location_name ),
-							esc_html( $this->location_id )
-						);
-					} elseif ( ! empty( $this->location_id ) ) {
-						$user_message = sprintf(
-							/* translators: %s: Location ID */
-							__( 'The GoHighLevel location (ID: %s) is not active. This location may have been paused, deleted, or deactivated in your GoHighLevel account. Please check your GHL dashboard and reconnect with an active location.', 'syncly' ),
-							esc_html( $this->location_id )
-						);
-					} else {
-						$user_message = __( 'The GoHighLevel location is not active. This location may have been paused, deleted, or deactivated in your GoHighLevel account. Please check your GHL dashboard and reconnect with an active location.', 'syncly' );
+			$status   = is_wp_error( $response ) ? 0 : (int) wp_remote_retrieve_response_code( $response );
+			$decoded  = is_wp_error( $response ) ? [] : json_decode( wp_remote_retrieve_body( $response ), true );
+			$decoded  = is_array( $decoded ) ? $decoded : [];
+			if ( 200 !== $status || empty( $decoded['access_token'] ) || empty( $decoded['refresh_token'] ) ) {
+				$retry_after = is_wp_error( $response ) ? '' : (string) wp_remote_retrieve_header( $response, 'retry-after' );
+				$failure     = \Syncly\API\OAuth\OAuthFailure::normalize( $status, $decoded, $retry_after );
+				if ( 'duplicate' !== $failure['category'] ) {
+					$failed                            = \Syncly\API\OAuth\OAuthFailure::failed_state( $state, $failure );
+					$failed['oauth_health_checked_at'] = current_time( 'mysql' );
+					if ( $repository->save_oauth_state( $failed, $this->oauth_revision ) && 'permanent_auth' === $failure['category'] ) {
+						update_option( 'syncly_connection_verified', false, false );
+						self::unschedule_background_refresh();
+						$this->queue_oauth_health_notice( $failure['message'] );
 					}
-				} else {
-					$user_message = __( 'GoHighLevel rejected the refresh token. Please reconnect your account.', 'syncly' );
 				}
-
-				$this->log_oauth_event( 'Refresh token rejected by provider; clearing stored tokens', $decoded_array );
-				$this->clear_oauth_tokens();
-				$this->update_oauth_health( 'reconnect_required', $user_message );
-				// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Third argument is machine-readable context, not HTML output.
-				throw new ApiException(
-					$user_message,
-					(int) $status_code
+				$this->reload_settings();
+				throw new AuthenticationException(
+					$failure['message'],
+					[
+						'category' => $failure['category'],
+						'code'     => $failure['code'],
+					]
 				);
 			}
-
-			// Fallback: attempt reconnect API once to recover tokens
-			if ( ! empty( $this->location_id ) ) {
-				try {
-					$this->log_oauth_event( 'Primary refresh failed, attempting reconnect', [ 'location_id' => $this->location_id ] );
-					$auth_code                     = $this->reconnect_api();
-					$redirect_uri                  = $this->get_oauth_callback_redirect_uri();
-					$token_payload                 = $this->exchange_code_for_token( $auth_code, $redirect_uri );
-					$expires_at                    = time() + ( $token_payload['expires_in'] ?? 3600 );
-					$this->access_token_expires_at = $expires_at;
-					$this->save_oauth_tokens( $expires_at );
-					$this->log_oauth_event( 'Reconnect succeeded after refresh failure', [ 'expires_at' => $expires_at ] );
-
-					return $token_payload;
-				} catch ( ApiException $reconnect_error ) {
-					$this->log_oauth_event(
-						'Reconnect attempt failed',
-						[
-							'refresh_error'   => $decoded_array['message'] ?? 'unknown',
-							'reconnect_error' => $reconnect_error->getMessage(),
-						]
-					);
-					// If reconnect also fails, bubble original refresh error with context
-					// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Third argument is machine-readable context, not HTML output.
-					throw new ApiException(
-						sprintf(
-							/* translators: 1: refresh error, 2: reconnect error */
-							esc_html__( 'Failed to refresh access token (%1$s) and reconnect failed (%2$s)', 'syncly' ),
-							esc_html( $decoded_array['message'] ?? 'unknown' ),
-							esc_html( $reconnect_error->getMessage() )
-						),
-						(int) $status_code
-					);
-				}
-			}
-
-			$refresh_error = $decoded_array['message'] ?? 'Failed to refresh access token';
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Message is sanitized and consumed by error handlers.
-			throw new ApiException(
-				esc_html( sanitize_text_field( $refresh_error ) ),
-				(int) $status_code
-			);
-		}
-
-		// Update tokens
-		$this->access_token = $decoded['access_token'];
-		if ( ! empty( $decoded['refresh_token'] ) ) {
+			$this->access_token  = $decoded['access_token'];
 			$this->refresh_token = $decoded['refresh_token'];
-		}
-
-		// Persist refreshed tokens and expiry so new requests use the latest values
-		$expires_at                    = time() + ( $decoded['expires_in'] ?? 3600 );
-		$this->access_token_expires_at = $expires_at;
-		$this->save_oauth_tokens( $expires_at );
-
-		$this->clear_refresh_cooldown();
-		$this->mark_oauth_healthy();
-
-		// Release the refresh lock
-		$this->release_refresh_lock();
-
-		$this->log_oauth_event( 'Token refresh succeeded', [ 'expires_at' => $expires_at ] );
-
-		return $decoded;
+			$this->save_oauth_tokens( time() + (int) ( $decoded['expires_in'] ?? 3600 ) );
+			return $decoded;
 		} finally {
 			$this->release_refresh_lock();
 		}
@@ -1591,31 +1360,19 @@ class Client implements ClientInterface {
 	 * @return bool True when this process owns the lock.
 	 */
 	private function acquire_refresh_lock(): bool {
-		$lock = [
-			'pid'     => getmypid(),
-			'created' => time(),
-		];
-
-		if ( add_option( self::REFRESH_LOCK_KEY, $lock, '', 'no' ) ) {
-			return true;
-		}
-
-		$current = get_option( self::REFRESH_LOCK_KEY, [] );
-		if ( is_array( $current ) && ! empty( $current['created'] ) && time() - (int) $current['created'] > self::REFRESH_LOCK_TTL ) {
-			delete_option( self::REFRESH_LOCK_KEY );
-			return add_option( self::REFRESH_LOCK_KEY, $lock, '', 'no' );
-		}
-
-		return false;
+		$this->refresh_mutex = new \Syncly\API\OAuth\OptionMutex( self::REFRESH_LOCK_KEY );
+		return $this->refresh_mutex->acquire( self::REFRESH_LOCK_TTL );
 	}
 
 	/**
-	 * Release the refresh mutex.
+	 * Release only the lease owned by this client.
 	 *
 	 * @return void
 	 */
 	private function release_refresh_lock(): void {
-		delete_option( self::REFRESH_LOCK_KEY );
+		if ( null !== $this->refresh_mutex ) {
+			$this->refresh_mutex->release();
+		}
 	}
 
 	/**
@@ -1646,6 +1403,9 @@ class Client implements ClientInterface {
 	 * @throws ApiException On missing location ID, throttle, network error, or invalid response.
 	 */
 	public function reconnect_api(): string {
+		if ( ! \Syncly\API\OAuth\OAuthFailure::allows_attempt( \Syncly\Core\Settings\SettingsRepository::get_instance()->get_oauth_state() ) ) {
+			throw new AuthenticationException( 'OAuth circuit is open. Please reconnect your account or wait for backoff.' );
+		}
 		if ( empty( $this->location_id ) ) {
 			throw new ApiException( esc_html__( 'Missing location ID for HighLevel reconnect', 'syncly' ) );
 		}
@@ -1839,7 +1599,7 @@ class Client implements ClientInterface {
 	 * - Calls ensure_fresh_access_token() before sending (proactive refresh)
 	 * - On 401, attempts refresh_access_token() and retries once
 	 * - On refresh failure, reloads settings to check for concurrent refresh
-	 * - Clears tokens only if genuinely expired (not just refreshed by another process)
+	 * - Quarantines credentials only on confirmed permanent OAuth failure
 	 *
 	 * Response Handling:
 	 * - Stores response headers for rate-limit inspection
@@ -1938,8 +1698,6 @@ class Client implements ClientInterface {
 				// Attempt to refresh the token
 				$this->refresh_access_token();
 
-				// Save refreshed tokens
-				$this->save_oauth_tokens();
 				$this->log_oauth_event( 'Retrying request after 401 with refreshed token', [ 'url' => $url ] );
 
 				// Set flag to prevent handle_http_response from also attempting refresh
@@ -1972,7 +1730,7 @@ class Client implements ClientInterface {
 					]
 				);
 				// NEVER clear tokens on temporary failures (timeout, 5xx, throttle)
-				// Only clear_oauth_tokens() is called on invalid_grant inside refresh_access_token()
+				// Permanent refresh failures quarantine credentials through the bundle store.
 				// Keeping the refresh token allows recovery on the next attempt
 			}
 		}
@@ -2086,27 +1844,48 @@ class Client implements ClientInterface {
 	 * @return void
 	 */
 	private function save_oauth_tokens( ?int $expires_at = null ): void {
-		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
-
-		// Update individual settings using SettingsManager (multisite-aware)
-		$settings_manager->update_setting( 'oauth_access_token', $this->access_token );
-		$settings_manager->update_setting( 'oauth_refresh_token', $this->refresh_token );
-
-		if ( null !== $expires_at ) {
-			$this->access_token_expires_at = $expires_at;
-			$settings_manager->update_setting( 'oauth_expires_at', $expires_at );
+		$repository = \Syncly\Core\Settings\SettingsRepository::get_instance();
+		$state      = $repository->get_oauth_state();
+		$state      = array_merge(
+			$state,
+			[
+				'oauth_access_token'      => $this->access_token,
+				'oauth_refresh_token'     => $this->refresh_token,
+				'oauth_expires_at'        => $expires_at ?? $this->access_token_expires_at,
+				'oauth_connected_at'      => current_time( 'mysql' ),
+				'oauth_health_status'     => 'healthy',
+				'oauth_health_message'    => '',
+				'oauth_health_checked_at' => current_time( 'mysql' ),
+				'oauth_failure_count'     => 0,
+				'oauth_failure_category'  => '',
+				'oauth_last_failure'      => 0,
+				'oauth_next_attempt'      => 0,
+				'oauth_error_code'        => '',
+			]
+		);
+		if ( ! $repository->save_oauth_state( $state, $this->oauth_revision ) ) {
+			$this->reload_settings();
+			throw new AuthenticationException( 'OAuth credentials changed concurrently. Please retry.' );
 		}
-
-		$this->mark_oauth_healthy();
+		$this->reload_settings();
+		$this->clear_refresh_cooldown();
+		update_option(
+			'syncly_connection_verified',
+			[
+				'verified'    => true,
+				'method'      => 'oauth2',
+				'verified_at' => current_time( 'mysql' ),
+			],
+			false
+		);
 	}
 
 	/**
 	 * Clear all OAuth2 tokens from in-memory state and the database.
 	 *
 	 * Called when:
-	 * - GHL returns `invalid_grant` (token permanently revoked)
 	 * - Admin disconnects the account
-	 * - Refresh fails and tokens are genuinely expired
+	 * Permanent provider failures quarantine credentials using the same bundle store.
 	 *
 	 * Also clears refresh cooldown to avoid confusing
 	 * "temporarily disabled" errors after a manual disconnect.
@@ -2114,31 +1893,24 @@ class Client implements ClientInterface {
 	 * @return void
 	 */
 	public function clear_oauth_tokens(): void {
-		$this->access_token  = '';
-		$this->refresh_token = '';
-
-		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
-
-		// Delete OAuth settings using SettingsManager (multisite-aware)
-		$settings_manager->delete_setting( 'oauth_access_token' );
-		$settings_manager->delete_setting( 'oauth_refresh_token' );
-		$settings_manager->delete_setting( 'oauth_expires_at' );
-		$settings_manager->update_setting( 'oauth_health_status', 'reconnect_required' );
-		$settings_manager->update_setting( 'oauth_health_message', __( 'OAuth tokens were cleared and the account must be reconnected.', 'syncly' ) );
-		$settings_manager->update_setting( 'oauth_health_checked_at', current_time( 'mysql' ) );
-		$settings_manager->update_option( 'syncly_connection_verified', false );
-
-		$this->clear_refresh_cooldown();
-		/*
-		 * Trigger a custom action to notify other parts of the plugin that the connection status has changed.
-		 * This allows other components to react to the token clearance, such as disabling features or prompting for reconnection.
-		 * @param bool $is_connected Current connection status (false since tokens are cleared).
-		 * @param string $reason Reason for the status change ('oauth_tokens_cleared').
-		 */
-		do_action( 'syncly_connection_status_changed', false, 'oauth_tokens_cleared' );
-
-		// Unschedule background refresh since we no longer have tokens
-		self::unschedule_background_refresh();
+		if ( ! $this->acquire_refresh_lock() ) {
+			throw new AuthenticationException( 'Another token refresh is in progress.' );
+		}
+		try {
+			$this->reload_settings();
+			$repository = \Syncly\Core\Settings\SettingsRepository::get_instance();
+			$state      = $repository->get_oauth_state();
+			$failure    = \Syncly\API\OAuth\OAuthFailure::normalize( 400, [ 'error' => 'invalid_grant' ] );
+			if ( ! $repository->save_oauth_state( \Syncly\API\OAuth\OAuthFailure::failed_state( $state, $failure ), $this->oauth_revision ) ) {
+				throw new AuthenticationException( 'OAuth credentials changed concurrently. Please retry.' );
+			}
+			$this->reload_settings();
+			update_option( 'syncly_connection_verified', false, false );
+			self::unschedule_background_refresh();
+			do_action( 'syncly_connection_status_changed', false, 'oauth_tokens_cleared' );
+		} finally {
+			$this->release_refresh_lock();
+		}
 	}
 
 	// =========================================================================

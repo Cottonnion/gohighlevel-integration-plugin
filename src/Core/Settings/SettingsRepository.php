@@ -23,6 +23,59 @@ class SettingsRepository {
 	 */
 	private const OPTION_NAME = 'syncly_settings';
 
+	private const OAUTH_OPTION = 'syncly_oauth_state';
+	private const OAUTH_KEYS   = [ 'oauth_access_token', 'oauth_refresh_token', 'oauth_expires_at', 'oauth_connected_at', 'oauth_health_status', 'oauth_health_message', 'oauth_health_checked_at', 'oauth_revision', 'oauth_failure_count', 'oauth_failure_category', 'oauth_last_failure', 'oauth_next_attempt', 'oauth_error_code' ];
+
+	/**
+	 * Read or migrate the encrypted credential source without stale option caches.
+	 *
+	 * @return array Decrypted OAuth state.
+	 */
+	public function get_oauth_state(): array {
+		global $wpdb;
+		$raw = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", self::OAUTH_OPTION ) );
+		if ( null === $raw ) {
+			$legacy = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", self::OPTION_NAME ) );
+			$legacy = null === $legacy ? [] : maybe_unserialize( $legacy );
+			$state  = array_intersect_key( is_array( $legacy ) ? $legacy : [], array_flip( self::OAUTH_KEYS ) );
+			$state  = array_merge(
+				[
+					'oauth_access_token'  => '',
+					'oauth_refresh_token' => '',
+					'oauth_expires_at'    => 0,
+					'oauth_revision'      => 0,
+				],
+				$state
+			);
+			$state  = $this->encrypt_sensitive_settings( $this->decrypt_sensitive_settings( $state ) );
+			add_option( self::OAUTH_OPTION, $state, '', false );
+			$raw = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", self::OAUTH_OPTION ) );
+		}
+		return $this->decrypt_sensitive_settings( (array) maybe_unserialize( $raw ) );
+	}
+
+	/**
+	 * Atomically replace the encrypted credential and health bundle.
+	 *
+	 * @param array $state Complete decrypted state.
+	 * @param int   $expected_revision Revision originally loaded by this writer.
+	 * @return bool Whether the compare-and-swap succeeded.
+	 */
+	public function save_oauth_state( array $state, int $expected_revision ): bool {
+		global $wpdb;
+		$raw     = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", self::OAUTH_OPTION ) );
+		$current = (array) maybe_unserialize( $raw );
+		if ( null === $raw || (int) ( $current['oauth_revision'] ?? 0 ) !== $expected_revision ) {
+			return false;
+		}
+		$state                   = array_intersect_key( $state, array_flip( self::OAUTH_KEYS ) );
+		$state['oauth_revision'] = $expected_revision + 1;
+		$stored                  = maybe_serialize( $this->encrypt_sensitive_settings( $state ) );
+		$saved                   = 1 === $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s AND BINARY option_value = BINARY %s", $stored, self::OAUTH_OPTION, $raw ) );
+		wp_cache_delete( self::OAUTH_OPTION, 'options' );
+		return $saved;
+	}
+
 	/**
 	 * Sensitive keys that should be encrypted at rest.
 	 *
@@ -81,13 +134,13 @@ class SettingsRepository {
 	public function get_settings_array( ?int $site_id = null ): array {
 		if ( is_multisite() && null !== $site_id && $site_id !== get_current_blog_id() ) {
 			switch_to_blog( $site_id );
-			$settings = get_option( self::OPTION_NAME, [] );
+			$settings = $this->decrypt_sensitive_settings( get_option( self::OPTION_NAME, [] ) );
+			$settings = array_merge( $settings, $this->get_oauth_state() );
 			restore_current_blog();
 		} else {
-			$settings = get_option( self::OPTION_NAME, [] );
+			$settings = $this->decrypt_sensitive_settings( get_option( self::OPTION_NAME, [] ) );
+			$settings = array_merge( $settings, $this->get_oauth_state() );
 		}
-
-		$settings = $this->decrypt_sensitive_settings( $settings );
 
 		// Return with defaults
 		return wp_parse_args(
@@ -125,15 +178,19 @@ class SettingsRepository {
 	 * @return bool
 	 */
 	public function save_site_settings( array $settings, ?int $site_id = null ): bool {
-		$settings_to_store = $this->encrypt_sensitive_settings( $settings );
-
 		if ( is_multisite() && null !== $site_id && $site_id !== get_current_blog_id() ) {
 			switch_to_blog( $site_id );
-			$old   = get_option( self::OPTION_NAME );
-			$saved = update_option( self::OPTION_NAME, $settings_to_store, false );
-			restore_current_blog();
-			return $saved || $old === $settings_to_store;
+			try {
+				return $this->save_site_settings( $settings );
+			} finally {
+				restore_current_blog();
+			}
 		}
+		// Migrate before a general save can remove the legacy credential fields.
+		$this->get_oauth_state();
+		// General settings snapshots cannot write credentials or OAuth health.
+		$settings          = array_diff_key( $settings, array_flip( self::OAUTH_KEYS ) );
+		$settings_to_store = $this->encrypt_sensitive_settings( $settings );
 
 		$old   = get_option( self::OPTION_NAME );
 		$saved = update_option( self::OPTION_NAME, $settings_to_store, false );
@@ -197,6 +254,9 @@ class SettingsRepository {
 	 * @return bool True on success, false on failure.
 	 */
 	public function update_setting( string $key, $value, ?int $site_id = null ): bool {
+		if ( in_array( $key, self::OAUTH_KEYS, true ) ) {
+			return false; // Credentials require a complete revision-checked bundle.
+		}
 		// Get current settings
 		$settings = $this->get_settings_array( $site_id );
 
@@ -215,6 +275,9 @@ class SettingsRepository {
 	 * @return bool True on success, false on failure.
 	 */
 	public function delete_setting( string $key, ?int $site_id = null ): bool {
+		if ( in_array( $key, self::OAUTH_KEYS, true ) ) {
+			return false; // Credentials require a complete revision-checked bundle.
+		}
 		// Get current settings
 		$settings = $this->get_settings_array( $site_id );
 
@@ -309,6 +372,10 @@ class SettingsRepository {
 		// Get current settings
 		$settings = $this->get_settings_array( $site_id );
 
+		if ( ! \Syncly\API\OAuth\OAuthFailure::allows_attempt( $settings ) ) {
+			return false;
+		}
+
 		$has_oauth = ! empty( $settings['oauth_access_token'] ) && ! empty( $settings['location_id'] );
 
 		if ( ! $has_oauth ) {
@@ -394,7 +461,7 @@ class SettingsRepository {
 		$encrypted = openssl_encrypt( $value, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv );
 
 		if ( false === $encrypted ) {
-			return $value; // Fallback to plaintext to avoid data loss.
+			throw new \RuntimeException( 'Unable to encrypt Syncly credentials.' );
 		}
 
 		return base64_encode( $encrypted );

@@ -2,6 +2,22 @@
 
 All notable changes to Syncly will be documented in this file.
 
+## [1.4.47] - 2026-10-10
+
+### Fixed
+
+- Coordinated OAuth refresh and silent reconnect through one per-site lease, with fresh credential reads after acquiring it and ownership-safe lock release.
+- Committed encrypted access token, rotating refresh token, expiry, and health together; revision checks prevent stale writers and general settings saves from replacing newer credentials.
+- Recognized proxy-wrapped permanent OAuth errors, quarantined rejected credentials, stopped automatic refresh, and preserved queued work for manual reconnection.
+- Removed immediate retries after ambiguous refresh timeouts and automatic refresh/reconnect fallback loops.
+- Serialized recurring schedule migration and creation, enabled Action Scheduler uniqueness, and preserved completed history and pending one-shot actions.
+
+### Added
+
+- Persistent OAuth failure categories and exponential backoff, including Retry-After handling for HTTP 429 and recovery-state reset on success.
+- OAuth WP-Cron fallback, throttled administrator notices, and a Site Health recommendation when refresh scheduling is overdue.
+- Client reliability documentation and regression coverage. Low-traffic sites still require traffic or a real server cron trigger; OAuth proxy idempotency changes are outside this release.
+
 ## [1.4.46] - 2026-10-09
 
 ### Changed

@@ -41,11 +41,6 @@ class QueueManager {
 	private const PROCESSING_INTERVAL = 5 * MINUTE_IN_SECONDS;
 
 	/**
-	 * Queue schedule schema version
-	 */
-	private const QUEUE_SCHEDULE_VERSION = 2;
-
-	/**
 	 * Singleton instance
 	 *
 	 * @var self|null
@@ -142,49 +137,7 @@ class QueueManager {
 	 * @return void
 	 */
 	public function schedule_queue_processor(): void {
-		$this->maybe_migrate_queue_schedule();
-
-		// Schedule recurring action via Action Scheduler (runs every 5 minutes)
-		if ( function_exists( 'as_next_scheduled_action' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {
-			$next_scheduled = as_next_scheduled_action( 'syncly_process_queue' );
-
-			if ( false === $next_scheduled ) {
-				as_schedule_recurring_action( time(), self::PROCESSING_INTERVAL, 'syncly_process_queue', [], 'syncly' );
-			}
-		} elseif ( ! wp_next_scheduled( 'syncly_process_queue' ) ) {
-			// Fallback to WP-Cron if Action Scheduler not available or not yet initialized.
-			wp_schedule_event( time(), 'syncly_5min', 'syncly_process_queue' );
-		}
-	}
-
-	/**
-	 * One-time migration to replace older high-frequency schedules.
-	 *
-	 * @return void
-	 */
-	private function maybe_migrate_queue_schedule(): void {
-		$stored_version = (int) get_option( 'syncly_queue_schedule_version', 0 );
-		if ( $stored_version >= self::QUEUE_SCHEDULE_VERSION ) {
-			return;
-		}
-
-		$did_unschedule = false;
-
-		if ( function_exists( 'as_unschedule_all_actions' ) && class_exists( 'ActionScheduler' ) && \ActionScheduler::is_initialized() ) {
-			as_unschedule_all_actions( 'syncly_process_queue', [], 'syncly' );
-			$did_unschedule = true;
-		}
-
-		$timestamp = wp_next_scheduled( 'syncly_process_queue' );
-		while ( $timestamp ) {
-			wp_unschedule_event( $timestamp, 'syncly_process_queue' );
-			$timestamp      = wp_next_scheduled( 'syncly_process_queue' );
-			$did_unschedule = true;
-		}
-
-		if ( $did_unschedule || ! function_exists( 'as_unschedule_all_actions' ) ) {
-			update_option( 'syncly_queue_schedule_version', self::QUEUE_SCHEDULE_VERSION, false );
-		}
+		\Syncly\API\OAuth\RecurringSchedule::ensure( 'syncly_process_queue', self::PROCESSING_INTERVAL, 'syncly_5min' );
 	}
 
 	/**
@@ -418,7 +371,7 @@ class QueueManager {
 		// CRITICAL: Skip processing if OAuth is not connected
 		// Prevents burning retry attempts when auth is down
 		$settings_manager = \Syncly\Core\SettingsManager::get_instance();
-		if ( ! $settings_manager->is_connection_verified() ) {
+		if ( ! \Syncly\API\OAuth\OAuthFailure::allows_attempt( $settings_manager->get_settings_array() ) || ! $settings_manager->is_connection_verified() ) {
 			return;
 		}
 
@@ -864,13 +817,7 @@ class QueueManager {
 
 			// Check if it's an authentication/token error (circuit breaker, token refresh failure, etc.)
 			// Don't burn retry attempts on auth errors - the item itself isn't broken, auth is.
-			$is_auth_error = ( $e instanceof \Syncly\API\Exceptions\AuthenticationException )
-				|| false !== stripos( $e->getMessage(), 'Token refresh' )
-				|| false !== stripos( $e->getMessage(), 'refresh temporarily disabled' )
-				|| false !== stripos( $e->getMessage(), 'No refresh token' )
-				|| false !== stripos( $e->getMessage(), 'No authentication method' )
-				|| false !== stripos( $e->getMessage(), 'reconnect your account' )
-				|| false !== stripos( $e->getMessage(), 'Recent refresh attempt' );
+			$is_auth_error = \Syncly\API\OAuth\OAuthFailure::is_authentication_error( $e );
 
 			if ( $is_auth_error ) {
 				// Roll back the attempt counter - don't penalize the item for auth issues.

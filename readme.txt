@@ -4,7 +4,7 @@ Tags: gohighlevel, wpfusion, contact-sync, woocommerce, leadconnector
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.4.46
+Stable tag: 1.4.47
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -133,10 +133,21 @@ Yes. If you use WP Fusion to connect WordPress to GoHighLevel, Syncly offers com
 
 == Upgrade Notice ==
 
+= 1.4.47 =
+Improves OAuth refresh coordination, retry backoff, and background scheduling. Connections with rejected refresh tokens require manual reconnection. Idle sites need a real server cron trigger.
+
 = 1.4.46 =
 Documentation and listing refresh: clearer feature descriptions, new FAQs, corrected free vs Pro boundaries, and updated links. No functional changes to syncing.
 
 == Changelog ==
+
+= 1.4.47 =
+* Fixed overlapping OAuth refresh attempts by sharing a per-site lock and reloading current credentials before refresh.
+* Saved encrypted token pairs, expiry, and health together with revision checks to prevent stale settings overwrites.
+* Recognized nested invalid-refresh-token and inactive-location errors, paused automatic attempts, and added throttled administrator notices.
+* Added persistent retry backoff for temporary failures and Retry-After handling for rate limits; sync work remains recoverable while authentication is unavailable.
+* Removed immediate timeout retries and automatic refresh/reconnect fallback loops.
+* Deduplicated pending recurring queue and OAuth refresh schedules, added OAuth WP-Cron fallback, and added a Site Health recommendation for overdue refresh jobs.
 
 = 1.4.46 =
 * Refreshed the WordPress.org listing with a clearer short description, natural keyword coverage, and a new "Built for GoHighLevel" section.

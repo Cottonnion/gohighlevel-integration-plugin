@@ -119,11 +119,17 @@ if (! class_exists('WooCommerce') ) {
 // ActionScheduler::is_initialized() work without the real library.
 if (! class_exists('ActionScheduler') ) {
 	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedClassFound
-    class ActionScheduler
-    {
-        public static function is_initialized(): bool
-        {
-            return true;
-        }
-    }
+	class ActionScheduler {
+
+		public static bool $initialized = true;
+		public static $test_store;
+
+		public static function is_initialized(): bool {
+			return self::$initialized;
+		}
+
+		public static function store() {
+			return self::$test_store;
+		}
+	}
 }
