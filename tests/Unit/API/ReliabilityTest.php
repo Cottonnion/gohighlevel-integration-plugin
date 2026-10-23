@@ -55,6 +55,30 @@ class ReliabilityTest extends TestCase
         $this->assertNull($method->invoke($client, [ 'retry-after' => 'invalid' ]));
     }
 
+    public function test_response_headers_are_normalized_for_array_and_dictionary_shapes(): void
+    {
+        $client = (new \ReflectionClass(Client::class))->newInstanceWithoutConstructor();
+        $method = (new \ReflectionClass(Client::class))->getMethod('normalize_response_headers');
+        $method->setAccessible(true);
+
+        $dictionary = new class {
+            public function getAll(): array
+            {
+                return [ 'x-ratelimit-remaining' => '5' ];
+            }
+        };
+
+        $this->assertSame(
+            [ 'x-ratelimit-remaining' => '5' ],
+            $method->invoke($client, $dictionary)
+        );
+        $this->assertSame(
+            [ 'content-type' => 'application/json' ],
+            $method->invoke($client, [ 'content-type' => 'application/json' ])
+        );
+        $this->assertSame([], $method->invoke($client, 'unexpected'));
+    }
+
     public function test_webhook_rejects_malformed_json_before_processing(): void
     {
         $settings = Mockery::mock(SettingsManager::class);

@@ -4,6 +4,25 @@ Internal changelog with full technical details. **Not included in release zips.*
 
 ---
 
+## [1.4.48] - 2026-10-23
+
+### Fixed
+
+- Added `Client::normalize_response_headers()` and routed the three `wp_remote_retrieve_headers()` call sites in `Client::request()` through it. WordPress can return either a `WpOrg\Requests\Utility\CaseInsensitiveDictionary` or a plain array; calling `getAll()` on the array shape caused a fatal error that surfaced from the manual queue runner as `A fatal error occurred while processing the queue: Call to a member function getAll() on array`.
+- Added `ReliabilityTest::test_response_headers_are_normalized_for_array_and_dictionary_shapes()` covering dictionary, array, and unexpected scalar inputs.
+
+### Documentation
+
+- Refreshed `readme.txt` description, FAQs, Screenshots, and Upgrade Notice copy; retained `Tested up to: 7.1` and external service disclosures.
+- Bumped `syncly.php` header and `SYNCLY_VERSION`, `readme.txt` stable tag, and the `README.md` version badge to 1.4.48.
+
+### Validation
+
+- `composer lint` passes.
+- Focused ReliabilityTest run: 3 tests, 12 assertions passed on PHP 8.5.11.
+
+---
+
 ## [1.4.47] - 2026-10-10
 
 ### OAuth reliability

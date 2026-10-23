@@ -1587,6 +1587,24 @@ class Client implements ClientInterface {
 	}
 
 	/**
+	 * Normalize response headers into a plain array.
+	 *
+	 * wp_remote_retrieve_headers() may return either a CaseInsensitiveDictionary
+	 * (which exposes getAll()) or a plain array depending on the HTTP transport
+	 * or filters applied to the response.
+	 *
+	 * @param mixed $headers Raw headers from wp_remote_retrieve_headers().
+	 * @return array Normalized headers.
+	 */
+	private function normalize_response_headers( $headers ): array {
+		if ( is_object( $headers ) && method_exists( $headers, 'getAll' ) ) {
+			return (array) $headers->getAll();
+		}
+
+		return is_array( $headers ) ? $headers : [];
+	}
+
+	/**
 	 * Execute an HTTP request against the GHL API.
 	 *
 	 * Core request engine used by all HTTP verb helpers (get/post/put/delete).
@@ -1670,7 +1688,7 @@ class Client implements ClientInterface {
 
 			$status_code = wp_remote_retrieve_response_code( $response );
 			$response_headers = wp_remote_retrieve_headers( $response );
-			$this->last_response_headers = $response_headers->getAll();
+			$this->last_response_headers = $this->normalize_response_headers( $response_headers );
 
 			if ( $retry_count < self::MAX_TRANSIENT_RETRIES && $this->is_retryable_http_failure( $method, $status_code ) ) {
 				$retry_after = 429 === $status_code ? $this->get_retry_after_seconds( $this->last_response_headers ) : null;
@@ -1690,7 +1708,7 @@ class Client implements ClientInterface {
 		// Log full response
 
 		// Store headers for rate limit tracking
-		$this->last_response_headers = $headers->getAll();
+		$this->last_response_headers = $this->normalize_response_headers( $headers );
 
 		// Handle 401 with OAuth2 - try to refresh token
 		if ( 401 === $status_code && $this->is_oauth_configured() && ! empty( $this->refresh_token ) && ! $this->refresh_failed_this_request ) {
@@ -1713,7 +1731,7 @@ class Client implements ClientInterface {
 					$status_code                 = wp_remote_retrieve_response_code( $response );
 					$body                        = wp_remote_retrieve_body( $response );
 					$headers                     = wp_remote_retrieve_headers( $response );
-					$this->last_response_headers = $headers->getAll();
+					$this->last_response_headers = $this->normalize_response_headers( $headers );
 				}
 			} catch ( ApiException $e ) {
 				$this->is_retrying_after_refresh   = false;

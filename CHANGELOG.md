@@ -2,6 +2,20 @@
 
 All notable changes to Syncly will be documented in this file.
 
+## [1.4.48] - 2026-10-23
+
+### Fixed
+
+- Prevented a fatal `Call to a member function getAll() on array` error during API requests by normalizing response headers whether WordPress returns a `CaseInsensitiveDictionary` or a plain array.
+
+### Changed
+
+- Refreshed the WordPress.org listing description and FAQ with clearer feature boundaries, privacy details, and form integration guidance.
+
+### Added
+
+- Regression coverage for both response header shapes in the API reliability test suite.
+
 ## [1.4.47] - 2026-10-10
 
 ### Fixed
