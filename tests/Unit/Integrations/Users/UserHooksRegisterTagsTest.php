@@ -26,6 +26,14 @@ namespace Syncly\Tests\Unit\Integrations\Users {
 	use Syncly\Tests\TestCase;
 
 	class UserHooksRegisterTagsTest extends TestCase {
+		private function set_property( string $class_name, string $property_name, $target, $value ): void {
+			$property = new \ReflectionProperty( $class_name, $property_name );
+			if ( PHP_VERSION_ID < 80100 ) {
+				$property->setAccessible( true );
+			}
+			$property->setValue( $target, $value );
+		}
+
 		public function test_external_tags_are_included_in_registration_contact_payload(): void {
 			Functions\when( 'is_multisite' )->justReturn( false );
 			Functions\when( 'get_site_url' )->justReturn( 'https://example.com' );
@@ -40,10 +48,10 @@ namespace Syncly\Tests\Unit\Integrations\Users {
 			$settings->shouldReceive( 'get_location_register_tags' )->andReturn( [ 'default' ] );
 			$roles = Mockery::mock( RoleTagsManager::class );
 			$roles->shouldReceive( 'get_user_role_tags' )->with( 42 )->andReturn( [ 'role' ] );
-			( new \ReflectionProperty( RoleTagsManager::class, 'instance' ) )->setValue( null, $roles );
+			$this->set_property( RoleTagsManager::class, 'instance', null, $roles );
 
 			$hooks = ( new \ReflectionClass( UserHooks::class ) )->newInstanceWithoutConstructor();
-			( new \ReflectionProperty( UserHooks::class, 'settings_manager' ) )->setValue( $hooks, $settings );
+			$this->set_property( UserHooks::class, 'settings_manager', $hooks, $settings );
 			$payload = $hooks->build_register_payload( new \WP_User() );
 
 			$this->assertSame( 'new@example.com', $payload['email'] );

@@ -10,6 +10,14 @@ use Syncly\Sync\QueueManager;
 use Syncly\Tests\TestCase;
 
 class DirectSyncTest extends TestCase {
+	private function set_property( string $class_name, string $property_name, $target, $value ): void {
+		$property = new \ReflectionProperty( $class_name, $property_name );
+		if ( PHP_VERSION_ID < 80100 ) {
+			$property->setAccessible( true );
+		}
+		$property->setValue( $target, $value );
+	}
+
 	/**
 	 * @runInSeparateProcess
 	 * @preserveGlobalState disabled
@@ -43,7 +51,7 @@ class DirectSyncTest extends TestCase {
 		$settings->shouldReceive( 'get_settings_array' )->andReturn( [] );
 		$settings->shouldReceive( 'is_connection_verified' )->andReturn( true );
 		$settings->shouldReceive( 'get_setting' )->with( 'location_id' )->andReturn( 'loc-test' );
-		( new \ReflectionProperty( SettingsManager::class, 'instance' ) )->setValue( null, $settings );
+		$this->set_property( SettingsManager::class, 'instance', null, $settings );
 
 		$manager = ( new \ReflectionClass( QueueManager::class ) )->newInstanceWithoutConstructor();
 		$processor = Mockery::mock( 'Syncly\\Sync\\QueueProcessor' );
@@ -54,7 +62,7 @@ class DirectSyncTest extends TestCase {
 		$logger = Mockery::mock( 'Syncly\\Sync\\QueueLogger' );
 		$logger->shouldReceive( 'log_event' )->twice()->andReturnNull();
 		foreach ( [ 'processor' => $processor, 'rate_limiter' => $limiter, 'logger' => $logger ] as $name => $value ) {
-			( new \ReflectionProperty( QueueManager::class, $name ) )->setValue( $manager, $value );
+			$this->set_property( QueueManager::class, $name, $manager, $value );
 		}
 		$child_result = null;
 		Functions\when( 'do_action' )->alias( static function ( $hook, $item ) use ( $manager, &$child_result ) {
@@ -99,14 +107,14 @@ class DirectSyncTest extends TestCase {
 		$settings->shouldReceive( 'get_settings_array' )->andReturn( [] );
 		$settings->shouldReceive( 'is_connection_verified' )->andReturn( true );
 		$settings->shouldReceive( 'get_setting' )->with( 'location_id' )->andReturn( 'loc-test' );
-		( new \ReflectionProperty( SettingsManager::class, 'instance' ) )->setValue( null, $settings );
+		$this->set_property( SettingsManager::class, 'instance', null, $settings );
 		$manager = ( new \ReflectionClass( QueueManager::class ) )->newInstanceWithoutConstructor();
 		$processor = Mockery::mock( 'Syncly\\Sync\\QueueProcessor' );
 		$processor->shouldReceive( 'execute_sync' )->once()->andReturn( [ 'success' => false, 'error' => 'GHL unavailable' ] );
 		$limiter = Mockery::mock( 'Syncly\\Sync\\RateLimiter' );
 		$limiter->shouldReceive( 'reserve_request' )->once()->andReturn( true );
 		foreach ( [ 'processor' => $processor, 'rate_limiter' => $limiter ] as $name => $value ) {
-			( new \ReflectionProperty( QueueManager::class, $name ) )->setValue( $manager, $value );
+			$this->set_property( QueueManager::class, $name, $manager, $value );
 		}
 
 		$this->assertSame( 72, $manager->add_to_queue( 'form', 7, 'add_tags', [ 'tags' => [ 'vip' ] ], 60 ) );
@@ -146,8 +154,7 @@ class DirectSyncTest extends TestCase {
 		$settings->shouldReceive( 'get_settings_array' )->andReturn( [] );
 		$settings->shouldReceive( 'is_connection_verified' )->andReturn( true );
 		$settings->shouldReceive( 'get_setting' )->with( 'location_id' )->andReturn( 'loc-test' );
-		$sm = new \ReflectionProperty( SettingsManager::class, 'instance' );
-		$sm->setValue( null, $settings );
+		$this->set_property( SettingsManager::class, 'instance', null, $settings );
 
 		$manager = ( new \ReflectionClass( QueueManager::class ) )->newInstanceWithoutConstructor();
 		$processor = Mockery::mock( 'Syncly\\Sync\\QueueProcessor' );
@@ -157,7 +164,7 @@ class DirectSyncTest extends TestCase {
 		$logger = Mockery::mock( 'Syncly\\Sync\\QueueLogger' );
 		$logger->shouldReceive( 'log_event' )->andReturnNull();
 		foreach ( [ 'processor' => $processor, 'rate_limiter' => $limiter, 'logger' => $logger ] as $name => $value ) {
-			( new \ReflectionProperty( QueueManager::class, $name ) )->setValue( $manager, $value );
+			$this->set_property( QueueManager::class, $name, $manager, $value );
 		}
 
 		$result = $manager->add_to_queue( 'user', 42, 'user_register', [ 'email' => 'direct@example.com' ] );
@@ -189,7 +196,7 @@ class DirectSyncTest extends TestCase {
 		$GLOBALS['wpdb'] = $wpdb;
 		$settings = Mockery::mock( SettingsManager::class );
 		$settings->shouldReceive( 'is_connection_verified' )->andReturn( false );
-		( new \ReflectionProperty( SettingsManager::class, 'instance' ) )->setValue( null, $settings );
+		$this->set_property( SettingsManager::class, 'instance', null, $settings );
 		$manager = ( new \ReflectionClass( QueueManager::class ) )->newInstanceWithoutConstructor();
 		$this->assertSame( 92, $manager->add_to_queue( 'user', 42, 'add_tags', [ 'tags' => [ 'vip' ] ] ) );
 	}
