@@ -19,6 +19,7 @@ $is_connected     = $oauth_status['connected'];
 // Check if logging is enabled
 $is_logging_enabled = \Syncly\Core\SettingsManager::is_sync_logging_enabled();
 $is_pro_active      = (bool) apply_filters( 'syncly_is_pro_active', false );
+$is_direct_sync     = defined( 'SYNCLY_DIRECT_SYNC' ) && SYNCLY_DIRECT_SYNC;
 
 // Get per-page preference from user meta (default 20)
 $current_user_id = get_current_user_id();
@@ -86,6 +87,11 @@ $total_pages = ceil( $log_count / $logs_per_page );
 	<?php endif; ?>
 
 	<!-- Status Info -->
+	<?php if ( $is_direct_sync ) : ?>
+		<div class="notice notice-info inline">
+			<p><?php esc_html_e( 'Direct sync is enabled through SYNCLY_DIRECT_SYNC. Syncly calls GHL during the originating request; operations that cannot complete immediately fall back to the queue. Direct results appear here when sync logging is enabled.', 'syncly' ); ?></p>
+		</div>
+	<?php endif; ?>
 	<div style="margin-bottom: 20px; padding: 12px 16px; background: #f0f0f1; border-left: 4px solid <?php echo $is_logging_enabled ? '#46b450' : '#dc3232'; ?>; font-size: 13px;">
 		<strong><?php esc_html_e( 'Logging:', 'syncly' ); ?></strong> 
 		<?php if ( $is_logging_enabled ) : ?>

@@ -2,6 +2,19 @@
 
 All notable changes to Syncly will be documented in this file.
 
+## [1.4.49] - 2026-11-07
+
+### Added
+
+- Added `SYNCLY_DIRECT_SYNC` as an opt-in constant for immediate outbound GHL requests. Operations that cannot complete immediately retain the queue retry path.
+- Added `syncly_user_register_tags` so integrations can include known tags in the initial registration contact request.
+- Added a direct-mode notice to Sync Logs.
+
+### Fixed
+
+- Preserved dependency ordering for form and other follow-up operations in direct mode.
+- Applied pending and family tags immediately after registration without a same-request lock conflict or stale local tag state.
+
 ## [1.4.48] - 2026-10-23
 
 ### Fixed

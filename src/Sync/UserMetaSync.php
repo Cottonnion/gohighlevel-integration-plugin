@@ -99,11 +99,12 @@ class UserMetaSync {
 		$this->tag_manager->suppress_user_tags_updated_once( $user_id );
 
 		try {
-			// Flush pending tags (queued before contact existed).
-			$this->flush_pending_tags( $user_id, $contact_id, $item );
-
 			// Store/merge tags from result or payload.
 			$this->sync_tags( $user_id, $item, $result, $payload );
+
+			// Run pending tags after storing the parent result. A direct child
+			// may update the tag cache during this same callback.
+			$this->flush_pending_tags( $user_id, $contact_id, $item );
 
 			// For add_tags / remove_tags / update — full refresh from GHL.
 			$this->maybe_refresh_from_ghl( $user_id, $contact_id, $item );
@@ -187,47 +188,55 @@ class UserMetaSync {
 			return;
 		}
 
-		// Regular pending tags.
 		$pending_key  = $this->tag_manager->get_pending_tags_meta_key();
+		$family_key   = $this->tag_manager->get_pending_family_tags_meta_key();
 		$pending_tags = get_user_meta( $user_id, $pending_key, true );
-		if ( is_array( $pending_tags ) && ! empty( $pending_tags ) ) {
-			$normalized   = $this->tag_manager->normalize_tag_input( $pending_tags );
-			$payload_tags = $this->tag_manager->prepare_tags_for_payload( $normalized['ids'], $normalized['pairs'] );
-
-			if ( ! empty( $payload_tags ) ) {
-				$this->queue_manager->add_to_queue(
-					'user',
-					$user_id,
-					'add_tags',
-					[
-						'contact_id' => $contact_id,
-						'tags'       => array_values( array_unique( $payload_tags ) ),
-						'reason'     => 'Pending tags applied after contact creation',
-					]
-				);
-			}
-
-			delete_user_meta( $user_id, $pending_key );
+		$family_tags  = get_user_meta( $user_id, $family_key, true );
+		$pending_tags = is_array( $pending_tags ) ? $pending_tags : [];
+		$family_tags  = is_array( $family_tags ) ? $family_tags : [];
+		if ( [] === $pending_tags && [] === $family_tags ) {
+			return;
 		}
 
-		// Family-inherited pending tags.
-		$family_key  = $this->tag_manager->get_pending_family_tags_meta_key();
-		$family_tags = get_user_meta( $user_id, $family_key, true );
-		if ( is_array( $family_tags ) && ! empty( $family_tags ) ) {
-			$payload_tags = $this->tag_manager->prepare_tags_for_payload( $family_tags );
+		$normalized = $this->tag_manager->normalize_tag_input( $pending_tags );
+		$tags       = array_merge(
+			$this->tag_manager->prepare_tags_for_payload( $normalized['ids'], $normalized['pairs'] ),
+			$this->tag_manager->prepare_tags_for_payload( $family_tags )
+		);
+		$tags       = array_values( array_unique( $tags ) );
+		if ( [] === $tags ) {
+			return;
+		}
 
-			$this->queue_manager->add_to_queue(
+		// A successful direct call fires this same hook recursively. Clear the
+		// pending markers first so the child cannot dispatch the tags twice.
+		if ( [] !== $pending_tags ) {
+			delete_user_meta( $user_id, $pending_key );
+		}
+		if ( [] !== $family_tags ) {
+			delete_user_meta( $user_id, $family_key );
+		}
+		$dispatched = false;
+		try {
+			$dispatched = false !== $this->queue_manager->add_to_queue(
 				'user',
 				$user_id,
 				'add_tags',
 				[
 					'contact_id' => $contact_id,
-					'tags'       => array_values( array_unique( $payload_tags ) ),
-					'reason'     => 'Family inheritance - pending tags applied after registration',
+					'tags'       => $tags,
+					'reason'     => 'Pending tags applied after contact creation',
 				]
 			);
-
-			delete_user_meta( $user_id, $family_key );
+		} finally {
+			if ( ! $dispatched ) {
+				if ( [] !== $pending_tags ) {
+					update_user_meta( $user_id, $pending_key, $pending_tags );
+				}
+				if ( [] !== $family_tags ) {
+					update_user_meta( $user_id, $family_key, $family_tags );
+				}
+			}
 		}
 	}
 

@@ -75,6 +75,9 @@ class QueueManager {
 	 */
 	private QueueLogger $logger;
 
+	/** @var array<string, true> Direct operations whose per-object lock this request owns. */
+	private array $active_direct_keys = [];
+
 	/**
 	 * Get instance
 	 *
@@ -143,7 +146,8 @@ class QueueManager {
 	/**
 	 * Add item to queue
 	 *
-	 * Intelligently adds a sync task to the queue with automatic duplicate prevention.
+	 * Dispatches directly when SYNCLY_DIRECT_SYNC is enabled, or stores a sync task
+	 * in the queue with automatic duplicate prevention.
 	 * If a pending item with the same type/id/action already exists, it updates the
 	 * payload with latest data instead of creating a duplicate row.
 	 *
@@ -172,6 +176,9 @@ class QueueManager {
 
 		$table_name      = $this->get_queue_table_name();
 		$current_site_id = get_current_blog_id();
+		if ( null !== $depends_on_queue_id ) {
+			$payload['_depends_on_queue_id'] = $depends_on_queue_id;
+		}
 
 		// Check for existing pending item
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Inspecting queue table for duplicate pending entry.
@@ -208,6 +215,13 @@ class QueueManager {
 			return $updated ? (int) $existing : false;
 		}
 
+		if ( defined( 'SYNCLY_DIRECT_SYNC' ) && SYNCLY_DIRECT_SYNC ) {
+			$direct_id = $this->try_direct_sync( $table_name, $current_site_id, $item_type, $item_id, $action, $payload );
+			if ( null !== $direct_id ) {
+				return $direct_id;
+			}
+		}
+
 		// Safety check: Limit queue size per site (prevent bloat)
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Counting pending queue items for throttling.
 		$queue_count = $wpdb->get_var(
@@ -219,11 +233,6 @@ class QueueManager {
 
 		if ( $queue_count >= 10000 ) { // Max 10k pending items per site
 			return false;
-		}
-
-		// Store dependency in payload if provided
-		if ( null !== $depends_on_queue_id ) {
-			$payload['_depends_on_queue_id'] = $depends_on_queue_id;
 		}
 
 		// Insert new queue item
@@ -255,6 +264,94 @@ class QueueManager {
 		);
 
 		return $inserted ? $wpdb->insert_id : false;
+	}
+
+	/**
+	 * Try an outbound operation in the current request. A null result tells the
+	 * caller to retain the job for the normal retry worker.
+	 *
+	 * @param string $table_name Queue table name.
+	 * @param int    $site_id Site ID.
+	 * @param string $item_type Sync item type.
+	 * @param int    $item_id WordPress item ID.
+	 * @param string $action Sync action.
+	 * @param array  $payload Sync data.
+	 * @return int|false|null Completed record ID, persistence failure, or deferred.
+	 */
+	private function try_direct_sync( string $table_name, int $site_id, string $item_type, int $item_id, string $action, array $payload ) {
+		global $wpdb;
+		// Do not let a direct call pass older work for the same object.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Checking live queue state for ordering.
+		$older_work = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT id FROM {$table_name} WHERE item_type = %s AND item_id = %d AND site_id = %d AND status IN ('pending','processing') LIMIT 1",
+				$item_type,
+				$item_id,
+				$site_id
+			)
+		);
+		if ( $older_work ) {
+			return null;
+		}
+		$settings = \Syncly\Core\SettingsManager::get_instance();
+		if ( ! $settings->is_connection_verified() || ! \Syncly\API\OAuth\OAuthFailure::allows_attempt( $settings->get_settings_array() ) ) {
+			return null;
+		}
+
+		$lock_key = $site_id . ':' . $item_type . ':' . $item_id;
+		$nested   = isset( $this->active_direct_keys[ $lock_key ] );
+		$lock     = $nested ? null : new \Syncly\API\OAuth\OptionMutex( 'syncly_direct_' . md5( $lock_key ) );
+		if ( ! $nested && ! $lock->acquire() ) {
+			return null;
+		}
+		$this->active_direct_keys[ $lock_key ] = true;
+
+		$started         = microtime( true );
+		$completed_id    = null;
+		$remote_accepted = false;
+		try {
+			$location_id = $this->get_ghl_location_id();
+			if ( $location_id && ! $this->rate_limiter->reserve_request( $location_id ) ) {
+				return null;
+			}
+			$result = $this->processor->execute_sync( $item_type, $action, $item_id, $payload );
+			if ( ! $result || ( is_array( $result ) && ( ! empty( $result['skip'] ) || ( isset( $result['success'] ) && ! $result['success'] ) ) ) ) {
+				return null;
+			}
+			$remote_accepted = true;
+
+			$now = current_time( 'mysql' );
+			$record = [
+				'item_type'    => $item_type,
+				'item_id'      => $item_id,
+				'action'       => $action,
+				'payload'      => wp_json_encode( $payload ),
+				'status'       => 'completed',
+				'attempts'     => 1,
+				'created_at'   => $now,
+				'updated_at'   => $now,
+				'processed_at' => $now,
+				'site_id'      => $site_id,
+			];
+			if ( ! $wpdb->insert( $table_name, $record ) ) {
+				return false; // The API succeeded; retrying could repeat a non-idempotent operation.
+			}
+			$record_id    = (int) $wpdb->insert_id;
+			$completed_id = $record_id;
+			$item         = (object) array_merge( [ 'id' => $record_id ], $record );
+			$contact_id = is_array( $result ) ? ( $result['contact']['id'] ?? $result['id'] ?? null ) : null;
+			$contact_id = $contact_id ?: ( $payload['contact_id'] ?? null );
+			do_action( 'syncly_after_sync_success', $item, $contact_id, $result, $payload );
+			$this->logger->log_event( $item_id, $action, 'success', $contact_id, $payload, is_array( $result ) ? $result : null, null, microtime( true ) - $started, $item_type );
+			return $record_id;
+		} catch ( \Throwable $error ) {
+			return $remote_accepted ? ( $completed_id ?? false ) : null; // Never replay an operation GHL already accepted.
+		} finally {
+			if ( ! $nested ) {
+				unset( $this->active_direct_keys[ $lock_key ] );
+				$lock->release();
+			}
+		}
 	}
 
 	/**

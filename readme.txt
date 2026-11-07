@@ -4,7 +4,7 @@ Tags: gohighlevel, leadconnector, crm, contact-sync, forms
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.4.48
+Stable tag: 1.4.49
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,7 +33,7 @@ The free plugin includes:
 
 **WPForms Lite and Pro**
 
-Map form answers to standard or custom contact fields, add tags, and choose whether to update or skip contacts with a matching email address. Submissions run through the background queue, with results available in Sync Logs.
+Map form answers to standard or custom contact fields, add tags, and choose whether to update or skip contacts with a matching email address. Submissions use the background queue by default; sites that enable direct sync send them during the originating request. Results are available in Sync Logs when sync logging is enabled.
 
 **Gravity Forms**
 
@@ -120,6 +120,10 @@ Check queue status and Sync Logs to investigate failed jobs. If GoHighLevel reje
 
 Action Scheduler is included with the plugin.
 
+= Can I send outbound sync requests immediately? =
+
+Yes. Add `define( 'SYNCLY_DIRECT_SYNC', true );` to `wp-config.php` before WordPress loads plugins. Outbound events then call GoHighLevel during the originating request. Dependent operations run after their parent succeeds; operations that cannot complete immediately fall back to the background queue. This is an opt-in site configuration, and the request may take longer while waiting for GoHighLevel. Sync Logs shows when direct mode is active.
+
 = What data leaves my site? =
 
 Syncly sends data needed for the features you enable, including contact details, mapped fields, tags, and applicable form or integration data. The External services section lists the data, destinations, and events that trigger transmission.
@@ -146,6 +150,9 @@ No. Syncly is independently developed and is not affiliated with, endorsed by, o
 
 == Upgrade Notice ==
 
+= 1.4.49 =
+Adds optional direct outbound sync through `SYNCLY_DIRECT_SYNC` in `wp-config.php`. Existing queue behavior remains the default; direct attempts that cannot complete fall back to the queue.
+
 = 1.4.48 =
 Fixes a fatal error that could interrupt manual or background queue processing when an API response returns plain-array headers. No settings changes required.
 
@@ -156,6 +163,11 @@ Improves OAuth refresh coordination, retry backoff, and background scheduling. C
 Documentation and listing refresh: clearer feature descriptions, new FAQs, corrected free vs Pro boundaries, and updated links. No functional changes to syncing.
 
 == Changelog ==
+
+= 1.4.49 =
+* Added opt-in direct outbound sync during the originating WordPress request, with queue fallback and ordering for dependent work.
+* Applied pending registration and family tags immediately after contact creation when direct sync succeeds.
+* Added a direct-mode notice on Sync Logs and a filter for tags known before the first registration request.
 
 = 1.4.48 =
 * Fixed a fatal error that could stop manual or background queue processing when WordPress returned API response headers as an array instead of a header dictionary.

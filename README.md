@@ -6,7 +6,7 @@ A WordPress plugin that connects your site to GoHighLevel CRM (HighLevel / LeadC
 
 > **Published listing:** The WordPress.org directory listing lives in [`readme.txt`](readme.txt). Tags and metadata there take precedence for the plugin directory.
 
-![Version](https://img.shields.io/badge/version-1.4.48-blue.svg)
+![Version](https://img.shields.io/badge/version-1.4.49-blue.svg)
 ![WordPress](https://img.shields.io/badge/wordpress-5.8%2B-brightgreen.svg)
 ![PHP](https://img.shields.io/badge/php-7.4%2B-purple.svg)
 ![License](https://img.shields.io/badge/license-GPL--2.0%2B-red.svg)
@@ -23,6 +23,7 @@ A WordPress plugin that connects your site to GoHighLevel CRM (HighLevel / LeadC
 - **Role-based tagging** — auto-assign or remove tags when users gain/lose WordPress roles
 - **Bidirectional webhooks** — receive GoHighLevel contact changes in real time
 - **Background queue** — reliable bulk operations via Action Scheduler with rate limiting
+- **Optional direct sync** — send outbound events during the originating request, with queue fallback when an immediate operation cannot complete
 - **Elementor integration** — GHL form widget with tag-driven conditions on Pro
 
 ## OAuth2 connection
@@ -95,6 +96,18 @@ Mapped fields show a green checkmark. Each GHL field can only be mapped once —
 ### 3. Enable user sync
 
 Go to **Syncly → Settings **. Toggle sync on, select which events trigger sync (registration, profile update, login), and configure default tags and deletion behavior.
+
+### Optional direct outbound sync
+
+Add this to `wp-config.php` before WordPress loads plugins:
+
+```php
+define( 'SYNCLY_DIRECT_SYNC', true );
+```
+
+With this constant enabled, outbound events call GoHighLevel during the originating WordPress request. Follow-up work, such as tags after contact creation, runs in order. If an immediate attempt cannot complete, Syncly retains it in the queue for retry. The originating request waits for the API response, so completion time depends on GoHighLevel and network latency. Direct results appear in Sync Logs when sync logging is enabled. Remove the constant or set it to `false` to use the background queue for all outbound events.
+
+Integrations that know registration tags before the first contact request may use `syncly_user_register_tags` to include them in that request. Tags added after registration are sent as a follow-up operation.
 
 ### 4. Role-based tags
 

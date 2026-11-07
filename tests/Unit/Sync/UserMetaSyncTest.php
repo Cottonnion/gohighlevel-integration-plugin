@@ -301,6 +301,51 @@ class UserMetaSyncTest extends TestCase
     //  Pending tags flush
     // ------------------------------------------------------------------
 
+    public function test_pending_and_family_tags_are_dispatched_once_after_meta_is_cleared(): void
+    {
+        $meta = [ '_ghl_pending_tags' => [ 'vip' ], '_ghl_pending_family_tags' => [ 'family' ] ];
+        Functions\when('get_user_meta')->alias(static function ( $uid, $key ) use ( &$meta ) { return $meta[$key] ?? ''; });
+        Functions\when('delete_user_meta')->alias(static function ( $uid, $key ) use ( &$meta ) { unset($meta[$key]); return true; });
+        $this->queue_manager_mock->shouldReceive('add_to_queue')->once()->with(
+            'user', 42, 'add_tags', Mockery::on(static function ( $payload ) use ( &$meta ) {
+                return $payload['contact_id'] === 'c_new'
+                    && $payload['tags'] === [ 'vip', 'family' ]
+                    && ! isset($meta['_ghl_pending_tags'], $meta['_ghl_pending_family_tags']);
+            })
+        )->andReturn(2);
+
+        $this->sync->handle_sync_success($this->makeItem('user', 42, 'user_register'), 'c_new');
+        $this->assertSame([], $meta);
+    }
+
+    public function test_pending_tags_are_restored_if_direct_and_queue_persistence_both_fail(): void
+    {
+        $meta = [ '_ghl_pending_tags' => [ 'vip' ] ];
+        Functions\when('get_user_meta')->alias(static function ( $uid, $key ) use ( &$meta ) { return $meta[$key] ?? ''; });
+        Functions\when('delete_user_meta')->alias(static function ( $uid, $key ) use ( &$meta ) { unset($meta[$key]); return true; });
+        Functions\when('update_user_meta')->alias(static function ( $uid, $key, $value ) use ( &$meta ) { $meta[$key] = $value; return true; });
+        $this->queue_manager_mock->shouldReceive('add_to_queue')->once()->andReturn(false);
+
+        $this->sync->handle_sync_success($this->makeItem('user', 42, 'user_register'), 'c_new');
+        $this->assertSame([ 'vip' ], $meta['_ghl_pending_tags']);
+    }
+
+    public function test_direct_tag_follow_up_keeps_newer_tag_state_in_user_meta(): void
+    {
+        $meta = [ '_ghl_pending_tags' => [ 'vip' ] ];
+        $stored_tags = [];
+        Functions\when('get_user_meta')->alias(static function ( $uid, $key ) use ( &$meta ) { return $meta[$key] ?? ''; });
+        Functions\when('delete_user_meta')->alias(static function ( $uid, $key ) use ( &$meta ) { unset($meta[$key]); return true; });
+        $this->tag_manager_mock->shouldReceive('store_user_tags')->andReturnUsing(static function ( $uid, $tags ) use ( &$stored_tags ) { $stored_tags = $tags; return $tags; });
+        $this->queue_manager_mock->shouldReceive('add_to_queue')->once()->andReturnUsing(function () {
+            $this->sync->handle_sync_success($this->makeItem('user', 42, 'add_tags'), 'c_new', [ 'tags' => [ 'base', 'vip' ] ]);
+            return 2;
+        });
+
+        $this->sync->handle_sync_success($this->makeItem('user', 42, 'user_register'), 'c_new', [ 'contact' => [ 'tags' => [ 'base' ] ] ]);
+        $this->assertSame([ 'base', 'vip' ], $stored_tags);
+    }
+
     public function test_flushes_pending_tags_for_user_item(): void
     {
         $item = $this->makeItem('user', 42, 'create');

@@ -4,6 +4,21 @@ Internal changelog with full technical details. **Not included in release zips.*
 
 ---
 
+## [1.4.49] - 2026-11-07
+
+### Direct outbound sync
+
+- `QueueManager::add_to_queue()` tries `QueueProcessor::execute_sync()` in the originating request when `SYNCLY_DIRECT_SYNC` is true, after checking older work, connection health, the per-object lease, and the rate limiter. A successful call writes a completed record to preserve queue IDs and success hooks; unsuccessful or deferred calls retain the pending queue path.
+- Dependency IDs are included before duplicate detection, so follow-up tasks keep their parent reference. A same-request nested direct call can reuse its own per-object lease while another request remains excluded.
+- `UserMetaSync` combines pending and family tags into one follow-up, clears the pending markers before recursive success hooks, and stores the parent tag state before the follow-up can update it. Pending markers are restored if dispatch cannot be persisted.
+- `UserHooks` exposes `syncly_user_register_tags` to include known tags in the first contact payload. The Sync Logs screen reports direct mode and its queue fallback.
+
+### Validation
+
+- User reported successful live testing of the direct path. Local PHP 8.5 PHPUnit passed (183 tests, 34,624 assertions); `composer validate --strict --no-check-publish`, `composer lint`, and `git diff --check` passed. The release workflow's terms and privacy URLs returned HTTP 200. PHP 7.4 through 8.4 checks remain for CI after the candidate is pushed.
+
+---
+
 ## [1.4.48] - 2026-10-23
 
 ### Fixed

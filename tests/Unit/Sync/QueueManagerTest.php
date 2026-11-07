@@ -286,6 +286,21 @@ class QueueManagerTest extends TestCase
         $this->assertSame(10, $result);
     }
 
+    public function test_duplicate_update_keeps_new_dependency(): void
+    {
+        $this->wpdb->shouldReceive('get_var')->once()->andReturn(10);
+        $saved = null;
+        $this->wpdb->shouldReceive('update')->once()->andReturnUsing(
+            function ($table, $data) use (&$saved) {
+                $saved = json_decode($data['payload'], true);
+                return true;
+            }
+        );
+
+        $this->assertSame(10, $this->qm->add_to_queue('form', 7, 'add_tags', ['tags' => ['new']], 88));
+        $this->assertSame(88, $saved['_depends_on_queue_id']);
+    }
+
     public function test_atomic_claim_allows_only_the_first_worker(): void
     {
         $this->wpdb->shouldReceive('query')

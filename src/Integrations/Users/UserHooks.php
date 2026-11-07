@@ -175,25 +175,7 @@ class UserHooks {
 			return;
 		}
 
-		// Prepare contact data
-		$contact_data = $this->prepare_contact_data( $user );
-
-		// Add registration tags if configured
-		$register_tags = $this->settings_manager->get_location_register_tags();
-
-		// Get role-based tags from persisted user role only.
-		$role_tags_manager = RoleTagsManager::get_instance();
-		$role_based_tags   = $role_tags_manager->get_user_role_tags( $user_id );
-
-		// Combine registration tags with role-based tags
-		$all_tags = array_merge( $register_tags, $role_based_tags );
-		$all_tags = array_unique( $all_tags );
-		// Re-index array to ensure sequential numeric keys (not associative)
-		$all_tags = array_values( $all_tags );
-
-		if ( ! empty( $all_tags ) ) {
-			$contact_data['tags'] = $all_tags;
-		}
+		$contact_data = $this->build_register_payload( $user );
 
 		// Queue for async processing
 		$queue_manager = \Syncly\Sync\QueueManager::get_instance();
@@ -227,7 +209,9 @@ class UserHooks {
 		$role_tags_manager = RoleTagsManager::get_instance();
 		$role_based_tags   = $role_tags_manager->get_user_role_tags( $user->ID );
 
-		$all_tags = array_values( array_unique( array_merge( $register_tags, $role_based_tags ) ) );
+		// Other plugins can add tags before the first contact request is sent.
+		$all_tags = apply_filters( 'syncly_user_register_tags', array_merge( $register_tags, $role_based_tags ), $user->ID, $user );
+		$all_tags = is_array( $all_tags ) ? array_values( array_unique( array_filter( $all_tags, 'is_scalar' ) ) ) : [];
 		if ( ! empty( $all_tags ) ) {
 			$contact_data['tags'] = $all_tags;
 		}
